@@ -19,6 +19,65 @@ namespace Robust.UnitTesting.Shared.Physics;
 public sealed class Broadphase_Test
 {
     /// <summary>
+    /// Tests that physics body type changes correctly updates broadphase trees.
+    /// </summary>
+    [Test]
+    public void TestBodyTypeChange()
+    {
+        var sim = RobustServerSimulation
+            .NewSimulation()
+            .InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+        var physicsSystem = entManager.System<SharedPhysicsSystem>();
+
+        var (mapEnt, mapId) = sim.CreateMap();
+
+        var dynamicEnt = entManager.SpawnAtPosition(null, new EntityCoordinates(mapEnt, Vector2.Zero));
+        var broadphase =
+            entManager.GetComponent<BroadphaseComponent>(
+                entManager.GetComponent<TransformComponent>(dynamicEnt).Broadphase!.Value.Uid);
+        var dynamicBody = entManager.AddComponent<PhysicsComponent>(dynamicEnt);
+        physicsSystem.SetBodyType(dynamicEnt, BodyType.Dynamic, body: dynamicBody);
+
+        fixtureSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
+        Assert.That(broadphase.StaticTree.Count, Is.EqualTo(0));
+        Assert.That(broadphase.DynamicTree.Count, Is.EqualTo(1));
+        physicsSystem.SetBodyType(dynamicEnt, BodyType.Static, body: dynamicBody);
+        Assert.That(broadphase.StaticTree.Count, Is.EqualTo(1));
+        Assert.That(broadphase.DynamicTree.Count, Is.EqualTo(0));
+    }
+
+    /// <summary>
+    /// Tests that adding physics comp to an entity correctly removes it from the sundries tree and onto the main tree.
+    /// </summary>
+    [Test]
+    public void TestPhysicsAdd()
+    {
+        var sim = RobustServerSimulation
+            .NewSimulation()
+            .InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+
+        var (mapEnt, mapId) = sim.CreateMap();
+
+        var dynamicEnt = entManager.SpawnAtPosition(null, new EntityCoordinates(mapEnt, Vector2.Zero));
+        var broadphase =
+            entManager.GetComponent<BroadphaseComponent>(
+                entManager.GetComponent<TransformComponent>(dynamicEnt).Broadphase!.Value.Uid);
+
+        Assert.That(broadphase.StaticSundriesTree.Count == 1);
+
+        entManager.AddComponent<PhysicsComponent>(dynamicEnt);
+        fixtureSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
+        Assert.That(broadphase.StaticSundriesTree.Count, Is.EqualTo(0));
+        Assert.That(broadphase.StaticTree.Count, Is.EqualTo(1));
+    }
+
+    /// <summary>
     /// Tests that spawned static ents properly collide with entities in range.
     /// </summary>
     [Test]
@@ -126,18 +185,17 @@ public sealed class Broadphase_Test
         var broadphase = entManager.GetComponent<BroadphaseComponent>(gridUid);
 
         var ent = entManager.SpawnEntity(null, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)));
-        var physics = entManager.AddComponent<PhysicsComponent>(ent);
         var xform = entManager.GetComponent<TransformComponent>(ent);
 
         // If we're not collidable we're still on the sundries tree.
         Assert.That(broadphase.StaticSundriesTree, Does.Contain(ent));
         Assert.That(xform.Broadphase!.Value.Uid, Is.EqualTo(gridUid));
 
+        var physics = entManager.AddComponent<PhysicsComponent>(ent);
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
         var fixture = new Fixture(shape, 0, 0, true);
         fixturesSystem.CreateFixture(ent, "fix1", fixture, body: physics, xform: xform);
-        physicsSystem.SetCanCollide(ent, true, body: physics);
         Assert.That(physics.CanCollide);
 
         // Now that we're collidable should be correctly on the grid's tree.

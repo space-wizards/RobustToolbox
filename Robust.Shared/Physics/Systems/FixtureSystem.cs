@@ -111,7 +111,7 @@ namespace Robust.Shared.Physics.Systems
             manager.Fixtures.Add(fixtureId, fixture);
             fixture.Owner = uid;
 
-            if (body.CanCollide && Resolve(uid, ref xform))
+            if (Resolve(uid, ref xform))
             {
                 _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
             }
@@ -391,9 +391,6 @@ namespace Robust.Shared.Physics.Systems
             body.CollisionMask = mask;
             body.CollisionLayer = layer;
             body.Hard = hard;
-
-            if (manager.FixtureCount == 0)
-                _physics.SetCanCollide(uid, false, manager: manager, body: body);
 
             if (oldLayer != layer)
             {

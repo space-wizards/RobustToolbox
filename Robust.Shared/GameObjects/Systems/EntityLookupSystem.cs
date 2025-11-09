@@ -144,9 +144,19 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private void OnBodyStartup(EntityUid uid, PhysicsComponent component, ComponentStartup args)
     {
-        // If physics is added live need to remove it from the sundries tree.
         var xform = Transform(uid);
-        RemoveFromEntityTree(uid, xform);
+
+        if (xform.Broadphase is { } old &&
+            old.BodyType == null)
+        {
+            // If physics comp is added to an initialized entity it may be on the sundries tree so need to remove it.
+            if (_broadQuery.TryComp(old.Uid, out var oldBroadphaseComp))
+            {
+                DebugTools.Assert(oldBroadphaseComp.StaticSundriesTree.Contains(uid));
+                oldBroadphaseComp.StaticSundriesTree.Remove(uid);
+            }
+        }
+
         UpdatePhysicsBroadphase(uid, xform, component);
     }
 
@@ -339,22 +349,18 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private void OnBodyTypeChange(EntityUid uid, TransformComponent xform, ref PhysicsBodyTypeChangedEvent args)
     {
-        // TODO: Don't raise this on physics startup,
-        // then remove the check from UpdatePhysicsBroadphase
         UpdatePhysicsBroadphase(uid, xform, args.Component);
     }
 
     private void UpdatePhysicsBroadphase(EntityUid uid, TransformComponent xform, PhysicsComponent body)
     {
-        if (body.LifeStage <= ComponentLifeStage.Initializing)
-            return;
+        DebugTools.Assert(body.LifeStage > ComponentLifeStage.Initializing);
 
         if (xform.GridUid == uid)
             return;
         DebugTools.Assert(!HasComp<MapGridComponent>(uid));
 
-        if (xform.Broadphase is not { Valid: true } old ||
-            old.BodyType == body.BodyType)
+        if (xform.Broadphase is not { Valid: true } old)
             return; // entity is not on any broadphase
 
         xform.Broadphase = null;
@@ -364,9 +370,10 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         // remove from the old broadphase
         var fixtures = Comp<FixturesComponent>(uid);
-        DebugTools.Assert(old.BodyType != null);
 
-        RemovePhysicsTree(broadphase, fixtures, old.BodyType.Value);
+        // If physics comp is added to an initialized entity this may not be true.
+        if (old.BodyType != null)
+            RemovePhysicsTree(broadphase, fixtures, old.BodyType.Value);
 
         // Add to new broadphase
         AddPhysicsTree(uid, old.Uid, broadphase, xform, body, fixtures);

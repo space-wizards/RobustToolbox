@@ -63,8 +63,7 @@ public partial class SharedPhysicsSystem
         // Gets added to broadphase via fixturessystem
         _fixtureSystem.OnPhysicsInit(uid, manager, component);
 
-        if (manager.FixtureCount == 0)
-            component.CanCollide = false;
+        // We used to disable cancollide if no fixtures but that doesn't actually matter anymore.
 
         var ev = new CollisionChangeEvent(uid, component, component.CanCollide);
         RaiseLocalEvent(ref ev);

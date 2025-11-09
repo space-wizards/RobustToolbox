@@ -633,12 +633,22 @@ namespace Robust.Shared.GameObjects
     ///     An invalid entity UID indicates that this entity has intentionally been removed from broadphases and should
     ///     not automatically be re-added by movement events.
     /// </remarks>
-    internal record struct BroadphaseData(EntityUid Uid, BodyType? BodyType)
+    internal record struct BroadphaseData(EntityUid Uid, BodyType? BodyType) : IEquatable<BroadphaseData>
     {
         public bool IsValid() => Uid.IsValid();
         public bool Valid => IsValid();
         public static readonly BroadphaseData Invalid = default;
 
         // TODO include MapId if ever grids are allowed to enter null-space (leave PVS).
+
+        public bool Equals(BroadphaseData other)
+        {
+            return Uid.Equals(other.Uid) && BodyType == other.BodyType;
+        }
+
+        public readonly override int GetHashCode()
+        {
+            return HashCode.Combine(Uid, BodyType);
+        }
     }
 }

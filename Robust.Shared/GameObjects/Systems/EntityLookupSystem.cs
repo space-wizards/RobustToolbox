@@ -144,7 +144,10 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private void OnBodyStartup(EntityUid uid, PhysicsComponent component, ComponentStartup args)
     {
-        UpdatePhysicsBroadphase(uid, Transform(uid), component);
+        // If physics is added live need to remove it from the sundries tree.
+        var xform = Transform(uid);
+        RemoveFromEntityTree(uid, xform);
+        UpdatePhysicsBroadphase(uid, xform, component);
     }
 
     public override void Shutdown()
@@ -336,6 +339,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private void OnBodyTypeChange(EntityUid uid, TransformComponent xform, ref PhysicsBodyTypeChangedEvent args)
     {
+        // TODO: Don't raise this on physics startup,
+        // then remove the check from UpdatePhysicsBroadphase
         UpdatePhysicsBroadphase(uid, xform, args.Component);
     }
 
@@ -348,7 +353,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return;
         DebugTools.Assert(!HasComp<MapGridComponent>(uid));
 
-        if (xform.Broadphase is not { Valid: true } old)
+        if (xform.Broadphase is not { Valid: true } old ||
+            old.BodyType == body.BodyType)
             return; // entity is not on any broadphase
 
         xform.Broadphase = null;

@@ -288,11 +288,11 @@ public sealed class Broadphase_Test
             var broadphase = entManager.GetComponent<BroadphaseComponent>(map);
             Assert.That(parentXform.ParentUid == map);
             Assert.That(parentXform.MapUid == map);
-            Assert.That(childXform.MapUid == map);
+            Assert.That(childXform.MapUid, Is.EqualTo(map));
             Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(broadphase));
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
-            Assert.That(parentXform.Broadphase == new BroadphaseData(map, null));
-            Assert.That(childXform.Broadphase == new BroadphaseData(map, childBody.BodyType));
+            Assert.That(parentXform.Broadphase, Is.EqualTo(new BroadphaseData(map, null)));
+            Assert.That(childXform.Broadphase, Is.EqualTo(new BroadphaseData(map, childBody.BodyType)));
         };
         AssertMap(mapA, mapB, new Vector2(200, 200));
 

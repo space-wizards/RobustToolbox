@@ -18,48 +18,48 @@ namespace Robust.Shared.GameObjects
     public interface IDirectedEventBus
     {
         void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         void RaiseLocalEvent(EntityUid uid, object args, bool broadcast = false);
 
         void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         void SubscribeLocalEvent<TComp, TEvent>(
             ComponentEventHandler<TComp, TEvent> handler,
             Type orderType, Type[]? before = null, Type[]? after = null)
             where TComp : IComponent
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         #region Ref Subscriptions
 
         void RaiseLocalEvent<TEvent>(EntityUid uid, ref TEvent args, bool broadcast = false)
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         void RaiseLocalEvent(EntityUid uid, ref object args, bool broadcast = false);
 
         void SubscribeLocalEvent<TComp, TEvent>(ComponentEventRefHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         void SubscribeLocalEvent<TComp, TEvent>(
             ComponentEventRefHandler<TComp, TEvent> handler,
             Type orderType, Type[]? before = null, Type[]? after = null)
             where TComp : IComponent
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         void SubscribeLocalEvent<TComp, TEvent>(
             EntityEventRefHandler<TComp, TEvent> handler,
             Type orderType, Type[]? before = null, Type[]? after = null)
             where TComp : IComponent
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         #endregion
 
         void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         /// <summary>
         /// Dispatches an event directly to a specific component.
@@ -70,29 +70,29 @@ namespace Robust.Shared.GameObjects
         /// is because of the component network source generator.
         /// </remarks>
         public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, TEvent args)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
             where TComponent : IComponent;
 
         /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
         public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, TEvent args)
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
         public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx idx, TEvent args)
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
         public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, ref TEvent args)
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
         public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, ref TEvent args)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
             where TComponent : IComponent;
 
         /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
         public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx idx, ref TEvent args)
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
     }
@@ -102,7 +102,7 @@ namespace Robust.Shared.GameObjects
         internal delegate void DirectedEventHandler(EntityUid uid, IComponent comp, ref Unit args);
 
         private delegate void DirectedEventHandler<TEvent>(EntityUid uid, IComponent comp, ref TEvent args)
-            where TEvent : notnull;
+            where TEvent : notnull, allows ref struct;
 
         /// <summary>
         /// Max size of a components event subscription linked list.
@@ -132,7 +132,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, TEvent args)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             RaiseComponentEvent(uid, component, _comFac.GetIndex(component.GetType()), ref args);
         }
@@ -140,7 +140,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, TEvent args)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
             where TComponent : IComponent
         {
             RaiseComponentEvent(uid, component, CompIdx.Index<TComponent>(), ref args);
@@ -149,7 +149,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx type, TEvent args)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             RaiseComponentEvent(uid, component, type, ref args);
         }
@@ -157,7 +157,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, ref TEvent args)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             RaiseComponentEvent(uid, component, _comFac.GetIndex(component.GetType()), ref args);
         }
@@ -165,7 +165,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, ref TEvent args)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
             where TComponent : IComponent
         {
             RaiseComponentEvent(uid, component, CompIdx.Index<TComponent>(), ref args);
@@ -174,7 +174,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx type, ref TEvent args)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
@@ -192,7 +192,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             var type = typeof(TEvent);
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
@@ -210,7 +210,7 @@ namespace Robust.Shared.GameObjects
         }
 
         public void RaiseLocalEvent<TEvent>(EntityUid uid, ref TEvent args, bool broadcast = false)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             var type = typeof(TEvent);
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
@@ -247,7 +247,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, args);
@@ -266,7 +266,7 @@ namespace Robust.Shared.GameObjects
             Type[]? before = null,
             Type[]? after = null)
             where TComp : IComponent
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, args);
@@ -284,7 +284,7 @@ namespace Robust.Shared.GameObjects
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(ComponentEventRefHandler<TComp, TEvent> handler)
-            where TComp : IComponent where TEvent : notnull
+            where TComp : IComponent where TEvent : notnull, allows ref struct
         {
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, ref args);
@@ -299,7 +299,7 @@ namespace Robust.Shared.GameObjects
 
         public void SubscribeLocalEvent<TComp, TEvent>(ComponentEventRefHandler<TComp, TEvent> handler, Type orderType,
             Type[]? before = null,
-            Type[]? after = null) where TComp : IComponent where TEvent : notnull
+            Type[]? after = null) where TComp : IComponent where TEvent : notnull, allows ref struct
         {
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, ref args);
@@ -318,7 +318,7 @@ namespace Robust.Shared.GameObjects
 
         public void SubscribeLocalEvent<TComp, TEvent>(EntityEventRefHandler<TComp, TEvent> handler, Type orderType,
             Type[]? before = null,
-            Type[]? after = null) where TComp : IComponent where TEvent : notnull
+            Type[]? after = null) where TComp : IComponent where TEvent : notnull, allows ref struct
         {
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(new Entity<TComp>(uid, (TComp) comp), ref args);
@@ -338,7 +338,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             EntUnsubscribe(CompIdx.Index<TComp>(), typeof(TEvent));
         }
@@ -451,7 +451,7 @@ namespace Robust.Shared.GameObjects
             Type eventType,
             DirectedEventHandler<TEvent> handler,
             OrderingData? order)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             EntAddSubscription(compType, compTypeObj, eventType, new DirectedRegistration(handler, order,
                 (EntityUid uid, IComponent comp, ref Unit ev) =>
@@ -672,7 +672,7 @@ namespace Robust.Shared.GameObjects
             IComponent component,
             CompIdx baseType,
             ref Unit args)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             if (_compEventSubs[baseType.Value].TryGetValue(typeof(TEvent), out var reg))
                 reg.Handler(euid, component, ref args);
@@ -759,13 +759,13 @@ namespace Robust.Shared.GameObjects
     // [Obsolete("Use ComponentEventRefHandler instead")]
     public delegate void ComponentEventHandler<in TComp, in TEvent>(EntityUid uid, TComp component, TEvent args)
         where TComp : IComponent
-        where TEvent : notnull;
+        where TEvent : notnull, allows ref struct;
 
     public delegate void ComponentEventRefHandler<in TComp, TEvent>(EntityUid uid, TComp component, ref TEvent args)
         where TComp : IComponent
-        where TEvent : notnull;
+        where TEvent : notnull, allows ref struct;
 
     public delegate void EntityEventRefHandler<TComp, TEvent>(Entity<TComp> ent, ref TEvent args)
         where TComp : IComponent
-        where TEvent : notnull;
+        where TEvent : notnull, allows ref struct;
 }

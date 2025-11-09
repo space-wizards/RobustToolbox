@@ -19,7 +19,7 @@ namespace Robust.Shared.GameObjects
         protected void SubscribeNetworkEvent<T>(
             EntityEventHandler<T> handler,
             Type[]? before = null, Type[]? after = null)
-            where T : notnull
+            where T : notnull, allows ref struct
         {
             SubEvent(EventSource.Network, handler, before, after);
         }
@@ -29,7 +29,7 @@ namespace Robust.Shared.GameObjects
         protected void SubscribeLocalEvent<T>(
             EntityEventHandler<T> handler,
             Type[]? before = null, Type[]? after = null)
-            where T : notnull
+            where T : notnull, allows ref struct
         {
             SubEvent(EventSource.Local, handler, before, after);
         }
@@ -37,7 +37,7 @@ namespace Robust.Shared.GameObjects
         protected void SubscribeLocalEvent<T>(
             EntityEventRefHandler<T> handler,
             Type[]? before = null, Type[]? after = null)
-            where T : notnull
+            where T : notnull, allows ref struct
         {
             SubEvent(EventSource.Local, handler, before, after);
         }
@@ -45,7 +45,7 @@ namespace Robust.Shared.GameObjects
         protected void SubscribeAllEvent<T>(
             EntityEventHandler<T> handler,
             Type[]? before = null, Type[]? after = null)
-            where T : notnull
+            where T : notnull, allows ref struct
         {
             SubEvent(EventSource.All, handler, before, after);
         }
@@ -80,7 +80,7 @@ namespace Robust.Shared.GameObjects
             EventSource src,
             EntityEventHandler<T> handler,
             Type[]? before, Type[]? after)
-            where T : notnull
+            where T : notnull, allows ref struct
         {
             EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
 
@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects
             EventSource src,
             EntityEventRefHandler<T> handler,
             Type[]? before, Type[]? after)
-            where T : notnull
+            where T : notnull, allows ref struct
         {
             EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
 
@@ -243,7 +243,7 @@ namespace Robust.Shared.GameObjects
             public abstract void Unsubscribe(EntitySystem sys, IEventBus bus);
         }
 
-        private sealed class SubBroadcast<T> : SubBase where T : notnull
+        private sealed class SubBroadcast<T> : SubBase where T : notnull, allows ref struct
         {
             private readonly EventSource _source;
 

@@ -6,8 +6,8 @@ namespace Robust.Shared.GameObjects
 {
     public interface IEntityEventSubscriber { }
 
-    public delegate void EntityEventHandler<in T>(T ev);
-    public delegate void EntityEventRefHandler<T>(ref T ev);
+    public delegate void EntityEventHandler<in T>(T ev) where T : allows ref struct;
+    public delegate void EntityEventRefHandler<T>(ref T ev) where T : allows ref struct;
     public delegate void EntitySessionEventHandler<in T>(T msg, EntitySessionEventArgs args);
 
     [Serializable, NetSerializable]

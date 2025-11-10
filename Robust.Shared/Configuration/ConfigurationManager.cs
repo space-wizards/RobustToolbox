@@ -480,7 +480,7 @@ namespace Robust.Shared.Configuration
         public void OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull
         {
-            SubValueChanged(cVar, onValueChanged, invokeImmediately);
+            SubValueChanged(cVar.Name, onValueChanged, invokeImmediately);
         }
 
         public void OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)

@@ -454,21 +454,20 @@ namespace Robust.Shared.Configuration
             _configVars.Add(name, cvar);
         }
 
-        public void OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
-            where T : notnull
+        public void SubValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false) where T : notnull
         {
-            OnValueChanged(cVar.Name, onValueChanged, invokeImmediately);
+            SubValueChanged(cVar.Name, onValueChanged, invokeImmediately);
         }
 
-        public void OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
+        public void SubValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull
         {
             using (Lock.WriteGuard())
             {
                 var reg = _configVars[name];
 
-                reg.ValueChanged.AddInPlace(
-                    (object value, in CVarChangeInfo _) => onValueChanged((T)value),
+                reg.ValueChanged.AddInPlace((object value, in CVarChangeInfo _) =>
+                        onValueChanged((T)value),
                     onValueChanged);
             }
 
@@ -476,6 +475,18 @@ namespace Robust.Shared.Configuration
             {
                 onValueChanged(GetCVar<T>(name));
             }
+        }
+
+        public void OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull
+        {
+            SubValueChanged(cVar, onValueChanged, invokeImmediately);
+        }
+
+        public void OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull
+        {
+            SubValueChanged(name, onValueChanged, invokeImmediately);
         }
 
         public void UnsubValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged) where T : notnull
@@ -491,29 +502,43 @@ namespace Robust.Shared.Configuration
             reg.ValueChanged.RemoveInPlace(onValueChanged);
         }
 
-        public void OnValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+        public void SubValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull
         {
-            OnValueChanged(cVar.Name, onValueChanged, invokeImmediately);
+            SubValueChanged(cVar.Name, onValueChanged, invokeImmediately);
         }
 
-        public void OnValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+        public void SubValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull
         {
-            object value;
+            object newValue;
+
             using (Lock.WriteGuard())
             {
                 var reg = _configVars[name];
-                value = GetConfigVarValue(reg);
-                reg.ValueChanged.AddInPlace(
-                    (object value, in CVarChangeInfo info) => onValueChanged((T)value, info),
+                newValue = GetConfigVarValue(reg);
+
+                reg.ValueChanged.AddInPlace((object value, in CVarChangeInfo info) =>
+                        onValueChanged((T)value, info),
                     onValueChanged);
             }
 
             if (invokeImmediately)
             {
-                onValueChanged(GetCVar<T>(name), new CVarChangeInfo(name, _gameTiming.CurTick, value, value));
+                onValueChanged(GetCVar<T>(name), new CVarChangeInfo(name, _gameTiming.CurTick, newValue, newValue));
             }
+        }
+
+        public void OnValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull
+        {
+            SubValueChanged(cVar.Name, onValueChanged, invokeImmediately);
+        }
+
+        public void OnValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull
+        {
+            SubValueChanged(name, onValueChanged, invokeImmediately);
         }
 
         public void UnsubValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged) where T : notnull

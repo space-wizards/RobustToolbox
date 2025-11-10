@@ -172,7 +172,7 @@ namespace Robust.Shared.Configuration
         /// </param>
         /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
         /// <seealso cref="UnsubValueChanged{T}(Robust.Shared.Configuration.CVarDef{T},System.Action{T})"/>
-        void OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
+        void SubValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull;
 
         /// <summary>
@@ -188,6 +188,16 @@ namespace Robust.Shared.Configuration
         /// </param>
         /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
         /// <seealso cref="UnsubValueChanged{T}(string,System.Action{T})"/>
+        void SubValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull;
+
+        /// <inheritdoc cref="SubValueChanged{T}(CVarDef{T},System.Action{T},bool)"/>
+        [Obsolete("Use SubValueChanged")]
+        void OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull;
+
+        /// <inheritdoc cref="SubValueChanged{T}(string,System.Action{T},bool)"/>
+        [Obsolete("Use SubValueChanged")]
         void OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull;
 
@@ -228,7 +238,7 @@ namespace Robust.Shared.Configuration
         /// </param>
         /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
         /// <seealso cref="UnsubValueChanged{T}(Robust.Shared.Configuration.CVarDef{T},System.Action{T})"/>
-        void OnValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+        void SubValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull;
 
         /// <summary>
@@ -244,6 +254,16 @@ namespace Robust.Shared.Configuration
         /// </param>
         /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
         /// <seealso cref="UnsubValueChanged{T}(string,System.Action{T})"/>
+        void SubValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull;
+
+        /// <inheritdoc cref="SubValueChanged{T}(CVarDef{T},CVarChanged{T},bool)"/>
+        [Obsolete("Use SubValueChanged")]
+        void OnValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull;
+
+        /// <inheritdoc cref="SubValueChanged{T}(string,CVarChanged{T},bool)"/>
+        [Obsolete("Use SubValueChanged")]
         void OnValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull;
 

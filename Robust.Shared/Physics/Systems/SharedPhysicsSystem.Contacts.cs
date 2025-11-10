@@ -87,7 +87,7 @@ public abstract partial class SharedPhysicsSystem
        }
    };
 
-    private int ContactCount => _activeContacts.Count;
+    public int ContactCount => _pairKeys.Count;
 
     private const int ContactPoolInitialSize = 128;
     private const int ContactsPerThread = 32;

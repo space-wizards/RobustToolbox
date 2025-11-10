@@ -14,6 +14,9 @@ namespace Robust.UnitTesting.Shared.Physics;
 [TestFixture]
 public sealed class Fixtures_Test
 {
+    /// <summary>
+    /// Asserts fixture IDs work as expected.
+    /// </summary>
     [Test]
     public void TestFixtureId()
     {
@@ -32,10 +35,28 @@ public sealed class Fixtures_Test
         fixturesSystem.CreateFixture(ent1, "fix1", fixture1);
 
         // Slot 0 (just offset by 1 because)
+        var fix1Id = fixture1.Id;
         Assert.That(fixture1.Id, Is.EqualTo(0 + 1));
+
+        // Check that another fixture doesn't overlap IDs.
+        var ent2 = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map));
+        var body2 = entManager.AddComponent<PhysicsComponent>(ent2);
+        physicsSystem.SetBodyType(ent2, BodyType.Dynamic, body: body2);
+        var fixture2 = new Fixture();
+        fixturesSystem.CreateFixture(ent2, "fix1", fixture2);
+
+        Assert.That(fixture2.Id, Is.EqualTo(fixture1.Id + 1));
 
         fixturesSystem.DestroyFixture(ent1, "fix1");
         Assert.That(fixture1.Id, Is.EqualTo(0));
+
+        // Check that it gets recycled
+        var ent3 = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map));
+        var body3 = entManager.AddComponent<PhysicsComponent>(ent3);
+        physicsSystem.SetBodyType(ent3, BodyType.Dynamic, body: body3);
+        var fixture3 = new Fixture();
+        fixturesSystem.CreateFixture(ent3, "fix1", fixture3);
+        Assert.That(fixture3.Id, Is.EqualTo(fix1Id));
     }
 
     [Test]

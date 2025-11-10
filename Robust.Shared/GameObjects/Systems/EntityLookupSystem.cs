@@ -67,7 +67,7 @@ public enum LookupFlags : ushort
 
     StaticSundries = Static | Sundries,
 
-    All = Contained | Dynamic | Static | Sensors | Sundries
+    All = Contained | Dynamic | Kinematic | Static | Sensors | Sundries
 }
 
 /// <summary>

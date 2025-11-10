@@ -193,33 +193,9 @@ public sealed partial class EntityLookupSystem
                 return true;
             }
 
+            // Check the target doesn't have fixturescomp because it should NOT be on this tree.
+            DebugTools.Assert(!state.FixturesQuery.HasComp(value));
             var intersectingTransform = state.Physics.GetLocalPhysicsTransform(value);
-
-            if (state.FixturesQuery.TryGetComponent(value, out var fixtures))
-            {
-                var sensors = (state.Flags & LookupFlags.Sensors) != 0x0;
-                bool anyFixture = false;
-
-                foreach (var fixture in fixtures.Fixtures.Values)
-                {
-                    if (!sensors && !fixture.Hard)
-                        continue;
-
-                    anyFixture = true;
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                    {
-                        if (state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform,
-                                intersectingTransform))
-                        {
-                            state.Intersecting.Add(value);
-                            return true;
-                        }
-                    }
-                }
-
-                if (anyFixture)
-                    return true;
-            }
 
             if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
                 state.Intersecting.Add(value);

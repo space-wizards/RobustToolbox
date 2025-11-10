@@ -15,6 +15,30 @@ namespace Robust.UnitTesting.Shared.Physics;
 public sealed class Fixtures_Test
 {
     [Test]
+    public void TestFixtureId()
+    {
+        var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var sysManager = sim.Resolve<IEntitySystemManager>();
+        var fixturesSystem = sysManager.GetEntitySystem<FixtureSystem>();
+        var physicsSystem = sysManager.GetEntitySystem<SharedPhysicsSystem>();
+        var map = sim.CreateMap().MapId;
+
+        var ent1 = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map));
+        var body1 = entManager.AddComponent<PhysicsComponent>(ent1);
+        physicsSystem.SetBodyType(ent1, BodyType.Dynamic, body: body1);
+        var fixture1 = new Fixture();
+        fixturesSystem.CreateFixture(ent1, "fix1", fixture1);
+
+        // Slot 0 (just offset by 1 because)
+        Assert.That(fixture1.Id, Is.EqualTo(0 + 1));
+
+        fixturesSystem.DestroyFixture(ent1, "fix1");
+        Assert.That(fixture1.Id, Is.EqualTo(0));
+    }
+
+    [Test]
     public void SetDensity()
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();

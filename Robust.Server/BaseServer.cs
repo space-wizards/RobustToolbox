@@ -166,7 +166,11 @@ namespace Robust.Server
         public bool Start(ServerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
             Options = options;
+
             _config.Initialize(true);
+
+            _config.LoadCVarsFromAssembly(typeof(BaseServer).Assembly); // Robust.Server
+            _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
 
             if (Options.LoadConfigAndUserData)
             {
@@ -191,9 +195,6 @@ namespace Robust.Server
                     _config.SetSaveFile(path);
                 }
             }
-
-            _config.LoadCVarsFromAssembly(typeof(BaseServer).Assembly); // Robust.Server
-            _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
 
             CVarDefaultOverrides.OverrideServer(_config);
 
@@ -297,7 +298,7 @@ namespace Robust.Server
                 : null;
 
             // Set up the VFS
-            _resources.Initialize(dataDir);
+            _resources.Initialize(dataDir, hideUserDataDir: false);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;

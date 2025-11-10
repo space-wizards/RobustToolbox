@@ -41,6 +41,8 @@ internal record struct Polygon : IPhysShape
 
     }
 
+    public Polygon(PhysShapeAabb aabb) : this(aabb.LocalBounds) {}
+
     public Polygon(PolygonShape polyShape)
     {
         Unsafe.SkipInit(out this);

@@ -52,6 +52,24 @@ internal record struct Polygon : IPhysShape
         polyShape.Normals.AsSpan()[..VertexCount].CopyTo(_normals.AsSpan);
     }
 
+    internal Polygon(SlimPolygon slim)
+    {
+        Unsafe.SkipInit(out this);
+        Radius = slim.Radius;
+        VertexCount = slim.VertexCount;
+
+        _vertices._00 = slim._vertices._00;
+        _vertices._01 = slim._vertices._01;
+        _vertices._02 = slim._vertices._02;
+        _vertices._03 = slim._vertices._03;
+
+        _normals._00 = slim._normals._00;
+        _normals._01 = slim._normals._01;
+        _normals._02 = slim._normals._02;
+        _normals._03 = slim._normals._03;
+        Centroid = slim.Centroid;
+    }
+
     public Polygon(Box2 box)
     {
         Unsafe.SkipInit(out this);

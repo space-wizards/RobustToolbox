@@ -28,6 +28,20 @@ namespace Robust.Client.Editor.Interface;
 public partial class EditorDocker : Control
 {
     private readonly List<EditorTabPanel> _tabPanels = new();
+    private bool _allowSplitting = true;
+
+    public bool AllowSplitting
+    {
+        get => _allowSplitting;
+        set
+        {
+            _allowSplitting = value;
+            foreach (var panel in _tabPanels)
+            {
+                panel.AllowSplitting = value;
+            }
+        }
+    }
 
     public EditorDocker()
     {
@@ -89,6 +103,7 @@ public partial class EditorDocker : Control
     private EditorTabPanel NewTabPanel(EditorPanel tab)
     {
         var tabPanel = new EditorTabPanel(this);
+        tabPanel.AllowSplitting = _allowSplitting;
         _tabPanels.Add(tabPanel);
         tabPanel.AddPanel(tab);
         return tabPanel;
@@ -191,6 +206,7 @@ internal sealed class EditorWindowDocker : EditorDocker
     public EditorWindowDocker(OSWindow window)
     {
         _window = window;
+        AllowSplitting = false;
     }
 
     protected override void LastTabPendingRemoval()

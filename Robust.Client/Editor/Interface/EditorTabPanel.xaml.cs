@@ -26,6 +26,8 @@ public partial class EditorTabPanel : Control
 
     private readonly List<PanelData> _panels = new();
 
+    public bool AllowSplitting { get; set; }
+
     public int PanelCount => _panels.Count;
 
     public EditorTabPanel(EditorDocker owner)
@@ -82,7 +84,7 @@ public partial class EditorTabPanel : Control
 
     public override void DragEnter(DragEnterEventArgs eventArgs)
     {
-        if (eventArgs.Operation is EditorTabDragDrop)
+        if (eventArgs.Operation is EditorTabDragDrop && AllowSplitting)
         {
             DropOverlay.Visible = true;
         }
@@ -98,7 +100,7 @@ public partial class EditorTabPanel : Control
 
     private void DropOverlayDragDropped(DragDropEventArgs eventArgs)
     {
-        if (eventArgs.Operation is not EditorTabDragDrop dragDrop)
+        if (eventArgs.Operation is not EditorTabDragDrop dragDrop || !AllowSplitting)
             return;
 
         var pos = eventArgs.RelativePosition;

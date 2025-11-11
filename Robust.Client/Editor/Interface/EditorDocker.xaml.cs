@@ -110,7 +110,7 @@ public partial class EditorDocker : Control
         }
         else if (parent is EditorDockerSplitter splitter)
         {
-            var sibling = splitter.Children.OfType<EditorTabPanel>().Single();
+            var sibling = splitter.Children.Single(x => x is EditorTabPanel or EditorDockerSplitter);
             sibling.Orphan();
 
             var grandParent = parent.Parent;

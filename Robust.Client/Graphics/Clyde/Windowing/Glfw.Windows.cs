@@ -289,7 +289,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (reg != null)
                 {
-                    reg.Owner = reg.Handle;
+                    reg.Owner = owner;
                     return (reg, null);
                 }
 

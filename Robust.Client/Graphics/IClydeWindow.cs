@@ -19,6 +19,7 @@ namespace Robust.Client.Graphics
         bool IsMinimized { get; }
         bool IsVisible { get; set; }
         Vector2 ContentScale { get; }
+        WindowId? Owner { get; }
 
         float Opacity { get; set; }
 

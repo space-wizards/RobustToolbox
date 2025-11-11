@@ -77,5 +77,14 @@ internal partial class Clyde
             Marshal.FreeCoTaskMem(newPropValString);
             Marshal.FreeCoTaskMem(propNameString);
         }
+
+        public static void SharedWindowFocused(Clyde clyde, WindowReg window)
+        {
+            var stampCounter = ++clyde._focusCounter;
+            for (var win = window; win != null; win = win.Owner)
+            {
+                win.LastFocusStamp = stampCounter;
+            }
+        }
     }
 }

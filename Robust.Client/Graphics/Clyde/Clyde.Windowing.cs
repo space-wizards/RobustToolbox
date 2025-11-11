@@ -509,7 +509,7 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsMinimized;
             public string Title = "";
             public bool IsVisible;
-            public IClydeWindow? Owner;
+            public WindowReg? Owner;
             public float Opacity;
 
             public bool DisposeOnClose;
@@ -570,6 +570,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2 ContentScale => Reg.WindowScale;
+            public WindowId? Owner => Reg.Owner?.Id;
 
             public float Opacity
             {

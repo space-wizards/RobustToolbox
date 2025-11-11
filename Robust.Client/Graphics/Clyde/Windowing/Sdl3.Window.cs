@@ -51,7 +51,7 @@ internal partial class Clyde
 #pragma warning restore RA0004
             if (result.Reg != null)
             {
-                result.Reg.Owner = result.Reg.Handle;
+                result.Reg.Owner = owner;
             }
 
             return (result.Reg, result.Error);

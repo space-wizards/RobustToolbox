@@ -582,6 +582,7 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsMinimized => false;
             public bool IsVisible { get; set; } = true;
             public Vector2 ContentScale => Vector2.One;
+            public WindowId? Owner => null;
             public float Opacity { get; set; }
             public bool DisposeOnClose { get; set; }
             public event Action<WindowRequestClosedEventArgs>? RequestClosed { add { } remove { } }

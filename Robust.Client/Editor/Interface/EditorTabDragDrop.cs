@@ -1,5 +1,7 @@
-﻿using Robust.Client.UserInterface;
+﻿using Robust.Client.Graphics;
+using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.Editor.Interface;
 
@@ -16,7 +18,8 @@ public sealed class EditorTabDragDrop : DragDropOperation
 
     public override void Drop()
     {
-        var window = new OSWindow();
+        var clyde = IoCManager.Resolve<IClyde>();
+        var window = new OSWindow { Owner = clyde.MainWindow };
         var docker = new EditorWindowDocker(window);
         docker.AddPanel(Panel);
         window.AddChild(docker);

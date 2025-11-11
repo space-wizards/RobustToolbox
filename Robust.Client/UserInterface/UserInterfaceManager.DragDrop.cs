@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Shared.Input;
@@ -257,10 +259,10 @@ internal sealed partial class UserInterfaceManager
         // Can this be broken? Yes. Do we care? No.
         // TODO: Handle owned windows which always overlap their parent.
 
-        var hitWindow = _clyde.AllWindows
+        var hitWindow = GetDepthSortedWindows()
             .Select(win =>
             {
-                var winInternal = (IClydeWindowInternal) win;
+                var winInternal = (IClydeWindowInternal)win;
                 var localCoords = globalCoords - winInternal.WindowPosition;
                 // System.Console.WriteLine($"Test window @ {winInternal.WindowPosition}: {localCoords} x { win.Id }");
                 return new { win = winInternal, localCoords };
@@ -275,7 +277,7 @@ internal sealed partial class UserInterfaceManager
 
                 return true;
             })
-            .MaxBy(obj => obj.win.LastFocusStamp);
+            .LastOrDefault();
 
         if (hitWindow == null)
         {
@@ -292,5 +294,66 @@ internal sealed partial class UserInterfaceManager
         None = 0,
         Detecting,
         Dragging
+    }
+
+    /// <summary>
+    /// Get all OS windows sorted from lowest to highest depth.
+    /// </summary>
+    /// <returns></returns>
+    private IClydeWindow[] GetDepthSortedWindows()
+    {
+        var windows = _clyde.AllWindows.ToArray();
+
+        // Radix sort the windows by owner.
+        var dictCounts = new Dictionary<WindowId, (int Index, int Count)>();
+        foreach (var window in windows)
+        {
+            ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                dictCounts,
+                window.Owner ?? WindowId.Invalid,
+                out _);
+
+            entry.Count += 1;
+        }
+
+        var totalCount = 0;
+        foreach (var (window, (_, count)) in dictCounts)
+        {
+            dictCounts[window] = (totalCount, count);
+            totalCount += 1;
+        }
+
+        var windowsSorted = new IClydeWindowInternal[windows.Length];
+        foreach (var window in windows)
+        {
+            ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                dictCounts,
+                window.Owner ?? WindowId.Invalid,
+                out _);
+
+            windowsSorted[entry.Index] = (IClydeWindowInternal) window;
+            entry.Index += 1;
+        }
+
+        var finalIdx = 0;
+        Recurse(WindowId.Invalid);
+
+        return windows;
+
+        void Recurse(WindowId ownerWindow)
+        {
+            if (!dictCounts.TryGetValue(ownerWindow, out var entry))
+                return;
+
+            var span = windowsSorted.AsSpan(entry.Index - entry.Count, entry.Count);
+            span.Sort((a, b) => a.LastFocusStamp.CompareTo(b.LastFocusStamp));
+
+            foreach (var window in span)
+            {
+                windows[finalIdx] = window;
+                finalIdx += 1;
+                Recurse(window.Id);
+            }
+        }
     }
 }

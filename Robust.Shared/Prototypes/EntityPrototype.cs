@@ -221,7 +221,7 @@ namespace Robust.Shared.Prototypes
                         continue;
 
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
-                    var compReg = factory.GetRegistration(name);
+                    var compReg = factory.GetRegistration(fullData);
                     EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, ctx);
 
                     if (!entry.Component.NetSyncEnabled && compReg.NetID is {} netId)
@@ -247,7 +247,7 @@ namespace Robust.Shared.Prototypes
                             $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
                     }
 
-                    var compReg = factory.GetRegistration(name);
+                    var compReg = factory.GetRegistration(data);
                     EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, ctx);
                 }
             }
@@ -264,7 +264,7 @@ namespace Robust.Shared.Prototypes
         {
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                var newComponent = factory.GetComponent(compName);
+                var newComponent = factory.GetComponent(compReg);
                 entityManager.AddComponent(entity, newComponent);
                 component = newComponent;
             }

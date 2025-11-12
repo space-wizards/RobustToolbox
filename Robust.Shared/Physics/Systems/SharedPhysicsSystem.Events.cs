@@ -7,6 +7,9 @@ public abstract partial class SharedPhysicsSystem
         // This will raise events even if the contact is gone which is fine I think
         // because otherwise we may get issues with events not getting raised in some cases.
 
+        // Swap the end index over so new events happen next tick.
+        _endEventIndex = 1 - _endEventIndex;
+
         // Raises all the buffered events once physics step is done.
         foreach (var ev in _startCollideEvents)
         {
@@ -14,14 +17,14 @@ public abstract partial class SharedPhysicsSystem
             RaiseLocalEvent(ev.OurEntity, ref elem);
         }
 
-        foreach (var ev in _endCollideEvents[_endEventIndex])
+        _startCollideEvents.Clear();
+
+        foreach (var ev in _endCollideEvents[1 - _endEventIndex])
         {
             var elem = ev;
             RaiseLocalEvent(ev.OurEntity, ref elem);
         }
-
-        _endEventIndex = 1 - _endEventIndex;
-        _startCollideEvents.Clear();
-        _endCollideEvents[_endEventIndex].Clear();
+        
+        _endCollideEvents[1 - _endEventIndex].Clear();
     }
 }

@@ -187,10 +187,6 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<Robust.Client.GameObjects.PointLightComponent>();
                 compFactory.RegisterClass<SpriteComponent>();
             }
-            else
-            {
-                compFactory.RegisterClass<Robust.Server.GameObjects.PointLightComponent>();
-            }
 
             deps.Resolve<IParallelManagerInternal>().Initialize();
 

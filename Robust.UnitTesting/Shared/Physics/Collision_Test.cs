@@ -30,6 +30,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Server;
 
@@ -38,6 +39,57 @@ namespace Robust.UnitTesting.Shared.Physics;
 [TestFixture]
 public sealed class Collision_Test
 {
+    /// <summary>
+    /// Asserts that collision events even go out.
+    /// </summary>
+    [Test]
+    public void CollisionEvents()
+    {
+        var sim = RobustServerSimulation.NewSimulation()
+            .RegisterEntitySystems(fac =>
+            {
+                fac.LoadExtraSystemType<CollisionSubSystem>();
+            })
+            .RegisterComponents(fac =>
+            {
+                fac.RegisterClass<CollisionSubComponent>();
+            })
+            .InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+
+        var broadphase = entManager.System<SharedBroadphaseSystem>();
+        var fixtures = entManager.System<FixtureSystem>();
+        var physics = entManager.System<SharedPhysicsSystem>();
+        var sub = entManager.System<CollisionSubSystem>();
+
+        var map = sim.CreateMap();
+
+        var bodyAUid = entManager.SpawnAttachedTo(null, new EntityCoordinates(map.Uid, Vector2.Zero));
+        var bodyBUid = entManager.SpawnAttachedTo(null, new EntityCoordinates(map.Uid, Vector2.Zero));
+        var bodyA = entManager.AddComponent<PhysicsComponent>(bodyAUid);
+        var bodyB = entManager.AddComponent<PhysicsComponent>(bodyBUid);
+        entManager.AddComponent<CollisionSubComponent>(bodyAUid);
+        physics.SetBodyType(bodyAUid, BodyType.Dynamic);
+        physics.SetBodyType(bodyBUid, BodyType.Dynamic);
+
+        fixtures.CreateFixture(bodyAUid, "fix1", new Fixture(new PhysShapeCircle(0.5f), 1, 1, true));
+        fixtures.CreateFixture(bodyBUid, "fix1", new Fixture(new PhysShapeCircle(0.5f), 1, 1, true));
+
+        physics.SetCanCollide(bodyAUid, true, body: bodyA);
+        physics.SetCanCollide(bodyBUid, true, body: bodyB);
+        physics.WakeBody(bodyAUid);
+
+        Assert.That(physics.IsHardCollidable(bodyAUid, bodyBUid));
+        broadphase.FindNewContacts();
+
+        Assert.That(bodyA.ContactCount, Is.EqualTo(1));
+        Assert.That(bodyB.ContactCount, Is.EqualTo(1));
+
+        physics.Update(0.016f);
+        Assert.That(sub._counter, Is.GreaterThan(0));
+    }
+
     [Test]
     public void TestHardCollidable()
     {
@@ -156,4 +208,26 @@ public sealed class Collision_Test
 
         Assert.That(body1.ContactCount == 0 && body2.ContactCount == 0);
     }
+}
+
+internal sealed class CollisionSubSystem : EntitySystem
+{
+    public int _counter;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<CollisionSubComponent, StartCollideEvent>(OnStartCollide);
+    }
+
+    private void OnStartCollide(Entity<CollisionSubComponent> ent, ref StartCollideEvent args)
+    {
+        _counter++;
+        return;
+    }
+}
+
+internal sealed partial class CollisionSubComponent : Component
+{
+
 }

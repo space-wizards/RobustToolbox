@@ -43,7 +43,7 @@ namespace Robust.Shared.Maths
         [FieldOffset(sizeof(float) * 2)] public Vector2 TopRight;
 
         [NonSerialized]
-        [FieldOffset(sizeof(float) * 0)] public System.Numerics.Vector4 AsVector4;
+        [FieldOffset(sizeof(float) * 0)] public Vector4 AsVector4;
 
         public readonly Vector2 BottomRight
         {
@@ -87,7 +87,7 @@ namespace Robust.Shared.Maths
         public readonly Vector2 Center
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => BottomLeft + Size * .5f;
+            get => (BottomLeft + TopRight) * .5f;
         }
 
         public readonly Vector2 Extents
@@ -503,7 +503,7 @@ namespace Robust.Shared.Maths
             return new Vector2(cx, cy);
         }
 
-        public bool EqualsApprox(Box2 other)
+        public readonly bool EqualsApprox(Box2 other)
         {
             return MathHelper.CloseToPercent(Left, other.Left)
                    && MathHelper.CloseToPercent(Bottom, other.Bottom)
@@ -511,7 +511,7 @@ namespace Robust.Shared.Maths
                    && MathHelper.CloseToPercent(Top, other.Top);
         }
 
-        public bool EqualsApprox(Box2 other, double tolerance)
+        public readonly bool EqualsApprox(Box2 other, double tolerance)
         {
             return MathHelper.CloseToPercent(Left, other.Left, tolerance)
                    && MathHelper.CloseToPercent(Bottom, other.Bottom, tolerance)

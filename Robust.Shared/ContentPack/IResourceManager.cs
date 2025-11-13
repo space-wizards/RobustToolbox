@@ -139,6 +139,7 @@ namespace Robust.Shared.ContentPack
         ///     Returns a list of paths to all top-level content directories
         /// </summary>
         /// <returns></returns>
+        [Obsolete("This API is no longer content-accessible")]
         IEnumerable<ResPath> GetContentRoots();
 
         /// <summary>

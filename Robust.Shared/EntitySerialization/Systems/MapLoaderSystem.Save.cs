@@ -47,12 +47,7 @@ public sealed partial class MapLoaderSystem
 
         var serializer = new EntitySerializer(_dependency, opts);
         serializer.OnIsSerializeable += OnIsSerializable;
-
-        foreach (var ent in entities)
-        {
-            serializer.SerializeEntityRecursive(ent);
-        }
-
+        serializer.SerializeEntityRecursive(entities);
         var data = serializer.Write();
         var cat = serializer.GetCategory();
 

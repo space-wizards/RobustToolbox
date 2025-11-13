@@ -43,9 +43,9 @@ internal abstract partial class ViewVariablesManager
 
     private (ViewVariablesPath? Path, string[] Segments) ResolveIoCObject(string path)
     {
-        var empty = (new ViewVariablesInstancePath(IoCManager.Instance), Array.Empty<string>());
+        var empty = (new ViewVariablesInstancePath(_deps), Array.Empty<string>());
 
-        if (string.IsNullOrEmpty(path) || IoCManager.Instance == null)
+        if (string.IsNullOrEmpty(path))
             return empty;
 
         var segments = path.Split('/');
@@ -58,24 +58,24 @@ internal abstract partial class ViewVariablesManager
         if (!_reflectionMan.TryLooseGetType(service, out var type))
             return EmptyResolve;
 
-        return IoCManager.Instance.TryResolveType(type, out var obj)
+        return _deps.TryResolveType(type, out var obj)
             ? (new ViewVariablesInstancePath(obj), segments[1..])
             : EmptyResolve;
     }
 
     private IEnumerable<string>? ListIoCPaths(string[] segments)
     {
-        if (segments.Length > 1 || IoCManager.Instance is not {} deps)
+        if (segments.Length > 1)
             return null;
 
         if (segments.Length == 1
             && _reflectionMan.TryLooseGetType(segments[0], out var type)
-            && deps.TryResolveType(type, out _))
+            && _deps.TryResolveType(type, out _))
         {
             return null;
         }
 
-        return deps.GetRegisteredTypes()
+        return _deps.GetRegisteredTypes()
             .Select(t => t.Name);
     }
 
@@ -161,7 +161,7 @@ internal abstract partial class ViewVariablesManager
     {
         var empty = (new ViewVariablesInstancePath(_protoMan), Array.Empty<string>());
 
-        if (string.IsNullOrEmpty(path) || IoCManager.Instance == null)
+        if (string.IsNullOrEmpty(path))
             return empty;
 
         var segments = path.Split('/');

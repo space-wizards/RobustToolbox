@@ -39,12 +39,13 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `IReplayFileWriter.WriteYaml()`, for writing yaml documents to a replay zip file.
 
 ### Bugfixes
 
-*None yet*
-
+* `ActorComponent` now has the `UnsavedComponentAttribute`
+  * Previously it was unintentionally get serialized to yaml, which could result in NREs when deserializing.
+  
 ### Other
 
 *None yet*

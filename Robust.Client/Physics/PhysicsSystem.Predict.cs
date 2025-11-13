@@ -106,6 +106,7 @@ public sealed partial class PhysicsSystem
         }
 
         UpdateIsTouching(contacts);
+        DispatchEvents();
     }
 
     /// <summary>

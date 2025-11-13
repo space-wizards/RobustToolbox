@@ -50,6 +50,7 @@ namespace Robust.Shared.IoC
         /// <remarks>
         /// This property will be null if <see cref="InitThread()"/> has not been called on this thread yet.
         /// </remarks>
+        [Obsolete("Resolve the IDependencyCollection directly without static methods (e.g., with a [Dependency] IDependencyCollection field)")]
         public static IDependencyCollection? Instance => _container.IsValueCreated ? _container.Value : null;
 
         /// <summary>
@@ -102,6 +103,7 @@ namespace Robust.Shared.IoC
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
         /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
+        [Obsolete("Use an IDependencyCollection instance instead of static methods")]
         public static void Register<TInterface, [MeansImplicitUse] TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface
             where TInterface : class
@@ -123,6 +125,7 @@ namespace Robust.Shared.IoC
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="T"/> has been registered before,
         /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
+        [Obsolete("Use an IDependencyCollection instance instead of static methods")]
         public static void Register<[MeansImplicitUse] T>(bool overwrite = false) where T : class
         {
             Register<T, T>(overwrite);
@@ -143,6 +146,7 @@ namespace Robust.Shared.IoC
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
         /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
+        [Obsolete("Use an IDependencyCollection instance instead of static methods")]
         public static void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
             where TImplementation : class, TInterface
             where TInterface : class
@@ -165,6 +169,7 @@ namespace Robust.Shared.IoC
         ///     If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
         ///     replace the current implementation instead.
         /// </param>
+        [Obsolete("Use an IDependencyCollection instance instead of static methods")]
         public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
             where TInterface : class
         {
@@ -193,6 +198,7 @@ namespace Robust.Shared.IoC
         /// because the object graph still needs to be constructed for it.
         /// </exception>
         [System.Diagnostics.Contracts.Pure]
+        [Obsolete("Use dependency injection or an IDependencyCollection instance instead of static methods")]
         public static T Resolve<T>()
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
@@ -202,6 +208,7 @@ namespace Robust.Shared.IoC
 
         /// <inheritdoc cref="Resolve{T}()"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Obsolete("Use dependency injection or an IDependencyCollection instance instead of static methods")]
         public static void Resolve<T>([NotNull] ref T? instance)
         {
             // Do not call into IDependencyCollection immediately for this,
@@ -214,6 +221,7 @@ namespace Robust.Shared.IoC
         /// Resolve two dependencies manually.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Obsolete("Use dependency injection or an IDependencyCollection instance instead of static methods")]
         public static void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
@@ -226,6 +234,7 @@ namespace Robust.Shared.IoC
         /// Resolve three dependencies manually.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Obsolete("Use dependency injection or an IDependencyCollection instance instead of static methods")]
         public static void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
@@ -238,6 +247,7 @@ namespace Robust.Shared.IoC
         /// Resolve four dependencies manually.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Obsolete("Use dependency injection or an IDependencyCollection instance instead of static methods")]
         public static void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
@@ -254,6 +264,7 @@ namespace Robust.Shared.IoC
         /// because the object graph still needs to be constructed for it.
         /// </exception>
         [System.Diagnostics.Contracts.Pure]
+        [Obsolete("Use dependency injection or an IDependencyCollection instance instead of static methods")]
         public static object ResolveType(Type type)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
@@ -284,6 +295,7 @@ namespace Robust.Shared.IoC
         ///     Thrown if a dependency field on the object is not registered.
         /// </exception>
         /// <seealso cref="BuildGraph"/>
+        [Obsolete("Use an IDependencyCollection instance instead of static methods")]
         public static T InjectDependencies<T>(T obj) where T : notnull
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);

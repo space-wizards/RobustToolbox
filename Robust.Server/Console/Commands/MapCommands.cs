@@ -402,11 +402,16 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            var flush = false;
+            if (args.Length == 2)
+                bool.TryParse(args[1], out flush);
+
             shell.WriteLine(Loc.GetString("cmd-loadgame-attempt", ("path", args[0])));
 
-            // TODO SAVE make a new manager for this
-            _entMan.FlushEntities();
-            bool loadSuccess = _system.GetEntitySystem<MapLoaderSystem>().TryLoadGame(new ResPath(args[0]));
+            if (flush)
+                _entMan.FlushEntities();
+
+            bool loadSuccess = _system.GetEntitySystem<GameSavesSystem>().TryLoadGame(new ResPath(args[0]));
             if(loadSuccess)
             {
                 shell.WriteLine(Loc.GetString("cmd-loadgame-success"));

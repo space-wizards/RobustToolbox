@@ -41,7 +41,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `IUserInterfaceManager.ControlSawmill` and `Control.Log` properties so that controls can easily use logging without using static methods.
 
 ### Bugfixes
 

@@ -81,14 +81,14 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected readonly HashSet<EntityUid> Entities = new();
 
-        private EntityEventBus _eventBus = null!;
+        internal EntityEventBus EventBusInternal = null!;
 
         protected int NextEntityUid = (int) EntityUid.FirstUid;
 
         protected int NextNetworkId = (int) NetEntity.First;
 
         /// <inheritdoc />
-        public IEventBus EventBus => _eventBus;
+        public IEventBus EventBus => EventBusInternal;
 
         public event Action<Entity<MetaDataComponent>>? EntityAdded;
         public event Action<Entity<MetaDataComponent>>? EntityInitialized;
@@ -142,7 +142,7 @@ namespace Robust.Shared.GameObjects
             if (Initialized)
                 throw new InvalidOperationException("Initialize() called multiple times");
 
-            _eventBus = new EntityEventBus(this, _reflection);
+            EventBusInternal = new EntityEventBus(this, _reflection);
 
             InitializeComponents();
             _metaReg = _componentFactory.GetRegistration(typeof(MetaDataComponent));
@@ -233,7 +233,7 @@ namespace Robust.Shared.GameObjects
             // TODO: Probably better to call this on its own given it's so infrequent.
             _entitySystemManager.Initialize();
             Started = true;
-            _eventBus.LockSubscriptions();
+            EventBusInternal.LockSubscriptions();
             _mapSystem = System<SharedMapSystem>();
             _xforms = System<SharedTransformSystem>();
             _containers = System<SharedContainerSystem>();
@@ -248,7 +248,7 @@ namespace Robust.Shared.GameObjects
         {
             ShuttingDown = true;
             FlushEntities();
-            _eventBus.ClearSubscriptions();
+            EventBusInternal.ClearSubscriptions();
             _entitySystemManager.Shutdown();
             ClearComponents();
             ShuttingDown = false;
@@ -262,8 +262,8 @@ namespace Robust.Shared.GameObjects
             ShuttingDown = true;
             FlushEntities();
             _entitySystemManager.Clear();
-            _eventBus.Dispose();
-            _eventBus = null!;
+            EventBusInternal.Dispose();
+            EventBusInternal = null!;
             ClearComponents();
 
             ShuttingDown = false;
@@ -282,7 +282,7 @@ namespace Robust.Shared.GameObjects
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
             using (_prof.Group("Events"))
             {
-                _eventBus.ProcessEventQueue();
+                EventBusInternal.ProcessEventQueue();
             }
 
             using (histogram?.WithLabels("QueuedDeletion").NewTimer())
@@ -604,7 +604,7 @@ namespace Robust.Shared.GameObjects
             {
                 var ev = new EntityTerminatingEvent((uid, metadata));
                 BeforeEntityTerminating?.Invoke(ref ev);
-                EventBus.RaiseLocalEvent(uid, ref ev, true);
+                EventBusInternal.RaiseLocalEvent(uid, ref ev, true);
             }
             catch (Exception e)
             {
@@ -698,7 +698,7 @@ namespace Robust.Shared.GameObjects
 #endif
             }
 
-            _eventBus.OnEntityDeleted(uid);
+            EventBusInternal.OnEntityDeleted(uid);
             Entities.Remove(uid);
             // Need to get the ID above before MetadataComponent shutdown but only remove it after everything else is done.
             NetEntityLookup.Remove(metadata.NetEntity);
@@ -932,7 +932,7 @@ namespace Robust.Shared.GameObjects
 
             // we want this called before adding components
             EntityAdded?.Invoke((uid, metadata));
-            _eventBus.OnEntityAdded(uid);
+            EventBusInternal.OnEntityAdded(uid);
 
             Entities.Add(uid);
             // add the required MetaDataComponent directly.
@@ -1049,7 +1049,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized, $"Expected entity {ToPrettyString(entity)} to be initialized, was {meta.EntityLifeStage}");
             SetLifeStage(meta, EntityLifeStage.MapInitialized);
 
-            EventBus.RaiseLocalEvent(entity, MapInitEventInstance);
+            EventBusInternal.RaiseLocalEvent(entity, MapInitEventInstance);
         }
 
         /// <inheritdoc />

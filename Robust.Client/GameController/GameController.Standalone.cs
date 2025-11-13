@@ -15,6 +15,7 @@ namespace Robust.Client
     internal partial class GameController : IPostInjectInit
     {
         private IGameLoop? _mainLoop;
+        private bool _dontStart;
 
         [Dependency] private readonly IClientGameTiming _gameTiming = default!;
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
@@ -162,8 +163,11 @@ namespace Robust.Client
                 return;
             }
 
-            DebugTools.AssertNotNull(_mainLoop);
-            _mainLoop!.Run();
+            if (!_dontStart)
+            {
+                DebugTools.AssertNotNull(_mainLoop);
+                _mainLoop!.Run();
+            }
 
             CleanupGameThread();
         }

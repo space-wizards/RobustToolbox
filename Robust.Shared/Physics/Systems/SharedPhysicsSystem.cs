@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -50,6 +51,25 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] private readonly CollisionWakeSystem _wakeSystem = default!;
+
+        /*
+         * Events
+         */
+
+        // Buffer events to avoid enumeration issues.
+
+        private readonly List<StartCollideEvent> _startCollideEvents = new();
+
+        // Double-buffer end-collide events like box2d-v3 because we can raise these while destroying contacts
+        // whereas with start events they only ever get made during the collision step.
+        private readonly List<EndCollideEvent>[]
+            _endCollideEvents =
+            [
+                new List<EndCollideEvent>(),
+                new List<EndCollideEvent>()
+            ];
+
+        private int _endEventIndex = 0;
 
         private int _substeps;
 
@@ -302,6 +322,8 @@ namespace Robust.Shared.Physics.Systems
                 CollideContacts();
 
                 Step(frameTime, prediction);
+
+                DispatchEvents();
 
                 var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
                 RaiseLocalEvent(ref updateAfterSolve);

@@ -2,6 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
@@ -17,6 +20,7 @@ public sealed class XamlProxyManager: IXamlProxyManager
     ISawmill _sawmill = null!;
     [Dependency] IReflectionManager _reflectionManager = null!;
     [Dependency] ILogManager _logManager = null!;
+    [Dependency] private readonly IConfigurationManager _cfg = null!;
 
     XamlImplementationStorage _xamlImplementationStorage = null!;
 
@@ -31,8 +35,21 @@ public sealed class XamlProxyManager: IXamlProxyManager
         _sawmill = _logManager.GetSawmill("xamlhotreload");
         _xamlImplementationStorage = new XamlImplementationStorage(_sawmill, Compile);
 
-        AddAssemblies();
+        var preload = _cfg.GetCVar(CVars.UIXamlJitPreload);
+
+        AddAssemblies(reload: preload);
         _reflectionManager.OnAssemblyAdded += (_, _) => { AddAssemblies(); };
+
+        if (!preload)
+        {
+            // Compile any type at all on another thread, so we don't hold up main thread init with loading
+            // the entire XAML compiler machinery.
+            // In my testing, it took like 0.5s on debug to run the first XAML compile. Yeah.
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                _xamlImplementationStorage.CompileType(UserInterfaceManager.XamlHotReloadWarmupType);
+            });
+        }
     }
 
     /// <summary>
@@ -61,7 +78,7 @@ public sealed class XamlProxyManager: IXamlProxyManager
     /// Add all the types from all known assemblies, then force-JIT everything
     /// again.
     /// </summary>
-    private void AddAssemblies()
+    private void AddAssemblies(bool reload = true)
     {
         foreach (var a in _reflectionManager.Assemblies)
         {
@@ -74,8 +91,8 @@ public sealed class XamlProxyManager: IXamlProxyManager
             }
         }
 
-        // Always use the JITed versions on debug builds
-        _xamlImplementationStorage.ForceReloadAll();
+        if (reload)
+            _xamlImplementationStorage.ForceReloadAll();
     }
 
     /// <summary>

@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 267.4.0
+
+### New features
+
 * Added two new custom yaml serializers `CustomListSerializer` and `CustomArraySerializer`.
 * CVars defined in `[CVarDefs]` can now be private or internal.
 * Added config rollback system to `IConfigurationManager`. This enables CVars to be snapshot and rolled back, even in the event of client crash.
@@ -47,6 +66,10 @@ END TEMPLATE-->
 * Sandbox:
   * Exposed `System.Reflection.Metadata.MetadataUpdateHandlerAttribute`.
   * Exposed more overloads on `StringBuilder`.
+* The engine can now load system fonts.
+  * At the moment only available on Windows.
+  * See `ISystemFontManager` for API.
+* The client now display a loading screen during startup.
 
 ### Bugfixes
 
@@ -60,7 +83,9 @@ END TEMPLATE-->
 
 * ComponentNameSerializer will now ignore any components that have been ignored via `IComponentFactory.RegisterIgnore`.
 * Add pure to some SharedTransformSystem methods.
+* Significantly optimised collision detection in SharedBroadphaseSystem.
 * `Control.Stylesheet` does not do any work if assigning the value it already has.
+* XAML hot reload now JITs UIs when first opened rather than doing every single one at client startup. This reduces dev startup overhead significantly and probably helps with memory usage too.
 
 ### Internal
 

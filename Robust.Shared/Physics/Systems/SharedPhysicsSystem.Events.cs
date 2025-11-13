@@ -24,7 +24,7 @@ public abstract partial class SharedPhysicsSystem
             var elem = ev;
             RaiseLocalEvent(ev.OurEntity, ref elem);
         }
-        
+
         _endCollideEvents[1 - _endEventIndex].Clear();
     }
 }

@@ -37,7 +37,7 @@ using Robust.UnitTesting.Server;
 namespace Robust.UnitTesting.Shared.Physics;
 
 [TestFixture]
-public sealed class Collision_Test
+public sealed partial class Collision_Test
 {
     /// <summary>
     /// Asserts that collision events even go out.
@@ -88,6 +88,28 @@ public sealed class Collision_Test
 
         physics.Update(0.016f);
         Assert.That(sub._counter, Is.GreaterThan(0));
+    }
+
+    private sealed class CollisionSubSystem : EntitySystem
+    {
+        public int _counter;
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            SubscribeLocalEvent<CollisionSubComponent, StartCollideEvent>(OnStartCollide);
+        }
+
+        private void OnStartCollide(Entity<CollisionSubComponent> ent, ref StartCollideEvent args)
+        {
+            _counter++;
+            return;
+        }
+    }
+
+    private sealed partial class CollisionSubComponent : Component
+    {
+
     }
 
     [Test]
@@ -208,26 +230,4 @@ public sealed class Collision_Test
 
         Assert.That(body1.ContactCount == 0 && body2.ContactCount == 0);
     }
-}
-
-internal sealed class CollisionSubSystem : EntitySystem
-{
-    public int _counter;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<CollisionSubComponent, StartCollideEvent>(OnStartCollide);
-    }
-
-    private void OnStartCollide(Entity<CollisionSubComponent> ent, ref StartCollideEvent args)
-    {
-        _counter++;
-        return;
-    }
-}
-
-internal sealed partial class CollisionSubComponent : Component
-{
-
 }

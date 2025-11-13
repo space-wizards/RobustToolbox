@@ -122,7 +122,7 @@ public sealed class EntityLookupOverlay : Overlay
                 var lookupPos = Vector2.Transform(entPos, invMatrix);
                 var lookupRot = entRot - rotation;
 
-                var aabb = _lookup.GetAABB(ent, lookupPos, lookupRot, xform, _xformQuery);
+                var aabb = _lookup.GetAABB(ent, lookupPos, lookupRot, xform);
 
                 worldHandle.DrawRect(aabb, Color.Blue.WithAlpha(0.2f));
             }

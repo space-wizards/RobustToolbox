@@ -48,6 +48,9 @@ internal sealed partial class PvsSystem
         {
             var source = i >= 0 ? _sessions[i].Session.ToString() : "replays";
             Log.Log(LogLevel.Error, e, $"Caught exception while serializing game state for {source}.");
+#if !EXCEPTION_TOLERANCE
+            throw;
+#endif
         }
     }
 

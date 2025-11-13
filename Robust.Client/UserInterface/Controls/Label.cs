@@ -27,6 +27,7 @@ namespace Robust.Client.UserInterface.Controls
         private ReadOnlyMemory<char> _textMemory;
         private bool _clipText;
         private AlignMode _align;
+        private Font? _fontOverride;
 
         public Label()
         {
@@ -106,7 +107,16 @@ namespace Robust.Client.UserInterface.Controls
 
         [ViewVariables] public VAlignMode VAlign { get; set; }
 
-        public Font? FontOverride { get; set; }
+        public Font? FontOverride
+        {
+            get => _fontOverride;
+            set
+            {
+                _fontOverride = value;
+                _textDimensionCacheValid = false;
+                InvalidateMeasure();
+            }
+        }
 
         private Font ActualFont
         {

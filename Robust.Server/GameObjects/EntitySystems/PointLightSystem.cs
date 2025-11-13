@@ -8,12 +8,14 @@ namespace Robust.Server.GameObjects;
 
 public sealed class PointLightSystem : SharedPointLightSystem
 {
+    [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly MetaDataSystem _metadata = default!;
 
     public override void Initialize()
     {
         base.Initialize();
         SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
+        //SubscribeLocalEvent<PointLightComponent, EntInsertedIntoContainerMessage>(OnInserted);
         SubscribeLocalEvent<PointLightComponent, EntGotInsertedIntoContainerMessage>(OnInserted);
         SubscribeLocalEvent<PointLightComponent, EntGotRemovedFromContainerMessage>(OnRemoved);
         // SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
@@ -32,6 +34,7 @@ public sealed class PointLightSystem : SharedPointLightSystem
             args.ToRemove &= ~MetaDataFlags.PvsPriority;
     }
 
+
     private bool IsHighPriority(SharedPointLightComponent comp)
     {
         return comp is { Enabled: true, CastShadows: true, Radius: > 7, LifeStage: <= ComponentLifeStage.Running };
@@ -39,12 +42,12 @@ public sealed class PointLightSystem : SharedPointLightSystem
 
     private void OnInserted(EntityUid uid, PointLightComponent component, EntGotInsertedIntoContainerMessage args)
     {
-        SetContainerOccluded(uid, args.Container.OccludesLight, component);
+        SetContainerOccluded(uid, IsContainerOrParentOccluder(args.Container), component);
     }
 
     private void OnRemoved(EntityUid uid, PointLightComponent component, EntGotRemovedFromContainerMessage args)
     {
-        SetContainerOccluded(uid, false, component);
+        SetContainerOccluded(uid, IsContainerOrParentOccluder(args.Container), component);
     }
 
     private void OnLightGetState(EntityUid uid, PointLightComponent component, ref ComponentGetState args)
@@ -98,5 +101,21 @@ public sealed class PointLightSystem : SharedPointLightSystem
     public override bool RemoveLightDeferred(EntityUid uid)
     {
         return RemCompDeferred<PointLightComponent>(uid);
+    }
+
+    /// <summary>
+    /// Recursively check if a container or any parent container occludes light.
+    /// This is probably a terribly unoptimized way to get the occlusion right
+    /// </summary>
+    /// <returns>True if any container should block light.</returns>
+    private bool IsContainerOrParentOccluder(BaseContainer container)
+    {
+        if (container.OccludesLight)
+            return true;
+        
+        if (!_container.TryGetContainingContainer(container.Owner, out var nextContainer))
+            return false;
+
+        return IsContainerOrParentOccluder(nextContainer);
     }
 }

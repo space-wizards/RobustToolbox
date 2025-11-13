@@ -319,6 +319,7 @@ namespace Robust.UnitTesting.Server
             var entitySystemMan = container.Resolve<IEntitySystemManager>();
 
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<RayCastSystem>();
             entitySystemMan.LoadExtraSystemType<SharedGridTraversalSystem>();
             entitySystemMan.LoadExtraSystemType<ContainerSystem>();
             entitySystemMan.LoadExtraSystemType<JointSystem>();

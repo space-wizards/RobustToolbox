@@ -23,9 +23,9 @@ public sealed class GameSavesSystem : EntitySystem
     [Dependency] private readonly MapLoaderSystem _mapLoader = default!;
 
     /// <summary>
-    /// File extension that represents a ZSTD compressed YAML file with a singe mapping data node.
+    /// File extension that represents a ZSTD compressed YAML file with a single mapping data node.
     /// </summary>
-    public const string SaveFileFormat = ".rtsave";
+    public const string Extension = ".rtsave";
 
     private bool _enabled;
 
@@ -33,7 +33,7 @@ public sealed class GameSavesSystem : EntitySystem
     {
         base.Initialize();
         _zstdContext = new ZStdCompressionContext();
-        _zstdContext.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, _config.GetCVar(CVars.NetPvsCompressLevel));
+        _zstdContext.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, _config.GetCVar(CVars.GameSavesCompressLevel));
         Subs.CVar(_config, CVars.GameSavesEnabled, value => _enabled = value, true);
     }
 
@@ -72,10 +72,10 @@ public sealed class GameSavesSystem : EntitySystem
     private ZStdCompressionContext _zstdContext = default!;
 
     /// <summary>
-    /// Compresses a YAML data node using ZST
+    /// Compresses a YAML data node using ZSTD compression.
     /// </summary>
-    /// <param name="path"></param>
-    /// <param name="data"></param>
+    /// <param name="path">Path to a file without a file extension</param>
+    /// <param name="data">Mapping data node to compress in the specified path.</param>
     private void WriteCompressedZstd(ResPath path, MappingDataNode data)
     {
         var uncompressedStream = new MemoryStream();
@@ -100,7 +100,7 @@ public sealed class GameSavesSystem : EntitySystem
                 buf.AsSpan(4, bound),
                 poolData.AsSpan(0, uncompressed.Length));
 
-            var filePath = Path.Combine(_resourceManager.UserData.RootDir, path.Filename);
+            var filePath = Path.Combine(_resourceManager.UserData.RootDir, path.Filename + Extension);
             File.WriteAllBytes(filePath, buf);
         }
         finally
@@ -131,7 +131,7 @@ public sealed class GameSavesSystem : EntitySystem
         while (decompressedStream.Position < decompressedStream.Length)
         {
             _serializer.DeserializeDirect<string>(decompressedStream, out var yml);
-            if (! TryParseMappingNode(yml, out var node))
+            if (!TryParseMappingNode(yml, out var node))
                 return false;
 
             data = node;

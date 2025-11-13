@@ -1,5 +1,7 @@
 using System.Linq;
 using System.Numerics;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.EntitySerialization;
@@ -340,6 +342,7 @@ namespace Robust.Server.Console.Commands
     {
         [Dependency] private readonly IEntitySystemManager _system = default!;
         [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private readonly IConfigurationManager _config = default!;
 
         public override string Command => "savegame";
 
@@ -350,12 +353,20 @@ namespace Robust.Server.Console.Commands
                 case 1:
                     var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+                case 2:
+                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-force"));
             }
             return CompletionResult.Empty;
         }
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+            if (!_config.GetCVar(CVars.GameSavesEnabled))
+            {
+                shell.WriteLine(Loc.GetString("cmd-savegame-disabled"));
+                return;
+            }
+
             if (args.Length < 1)
             {
                 shell.WriteLine(Help);
@@ -380,6 +391,7 @@ namespace Robust.Server.Console.Commands
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly IEntitySystemManager _system = default!;
         [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private readonly IConfigurationManager _config = default!;
 
         public override string Command => "loadgame";
 
@@ -390,12 +402,20 @@ namespace Robust.Server.Console.Commands
                 case 1:
                     var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+                case 2:
+                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-force"));
             }
             return CompletionResult.Empty;
         }
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+            if (!_config.GetCVar(CVars.GameSavesEnabled))
+            {
+                shell.WriteLine(Loc.GetString("cmd-savegame-disabled"));
+                return;
+            }
+
             if (args.Length < 1)
             {
                 shell.WriteLine(Help);
@@ -403,8 +423,11 @@ namespace Robust.Server.Console.Commands
             }
 
             var flush = false;
-            if (args.Length == 2)
-                bool.TryParse(args[1], out flush);
+            if (args.Length == 2 && !bool.TryParse(args[1], out flush))
+            {
+                shell.WriteError(Loc.GetString("cmd-parse-failure-bool", ("arg", args[1])));
+                return;
+            }
 
             shell.WriteLine(Loc.GetString("cmd-loadgame-attempt", ("path", args[0])));
 

@@ -80,7 +80,7 @@ public sealed partial class MapLoaderSystem
         return TryLoadGeneric(data, file.ToString(), out result, options);
     }
 
-    private bool TryLoadGeneric(
+    public bool TryLoadGeneric(
         MappingDataNode data,
         string fileName,
         [NotNullWhen(true)] out LoadResult? result,

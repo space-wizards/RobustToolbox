@@ -180,12 +180,14 @@ cmd-savegame-help = savegame <Path>
 cmd-savegame-attempt = Attempting to save full game state to {$path}.
 cmd-savegame-success = Game state successfully saved.
 cmd-savegame-error = Could not save the game state! See server log for details.
+cmd-savegame-disabled = Game saves are disabled on this server.
 
 cmd-loadgame-desc = Loads a full game state from disk into the game. Flushes all existing entities
 cmd-loadgame-help = loadgame <Path>
 cmd-loadgame-attempt = Attempting to load full game state from {$path}.
 cmd-loadgame-success = Game state successfully loaded.
 cmd-loadgame-error = Could not load the game state! See server log for details.
+cmd-loadgame-disabled = Game saves are disabled on this server.
 
 cmd-hint-savebp-id = <Grid EntityID>
 

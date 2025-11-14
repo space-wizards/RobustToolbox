@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using Robust.Client.Audio;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.ResourceManagement;
@@ -16,7 +17,6 @@ namespace Robust.Client.ResourceManagement;
 /// </summary>
 internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
 {
-    [Shared.IoC.Dependency] private readonly IDependencyCollection _deps = default!;
     private readonly Dictionary<Type, TypeData> _cachedResources = new();
     private readonly Dictionary<Type, BaseResource> _fallbacks = new();
 
@@ -36,7 +36,8 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         var resource = new T();
         try
         {
-            resource.Load(_deps, path);
+            var dependencies = IoCManager.Instance!;
+            resource.Load(dependencies, path);
             cache.Resources[path] = resource;
             return resource;
         }
@@ -80,7 +81,8 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         var _resource = new T();
         try
         {
-            _resource.Load(_deps, path);
+            var dependencies = IoCManager.Instance!;
+            _resource.Load(dependencies, path);
             resource = _resource;
             cache.Resources[path] = resource;
             return true;
@@ -121,7 +123,8 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
 
         try
         {
-            res.Reload(_deps, path);
+            var dependencies = IoCManager.Instance!;
+            res.Reload(dependencies, path);
         }
         catch (Exception e)
         {

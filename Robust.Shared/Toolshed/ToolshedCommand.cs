@@ -70,6 +70,9 @@ public abstract partial class ToolshedCommand
     /// </summary>
     public IEnumerable<string> Subcommands => CommandImplementors.Keys;
 
+    /// <summary>
+    ///     The mapping between subcommands and the implementors describing them.
+    /// </summary>
     internal readonly Dictionary<string, ToolshedCommandImplementor> CommandImplementors = new();
 
     private readonly Dictionary<string, HashSet<Type>> _acceptedTypes = new();

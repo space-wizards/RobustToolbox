@@ -60,7 +60,7 @@ namespace Robust.Shared.Physics.Systems
          */
 
         private readonly HashSet<ulong> _pairKeys = new();
-
+        private readonly List<Fixture?> Fixtures = new();
         private readonly List<Contact> _contacts = new();
 
         /*
@@ -68,7 +68,7 @@ namespace Robust.Shared.Physics.Systems
          */
 
         private IdPool _shapesPool = new();
-        
+
         /*
          * Events
          */

@@ -343,7 +343,7 @@ namespace Robust.Shared.GameObjects
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
             // get interface aliases for mapping
-            var reg = _componentFactory.GetRegistration(component);
+            var reg = _componentFactory.GetRegistration(CompIdx.Index<T>());
             AddComponentInternal(uid, component, reg, overwrite, skipInit, metadata);
         }
 
@@ -721,7 +721,7 @@ namespace Robust.Shared.GameObjects
 
             if (!terminating)
             {
-                var reg = _componentFactory.GetRegistration(component);
+                var reg = _componentFactory.GetRegistration(idx);
                 DebugTools.Assert(component.Networked == (reg.NetID != null));
                 if (reg.NetID != null)
                 {
@@ -1167,7 +1167,7 @@ namespace Robust.Shared.GameObjects
 
         private T CopyComponentInternal<T>(EntityUid source, EntityUid target, T sourceComponent, MetaDataComponent meta) where T : IComponent
         {
-            var compReg = ComponentFactory.GetRegistration(sourceComponent.GetType());
+            var compReg = ComponentFactory.GetRegistration(CompIdx.Index<T>());
             var component = (T)ComponentFactory.GetComponent(compReg);
 
             _serManager.CopyTo(sourceComponent, ref component, notNullableOverride: true);

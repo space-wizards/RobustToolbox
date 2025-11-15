@@ -421,6 +421,7 @@ public abstract partial class SharedPhysicsSystem
             var contact = _contacts[i];
 
             // It's possible the contact was destroyed by content in which case we just skip it.
+            // TODO: Is this possible?
             if (!contact.Enabled)
                 continue;
 

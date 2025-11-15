@@ -492,12 +492,15 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private void OnEntityInit(Entity<MetaDataComponent> uid)
     {
-        if (_container.IsEntityOrParentInContainer(uid, uid) || _mapQuery.HasComp(uid) || _gridQuery.HasComp(uid))
+        // TODO: Get xform from spawn and re-use here
+        _xformQuery.TryGetComponent(uid.Owner, out var xform);
+        if (_container.IsEntityOrParentInContainer(uid.Owner, meta: uid.Comp, xform: xform) || _mapQuery.HasComp(uid) || _gridQuery.HasComp(uid))
             return;
 
         // TODO can this just be done implicitly via transform startup?
         // or do things need to be in trees for other component startup logic?
-        FindAndAddToEntityTree(uid, false);
+        // We should find out.
+        FindAndAddToEntityTree(uid, xform: xform, recursive: false);
     }
 
     private void OnMove(ref MoveEvent args)
@@ -541,6 +544,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private void UpdateParent(EntityUid uid, TransformComponent xform)
     {
         BroadphaseComponent? oldBroadphase = null;
+        FixturesComponent? fixtures = null;
+
         if (xform.Broadphase != null)
         {
             if (!xform.Broadphase.Value.IsValid())
@@ -551,7 +556,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 DebugTools.Assert("Encountered deleted broadphase.");
 
                 // broadphase was probably deleted.
-                if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
+                if (_fixturesQuery.Resolve(uid, ref fixtures, logMissing: false))
                 {
                     foreach (var fixture in fixtures.Fixtures.Values)
                     {
@@ -574,6 +579,12 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (newBroadphase == null)
             return;
 
+        // If it's non-collidable (e.g. on nullspace) then reset collision back to on.
+        if (_physicsQuery.TryComp(uid, out var body) && !body.CanCollide)
+        {
+            _physics.SetCanCollide(uid, value: true, manager: fixtures, body: body);
+        }
+
         var newBroadphaseXform = _xformQuery.GetComponent(newBroadphase.Owner);
 
         AddOrUpdateEntityTree(
@@ -581,7 +592,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
             newBroadphase,
             newBroadphaseXform,
             uid,
-            xform);
+            xform,
+            body: body);
     }
 
     public void FindAndAddToEntityTree(EntityUid uid, bool recursive = true, TransformComponent? xform = null)
@@ -621,7 +633,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             broadphaseXform,
             uid,
             xform,
-            recursive);
+            recursive: recursive);
     }
 
     private void AddOrUpdateEntityTree(
@@ -630,6 +642,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         TransformComponent broadphaseXform,
         EntityUid uid,
         TransformComponent xform,
+        PhysicsComponent? body = null,
         bool recursive = true)
     {
         if (xform.Broadphase != null && !xform.Broadphase.Value.IsValid())
@@ -639,7 +652,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return;
         }
 
-        if (!_physicsQuery.TryGetComponent(uid, out var body))
+        if (!_physicsQuery.Resolve(uid, ref body, logMissing: false))
         {
             // TODO optimize this. This function iterates UP through parents, while we are currently iterating down.
             var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(uid, xform);
@@ -665,7 +678,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             foreach (var child in xform._children)
             {
                 var childXform = _xformQuery.GetComponent(child);
-                AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, child, childXform, recursive);
+                AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, child, childXform, recursive: recursive);
             }
             return;
         }
@@ -676,7 +689,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 continue;
 
             var childXform = _xformQuery.GetComponent(child);
-            AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, child, childXform, recursive);
+            AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, child, childXform, recursive: recursive);
         }
     }
 

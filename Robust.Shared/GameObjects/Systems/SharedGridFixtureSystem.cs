@@ -23,6 +23,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly FixtureSystem _fixtures = default!;
         [Dependency] private readonly SharedMapSystem _map = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
 
         private bool _enabled;
@@ -147,6 +148,7 @@ namespace Robust.Shared.GameObjects
                 {
                     Owner = uid
                 };
+
 #pragma warning restore CS0618
 
                 var key = string.Create(CultureInfo.InvariantCulture, $"grid_chunk-{bounds.Left}-{bounds.Bottom}");

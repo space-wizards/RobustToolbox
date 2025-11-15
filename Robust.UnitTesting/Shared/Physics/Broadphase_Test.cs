@@ -19,6 +19,101 @@ namespace Robust.UnitTesting.Shared.Physics;
 public sealed class Broadphase_Test
 {
     /// <summary>
+    /// Tests a physics body with no fixtures is on the sundries tree
+    /// </summary>
+    [Test]
+    public void TestFixturelessEntity()
+    {
+        var sim = RobustServerSimulation
+            .NewSimulation()
+            .InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+        var physics = entManager.System<SharedPhysicsSystem>();
+
+        var (mapEnt, mapId) = sim.CreateMap();
+
+        var dynamicEnt = entManager.SpawnAtPosition(null, new EntityCoordinates(mapEnt, Vector2.Zero));
+        var xform = entManager.GetComponent<TransformComponent>(dynamicEnt);
+        var dynamicBody = entManager.AddComponent<PhysicsComponent>(dynamicEnt);
+
+        Assert.That(xform.Broadphase?.BodyType, Is.EqualTo(null));
+
+        fixtureSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
+        var fix1 = entManager.GetComponent<FixturesComponent>(dynamicEnt).Fixtures["fix1"];
+        var moveBuffer = physics.GetMoveBuffer();
+
+        Assert.That(xform.Broadphase.Value.BodyType, Is.EqualTo(dynamicBody.BodyType));
+        Assert.That(moveBuffer, Does.Contain(fix1.Proxies.First()));
+        Assert.That(moveBuffer, Has.Count.EqualTo(1));
+
+        fixtureSystem.DestroyFixture(dynamicEnt, "fix1");
+
+        Assert.That(xform.Broadphase?.BodyType, Is.EqualTo(null));
+        Assert.That(moveBuffer.Count, Is.EqualTo(0));
+    }
+
+    /// <summary>
+    /// Tests that physics body type changes correctly updates broadphase trees.
+    /// </summary>
+    [Test]
+    public void TestBodyTypeChange()
+    {
+        var sim = RobustServerSimulation
+            .NewSimulation()
+            .InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+        var physicsSystem = entManager.System<SharedPhysicsSystem>();
+
+        var (mapEnt, mapId) = sim.CreateMap();
+
+        var dynamicEnt = entManager.SpawnAtPosition(null, new EntityCoordinates(mapEnt, Vector2.Zero));
+        var broadphase =
+            entManager.GetComponent<BroadphaseComponent>(
+                entManager.GetComponent<TransformComponent>(dynamicEnt).Broadphase!.Value.Uid);
+        var dynamicBody = entManager.AddComponent<PhysicsComponent>(dynamicEnt);
+        physicsSystem.SetBodyType(dynamicEnt, BodyType.Dynamic, body: dynamicBody);
+
+        fixtureSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
+        Assert.That(broadphase.StaticTree.Count, Is.EqualTo(0));
+        Assert.That(broadphase.DynamicTree.Count, Is.EqualTo(1));
+        physicsSystem.SetBodyType(dynamicEnt, BodyType.Static, body: dynamicBody);
+        Assert.That(broadphase.StaticTree.Count, Is.EqualTo(1));
+        Assert.That(broadphase.DynamicTree.Count, Is.EqualTo(0));
+    }
+
+    /// <summary>
+    /// Tests that adding physics comp to an entity correctly removes it from the sundries tree and onto the main tree.
+    /// </summary>
+    [Test]
+    public void TestPhysicsAdd()
+    {
+        var sim = RobustServerSimulation
+            .NewSimulation()
+            .InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+
+        var (mapEnt, mapId) = sim.CreateMap();
+
+        var dynamicEnt = entManager.SpawnAtPosition(null, new EntityCoordinates(mapEnt, Vector2.Zero));
+        var broadphase =
+            entManager.GetComponent<BroadphaseComponent>(
+                entManager.GetComponent<TransformComponent>(dynamicEnt).Broadphase!.Value.Uid);
+
+        Assert.That(broadphase.StaticSundriesTree.Count == 1);
+
+        entManager.AddComponent<PhysicsComponent>(dynamicEnt);
+        fixtureSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
+        Assert.That(broadphase.StaticSundriesTree.Count, Is.EqualTo(0));
+        Assert.That(broadphase.StaticTree.Count, Is.EqualTo(1));
+    }
+
+    /// <summary>
     /// Tests that spawned static ents properly collide with entities in range.
     /// </summary>
     [Test]
@@ -90,15 +185,15 @@ public sealed class Broadphase_Test
 
         var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
         var xform = entManager.GetComponent<TransformComponent>(ent);
-        Assert.That(broadphase.SundriesTree, Does.Contain(ent));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(ent));
 
         var broadphaseData = xform.Broadphase;
         Assert.That(broadphaseData!.Value.Uid, Is.EqualTo(grid.Owner));
 
         xformSys.SetCoordinates(ent, new EntityCoordinates(mapEnt, Vector2.One));
-        Assert.That(broadphase.SundriesTree, Does.Not.Contain(ent));
+        Assert.That(broadphase.StaticSundriesTree, Does.Not.Contain(ent));
 
-        Assert.That(entManager.GetComponent<BroadphaseComponent>(mapEnt).SundriesTree, Does.Contain(ent));
+        Assert.That(entManager.GetComponent<BroadphaseComponent>(mapEnt).StaticSundriesTree, Does.Contain(ent));
         broadphaseData = xform.Broadphase;
         Assert.That(broadphaseData!.Value.Uid, Is.EqualTo(mapEnt));
     }
@@ -126,18 +221,17 @@ public sealed class Broadphase_Test
         var broadphase = entManager.GetComponent<BroadphaseComponent>(gridUid);
 
         var ent = entManager.SpawnEntity(null, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)));
-        var physics = entManager.AddComponent<PhysicsComponent>(ent);
         var xform = entManager.GetComponent<TransformComponent>(ent);
 
         // If we're not collidable we're still on the sundries tree.
         Assert.That(broadphase.StaticSundriesTree, Does.Contain(ent));
         Assert.That(xform.Broadphase!.Value.Uid, Is.EqualTo(gridUid));
 
+        var physics = entManager.AddComponent<PhysicsComponent>(ent);
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
         var fixture = new Fixture(shape, 0, 0, true);
         fixturesSystem.CreateFixture(ent, "fix1", fixture, body: physics, xform: xform);
-        physicsSystem.SetCanCollide(ent, true, body: physics);
         Assert.That(physics.CanCollide);
 
         // Now that we're collidable should be correctly on the grid's tree.
@@ -274,7 +368,6 @@ public sealed class Broadphase_Test
         var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var childXform = entManager.GetComponent<TransformComponent>(child);
         var childBody = entManager.AddComponent<PhysicsComponent>(child);
-        var childFixtures = entManager.GetComponent<FixturesComponent>(child);
 
         // enable collision for the child
         var shape = new PolygonShape();
@@ -289,11 +382,11 @@ public sealed class Broadphase_Test
             var broadphase = entManager.GetComponent<BroadphaseComponent>(map);
             Assert.That(parentXform.ParentUid == map);
             Assert.That(parentXform.MapUid == map);
-            Assert.That(childXform.MapUid == map);
+            Assert.That(childXform.MapUid, Is.EqualTo(map));
             Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(broadphase));
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
-            Assert.That(parentXform.Broadphase == new BroadphaseData(map, false, false));
-            Assert.That(childXform.Broadphase == new BroadphaseData(map, true, true));
+            Assert.That(parentXform.Broadphase, Is.EqualTo(new BroadphaseData(map, null)));
+            Assert.That(childXform.Broadphase, Is.EqualTo(new BroadphaseData(map, childBody.BodyType)));
         };
         AssertMap(mapA, mapB, new Vector2(200, 200));
 
@@ -323,8 +416,8 @@ public sealed class Broadphase_Test
             Assert.That(childXform.MapUid == map);
             Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(broadphase));
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
-            Assert.That(parentXform.Broadphase == new BroadphaseData(grid, false, false));
-            Assert.That(childXform.Broadphase == new BroadphaseData(grid, true, true));
+            Assert.That(parentXform.Broadphase == new BroadphaseData(grid, null));
+            Assert.That(childXform.Broadphase == new BroadphaseData(grid, childBody.BodyType));
         };
         AssertGrid(gridA, mapA, mapB, Vector2.Zero);
 

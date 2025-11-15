@@ -63,7 +63,6 @@ namespace Robust.UnitTesting
                 typeof(OccluderTreeComponent),
                 typeof(SpriteTreeComponent),
                 typeof(LightTreeComponent),
-                typeof(CollisionWakeComponent),
                 typeof(CollideOnAnchorComponent),
                 typeof(ActorComponent)
             };
@@ -123,7 +122,6 @@ namespace Robust.UnitTesting
 
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
-            systems.LoadExtraSystemType<CollisionWakeSystem>();
 
             if (Project == UnitTestProject.Client)
             {

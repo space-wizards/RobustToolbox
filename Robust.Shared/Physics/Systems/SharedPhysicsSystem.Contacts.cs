@@ -87,7 +87,7 @@ public abstract partial class SharedPhysicsSystem
        }
    };
 
-    private int ContactCount => _activeContacts.Count;
+    public int ContactCount => _pairKeys.Count;
 
     private const int ContactPoolInitialSize = 128;
     private const int ContactsPerThread = 32;
@@ -282,6 +282,10 @@ public abstract partial class SharedPhysicsSystem
         var bodA = contact.BodyA!;
         var bodB = contact.BodyB!;
 
+        var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
+
+        _pairKeys.Add(pairKey);
+
         // Insert into world
         _activeContacts.AddLast(contact.MapNode);
 
@@ -317,10 +321,15 @@ public abstract partial class SharedPhysicsSystem
             proxyA.Body, proxyB.Body, flags: flags);
     }
 
-    internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
+    internal static bool ShouldCollide(PhysicsComponent bodyA, Fixture fixtureA, PhysicsComponent bodyB, Fixture fixtureB)
     {
-        return !((fixtureA.CollisionMask & fixtureB.CollisionLayer) == 0x0 &&
-                 (fixtureB.CollisionMask & fixtureA.CollisionLayer) == 0x0);
+        if ((fixtureA.CollisionMask & fixtureB.CollisionLayer) == 0x0 &&
+            (fixtureB.CollisionMask & fixtureA.CollisionLayer) == 0x0)
+        {
+            return false;
+        }
+
+        return bodyA.CanCollide && bodyB.CanCollide;
     }
 
     public void DestroyContact(Contact contact)
@@ -348,6 +357,9 @@ public abstract partial class SharedPhysicsSystem
         var aUid = contact.EntityA;
         var bUid = contact.EntityB;
         contact.Flags |= ContactFlags.Deleting;
+        // At least for now we get this here in case either fixture is touched during the event (until we get deferred events).
+        DebugTools.Assert(fixtureA.Id > 0 && fixtureB.Id > 0);
+        var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
 
         if (contact.IsTouching)
         {
@@ -373,6 +385,9 @@ public abstract partial class SharedPhysicsSystem
 
         // Remove from the world
         _activeContacts.Remove(contact.MapNode);
+
+        DebugTools.Assert(_pairKeys.Contains(pairKey));
+        _pairKeys.Remove(pairKey);
 
         // Remove from body 1
         DebugTools.Assert(fixtureA.Contacts.ContainsKey(fixtureB));
@@ -422,6 +437,7 @@ public abstract partial class SharedPhysicsSystem
             var bodyB = contact.BodyB!;
             var uidA = contact.EntityA;
             var uidB = contact.EntityB;
+            DebugTools.Assert(fixtureA.Id > 0 && fixtureB.Id > 0);
 
             // Do not try to collide disabled bodies
             if (!bodyA.CanCollide || !bodyB.CanCollide)
@@ -443,7 +459,7 @@ public abstract partial class SharedPhysicsSystem
             if ((contact.Flags & ContactFlags.Filter) != 0x0)
             {
                 // Check default filtering
-                if (!ShouldCollide(fixtureA, fixtureB) ||
+                if (!ShouldCollide(bodyA, fixtureA, bodyB, fixtureB) ||
                     !ShouldCollideSlow(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB) ||
                     !ShouldCollideJoints(uidA, uidB))
                 {

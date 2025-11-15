@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -10,7 +11,71 @@ namespace Robust.Shared.Physics.Systems;
 
 public abstract partial class SharedPhysicsSystem
 {
-    [Dependency] private readonly FixtureSystem _fixtures = default!;
+    // Will get expanded as v3 gets ported but for now just handles fixture tracking.
+    internal Fixture AddWorldFixture()
+    {
+        // P1 id pool + fixtures and figuring out a way to do it.
+        //
+
+        // TODO: Addddd solver sets
+        // - Port cancollide
+
+        var fixture = new Fixture();
+        AddWorldFixture(fixture);
+        return fixture;
+    }
+
+    internal void AddWorldFixture(Fixture fixture)
+    {
+        DebugTools.Assert(fixture.Contacts.Count == 0);
+        DebugTools.Assert(fixture.Id == 0);
+        var id = _shapesPool.AllocId();
+
+        if (id == Fixtures.Count)
+        {
+            Fixtures.Add(fixture);
+        }
+        else
+        {
+            DebugTools.Assert(Fixtures[id] == null);
+            Fixtures[id] = fixture;
+        }
+
+        // Offset by 1 as slot 0 is also the default int (funny that).
+        fixture.Id = id + 1;
+    }
+
+    internal void DestroyWorldFixture(Fixture fixture)
+    {
+        DebugTools.Assert(fixture.Id > 0);
+        var id = fixture.Id - 1;
+        Fixtures[id] = null;
+        _shapesPool.FreeId(id);
+        fixture.Id = 0;
+    }
+
+    public bool HasContact(Fixture fixtureA, Fixture fixtureB)
+    {
+        if (fixtureB.Id < fixtureA.Id)
+        {
+            (fixtureB, fixtureA) = (fixtureA, fixtureB);
+        }
+
+        var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
+        return _pairKeys.Contains(pairKey);
+    }
+
+    private static ulong GetPairKey(int idA, int idB)
+    {
+        DebugTools.Assert(idA > 0 && idB > 0);
+
+        if (idA < idB)
+        {
+            return (ulong)idA << 32 | (uint)idB;
+        }
+
+        return (ulong)idB << 32 | (uint)idA;
+    }
 
     public void SetDensity(EntityUid uid, string fixtureId, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
     {
@@ -25,7 +90,7 @@ public abstract partial class SharedPhysicsSystem
         fixture.Density = value;
 
         if (update)
-            _fixtures.FixtureUpdate(uid, manager: manager);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager);
     }
 
     public void SetFriction(EntityUid uid, string fixtureId, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
@@ -41,7 +106,7 @@ public abstract partial class SharedPhysicsSystem
         fixture.Friction = value;
 
         if (update)
-            _fixtures.FixtureUpdate(uid, manager: manager);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager);
     }
 
     public void SetHard(EntityUid uid, Fixture fixture, bool value, FixturesComponent? manager = null)
@@ -53,7 +118,7 @@ public abstract partial class SharedPhysicsSystem
             return;
 
         fixture.Hard = value;
-        _fixtures.FixtureUpdate(uid, manager: manager);
+        _fixtureSystem.FixtureUpdate(uid, manager: manager);
         WakeBody(uid);
     }
 
@@ -70,7 +135,7 @@ public abstract partial class SharedPhysicsSystem
         fixture.Restitution = value;
 
         if (update)
-            _fixtures.FixtureUpdate(uid, manager: manager);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager);
     }
 
     /// <summary>
@@ -111,6 +176,20 @@ public abstract partial class SharedPhysicsSystem
             }
         }
     }
+
+    internal void AddToMoveBuffer(FixtureProxy proxy)
+    {
+        DebugTools.Assert(proxy.Body.CanCollide);
+        _moveBuffer.Add(proxy);
+    }
+
+    internal void RemoveFromMoveBuffer(FixtureProxy proxy)
+    {
+        _moveBuffer.Remove(proxy);
+    }
+
+    // Just to deter us from calling the field directly so it's more easier to debug add / removals.
+    internal HashSet<FixtureProxy> GetMoveBuffer() => _moveBuffer;
 
     #region Collision Masks & Layers
 
@@ -194,7 +273,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);
@@ -212,7 +291,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);
@@ -230,7 +309,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);
@@ -248,7 +327,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);
@@ -266,7 +345,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);
@@ -281,7 +360,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);

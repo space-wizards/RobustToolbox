@@ -149,8 +149,7 @@ public sealed partial class EntityLookupSystem
             _manifoldManager,
             query,
             _fixturesQuery,
-            (flags & LookupFlags.Sensors) != 0,
-            (flags & LookupFlags.Approximate) != 0x0
+            flags
         );
 
         if ((flags & LookupFlags.Dynamic) != 0x0)
@@ -158,32 +157,38 @@ public sealed partial class EntityLookupSystem
             lookup.DynamicTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
         }
 
+        if ((flags & LookupFlags.Kinematic) != 0x0)
+        {
+            lookup.KinematicTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
+        }
+
         if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
         }
 
-        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        if ((flags & LookupFlags.Sundries) == LookupFlags.Sundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
-        }
-
-        if ((flags & LookupFlags.Sundries) != 0x0)
-        {
-            lookup.SundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
         }
 
         return;
 
         static bool PhysicsQuery(ref QueryState<T, TShape> state, in FixtureProxy value)
         {
-            if (!state.Sensors && !value.Fixture.Hard)
+            if ((state.Flags & LookupFlags.Enabled) != 0x0 &&
+                !value.Body.CanCollide)
+            {
+                return true;
+            }
+
+            if (((state.Flags & LookupFlags.Sensors) != 0) && !value.Fixture.Hard)
                 return true;
 
             if (!state.Query.TryGetComponent(value.Entity, out var comp))
                 return true;
 
-            if (!state.Approximate)
+            if ((state.Flags & LookupFlags.Approximate) == 0)
             {
                 var intersectingTransform = state.Physics.GetLocalPhysicsTransform(value.Entity);
                 if (!state.Manifolds.TestOverlap(state.Shape, 0, value.Fixture.Shape, value.ChildIndex, state.Transform, intersectingTransform))
@@ -201,7 +206,7 @@ public sealed partial class EntityLookupSystem
             if (!state.Query.TryGetComponent(value, out var comp))
                 return true;
 
-            if (state.Approximate)
+            if ((state.Flags & LookupFlags.Approximate) != 0)
             {
                 state.Intersecting.Add((value, comp));
                 return true;
@@ -214,7 +219,7 @@ public sealed partial class EntityLookupSystem
                 bool anyFixture = false;
                 foreach (var fixture in fixtures.Fixtures.Values)
                 {
-                    if (!state.Sensors && !fixture.Hard)
+                    if ((state.Flags & LookupFlags.Sensors) == 0 && !fixture.Hard)
                         continue;
 
                     anyFixture = true;
@@ -298,6 +303,14 @@ public sealed partial class EntityLookupSystem
                 return true;
         }
 
+        if ((flags & LookupFlags.Kinematic) != 0x0)
+        {
+            lookup.KinematicTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
+
+            if (state.Found)
+                return true;
+        }
+
         if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
@@ -306,17 +319,12 @@ public sealed partial class EntityLookupSystem
                 return true;
         }
 
-        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        if ((flags & LookupFlags.Sundries) == LookupFlags.Sundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
 
             if (state.Found)
                 return true;
-        }
-
-        if ((flags & LookupFlags.Sundries) != 0x0)
-        {
-            lookup.SundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
         }
 
         return state.Found;
@@ -871,8 +879,7 @@ public sealed partial class EntityLookupSystem
         IManifoldManager Manifolds,
         EntityQuery<T> Query,
         EntityQuery<FixturesComponent> FixturesQuery,
-        bool Sensors,
-        bool Approximate
+        LookupFlags Flags
     ) where T : IComponent
      where TShape : IPhysShape;
 }

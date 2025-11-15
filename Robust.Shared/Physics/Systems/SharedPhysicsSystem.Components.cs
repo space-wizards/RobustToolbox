@@ -61,13 +61,22 @@ public partial class SharedPhysicsSystem
         }
 
         // Gets added to broadphase via fixturessystem
-        _fixtures.OnPhysicsInit(uid, manager, component);
+        _fixtureSystem.OnPhysicsInit(uid, manager, component);
 
-        if (manager.FixtureCount == 0)
-            component.CanCollide = false;
+        // We used to disable cancollide if no fixtures but that doesn't actually matter anymore.
 
         var ev = new CollisionChangeEvent(uid, component, component.CanCollide);
         RaiseLocalEvent(ref ev);
+
+#if DEBUG
+        foreach (var fixture in manager.Fixtures.Values)
+        {
+            foreach (var proxy in fixture.Proxies)
+            {
+                DebugTools.Assert(!_moveBuffer.Contains(proxy));
+            }
+        }
+#endif
     }
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
@@ -458,21 +467,21 @@ public partial class SharedPhysicsSystem
 
         body.Awake = value;
 
-        if (value)
+        // Bandaid for now
+        if (!Terminating(uid))
         {
-            var ev = new PhysicsWakeEvent(uid, body);
-            RaiseLocalEvent(uid, ref ev, true);
+            if (value)
+            {
+                var ev = new PhysicsWakeEvent(uid, body);
+                RaiseLocalEvent(uid, ref ev, true);
+            }
+            else
+            {
+                var ev = new PhysicsSleepEvent(uid, body);
+                RaiseLocalEvent(uid, ref ev, true);
+                ResetDynamics(ent, body, dirty: false);
+            }
         }
-        else
-        {
-            var ev = new PhysicsSleepEvent(uid, body);
-            RaiseLocalEvent(uid, ref ev, true);
-            ResetDynamics(ent, body, dirty: false);
-        }
-
-        // Update wake system last, if sleeping but still colliding.
-        if (!value && body.CanCollide)
-            _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
 
         if (updateSleepTime)
             SetSleepTime(body, 0);
@@ -564,6 +573,7 @@ public partial class SharedPhysicsSystem
         bool dirty = true,
         bool force = false,
         FixturesComponent? manager = null,
+        MetaDataComponent? metadata = null,
         PhysicsComponent? body = null)
     {
         if (!PhysicsQuery.Resolve(uid, ref body))
@@ -594,7 +604,9 @@ public partial class SharedPhysicsSystem
         body.CanCollide = value;
 
         if (!value)
+        {
             SetAwake((uid, body), false);
+        }
 
         if (body.Initialized)
         {
@@ -603,7 +615,7 @@ public partial class SharedPhysicsSystem
         }
 
         if (dirty)
-            DirtyField(uid, body, nameof(PhysicsComponent.CanCollide));
+            DirtyField(uid, body, nameof(PhysicsComponent.CanCollide), meta: metadata);
 
         return value;
     }

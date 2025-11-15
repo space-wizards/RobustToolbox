@@ -32,6 +32,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Reflection;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Physics;
@@ -90,6 +91,7 @@ public sealed partial class Collision_Test
         Assert.That(sub._counter, Is.GreaterThan(0));
     }
 
+    [Reflect(false)]
     private sealed class CollisionSubSystem : EntitySystem
     {
         public int _counter;

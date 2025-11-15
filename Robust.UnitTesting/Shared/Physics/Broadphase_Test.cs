@@ -30,6 +30,7 @@ public sealed class Broadphase_Test
 
         var entManager = sim.Resolve<IEntityManager>();
         var fixtureSystem = entManager.System<FixtureSystem>();
+        var physics = entManager.System<SharedPhysicsSystem>();
 
         var (mapEnt, mapId) = sim.CreateMap();
 
@@ -40,12 +41,17 @@ public sealed class Broadphase_Test
         Assert.That(xform.Broadphase?.BodyType, Is.EqualTo(null));
 
         fixtureSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
+        var fix1 = entManager.GetComponent<FixturesComponent>(dynamicEnt).Fixtures["fix1"];
+        var moveBuffer = physics.GetMoveBuffer();
 
         Assert.That(xform.Broadphase.Value.BodyType, Is.EqualTo(dynamicBody.BodyType));
+        Assert.That(moveBuffer, Does.Contain(fix1.Proxies.First()));
+        Assert.That(moveBuffer, Has.Count.EqualTo(1));
 
         fixtureSystem.DestroyFixture(dynamicEnt, "fix1");
 
         Assert.That(xform.Broadphase?.BodyType, Is.EqualTo(null));
+        Assert.That(moveBuffer.Count, Is.EqualTo(0));
     }
 
     /// <summary>

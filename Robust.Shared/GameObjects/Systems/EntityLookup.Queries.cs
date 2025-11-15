@@ -194,7 +194,7 @@ public sealed partial class EntityLookupSystem
             }
 
             // Check the target doesn't have fixturescomp because it should NOT be on this tree.
-            DebugTools.Assert(!state.FixturesQuery.HasComp(value));
+            DebugTools.Assert(!state.FixturesQuery.TryComp(value, out var fixtures) || fixtures.FixtureCount == 0);
             var intersectingTransform = state.Physics.GetLocalPhysicsTransform(value);
 
             if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))

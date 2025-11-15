@@ -144,9 +144,14 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var proxy in _gridMoveBuffer)
             {
-                moveBuffer.Add(proxy);
                 // If something is in our AABB then try grid traversal for it
                 _traversal.CheckTraverse((proxy.Entity, _xformQuery.GetComponent(proxy.Entity)));
+
+                // We still want to traverse it but we don't want to add it to the movebuffer.
+                if (!proxy.Body.CanCollide)
+                    continue;
+
+                moveBuffer.Add(proxy);
             }
         }
 

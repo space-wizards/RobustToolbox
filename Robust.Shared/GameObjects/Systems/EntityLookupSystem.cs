@@ -351,7 +351,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         AddOrMoveProxies((uid, body, xform), fixtureId, fixture, tree, broadphaseTransform);
     }
 
-    internal void DestroyProxies(EntityUid uid, string fixtureId, Fixture fixture, FixturesComponent fixtures, TransformComponent xform, BroadphaseComponent broadphase)
+    internal void DestroyProxies(EntityUid uid, string fixtureId, Fixture fixture, FixturesComponent fixtures, TransformComponent xform, BroadphaseComponent broadphase, bool checkTreeUpdate = true)
     {
         DebugTools.AssertNotNull(xform.Broadphase);
         DebugTools.Assert(xform.Broadphase!.Value.Uid == broadphase.Owner);
@@ -369,7 +369,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         DestroyProxies(fixture, tree);
 
         // Move back to static sundries tree if relevant
-        if (fixtures.FixtureCount == 0)
+        if (checkTreeUpdate && fixtures.FixtureCount == 0)
         {
             xform.Broadphase = new BroadphaseData(broadphase.Owner, null);
             AddOrUpdateSundriesTree(broadphase.Owner, broadphase, uid, xform);

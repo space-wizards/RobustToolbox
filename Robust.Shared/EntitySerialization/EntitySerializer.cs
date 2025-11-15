@@ -62,6 +62,7 @@ public sealed class EntitySerializer : ISerializationContext,
     private readonly ISawmill _log;
     public readonly Dictionary<EntityUid, int> YamlUidMap = new();
     public readonly HashSet<int> YamlIds = new();
+    public readonly ValueDataNode InvalidNode = new("invalid");
 
     public string? CurrentComponent { get; private set; }
     public Entity<MetaDataComponent>? CurrentEntity { get; private set; }
@@ -222,6 +223,7 @@ public sealed class EntitySerializer : ISerializationContext,
     /// setting of <see cref="SerializationOptions.MissingEntityBehaviour"/> it may auto-include additional entities
     /// aside from the one provided.
     /// </summary>
+    /// <param name="entities">The set of entities to serialize</param>
     public void SerializeEntities(HashSet<EntityUid> entities)
     {
         foreach (var uid in entities)
@@ -329,7 +331,12 @@ public sealed class EntitySerializer : ISerializationContext,
             return true;
         }
 
-        // iterate over all of its children and grab the first grid with a mapping
+        map = null;
+
+        // if this is a map, iterate over all of its children and grab the first grid with a mapping
+        if (!_mapQuery.HasComponent(root))
+            return false;
+
         var xform = _xformQuery.GetComponent(root);
         foreach (var child in xform._children)
         {
@@ -339,7 +346,6 @@ public sealed class EntitySerializer : ISerializationContext,
             return true;
         }
 
-        map = null;
         return false;
     }
 
@@ -979,7 +985,7 @@ public sealed class EntitySerializer : ISerializationContext,
         if (CurrentComponent == _xformName)
         {
             if (value == EntityUid.Invalid)
-                return new ValueDataNode("invalid");
+                return InvalidNode;
 
             DebugTools.Assert(!Orphans.Contains(CurrentEntityYamlUid));
             Orphans.Add(CurrentEntityYamlUid);
@@ -987,13 +993,13 @@ public sealed class EntitySerializer : ISerializationContext,
             if (Options.ErrorOnOrphan && CurrentEntity != null && value != Truncate && !ErroringEntities.Contains(value))
                 _log.Error($"Serializing entity {EntMan.ToPrettyString(CurrentEntity)} without including its parent {EntMan.ToPrettyString(value)}");
 
-            return new ValueDataNode("invalid");
+            return InvalidNode;
         }
 
         if (ErroringEntities.Contains(value))
         {
             // Referenced entity already logged an error, so we just silently fail.
-            return new ValueDataNode("invalid");
+            return InvalidNode;
         }
 
         if (value == EntityUid.Invalid)
@@ -1001,7 +1007,7 @@ public sealed class EntitySerializer : ISerializationContext,
             if (Options.MissingEntityBehaviour != MissingEntityBehaviour.Ignore)
                 _log.Error($"Encountered an invalid entityUid reference.");
 
-            return new ValueDataNode("invalid");
+            return InvalidNode;
         }
 
         if (value == Truncate)
@@ -1016,9 +1022,9 @@ public sealed class EntitySerializer : ISerializationContext,
                 _log.Error(EntMan.Deleted(value)
                     ? $"Encountered a reference to a deleted entity {value} while serializing {EntMan.ToPrettyString(CurrentEntity)}."
                     : $"Encountered a reference to a missing entity: {value} while serializing {EntMan.ToPrettyString(CurrentEntity)}.");
-                return new ValueDataNode("invalid");
+                return InvalidNode;
             case MissingEntityBehaviour.Ignore:
-                return new ValueDataNode("invalid");
+                return InvalidNode;
             case MissingEntityBehaviour.IncludeNullspace:
                 if (!EntMan.TryGetComponent(value, out TransformComponent? xform)
                     || xform.ParentUid != EntityUid.Invalid

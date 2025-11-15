@@ -39,6 +39,39 @@ END TEMPLATE-->
 
 ### New features
 
+* Added `IReplayFileWriter.WriteYaml()`, for writing yaml documents to a replay zip file.
+
+### Bugfixes
+
+* `ActorComponent` now has the `UnsavedComponentAttribute`
+  * Previously it was unintentionally get serialized to yaml, which could result in NREs when deserializing.
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 268.0.0
+
+### Breaking changes
+
+* Events that are raised via `IEventBus.RaiseComponentEvent()` now **must** be annotated with  the `ComponentEventAttribute`.
+  * By default, events annotated with this attribute can **only** be raised via `IEventBus.RaiseComponentEvent()`. This can be configured via `ComponentEventAttribute.Exclusive`
+* StartCollide and EndCollide events are now buffered until the end of physics substeps instead of being raised during the CollideContacts step. EndCollide events are double-buffered and any new ones raised while the events are being dispatched will now go out on the next tick / substep.
+
+### New features
+
+* Added `IUserInterfaceManager.ControlSawmill` and `Control.Log` properties so that controls can easily use logging without using static methods.
+
+
+## 267.4.0
+
+### New features
+
 * Added two new custom yaml serializers `CustomListSerializer` and `CustomArraySerializer`.
 * CVars defined in `[CVarDefs]` can now be private or internal.
 * Added config rollback system to `IConfigurationManager`. This enables CVars to be snapshot and rolled back, even in the event of client crash.

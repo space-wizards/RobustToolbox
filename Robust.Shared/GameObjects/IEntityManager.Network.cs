@@ -127,6 +127,11 @@ public partial interface IEntityManager
     public HashSet<NetEntity> GetNetEntitySet(HashSet<EntityUid> entities);
 
     /// <summary>
+    /// HashSet version of <see cref="GetNetEntity"/> for <see cref="WeakEntityReference"/>
+    /// </summary>
+    public HashSet<NetEntity> GetNetEntitySet(HashSet<WeakEntityReference> entities);
+
+    /// <summary>
     /// List version of <see cref="GetNetEntity"/>
     /// </summary>
     public List<NetEntity> GetNetEntityList(List<EntityUid> entities);
@@ -140,6 +145,11 @@ public partial interface IEntityManager
     /// List version of <see cref="GetNetEntity"/>
     /// </summary>
     public List<NetEntity> GetNetEntityList(ICollection<EntityUid> entities);
+
+    /// <summary>
+    /// List version of <see cref="GetNetEntity"/> for <see cref="WeakEntityReference"/>
+    /// </summary>
+    public List<NetEntity> GetNetEntityList(IReadOnlyList<WeakEntityReference> entities);
 
     /// <summary>
     /// List version of <see cref="GetNetEntity"/>
@@ -220,9 +230,13 @@ public partial interface IEntityManager
 
     public HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity);
 
+    void EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity, HashSet<WeakEntityReference> entities);
+
     public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity);
 
     void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities);
+
+    void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<WeakEntityReference> entities);
 
     void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity,
         Dictionary<EntityUid, TValue> entities);

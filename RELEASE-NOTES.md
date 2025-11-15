@@ -116,6 +116,7 @@ END TEMPLATE-->
 * The base component tree lookup system has new methods including several new `QueryAabb()` overloads that take in a collection and various new `IntersectRay()` overloads that should replace `IntersectRayWithPredicate`.
  * Added `OccluderSystem.InRangeUnoccluded()` for checking for occluders that lie between two points.
 * `LocalizedCommands` now pass the command name as an argument to the localized help text.
+* Added a new `WeakEntityReference` struct that is intended to be used by component data-fields to refer to entities that may or may not still exist.
 
 ### Bugfixes
 

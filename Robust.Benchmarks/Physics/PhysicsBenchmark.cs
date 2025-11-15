@@ -19,7 +19,6 @@ public class PhysicsBenchmark
     // TODO: Rain
     // Large pyramid
     // Joint Grid
-    // Smash
     // Spinner
     // Washer
 
@@ -127,12 +126,14 @@ public class PhysicsBenchmark
 
     #region Smash
 
+    private ISimulation _smashSim = default!;
+
     [GlobalSetup(Target = nameof(Smash))]
     public void SmashSetup()
     {
-        _tumblerSim = RobustServerSimulation.NewSimulation().InitializeInstance();
+        _smashSim = RobustServerSimulation.NewSimulation().InitializeInstance();
 
-        var entManager = _tumblerSim.Resolve<IEntityManager>();
+        var entManager = _smashSim.Resolve<IEntityManager>();
 
         entManager.System<SharedMapSystem>().CreateMap(out var mapId);
 
@@ -187,7 +188,7 @@ public class PhysicsBenchmark
     [Benchmark]
     public void Smash()
     {
-        var entManager = _manyPyramidSim.Resolve<IEntityManager>();
+        var entManager = _smashSim.Resolve<IEntityManager>();
 
         for (var i = 0; i < (1f / frameTime) * 10; i++)
         {

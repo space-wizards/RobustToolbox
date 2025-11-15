@@ -19,6 +19,36 @@ namespace Robust.UnitTesting.Shared.Physics;
 public sealed class Broadphase_Test
 {
     /// <summary>
+    /// Tests a physics body with no fixtures is on the sundries tree
+    /// </summary>
+    [Test]
+    public void TestFixturelessEntity()
+    {
+        var sim = RobustServerSimulation
+            .NewSimulation()
+            .InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+
+        var (mapEnt, mapId) = sim.CreateMap();
+
+        var dynamicEnt = entManager.SpawnAtPosition(null, new EntityCoordinates(mapEnt, Vector2.Zero));
+        var xform = entManager.GetComponent<TransformComponent>(dynamicEnt);
+        var dynamicBody = entManager.AddComponent<PhysicsComponent>(dynamicEnt);
+
+        Assert.That(xform.Broadphase?.BodyType, Is.EqualTo(null));
+
+        fixtureSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
+
+        Assert.That(xform.Broadphase.Value.BodyType, Is.EqualTo(dynamicBody.BodyType));
+
+        fixtureSystem.DestroyFixture(dynamicEnt, "fix1");
+
+        Assert.That(xform.Broadphase?.BodyType, Is.EqualTo(null));
+    }
+
+    /// <summary>
     /// Tests that physics body type changes correctly updates broadphase trees.
     /// </summary>
     [Test]

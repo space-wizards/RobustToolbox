@@ -100,6 +100,15 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
+    /*
+     * For broadphases there's 5 scenarios
+     * 1. Normal physics body goes in a physics tree.
+     * 2. Contained entities get an invalid broadphase and go on no tree.
+     * 3. Nullspace entities get an invalid broadphase and go on no tree.
+     * 4. Physics bodies with no fixtures go on the sundries tree. This is to avoid having callers have to manually mess with CanCollide / lookup when dynamically making a body.
+     * 5. Every other entity goes on the sundries tree.
+     */
+
     /// <summary>
     /// 1 x 1 polygons can overlap neighboring tiles (even without considering the polygon skin around them.
     /// When querying for specific tile fixtures we shrink the bounds by this amount to avoid this overlap.
@@ -149,6 +158,13 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (xform.Broadphase is { } old &&
             old.BodyType == null)
         {
+            // Body is right where it should be
+            if (_fixturesQuery.TryComp(uid, out var fixtures) &&
+                fixtures.FixtureCount == 0)
+            {
+                return;
+            }
+
             // If physics comp is added to an initialized entity it may be on the sundries tree so need to remove it.
             if (_broadQuery.TryComp(old.Uid, out var oldBroadphaseComp))
             {
@@ -314,6 +330,16 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (!TryGetCurrentBroadphase(xform, out var broadphase))
             return;
 
+        TransformComponent? broadphaseXform = null;
+
+        // Remove the entity from the sundries tree if it had no fixtures
+        if (xform.Broadphase?.BodyType == null)
+        {
+            DebugTools.Assert(_fixturesQuery.GetComponent(uid).FixtureCount == 1);
+            RemoveFromEntityTree(broadphase.Owner, broadphase, uid, xform);
+            xform.Broadphase = new BroadphaseData(broadphase.Owner, body.BodyType);
+        }
+
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
         var mapTransform = new Transform(worldPos, worldRot);
 
@@ -325,7 +351,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         AddOrMoveProxies((uid, body, xform), fixtureId, fixture, tree, broadphaseTransform);
     }
 
-    internal void DestroyProxies(EntityUid uid, string fixtureId, Fixture fixture, TransformComponent xform, BroadphaseComponent broadphase)
+    internal void DestroyProxies(EntityUid uid, string fixtureId, Fixture fixture, FixturesComponent fixtures, TransformComponent xform, BroadphaseComponent broadphase)
     {
         DebugTools.AssertNotNull(xform.Broadphase);
         DebugTools.Assert(xform.Broadphase!.Value.Uid == broadphase.Owner);
@@ -341,6 +367,13 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         var tree = _broadphase.GetTree(broadphase, xform.Broadphase.Value.BodyType.Value);
         DestroyProxies(fixture, tree);
+
+        // Move back to static sundries tree if relevant
+        if (fixtures.FixtureCount == 0)
+        {
+            xform.Broadphase = new BroadphaseData(broadphase.Owner, null);
+            AddOrUpdateSundriesTree(broadphase.Owner, broadphase, uid, xform);
+        }
     }
 
     #endregion
@@ -652,7 +685,12 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return;
         }
 
-        if (!_physicsQuery.Resolve(uid, ref body, logMissing: false))
+        FixturesComponent? fixtures = null;
+
+        // If it has no physics OR no fixtures it goes in sundries tree.
+        if (!_physicsQuery.Resolve(uid, ref body, logMissing: false) ||
+            !_fixturesQuery.Resolve(uid, ref fixtures, logMissing: false) ||
+            fixtures.FixtureCount == 0)
         {
             // TODO optimize this. This function iterates UP through parents, while we are currently iterating down.
             var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(uid, xform);
@@ -665,7 +703,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         }
         else
         {
-            AddOrUpdatePhysicsTree(uid, broadUid, broadphase, broadphaseXform, xform, body, _fixturesQuery.GetComponent(uid));
+            AddOrUpdatePhysicsTree(uid, broadUid, broadphase, broadphaseXform, xform, body, fixtures);
         }
 
         if (xform.ChildCount == 0 || !recursive)

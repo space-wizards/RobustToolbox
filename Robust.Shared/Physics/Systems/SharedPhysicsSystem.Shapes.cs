@@ -28,7 +28,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
         {
-            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
+            _lookup.DestroyProxies(uid, fixtureId, fixture, manager, xform, broadphase);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
@@ -58,7 +58,7 @@ public abstract partial class SharedPhysicsSystem
         if (body.CanCollide &&
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
         {
-            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
+            _lookup.DestroyProxies(uid, fixtureId, fixture, manager, xform, broadphase);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
@@ -82,7 +82,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
         {
-            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
+            _lookup.DestroyProxies(uid, fixtureId, fixture, manager, xform, broadphase);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
@@ -117,7 +117,7 @@ public abstract partial class SharedPhysicsSystem
         if (body.CanCollide &&
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
         {
-            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
+            _lookup.DestroyProxies(uid, fixtureId, fixture, manager, xform, broadphase);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
@@ -145,7 +145,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
         {
-            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
+            _lookup.DestroyProxies(uid, fixtureId, fixture, manager, xform, broadphase);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 

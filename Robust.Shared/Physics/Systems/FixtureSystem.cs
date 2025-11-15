@@ -111,6 +111,8 @@ namespace Robust.Shared.Physics.Systems
             manager.Fixtures.Add(fixtureId, fixture);
             fixture.Owner = uid;
 
+            TransformComponent? broadphaseXform = null;
+
             if (Resolve(uid, ref xform))
             {
                 _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
@@ -208,7 +210,7 @@ namespace Robust.Shared.Physics.Systems
             if (_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
             {
                 DebugTools.Assert(xform.MapUid == Transform(broadphase.Owner).MapUid);
-                _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
+                _lookup.DestroyProxies(uid, fixtureId, fixture, manager, xform, broadphase);
             }
 
             _physics.DestroyWorldFixture(fixture);

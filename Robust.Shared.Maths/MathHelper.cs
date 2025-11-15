@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 
 namespace Robust.Shared.Maths
 {
@@ -579,6 +580,17 @@ namespace Robust.Shared.Maths
             return Math.Abs(a - b) <= epsilon;
         }
 
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="percentage"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(Vector128<float> a, Vector128<float> b, float percentage = .00001f)
+        {
+            var epsilon = Vector128.Max(Vector128.Max(Vector128.Abs(a), Vector128.Abs(b)) * Vector128.Create(percentage),
+                Vector128.Create(percentage));
+            var result = Vector128.LessThanOrEqual(Vector128.Abs(a - b), epsilon);
+            return Vector128.EqualsAll(result.AsInt32(), Vector128<int>.AllBitsSet);
+        }
         #endregion CloseToPercent
 
         #region CloseTo

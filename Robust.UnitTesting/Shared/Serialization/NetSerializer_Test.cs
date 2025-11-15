@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Numerics;
+using System.Text;
 using NetSerializer;
 using NUnit.Framework;
 using Robust.Shared.Maths;
@@ -244,6 +246,38 @@ namespace Robust.UnitTesting.Shared.Serialization
             serializer.DeserializeDirect(stream, out ImmutableHashSet<string> read);
 
             Assert.That(read, NUnit.Framework.Is.EquivalentTo(x));
+        }
+
+        [Test, TestOf(typeof(NetBitArraySerializer))]
+        public void TestBitArray()
+        {
+            // Test that BitArray serialization matches the behavior before .NET 10
+            // This test can be removed in future RT versions.
+
+            var bitData = "little creature, have you ever heard about gay people?"u8.ToArray();
+            var bitArray = new BitArray(bitData);
+
+            var serializer = new Serializer([typeof(BitArray)],
+                new Settings
+                {
+                    CustomTypeSerializers = [new NetBitArraySerializer()]
+                });
+
+            var stream = new MemoryStream();
+            serializer.Serialize(stream, bitArray);
+
+            var base64 = Convert.ToBase64String(stream.ToArray());
+
+            TestContext.Out.WriteLine(base64);
+
+            Assert.That(base64,
+                Is.EqualTo(
+                    "AgAP2KWjxw7YlYOyDOSVi8YO6smrxgXAoIvmDsqByfcN6oGp5g7KyYOCDcqFk8cMwIST9g3q0YPyDMLlg4IOyr2Dxw3K/QHgBg=="));
+
+            stream.Position = 0;
+            var newBitArray = (BitArray)serializer.Deserialize(stream);
+
+            Assert.That(newBitArray, Is.EquivalentTo(bitArray));
         }
     }
 }

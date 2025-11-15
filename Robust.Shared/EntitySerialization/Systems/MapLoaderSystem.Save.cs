@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -18,6 +19,10 @@ public sealed partial class MapLoaderSystem
     /// <summary>
     /// Recursively serialize the given entities and all of their children.
     /// </summary>
+    /// <remarks>
+    /// This method is not optimized for being given a large set of entities. I.e., this should be a small handful of
+    /// maps or grids, not something like <see cref="EntityManager.AllEntityUids"/>.
+    /// </remarks>
     public (MappingDataNode Node, FileCategory Category) SerializeEntitiesRecursive(
         HashSet<EntityUid> entities,
         SerializationOptions? options = null)
@@ -29,8 +34,6 @@ public sealed partial class MapLoaderSystem
         Log.Info($"Serializing entities: {string.Join(", ", entities.Select(x => ToPrettyString(x).ToString()))}");
 
         var maps = entities.Select(x => Transform(x).MapID).ToHashSet();
-        var ev = new BeforeSerializationEvent(entities, maps);
-        RaiseLocalEvent(ev);
 
         // In case no options were provided, we assume that if all of the starting entities are pre-init, we should
         // expect that **all** entities that get serialized should be pre-init.
@@ -38,6 +41,9 @@ public sealed partial class MapLoaderSystem
         {
             ExpectPreInit = (entities.All(x => LifeStage(x) < EntityLifeStage.MapInitialized))
         };
+
+        var ev = new BeforeSerializationEvent(entities, maps, opts.Category);
+        RaiseLocalEvent(ev);
 
         var serializer = new EntitySerializer(_dependency, opts);
         serializer.OnIsSerializeable += OnIsSerializable;
@@ -228,6 +234,91 @@ public sealed partial class MapLoaderSystem
         }
 
         Write(path, data);
+        return true;
+    }
+
+    /// <inheritdoc cref="TrySerializeAllEntities(out MappingDataNode, SerializationOptions?)"/>
+    public bool TrySaveAllEntities(ResPath path, SerializationOptions? options = null)
+    {
+        if (!TrySerializeAllEntities(out var data, options))
+            return false;
+
+        Write(path, data);
+        return true;
+    }
+
+    /// <summary>
+    /// Attempt to serialize all entities.
+    /// </summary>
+    /// <remarks>
+    /// Note that this alone is not sufficient for a proper full-game save, as the game may contain things like chat
+    /// logs or resources and prototypes that were uploaded mid-game.
+    /// </remarks>
+    public bool TrySerializeAllEntities([NotNullWhen(true)] out MappingDataNode? data, SerializationOptions? options = null)
+    {
+        data  = null;
+        var opts = options ?? SerializationOptions.Default with
+        {
+            MissingEntityBehaviour = MissingEntityBehaviour.Error
+        };
+
+        opts.Category = FileCategory.Save;
+        _stopwatch.Restart();
+        Log.Info($"Serializing all entities");
+
+        var entities = EntityManager.GetEntities().ToHashSet();
+        var maps = _mapSystem.Maps.Keys.ToHashSet();
+        var ev = new BeforeSerializationEvent(entities, maps, FileCategory.Save);
+        var serializer = new EntitySerializer(_dependency, opts);
+
+        // Remove any non-serializable entities and their children (prevent error spam)
+        var toRemove = new Queue<EntityUid>();
+        foreach (var entity in entities)
+        {
+            // TODO SERIALIZATION Perf
+            // IsSerializable gets called again by serializer.SerializeEntities()
+            if (!serializer.IsSerializable(entity))
+                toRemove.Enqueue(entity);
+        }
+
+        if (toRemove.Count > 0)
+        {
+            if (opts.MissingEntityBehaviour == MissingEntityBehaviour.Error)
+            {
+                // The save will probably contain references to the non-serializable entities, and we avoid spamming errors.
+                opts.MissingEntityBehaviour = MissingEntityBehaviour.Ignore;
+                Log.Error($"Attempted to serialize one or more non-serializable entities");
+            }
+
+            while (toRemove.TryDequeue(out var next))
+            {
+                entities.Remove(next);
+                foreach (var uid in Transform(next)._children)
+                {
+                    toRemove.Enqueue(uid);
+                }
+            }
+        }
+
+        try
+        {
+            RaiseLocalEvent(ev);
+            serializer.OnIsSerializeable += OnIsSerializable;
+            serializer.SerializeEntities(entities);
+            data = serializer.Write();
+            var cat = serializer.GetCategory();
+            DebugTools.AssertEqual(cat, FileCategory.Save);
+            var ev2 = new AfterSerializationEvent(entities, data, cat);
+            RaiseLocalEvent(ev2);
+
+            Log.Debug($"Serialized {serializer.EntityData.Count} entities in {_stopwatch.Elapsed}");
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Caught exception while trying to serialize all entities:\n{e}");
+            return false;
+        }
+
         return true;
     }
 }

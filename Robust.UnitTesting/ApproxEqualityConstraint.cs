@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.Intrinsics;
 using NUnit.Framework.Constraints;
 using Robust.Shared.Maths;
 
@@ -59,6 +60,17 @@ namespace Robust.UnitTesting
                     return new ConstraintResult(this, actual, m3x2Expected.EqualsApprox(m3x2Actual));
                 }
 
+                if (Expected is Vector128<float> vecExpected && actual is Vector128<float> vecActual)
+                {
+                    if (Tolerance != null)
+                    {
+                        return new ConstraintResult(this,
+                            actual,
+                            MathHelper.CloseToPercent(vecActual, vecExpected, (float)Tolerance.Value));
+                    }
+
+                    return new ConstraintResult(this, actual, MathHelper.CloseToPercent(vecActual, vecExpected));
+                }
                 return new ConstraintResult(this, actual, false);
             }
 

@@ -73,7 +73,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        public static MassData GetMassData(IPhysShape shape, float density)
+        public static MassData GetMassData<T>(T shape, float density) where T : IPhysShape
         {
             var data = new MassData();
 
@@ -82,7 +82,7 @@ namespace Robust.Shared.Physics.Systems
             return data;
         }
 
-        public static void GetMassData(IPhysShape shape, ref MassData data, float density)
+        public static void GetMassData<T>(T shape, ref MassData data, float density) where T : IPhysShape
         {
             // Box2D just calls fixture.GetMassData which just calls the shape method anyway soooo
             // we can just cut out the middle-man
@@ -106,16 +106,17 @@ namespace Robust.Shared.Physics.Systems
                     data.I = data.Mass * (0.5f * circle.Radius * circle.Radius + Vector2.Dot(circle.Position, circle.Position));
                     break;
                 case PhysShapeAabb aabb:
-                    var polygon = (PolygonShape) aabb;
+                    var polygon = new Polygon(aabb);
                     GetMassData(polygon, ref data, density);
                     break;
-                case Polygon fastPoly:
-                    GetMassData(new PolygonShape(fastPoly), ref data, density);
+                case PolygonShape fatPoly:
+                    GetMassData(new Polygon(fatPoly), ref data, density);
                     break;
                 case SlimPolygon slim:
-                    GetMassData(new PolygonShape(slim), ref data, density);
+                    var slimPoly = new Polygon(slim);
+                    GetMassData(slimPoly, ref data, density);
                     break;
-                case PolygonShape poly:
+                case Polygon poly:
                     // Polygon mass, centroid, and inertia.
                     // Let rho be the polygon density in mass per unit area.
                     // Then:
@@ -142,6 +143,7 @@ namespace Robust.Shared.Physics.Systems
 
                     var count = poly.VertexCount;
                     DebugTools.Assert(count >= 3);
+                    DebugTools.Assert(poly._normals._00 != Vector2.Zero);
 
                     Vector2 center = new(0.0f, 0.0f);
                     float area = 0.0f;
@@ -149,15 +151,16 @@ namespace Robust.Shared.Physics.Systems
 
                     // Get a reference point for forming triangles.
                     // Use the first vertex to reduce round-off errors.
-                    var s = poly.Vertices[0];
+                    var s = poly._vertices._00;
+                    var polySpan = poly._vertices.AsSpan;
 
                     const float k_inv3 = 1.0f / 3.0f;
 
                     for (var i = 0; i < count; ++i)
                     {
 	                    // Triangle vertices.
-	                    var e1 = poly.Vertices[i] - s;
-	                    var e2 = i + 1 < count ? poly.Vertices[i+1] - s : poly.Vertices[0] - s;
+	                    var e1 = polySpan[i] - s;
+	                    var e2 = i + 1 < count ? polySpan[i+1] - s : polySpan[0] - s;
 
 	                    float D = Vector2Helpers.Cross(e1, e2);
 

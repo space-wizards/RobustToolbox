@@ -102,6 +102,7 @@ namespace Robust.Client.UserInterface
         private Stylesheet? _stylesheet;
 
         private ISawmill _sawmillUI = default!;
+        public ISawmill ControlSawmill { get; private set; } = default!;
 
         public event Action<Control>? OnKeyBindDown;
 
@@ -150,6 +151,7 @@ namespace Robust.Client.UserInterface
         private void _initializeCommon()
         {
             _sawmillUI = _logManager.GetSawmill("ui");
+            ControlSawmill = _logManager.GetSawmill("ctrl");
 
             RootControl = CreateWindowRoot(_clyde.MainWindow);
             RootControl.Name = "MainWindowRoot";

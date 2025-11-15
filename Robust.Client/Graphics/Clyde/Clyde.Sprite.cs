@@ -161,47 +161,33 @@ internal partial class Clyde
     }
 
     /// <summary>
-    /// This is effectively a specialized combination of a <see cref="Matrix3.TransformBox(in Box2Rotated)"/> and <see cref="Box2Rotated.CalcBoundingBox()"/>.
+    /// This is effectively a specialized combination of a <see cref="Matrix3Helpers.TransformBox(Matrix3x2, in Box2)"/>.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe Box2 TransformCenteredBox(in Box2 box, float angle, in Vector2 offset, in Vector2 scale)
+    internal static unsafe Box2 TransformCenteredBox(in Box2 box, float angle, in Vector2 offset, in Vector2 scale)
     {
-        // This function is for sprites, which flip the y axis, so here we flip the definition of t and b relative to the normal function.
-        DebugTools.Assert(scale.Y < 0);
-
         var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in box));
-
         var sin = Vector128.Create(MathF.Sin(angle));
         var cos = Vector128.Create(MathF.Cos(angle));
-        var allX = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
-        var allY = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));
-        var modX = allX * cos - allY * sin;
-        var modY = allX * sin + allY * cos;
+        var boxX = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
+        var boxY = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));
+
+        var x = boxX * cos - boxY * sin;
+        var y = boxX * sin + boxY * cos;
+        var lbrt = SimdHelpers.GetAABB(x, y);
+
+        // This function is for sprites, which flip the y-axis via the scale, so we need to flip t & b.
+        DebugTools.Assert(scale.Y < 0);
+        lbrt = Vector128.Shuffle(lbrt, Vector128.Create(0,3,2,1));
 
         var offsetVec = Unsafe.As<Vector2, Vector128<float>>(ref Unsafe.AsRef(in offset)); // upper undefined
         var scaleVec = Unsafe.As<Vector2, Vector128<float>>(ref Unsafe.AsRef(in scale)); // upper undefined
         offsetVec = Vector128.Shuffle(offsetVec, Vector128.Create(0, 1, 0, 1));
         scaleVec = Vector128.Shuffle(scaleVec, Vector128.Create(0, 1, 0, 1));
 
-        Vector128<float> lbrt;
-        if (Sse.IsSupported)
-        {
-            var lrlr = SimdHelpers.MinMaxHorizontalSse(modX);
-            var btbt = SimdHelpers.MaxMinHorizontalSse(modY);
-            lbrt = Sse.UnpackLow(lrlr, btbt);
-        }
-        else
-        {
-            var l = SimdHelpers.MinHorizontal128(allX);
-            var b = SimdHelpers.MaxHorizontal128(allY);
-            var r = SimdHelpers.MaxHorizontal128(allX);
-            var t = SimdHelpers.MinHorizontal128(allY);
-            lbrt = SimdHelpers.MergeRows128(l, b, r, t);
-        }
-
         // offset and scale box.
+        // note that the scaling here is scaling the whole space, not jut the box. I.e., the centre of the box is changing
         lbrt = (lbrt + offsetVec) * scaleVec;
-
         return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
     }
 

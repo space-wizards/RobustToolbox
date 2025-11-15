@@ -63,6 +63,25 @@ namespace Robust.Shared.Physics.Systems
 
         private IdPool _shapesPool = new();
 
+        /*
+         * Events
+         */
+
+        // Buffer events to avoid enumeration issues.
+
+        private readonly List<StartCollideEvent> _startCollideEvents = new();
+
+        // Double-buffer end-collide events like box2d-v3 because we can raise these while destroying contacts
+        // whereas with start events they only ever get made during the collision step.
+        private readonly List<EndCollideEvent>[]
+            _endCollideEvents =
+            [
+                new List<EndCollideEvent>(),
+                new List<EndCollideEvent>()
+            ];
+
+        private int _endEventIndex = 0;
+
         private int _substeps;
 
         /// <summary>
@@ -325,6 +344,8 @@ namespace Robust.Shared.Physics.Systems
                 CollideContacts();
 
                 Step(frameTime, prediction);
+
+                DispatchEvents();
 
                 var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
                 RaiseLocalEvent(ref updateAfterSolve);

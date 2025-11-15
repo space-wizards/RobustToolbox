@@ -44,7 +44,7 @@ public class PhysicsBenchmark
     {
         var entManager = _manyPyramidSim.Resolve<IEntityManager>();
 
-        for (var i = 0; i < 1f / frameTime * 10; i++)
+        for (var i = 0; i < (1f / frameTime) * 10; i++)
         {
             entManager.TickUpdate(frameTime, false);
         }
@@ -54,7 +54,7 @@ public class PhysicsBenchmark
     {
         int baseCount = 10;
         float extent = 0.5f;
-        int rowCount = 5; // 20
+        int rowCount = 20; // 5
         int columnCount = 5;
 
         // Setup ground
@@ -118,7 +118,80 @@ public class PhysicsBenchmark
                 physics.SetBodyType(boxUid, BodyType.Dynamic, body: box);
 
                 fixtures.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true, 5f), body: box);
+                physics.WakeBody(boxUid);
             }
+        }
+    }
+
+    #endregion
+
+    #region Smash
+
+    [GlobalSetup(Target = nameof(Smash))]
+    public void SmashSetup()
+    {
+        _tumblerSim = RobustServerSimulation.NewSimulation().InitializeInstance();
+
+        var entManager = _tumblerSim.Resolve<IEntityManager>();
+
+        entManager.System<SharedMapSystem>().CreateMap(out var mapId);
+
+        var physics = entManager.System<SharedPhysicsSystem>();
+        var fixtures = entManager.System<FixtureSystem>();
+        var joints = entManager.System<SharedJointSystem>();
+        var xformSystem = entManager.System<SharedTransformSystem>();
+        physics.SetGravity(new Vector2(0f, -9.8f));
+
+        {
+            var smashBox = new PolygonShape();
+            smashBox.SetAsBox(4f, 4f);
+
+            var bodyUid = entManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
+            var body = entManager.AddComponent<PhysicsComponent>(bodyUid);
+
+            physics.SetBodyType(bodyUid, BodyType.Dynamic, body: body);
+            physics.SetSleepingAllowed(bodyUid, body, false);
+            physics.SetFixedRotation(bodyUid, false, body: body);
+            xformSystem.SetLocalPosition(bodyUid, new Vector2(-20f, 0f));
+            physics.SetLinearVelocity(bodyUid, new Vector2(40f, 0f));
+
+            fixtures.TryCreateFixture(bodyUid, smashBox, "fix1", density: 8f, hard: true);
+        }
+
+        float d = 0.4f;
+        var box = new PolygonShape();
+        box.SetAsBox(0.5f * d, 0.5f * d);
+
+        int columns = 120; // 20
+        int rows = 80; // 10
+
+        for ( int i = 0; i < columns; ++i )
+        {
+            for ( int j = 0; j < rows; ++j )
+            {
+                var bodyUid = entManager.SpawnEntity(null, new MapCoordinates(i * d + 30f, ( j - rows / 2.0f ) * d, mapId));
+                var body = entManager.AddComponent<PhysicsComponent>(bodyUid);
+
+                physics.SetBodyType(bodyUid, BodyType.Dynamic, body: body);
+                physics.SetSleepingAllowed(bodyUid, body, false);
+                physics.SetFixedRotation(bodyUid, false, body: body);
+                xformSystem.SetLocalPosition(bodyUid, new Vector2(-20f, 0f));
+                physics.SetLinearVelocity(bodyUid, new Vector2(40f, 0f));
+
+                fixtures.TryCreateFixture(bodyUid, box, "fix1",  hard: true);
+                physics.WakeBody(bodyUid);
+            }
+        }
+    }
+
+    [Benchmark]
+    public void Smash()
+    {
+        var entManager = _manyPyramidSim.Resolve<IEntityManager>();
+
+        for (var i = 0; i < (1f / frameTime) * 10; i++)
+        {
+            entManager.TickUpdate(frameTime, false);
         }
     }
 

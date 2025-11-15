@@ -8,15 +8,10 @@ namespace Robust.Client.Editor.Testing;
 [GenerateTypedNameReferences]
 public partial class EditorDebugPanel : EditorPanel
 {
-    private readonly string _foo;
-
     public EditorDebugPanel(string foo)
     {
-        _foo = foo;
         RobustXamlLoader.Load(this);
 
-        A.Text = foo;
+        Title = foo;
     }
-
-    public override string Title => _foo;
 }

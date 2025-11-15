@@ -1,22 +1,26 @@
+using System;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 using Robust.Client.Console;
+using Robust.Client.Editor.Interface;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal abstract class ScriptConsole : DefaultWindow
+    internal abstract class ScriptConsole : EditorPanel, IConsoleTab
     {
         protected OutputPanel OutputPanel { get; }
         protected HistoryLineEdit InputBar { get; }
         protected Button RunButton { get; }
         protected Completions Suggestions { get; }
 
+        public event Action<IConsoleTab>? Focused;
+
         protected ScriptConsole()
         {
-            Contents.AddChild(new BoxContainer
+            AddChild(new BoxContainer
             {
                 Orientation = LayoutOrientation.Vertical,
                 Children =
@@ -55,14 +59,20 @@ namespace Robust.Client.UserInterface.CustomControls
             InputBar.OnTextChanged += _ => Suggestions.TextChanged();
             InputBar.OnTextEntered += _ => Run();
             RunButton.OnPressed += _ => Run();
-            MinSize = new Vector2(550, 300);
+
+            InputBar.OnFocusEnter += _ =>
+            {
+                Focused?.Invoke(this);
+            };
         }
 
         protected abstract void Complete();
 
         protected abstract void Run();
 
-        protected override void Opened()
+        LineEdit IConsoleTab.CommandBar => InputBar;
+
+        protected internal override void TabFocused()
         {
             InputBar.GrabKeyboardFocus();
         }

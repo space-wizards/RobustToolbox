@@ -43,6 +43,9 @@ public partial class EditorDocker : Control
         }
     }
 
+    public event Action<EditorPanel>? PanelAdded;
+    public event Action<EditorPanel>? PanelRemoved;
+
     public EditorDocker()
     {
         RobustXamlLoader.Load(this);
@@ -163,6 +166,29 @@ public partial class EditorDocker : Control
     {
 
     }
+
+    [Access(typeof(EditorTabPanel))]
+    internal void ChildPanelAdded(EditorPanel panel)
+    {
+        PanelAdded?.Invoke(panel);
+    }
+
+    [Access(typeof(EditorTabPanel))]
+    internal void ChildPanelRemoved(EditorPanel panel)
+    {
+        PanelRemoved?.Invoke(panel);
+    }
+
+    public IEnumerable<EditorPanel> GetAllPanels()
+    {
+        foreach (var tabPanel in _tabPanels)
+        {
+            foreach (var panel in tabPanel.Panels)
+            {
+                yield return panel;
+            }
+        }
+    }
 }
 
 /// <summary>
@@ -207,6 +233,16 @@ internal sealed class EditorWindowDocker : EditorDocker
     {
         _window = window;
         AllowSplitting = false;
+
+        window.Closed += WindowOnClosed;
+    }
+
+    private void WindowOnClosed()
+    {
+        foreach (var panel in GetAllPanels())
+        {
+            panel.TabClosed();
+        }
     }
 
     protected override void LastTabPendingRemoval()

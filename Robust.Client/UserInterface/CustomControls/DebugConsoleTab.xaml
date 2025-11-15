@@ -1,0 +1,4 @@
+﻿<editor:EditorPanel xmlns="https://spacestation14.io"
+                    xmlns:editor="clr-namespace:Robust.Client.Editor.Interface">
+    <DebugConsole Name="MainControl" />
+</editor:EditorPanel>

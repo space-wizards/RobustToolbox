@@ -1,3 +1,4 @@
+using Robust.Client.UserInterface;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 
@@ -6,11 +7,13 @@ namespace Robust.Client.Console.Commands
 #if CLIENT_SCRIPTING
     internal sealed class ScriptCommand : LocalizedCommands
     {
+        [Dependency] private readonly IUserInterfaceManagerInternal _uiManager = default!;
+
         public override string Command => "csi";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            new ScriptConsoleClient().OpenCentered();
+            ((UserInterfaceManager)_uiManager).DebugConsole.MainControl.AddPanel(new ScriptConsoleClient());
         }
     }
 

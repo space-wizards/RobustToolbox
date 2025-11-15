@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Editor.Interface;
 
-public sealed class EditorTabDragDrop : DragDropOperation
+public abstract class EditorTabBaseDragDrop : DragDropOperation
 {
-    internal EditorTabDragDrop(EditorPanel panel, EditorTabPanel originatingTabPanel)
+    private protected EditorTabBaseDragDrop(EditorPanel panel, EditorTabPanel originatingTabPanel)
     {
         Panel = panel;
         OriginatingTabPanel = originatingTabPanel;
@@ -15,6 +15,21 @@ public sealed class EditorTabDragDrop : DragDropOperation
 
     public EditorPanel Panel { get; }
     public EditorTabPanel OriginatingTabPanel { get; }
+}
+
+public sealed class EditorTabOnlyReorderDragDrop : EditorTabBaseDragDrop
+{
+    internal EditorTabOnlyReorderDragDrop(EditorPanel panel, EditorTabPanel originatingTabPanel)
+        : base(panel, originatingTabPanel)
+    {
+    }
+}
+
+public sealed class EditorTabDragDrop : EditorTabBaseDragDrop
+{
+    internal EditorTabDragDrop(EditorPanel panel, EditorTabPanel originatingTabPanel) : base(panel, originatingTabPanel)
+    {
+    }
 
     public override void Drop()
     {

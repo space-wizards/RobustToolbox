@@ -30,6 +30,8 @@ public partial class EditorTabPanel : Control
 
     public int PanelCount => _panels.Count;
 
+    internal IEnumerable<EditorPanel> Panels => _panels.Select(x => x.Panel);
+
     public EditorTabPanel(EditorDocker owner)
     {
         Owner = owner;
@@ -43,16 +45,17 @@ public partial class EditorTabPanel : Control
 
     public void AddPanel(EditorPanel panel)
     {
-        Content.Children.Add(panel);
-
         var tab = new EditorTab(panel, _tabs);
-        tab.TitleText = panel.Title;
         tab.Button.OnPressed += _ => SelectTab(tab);
         _tabs.Tabs.AddChild(tab);
 
         _panels.Add(new PanelData(panel, tab));
 
+        Owner.ChildPanelAdded(panel);
+
         Owner.CheckPendingRemoval();
+
+        SelectTab(tab);
     }
 
     public void RemovePanel(EditorPanel panel, bool destroy = true)
@@ -64,10 +67,15 @@ public partial class EditorTabPanel : Control
 
         _tabs.Tabs.RemoveChild(panelData.Tab);
 
+        Owner.ChildPanelRemoved(panel);
+
         if (destroy)
             ConfirmRemoval();
         else
             Owner.CheckPendingRemoval();
+
+        if (Content.ChildCount == 0 && _panels.Count > 0)
+            SelectTab(_panels[0].Tab);
     }
 
     public void ConfirmRemoval()
@@ -78,8 +86,13 @@ public partial class EditorTabPanel : Control
 
     private void SelectTab(EditorTab tab)
     {
-        Content.RemoveAllChildren();
-        Content.AddChild(_panels.Single(x => x.Tab == tab).Panel);
+        if (tab.Panel.Parent != Content)
+        {
+            Content.RemoveAllChildren();
+            Content.AddChild(_panels.Single(x => x.Tab == tab).Panel);
+        }
+
+        tab.Panel.TabFocused();
     }
 
     public override void DragEnter(DragEnterEventArgs eventArgs)

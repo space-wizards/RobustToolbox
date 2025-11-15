@@ -56,9 +56,9 @@ namespace Robust.Client.Console
                 _client._netManager.ClientSendMessage(msg);
             }
 
-            public override void Close()
+            protected internal override void TabClosed()
             {
-                base.Close();
+                base.TabClosed();
 
                 _client.ConsoleClosed(_session);
             }

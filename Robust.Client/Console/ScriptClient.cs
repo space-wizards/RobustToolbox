@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -10,6 +11,7 @@ namespace Robust.Client.Console
     {
         [Dependency] private readonly IClientConGroupController _conGroupController = default!;
         [Dependency] private readonly IClientNetManager _netManager = default!;
+        [Dependency] private readonly IUserInterfaceManagerInternal _uiManager = default!;
 
         private readonly Dictionary<int, ScriptConsoleServer> _activeConsoles = new();
 
@@ -31,9 +33,10 @@ namespace Robust.Client.Console
             var session = message.ScriptSession;
 
             var console = new ScriptConsoleServer(this, session);
+
+            ((UserInterfaceManager)_uiManager).DebugConsole.MainControl.AddPanel(console);
+
             _activeConsoles.Add(session, console);
-            // FIXME: When this is Open(), resizing the window will cause its position to get NaN'd.
-            console.OpenCentered();
         }
 
         private void ReceiveScriptResponse(MsgScriptResponse message)

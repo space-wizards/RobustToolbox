@@ -1,6 +1,7 @@
-<Control xmlns="https://spacestation14.io">
+<Control xmlns="https://spacestation14.io"
+         xmlns:editor="clr-namespace:Robust.Client.Editor.Interface">
     <LayoutContainer>
-        <DebugConsole Name="MainControl" Visible="False" />
+        <editor:EditorDocker Access="Internal" Name="MainControl" />
         <Control Name="BelowConsole" Access="Public" />
     </LayoutContainer>
 </Control>

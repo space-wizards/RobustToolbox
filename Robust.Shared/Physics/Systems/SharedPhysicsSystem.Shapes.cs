@@ -53,8 +53,7 @@ public abstract partial class SharedPhysicsSystem
         shape.Position = position;
         shape.Radius = radius;
 
-        if (body.CanCollide &&
-            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
+        if (TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
         {
             _lookup.DestroyProxies(uid, fixtureId, fixture, manager, xform, broadphase, checkTreeUpdate: false);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
@@ -112,8 +111,7 @@ public abstract partial class SharedPhysicsSystem
         edge.Vertex2 = vertex2;
         edge.Vertex3 = vertex3;
 
-        if (body.CanCollide &&
-            TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
+        if (TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase))
         {
             _lookup.DestroyProxies(uid, fixtureId, fixture, manager, xform, broadphase, checkTreeUpdate: false);
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Prometheus;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -9,6 +10,8 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -44,12 +47,27 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly IManifoldManager _manifoldManager = default!;
         [Dependency] private readonly IParallelManager _parallel = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly FixtureSystem _fixtureSystem = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
         [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] private readonly CollisionWakeSystem _wakeSystem = default!;
+
+        /*
+         * Physics data
+         */
+
+        private readonly HashSet<ulong> _pairKeys = new();
+        private readonly List<Fixture?> _fixtures = new();
+        private readonly List<Contact> _contacts = new();
+
+        /*
+         * Pools
+         */
+
+        private IdPool _shapesPool = new();
 
         /*
          * Events
@@ -132,7 +150,6 @@ namespace Robust.Shared.Physics.Systems
             XformQuery = GetEntityQuery<TransformComponent>();
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
-            SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
             SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
@@ -148,24 +165,36 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
         {
+            DestroyContacts(component);
+
             SetCanCollide(uid, false, false, body: component);
             DebugTools.Assert(!component.Awake);
+
+            // Recycle the IDs
+            if (_fixturesQuery.TryComp(uid, out var fixtures))
+            {
+                foreach (var fixture in fixtures.Fixtures.Values)
+                {
+                    DestroyWorldFixture(fixture);
+                }
+            }
 
             if (LifeStage(uid) <= EntityLifeStage.MapInitialized)
                 RemComp<FixturesComponent>(uid);
         }
 
-        private void OnCollisionChange(ref CollisionChangeEvent ev)
+        private void OnCollisionChange(Entity<PhysicsComponent, TransformComponent> ent)
         {
-            var uid = ev.BodyUid;
-            var mapId = Transform(uid).MapID;
+            var xform = ent.Comp2;
+            var mapId = xform.MapID;
+            var body = ent.Comp1;
 
             if (mapId == MapId.Nullspace)
                 return;
 
-            if (!ev.CanCollide)
+            if (!body.CanCollide)
             {
-                DestroyContacts(ev.Body);
+                DestroyContacts(body);
             }
         }
 

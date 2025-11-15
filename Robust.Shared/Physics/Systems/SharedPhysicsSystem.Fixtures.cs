@@ -30,14 +30,14 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(fixture.Id == 0);
         var id = _shapesPool.AllocId();
 
-        if (id == Fixtures.Count)
+        if (id == _fixtures.Count)
         {
-            Fixtures.Add(fixture);
+            _fixtures.Add(fixture);
         }
         else
         {
-            DebugTools.Assert(Fixtures[id] == null);
-            Fixtures[id] = fixture;
+            DebugTools.Assert(_fixtures[id] == null);
+            _fixtures[id] = fixture;
         }
 
         // Offset by 1 as slot 0 is also the default int (funny that).
@@ -48,7 +48,7 @@ public abstract partial class SharedPhysicsSystem
     {
         DebugTools.Assert(fixture.Id > 0);
         var id = fixture.Id - 1;
-        Fixtures[id] = null;
+        _fixtures[id] = null;
         _shapesPool.FreeId(id);
         fixture.Id = 0;
     }

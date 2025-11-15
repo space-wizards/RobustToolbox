@@ -60,7 +60,7 @@ namespace Robust.Shared.Physics.Systems
          */
 
         private readonly HashSet<ulong> _pairKeys = new();
-        private readonly List<Fixture?> Fixtures = new();
+        private readonly List<Fixture?> _fixtures = new();
         private readonly List<Contact> _contacts = new();
 
         /*
@@ -166,8 +166,19 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
         {
+            DestroyContacts(component);
+
             SetCanCollide(uid, false, false, body: component);
             DebugTools.Assert(!component.Awake);
+
+            // Recycle the IDs
+            if (_fixturesQuery.TryComp(uid, out var fixtures))
+            {
+                foreach (var fixture in fixtures.Fixtures.Values)
+                {
+                    DestroyWorldFixture(fixture);
+                }
+            }
 
             if (LifeStage(uid) <= EntityLifeStage.MapInitialized)
                 RemComp<FixturesComponent>(uid);

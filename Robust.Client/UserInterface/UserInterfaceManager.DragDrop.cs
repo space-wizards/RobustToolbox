@@ -82,7 +82,7 @@ internal sealed partial class UserInterfaceManager
         switch (_dragState)
         {
             case DragState.Dragging:
-                _sawmillUI.Debug("Ending drag");
+                _sawmillUI.Verbose("Ending drag");
 
                 // TODO: Clean up this coordinate conversion code. This is crap.
                 var uiScale = _currentlyDraggingOver.Count == 0 ? 1 : _currentlyDraggingOver[0].UIScale;
@@ -132,7 +132,7 @@ internal sealed partial class UserInterfaceManager
                 goto case DragState.Detecting;
 
             case DragState.Detecting:
-                _sawmillUI.Debug("Ending drag detection");
+                _sawmillUI.Verbose("Ending drag detection");
                 CancelDragDetect();
                 break;
         }
@@ -165,12 +165,12 @@ internal sealed partial class UserInterfaceManager
 
                 if (result.Result == null)
                 {
-                    _sawmillUI.Debug("Drag cancelled");
+                    _sawmillUI.Verbose("Drag cancelled");
                     CancelDragDetect();
                     return;
                 }
 
-                _sawmillUI.Debug("Starting drag");
+                _sawmillUI.Verbose("Starting drag");
                 var (srcControl, op) = result.Result.Value;
 
                 _dragOperation = op;
@@ -200,7 +200,7 @@ internal sealed partial class UserInterfaceManager
                 var curControl = MouseGetControl(resolvedCoords);
                 _lastDragCoordinates = resolvedCoords;
                 //_sawmillUI.Debug($"A: {Control.GetDebugPath(curControl)}");
-                _sawmillUI.Debug($"A: {mouseMoveEventArgs.Position}");
+                // _sawmillUI.Verbose($"A: {mouseMoveEventArgs.Position}");
                 var newOverSet = new HashSet<Control>();
                 var oldOverSet = new HashSet<Control>(_currentlyDraggingOver);
 
@@ -257,14 +257,12 @@ internal sealed partial class UserInterfaceManager
         // We don't really have a cross-platform way to figure out Z order, so we uh, have to guess
         // based on focus interactions.
         // Can this be broken? Yes. Do we care? No.
-        // TODO: Handle owned windows which always overlap their parent.
 
         var hitWindow = GetDepthSortedWindows()
             .Select(win =>
             {
                 var winInternal = (IClydeWindowInternal)win;
                 var localCoords = globalCoords - winInternal.WindowPosition;
-                // System.Console.WriteLine($"Test window @ {winInternal.WindowPosition}: {localCoords} x { win.Id }");
                 return new { win = winInternal, localCoords };
             })
             .Where(obj =>

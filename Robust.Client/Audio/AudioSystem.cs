@@ -17,6 +17,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -402,7 +403,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             worldPos = listener.Position;
             delta = Vector2.Zero;
-            distance = 0f;
         }
 
         // Update audio occlusion
@@ -412,7 +412,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
         else
         {
-            var occlusion = GetOcclusion(listener, delta, distance, parentUid);
+            var occlusion = GetOcclusion(listener, delta, parentUid);
             component.Occlusion = occlusion;
         }
 
@@ -432,15 +432,15 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <summary>
     /// Gets the audio occlusion from the target audio entity to the listener's position.
     /// </summary>
-    public float GetOcclusion(MapCoordinates listener, Vector2 delta, float distance, EntityUid? ignoredEnt = null)
+    public float GetOcclusion(MapCoordinates listener, Vector2 translation, EntityUid? ignoredEnt = null)
     {
         float occlusion = 0;
 
-        if (distance > 0.1)
+        if (translation != Vector2.Zero)
         {
-            var rayLength = MathF.Min(distance, _maxRayLength);
-            var ray = new CollisionRay(listener.Position, delta / distance, OcclusionCollisionMask);
-            occlusion = _physics.IntersectRayPenetration(listener.MapId, ray, rayLength, ignoredEnt);
+            translation = translation.Normalized() * MathF.Min(translation.Length(), _maxRayLength);
+            var ray = new CollisionRay(listener.Position, translation, OcclusionCollisionMask);
+            occlusion = _physics.IntersectRayPenetration(listener.MapId, ray, ignoredEnt);
         }
 
         return occlusion;

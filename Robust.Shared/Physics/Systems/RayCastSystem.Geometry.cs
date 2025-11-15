@@ -23,7 +23,7 @@ public sealed partial class RayCastSystem
     /// </summary>
     public static float RayCastAllCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, ref RayResult result)
     {
-        result.Results.Add(new RayHit(proxy.Entity, normal, fraction)
+        result.Results.Add(new RayHit(proxy.Entity, proxy.FixtureId, normal, fraction)
         {
             Point = point,
         });
@@ -52,7 +52,7 @@ public sealed partial class RayCastSystem
 
         if (add)
         {
-            result.Results.Add(new RayHit(proxy.Entity, normal, fraction)
+            result.Results.Add(new RayHit(proxy.Entity, proxy.FixtureId, normal, fraction)
             {
                 Point = point,
             });

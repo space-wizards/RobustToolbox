@@ -6,7 +6,6 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
-#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Robust.UnitTesting.Shared.Localization;
 

@@ -150,7 +150,6 @@ namespace Robust.Shared.Physics.Systems
             XformQuery = GetEntityQuery<TransformComponent>();
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
-            SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
             SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
@@ -184,17 +183,18 @@ namespace Robust.Shared.Physics.Systems
                 RemComp<FixturesComponent>(uid);
         }
 
-        private void OnCollisionChange(ref CollisionChangeEvent ev)
+        private void OnCollisionChange(Entity<PhysicsComponent, TransformComponent> ent)
         {
-            var uid = ev.BodyUid;
-            var mapId = Transform(uid).MapID;
+            var xform = ent.Comp2;
+            var mapId = xform.MapID;
+            var body = ent.Comp1;
 
             if (mapId == MapId.Nullspace)
                 return;
 
-            if (!ev.CanCollide)
+            if (!body.CanCollide)
             {
-                DestroyContacts(ev.Body);
+                DestroyContacts(body);
             }
         }
 

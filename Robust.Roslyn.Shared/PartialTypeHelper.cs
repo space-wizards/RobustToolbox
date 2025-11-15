@@ -62,9 +62,14 @@ public sealed record PartialTypeInfo(
         return false;
     }
 
+    public string GetQualifiedName()
+    {
+        return Namespace == null ? Name : $"{Namespace}.{Name}";
+    }
+
     public string GetGeneratedFileName()
     {
-        var name = Namespace == null ? Name : $"{Namespace}.{Name}";
+        var name = GetQualifiedName();
         if (TypeParameterNames.AsImmutableArray().Length > 0)
             name += $"`{TypeParameterNames.AsImmutableArray().Length}";
 
@@ -117,5 +122,44 @@ public sealed record PartialTypeInfo(
     public void WriteFooter(StringBuilder builder)
     {
         // TODO: Nested classes
+    }
+
+    /// <summary>
+    /// An <see cref="IEqualityComparer{T}"/> for <see cref="PartialTypeInfo"/>s which considers all fields EXCEPT
+    /// <see cref="Location"/>. This comparer, therefore, considers <see cref="PartialTypeInfo"/>s constructed from
+    /// different syntactic parts of one <c>partial</c> to be equal.
+    /// </summary>
+    public static readonly IEqualityComparer<PartialTypeInfo> WithoutLocationEqualityComparer =
+        new WithoutLocationEqualityComparerImpl();
+
+    private class WithoutLocationEqualityComparerImpl : IEqualityComparer<PartialTypeInfo>
+    {
+        public bool Equals(PartialTypeInfo t, PartialTypeInfo other)
+        {
+            return t.Namespace == other.Namespace &&
+                   t.Name == other.Name &&
+                   t.DisplayName == other.DisplayName &&
+                   t.TypeParameterNames.Equals(other.TypeParameterNames) &&
+                   t.IsValid == other.IsValid &&
+                   t.Accessibility == other.Accessibility &&
+                   t.Kind == other.Kind &&
+                   t.IsRecord == other.IsRecord &&
+                   t.IsAbstract == other.IsAbstract;
+        }
+
+        public int GetHashCode(PartialTypeInfo t)
+        {
+            var hash = new HashCode();
+            hash.Add(t.Namespace);
+            hash.Add(t.Name);
+            hash.Add(t.DisplayName);
+            hash.Add(t.TypeParameterNames);
+            hash.Add(t.IsValid);
+            hash.Add(t.Accessibility);
+            hash.Add(t.Kind);
+            hash.Add(t.IsRecord);
+            hash.Add(t.IsAbstract);
+            return hash.ToHashCode();
+        }
     }
 }

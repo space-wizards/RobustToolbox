@@ -125,6 +125,8 @@ namespace Robust.Shared.Timing
         /// </summary>
         public TimeSpan LastTick { get; set; }
 
+        public GameTick LastRealTick { get; set; }
+
         private ushort _tickRate;
         private TimeSpan _tickRemainder;
 

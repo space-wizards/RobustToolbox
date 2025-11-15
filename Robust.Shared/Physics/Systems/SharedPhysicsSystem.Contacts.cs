@@ -286,6 +286,7 @@ public abstract partial class SharedPhysicsSystem
 
         // Insert into world
         _contacts.Add(contact);
+        contact.ContactId = _contacts.Count;
 
         // Connect to body A
         DebugTools.Assert(!fixA.Contacts.ContainsKey(fixB));
@@ -375,15 +376,21 @@ public abstract partial class SharedPhysicsSystem
         next = node?.Next;
 
         // Remove from the world
-        var slotContact = _contacts.RemoveSwap(contact.ContactId);
-        DebugTools.Assert(slotContact.ContactId == contact.ContactId);
-
-        // Update the moved one's slot.
-        if (slotContact.ContactId > 0)
+        if (_contacts.Count > 1)
         {
-            var moved = _contacts[slotContact.ContactId];
-            moved.ContactId = slotContact.ContactId;
+            DebugTools.Assert(contact.ContactId > 0 && contact.ContactId <= _contacts.Count);
+            var replacement = _contacts[^1];
+            _contacts.RemoveAt(_contacts.Count - 1);
+            _contacts[contact.ContactId] = replacement;
+            replacement.ContactId = contact.ContactId;
         }
+        else
+        {
+            DebugTools.Assert(contact.ContactId == 1);
+            _contacts.Clear();
+        }
+
+        contact.ContactId = 0;
 
         var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
         DebugTools.Assert(_pairKeys.Contains(pairKey));
@@ -412,8 +419,11 @@ public abstract partial class SharedPhysicsSystem
         var contacts = ArrayPool<Contact>.Shared.Rent(ContactCount);
         var index = 0;
 
-        foreach (var contact in _contacts)
+        // No events should be issued so contacts ahead of us shouldn't be getting mutated.
+        for (var i = _contacts.Count - 1; i >= 0; i--)
         {
+            var contact = _contacts[i];
+
             // It's possible the contact was destroyed by content in which case we just skip it.
             if (!contact.Enabled)
                 continue;

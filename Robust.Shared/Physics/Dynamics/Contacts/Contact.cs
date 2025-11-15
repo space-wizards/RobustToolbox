@@ -54,8 +54,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         // trying to find it.
 
         /// <summary>
-        /// Index of this contact into the contact list.
+        /// Index + 1 of this contact into the contact list.
         /// </summary>
+        /// <remarks>
+        /// + 1 as a sanity check so the default 0 is invalid.
+        /// </remarks>
         internal int ContactId;
 
         /// <summary>
@@ -93,7 +96,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         {
             _manifoldManager = manifoldManager;
 
-            MapNode = new LinkedListNode<Contact>(this);
             BodyANode = new LinkedListNode<Contact>(this);
             BodyBNode = new LinkedListNode<Contact>(this);
         }

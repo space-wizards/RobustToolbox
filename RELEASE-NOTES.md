@@ -45,6 +45,7 @@ END TEMPLATE-->
 
 * `ActorComponent` now has the `UnsavedComponentAttribute`
   * Previously it was unintentionally get serialized to yaml, which could result in NREs when deserializing.
+* Don't spam error messages on startup trying to draw splash logos for projects that don't have one.
 
 ### Other
 

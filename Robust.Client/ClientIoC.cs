@@ -28,6 +28,7 @@ using Robust.Client.Timing;
 using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
+using Robust.Client.UserInterface.Stylesheets;
 using Robust.Client.UserInterface.Themes;
 using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Client.Utility;
@@ -83,6 +84,8 @@ namespace Robust.Client
             deps.Register<IResourceManagerInternal, ResourceCache>();
             deps.Register<IResourceCache, ResourceCache>();
             deps.Register<IResourceCacheInternal, ResourceCache>();
+            deps.Register<IEngineStylesheetManager, EngineStylesheetManager>();
+            deps.Register<IEngineStylesheetManagerInternal, EngineStylesheetManager>();
             deps.Register<IClientNetManager, NetManager>();
             deps.Register<EntityManager, ClientEntityManager>();
             deps.Register<ClientEntityManager>();

@@ -6,17 +6,10 @@
          MouseFilter="Stop">
     <BoxContainer Orientation="Vertical">
         <!-- Needs MouseFilter="Stop" so that hit detection works when dragging tabs around. -->
-        <PanelContainer Name="TabsContainer">
-            <PanelContainer.PanelOverride>
-                <graphics:StyleBoxFlat BackgroundColor="#00FF00" />
-            </PanelContainer.PanelOverride>
-        </PanelContainer>
-        <PanelContainer VerticalExpand="True">
-            <PanelContainer.PanelOverride>
-                <graphics:StyleBoxFlat BackgroundColor="#00FFAA" />
-            </PanelContainer.PanelOverride>
+        <Control Name="TabsContainer" />
+        <Control VerticalExpand="True">
             <Control Name="Content" />
             <interface:EditorTabDropOverlay Name="DropOverlay" Access="PrivateProtected" Visible="False" />
-        </PanelContainer>
+        </Control>
     </BoxContainer>
 </Control>

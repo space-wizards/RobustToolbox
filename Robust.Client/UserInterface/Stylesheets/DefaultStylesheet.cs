@@ -2,17 +2,18 @@
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.StylesheetHelpers;
 
 namespace Robust.Client.UserInterface.Stylesheets;
 
-public sealed class DefaultStylesheet
+public sealed class DefaultStylesheet : CommonEngineStylesheet
 {
+    public const string Name = "Default";
+
     public Stylesheet Stylesheet { get; private set; } = default!;
 
-    public DefaultStylesheet(IResourceCache res, IUserInterfaceManager userInterfaceManager)
+    public DefaultStylesheet(IResourceCache res, IUserInterfaceManager userInterfaceManager) : base(new NoConfig())
     {
         var notoSansFont = res.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf");
         var notoSansFont12 = new VectorFont(notoSansFont, 12);
@@ -40,8 +41,8 @@ public sealed class DefaultStylesheet
             ContentMarginTopOverride = 10,
         };
 
-        Stylesheet = new Stylesheet(new StyleRule[]
-        {
+        Stylesheet = new Stylesheet(
+        [
             /*
              * Debug console and other monospace things.
              */
@@ -127,9 +128,7 @@ public sealed class DefaultStylesheet
              * Font defaults
              */
 
-            Element()
-                .Prop("font", notoSansFont12)
-                .Prop("font-color", Color.White),
+            ..GetFontRules(),
 
             /*
              * Buttons
@@ -269,6 +268,6 @@ public sealed class DefaultStylesheet
                     ContentMarginTopOverride = 3,
                 })
                 .Prop("font", notoSansFont12),
-        });
+        ]);
     }
 }

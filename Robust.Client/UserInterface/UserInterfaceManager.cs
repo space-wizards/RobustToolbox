@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
-using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -18,8 +17,6 @@ using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
@@ -40,7 +37,6 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IFontManager _fontManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IStateManager _stateManager = default!;
         [Dependency] private readonly IPrototypeManager _protoManager = default!;
@@ -54,6 +50,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IRuntimeLog _runtime = default!;
         [Dependency] private readonly IClipboardManager _clipboard = null!;
+        [Dependency] private readonly IEngineStylesheetManagerInternal _styleSheets = null!;
 
         private IAudioSource? _clickSource;
         private IAudioSource? _hoverSource;
@@ -112,9 +109,14 @@ namespace Robust.Client.UserInterface
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
             _configurationManager.OnValueChanged(CVars.UIDragThreshold, v => _dragThresholdSquared = v * v, true);
             ThemeDefaults = new InterfaceThemeDummy();
+
             _initScaling();
-            SetupControllers();
             _initializeCommon();
+
+            _initThemes();
+            _styleSheets.Initialize();
+
+            SetupControllers();
 
             DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
@@ -138,9 +140,6 @@ namespace Robust.Client.UserInterface
                     disabled: session => _rendering = true));
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
-            _initThemes();
-
-            _stylesheet = new DefaultStylesheet(_resourceCache, this).Stylesheet;
         }
 
         public void PostInitialize()

@@ -1,7 +1,9 @@
 <Control xmlns="https://spacestation14.io"
          xmlns:editor="clr-namespace:Robust.Client.Editor.Interface">
     <LayoutContainer>
-        <editor:EditorDocker Access="Internal" Name="MainControl" />
+        <PanelContainer Name="Background" StyleClasses="DropDownBackground">
+            <editor:EditorDocker Access="Internal" Name="MainControl" />
+        </PanelContainer>
         <Control Name="BelowConsole" Access="Public" />
     </LayoutContainer>
 </Control>

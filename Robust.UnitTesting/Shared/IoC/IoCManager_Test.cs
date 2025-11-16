@@ -4,7 +4,6 @@ using NUnit.Framework;
 using Robust.Shared.Analyzers;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
-#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Robust.UnitTesting.Shared.IoC
 {

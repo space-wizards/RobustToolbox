@@ -2,6 +2,10 @@ namespace Robust.Shared.GameObjects;
 
 public abstract class SharedVisibilitySystem : EntitySystem
 {
+    public override void Update(float frameTime)
+    {
+    }
+
     public virtual void AddLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
     {
     }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Shared.Containers;
@@ -14,13 +13,12 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 [Flags]
-public enum LookupFlags : byte
+public enum LookupFlags : ushort
 {
     None = 0,
 
@@ -34,31 +32,42 @@ public enum LookupFlags : byte
     /// </summary>
     Dynamic = 1 << 1,
 
+    Kinematic = 1 << 2,
+
     /// <summary>
     /// Should we query static physics bodies.
     /// </summary>
-    Static = 1 << 2,
+    Static = 1 << 3,
 
     /// <summary>
     /// Should we query non-collidable physics bodies.
     /// </summary>
-    Sundries = 1 << 3,
+    Sundries = 1 << 5,
 
     /// <summary>
     /// Include entities that are currently in containers.
     /// </summary>
-    Contained = 1 << 5,
+    Contained = 1 << 6,
 
     /// <summary>
     /// Do we include non-hard fixtures.
     /// </summary>
-    Sensors = 1 << 6,
+    Sensors = 1 << 7,
 
-    Uncontained = Dynamic | Static | Sundries | Sensors,
+    /// <summary>
+    /// Should we only query for enabled physics bodies. Does nothing for <see cref="StaticSundries"/> tree.
+    /// </summary>
+    /// <remarks>
+    /// If you don't want to return non-collidable bodies then exclude <see cref="Sundries"/> as well.
+    /// </remarks>
+    Enabled = 1 << 8,
+
+    // Contained entities don't have collision so can skip those ones.
+    Uncontained = Dynamic | Static | Sensors | Enabled | Sundries,
 
     StaticSundries = Static | Sundries,
 
-    All = Contained | Dynamic | Static | Sundries | Sensors
+    All = Contained | Dynamic | Kinematic | Static | Sensors | Sundries
 }
 
 /// <summary>
@@ -74,11 +83,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
 {
     [Dependency] private readonly IManifoldManager _manifoldManager = default!;
     [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly INetManager _netMan = default!;
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly FixtureSystem _fixtures = default!;
     [Dependency] private readonly SharedMapSystem _map = default!;
+    [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
 
@@ -90,6 +99,15 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private EntityQuery<MetaDataComponent> _metaQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<TransformComponent> _xformQuery;
+
+    /*
+     * For broadphases there's 5 scenarios
+     * 1. Normal physics body goes in a physics tree.
+     * 2. Contained entities get an invalid broadphase and go on no tree.
+     * 3. Nullspace entities get an invalid broadphase and go on no tree.
+     * 4. Physics bodies with no fixtures go on the sundries tree. This is to avoid having callers have to manually mess with CanCollide / lookup when dynamically making a body.
+     * 5. Every other entity goes on the sundries tree.
+     */
 
     /// <summary>
     /// 1 x 1 polygons can overlap neighboring tiles (even without considering the polygon skin around them.
@@ -131,12 +149,31 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         SubscribeLocalEvent<TransformComponent, PhysicsBodyTypeChangedEvent>(OnBodyTypeChange);
         SubscribeLocalEvent<PhysicsComponent, ComponentStartup>(OnBodyStartup);
-        SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
     }
 
     private void OnBodyStartup(EntityUid uid, PhysicsComponent component, ComponentStartup args)
     {
-        UpdatePhysicsBroadphase(uid, Transform(uid), component);
+        var xform = Transform(uid);
+
+        if (xform.Broadphase is { } old &&
+            old.BodyType == null)
+        {
+            // Body is right where it should be
+            if (_fixturesQuery.TryComp(uid, out var fixtures) &&
+                fixtures.FixtureCount == 0)
+            {
+                return;
+            }
+
+            // If physics comp is added to an initialized entity it may be on the sundries tree so need to remove it.
+            if (_broadQuery.TryComp(old.Uid, out var oldBroadphaseComp))
+            {
+                DebugTools.Assert(oldBroadphaseComp.StaticSundriesTree.Contains(uid));
+                oldBroadphaseComp.StaticSundriesTree.Remove(uid);
+            }
+        }
+
+        UpdatePhysicsBroadphase(uid, xform, component);
     }
 
     public override void Shutdown()
@@ -155,8 +192,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         RemComp(uid, component);
     }
 
-    private void RemoveChildrenFromTerminatingBroadphase(TransformComponent xform,
-        BroadphaseComponent component)
+    private void RemoveChildrenFromTerminatingBroadphase(TransformComponent xform, BroadphaseComponent component)
     {
         foreach (var child in xform._children)
         {
@@ -172,9 +208,9 @@ public sealed partial class EntityLookupSystem : EntitySystem
             DebugTools.Assert(childXform.Broadphase.Value.Uid == component.Owner);
             DebugTools.Assert(!_gridQuery.HasComp(child));
 
-            if (childXform.Broadphase.Value.CanCollide && _fixturesQuery.TryGetComponent(child, out var fixtures))
+            if (childXform.Broadphase.Value.BodyType != null && _fixturesQuery.TryGetComponent(child, out var fixtures))
             {
-                var tree = childXform.Broadphase.Value.Static ? component.StaticTree : component.DynamicTree;
+                var tree = _broadphase.GetTree(component, childXform.Broadphase.Value.BodyType.Value);
                 foreach (var fixture in fixtures.Fixtures.Values)
                 {
                     DestroyProxies(fixture, tree);
@@ -203,8 +239,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private void OnBroadphaseAdd(Entity<BroadphaseComponent> broadphase, ref ComponentAdd args)
     {
         broadphase.Comp.StaticSundriesTree = new DynamicTree<EntityUid>(
-            (in EntityUid value) => GetTreeAABB(value, broadphase.Owner));
-        broadphase.Comp.SundriesTree = new DynamicTree<EntityUid>(
             (in EntityUid value) => GetTreeAABB(value, broadphase.Owner));
     }
 
@@ -261,7 +295,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             }
         }
 
-        DebugTools.Assert(xform.Broadphase is not {} x || x.Uid == broadphase.Owner && !x.CanCollide);
+        DebugTools.Assert(xform.Broadphase is not {} x || x.Uid == broadphase.Owner && x.BodyType == null);
         AddOrUpdateEntityTree(
             broadphase.Owner,
             broadphase.Comp2,
@@ -296,23 +330,33 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (!TryGetCurrentBroadphase(xform, out var broadphase))
             return;
 
+        TransformComponent? broadphaseXform = null;
+
+        // Remove the entity from the sundries tree if it had no fixtures
+        if (xform.Broadphase?.BodyType == null)
+        {
+            DebugTools.Assert(_fixturesQuery.GetComponent(uid).FixtureCount == 1);
+            RemoveFromEntityTree(broadphase.Owner, broadphase, uid, xform);
+            xform.Broadphase = new BroadphaseData(broadphase.Owner, body.BodyType);
+        }
+
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
         var mapTransform = new Transform(worldPos, worldRot);
 
         var (_, broadWorldRot, _, broadInvMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(broadphase.Owner);
         var broadphaseTransform = new Transform(Vector2.Transform(mapTransform.Position, broadInvMatrix), mapTransform.Quaternion2D.Angle - broadWorldRot);
-        var tree = body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
+        var tree = _broadphase.GetTree(broadphase, body.BodyType);
         DebugTools.Assert(fixture.ProxyCount == 0);
 
         AddOrMoveProxies((uid, body, xform), fixtureId, fixture, tree, broadphaseTransform);
     }
 
-    internal void DestroyProxies(EntityUid uid, string fixtureId, Fixture fixture, TransformComponent xform, BroadphaseComponent broadphase)
+    internal void DestroyProxies(EntityUid uid, string fixtureId, Fixture fixture, FixturesComponent fixtures, TransformComponent xform, BroadphaseComponent broadphase, bool checkTreeUpdate = true)
     {
         DebugTools.AssertNotNull(xform.Broadphase);
         DebugTools.Assert(xform.Broadphase!.Value.Uid == broadphase.Owner);
 
-        if (!xform.Broadphase.Value.CanCollide || xform.GridUid == uid)
+        if (xform.Broadphase.Value.BodyType == null || xform.GridUid == uid)
             return;
 
         if (fixture.ProxyCount == 0)
@@ -321,41 +365,29 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return;
         }
 
-        var tree = xform.Broadphase.Value.Static ? broadphase.StaticTree : broadphase.DynamicTree;
+        var tree = _broadphase.GetTree(broadphase, xform.Broadphase.Value.BodyType.Value);
         DestroyProxies(fixture, tree);
+
+        // Move back to static sundries tree if relevant
+        if (checkTreeUpdate && fixtures.FixtureCount == 0)
+        {
+            xform.Broadphase = new BroadphaseData(broadphase.Owner, null);
+            AddOrUpdateSundriesTree(broadphase.Owner, broadphase, uid, xform);
+        }
     }
 
     #endregion
 
     #region Entity events
 
-    private void OnPhysicsUpdate(ref CollisionChangeEvent ev)
-    {
-        var xform = Transform(ev.BodyUid);
-        UpdatePhysicsBroadphase(ev.BodyUid, xform, ev.Body);
-
-        // ensure that the cached broadphase is correct.
-        DebugTools.Assert(_timing.ApplyingState
-                          || xform.Broadphase == null
-                          || ev.Body.LifeStage <= ComponentLifeStage.Initializing
-                          || !xform.Broadphase.Value.IsValid()
-                          || ((xform.Broadphase.Value.CanCollide == ev.Body.CanCollide)
-                              && (xform.Broadphase.Value.Static == (ev.Body.BodyType == BodyType.Static))));
-    }
-
     private void OnBodyTypeChange(EntityUid uid, TransformComponent xform, ref PhysicsBodyTypeChangedEvent args)
     {
-        // only matters if we swapped from static to non-static or vice versa.
-        if (args.Old != BodyType.Static && args.New != BodyType.Static)
-            return;
-
         UpdatePhysicsBroadphase(uid, xform, args.Component);
     }
 
     private void UpdatePhysicsBroadphase(EntityUid uid, TransformComponent xform, PhysicsComponent body)
     {
-        if (body.LifeStage <= ComponentLifeStage.Initializing)
-            return;
+        DebugTools.Assert(body.LifeStage > ComponentLifeStage.Initializing);
 
         if (xform.GridUid == uid)
             return;
@@ -371,37 +403,31 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         // remove from the old broadphase
         var fixtures = Comp<FixturesComponent>(uid);
-        if (old.CanCollide)
-        {
-            RemoveBroadTree(broadphase, fixtures, old.Static);
-        }
-        else
-            (old.Static ? broadphase.StaticSundriesTree : broadphase.SundriesTree).Remove(uid);
+
+        // If physics comp is added to an initialized entity this may not be true.
+        if (old.BodyType != null)
+            RemovePhysicsTree(broadphase, fixtures, old.BodyType.Value);
 
         // Add to new broadphase
-        if (body.CanCollide)
-            AddPhysicsTree(uid, old.Uid, broadphase, xform, body, fixtures);
-        else
-            AddOrUpdateSundriesTree(old.Uid, broadphase, uid, xform, body.BodyType == BodyType.Static);
+        AddPhysicsTree(uid, old.Uid, broadphase, xform, body, fixtures);
     }
 
-    private void RemoveBroadTree(BroadphaseComponent lookup, FixturesComponent manager, bool staticBody)
+    private void RemovePhysicsTree(BroadphaseComponent lookup, FixturesComponent manager, BodyType bodyType)
     {
-        var tree = staticBody ? lookup.StaticTree : lookup.DynamicTree;
+        var tree = _broadphase.GetTree(lookup, bodyType);
         foreach (var fixture in manager.Fixtures.Values)
         {
             DestroyProxies(fixture, tree);
         }
     }
 
-    internal void DestroyProxies(Fixture fixture, IBroadPhase tree)
+    private void DestroyProxies(Fixture fixture, IBroadPhase tree)
     {
-        var buffer = _physics.MoveBuffer;
         for (var i = 0; i < fixture.ProxyCount; i++)
         {
             var proxy = fixture.Proxies[i];
             tree.RemoveProxy(proxy.ProxyId);
-            buffer.Remove(proxy);
+            _physics.RemoveFromMoveBuffer(proxy);
         }
 
         fixture.ProxyCount = 0;
@@ -428,11 +454,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
         FixturesComponent manager)
     {
         DebugTools.Assert(!_container.IsEntityOrParentInContainer(body.Owner, null, xform));
-        DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadphase.Owner, body.CanCollide, body.BodyType == BodyType.Static));
+        DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadphase.Owner, body.BodyType));
         DebugTools.Assert(broadphase.Owner == broadUid);
 
-        xform.Broadphase ??= new(broadUid, body.CanCollide, body.BodyType == BodyType.Static);
-        var tree = body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
+        xform.Broadphase ??= new(broadUid, body.BodyType);
+        var tree = _broadphase.GetTree(broadphase, body.BodyType);
 
         // TOOD optimize this. This function iterates UP through parents, while we are currently iterating down.
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
@@ -454,8 +480,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
         IBroadPhase tree,
         Transform broadphaseTransform)
     {
-        var moveBuffer = _physics.MoveBuffer;
-
         // Moving
         if (fixture.ProxyCount > 0)
         {
@@ -465,7 +489,9 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 var proxy = fixture.Proxies[i];
                 tree.MoveProxy(proxy.ProxyId, bounds);
                 proxy.AABB = bounds;
-                moveBuffer.Add(proxy);
+
+                if (ent.Comp1.CanCollide)
+                    _physics.AddToMoveBuffer(proxy);
             }
 
             return;
@@ -481,29 +507,33 @@ public sealed partial class EntityLookupSystem : EntitySystem
             proxy.ProxyId = tree.AddProxy(ref proxy);
             proxy.AABB = bounds;
             proxies[i] = proxy;
-            moveBuffer.Add(proxy);
+            if (ent.Comp1.CanCollide)
+                _physics.AddToMoveBuffer(proxy);
         }
 
         fixture.Proxies = proxies;
         fixture.ProxyCount = count;
     }
 
-    private void AddOrUpdateSundriesTree(EntityUid broadUid, BroadphaseComponent broadphase, EntityUid uid, TransformComponent xform, bool staticBody, Box2? aabb = null)
+    private void AddOrUpdateSundriesTree(EntityUid broadUid, BroadphaseComponent broadphase, EntityUid uid, TransformComponent xform, Box2? aabb = null)
     {
         DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid));
-        DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadUid, false, staticBody));
-        xform.Broadphase ??= new(broadUid, false, staticBody);
-        (staticBody ? broadphase.StaticSundriesTree : broadphase.SundriesTree).AddOrUpdate(uid, aabb);
+        DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadUid, null));
+        xform.Broadphase ??= new(broadUid, null);
+        broadphase.StaticSundriesTree.AddOrUpdate(uid, aabb);
     }
 
     private void OnEntityInit(Entity<MetaDataComponent> uid)
     {
-        if (_container.IsEntityOrParentInContainer(uid, uid) || _mapQuery.HasComp(uid) || _gridQuery.HasComp(uid))
+        // TODO: Get xform from spawn and re-use here
+        _xformQuery.TryGetComponent(uid.Owner, out var xform);
+        if (_container.IsEntityOrParentInContainer(uid.Owner, meta: uid.Comp, xform: xform) || _mapQuery.HasComp(uid) || _gridQuery.HasComp(uid))
             return;
 
         // TODO can this just be done implicitly via transform startup?
         // or do things need to be in trees for other component startup logic?
-        FindAndAddToEntityTree(uid, false);
+        // We should find out.
+        FindAndAddToEntityTree(uid, xform: xform, recursive: false);
     }
 
     private void OnMove(ref MoveEvent args)
@@ -547,6 +577,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private void UpdateParent(EntityUid uid, TransformComponent xform)
     {
         BroadphaseComponent? oldBroadphase = null;
+        FixturesComponent? fixtures = null;
+
         if (xform.Broadphase != null)
         {
             if (!xform.Broadphase.Value.IsValid())
@@ -557,7 +589,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 DebugTools.Assert("Encountered deleted broadphase.");
 
                 // broadphase was probably deleted.
-                if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
+                if (_fixturesQuery.Resolve(uid, ref fixtures, logMissing: false))
                 {
                     foreach (var fixture in fixtures.Fixtures.Values)
                     {
@@ -580,6 +612,12 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (newBroadphase == null)
             return;
 
+        // If it's non-collidable (e.g. on nullspace) then reset collision back to on.
+        if (_physicsQuery.TryComp(uid, out var body) && !body.CanCollide)
+        {
+            _physics.SetCanCollide(uid, value: true, manager: fixtures, body: body);
+        }
+
         var newBroadphaseXform = _xformQuery.GetComponent(newBroadphase.Owner);
 
         AddOrUpdateEntityTree(
@@ -587,7 +625,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
             newBroadphase,
             newBroadphaseXform,
             uid,
-            xform);
+            xform,
+            body: body);
     }
 
     public void FindAndAddToEntityTree(EntityUid uid, bool recursive = true, TransformComponent? xform = null)
@@ -627,7 +666,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             broadphaseXform,
             uid,
             xform,
-            recursive);
+            recursive: recursive);
     }
 
     private void AddOrUpdateEntityTree(
@@ -636,6 +675,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         TransformComponent broadphaseXform,
         EntityUid uid,
         TransformComponent xform,
+        PhysicsComponent? body = null,
         bool recursive = true)
     {
         if (xform.Broadphase != null && !xform.Broadphase.Value.IsValid())
@@ -645,7 +685,12 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return;
         }
 
-        if (!_physicsQuery.TryGetComponent(uid, out var body) || !body.CanCollide)
+        FixturesComponent? fixtures = null;
+
+        // If it has no physics OR no fixtures it goes in sundries tree.
+        if (!_physicsQuery.Resolve(uid, ref body, logMissing: false) ||
+            !_fixturesQuery.Resolve(uid, ref fixtures, logMissing: false) ||
+            fixtures.FixtureCount == 0)
         {
             // TODO optimize this. This function iterates UP through parents, while we are currently iterating down.
             var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(uid, xform);
@@ -654,11 +699,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
             var relativeRotation = rotation - broadphaseXform.LocalRotation;
 
             var aabb = GetAABBNoContainer(uid, coordinates.Position, relativeRotation);
-            AddOrUpdateSundriesTree(broadUid, broadphase, uid, xform, body?.BodyType == BodyType.Static, aabb);
+            AddOrUpdateSundriesTree(broadUid, broadphase, uid, xform, aabb);
         }
         else
         {
-            AddOrUpdatePhysicsTree(uid, broadUid, broadphase, broadphaseXform, xform, body, _fixturesQuery.GetComponent(uid));
+            AddOrUpdatePhysicsTree(uid, broadUid, broadphase, broadphaseXform, xform, body, fixtures);
         }
 
         if (xform.ChildCount == 0 || !recursive)
@@ -671,7 +716,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             foreach (var child in xform._children)
             {
                 var childXform = _xformQuery.GetComponent(child);
-                AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, child, childXform, recursive);
+                AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, child, childXform, recursive: recursive);
             }
             return;
         }
@@ -682,7 +727,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 continue;
 
             var childXform = _xformQuery.GetComponent(child);
-            AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, child, childXform, recursive);
+            AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, child, childXform, recursive: recursive);
         }
     }
 
@@ -726,14 +771,12 @@ public sealed partial class EntityLookupSystem : EntitySystem
             broadUid = old.Uid;
         }
 
-        if (old.CanCollide)
+        if (old.BodyType != null)
         {
-            RemoveBroadTree(broadphase, _fixturesQuery.GetComponent(uid), old.Static);
+            RemovePhysicsTree(broadphase, _fixturesQuery.GetComponent(uid), old.BodyType.Value);
         }
-        else if (old.Static)
-            broadphase.StaticSundriesTree.Remove(uid);
         else
-            broadphase.SundriesTree.Remove(uid);
+            broadphase.StaticSundriesTree.Remove(uid);
 
         xform.Broadphase = null;
         if (!recursive)

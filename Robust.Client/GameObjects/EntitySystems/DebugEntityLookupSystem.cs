@@ -91,6 +91,12 @@ public sealed class EntityLookupOverlay : Overlay
                 return true;
             }, lookupAABB);
 
+            lookup.KinematicTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in FixtureProxy value) =>
+            {
+                state.Add(value.Entity);
+                return true;
+            }, lookupAABB);
+
             lookup.StaticTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in FixtureProxy value) =>
             {
                 state.Add(value.Entity);
@@ -98,12 +104,6 @@ public sealed class EntityLookupOverlay : Overlay
             }, lookupAABB);
 
             lookup.StaticSundriesTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in EntityUid value) =>
-            {
-                state.Add(value);
-                return true;
-            }, lookupAABB);
-
-            lookup.SundriesTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in EntityUid value) =>
             {
                 state.Add(value);
                 return true;

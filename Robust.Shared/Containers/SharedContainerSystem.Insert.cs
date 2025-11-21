@@ -92,7 +92,6 @@ public abstract partial class SharedContainerSystem
         DebugTools.Assert(transform.Broadphase == null || !transform.Broadphase.Value.IsValid(), "invalid broadphase");
 
         // Avoid unnecessary broadphase updates while unanchoring, changing physics collision, and re-parenting.
-        var old = transform.Broadphase;
         transform.Broadphase = BroadphaseData.Invalid;
 
         // Unanchor the entity (without changing physics body types).
@@ -108,7 +107,8 @@ public abstract partial class SharedContainerSystem
         // Attach to new parent
         var oldParent = transform.ParentUid;
         _transform.SetCoordinates(toInsert, transform, new EntityCoordinates(container.Owner, Vector2.Zero), Angle.Zero);
-        transform.Broadphase = old;
+        DebugTools.Assert(transform.Broadphase?.IsValid() == false);
+        transform.Broadphase = null;
 
         // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
         DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0, "invalid metadata flags after insertion");

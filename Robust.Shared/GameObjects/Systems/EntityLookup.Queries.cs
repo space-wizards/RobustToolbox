@@ -138,25 +138,31 @@ public sealed partial class EntityLookupSystem
             lookup.DynamicTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
         }
 
+        if ((flags & LookupFlags.Kinematic) != 0x0)
+        {
+            lookup.KinematicTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
+        }
+
         if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
         }
 
-        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        if ((flags & LookupFlags.Sundries) == LookupFlags.Sundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
-        }
-
-        if ((flags & LookupFlags.Sundries) != 0x0)
-        {
-            lookup.SundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
         }
 
         return;
 
         static bool PhysicsQuery(ref EntityQueryState<T> state, in FixtureProxy value)
         {
+            if ((state.Flags & LookupFlags.Enabled) != 0x0 &&
+                !value.Body.CanCollide)
+            {
+                return true;
+            }
+
             var sensors = (state.Flags & LookupFlags.Sensors) != 0x0;
 
             if (!sensors && !value.Fixture.Hard)
@@ -187,33 +193,9 @@ public sealed partial class EntityLookupSystem
                 return true;
             }
 
+            // Check the target doesn't have fixturescomp because it should NOT be on this tree.
+            DebugTools.Assert(!state.FixturesQuery.TryComp(value, out var fixtures) || fixtures.FixtureCount == 0);
             var intersectingTransform = state.Physics.GetLocalPhysicsTransform(value);
-
-            if (state.FixturesQuery.TryGetComponent(value, out var fixtures))
-            {
-                var sensors = (state.Flags & LookupFlags.Sensors) != 0x0;
-                bool anyFixture = false;
-
-                foreach (var fixture in fixtures.Fixtures.Values)
-                {
-                    if (!sensors && !fixture.Hard)
-                        continue;
-
-                    anyFixture = true;
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                    {
-                        if (state.Manifolds.TestOverlap(state.Shape, 0, fixture.Shape, i, state.Transform,
-                                intersectingTransform))
-                        {
-                            state.Intersecting.Add(value);
-                            return true;
-                        }
-                    }
-                }
-
-                if (anyFixture)
-                    return true;
-            }
 
             if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
                 state.Intersecting.Add(value);
@@ -300,6 +282,14 @@ public sealed partial class EntityLookupSystem
                 return true;
         }
 
+        if ((flags & LookupFlags.Kinematic) != 0x0)
+        {
+            lookup.KinematicTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
+
+            if (state.Found)
+                return true;
+        }
+
         if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
@@ -308,17 +298,12 @@ public sealed partial class EntityLookupSystem
                 return true;
         }
 
-        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        if ((flags & LookupFlags.Sundries) == LookupFlags.Sundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
 
             if (state.Found)
                 return true;
-        }
-
-        if ((flags & LookupFlags.Sundries) != 0x0)
-        {
-            lookup.SundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
         }
 
         return state.Found;

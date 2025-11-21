@@ -54,6 +54,16 @@ command-description-ent =
     Returns the provided entity ID.
 command-description-entities =
     Returns all entities on the server.
+command-description-nudge-up =
+    Moves an entity up.
+command-description-nudge-right =
+    Moves an entity right.
+command-description-nudge-down =
+    Moves an entity down.
+command-description-nudge-left =
+    Moves an entity left.
+command-description-nudge-xy =
+    Moves an entity.
 command-description-paused =
     Filters the input entities by whether or not they are paused.
 command-description-with =

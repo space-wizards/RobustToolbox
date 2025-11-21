@@ -73,7 +73,7 @@ namespace Robust.Client.GameObjects
                         var aabb = _lookup.GetWorldAABB(entry.Uid, entry.Transform);
                         if (!aabb.Intersects(args.WorldAABB)) continue;
 
-                        args.WorldHandle.DrawRect(aabb, Color.Green.WithAlpha(0.1f));
+                        args.WorldHandle.DrawRect(aabb, Color.Yellow.WithAlpha(0.1f));
                     }
                 }
             }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -34,7 +35,7 @@ namespace Robust.Client.Console
         private int _linesEntered;
 
         // Necessary for syntax highlighting.
-        private readonly Workspace _highlightWorkspace = new AdhocWorkspace();
+        private readonly Task<Workspace> _highlightWorkspace;
 
         private readonly ScriptGlobals _globals;
         private ScriptState? _state;
@@ -51,6 +52,8 @@ namespace Robust.Client.Console
 
             OutputPanel.AddText("Robust C# interactive console (CLIENT).");
             OutputPanel.AddText(">");
+
+            _highlightWorkspace = Task.Run<Workspace>(() => new AdhocWorkspace());
         }
 
         // No-op for now.
@@ -131,7 +134,9 @@ namespace Robust.Client.Console
             var echoMessage = new FormattedMessage();
             echoMessage.PushColor(Color.FromHex("#D4D4D4"));
             echoMessage.AddText("> ");
-            ScriptInstanceShared.AddWithSyntaxHighlighting(newScript, echoMessage, code, _highlightWorkspace);
+#pragma warning disable RA0004
+            ScriptInstanceShared.AddWithSyntaxHighlighting(newScript, echoMessage, code, _highlightWorkspace.Result);
+#pragma warning restore RA0004
 
             OutputPanel.AddMessage(echoMessage);
 
@@ -220,7 +225,9 @@ namespace Robust.Client.Console
                 script.Compile();
 
                 var syntax = new FormattedMessage();
-                ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _owner._highlightWorkspace);
+#pragma warning disable RA0004
+                ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _owner._highlightWorkspace.Result);
+#pragma warning restore RA0004
 
                 _owner.OutputPanel.AddMessage(syntax);
             }

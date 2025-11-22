@@ -61,6 +61,8 @@ public static class StylesheetAccessorExt
 internal interface IEngineStylesheetManagerInternal : IEngineStylesheetManager
 {
     void Initialize();
+    void Shutdown();
+    void Reload();
 }
 
 public interface IEngineStylesheetAccessor
@@ -73,6 +75,7 @@ internal sealed class EngineStylesheetManager : IEngineStylesheetManagerInternal
 {
     [Dependency] private readonly IUserInterfaceManager _uiMgr = null!;
     [Dependency] private readonly IResourceCache _res = null!;
+    [Dependency] private readonly IDependencyCollection _deps = null!;
 
     private readonly Dictionary<Control, Func<IEngineStylesheetAccessor, Stylesheet?>> _controlStylesheetSubs = [];
     private readonly Dictionary<string, Stylesheet> _stylesheets = [];
@@ -85,6 +88,26 @@ internal sealed class EngineStylesheetManager : IEngineStylesheetManagerInternal
 
     public void Initialize()
     {
+        Reload();
+
+        _uiMgr.Stylesheet = _stylesheets[DefaultStylesheet.Name];
+
+#if TOOLS
+        EngineStylesheetReload.RegisterForReload(_deps);
+#endif
+    }
+
+    public void Shutdown()
+    {
+#if TOOLS
+        EngineStylesheetReload.UnregisterForReload(_deps);
+#endif
+    }
+
+    public void Reload()
+    {
+        _stylesheets.Clear();
+
         var styleDefault = new DefaultStylesheet(_res, _uiMgr);
         _stylesheets.Add(DefaultStylesheet.Name, styleDefault.Stylesheet);
         var editorDark = new EditorDarkStylesheet(new BaseEngineStylesheet.NoConfig());
@@ -92,7 +115,10 @@ internal sealed class EngineStylesheetManager : IEngineStylesheetManagerInternal
         var editorLight = new EditorLightStylesheet(new BaseEngineStylesheet.NoConfig());
         _stylesheets.Add(EditorLightStylesheet.Name, editorLight.Stylesheet);
 
-        _uiMgr.Stylesheet = _stylesheets[DefaultStylesheet.Name];
+        foreach (var (control, getter) in _controlStylesheetSubs)
+        {
+            control.Stylesheet = getter(_accessor);
+        }
     }
 
     public void UseStylesheet(Control control, Func<IEngineStylesheetAccessor, Stylesheet?> getStylesheet)

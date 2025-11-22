@@ -25,19 +25,11 @@ namespace Robust.Client.UserInterface.CustomControls
                 Orientation = LayoutOrientation.Vertical,
                 Children =
                 {
-                    new PanelContainer
+                    (OutputPanel = new OutputPanel
                     {
-                        PanelOverride = new StyleBoxFlat
-                        {
-                            BackgroundColor = Color.FromHex("#1E1E1E"),
-                            ContentMarginLeftOverride = 4
-                        },
-                        Children =
-                        {
-                            (OutputPanel = new OutputPanel())
-                        },
                         VerticalExpand = true,
-                    },
+                        Margin = new Thickness(4)
+                    }),
                     new BoxContainer
                     {
                         Orientation = LayoutOrientation.Horizontal,

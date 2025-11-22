@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -66,7 +67,7 @@ namespace Robust.Client.Input
         [ViewVariables] private readonly List<KeyBinding> _bindings = new();
         private readonly bool[] _keysPressed = new bool[256];
 
-        private ValueList<Func<BoundKeyEventArgs, bool>> _uiKeyBindStateChanged;
+        private ImmutableList<Func<BoundKeyEventArgs, bool>> _uiKeyBindStateChanged = [];
 
         /// <inheritdoc />
         [ViewVariables]
@@ -79,8 +80,8 @@ namespace Robust.Client.Input
         /// <inheritdoc />
         public event Func<BoundKeyEventArgs, bool> UIKeyBindStateChanged
         {
-            add => _uiKeyBindStateChanged.Add(value);
-            remove => _uiKeyBindStateChanged.Remove(value);
+            add => _uiKeyBindStateChanged = _uiKeyBindStateChanged.Add(value);
+            remove => _uiKeyBindStateChanged = _uiKeyBindStateChanged.Remove(value);
         }
 
         /// <inheritdoc />

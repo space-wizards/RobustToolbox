@@ -13,7 +13,6 @@ using Robust.Client.HWId;
 using Robust.Client.Input;
 using Robust.Client.Localization;
 using Robust.Client.Map;
-using Robust.Client.Placement;
 using Robust.Client.Player;
 using Robust.Client.Profiling;
 using Robust.Client.Prototypes;
@@ -149,7 +148,6 @@ namespace Robust.Client
             deps.Register<IFontManager, FontManager>();
             deps.Register<IFontManagerInternal, FontManager>();
             deps.Register<IEyeManager, EyeManager>();
-            deps.Register<IPlacementManager, PlacementManager>();
             deps.Register<IOverlayManager, OverlayManager>();
             deps.Register<IOverlayManagerInternal, OverlayManager>();
             deps.Register<IViewVariablesManager, ClientViewVariablesManager>();

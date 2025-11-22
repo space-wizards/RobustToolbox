@@ -11,7 +11,6 @@ using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
-using Robust.Client.Placement;
 using Robust.Client.Replays.Loading;
 using Robust.Client.Replays.Playback;
 using Robust.Client.ResourceManagement;
@@ -67,7 +66,6 @@ namespace Robust.Client
         [Dependency] private readonly IClientConsoleHost _console = default!;
         [Dependency] private readonly ITimerManager _timerManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
-        [Dependency] private readonly IPlacementManager _placementManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IOverlayManagerInternal _overlayManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
@@ -143,7 +141,7 @@ namespace Robust.Client
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
-            _loadscr.Initialize(42);
+            _loadscr.Initialize(41);
 
             _loadscr.BeginLoadingSection("Init graphics", dontRender: true);
             _clyde.InitializePostWindowing();
@@ -227,7 +225,6 @@ namespace Robust.Client
             _loadscr.LoadingStep(_entityManager.Initialize, _entityManager);
             _loadscr.LoadingStep(_mapManager.Initialize, _mapManager);
             _loadscr.LoadingStep(_gameStateManager.Initialize, _gameStateManager);
-            _loadscr.LoadingStep(_placementManager.Initialize, _placementManager);
             _loadscr.LoadingStep(_viewVariablesManager.Initialize, _viewVariablesManager);
             _loadscr.LoadingStep(_scriptClient.Initialize, _scriptClient);
             _loadscr.LoadingStep(_client.Initialize, _client);
@@ -650,11 +647,6 @@ namespace Robust.Client
 
             if (_client.RunLevel >= ClientRunLevel.Connected)
             {
-                using (_prof.Group("Placement"))
-                {
-                    _placementManager.FrameUpdate(frameEventArgs);
-                }
-
                 using (_prof.Group("Entity"))
                 {
                     _entityManager.FrameUpdate(frameEventArgs.DeltaSeconds);

@@ -58,10 +58,7 @@ public sealed class RayCast_Test
     [Test, TestCaseSource(nameof(_rayCases))]
     public void RayCast(Vector2 origin, Vector2 direction, Vector2? point)
     {
-        var sim = RobustServerSimulation.NewSimulation().RegisterEntitySystems(f =>
-        {
-            f.LoadExtraSystemType<RayCastSystem>();
-        }).InitializeInstance();
+        var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         Setup(sim, out var mapId);
         var raycast = sim.System<RayCastSystem>();
 
@@ -86,10 +83,7 @@ public sealed class RayCast_Test
     [Test, TestCaseSource(nameof(_shapeCases))]
     public void ShapeCast(IPhysShape shape, Transform origin, Vector2 direction, Vector2? point)
     {
-        var sim = RobustServerSimulation.NewSimulation().RegisterEntitySystems(f =>
-        {
-            f.LoadExtraSystemType<RayCastSystem>();
-        }).InitializeInstance();
+        var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         Setup(sim, out var mapId);
         var raycast = sim.System<RayCastSystem>();
 

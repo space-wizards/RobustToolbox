@@ -11,4 +11,7 @@ internal sealed class EditorLightStylesheet : BaseEditorStylesheet
     }
 
     internal override Color BaseBackground => Color.FromHex("#EEE");
+    internal override Color ButtonBackground => default;
+    internal override Color ButtonBackgroundHover => default;
+    internal override Color BaseAccent => default;
 }

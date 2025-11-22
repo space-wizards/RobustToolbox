@@ -10,6 +10,9 @@ namespace Robust.Client.Editor.Interface;
 [GenerateTypedNameReferences]
 public partial class EditorTab : Control
 {
+    public const string StyleClassEditorTabButton = "EditorTabButton";
+    public const string StyleClassEditorTabButtonSmall = "EditorTabButtonSmall";
+
     public EditorPanel Panel { get; }
 
     public EditorTabBar TabBar { get; }

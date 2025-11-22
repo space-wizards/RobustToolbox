@@ -11,4 +11,8 @@ public sealed class EditorDarkStylesheet : BaseEditorStylesheet
     }
 
     internal override Color BaseBackground => Color.FromHex("#181818");
+    internal override Color ButtonBackground => Color.FromHex("#3D3D3D");
+    internal override Color ButtonBackgroundHover => Color.FromHex("#484848");
+
+    internal override Color BaseAccent => Color.FromHex("#0072FF");
 }

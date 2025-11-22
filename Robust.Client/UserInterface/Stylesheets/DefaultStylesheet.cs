@@ -44,13 +44,6 @@ public sealed class DefaultStylesheet : CommonEngineStylesheet
         Stylesheet = new Stylesheet(
         [
             /*
-             * Debug console and other monospace things.
-             */
-
-            Element().Class("monospace")
-                .Prop("font", notoSansMono12),
-
-            /*
              * OS Window defaults
              */
 

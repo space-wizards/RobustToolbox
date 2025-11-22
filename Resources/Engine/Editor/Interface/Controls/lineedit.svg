@@ -4,12 +4,12 @@
 <svg
    width="12"
    height="12"
-   viewBox="0 0 3.1749999 3.1749999"
+   viewBox="0 0 3.175 3.175"
    version="1.1"
    id="svg1"
    inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
-   sodipodi:docname="button.svg"
-   inkscape:export-filename="button.svg.192dpi.png"
+   sodipodi:docname="lineedit.svg"
+   inkscape:export-filename="lineedit.svg.outer.192dpi.png"
    inkscape:export-xdpi="192"
    inkscape:export-ydpi="192"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -18,7 +18,7 @@
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
      id="namedview1"
-     pagecolor="#030303"
+     pagecolor="#121212"
      bordercolor="#000000"
      borderopacity="0.25"
      inkscape:showpageshadow="2"
@@ -27,9 +27,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="true"
-     inkscape:zoom="90.509668"
-     inkscape:cx="5.3640679"
-     inkscape:cy="6.78933"
+     inkscape:zoom="47.289968"
+     inkscape:cx="3.6477081"
+     inkscape:cy="6.7561898"
      inkscape:window-width="2560"
      inkscape:window-height="1369"
      inkscape:window-x="2552"
@@ -40,7 +40,7 @@
        id="grid1"
        units="px"
        originx="0"
-       originy="-2.0679515e-25"
+       originy="0"
        spacingx="0.26458333"
        spacingy="0.26458333"
        empcolor="#0099e5"
@@ -60,12 +60,22 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#ffffff;stroke:none;stroke-width:0.509012;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+       style="display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.509012;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
        id="rect1"
        width="3.175"
        height="3.175"
-       x="0"
-       y="2.0679515e-25"
-       ry="1.0583333" />
+       x="2.3841858e-08"
+       y="2.3841858e-08"
+       ry="1.0583333"
+       inkscape:label="outer" />
+    <rect
+       style="display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.424177;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+       id="rect1-8"
+       width="2.6458333"
+       height="2.6458335"
+       x="0.26458329"
+       y="0.2645832"
+       ry="0.88194448"
+       inkscape:label="inner" />
   </g>
 </svg>

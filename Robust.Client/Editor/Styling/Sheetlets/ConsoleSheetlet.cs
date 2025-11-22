@@ -16,7 +16,6 @@ internal sealed class ConsoleSheetlet : EngineSheetlet<BaseEditorStylesheet>
         {
             BackgroundColor = sheet.BaseBackground with { A = 0.8f },
         };
-        box.SetContentMarginOverride(StyleBox.Margin.All, 3);
 
         return
         [

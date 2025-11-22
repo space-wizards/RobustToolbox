@@ -4,7 +4,7 @@
          x:Class="Robust.Client.Editor.Interface.EditorTab"
          MinWidth="150"
          MouseFilter="Stop">
-    <Button Name="Button" Access="Public" MouseFilter="Pass">
+    <Button Name="Button" Access="Public" MouseFilter="Pass" StyleClasses="EditorTabButton">
         <BoxContainer Orientation="Horizontal">
             <TextureRect Name="Icon" />
 

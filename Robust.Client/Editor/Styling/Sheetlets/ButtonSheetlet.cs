@@ -4,7 +4,6 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.Stylesheets;
-using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.StylesheetHelpers;
 
 namespace Robust.Client.Editor.Styling.Sheetlets;
@@ -20,16 +19,20 @@ internal sealed class ButtonSheetlet : EngineSheetlet<BaseEditorStylesheet>
         var box = new StyleBoxTexture
         {
             Texture = boxTex,
-            Modulate = Color.Black,
-            TextureScale = new Vector2(2, 2),
+            Modulate = sheet.ButtonBackground,
+            TextureScale = new Vector2(0.5f, 0.5f),
         };
-        box.SetPatchMargin(StyleBox.Margin.All, 2);
-        box.SetPadding(StyleBox.Margin.All, 2);
+        box.SetPatchMargin(StyleBox.Margin.All, 8);
+        box.SetContentMarginOverride(StyleBox.Margin.Vertical, 2);
+
+        var selectedBox = new StyleBoxTexture(box) { Modulate = sheet.ButtonBackgroundHover };
 
         return
         [
             Element<ContainerButton>()
-                .Prop(ContainerButton.StylePropertyStyleBox, box)
+                .Prop(ContainerButton.StylePropertyStyleBox, box),
+            Element<ContainerButton>().Pseudo(ContainerButton.StylePseudoClassHover)
+                .Prop(ContainerButton.StylePropertyStyleBox, selectedBox)
         ];
     }
 }

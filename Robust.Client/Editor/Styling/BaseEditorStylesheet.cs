@@ -18,4 +18,8 @@ public abstract class BaseEditorStylesheet : CommonEngineStylesheet
     }
 
     internal abstract Color BaseBackground { get; }
+    internal abstract Color ButtonBackground { get; }
+    internal abstract Color ButtonBackgroundHover { get; }
+
+    internal abstract Color BaseAccent { get; }
 }

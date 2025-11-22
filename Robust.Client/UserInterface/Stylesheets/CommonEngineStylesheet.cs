@@ -16,11 +16,18 @@ public abstract class CommonEngineStylesheet : BaseEngineStylesheet
         var notoSansFont = Resources.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf");
         var notoSansFont12 = new VectorFont(notoSansFont, 12);
 
+        var notoSansMonoFont = Resources.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSansMono-Regular.ttf");
+        var notoSansMono12 = new VectorFont(notoSansMonoFont, 12);
+
         return
         [
             Element()
                 .Prop("font", notoSansFont12)
                 .Prop("font-color", Color.White),
+
+            Element().Class("monospace")
+                .Prop("font", notoSansMono12),
+
         ];
     }
 }

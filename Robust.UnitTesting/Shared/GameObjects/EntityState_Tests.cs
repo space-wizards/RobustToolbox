@@ -3,6 +3,7 @@ using System.IO;
 using Moq;
 using NUnit.Framework;
 using Robust.Server.Configuration;
+using Robust.Server.Player;
 using Robust.Server.Reflection;
 using Robust.Server.Serialization;
 using Robust.Shared.Configuration;
@@ -45,6 +46,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<ProfManager, ProfManager>();
             container.Register<HttpClientHolder>();
             container.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
+            container.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);
             container.BuildGraph();
 
             var cfg = container.Resolve<IConfigurationManagerInternal>();

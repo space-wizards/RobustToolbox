@@ -33,7 +33,7 @@ public abstract partial class SharedPhysicsSystem
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
-        _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+        _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
     }
 
     #region Circle
@@ -123,7 +123,7 @@ public abstract partial class SharedPhysicsSystem
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
-        _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+        _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
     }
 
     #endregion
@@ -152,7 +152,7 @@ public abstract partial class SharedPhysicsSystem
             _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
-        _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+        _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
     }
 
     #endregion

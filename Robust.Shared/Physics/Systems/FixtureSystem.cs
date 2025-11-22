@@ -34,24 +34,10 @@ namespace Robust.Shared.Physics.Systems
         {
             base.Initialize();
 
-            SubscribeLocalEvent<FixturesComponent, ComponentShutdown>(OnShutdown);
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
             _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _fixtureQuery = GetEntityQuery<FixturesComponent>();
-        }
-
-        private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
-        {
-            // TODO: Need a better solution to this because the only reason I don't throw is that allcomponents test
-            // Yes it is actively making the game buggier but I would essentially double the size of this PR trying to fix it
-            // my best solution rn is move the broadphase property onto FixturesComponent and then refactor
-            // SharedBroadphaseSystem a LOT.
-            if (!_physicsQuery.TryGetComponent(uid, out var body))
-                return;
-
-            // Can't just get physicscomp on shutdown as it may be touched completely independently.
-            _physics.DestroyContacts(body);
         }
 
         #region Public
@@ -104,6 +90,7 @@ namespace Robust.Shared.Physics.Systems
                 throw new InvalidOperationException($"Tried to create a fixture without an ID!");
             }
 
+            _physics.AddWorldFixture(fixture);
             manager.Fixtures.Add(fixtureId, fixture);
             fixture.Owner = uid;
 
@@ -207,6 +194,8 @@ namespace Robust.Shared.Physics.Systems
                 _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
             }
 
+            _physics.DestroyWorldFixture(fixture);
+
             if (updates)
             {
                 var resetMass = fixture.Density > 0f;
@@ -224,6 +213,10 @@ namespace Robust.Shared.Physics.Systems
             {
                 foreach (var (id, fixture) in component.Fixtures)
                 {
+                    // Grid moment yayyy
+                    if (fixture.Id == 0)
+                        _physics.AddWorldFixture(fixture);
+
                     if (string.IsNullOrEmpty(id))
                     {
                         throw new InvalidOperationException($"Tried to setup fixture on init for {ToPrettyString(uid)} with no ID!");
@@ -274,6 +267,7 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var (id, fixture) in state.Fixtures)
             {
+                // ID gets set below.
                 var newFixture = new Fixture();
                 fixture.CopyTo(newFixture);
                 newFixtures.Add(id, newFixture);

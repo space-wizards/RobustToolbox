@@ -61,10 +61,12 @@ public partial class SharedPhysicsSystem
         }
 
         // Gets added to broadphase via fixturessystem
-        _fixtures.OnPhysicsInit(uid, manager, component);
+        _fixtureSystem.OnPhysicsInit(uid, manager, component);
 
         if (manager.FixtureCount == 0)
             component.CanCollide = false;
+
+        OnCollisionChange((uid, component, xform));
 
         var ev = new CollisionChangeEvent(uid, component, component.CanCollide);
         RaiseLocalEvent(ref ev);
@@ -598,6 +600,7 @@ public partial class SharedPhysicsSystem
 
         if (body.Initialized)
         {
+            OnCollisionChange((uid, body, Transform(uid)));
             var ev = new CollisionChangeEvent(uid, body, value);
             RaiseLocalEvent(ref ev);
         }

@@ -87,14 +87,12 @@ public abstract partial class SharedPhysicsSystem
        }
    };
 
-    private int ContactCount => _activeContacts.Count;
+    private int ContactCount => _contacts.Count;
 
     private const int ContactPoolInitialSize = 128;
     private const int ContactsPerThread = 32;
 
     private ObjectPool<Contact> _contactPool = default!;
-
-    private readonly LinkedList<Contact> _activeContacts = new();
 
     private sealed class ContactPoolPolicy : IPooledObjectPolicy<Contact>
     {
@@ -282,8 +280,13 @@ public abstract partial class SharedPhysicsSystem
         var bodA = contact.BodyA!;
         var bodB = contact.BodyB!;
 
+        var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
+
+        _pairKeys.Add(pairKey);
+
         // Insert into world
-        _activeContacts.AddLast(contact.MapNode);
+        _contacts.Add(contact);
+        contact.ContactId = _contacts.Count;
 
         // Connect to body A
         DebugTools.Assert(!fixA.Contacts.ContainsKey(fixB));
@@ -348,6 +351,7 @@ public abstract partial class SharedPhysicsSystem
         var aUid = contact.EntityA;
         var bUid = contact.EntityB;
         contact.Flags |= ContactFlags.Deleting;
+        DebugTools.Assert(fixtureA.Id > 0 && fixtureB.Id > 0);
 
         if (contact.IsTouching)
         {
@@ -371,8 +375,27 @@ public abstract partial class SharedPhysicsSystem
         // raised
         next = node?.Next;
 
-        // Remove from the world
-        _activeContacts.Remove(contact.MapNode);
+        // Pop from end of list
+        if (contact.ContactId == _contacts.Count)
+        {
+            _contacts.RemoveAt(contact.ContactId - 1);
+        }
+        // Swap end of list with our slot.
+        else
+        {
+            // Inline replacement because removeswap returns the original and not the replacement.
+            DebugTools.Assert(contact.ContactId > 0 && contact.ContactId <= _contacts.Count);
+            var replacement = _contacts[^1];
+            _contacts.RemoveAt(_contacts.Count - 1);
+            _contacts[contact.ContactId - 1] = replacement;
+            replacement.ContactId = contact.ContactId;
+        }
+
+        contact.ContactId = 0;
+
+        var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
+        DebugTools.Assert(_pairKeys.Contains(pairKey));
+        _pairKeys.Remove(pairKey);
 
         // Remove from body 1
         DebugTools.Assert(fixtureA.Contacts.ContainsKey(fixtureB));
@@ -392,22 +415,13 @@ public abstract partial class SharedPhysicsSystem
 
     internal void CollideContacts()
     {
-        // Due to the fact some contacts may be removed (and we need to update this array as we iterate).
-        // the length may not match the actual contact count, hence we track the index.
-        var contacts = ArrayPool<Contact>.Shared.Rent(ContactCount);
-        var index = 0;
-
-        // Can be changed while enumerating
-        // TODO: check for null instead?
-        // Work out which contacts are still valid before we decide to update manifolds.
-        var node = _activeContacts.First;
-
-        while (node != null)
+        // No events should be issued so contacts ahead of us shouldn't be getting mutated.
+        for (var i = _contacts.Count - 1; i >= 0; i--)
         {
-            var contact = node.Value;
-            node = node.Next;
+            var contact = _contacts[i];
 
             // It's possible the contact was destroyed by content in which case we just skip it.
+            // TODO: Is this possible?
             if (!contact.Enabled)
                 continue;
 
@@ -485,11 +499,6 @@ public abstract partial class SharedPhysicsSystem
                 {
                     // Grid contact is still alive.
                     contact.Flags &= ~ContactFlags.Island;
-                    if (index >= contacts.Length)
-                    {
-                        Log.Error($"Insufficient contact length at 388! Index {index} and length is {contacts.Length}. Tell Sloth");
-                    }
-                    contacts[index++] = contact;
                 }
 
                 continue;
@@ -544,32 +553,22 @@ public abstract partial class SharedPhysicsSystem
             // Contact is actually going to live for manifold generation and solving.
             // This can also short-circuit above for grid contacts.
             contact.Flags &= ~ContactFlags.Island;
-            if (index >= contacts.Length)
-            {
-                Log.Error($"Insufficient contact length at 429! Index {index} and length is {contacts.Length}. Tell Sloth");
-            }
-
-            contacts[index++] = contact;
         }
 
+        var index = _contacts.Count;
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);
         var worldPoints = ArrayPool<FixedArray4<Vector2>>.Shared.Rent(index);
 
         // Update contacts all at once.
-        BuildManifolds(contacts, index, status, worldPoints);
+        BuildManifolds(_contacts, index, status, worldPoints);
 
         // Single-threaded so content doesn't need to worry about race conditions.
-        for (var i = 0; i < index; i++)
+        for (var i = 0; i < _contacts.Count; i++)
         {
-            if (i >= contacts.Length)
-            {
-                Log.Error($"Invalid contact length for contact events!");
-                continue;
-            }
-
-            var contact = contacts[i];
+            var contact = _contacts[i];
 
             // It's possible the contact was disabled above if DestroyContact lead to even more being destroyed.
+            // TODO: Is this even the case with buffered events?
             if (!contact.Enabled)
             {
                 continue;
@@ -578,7 +577,6 @@ public abstract partial class SharedPhysicsSystem
             RunContactEvents(status[i], contact, worldPoints[i]);
         }
 
-        ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
         ArrayPool<FixedArray4<Vector2>>.Shared.Return(worldPoints);
     }
@@ -638,7 +636,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, FixedArray4<Vector2>[] worldPoints)
+    private void BuildManifolds(List<Contact> contacts, int count, ContactStatus[] status, FixedArray4<Vector2>[] worldPoints)
     {
         if (count == 0)
             return;
@@ -679,7 +677,7 @@ public abstract partial class SharedPhysicsSystem
 
         public SharedPhysicsSystem Physics;
 
-        public Contact[] Contacts;
+        public List<Contact> Contacts;
         public ContactStatus[] Status;
         public FixedArray4<Vector2>[] WorldPoints;
         public bool[] Wake;
@@ -690,7 +688,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void UpdateContact(Contact[] contacts, int index, ContactStatus[] status, bool[] wake, FixedArray4<Vector2>[] worldPoints)
+    private void UpdateContact(List<Contact> contacts, int index, ContactStatus[] status, bool[] wake, FixedArray4<Vector2>[] worldPoints)
     {
         var contact = contacts[index];
 

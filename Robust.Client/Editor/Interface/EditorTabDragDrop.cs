@@ -33,11 +33,8 @@ public sealed class EditorTabDragDrop : EditorTabBaseDragDrop
 
     public override void Drop()
     {
-        var clyde = IoCManager.Resolve<IClyde>();
-        var window = new OSWindow { Owner = clyde.MainWindow };
-        var docker = new EditorWindowDocker(window);
+        var (window, docker) = EditorWindowDocker.Create();
         docker.AddPanel(Panel);
-        window.AddChild(docker);
         window.Show();
     }
 

@@ -1,5 +1,6 @@
-﻿<Control xmlns="https://spacestation14.io"
+﻿<editor:EditorPanel xmlns="https://spacestation14.io"
          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:editor="clr-namespace:Robust.Client.Editor.Interface"
          x:Class="Robust.Client.UserInterface.DevWindowTabPerf">
     <SplitContainer Orientation="Horizontal">
         <!-- Snapshot list and settings overview -->
@@ -38,4 +39,4 @@
             </BoxContainer>
         </Control>
     </SplitContainer>
-</Control>
+</editor:EditorPanel>

@@ -10,7 +10,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.UserInterface
 {
     [GenerateTypedNameReferences]
-    public sealed partial class DevWindowUITreeEntry : Control
+    internal sealed partial class DevWindowUITreeEntry : Control
     {
         private readonly DevWindowTabUI _tab;
         public readonly Control VisControl;

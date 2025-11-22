@@ -27,6 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Needed for SharedSubscribeAnalyzer. -->
+    <Compile Include="..\Robust.Shared\Analyzers\SharedOnlyEventAttribute.cs" LinkBase="Implementations" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Needed for DataDefinitionAnalyzer. -->
     <Compile Include="..\Robust.Shared\Serialization\Manager\Definition\DataDefinitionUtility.cs" LinkBase="Implementations" />
     <Compile Include="..\Robust.Shared\ViewVariables\ViewVariablesAttribute.cs" LinkBase="Implementations" />

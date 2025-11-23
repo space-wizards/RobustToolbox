@@ -169,6 +169,8 @@ namespace Robust.Client.UserInterface
                     }
                 }
 
+                StylesheetChanged(_actualStylesheetCached);
+
                 _stylesheetUpdateNeeded = false;
             }
 
@@ -238,6 +240,11 @@ namespace Robust.Client.UserInterface
             // Setting this at the end of the function to prevent style updates from ever re-queueing a style update,
             // which would cause an infinite loop.
             _stylingDirty = false;
+        }
+
+        [MustCallBase(true)]
+        protected virtual void StylesheetChanged(Stylesheet? actualSheet)
+        {
         }
 
         protected virtual void StylePropertiesChanged()

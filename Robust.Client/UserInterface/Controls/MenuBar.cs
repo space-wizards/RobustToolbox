@@ -34,6 +34,7 @@ namespace Robust.Client.UserInterface.Controls
             _isSubmenu = isSubmenu;
             _popup = new Popup
             {
+                Name = "MenuBarPopup",
                 Children =
                 {
                     (_popupVBox = new BoxContainer
@@ -45,7 +46,6 @@ namespace Robust.Client.UserInterface.Controls
                 StyleClasses = { StyleClassMenuBarPopup }
             };
             _popup.OnPopupHide += PopupHidden;
-            UserInterfaceManager.ModalRoot.AddChild(_popup);
             Menus = new MenuCollection(this);
             AddChild(_hBox = new BoxContainer
             {
@@ -85,6 +85,13 @@ namespace Robust.Client.UserInterface.Controls
             // Set this after running open so that if this is called from MouseEntered,
             // It won't get set to false by Open() closing the popup to move it.
             _popupOpen = true;
+        }
+
+        protected override void StylesheetChanged(Stylesheet? actualSheet)
+        {
+            base.StylesheetChanged(actualSheet);
+
+            _popup.Stylesheet = actualSheet;
         }
 
         private void PopupHidden()
@@ -156,6 +163,20 @@ namespace Robust.Client.UserInterface.Controls
                         break;
                 }
             }
+        }
+
+        protected override void EnteredTree()
+        {
+            base.EnteredTree();
+
+            UserInterfaceManager.ModalRoot.AddChild(_popup);
+        }
+
+        protected override void ExitedTree()
+        {
+            base.ExitedTree();
+
+            _popup.Orphan();
         }
 
         private sealed class MenuCollection : IList<Menu>

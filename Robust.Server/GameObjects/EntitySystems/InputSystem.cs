@@ -25,15 +25,8 @@ namespace Robust.Server.GameObjects
         public override void Initialize()
         {
             SubscribeNetworkEvent<FullInputCmdMessage>(InputMessageHandler);
-            _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        }
 
-        /// <inheritdoc />
-        public override void Shutdown()
-        {
-            base.Shutdown();
-
-            _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
+            Subs.PlayerStatusChanged(_playerManager, OnPlayerStatusChanged);
         }
 
         private void InputMessageHandler(InputCmdMessage message, EntitySessionEventArgs eventArgs)

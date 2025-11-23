@@ -28,7 +28,6 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
     {
         base.Initialize();
         EntityManager.EntityDeleted += OnDeleted;
-        _player.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MapRemovedEvent>(OnMapRemoved);
         SubscribeLocalEvent<MapCreatedEvent>(OnMapCreated);
         SubscribeLocalEvent<GridInitializeEvent>(OnGridCreated);
@@ -41,6 +40,8 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
             "pvs_override_info",
             GetPvsInfo,
             GetCompletion);
+
+        Subs.PlayerStatusChanged(_player, OnPlayerStatusChanged);
     }
 
     #region Console Commands
@@ -104,7 +105,6 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
     {
         base.Shutdown();
         EntityManager.EntityDeleted -= OnDeleted;
-        _player.PlayerStatusChanged -= OnPlayerStatusChanged;
     }
 
     private void OnDeleted(Entity<MetaDataComponent> entity)

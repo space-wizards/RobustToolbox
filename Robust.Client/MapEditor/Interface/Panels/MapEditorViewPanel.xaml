@@ -1,0 +1,6 @@
+﻿<editor:EditorPanel xmlns="https://spacestation14.io"
+                    xmlns:editor="clr-namespace:Robust.Client.Editor.Interface">
+    <Control>
+        <ViewportContainer Name="Viewport" />
+    </Control>
+</editor:EditorPanel>

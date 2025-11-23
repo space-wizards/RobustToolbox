@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
-using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
-using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.UserInterface.CustomControls.DebugMonitorControls;
@@ -20,9 +18,7 @@ using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -33,17 +29,18 @@ namespace Robust.Client.UserInterface
 {
     internal sealed partial class UserInterfaceManager : IUserInterfaceManagerInternal
     {
+        /// <summary>
+        /// A type that will always be instantiated anyways.
+        /// </summary>
+        public static readonly Type XamlHotReloadWarmupType = typeof(DropDownDebugConsole);
+
         [Dependency] private readonly IDependencyCollection _rootDependencies = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IFontManager _fontManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IStateManager _stateManager = default!;
-        [Dependency] private readonly IClientNetManager _netManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IPrototypeManager _protoManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
@@ -86,10 +83,10 @@ namespace Robust.Client.UserInterface
 
         [ViewVariables] public ViewportContainer MainViewport { get; private set; } = default!;
         [ViewVariables] public LayoutContainer StateRoot { get; private set; } = default!;
-        [ViewVariables] public PopupContainer ModalRoot { get; private set; } = default!;
+        [ViewVariables] public PopupContainer ModalRoot => RootControl.ModalRoot;
         [ViewVariables] public WindowRoot RootControl { get; private set; } = default!;
         [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
-        [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
+        [ViewVariables] public LayoutContainer PopupRoot => RootControl.PopupRoot;
         [ViewVariables] public DropDownDebugConsole DebugConsole { get; private set; } = default!;
         [ViewVariables] public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors = default!;
@@ -103,6 +100,7 @@ namespace Robust.Client.UserInterface
         private Stylesheet? _stylesheet;
 
         private ISawmill _sawmillUI = default!;
+        public ISawmill ControlSawmill { get; private set; } = default!;
 
         public event Action<Control>? OnKeyBindDown;
 
@@ -117,10 +115,11 @@ namespace Robust.Client.UserInterface
 
             DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
-            DebugConsole.SetPositionInParent(ModalRoot.GetPositionInParent());
+            DebugConsole.SetPositionInParent(RootControl.ModalRoot.GetPositionInParent());
 
-            _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
-                _clyde, _netManager, _mapManager);
+            _debugMonitors = new DebugMonitors();
+            _rootDependencies.InjectDependencies(_debugMonitors);
+            _debugMonitors.Init();
             DebugConsole.BelowConsole.AddChild(_debugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,
@@ -149,6 +148,7 @@ namespace Robust.Client.UserInterface
         private void _initializeCommon()
         {
             _sawmillUI = _logManager.GetSawmill("ui");
+            ControlSawmill = _logManager.GetSawmill("ctrl");
 
             RootControl = CreateWindowRoot(_clyde.MainWindow);
             RootControl.Name = "MainWindowRoot";
@@ -177,19 +177,7 @@ namespace Robust.Client.UserInterface
             };
             RootControl.AddChild(WindowRoot);
 
-            ModalRoot = new PopupContainer
-            {
-                Name = "ModalRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore,
-            };
-            RootControl.AddChild(ModalRoot);
-
-            PopupRoot = new LayoutContainer
-            {
-                Name = "PopupRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore
-            };
-            RootControl.AddChild(PopupRoot);
+            RootControl.CreateRootControls();
         }
 
         public void InitializeTesting()

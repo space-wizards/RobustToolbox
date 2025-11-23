@@ -8,12 +8,14 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using SDL3;
 
 namespace Robust.Client
 {
     internal partial class GameController : IPostInjectInit
     {
         private IGameLoop? _mainLoop;
+        private bool _dontStart;
 
         [Dependency] private readonly IClientGameTiming _gameTiming = default!;
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
@@ -93,6 +95,8 @@ namespace Robust.Client
 
         public void Run(DisplayMode mode, GameControllerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
+            _displayMode = mode;
+
             if (!StartupSystemSplash(options, logHandlerFactory))
             {
                 _logger.Fatal("Failed to start game controller!");
@@ -159,8 +163,11 @@ namespace Robust.Client
                 return;
             }
 
-            DebugTools.AssertNotNull(_mainLoop);
-            _mainLoop!.Run();
+            if (!_dontStart)
+            {
+                DebugTools.AssertNotNull(_mainLoop);
+                _mainLoop!.Run();
+            }
 
             CleanupGameThread();
         }

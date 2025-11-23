@@ -146,7 +146,7 @@ internal partial class Clyde
             MapKey(SC.SDL_SCANCODE_RALT, Key.Alt);
             MapKey(SC.SDL_SCANCODE_LGUI, Key.LSystem);
             MapKey(SC.SDL_SCANCODE_RGUI, Key.RSystem);
-            MapKey(SC.SDL_SCANCODE_MENU, Key.Menu);
+            MapKey(SC.SDL_SCANCODE_APPLICATION, Key.Menu);
             MapKey(SC.SDL_SCANCODE_LEFTBRACKET, Key.LBracket);
             MapKey(SC.SDL_SCANCODE_RIGHTBRACKET, Key.RBracket);
             MapKey(SC.SDL_SCANCODE_SEMICOLON, Key.SemiColon);
@@ -173,7 +173,7 @@ internal partial class Clyde
             MapKey(SC.SDL_SCANCODE_KP_MINUS, Key.NumpadSubtract);
             MapKey(SC.SDL_SCANCODE_KP_DIVIDE, Key.NumpadDivide);
             MapKey(SC.SDL_SCANCODE_KP_MULTIPLY, Key.NumpadMultiply);
-            MapKey(SC.SDL_SCANCODE_KP_DECIMAL, Key.NumpadDecimal);
+            MapKey(SC.SDL_SCANCODE_KP_PERIOD, Key.NumpadDecimal);
             MapKey(SC.SDL_SCANCODE_LEFT, Key.Left);
             MapKey(SC.SDL_SCANCODE_RIGHT, Key.Right);
             MapKey(SC.SDL_SCANCODE_UP, Key.Up);

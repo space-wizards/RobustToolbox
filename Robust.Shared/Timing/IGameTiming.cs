@@ -31,6 +31,11 @@ namespace Robust.Shared.Timing
         TimeSpan RealTime { get; }
 
         /// <summary>
+        /// The time (on the <see cref="RealTime"/> scale) when the current frame started.
+        /// </summary>
+        TimeSpan FrameStartTime { get; }
+
+        /// <summary>
         ///     The <see cref="RealTime"/> of the server.
         /// </summary>
         /// <remarks>

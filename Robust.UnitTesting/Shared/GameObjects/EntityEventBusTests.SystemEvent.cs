@@ -1,22 +1,27 @@
 using System;
-using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Reflection;
+using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, Parallelizable, TestOf(typeof(EntityEventBus))]
     public partial class EntityEventBusTests
     {
+        private static (EntityEventBus Bus, ISimulation Sim, EntityUid Uid, MetaDataComponent Comp) EntFactory()
+        {
+            var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+            var entMan = sim.Resolve<EntityManager>();
+            var uid = entMan.Spawn();
+            var comp = entMan.MetaQuery.Comp(uid);
+            var bus = entMan.EventBusInternal;
+            bus.ClearSubscriptions();
+            return (bus, sim, uid, comp);
+        }
+
         private static EntityEventBus BusFactory()
         {
-            var compFacMock = new Mock<IComponentFactory>();
-            var entManMock = new Mock<IEntityManager>();
-            var reflectMock = new Mock<IReflectionManager>();
-            entManMock.SetupGet(e => e.ComponentFactory).Returns(compFacMock.Object);
-            var bus = new EntityEventBus(entManMock.Object, reflectMock.Object);
-            return bus;
+            return EntFactory().Bus;
         }
 
         /// <summary>

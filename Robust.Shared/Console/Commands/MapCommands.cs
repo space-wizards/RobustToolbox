@@ -183,6 +183,12 @@ internal sealed class ListMapsCommand : LocalizedEntityCommands
                 string.Join(",", _map.GetAllGrids(mapId).Select(grid => grid.Owner)));
         }
 
+        if (msg.Length == 0)
+        {
+            shell.WriteLine("No maps!");
+            return;
+        }
+
         // Trim the newline
         shell.WriteLine(msg.ToString()[..^1]);
     }
@@ -212,6 +218,12 @@ internal sealed class ListGridsCommand : LocalizedEntityCommands
 
             msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3:0.0},{4:0.0} \n",
                 uid, xform.MapID, uid, worldPos.X, worldPos.Y);
+        }
+
+        if (msg.Length == 0)
+        {
+            shell.WriteLine("No grids!");
+            return;
         }
 
         shell.WriteLine(msg.ToString()[..^1]);

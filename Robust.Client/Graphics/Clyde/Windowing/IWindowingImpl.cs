@@ -47,6 +47,7 @@ namespace Robust.Client.Graphics.Clyde
             uint? WindowGetX11Id(WindowReg window);
             nint? WindowGetX11Display(WindowReg window);
             nint? WindowGetWin32Window(WindowReg window);
+            void WindowMaximize(WindowReg window);
 
             // Keyboard
             string? KeyGetName(Keyboard.Key key);

@@ -261,6 +261,11 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public void WindowMaximize(WindowReg window)
+            {
+                // Not implemented.
+            }
+
             public (WindowReg?, string? error) WindowCreate(
                 GLContextSpec? spec,
                 WindowCreateParameters parameters,

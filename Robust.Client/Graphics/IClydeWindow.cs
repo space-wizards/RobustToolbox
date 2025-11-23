@@ -68,6 +68,14 @@ namespace Robust.Client.Graphics
         /// </summary>
         /// <seealso cref="TextInputStart"/>
         void TextInputStop();
+
+        /// <summary>
+        /// Tell the OS to maximize this window.
+        /// </summary>
+        /// <remarks>
+        /// This is not guaranteed to be respected, either by RT or by the OS.
+        /// </remarks>
+        void Maximize();
     }
 
     public interface IClydeWindowInternal : IClydeWindow

@@ -629,6 +629,11 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde._windowing!.TextInputStop(Reg);
             }
 
+            public void Maximize()
+            {
+                _clyde._windowing!.WindowMaximize(Reg);
+            }
+
             public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);
             public long LastFocusStamp => Reg.LastFocusStamp;
             public Vector2 WindowPosition => Reg.WindowPos;

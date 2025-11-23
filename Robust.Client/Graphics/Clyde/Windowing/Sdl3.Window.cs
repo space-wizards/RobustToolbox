@@ -405,6 +405,11 @@ internal partial class Clyde
             SDL.SDL_SetWindowPosition(cmd.Window, cmd.PosX, cmd.PosY);
         }
 
+        private static void WinThreadWinMaximize(CmdWinMaximize cmd)
+        {
+            SDL.SDL_MaximizeWindow(cmd.Window);
+        }
+
         public void WindowSetTitle(WindowReg window, string title)
         {
             SendCmd(new CmdWinSetTitle
@@ -559,6 +564,13 @@ internal partial class Clyde
 
             var reg = (Sdl3WindowReg)window;
             return reg.WindowsHwnd;
+        }
+
+        public void WindowMaximize(WindowReg window)
+        {
+            CheckWindowDisposed(window);
+
+            SendCmd(new CmdWinMaximize { Window = WinPtr(window) });
         }
 
         public void RunOnWindowThread(Action a)

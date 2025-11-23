@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -227,11 +228,24 @@ internal abstract partial class SharedPlayerManager
         if (session.Status == status)
             return;
 
-        var old = session.Status;
-        ((ICommonSessionInternal) session).SetStatus(status);
+        var internalSession = (ICommonSessionInternal)session;
+        try
+        {
+            if (internalSession.IsSettingStatus)
+                throw new InvalidOperationException("Cannot set status from PlayerStatusChanged callback!");
 
-        UpdateState(session);
-        PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(session, old, status));
+            internalSession.IsSettingStatus = true;
+
+            var old = session.Status;
+            ((ICommonSessionInternal)session).SetStatus(status);
+
+            UpdateState(session);
+            PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(session, old, status));
+        }
+        finally
+        {
+            internalSession.IsSettingStatus = false;
+        }
     }
 
     public void SetPing(ICommonSession session, short ping)

@@ -82,4 +82,5 @@ internal interface ICommonSessionInternal : ICommonSession
     public void SetPing(short ping);
     public void SetName(string name);
     void SetChannel(INetChannel channel);
+    bool IsSettingStatus { get; set; }
 }

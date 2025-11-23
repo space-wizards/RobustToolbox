@@ -76,6 +76,8 @@ internal sealed class DummySession : ICommonSessionInternal
     {
         throw new NotSupportedException();
     }
+
+    public bool IsSettingStatus { get; set; }
 }
 
 /// <summary>

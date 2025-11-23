@@ -83,4 +83,6 @@ internal sealed class CommonSession : ICommonSessionInternal
     {
         Channel = channel;
     }
+
+    public bool IsSettingStatus { get; set; }
 }

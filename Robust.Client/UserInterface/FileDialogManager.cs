@@ -36,6 +36,11 @@ namespace Robust.Client.UserInterface
             FileAccess access = FileAccess.ReadWrite,
             FileShare? share = null)
         {
+            return (await OpenFile2(filters, access, share))?.File;
+        }
+
+        public async Task<OpenFileResult?> OpenFile2(FileDialogFilters? filters = null, FileAccess access = FileAccess.ReadWrite, FileShare? share = null)
+        {
             if ((access & FileAccess.ReadWrite) != access)
                 throw new ArgumentException("Invalid file access specified");
 
@@ -52,7 +57,8 @@ namespace Robust.Client.UserInterface
             if (name == null)
                 return null;
 
-            return File.Open(name, FileMode.Open, access, realShare);
+            var handle = File.Open(name, FileMode.Open, access, realShare);
+            return new OpenFileResult(handle, Path.GetFileName(name), alreadyExisted: true);
         }
 
         private async Task<string?> GetOpenFileName(FileDialogFilters? filters)
@@ -67,6 +73,19 @@ namespace Robust.Client.UserInterface
 
         public async Task<(Stream, bool)?> SaveFile(
             FileDialogFilters? filters,
+            bool truncate = true,
+            FileAccess access = FileAccess.ReadWrite,
+            FileShare share = FileShare.None)
+        {
+            var result = await SaveFile2(filters, truncate, access, share);
+            if (result == null)
+                return null;
+
+            return (result.File, result.AlreadyExisted);
+        }
+
+        public async Task<OpenFileResult?> SaveFile2(
+            FileDialogFilters? filters = null,
             bool truncate = true,
             FileAccess access = FileAccess.ReadWrite,
             FileShare share = FileShare.None)
@@ -86,14 +105,19 @@ namespace Robust.Client.UserInterface
             if (name == null)
                 return null;
 
+            Stream handle;
+            var existed = true;
             try
             {
-                return (File.Open(name, truncate ? FileMode.Truncate : FileMode.Open, access, share), true);
+                handle = File.Open(name, truncate ? FileMode.Truncate : FileMode.Open, access, share);
             }
             catch (FileNotFoundException)
             {
-                return (File.Open(name, FileMode.Create, access, share), false);
+                handle = File.Open(name, FileMode.Create, access, share);
+                existed = false;
             }
+
+            return new OpenFileResult(handle, Path.GetFileName(name), existed);
         }
 
         private async Task<string?> GetSaveFileName(FileDialogFilters? filters)

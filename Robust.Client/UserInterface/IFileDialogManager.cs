@@ -4,6 +4,20 @@ using Robust.Client.Graphics;
 
 namespace Robust.Client.UserInterface
 {
+    public sealed class OpenFileResult
+    {
+        public Stream File { get; }
+        public string FileName { get; }
+        public bool AlreadyExisted { get; }
+
+        internal OpenFileResult(Stream file, string fileName, bool alreadyExisted)
+        {
+            File = file;
+            FileName = fileName;
+            AlreadyExisted = alreadyExisted;
+        }
+    }
+
     /// <summary>
     ///     Manager for opening of file dialogs.
     /// </summary>
@@ -32,6 +46,11 @@ namespace Robust.Client.UserInterface
             FileAccess access = FileAccess.ReadWrite,
             FileShare? share = null);
 
+        Task<OpenFileResult?> OpenFile2(
+            FileDialogFilters? filters = null,
+            FileAccess access = FileAccess.ReadWrite,
+            FileShare? share = null);
+
         /// <summary>
         ///     Open a file dialog used for saving a single file.
         /// </summary>
@@ -43,6 +62,12 @@ namespace Robust.Client.UserInterface
         /// <param name="access">What access is desired from the file operation.</param>
         /// <param name="share">Sharing mode for the opened file.</param>
         Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(
+            FileDialogFilters? filters = null,
+            bool truncate = true,
+            FileAccess access = FileAccess.ReadWrite,
+            FileShare share = FileShare.None);
+
+        Task<OpenFileResult?> SaveFile2(
             FileDialogFilters? filters = null,
             bool truncate = true,
             FileAccess access = FileAccess.ReadWrite,

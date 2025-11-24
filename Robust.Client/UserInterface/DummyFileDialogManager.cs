@@ -16,6 +16,14 @@ namespace Robust.Client.UserInterface
             return Task.FromResult<Stream?>(null);
         }
 
+        public Task<OpenFileResult?> OpenFile2(
+            FileDialogFilters? filters = null,
+            FileAccess access = FileAccess.ReadWrite,
+            FileShare? share = null)
+        {
+            return Task.FromResult<OpenFileResult?>(null);
+        }
+
         public Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(
             FileDialogFilters? filters = null,
             bool truncate = true,
@@ -23,6 +31,15 @@ namespace Robust.Client.UserInterface
             FileShare share = FileShare.None)
         {
             return Task.FromResult<(Stream fileStream, bool alreadyExisted)?>(null);
+        }
+
+        public Task<OpenFileResult?> SaveFile2(
+            FileDialogFilters? filters = null,
+            bool truncate = true,
+            FileAccess access = FileAccess.ReadWrite,
+            FileShare share = FileShare.None)
+        {
+            return Task.FromResult<OpenFileResult?>(null);
         }
     }
 }

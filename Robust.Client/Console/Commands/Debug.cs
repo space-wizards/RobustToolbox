@@ -15,8 +15,10 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Audio;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -259,6 +261,49 @@ namespace Robust.Client.Console.Commands
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             _netManager.ClientDisconnect("Disconnect command used.");
+        }
+    }
+
+    internal sealed class ConnectCommand : LocalizedCommands
+    {
+        [Dependency] private readonly IClientNetManager _netManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+
+        public override string Command => "connect";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (args.Length < 1)
+            {
+                shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
+                return;
+            }
+
+            var split = args[0].Split(':', 2);
+            var host = split[0];
+            var port = CVars.NetPort.DefaultValue;
+            if (split.Length == 2)
+            {
+                if (!Parse.TryInt32(split[1], out port))
+                {
+                    shell.WriteError(Loc.GetString("cmd-connect-error-port", ("value", split[1])));
+                    return;
+                }
+            }
+
+            _netManager.ClientConnect(host, port, _cfg.GetCVar(CVars.PlayerName));
+        }
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                return CompletionResult.FromHintOptions(
+                    [$"localhost:{CVars.NetPort.DefaultValue}"],
+                    Loc.GetString("cmd-connect-arg-endpoint"));
+            }
+
+            return CompletionResult.Empty;
         }
     }
 

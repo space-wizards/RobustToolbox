@@ -586,3 +586,8 @@ cmd-localization_set_culture-culture-name = <cultureName>
 cmd-localization_set_culture-changed = Localization changed to { $code } ({ $nativeName } / { $englishName })
 
 cmd-addmap-hint-2 = runMapInit [true / false]
+
+cmd-connect-desc = Connect to a server
+cmd-connect-help = Usage: connect <host>[:port]
+cmd-connect-error-port = Invalid port: "{ $value }"
+cmd-connect-arg-endpoint = <host>[:port]

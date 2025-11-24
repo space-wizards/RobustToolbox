@@ -15,6 +15,8 @@ public partial class EditorPanel : Control
     private bool _canClose = true;
     private string _title = "";
 
+    public EditorTabPanel? CurrentParent { get; internal set; }
+
     public EditorPanel()
     {
         RobustXamlLoader.Load(this);

@@ -10,6 +10,8 @@ internal sealed class PlaceholderEditorDocker : EditorDocker
 {
     private readonly Control _placeHolder = new();
 
+    public OrderedChildCollection PlaceHolderContents => _placeHolder.Children;
+
     public PlaceholderEditorDocker()
     {
         AddChild(_placeHolder);
@@ -28,6 +30,4 @@ internal sealed class PlaceholderEditorDocker : EditorDocker
 
         AddChild(_placeHolder);
     }
-
-    public override ICollection<Control> XamlChildren => _placeHolder.Children;
 }

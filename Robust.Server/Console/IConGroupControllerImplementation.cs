@@ -10,5 +10,6 @@ namespace Robust.Server.Console
         bool CanScript(ICommonSession session);
         bool CanAdminMenu(ICommonSession session);
         bool CanAdminReloadPrototypes(ICommonSession session);
+        bool CanMapEditor(ICommonSession session) => CanAdminPlace(session);
     }
 }

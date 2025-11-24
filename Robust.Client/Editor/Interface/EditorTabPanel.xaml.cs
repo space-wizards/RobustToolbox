@@ -46,6 +46,11 @@ public partial class EditorTabPanel : Control
 
     public void AddPanel(EditorPanel panel)
     {
+        if (panel.CurrentParent != null)
+            throw new ArgumentException("Panel is already parented somewhere!");
+
+        panel.CurrentParent = this;
+
         var tab = new EditorTab(panel, _tabs);
         tab.Button.OnPressed += _ => SelectTab(tab);
         tab.Button.Group = _buttonGroup;
@@ -62,6 +67,11 @@ public partial class EditorTabPanel : Control
 
     public void RemovePanel(EditorPanel panel, bool destroy = true)
     {
+        if (panel.CurrentParent != this)
+            throw new ArgumentException("Panel is not parented to us!");
+
+        panel.CurrentParent = null;
+
         Content.Children.Remove(panel);
 
         var panelData = _panels.Single(x => x.Panel == panel);

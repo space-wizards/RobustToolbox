@@ -6,13 +6,15 @@
 
         <!-- Main contents, docker window -->
         <editor:PlaceholderEditorDocker Name="FileDocker" Access="Internal" VerticalExpand="True">
-            <!-- Empty docker placeholder -->
-            <BoxContainer Orientation="Vertical" SetWidth="300" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Label Align="Center"
-                       Text="Welcome to the RobustToolbox map editor.&#x0a;Create or open a map to get started!" />
-                <Button Text="Create new map" />
-                <Button Text="Open existing map..." />
-            </BoxContainer>
+            <editor:PlaceholderEditorDocker.PlaceHolderContents>
+                <!-- Empty docker placeholder -->
+                <BoxContainer Orientation="Vertical" SetWidth="300" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Label Align="Center"
+                           Text="Welcome to the RobustToolbox map editor.&#x0a;Create or open a map to get started!" />
+                    <Button Name="NewFileButton" Text="Create new map" />
+                    <Button Name="OpenFileButton" Text="Open existing map..." />
+                </BoxContainer>
+            </editor:PlaceholderEditorDocker.PlaceHolderContents>
         </editor:PlaceholderEditorDocker>
 
         <!-- Status bar -->

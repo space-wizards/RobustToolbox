@@ -5,11 +5,12 @@ using Robust.Client.UserInterface.XAML;
 namespace Robust.Client.MapEditor.Interface.Panels;
 
 [GenerateTypedNameReferences]
-internal sealed partial class MapEditorViewPanel : EditorPanel
+public sealed partial class MapEditorInspectorPanel : EditorPanel
 {
-    public MapEditorViewPanel()
+    public MapEditorInspectorPanel()
     {
         RobustXamlLoader.Load(this);
-        Title = "Viewport";
+
+        Title = "Inspector";
     }
 }

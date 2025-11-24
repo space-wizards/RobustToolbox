@@ -1,0 +1,4 @@
+﻿<interface:EditorPanel xmlns="https://spacestation14.io"
+             xmlns:interface="clr-namespace:Robust.Client.Editor.Interface">
+
+</interface:EditorPanel>

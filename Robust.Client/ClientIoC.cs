@@ -13,6 +13,7 @@ using Robust.Client.HWId;
 using Robust.Client.Input;
 using Robust.Client.Localization;
 using Robust.Client.Map;
+using Robust.Client.MapEditor;
 using Robust.Client.Player;
 using Robust.Client.Profiling;
 using Robust.Client.Prototypes;
@@ -164,6 +165,8 @@ namespace Robust.Client
             deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
             deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
+            deps.Register<MapEditorPrimer>();
+            deps.Register<MapFileHandleManager>();
 
 #if TOOLS
             deps.Register<IXamlProxyManager, XamlProxyManager>();

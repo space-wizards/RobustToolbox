@@ -1,4 +1,4 @@
-﻿<Control xmlns="https://spacestation14.io"
-         xmlns:editor="clr-namespace:Robust.Client.Editor.Interface">
+﻿<editor:EditorPanel xmlns="https://spacestation14.io"
+                    xmlns:editor="clr-namespace:Robust.Client.Editor.Interface">
     <editor:EditorDocker Access="Internal" Name="Docker" />
-</Control>
+</editor:EditorPanel>

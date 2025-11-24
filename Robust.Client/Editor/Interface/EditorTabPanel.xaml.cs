@@ -103,10 +103,19 @@ public partial class EditorTabPanel : Control
         {
             Content.RemoveAllChildren();
             Content.AddChild(_panels.Single(x => x.Tab == tab).Panel);
+
+            tab.Panel.TabFocused();
         }
 
-        tab.Panel.TabFocused();
         tab.Button.Pressed = true;
+    }
+
+    public void SelectPanel(EditorPanel panel)
+    {
+        if (_panels.SingleOrDefault(x => x.Panel == panel) is not { } data)
+            throw new ArgumentException("Panel is not in this control!");
+
+        SelectTab(data.Tab);
     }
 
     public override void DragEnter(DragEnterEventArgs eventArgs)

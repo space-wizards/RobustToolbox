@@ -14,12 +14,16 @@ internal sealed class DevWindowCommand : LocalizedCommands
     {
         var (window, docker) = EditorWindowDocker.Create();
 
-        docker.AddPanel(new DebugConsoleTab());
+        var consolePanel = new DebugConsoleTab();
+
+        docker.AddPanel(consolePanel);
         docker.AddPanel(new DevWindowTabUI());
         docker.AddPanel(new DevWindowTabPerf());
         docker.AddPanel(new DevWindowTabTextures());
         docker.AddPanel(new DevWindowTabRenderTargets());
 
+        consolePanel.CurrentParent?.SelectPanel(consolePanel);
+        
         window.Show();
     }
 }

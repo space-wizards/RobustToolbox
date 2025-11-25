@@ -29,4 +29,7 @@
 
   <!-- serialization generator -->
   <Import Project="Robust.Serialization.Generator.targets" Condition="'$(SkipRobustAnalyzer)' != 'true'" />
+
+  <!-- viewvariable xml doc generation -->  
+  <Import Project="Robust.ViewVariables.targets" Condition="'$(ViewVariables)' == 'true'" />
 </Project>

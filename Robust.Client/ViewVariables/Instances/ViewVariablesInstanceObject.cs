@@ -36,7 +36,10 @@ namespace Robust.Client.ViewVariables.Instances
 
             var title = PrettyPrint.PrintUserFacingWithType(obj, out var subtitle);
 
-            _wrappingInit(window, title, subtitle);
+            string typeName = type.AssemblyQualifiedName!.Split(", ")[0];
+            string docString = ViewVariablesManager.GetDocStringForType(typeName);
+
+            _wrappingInit(window, title, docString, subtitle);
             foreach (var trait in TraitsFor(ViewVariablesManager.TraitIdsFor(type)))
             {
                 trait.Initialize(this);
@@ -50,7 +53,10 @@ namespace Robust.Client.ViewVariables.Instances
         {
             Session = session;
 
-            _wrappingInit(window, $"[SERVER] {blob.Stringified}", blob.ObjectTypePretty);
+            string typeName = blob.ObjectType.Split(", ")[0];
+            string docString = ViewVariablesManager.GetDocStringForType(typeName);
+
+            _wrappingInit(window, $"[SERVER] {blob.Stringified}", docString, blob.ObjectTypePretty);
             foreach (var trait in TraitsFor(blob.Traits))
             {
                 trait.Initialize(this);
@@ -59,7 +65,7 @@ namespace Robust.Client.ViewVariables.Instances
             _refresh();
         }
 
-        private void _wrappingInit(DefaultWindow window, string top, string bottom)
+        private void _wrappingInit(DefaultWindow window, string top, string middle, string bottom)
         {
             // Wrapping containers.
             var scrollContainer = new ScrollContainer();
@@ -79,14 +85,29 @@ namespace Robust.Client.ViewVariables.Instances
                 {
                     Orientation = LayoutOrientation.Horizontal
                 };
-                var name = MakeTopBar(top, bottom);
-                name.HorizontalExpand = true;
-                headBox.AddChild(name);
 
-                _refreshButton = new Button {Text = "Refresh", ToolTip = "RMB to toggle auto-refresh."};
+                var topBarControl = MakeTopBar(top, middle, bottom);
+                topBarControl.HorizontalExpand = true;
+
+                headBox.AddChild(topBarControl);
+
+                var refreshBox = new BoxContainer()
+                {
+                    Orientation = LayoutOrientation.Vertical,
+                };
+
+                _refreshButton = new Button
+                {
+                    Text = "Refresh",
+                    ToolTip = "RMB to toggle auto-refresh.",
+                };
                 _refreshButton.OnPressed += _ => _refresh();
                 _refreshButton.OnKeyBindDown += OnButtonKeybindDown;
-                headBox.AddChild(_refreshButton);
+
+                refreshBox.AddChild(_refreshButton);
+
+                headBox.AddChild(refreshBox);
+
                 vBoxContainer.AddChild(headBox);
             }
 

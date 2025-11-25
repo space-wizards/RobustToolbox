@@ -68,5 +68,27 @@ namespace Robust.Client.ViewVariables
         /// <seealso cref="ViewVariablesBlobMetadata.Traits" />
         /// <seealso cref="Shared.ViewVariables.ViewVariablesManager.TraitIdsFor"/>
         ICollection<object> TraitIdsFor(Type type);
+
+        /// <summary>
+        ///     Load the DocStrings for use by VV
+        /// </summary>
+        /// <remarks>
+        ///     Needs to be called before any call to the GetDocString* functions
+        /// </remarks>
+        void LoadDocStrings();
+
+        /// <summary>
+        ///     Retrieve a DocString for a type definition matching the given key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>DocString for the type or an error string</returns>
+        string GetDocStringForType(string key);
+
+        /// <summary>
+        ///     Retrieve a DocString for a field or property definition matching the given key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>DocString for the field or property or an error string</returns>
+        string GetDocStringForFieldOrProperty(string key);
     }
 }

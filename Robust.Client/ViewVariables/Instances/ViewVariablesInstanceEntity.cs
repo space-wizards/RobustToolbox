@@ -214,7 +214,16 @@ namespace Robust.Client.ViewVariables.Instances
 
             foreach (var component in componentList)
             {
-                var button = new Button {Text = PrettyPrint.PrintUserFacingTypeShort(component.GetType(), 2), TextAlign = Label.AlignMode.Left};
+                var ctype = component.GetType();
+                string typeName = ctype.AssemblyQualifiedName!.Split(", ")[0];
+                string docString = ViewVariablesManager.GetDocStringForType(typeName);
+
+                var button = new Button
+                {
+                    Text = PrettyPrint.PrintUserFacingTypeShort(ctype, 2),
+                    TextAlign = Label.AlignMode.Left,
+                    ToolTip = docString,
+                };
                 var removeButton = new TextureButton()
                 {
                     StyleClasses = { DefaultWindow.StyleClassWindowCloseButton },
@@ -265,7 +274,14 @@ namespace Robust.Client.ViewVariables.Instances
 
             foreach (var componentType in componentTypes)
             {
-                var button = new Button {Text = componentType.Stringified, TextAlign = Label.AlignMode.Left};
+                string docString = ViewVariablesManager.GetDocStringForType(componentType.FullName);
+
+                var button = new Button
+                {
+                    Text = componentType.Stringified,
+                    TextAlign = Label.AlignMode.Left,
+                    ToolTip = docString,
+                };
                 var removeButton = new TextureButton()
                 {
                     StyleClasses = { DefaultWindow.StyleClassWindowCloseButton },
@@ -525,13 +541,14 @@ namespace Robust.Client.ViewVariables.Instances
             var first = true;
             foreach (var (groupName, groupMembers) in _membersBlob!.MemberGroups)
             {
-                ViewVariablesTraitMembers.CreateMemberGroupHeader(ref first, groupName, _serverVariables.Children);
+                var prettyGroupName = TypeAbbreviation.Abbreviate(groupName);
+                ViewVariablesTraitMembers.CreateMemberGroupHeader(ref first, prettyGroupName, _serverVariables.Children);
 
                 foreach (var propertyData in groupMembers)
                 {
                     var propertyEdit = new ViewVariablesPropertyControl(ViewVariablesManager, _robustSerializer);
                     propertyEdit.SetStyle(otherStyle = !otherStyle);
-                    var editor = propertyEdit.SetProperty(propertyData);
+                    var editor = propertyEdit.SetProperty(propertyData, $"{groupName}.{propertyData.Name}");
                     var selectorChain = new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)};
                     editor.OnValueChanged += (o, r) => ViewVariablesManager.ModifyRemote(_entitySession, selectorChain, o, r);
                     editor.WireNetworkSelector(_entitySession.SessionId, selectorChain);

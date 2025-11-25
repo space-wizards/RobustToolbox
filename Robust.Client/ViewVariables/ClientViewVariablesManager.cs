@@ -6,6 +6,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Instances;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -25,6 +26,7 @@ namespace Robust.Client.ViewVariables
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IViewVariableControlFactory _controlFactory = default!;
+        [Dependency] private readonly IResourceManager _resManager = default!;
 
         private uint _nextReqId = 1;
         private readonly Vector2i _defaultWindowSize = (640, 420);
@@ -52,6 +54,8 @@ namespace Robust.Client.ViewVariables
             _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>();
             _netManager.RegisterNetMessage<MsgViewVariablesReqSession>();
             _netManager.RegisterNetMessage<MsgViewVariablesReqData>();
+
+            LoadDocStrings();
         }
 
         public VVPropEditor PropertyFor(Type? type)
@@ -274,6 +278,7 @@ namespace Robust.Client.ViewVariables
             session = null;
             return false;
         }
+
     }
 
     [Virtual]

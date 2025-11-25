@@ -212,8 +212,9 @@ namespace Robust.Shared.GameObjects
                     _sawmill.Error($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
 #if !EXCEPTION_TOLERANCE
                     throw;
-#endif
+#else
                     return false;
+#endif
                 }
 
                 if (compMapping.AnyExcept(protoMapping))

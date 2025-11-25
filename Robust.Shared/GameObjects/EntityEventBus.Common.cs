@@ -97,7 +97,7 @@ internal sealed partial class EntityEventBus : IEventBus
         /// <summary>
         /// <see cref="ComponentEventAttribute"/> set?
         /// </summary>
-        public bool ComponentEvent;
+        public bool ComponentEvent = false;
         public bool IsOrdered;
         public bool OrderingUpToDate;
         public ValueList<BroadcastRegistration> BroadcastRegistrations;

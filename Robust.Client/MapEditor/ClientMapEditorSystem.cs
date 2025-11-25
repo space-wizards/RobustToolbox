@@ -27,6 +27,14 @@ internal sealed class ClientMapEditorSystem : MapEditorSystem
         SubscribeLocalEvent<MapEditorEyeComponent, ComponentStartup>(AfterViewStartup);
     }
 
+    public override void Shutdown()
+    {
+        base.Shutdown();
+
+        if (_stateManager.CurrentState is MapEditorState)
+            _stateManager.RequestStateChange<DefaultState>();
+    }
+
     private void EditorUserDataStartup(Entity<MapEditorUserDataComponent> ent, ref ComponentStartup args)
     {
         if (ent.Comp.User != _playerManager.LocalUser)

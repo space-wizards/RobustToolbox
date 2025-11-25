@@ -27,7 +27,6 @@ public abstract class CommonEngineStylesheet : BaseEngineStylesheet
 
             Element().Class("monospace")
                 .Prop("font", notoSansMono12),
-
         ];
     }
 }

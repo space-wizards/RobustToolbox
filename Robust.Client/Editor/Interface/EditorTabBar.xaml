@@ -4,5 +4,7 @@
          x:Class="Robust.Client.Editor.Interface.EditorTabBar"
          MouseFilter="Stop"
          MinHeight="20">
-    <BoxContainer Name="Tabs" Access="Public" Orientation="Horizontal" />
+    <PanelContainer StyleClasses="EditorTabBar">
+        <BoxContainer Name="Tabs" Access="Public" Orientation="Horizontal" />
+    </PanelContainer>
 </Control>

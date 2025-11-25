@@ -19,6 +19,9 @@ internal sealed class EditorTabSheetlet : EngineSheetlet<BaseEditorStylesheet>
         var texAccent =
             sheet.Resources.GetResource<TextureResource>("/Engine/Editor/Interface/Controls/tab.svg.accent.192dpi.png");
 
+        var notoSansFont = sheet.Resources.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf");
+        var notoSansFont20 = new VectorFont(notoSansFont, 20);
+
         var box = new StyleBoxTexture
         {
             Texture = tex,
@@ -53,6 +56,51 @@ internal sealed class EditorTabSheetlet : EngineSheetlet<BaseEditorStylesheet>
                 .Class(EditorTab.StyleClassEditorTabButton)
                 .Pseudo(ContainerButton.StylePseudoClassPressed)
                 .Prop(ContainerButton.StylePropertyStyleBox, highlightBox),
+
+            Element<Label>()
+                .Class("EditorTabTitle", BaseEditorStylesheet.StyleClassEditorDockerLarge)
+                .Prop("font", notoSansFont20),
+        ];
+    }
+}
+
+[EngineSheetlet]
+internal sealed class EditorTabBackgroundSheetlet : EngineSheetlet<BaseEditorStylesheet>
+{
+    public override StyleRule[] GetRules(BaseEditorStylesheet sheet, object config)
+    {
+        var box = new StyleBoxFlat
+        {
+            BackgroundColor = sheet.BaseBackground
+        };
+
+        return
+        [
+            Element<PanelContainer>()
+                .Class("EditorPanelBackground")
+                .Prop(PanelContainer.StylePropertyPanel, box),
+            Element<PanelContainer>()
+                .Class("EditorPanelBackground", "EditorDockerLarge")
+                .Prop(PanelContainer.StylePropertyPanel, new StyleBoxEmpty())
+        ];
+    }
+}
+
+[EngineSheetlet]
+internal sealed class EditorTabBarSheetlet : EngineSheetlet<BaseEditorStylesheet>
+{
+    public override StyleRule[] GetRules(BaseEditorStylesheet sheet, object config)
+    {
+        var box = new StyleBoxFlat
+        {
+            BackgroundColor = sheet.HighBackground
+        };
+
+        return
+        [
+            Element<PanelContainer>()
+                .Class("EditorTabBar")
+                .Prop(PanelContainer.StylePropertyPanel, box)
         ];
     }
 }

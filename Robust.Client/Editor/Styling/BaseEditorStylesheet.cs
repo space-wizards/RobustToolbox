@@ -6,6 +6,9 @@ namespace Robust.Client.Editor.Styling;
 
 public abstract class BaseEditorStylesheet : CommonEngineStylesheet
 {
+    public const string StyleClassLowBackground = "EditorLowBackground";
+    public const string StyleClassEditorDockerLarge = "EditorDockerLarge";
+
     private protected BaseEditorStylesheet(object config) : base(config)
     {
         var rules = (StyleRule[])
@@ -17,7 +20,9 @@ public abstract class BaseEditorStylesheet : CommonEngineStylesheet
         Stylesheet = new Stylesheet(rules);
     }
 
+    internal abstract Color LowBackground { get; }
     internal abstract Color BaseBackground { get; }
+    internal abstract Color HighBackground { get; }
     internal abstract Color ButtonBackground { get; }
     internal abstract Color ButtonBackgroundHover { get; }
 

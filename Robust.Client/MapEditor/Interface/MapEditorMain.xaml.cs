@@ -29,6 +29,8 @@ internal sealed partial class MapEditorMain : Control
         IoCManager.InjectDependencies(this);
         RobustXamlLoader.Load(this);
 
+        FileDocker.AdditionalStyleClasses = [BaseEditorStylesheet.StyleClassEditorDockerLarge];
+
         MenuBar.Menus.Add(new MenuBar.Menu
         {
             Title = "File",

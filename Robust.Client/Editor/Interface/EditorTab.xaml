@@ -8,7 +8,7 @@
         <BoxContainer Orientation="Horizontal">
             <TextureRect Name="Icon" />
 
-            <Label Name="Title" HorizontalExpand="True" ClipText="True" />
+            <Label Name="Title" StyleClasses="EditorTabTitle" HorizontalExpand="True" ClipText="True" />
 
             <TextureButton Name="CloseButton" StyleClasses="windowCloseButton" VerticalAlignment="Center" />
         </BoxContainer>

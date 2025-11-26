@@ -21,7 +21,7 @@ public sealed class SinCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "sinpi")]
 public sealed class SinPiCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -37,7 +37,7 @@ public sealed class SinPiCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "asin")]
 public sealed class ASinCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -53,7 +53,7 @@ public sealed class ASinCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "asinpi")]
 public sealed class ASinPiCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -86,7 +86,7 @@ public sealed class CosCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "cospi")]
 public sealed class CosPiCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -102,7 +102,7 @@ public sealed class CosPiCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "acos")]
 public sealed class ACosCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -118,7 +118,7 @@ public sealed class ACosCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "acospi")]
 public sealed class ACosPiCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -151,7 +151,7 @@ public sealed class TanCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "tanpi")]
 public sealed class TanPiCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -167,7 +167,7 @@ public sealed class TanPiCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "atan")]
 public sealed class ATanCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -183,7 +183,7 @@ public sealed class ATanCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "atanpi")]
 public sealed class ATanPiCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]

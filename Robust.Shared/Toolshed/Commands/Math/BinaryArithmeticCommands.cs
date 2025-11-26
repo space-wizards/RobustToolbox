@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace Robust.Shared.Toolshed.Commands.Math;
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "bibytecount")]
 public sealed class BIByteCountCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -20,7 +20,7 @@ public sealed class BIByteCountCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "shortestbitlength")]
 public sealed class ShortestBitLengthCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -37,7 +37,7 @@ public sealed class ShortestBitLengthCommand : ToolshedCommand
 }
 
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "countleadzeros")]
 public sealed class CountLeadZerosCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -53,7 +53,7 @@ public sealed class CountLeadZerosCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "counttrailingzeros")]
 public sealed class CountTrailingZerosCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]

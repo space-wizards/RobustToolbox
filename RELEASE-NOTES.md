@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Auto-generated ToolshedCommand command names will now use `snake_case`, instead of simply using `ToLowerCase()`.
 
 ### New features
 

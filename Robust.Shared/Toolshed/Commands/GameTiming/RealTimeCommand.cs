@@ -4,7 +4,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Toolshed.Commands.GameTiming;
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "realtime")]
 public sealed class RealTimeCommand : ToolshedCommand
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;

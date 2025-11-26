@@ -5,7 +5,11 @@ using Robust.Shared.Player;
 
 namespace Robust.Shared.Toolshed.Commands.Math;
 
-[ToolshedCommand]
+// TODO TOOLSHED
+// Turn this into subcommands?
+// i.e, is:complex
+
+[ToolshedCommand(Name = "iscanonical")]
 public sealed class IsCanonicalCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -21,7 +25,7 @@ public sealed class IsCanonicalCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "iscomplex")]
 public sealed class IsComplexCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -37,7 +41,7 @@ public sealed class IsComplexCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "iseven")]
 public sealed class IsEvenCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -53,7 +57,7 @@ public sealed class IsEvenCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "isodd")]
 public sealed class IsOddCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -69,7 +73,7 @@ public sealed class IsOddCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "isfinite")]
 public sealed class IsFiniteCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -85,7 +89,7 @@ public sealed class IsFiniteCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "isimaginary")]
 public sealed class IsImaginaryCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -108,7 +112,7 @@ public sealed class IsImaginaryCommand : ToolshedCommand
     }
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "isinfinite")]
 public sealed class IsInfiniteCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -124,7 +128,7 @@ public sealed class IsInfiniteCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "isinteger")]
 public sealed class IsIntegerCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -140,7 +144,7 @@ public sealed class IsIntegerCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "isnan")]
 public sealed class IsNaNCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -156,7 +160,7 @@ public sealed class IsNaNCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "isnegative")]
 public sealed class IsNegativeCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -172,7 +176,7 @@ public sealed class IsNegativeCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "ispositive")]
 public sealed class IsPositiveCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -188,7 +192,7 @@ public sealed class IsPositiveCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "isreal")]
 public sealed class IsRealCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -211,7 +215,7 @@ public sealed class IsRealCommand : ToolshedCommand
     }
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "issubnormal")]
 public sealed class IsSubnormalCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -227,7 +231,7 @@ public sealed class IsSubnormalCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "iszero")]
 public sealed class IsZeroCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]

@@ -14,6 +14,8 @@ internal sealed partial class MapEditorLayout : EditorPanel
     private readonly ClientMapEditorSystem _mapEditor;
     [Dependency] private readonly IEntityManager _entityManager = null!;
 
+    private readonly MapEditorInnerScope _scope = new();
+
     internal readonly EntityUid MapData;
 
     public MapEditorLayout(ISawmill sawmill, ClientMapEditorSystem mapEditor, EntityUid mapData)
@@ -22,17 +24,19 @@ internal sealed partial class MapEditorLayout : EditorPanel
         MapData = mapData;
         IoCManager.InjectDependencies(this);
 
-        CanUndock = false;
-
         RobustXamlLoader.Load(this);
 
         Title = _entityManager.GetComponent<MetaDataComponent>(mapData).EntityName;
 
-        var viewportPanel = new MapEditorViewportPanel(sawmill, _entityManager, mapEditor, mapData);
+        var viewportPanel = new MapEditorViewportPanel(sawmill, _entityManager, mapEditor, mapData)
+        {
+            Scope = _scope
+        };
 
+        Docker.Scope = _scope;
         Docker.AddPanel(viewportPanel);
 
-        Docker.AddPanelRelative(new MapEditorOutlinerPanel(), viewportPanel.CurrentParent!, DockRelative.Left);
-        Docker.AddPanelRelative(new MapEditorInspectorPanel(), viewportPanel.CurrentParent!, DockRelative.Right);
+        Docker.AddPanelRelative(new MapEditorOutlinerPanel { Scope = _scope }, viewportPanel.CurrentParent!, DockRelative.Left);
+        Docker.AddPanelRelative(new MapEditorInspectorPanel { Scope = _scope }, viewportPanel.CurrentParent!, DockRelative.Right);
     }
 }

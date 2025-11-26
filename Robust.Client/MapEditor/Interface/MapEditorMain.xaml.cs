@@ -22,6 +22,7 @@ internal sealed partial class MapEditorMain : Control
     private readonly ISawmill _sawmill;
 
     private readonly List<MapEditorLayout> _openEditors = [];
+    private readonly MapEditorFilePanelScope _scope = new();
 
     public MapEditorMain(ClientMapEditorSystem editorSystem)
     {
@@ -30,6 +31,7 @@ internal sealed partial class MapEditorMain : Control
         RobustXamlLoader.Load(this);
 
         FileDocker.AdditionalStyleClasses = [BaseEditorStylesheet.StyleClassEditorDockerLarge];
+        FileDocker.Scope = _scope;
 
         MenuBar.Menus.Add(new MenuBar.Menu
         {
@@ -111,7 +113,10 @@ internal sealed partial class MapEditorMain : Control
 
         foreach (var addedMap in addedMaps)
         {
-            var layout = new MapEditorLayout(_sawmill, _editorSystem, addedMap);
+            var layout = new MapEditorLayout(_sawmill, _editorSystem, addedMap)
+            {
+                Scope = _scope
+            };
 
             _sawmill.Debug($"Adding editor for map {addedMap}");
 

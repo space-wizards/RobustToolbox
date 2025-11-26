@@ -38,8 +38,11 @@ public partial class EditorTabBar : Control
     {
         if (eventArgs.Operation is EditorTabDragDrop tabDrop)
         {
-            Logger.DebugS("ui.editor", "LEAVING");
-            Owner.RemovePanel(tabDrop.Panel, destroy: false);
+            if (EditorPanelScope.DockCheck(Owner.Owner.Scope, tabDrop.Panel.Scope))
+            {
+                Logger.DebugS("ui.editor", "LEAVING");
+                Owner.RemovePanel(tabDrop.Panel, destroy: false);
+            }
         }
     }
 
@@ -47,19 +50,23 @@ public partial class EditorTabBar : Control
     {
         if (eventArgs.Operation is EditorTabDragDrop tabDrop)
         {
-            Logger.DebugS("ui.editor", "ENTERING");
-            if (Tabs.Children.Select(x => (x as EditorTab)?.Panel).Contains(tabDrop.Panel))
-                return;
+            if (EditorPanelScope.DockCheck(Owner.Owner.Scope, tabDrop.Panel.Scope))
+            {
+                Logger.DebugS("ui.editor", "ENTERING");
+                if (Tabs.Children.Select(x => (x as EditorTab)?.Panel).Contains(tabDrop.Panel))
+                    return;
 
-            Owner.AddPanel(tabDrop.Panel);
+                Owner.AddPanel(tabDrop.Panel);
+            }
         }
     }
 
     public override void DragDrop(DragDropEventArgs eventArgs)
     {
-        if (eventArgs.Operation is EditorTabDragDrop)
+        if (eventArgs.Operation is EditorTabDragDrop tabDrop)
         {
-            eventArgs.Handle();
+            if (EditorPanelScope.DockCheck(Owner.Owner.Scope, tabDrop.Panel.Scope))
+                eventArgs.Handle();
         }
     }
 }

@@ -7,8 +7,7 @@
             <MenuBar Name="MenuBar" Access="Internal" />
 
             <!-- Main contents, docker window -->
-            <editor:PlaceholderEditorDocker Name="FileDocker" Access="Internal" VerticalExpand="True"
-                                            AllowSplitting="False">
+            <editor:PlaceholderEditorDocker Name="FileDocker" Access="Internal" VerticalExpand="True">
                 <editor:PlaceholderEditorDocker.PlaceHolderContents>
                     <!-- Empty docker placeholder -->
                     <BoxContainer Orientation="Vertical" SetWidth="300" HorizontalAlignment="Center" VerticalAlignment="Center">

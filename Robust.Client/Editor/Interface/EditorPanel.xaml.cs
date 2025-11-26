@@ -44,6 +44,8 @@ public partial class EditorPanel : Control
         }
     }
 
+    public EditorPanelScope? Scope { get; set; }
+
     internal event Action? TabInfoChanged;
 
     [MustCallBase(true)]

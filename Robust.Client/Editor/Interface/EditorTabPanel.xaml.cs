@@ -145,9 +145,12 @@ public partial class EditorTabPanel : Control
 
     public override void DragEnter(DragEnterEventArgs eventArgs)
     {
-        if (eventArgs.Operation is EditorTabDragDrop && AllowSplitting)
+        if (eventArgs.Operation is EditorTabDragDrop dragDrop && AllowSplitting)
         {
-            DropOverlay.Visible = true;
+            if (EditorPanelScope.DockCheck(Owner.Scope, dragDrop.Panel.Scope))
+            {
+                DropOverlay.Visible = true;
+            }
         }
     }
 
@@ -162,6 +165,9 @@ public partial class EditorTabPanel : Control
     private void DropOverlayDragDropped(DragDropEventArgs eventArgs)
     {
         if (eventArgs.Operation is not EditorTabDragDrop dragDrop || !AllowSplitting)
+            return;
+
+        if (!EditorPanelScope.DockCheck(Owner.Scope, dragDrop.Panel.Scope))
             return;
 
         var pos = eventArgs.RelativePosition;

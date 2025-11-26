@@ -39,6 +39,8 @@ public partial class EditorDocker : Control
     public event Action<EditorPanel>? PanelAdded;
     public event Action<EditorPanel>? PanelRemoved;
 
+    public EditorPanelScope? Scope { get; set; }
+
     public bool AllowSplitting
     {
         get => _allowSplitting;

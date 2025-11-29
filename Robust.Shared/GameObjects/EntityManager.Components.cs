@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
@@ -1862,7 +1863,8 @@ namespace Robust.Shared.GameObjects
 
             if (logMissing)
             {
-                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{Environment.StackTrace}");
+                var entMan = IoCManager.Resolve<IEntityManager>();
+                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {entMan.ToPrettyString(uid)}!\n{Environment.StackTrace}");
             }
 
             return false;
@@ -1969,7 +1971,10 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+            {
+                var entMan = IoCManager.Resolve<IEntityManager>();
+                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {entMan.ToPrettyString(uid)}!\n{new StackTrace(1, true)}");
+            }
 
             return false;
         }

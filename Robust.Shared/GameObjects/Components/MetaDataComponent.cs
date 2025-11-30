@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
@@ -244,6 +245,19 @@ namespace Robust.Shared.GameObjects
         /// If set, transform system will raise events directed at this entity whenever the GridUid or MapUid are modified.
         /// </summary>
         ExtraTransformEvents = 1 << 5,
+
+        /// <summary>
+        /// Used by <see cref="ComponentTreeSystem{TTreeComp,TComp}"/> to flag that an entity is stored on a lookup tree andd needs to be updated whenever it moves.
+        /// </summary>
+        CompTree = 1 << 6,
+
+        /// <summary>
+        /// Used by <see cref="ComponentTreeSystem{TTreeComp,TComp}"/> to flag that an entity or one of its children is stored on a component tree and needs be updated whenever it moves.
+        /// </summary>
+        RecursiveCompTree = 1 << 7,
+
+        // Damn we're all out of bits.
+        // This can probably be a ushort, but you'd have to check with some PVS explicit layout structs.
     }
 
     /// <summary>

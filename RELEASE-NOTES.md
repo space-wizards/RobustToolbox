@@ -39,11 +39,13 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `IReplayFileWriter.WriteYaml()`, for writing yaml documents to a replay zip file.
 
 ### Bugfixes
 
-*None yet*
+* `ActorComponent` now has the `UnsavedComponentAttribute`
+  * Previously it was unintentionally get serialized to yaml, which could result in NREs when deserializing.
+* Don't spam error messages on startup trying to draw splash logos for projects that don't have one.
 
 ### Other
 
@@ -52,6 +54,57 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 268.0.0
+
+### Breaking changes
+
+* Events that are raised via `IEventBus.RaiseComponentEvent()` now **must** be annotated with  the `ComponentEventAttribute`.
+  * By default, events annotated with this attribute can **only** be raised via `IEventBus.RaiseComponentEvent()`. This can be configured via `ComponentEventAttribute.Exclusive`
+* StartCollide and EndCollide events are now buffered until the end of physics substeps instead of being raised during the CollideContacts step. EndCollide events are double-buffered and any new ones raised while the events are being dispatched will now go out on the next tick / substep.
+
+### New features
+
+* Added `IUserInterfaceManager.ControlSawmill` and `Control.Log` properties so that controls can easily use logging without using static methods.
+
+
+## 267.4.0
+
+### New features
+
+* Added two new custom yaml serializers `CustomListSerializer` and `CustomArraySerializer`.
+* CVars defined in `[CVarDefs]` can now be private or internal.
+* Added config rollback system to `IConfigurationManager`. This enables CVars to be snapshot and rolled back, even in the event of client crash.
+* `OptionButton` now has a `Filterable` property that gives it a text box to filter options.
+* Added `FontTagHijackHolder` to replace fonts resolved by `FontTag`.
+* Sandbox:
+  * Exposed `System.Reflection.Metadata.MetadataUpdateHandlerAttribute`.
+  * Exposed more overloads on `StringBuilder`.
+* The engine can now load system fonts.
+  * At the moment only available on Windows.
+  * See `ISystemFontManager` for API.
+* The client now display a loading screen during startup.
+
+### Bugfixes
+
+* Fix `Menu` and `NumpadDecimal` key codes on SDL3.
+* client-side predicted entity deletion ( `EntityManager.PredictedQueueDeleteEntity`) now behaves more like it does on the server. In particular, entities will be deleted on the same tick after all system have been updated. Previously, it would process deletions at the beginning of the next tick.
+* Fix modifying `Label.FontOverride` not causing a layout update.
+* Controls created by rich-text tags now get arranged to a proper size.
+* Fix `OutputPanel` scrollbar breaking if a style update changes the font size.
+
+### Other
+
+* ComponentNameSerializer will now ignore any components that have been ignored via `IComponentFactory.RegisterIgnore`.
+* Add pure to some SharedTransformSystem methods.
+* Significantly optimised collision detection in SharedBroadphaseSystem.
+* `Control.Stylesheet` does not do any work if assigning the value it already has.
+* XAML hot reload now JITs UIs when first opened rather than doing every single one at client startup. This reduces dev startup overhead significantly and probably helps with memory usage too.
+
+### Internal
+
+* The `dmetamem` command now sorts its output, and doesn't output to log anymore to avoid output interleaving.
 
 
 ## 267.3.0

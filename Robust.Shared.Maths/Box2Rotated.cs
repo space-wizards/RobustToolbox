@@ -33,7 +33,31 @@ namespace Robust.Shared.Maths
         public readonly Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
         public readonly Vector2 Center => Origin + Rotation.RotateVec((Box.BottomLeft + Box.TopRight)/2 - Origin);
 
-        public Matrix3x2 Transform => Matrix3Helpers.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation);
+        public readonly Matrix3x2 Transform
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                // Equivalent to  Matrix3Helpers.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation)
+                // but ~20% faster
+                var angle = (float) Rotation;
+                var sin = MathF.Sin(angle);
+                var cos = MathF.Cos(angle);
+                var cos1 = 1 - cos;
+                var dx = cos1 * Origin.X + sin * Origin.Y;
+                var dy = - sin * Origin.X + cos1 * Origin.Y;
+
+                return new Matrix3x2
+                {
+                    M11 = cos,
+                    M12 = sin,
+                    M21 = -sin,
+                    M22 = cos,
+                    M31 = dx,
+                    M32 = dy,
+                };
+            }
+        }
 
         public Box2Rotated(Vector2 bottomLeft, Vector2 topRight)
             : this(new Box2(bottomLeft, topRight))
@@ -72,6 +96,19 @@ namespace Robust.Shared.Maths
         /// </summary>
         public readonly Box2 CalcBoundingBox()
         {
+            GetVertices(out var x, out var y);
+            var aabb = SimdHelpers.GetAABB(x, y);
+            return Unsafe.As<Vector128<float>, Box2>(ref aabb);
+        }
+
+        /// <summary>
+        /// Applies the transformation to the box's corners and returns the coordinates in two simd vectors.
+        /// </summary>
+        /// <remarks>The corners are ordered clockwise, starting from what was the bottom left corner prior to the transformation.</remarks>
+        /// <remarks>This is effectively a specialized variant of a <see cref="Matrix3Helpers"/> transform method that avoids having to use construct the matrix via <see cref="Transform"/></remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal readonly void GetVertices(out Vector128<float> x, out Vector128<float> y)
+        {
             var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in Box));
 
             var originX = Vector128.Create(Origin.X);
@@ -80,37 +117,11 @@ namespace Robust.Shared.Maths
             var cos = Vector128.Create((float) Math.Cos(Rotation));
             var sin = Vector128.Create((float) Math.Sin(Rotation));
 
-            var allX = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
-            var allY = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));
+            var boxX = Vector128.Shuffle(boxVec, Vector128.Create(0, 2, 2, 0)) - originX;
+            var boxY = Vector128.Shuffle(boxVec, Vector128.Create(1, 1, 3, 3)) - originY;
 
-            allX -= originX;
-            allY -= originY;
-
-            var modX = allX * cos - allY * sin;
-            var modY = allX * sin + allY * cos;
-
-            allX = modX + originX;
-            allY = modY + originY;
-
-            // lrlr = vector containing [left right left right]
-            Vector128<float> lbrt;
-
-            if (Sse.IsSupported)
-            {
-                var lrlr = SimdHelpers.MinMaxHorizontalSse(allX);
-                var btbt = SimdHelpers.MinMaxHorizontalSse(allY);
-                lbrt = Sse.UnpackLow(lrlr, btbt);
-            }
-            else
-            {
-                var l = SimdHelpers.MinHorizontal128(allX);
-                var b = SimdHelpers.MinHorizontal128(allY);
-                var r = SimdHelpers.MaxHorizontal128(allX);
-                var t = SimdHelpers.MaxHorizontal128(allY);
-                lbrt = SimdHelpers.MergeRows128(l, b, r, t);
-            }
-
-            return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
+            x = boxX * cos - boxY * sin + originX;
+            y = boxX * sin + boxY * cos + originY;
         }
 
         public readonly bool Contains(Vector2 worldPoint)
@@ -133,7 +144,21 @@ namespace Robust.Shared.Maths
         /// <inheritdoc />
         public readonly bool Equals(Box2Rotated other)
         {
-            return Box.Equals(other.Box) && Rotation.Equals(other.Rotation);
+            return Box.Equals(other.Box) && Rotation.Equals(other.Rotation) && Origin.Equals(other.Origin);
+        }
+
+        public readonly bool EqualsApprox(Box2Rotated other)
+        {
+            return Box.EqualsApprox(other.Box)
+                   && Rotation.EqualsApprox(other.Rotation)
+                   && Origin.EqualsApprox(other.Origin);
+        }
+
+        public readonly bool EqualsApprox(Box2Rotated other, double tolerance)
+        {
+            return Box.EqualsApprox(other.Box, tolerance)
+                   && Rotation.EqualsApprox(other.Rotation, tolerance)
+                   && Origin.EqualsApprox(other.Origin, tolerance);
         }
 
         /// <inheritdoc />

@@ -509,7 +509,6 @@ namespace Robust.Client.UserInterface
 
             IsMeasureValid = false;
             UserInterfaceManagerInternal.QueueMeasureUpdate(this);
-            InvalidateArrange();
         }
 
         /// <summary>
@@ -574,7 +573,9 @@ namespace Robust.Client.UserInterface
         protected virtual Vector2 MeasureCore(Vector2 availableSize)
         {
             if (!(Visible || ReservesSpace))
+            {
                 return default;
+            }
 
             if (_stylingDirty)
                 ForceRunStyleUpdate();
@@ -602,6 +603,7 @@ namespace Robust.Client.UserInterface
             measured = _margin.Inflate(measured);
             measured = Vector2.Min(measured, availableSize);
             measured = Vector2.Max(measured, Vector2.Zero);
+            InvalidateArrange();
             return measured;
         }
 
@@ -641,10 +643,14 @@ namespace Robust.Client.UserInterface
             _arranging = true;
             try
             {
+                bool ranMeasure = false;
                 if (!IsMeasureValid)
+                {
                     Measure(PreviousMeasure ?? finalRect.Size);
+                    ranMeasure = true;
+                }
 
-                if (!IsArrangeValid || PreviousArrange != finalRect)
+                if (ranMeasure || !IsArrangeValid || PreviousArrange != finalRect)
                 {
                     IsArrangeValid = true;
                     ArrangeCore(finalRect);

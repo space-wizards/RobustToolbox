@@ -1758,10 +1758,10 @@ namespace Robust.Shared.GameObjects
 
     public readonly struct EntityQuery<TComp1> where TComp1 : IComponent
     {
-        private readonly IEntityManager _entMan;
+        private readonly EntityManager _entMan;
         private readonly Dictionary<EntityUid, IComponent> _traitDict;
 
-        public EntityQuery(IEntityManager entMan, Dictionary<EntityUid, IComponent> traitDict)
+        public EntityQuery(EntityManager entMan, Dictionary<EntityUid, IComponent> traitDict)
         {
             _entMan = entMan;
             _traitDict = traitDict;

@@ -9,7 +9,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
@@ -1182,14 +1181,14 @@ namespace Robust.Shared.GameObjects
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp1).Name}");
-            return new EntityQuery<TComp1>(comps, _resolveSawmill);
+            return new EntityQuery<TComp1>(this, comps);
         }
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
             var comps = _entTraitDict[type];
             DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
-            return new EntityQuery<IComponent>(comps, _resolveSawmill);
+            return new EntityQuery<IComponent>(this, comps);
         }
 
         /// <inheritdoc />
@@ -1759,13 +1758,13 @@ namespace Robust.Shared.GameObjects
 
     public readonly struct EntityQuery<TComp1> where TComp1 : IComponent
     {
+        private readonly IEntityManager _entMan;
         private readonly Dictionary<EntityUid, IComponent> _traitDict;
-        private readonly ISawmill _sawmill;
 
-        public EntityQuery(Dictionary<EntityUid, IComponent> traitDict, ISawmill sawmill)
+        public EntityQuery(IEntityManager entMan, Dictionary<EntityUid, IComponent> traitDict)
         {
+            _entMan = entMan;
             _traitDict = traitDict;
-            _sawmill = sawmill;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1862,10 +1861,7 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-            {
-                var entMan = IoCManager.Resolve<IEntityManager>();
-                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {entMan.ToPrettyString(uid)}!\n{Environment.StackTrace}");
-            }
+                _entMan.ResolveSawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {_entMan.ToPrettyString(uid)}!\n{Environment.StackTrace}");
 
             return false;
         }
@@ -1971,10 +1967,7 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-            {
-                var entMan = IoCManager.Resolve<IEntityManager>();
-                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {entMan.ToPrettyString(uid)}!\n{new StackTrace(1, true)}");
-            }
+                _entMan.ResolveSawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {_entMan.ToPrettyString(uid)}!\n{new StackTrace(1, true)}");
 
             return false;
         }

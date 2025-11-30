@@ -3,6 +3,7 @@
   name: Audio
   description: Audio entity used by engine
   save: false # TODO PERSISTENCE what about looping or long sounds?
+  categories: [ HideSpawnMenu ]
   components:
     - type: Transform
       gridTraversal: false

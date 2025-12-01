@@ -91,6 +91,7 @@ namespace Robust.Shared.Serialization
                     MappedStringSerializer.TypeSerializer,
                     new Vector2Serializer(),
                     new Matrix3x2Serializer(),
+                    new NetBitArraySerializer()
                 }
             };
             _serializer = new Serializer(types, settings);

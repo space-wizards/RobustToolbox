@@ -119,7 +119,7 @@ public sealed class WriteableVarRef<T>(VarRef<T> inner) : ValueRef<T>
 /// This class represents a <see cref="ValueRef{T}"/> command argument that simply corresponds to a specific value of
 /// some type that has already been parsed/evaluated.
 /// </summary>
-internal sealed class ParsedValueRef<T>(T? value) : ValueRef<T>
+public sealed class ParsedValueRef<T>(T? value) : ValueRef<T>
 {
     public readonly T? Value = value;
 

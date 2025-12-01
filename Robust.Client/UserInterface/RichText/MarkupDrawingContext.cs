@@ -8,20 +8,20 @@ public sealed class MarkupDrawingContext
 {
     public readonly Stack<Color> Color;
     public readonly Stack<Font> Font;
-    public readonly List<IMarkupTagHandler> Tags;
+    public readonly List<IMarkupTag> Tags;
 
     public MarkupDrawingContext()
     {
         Color = new Stack<Color>();
         Font = new Stack<Font>();
-        Tags = new List<IMarkupTagHandler>();
+        Tags = new List<IMarkupTag>();
     }
 
     public MarkupDrawingContext(int capacity)
     {
         Color = new Stack<Color>(capacity);
         Font = new Stack<Font>(capacity);
-        Tags = new List<IMarkupTagHandler>();
+        Tags = new List<IMarkupTag>();
     }
 
     public void Clear()

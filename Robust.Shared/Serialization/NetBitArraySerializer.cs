@@ -38,7 +38,7 @@ internal sealed class NetBitArraySerializer : IStaticTypeSerializer
 
     public IEnumerable<Type> GetSubtypes(Type type)
     {
-        return [typeof(int[]), typeof(int)];
+        return new Type[] { typeof(int[]), typeof(int) };
     }
 
     public MethodInfo GetStaticWriter(Type type)

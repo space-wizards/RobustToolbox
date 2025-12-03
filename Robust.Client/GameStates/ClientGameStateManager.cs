@@ -382,6 +382,9 @@ namespace Robust.Client.GameStates
 
                 _timing.CurTick = _timing.LastRealTick = _timing.LastProcessedTick;
 
+                var ev = new ClientLastRealTickChanged(_timing.LastRealTick);
+                _entities.EntityNetManager.SendSystemNetworkMessage(ev);
+
                 // Update the cached server state.
                 using (_prof.Group("FullRep"))
                 {

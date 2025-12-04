@@ -1,4 +1,4 @@
-# Release notes for RobustToolbox.
+﻿# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -40,20 +40,32 @@ END TEMPLATE-->
 ### New features
 
 * Added `IReplayFileWriter.WriteYaml()`, for writing yaml documents to a replay zip file.
+* Added Caps Lock as a proper bindable key.
+* Added `IParallelBulkRobustJob` as an alternative to `IParallelRobustJob`, taking ranges instead of indices.
+* Allow content to override `ProcessStream` and `GetOcclusion` in `AudioSystem`
 
 ### Bugfixes
 
 * `ActorComponent` now has the `UnsavedComponentAttribute`
   * Previously it was unintentionally get serialized to yaml, which could result in NREs when deserializing.
 * Don't spam error messages on startup trying to draw splash logos for projects that don't have one.
+* Fix `SpriteSystem.LayerExists` saying that layer 0 is invalid.
+* Fix `ButtonGroup`s unpressing buttons in an edge case with UI rebuilding.
+* Added `CreatedTime` to `NetUserData`.
+* Fix loading of `WebView`.
 
 ### Other
 
-*None yet*
+* Reverted undocumented change from 268.0.0 which obsoleted many `IoCManager` methods.
+* Fix .NET 10 serializer compatibility of `BitArray`. (backported to older engines).
+* Revert performance change to physics due to issues (double-buffered contact events).
+* Audio entities are marked as `HideSpawnMenu` now.
+* Make `SharedAudioSystem.Stop` not do nothing when the current tick has already been predicted.
+* Warning cleanup.
 
 ### Internal
 
-*None yet*
+* Consolidated and updated physics benchmarks.
 
 
 ## 268.0.0

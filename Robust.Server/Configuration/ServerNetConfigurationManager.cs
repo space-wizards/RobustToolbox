@@ -243,13 +243,13 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     {
         if (!_configVars.TryGetValue(name, out var cVar))
         {
-            Sawmill.Error($"Tried to subscribe an unknown CVar '{name}.'");
+            Sawmill.Error($"Tried to unsubscribe an unknown CVar '{name}.'");
             return;
         }
 
         if (!cVar.Flags.HasFlag(CVar.REPLICATED) || !cVar.Flags.HasFlag(CVar.CLIENT))
         {
-            Sawmill.Error($"Tried to subscribe client cvar '{name}' without flags CLIENT | REPLICATED");
+            Sawmill.Error($"Tried to unsubscribe client cvar '{name}' without flags CLIENT | REPLICATED");
             return;
         }
 

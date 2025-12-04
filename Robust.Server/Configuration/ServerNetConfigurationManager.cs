@@ -205,6 +205,18 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     /// <inheritdoc />
     public override void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged, Action<ICommonSession>? onDisconnect)
     {
+        if (!_configVars.TryGetValue(name, out var cVar))
+        {
+            Sawmill.Error($"Tried to subscribe an unknown CVar '{name}.'");
+            return;
+        }
+
+        if (!cVar.Flags.HasFlag(CVar.REPLICATED) || !cVar.Flags.HasFlag(CVar.CLIENT))
+        {
+            Sawmill.Error($"Tried to subscribe client cvar '{name}' without flags CLIENT | REPLICATED");
+            return;
+        }
+
         using (Lock.WriteGuard())
         {
             if (!_replicatedInvokes.TryGetValue(name, out var cVarInvokes))
@@ -229,6 +241,18 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     /// <inheritdoc />
     public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged, Action<ICommonSession>? onDisconnect)
     {
+        if (!_configVars.TryGetValue(name, out var cVar))
+        {
+            Sawmill.Error($"Tried to subscribe an unknown CVar '{name}.'");
+            return;
+        }
+
+        if (!cVar.Flags.HasFlag(CVar.REPLICATED) || !cVar.Flags.HasFlag(CVar.CLIENT))
+        {
+            Sawmill.Error($"Tried to subscribe client cvar '{name}' without flags CLIENT | REPLICATED");
+            return;
+        }
+
         using (Lock.WriteGuard())
         {
             if (!_replicatedInvokes.TryGetValue(name, out var cVarInvokes))

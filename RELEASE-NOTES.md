@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `ExtensionMarkerAttribute`, used by the new C# 14 extension members, for the sandbox.
 
 ### Bugfixes
 

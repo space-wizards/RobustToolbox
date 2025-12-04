@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The project now targets .NET 10. You will have to install the new runtime on game servers when updating.
 
 ### New features
 

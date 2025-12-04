@@ -184,13 +184,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var currentPosition = entity.Comp.Source.PlaybackPosition;
         var diff = Math.Abs(position - currentPosition);
 
-        // Don't try to set the audio too far ahead.
         var totalLen = GetAudioLengthImpl(entity.Comp.FileName).TotalSeconds;
 
         // Looped audio requires special position calculation,
         // so we skip the standard end-of-stream check here.
         if (!entity.Comp.Params.Loop && !string.IsNullOrEmpty(entity.Comp.FileName))
         {
+            // Don't try to set the audio too far ahead.
             if (position > totalLen - _audioEndBuffer)
             {
                 entity.Comp.StopPlaying();

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using JetBrains.Annotations;
-using OpenTK.Audio.OpenAL;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
@@ -17,7 +16,6 @@ using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -187,13 +185,23 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var diff = Math.Abs(position - currentPosition);
 
         // Don't try to set the audio too far ahead.
-        if (!string.IsNullOrEmpty(entity.Comp.FileName))
+        var totalLen = GetAudioLengthImpl(entity.Comp.FileName).TotalSeconds;
+
+        // Looped audio requires special position calculation,
+        // so we skip the standard end-of-stream check here.
+        if (!entity.Comp.Params.Loop && !string.IsNullOrEmpty(entity.Comp.FileName))
         {
-            if (position > GetAudioLengthImpl(entity.Comp.FileName).TotalSeconds - _audioEndBuffer)
+            if (position > totalLen - _audioEndBuffer)
             {
                 entity.Comp.StopPlaying();
                 return;
             }
+        }
+
+        if (entity.Comp.Params.Loop && totalLen > 0)
+        {
+            position %= (float)totalLen;
+            diff = Math.Abs(position - currentPosition);
         }
 
         // If the difference is minor then we'll just keep playing it.
@@ -279,6 +287,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (offset < AudioDespawnBuffer)
         {
             offset = 0;
+        }
+        // Special handling for looped audio.
+        else if (component.Params.Loop && length.Value.TotalSeconds > 0)
+        {
+            offset %= length.Value.TotalSeconds;
         }
         // Not enough audio to play
         else if (offset > length.Value.TotalSeconds - _audioEndBuffer)
@@ -757,8 +770,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         // TODO clamp the offset inside of SetPlaybackPosition() itself.
         var offset = audioP.PlayOffsetSeconds;
-        var maxOffset = Math.Max((float) stream.Length.TotalSeconds - 0.01f, 0f);
-        offset = Math.Clamp(offset, 0f, maxOffset);
+
+        // Proper offset calculation for looped audio, which conceptually has no start or end.
+        if (audioP.Loop && stream.Length.TotalSeconds > 0)
+        {
+            offset %= (float)stream.Length.TotalSeconds;
+        }
+        else
+        {
+            var maxOffset = Math.Max((float) stream.Length.TotalSeconds - 0.01f, 0f);
+            offset = Math.Clamp(offset, 0f, maxOffset);
+        }
         source.PlaybackPosition = offset;
 
         source.StartPlaying();

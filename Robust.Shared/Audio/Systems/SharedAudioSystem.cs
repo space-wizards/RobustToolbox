@@ -1,12 +1,10 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
@@ -75,6 +73,10 @@ public abstract partial class SharedAudioSystem : EntitySystem
             return;
 
         var audioLength = GetAudioLength(entity.Comp.FileName);
+
+        // Calculate relative position if audio is looped
+        if (entity.Comp.Params.Loop && audioLength.TotalSeconds > 0)
+            position %= (float)audioLength.TotalSeconds;
 
         if (audioLength.TotalSeconds < position)
         {

@@ -219,6 +219,8 @@ namespace Robust.Client.UserInterface
             var baseLine = drawBox.TopLeft + new Vector2(0, defaultFont.GetAscent(uiScale) + verticalOffset);
             var controlYAdvance = 0f;
 
+            var spaceRune = new Rune(' ');
+
             var nodeIndex = -1;
             foreach (var node in Message)
             {
@@ -232,16 +234,25 @@ namespace Robust.Client.UserInterface
 
                 foreach (var rune in text.EnumerateRunes())
                 {
+                    bool skipSpaceBaseline = false;
+
                     if (lineBreakIndex < LineBreaks.Count &&
                         LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
                         baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(font, uiScale, lineHeightScale) + controlYAdvance);
                         controlYAdvance = 0;
                         lineBreakIndex += 1;
+
+                        // The baseline calc is kind of messed up, the newline is After the space but the space is being drawn after doing the newline
+                        // Which means if this metric Ends on a space, the next metric will use the wrong baseline when it starts, for some reason ..
+                        if (rune == spaceRune)
+                            skipSpaceBaseline = true;
                     }
 
                     var advance = font.DrawChar(handle, rune, baseLine, uiScale, color);
-                    baseLine += new Vector2(advance, 0);
+
+                    if (!skipSpaceBaseline)
+                        baseLine += new Vector2(advance, 0);
 
                     globalBreakCounter += 1;
                 }

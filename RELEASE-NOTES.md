@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 268.1.0
+
+### New features
+
 * Added `IReplayFileWriter.WriteYaml()`, for writing yaml documents to a replay zip file.
 * Added Caps Lock as a proper bindable key.
 * Added `IParallelBulkRobustJob` as an alternative to `IParallelRobustJob`, taking ranges instead of indices.

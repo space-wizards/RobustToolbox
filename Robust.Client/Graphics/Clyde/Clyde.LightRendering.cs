@@ -573,7 +573,7 @@ namespace Robust.Client.Graphics.Clyde
             int shadowCastingCount,
             EntityQuery<TransformComponent> xforms,
             Box2 worldAABB) state,
-            in ComponentTreeEntry<PointLightComponent> value)
+            in ComponentTreeEntry<SharedPointLightComponent> value)
         {
             ref var count = ref state.count;
             ref var shadowCount = ref state.shadowCastingCount;
@@ -597,7 +597,7 @@ namespace Robust.Client.Graphics.Clyde
                 shadowCount++;
 
             var distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared();
-            state.clyde._lightsToRenderList[count++] = (light, lightPos, distanceSquared, rot);
+            state.clyde._lightsToRenderList[count++] = ((PointLightComponent)light, lightPos, distanceSquared, rot);
 
             return true;
         }

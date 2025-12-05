@@ -406,6 +406,13 @@ namespace Robust.Shared.Localization
             return result;
         }
 
+
+        [Obsolete("Use SetFallbackCulture instead")]
+        public void SetFallbackCluture(params CultureInfo[] cultures)
+        {
+            SetFallbackCulture(cultures);
+        }
+
         public void SetFallbackCulture(params CultureInfo[] cultures)
         {
             _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();

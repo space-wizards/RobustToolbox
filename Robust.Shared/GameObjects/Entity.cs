@@ -6,7 +6,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.GameObjects;
 
 [NotYamlSerializable]
-public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>
+public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>, IAsType<WeakEntityReference>
     where T : IComponent?
 {
     public EntityUid Owner;
@@ -36,6 +36,11 @@ public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>
         return ent.Owner;
     }
 
+    public static implicit operator WeakEntityReference(Entity<T> ent)
+    {
+        return ent.Owner;
+    }
+
     public static implicit operator T(Entity<T> ent)
     {
         return ent.Comp;
@@ -51,10 +56,11 @@ public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>
     public override readonly int GetHashCode() => Owner.GetHashCode();
     public readonly Entity<T?> AsNullable() => new(Owner, Comp);
     public readonly EntityUid AsType() => Owner;
+    WeakEntityReference IAsType<WeakEntityReference>.AsType() => Owner;
 }
 
 [NotYamlSerializable]
-public record struct Entity<T1, T2> : IFluentEntityUid, IAsType<EntityUid>
+public record struct Entity<T1, T2> : IFluentEntityUid, IAsType<EntityUid>, IAsType<WeakEntityReference>
     where T1 : IComponent? where T2 : IComponent?
 {
     public EntityUid Owner;
@@ -83,6 +89,11 @@ public record struct Entity<T1, T2> : IFluentEntityUid, IAsType<EntityUid>
     }
 
     public static implicit operator EntityUid(Entity<T1, T2> ent)
+    {
+        return ent.Owner;
+    }
+
+    public static implicit operator WeakEntityReference(Entity<T1, T2> ent)
     {
         return ent.Owner;
     }
@@ -122,10 +133,11 @@ public record struct Entity<T1, T2> : IFluentEntityUid, IAsType<EntityUid>
     public override readonly int GetHashCode() => Owner.GetHashCode();
     public readonly Entity<T1?, T2?> AsNullable() => new(Owner, Comp1, Comp2);
     public readonly EntityUid AsType() => Owner;
+    WeakEntityReference IAsType<WeakEntityReference>.AsType() => Owner;
 }
 
 [NotYamlSerializable]
-public record struct Entity<T1, T2, T3> : IFluentEntityUid, IAsType<EntityUid>
+public record struct Entity<T1, T2, T3> : IFluentEntityUid, IAsType<EntityUid>, IAsType<WeakEntityReference>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent?
 {
     public EntityUid Owner;
@@ -160,6 +172,12 @@ public record struct Entity<T1, T2, T3> : IFluentEntityUid, IAsType<EntityUid>
     {
         return ent.Owner;
     }
+
+    public static implicit operator WeakEntityReference(Entity<T1, T2, T3> ent)
+    {
+        return ent.Owner;
+    }
+
 
     public static implicit operator T1(Entity<T1, T2, T3> ent)
     {
@@ -229,10 +247,11 @@ public record struct Entity<T1, T2, T3> : IFluentEntityUid, IAsType<EntityUid>
     public override readonly int GetHashCode() => Owner.GetHashCode();
     public readonly Entity<T1?, T2?, T3?> AsNullable() => new(Owner, Comp1, Comp2, Comp3);
     public readonly EntityUid AsType() => Owner;
+    WeakEntityReference IAsType<WeakEntityReference>.AsType() => Owner;
 }
 
 [NotYamlSerializable]
-public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid, IAsType<EntityUid>
+public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid, IAsType<EntityUid>, IAsType<WeakEntityReference>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent?
 {
     public EntityUid Owner;
@@ -270,6 +289,12 @@ public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid, IAsType<EntityUi
     {
         return ent.Owner;
     }
+
+    public static implicit operator WeakEntityReference(Entity<T1, T2, T3, T4> ent)
+    {
+        return ent.Owner;
+    }
+
 
     public static implicit operator T1(Entity<T1, T2, T3, T4> ent)
     {
@@ -360,10 +385,11 @@ public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid, IAsType<EntityUi
     public override readonly int GetHashCode() => Owner.GetHashCode();
     public readonly Entity<T1?, T2?, T3?, T4?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4);
     public readonly EntityUid AsType() => Owner;
+    WeakEntityReference IAsType<WeakEntityReference>.AsType() => Owner;
 }
 
 [NotYamlSerializable]
-public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid, IAsType<EntityUid>
+public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid, IAsType<EntityUid>, IAsType<WeakEntityReference>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent?
 {
     public EntityUid Owner;
@@ -401,6 +427,11 @@ public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid, IAsType<Enti
     }
 
     public static implicit operator EntityUid(Entity<T1, T2, T3, T4, T5> ent)
+    {
+        return ent.Owner;
+    }
+
+    public static implicit operator WeakEntityReference(Entity<T1, T2, T3, T4, T5> ent)
     {
         return ent.Owner;
     }
@@ -515,10 +546,11 @@ public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid, IAsType<Enti
     public override readonly int GetHashCode() => Owner.GetHashCode();
     public readonly Entity<T1?, T2?, T3?, T4?, T5?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5);
     public readonly EntityUid AsType() => Owner;
+    WeakEntityReference IAsType<WeakEntityReference>.AsType() => Owner;
 }
 
 [NotYamlSerializable]
-public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid, IAsType<EntityUid>
+public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid, IAsType<EntityUid>, IAsType<WeakEntityReference>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent?
 {
     public EntityUid Owner;
@@ -559,6 +591,11 @@ public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid, IAsType<
     }
 
     public static implicit operator EntityUid(Entity<T1, T2, T3, T4, T5, T6> ent)
+    {
+        return ent.Owner;
+    }
+
+    public static implicit operator WeakEntityReference(Entity<T1, T2, T3, T4, T5, T6> ent)
     {
         return ent.Owner;
     }
@@ -694,10 +731,11 @@ public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid, IAsType<
     public override readonly int GetHashCode() => Owner.GetHashCode();
     public readonly Entity<T1?, T2?, T3?, T4?, T5?, T6?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5, Comp6);
     public readonly EntityUid AsType() => Owner;
+    WeakEntityReference IAsType<WeakEntityReference>.AsType() => Owner;
 }
 
 [NotYamlSerializable]
-public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid, IAsType<EntityUid>
+public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid, IAsType<EntityUid>, IAsType<WeakEntityReference>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent? where T7 : IComponent?
 {
     public EntityUid Owner;
@@ -741,6 +779,11 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid, IAsT
     }
 
     public static implicit operator EntityUid(Entity<T1, T2, T3, T4, T5, T6, T7> ent)
+    {
+        return ent.Owner;
+    }
+
+    public static implicit operator WeakEntityReference(Entity<T1, T2, T3, T4, T5, T6, T7> ent)
     {
         return ent.Owner;
     }
@@ -897,10 +940,11 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid, IAsT
     public override readonly int GetHashCode() => Owner.GetHashCode();
     public readonly Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5, Comp6, Comp7);
     public readonly EntityUid AsType() => Owner;
+    WeakEntityReference IAsType<WeakEntityReference>.AsType() => Owner;
 }
 
 [NotYamlSerializable]
-public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid, IAsType<EntityUid>
+public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid, IAsType<EntityUid>, IAsType<WeakEntityReference>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent? where T7 : IComponent? where T8 : IComponent?
 {
     public EntityUid Owner;
@@ -947,6 +991,11 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid, 
     }
 
     public static implicit operator EntityUid(Entity<T1, T2, T3, T4, T5, T6, T7, T8> ent)
+    {
+        return ent.Owner;
+    }
+
+    public static implicit operator WeakEntityReference(Entity<T1, T2, T3, T4, T5, T6, T7, T8> ent)
     {
         return ent.Owner;
     }
@@ -1124,4 +1173,5 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid, 
     public override readonly int GetHashCode() => Owner.GetHashCode();
     public readonly Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5, Comp6, Comp7, Comp8);
     public readonly EntityUid AsType() => Owner;
+    WeakEntityReference IAsType<WeakEntityReference>.AsType() => Owner;
 }

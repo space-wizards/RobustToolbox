@@ -504,6 +504,15 @@ public interface IPrototypeManager
     /// empty, everything was successfully validated.</returns>
     Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx);
 
+    /// <summary>
+    ///     This method will serialize, validate, and then export all EntityPrototypes as a single .yml file.
+    ///     Used for generating YAML diffs that include inherited components.
+    /// </summary>
+    /// <param name="searchPath">Path to get EntityPrototypes from.</param>
+    /// <param name="includeAbstract">Whether or not to include abstract prototypes.</param>
+    /// <param name="saveFile">If false, will return output without saving a file.</param>
+    void SaveEntityPrototypes(ResPath searchPath, out string output, bool includeAbstract = false, bool saveFile = false);
+
     void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 
     void LoadString(string str, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);

@@ -15,6 +15,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Random;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
@@ -37,6 +38,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly IComponentFactory _factory = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
+        [Dependency] private readonly INetManager _net = default!;
 
         private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
         private EntityDiffContext _context = new();

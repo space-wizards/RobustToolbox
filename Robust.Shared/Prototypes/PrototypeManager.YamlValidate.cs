@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
@@ -18,25 +20,31 @@ public partial class PrototypeManager
     // disallow them for all prototypes.
     private static readonly char[] DisallowedIdChars = [' ', '.'];
 
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path) => ValidateDirectory(path, out _);
-
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
-        out Dictionary<Type, HashSet<string>> protos)
+    /// <summary>
+    ///     Returns an IEnum list of .yml files from a given ResPath.
+    /// </summary>
+    /// <param name="path">ResPath to search for .yml files.</param>
+    private IEnumerable<ResPath> GetYamlStreams(ResPath path)
     {
-        var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
-            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
+        return Resources.ContentFindFiles(path)
+            .ToList()
+            .AsParallel()
+            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith('.'));
+    }
 
-        var dict = new Dictionary<string, HashSet<ErrorNode>>();
-        var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
-
-        foreach (var resourcePath in streams)
+    /// <summary>
+    ///     Validate all prototypes in given .yml files.
+    /// </summary>
+    /// <param name="streams">List of .yml files to validate contents of.</param>
+    /// <returns>Entity prototype and validation data.</returns>
+    /// <exception cref="PrototypeLoadException"></exception>
+    private IEnumerable<(Type, PrototypeValidationData)> ValidateStreams(IEnumerable<ResPath> streams)
+    {
+        foreach (var resPath in streams)
         {
-            using var reader = ReadFile(resourcePath);
-
+            using var reader = ReadFile(resPath);
             if (reader == null)
-            {
                 continue;
-            }
 
             var yamlStream = new YamlStream();
             try
@@ -51,9 +59,10 @@ public partial class PrototypeManager
             foreach (var doc in yamlStream.Documents)
             {
                 var rootNode = (YamlSequenceNode)doc.RootNode;
-                foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
+                foreach (var node in rootNode.Cast<YamlMappingNode>())
                 {
                     var typeId = node.GetNode("type").AsString();
+                    // TODO maybe bool flag for this check
                     if (_ignoredPrototypeTypes.Contains(typeId))
                         continue;
 
@@ -65,29 +74,47 @@ public partial class PrototypeManager
                     var mapping = node.ToDataNodeCast<MappingDataNode>();
                     var id = mapping.Get<ValueDataNode>("id").Value;
 
-                    var data = new PrototypeValidationData(id, mapping, resourcePath.ToString());
-                    mapping.Remove("type");
-
-                    if (DisallowedIdChars.TryFirstOrNull(c => id.Contains(c), out var letter))
-                    {
-                        dict.GetOrNew(data.File)
-                            .Add(new ErrorNode(mapping, $"Prototype '{id}' ({type}) contains disallowed "
-                                                        + $"character '{letter}'."));
-                    }
-
-                    if (prototypes.GetOrNew(type).TryAdd(id, data))
-                        continue;
-
-                    var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
-                    dict.GetOrNew(data.File).Add(error);
+                    yield return (type, new(id, mapping, resPath.ToString()));
                 }
             }
+        }
+    }
+
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path) => ValidateDirectory(path, out _);
+
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
+        out Dictionary<Type, HashSet<string>> protos)
+    {
+        var streams = GetYamlStreams(path);
+
+        var dict = new Dictionary<string, HashSet<ErrorNode>>();
+        var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
+
+        foreach (var (type, data) in ValidateStreams(streams))
+        {
+            data.Mapping.Remove("type");
+
+            if (DisallowedIdChars.TryFirstOrNull(c => data.Id.Contains(c), out var letter))
+            {
+                dict.GetOrNew(data.File)
+                    .Add(new ErrorNode(data.Mapping,
+                        $"Prototype '{data.Id}' ({type}) contains disallowed character '{letter}'."));
+            }
+
+            if (prototypes.GetOrNew(type).TryAdd(data.Id, data))
+                continue;
+
+            var error = new ErrorNode(data.Mapping, $"Found dupe prototype ID of {data.Id} for {type}");
+            dict.GetOrNew(data.File).Add(error);
         }
 
         var ctx = new YamlValidationContext();
         var errors = new List<ErrorNode>();
+        var saveProto = !path.FilenameWithoutExtension.Contains("Engine") && _net.IsServer;
+        var dir = Directory.CreateDirectory("prototypes");
         foreach (var (type, instances) in prototypes)
         {
+            Dictionary<string, DataNode> allThings = [];
             foreach (var (id, data) in instances)
             {
                 errors.Clear();
@@ -102,6 +129,30 @@ public partial class PrototypeManager
                 errors.AddRange(_serializationManager.ValidateNode(type, data.Mapping).GetErrors());
                 if (errors.Count > 0)
                     dict.GetOrNew(data.File).UnionWith(errors);
+
+                if (saveProto)
+                {
+                    var mapSorted = data.Mapping.OrderByDescending(x => x.Key == "id")
+                        .ThenBy(x => x.Key)
+                        .ToDictionary();
+
+                    if (mapSorted.TryGetValue("components", out var compNode)
+                        && compNode is SequenceDataNode comps)
+                    {
+                        mapSorted["components"] = new SequenceDataNode(comps
+                            .Where(x => x is MappingDataNode)
+                            .Cast<MappingDataNode>()
+                            .Select(x => new MappingDataNode(x
+                                .OrderByDescending(y => y.Key == "type")
+                                .ThenBy(y => y.Key)
+                                .ToDictionary()))
+                            .OrderBy(x => x["type"].ToString())
+                            .Cast<DataNode>()
+                            .ToList());
+                    }
+
+                    allThings.Add(id, new MappingDataNode(mapSorted));
+                }
 
                 // Create instance & re-serialize it, to validate the default values of data-fields. We still validate
                 // the yaml directly just in case reading & writing the fields somehow modifies their values.
@@ -118,6 +169,16 @@ public partial class PrototypeManager
                     errors.Add(new ErrorNode(new ValueDataNode(), $"Caught Exception while validating {type} prototype {id}. Exception: {ex}"));
                 }
             }
+
+            if (allThings.Count <= 0)
+                continue;
+
+            var nodes = new SequenceDataNode(allThings
+                .OrderBy(x => x.Key)
+                .Select(x => x.Value)
+                .ToList());
+            using var writer = new StreamWriter($"{dir.Name}/{type.Name}.yml", true);
+            nodes.Write(writer);
         }
 
         protos = new(prototypes.Count);
@@ -188,6 +249,7 @@ public partial class PrototypeManager
         }
     }
 
+    // TODO rename
     private sealed class PrototypeValidationData
     {
         public readonly string Id;

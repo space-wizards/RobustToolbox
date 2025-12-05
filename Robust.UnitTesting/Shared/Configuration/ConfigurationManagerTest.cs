@@ -1,6 +1,7 @@
 using Moq;
 using NUnit.Framework;
 using Robust.Server.Configuration;
+using Robust.Server.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -142,6 +143,7 @@ namespace Robust.UnitTesting.Shared.Configuration
             var collection = new DependencyCollection();
             collection.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
             collection.RegisterInstance<INetManager>(new Mock<INetManager>().Object);
+            collection.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);
             collection.Register<ConfigurationManager, ServerNetConfigurationManager>();
             collection.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
             collection.Register<IGameTiming, GameTiming>();

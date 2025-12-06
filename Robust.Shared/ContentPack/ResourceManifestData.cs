@@ -5,7 +5,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.ContentPack;
 
-internal sealed record ResourceManifestData(
+public sealed record ResourceManifestData(
     string[] Modules,
     string? AssemblyPrefix,
     string? DefaultWindowTitle,
@@ -13,7 +13,8 @@ internal sealed record ResourceManifestData(
     string? SplashLogo,
     bool? ShowLoadingBar,
     bool AutoConnect,
-    string[]? ClientAssemblies
+    string[]? ClientAssemblies,
+    string[]? ModularResources
 )
 {
     public static readonly ResourceManifestData Default =
@@ -68,6 +69,7 @@ internal sealed record ResourceManifestData(
             autoConnect = autoConnectNode.AsBool();
 
         var clientAssemblies = ReadStringArray(mapping, "clientAssemblies");
+        var modularResources = ReadStringArray(mapping, "resources");
 
         return new ResourceManifestData(
             modules,
@@ -77,7 +79,8 @@ internal sealed record ResourceManifestData(
             splashLogo,
             showBar,
             autoConnect,
-            clientAssemblies
+            clientAssemblies,
+            modularResources
         );
 
         static string[]? ReadStringArray(YamlMappingNode mapping, string key)

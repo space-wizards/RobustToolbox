@@ -32,6 +32,18 @@ namespace Robust.Client.ResourceManagement
         [Dependency] private ILogManager _logManager = default!;
         [Dependency] private IConfigurationManager _configurationManager = default!;
 
+        private IEnumerable<ResPath> GetTextureSearchPaths()
+        {
+            yield return new ResPath("/Textures/");
+
+            var manifest = ResourceManifestData.LoadResourceManifest(_manager);
+            if (manifest.ModularResources == null) yield break;
+            foreach (var mod in manifest.ModularResources)
+            {
+                yield return new ResPath($"/{mod}/Textures/");
+            }
+        }
+
         public void PreloadTextures()
         {
             var sawmill = _logManager.GetSawmill("res.preload");
@@ -52,7 +64,8 @@ namespace Robust.Client.ResourceManagement
             var sw = Stopwatch.StartNew();
             var resList = GetTypeData<TextureResource>().Resources;
 
-            var texList = _manager.ContentFindFiles("/Textures/")
+            var texList = GetTextureSearchPaths()
+                .SelectMany(path => _manager.ContentFindFiles(path))
                 // Skip PNG files inside RSIs.
                 .Where(p => p.Extension == "png" && !p.ToString().Contains(".rsi/") && !resList.ContainsKey(p))
                 .Select(p => new TextureResource.LoadStepData {Path = p})
@@ -139,7 +152,8 @@ namespace Robust.Client.ResourceManagement
             var sw = Stopwatch.StartNew();
             var resList = GetTypeData<RSIResource>().Resources;
 
-            var foundRsiList = _manager.ContentFindFiles("/Textures/")
+            var rsiList = GetTextureSearchPaths()
+                .SelectMany(path => _manager.ContentFindFiles(path))
                 .Where(p => p.ToString().EndsWith(".rsi/meta.json"))
                 .Select(c => c.Directory);
 

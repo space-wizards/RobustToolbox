@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Server.Console;
 using Robust.Server.Player;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.Prototypes
 {
@@ -55,6 +57,14 @@ namespace Robust.Server.Prototypes
         {
             LoadDirectory(new("/EnginePrototypes/"), changed: changed);
             LoadDirectory(_server.Options.PrototypeDirectory, changed: changed);
+            var manifest = ResourceManifestData.LoadResourceManifest(Resources);
+            if (manifest.ModularResources != null)
+            {
+                foreach (var mod in manifest.ModularResources)
+                {
+                    LoadDirectory(new ResPath($"/{mod}/Prototypes/"), changed: changed);
+                }
+            }
             ResolveResults();
         }
     }

@@ -180,28 +180,20 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         // If playback position changed then update it.
-        var position = (float) ((entity.Comp.PauseTime ?? Timing.CurTime) - entity.Comp.AudioStart).TotalSeconds;
+        var totalLen = GetAudioLengthImpl(entity.Comp.FileName).TotalSeconds;
+        var position = CalculateAudioPosition(entity, (float) totalLen);
+
         var currentPosition = entity.Comp.Source.PlaybackPosition;
         var diff = Math.Abs(position - currentPosition);
 
-        var totalLen = GetAudioLengthImpl(entity.Comp.FileName).TotalSeconds;
-
-        // Looped audio requires special position calculation,
-        // so we skip the standard end-of-stream check here.
-        if (!entity.Comp.Params.Loop && !string.IsNullOrEmpty(entity.Comp.FileName))
+        // Don't try to set the audio too far ahead.
+        if (!string.IsNullOrEmpty(entity.Comp.FileName))
         {
-            // Don't try to set the audio too far ahead.
             if (position > totalLen - _audioEndBuffer)
             {
                 entity.Comp.StopPlaying();
                 return;
             }
-        }
-
-        if (entity.Comp.Params.Loop && totalLen > 0)
-        {
-            position %= (float)totalLen;
-            diff = Math.Abs(position - currentPosition);
         }
 
         // If the difference is minor then we'll just keep playing it.
@@ -259,7 +251,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         length ??= GetAudioLength(component.FileName);
 
         // If audio came into range then start playback at the correct position.
-        var offset = ((entity.Comp.PauseTime ?? Timing.CurTime) - component.AudioStart).TotalSeconds;
+        var offset = CalculateAudioPosition(entity, (float) length.Value.TotalSeconds);
 
         if (TryAudioLimit(component.FileName))
         {
@@ -288,11 +280,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             offset = 0;
         }
-        // Special handling for looped audio.
-        else if (component.Params.Loop && length.Value.TotalSeconds > 0)
-        {
-            offset %= length.Value.TotalSeconds;
-        }
         // Not enough audio to play
         else if (offset > length.Value.TotalSeconds - _audioEndBuffer)
         {
@@ -302,7 +289,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         if (offset > 0)
         {
-            component.PlaybackPosition = (float) offset;
+            component.PlaybackPosition = offset;
         }
     }
 
@@ -768,19 +755,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var comp = entity.Comp;
         var source = comp.Source;
 
-        // TODO clamp the offset inside of SetPlaybackPosition() itself.
-        var offset = audioP.PlayOffsetSeconds;
-
-        // Proper offset calculation for looped audio, which conceptually has no start or end.
-        if (audioP.Loop && stream.Length.TotalSeconds > 0)
-        {
-            offset %= (float)stream.Length.TotalSeconds;
-        }
-        else
-        {
-            var maxOffset = Math.Max((float) stream.Length.TotalSeconds - 0.01f, 0f);
-            offset = Math.Clamp(offset, 0f, maxOffset);
-        }
+        var offset = CalculateAudioPosition(entity, (float)stream.Length.TotalSeconds, audioP.PlayOffsetSeconds);
         source.PlaybackPosition = offset;
 
         source.StartPlaying();

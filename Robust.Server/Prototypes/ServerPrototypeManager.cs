@@ -60,9 +60,9 @@ namespace Robust.Server.Prototypes
             var manifest = ResourceManifestData.LoadResourceManifest(Resources);
             if (manifest.ModularResources != null)
             {
-                foreach (var mod in manifest.ModularResources)
+                foreach (var path in manifest.ModularResources.Keys)
                 {
-                    LoadDirectory(new ResPath($"/{mod}/Prototypes/"), changed: changed);
+                    LoadDirectory(new ResPath($"/{path}/Prototypes/"), changed: changed);
                 }
             }
             ResolveResults();

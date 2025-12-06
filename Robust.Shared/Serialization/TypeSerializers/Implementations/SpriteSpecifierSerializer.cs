@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
@@ -112,9 +113,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            var path = new ResPath(node.Value);
-            var actualPath = path.IsRooted ? path : TextureRoot / path;
-            return serializationManager.ValidateNode<ResPath>(new ValueDataNode($"{actualPath}"), context);
+            var path = PathHelpers.ApparentPath(new ResPath(node.Value), TextureRoot);
+            return serializationManager.ValidateNode<ResPath>(new ValueDataNode($"{path}"), context);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, MappingDataNode>.Validate(

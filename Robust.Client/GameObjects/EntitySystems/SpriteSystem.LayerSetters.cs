@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -131,7 +132,7 @@ public sealed partial class SpriteSystem
 
     private void LayerSetTexture(Layer layer, ResPath path)
     {
-        var actualPath = path.IsRooted ? path : TextureRoot / path;
+        var actualPath = PathHelpers.ApparentPath(path, TextureRoot);
         if (!_resourceCache.TryGetResource<TextureResource>(actualPath, out var texture))
         {
             if (path.Extension == "rsi")
@@ -229,8 +230,8 @@ public sealed partial class SpriteSystem
 
     public void LayerSetRsi(Layer layer, ResPath rsi, StateId? state = null)
     {
-        var actualPath = rsi.IsRooted ? rsi : TextureRoot / rsi;
-        if (!_resourceCache.TryGetResource<RSIResource>(actualPath, out var res))
+        var rsiPath = PathHelpers.ApparentPath(rsi, TextureRoot);
+        if (!_resourceCache.TryGetResource<RSIResource>(rsiPath, out var res))
             Log.Error($"Unable to load RSI '{rsi}' for entity {ToPrettyString(layer.Owner)}. Trace:\n{Environment.StackTrace}");
 
         LayerSetRsi(layer, res?.RSI, state);

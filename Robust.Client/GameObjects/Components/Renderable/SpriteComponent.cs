@@ -13,6 +13,7 @@ using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Animations;
 using Robust.Shared.ComponentTrees;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
@@ -253,7 +254,7 @@ namespace Robust.Client.GameObjects
             IoCManager.InjectDependencies(this);
             if (!string.IsNullOrWhiteSpace(rsi))
             {
-                var rsiPath = new ResPath(rsi).IsRooted ? new ResPath(rsi) : TextureRoot / rsi;
+                var rsiPath = PathHelpers.ApparentPath(rsi, TextureRoot.ToString());
                 if (resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
                     _baseRsi = resource.RSI;
                 else
@@ -500,9 +501,7 @@ namespace Robust.Client.GameObjects
 
             if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
             {
-                var rawPath = new ResPath(layerDatum.RsiPath);
-                var path = rawPath.IsRooted ? rawPath : TextureRoot / layerDatum.RsiPath;
-
+                var path = PathHelpers.ApparentPath(layerDatum.RsiPath, TextureRoot.ToString());
                 if (resourceCache.TryGetResource(path, out RSIResource? resource))
                 {
                     layer.RSI = resource.RSI;
@@ -552,8 +551,7 @@ namespace Robust.Client.GameObjects
                 }
                 else
                 {
-                    var rawTexPath = new ResPath(layerDatum.TexturePath);
-                    var texPath = rawTexPath.IsRooted ? rawTexPath : TextureRoot / layerDatum.TexturePath;
+                    var texPath = PathHelpers.ApparentPath(layerDatum.TexturePath, TextureRoot.ToString());
                     layer.Texture = resourceCache.GetResource<TextureResource>(texPath);
                 }
             }

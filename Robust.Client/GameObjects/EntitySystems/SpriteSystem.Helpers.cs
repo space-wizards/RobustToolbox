@@ -4,6 +4,7 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -171,10 +172,8 @@ public sealed partial class SpriteSystem
     [Pure]
     public RSI.State GetState(SpriteSpecifier.Rsi rsiSpecifier)
     {
-        var path = rsiSpecifier.RsiPath;
-        var actualPath = path.IsRooted ? path : TextureRoot / path;
-
-        if (_resourceCache.TryGetResource<RSIResource>(actualPath, out var theRsi) &&
+        var path = PathHelpers.ApparentPath(rsiSpecifier.RsiPath, TextureRoot);
+        if (_resourceCache.TryGetResource<RSIResource>(path, out var theRsi) &&
             theRsi.RSI.TryGetState(rsiSpecifier.RsiState, out var state))
         {
             return state;
@@ -186,11 +185,9 @@ public sealed partial class SpriteSystem
 
     public Texture GetTexture(SpriteSpecifier.Texture texSpecifier)
     {
-        var path = texSpecifier.TexturePath;
-        var actualPath = path.IsRooted ? path : TextureRoot / path;
-
+        var path = PathHelpers.ApparentPath(texSpecifier.TexturePath, TextureRoot);
         return _resourceCache
-            .GetResource<TextureResource>(actualPath)
+            .GetResource<TextureResource>(path)
             .Texture;
     }
 

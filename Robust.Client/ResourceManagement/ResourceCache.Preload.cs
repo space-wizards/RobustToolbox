@@ -30,16 +30,16 @@ namespace Robust.Client.ResourceManagement
         [field: Dependency] public IFontManager FontManager { get; } = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-
         private IEnumerable<ResPath> GetTextureSearchPaths()
         {
             yield return new ResPath("/Textures/");
 
             var manifest = ResourceManifestData.LoadResourceManifest(_manager);
             if (manifest.ModularResources == null) yield break;
-            foreach (var mod in manifest.ModularResources)
+            foreach (var path in manifest.ModularResources.Keys)
             {
-                yield return new ResPath($"/{mod}/Textures/");
+
+                yield return new ResPath(path).ToRootedPath() / "Textures";
             }
         }
 

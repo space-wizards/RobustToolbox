@@ -1,3 +1,4 @@
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -31,8 +32,7 @@ public sealed class ServerSpriteSpecifierSerializer : SpriteSpecifierSerializer
         {
             return new ErrorNode(node, "Sprite specifier has missing/invalid state node");
         }
-        var rawPath = new ResPath(valuePathNode.Value);
-        var actualPath = rawPath.IsRooted ? rawPath : TextureRoot / rawPath;
+        var actualPath = PathHelpers.ApparentPath(new ResPath(valuePathNode.Value), TextureRoot);
         var path = serializationManager.ValidateNode<ResPath>(
             new ValueDataNode($"{actualPath}"), context);
 

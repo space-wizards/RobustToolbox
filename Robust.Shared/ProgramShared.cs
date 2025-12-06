@@ -62,15 +62,14 @@ internal static class ProgramShared
         var manifest = ResourceManifestData.LoadResourceManifest(res);
         if (manifest.ModularResources != null)
         {
-            foreach (var mod in manifest.ModularResources)
+            foreach (var (vfsPath,diskName) in manifest.ModularResources)
             {
-                var virtualPath = new ResPath($"/{mod}/");
-
+                var virtualPath = new ResPath($"/{vfsPath}/");
 #if FULL_RELEASE
-                res.MountContentDirectory($@"{mod}/", virtualPath);
+                res.MountContentDirectory($@"{diskName}/", virtualPath);
 #else
                 var contentRootDir = FindContentRootDir(contentStart);
-                res.MountContentDirectory($@"{contentRootDir}{mod}/", virtualPath);
+                res.MountContentDirectory($@"{contentRootDir}{diskName}/", virtualPath);
 #endif
             }
         }

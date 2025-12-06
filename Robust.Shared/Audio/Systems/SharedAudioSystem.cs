@@ -320,7 +320,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <param name="position">
     /// A precomputed playback position.
     /// If provided, it will be added to the calculation.
-    /// </param>`
+    /// </param>
     /// <returns>The playback position as a float.</returns>
     protected float CalculateAudioPosition(Entity<AudioComponent> ent, float? length = null, float? position = null)
     {

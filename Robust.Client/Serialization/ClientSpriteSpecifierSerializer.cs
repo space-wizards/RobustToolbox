@@ -1,4 +1,5 @@
 using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -28,9 +29,8 @@ public sealed class ClientSpriteSpecifierSerializer : SpriteSpecifierSerializer
             return new ErrorNode(node, "Sprite specifier has missing/invalid state node");
         }
 
-        var rawPath = new ResPath(valuePathNode.Value);
         var res = dependencies.Resolve<IResourceCache>();
-        var rsiPath = rawPath.IsRooted ? rawPath : TextureRoot / rawPath;
+        var rsiPath = PathHelpers.ApparentPath(new ResPath(valuePathNode.Value), TextureRoot);
         if (!res.TryGetResource(rsiPath, out RSIResource? resource))
         {
             return new ErrorNode(node, "Failed to load RSI");

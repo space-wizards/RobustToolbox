@@ -31,6 +31,8 @@ namespace Robust.Client.ResourceManagement
         public IFontManager FontManager => _fontManager;
         [Dependency] private ILogManager _logManager = default!;
         [Dependency] private IConfigurationManager _configurationManager = default!;
+        [Dependency] private IAudioInternal _clydeAudio = default!;
+        public IAudioInternal ClydeAudio => _clydeAudio;
 
         private IEnumerable<ResPath> GetTextureSearchPaths()
         {
@@ -38,9 +40,10 @@ namespace Robust.Client.ResourceManagement
 
             var manifest = ResourceManifestData.LoadResourceManifest(_manager);
             if (manifest.ModularResources == null) yield break;
-            foreach (var mod in manifest.ModularResources)
+            foreach (var path in manifest.ModularResources.Keys)
             {
-                yield return new ResPath($"/{mod}/Textures/");
+
+                yield return new ResPath(path).ToRootedPath() / "Textures";
             }
         }
 

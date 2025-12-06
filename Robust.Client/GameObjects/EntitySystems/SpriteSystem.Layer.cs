@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Utility;
 using static Robust.Client.GameObjects.SpriteComponent;
@@ -190,8 +191,8 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
 
-        var actualPath = path.IsRooted ? path : TextureRoot / path;
-        if (!_resourceCache.TryGetResource<RSIResource>(actualPath, out var res))
+        var rsiPath = PathHelpers.ApparentPath(path, TextureRoot);
+        if (!_resourceCache.TryGetResource<RSIResource>(rsiPath, out var res))
             Log.Error($"Unable to load RSI '{path}'. Trace:\n{Environment.StackTrace}");
 
         if (path.Extension != "rsi")
@@ -202,8 +203,8 @@ public sealed partial class SpriteSystem
 
     public int AddTextureLayer(Entity<SpriteComponent?> sprite, ResPath path, int? index = null)
     {
-        var actualPath = path.IsRooted ? path : TextureRoot / path;
-        if (_resourceCache.TryGetResource<TextureResource>(actualPath, out var texture))
+        var texPath = PathHelpers.ApparentPath(path, TextureRoot);
+        if (_resourceCache.TryGetResource<TextureResource>(texPath, out var texture))
             return AddTextureLayer(sprite, texture?.Texture, index);
 
         if (path.Extension == "rsi")

@@ -9,6 +9,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
@@ -187,9 +188,8 @@ namespace Robust.Client.GameObjects
             switch (spriteSpec)
             {
                 case SpriteSpecifier.Rsi rsi:
-                    var path = rsi.RsiPath;
-                    var actualPath = path.IsRooted ? path : TextureRoot / path;
-                    var rsiActual = _resourceCache.GetResource<RSIResource>(actualPath).RSI;
+                    var path = PathHelpers.ApparentPath(rsi.RsiPath, TextureRoot);
+                    var rsiActual = _resourceCache.GetResource<RSIResource>(path).RSI;
                     rsiActual.TryGetState(rsi.RsiState, out var state);
                     var frames = state!.GetFrames(RsiDirection.South);
                     var delays = state.GetDelays();

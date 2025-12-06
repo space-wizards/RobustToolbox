@@ -31,9 +31,10 @@ public sealed class ServerSpriteSpecifierSerializer : SpriteSpecifierSerializer
         {
             return new ErrorNode(node, "Sprite specifier has missing/invalid state node");
         }
-
+        var rawPath = new ResPath(valuePathNode.Value);
+        var actualPath = rawPath.IsRooted ? rawPath : TextureRoot / rawPath;
         var path = serializationManager.ValidateNode<ResPath>(
-            new ValueDataNode($"{TextureRoot / valuePathNode.Value}"), context);
+            new ValueDataNode($"{actualPath}"), context);
 
         if (path is ErrorNode) return path;
 
@@ -43,7 +44,7 @@ public sealed class ServerSpriteSpecifierSerializer : SpriteSpecifierSerializer
         // meta.json
 
         var statePath = serializationManager.ValidateNode<ResPath>(
-            new ValueDataNode($"{TextureRoot / valuePathNode.Value / valueStateNode.Value}.png"),
+            new ValueDataNode($"{actualPath / valueStateNode.Value}.png"),
             context);
 
         if (statePath is ErrorNode) return statePath;

@@ -20,15 +20,19 @@ namespace Robust.Client.Utility
         [Obsolete("Use SpriteSystem.GetTexture() instead")]
         public static Texture GetTexture(this SpriteSpecifier.Texture texSpecifier, IResourceCache cache)
         {
+            var path = texSpecifier.TexturePath;
+            var actualPath = path.IsRooted ? path : SpriteSpecifierSerializer.TextureRoot / path;
             return cache
-                .GetResource<TextureResource>(SpriteSpecifierSerializer.TextureRoot / texSpecifier.TexturePath)
+                .GetResource<TextureResource>(actualPath)
                 .Texture;
         }
 
         [Obsolete("Use SpriteSystem.GetState() instead")]
         public static RSI.State GetState(this SpriteSpecifier.Rsi rsiSpecifier, IResourceCache cache)
         {
-            if (!cache.TryGetResource<RSIResource>(SpriteSpecifierSerializer.TextureRoot / rsiSpecifier.RsiPath, out var theRsi))
+            var path = rsiSpecifier.RsiPath;
+            var actualPath = path.IsRooted ? path : SpriteSpecifierSerializer.TextureRoot / path;
+            if (!cache.TryGetResource<RSIResource>(actualPath, out var theRsi))
             {
                 var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
                 Logger.Error("SpriteSpecifier failed to load RSI {0}", rsiSpecifier.RsiPath);

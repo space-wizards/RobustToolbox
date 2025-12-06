@@ -251,7 +251,7 @@ namespace Robust.Client.GameObjects
             IoCManager.InjectDependencies(this);
             if (!string.IsNullOrWhiteSpace(rsi))
             {
-                var rsiPath = TextureRoot / rsi;
+                var rsiPath = new ResPath(rsi).IsRooted ? new ResPath(rsi) : TextureRoot / rsi;
                 if (resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
                     _baseRsi = resource.RSI;
                 else
@@ -508,7 +508,8 @@ namespace Robust.Client.GameObjects
 
             if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
             {
-                var path = TextureRoot / layerDatum.RsiPath;
+                var rawPath = new ResPath(layerDatum.RsiPath);
+                var path = rawPath.IsRooted ? rawPath : TextureRoot / layerDatum.RsiPath;
 
                 if (resourceCache.TryGetResource(path, out RSIResource? resource))
                 {
@@ -559,8 +560,9 @@ namespace Robust.Client.GameObjects
                 }
                 else
                 {
-                    layer.Texture =
-                        resourceCache.GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
+                    var rawTexPath = new ResPath(layerDatum.TexturePath);
+                    var texPath = rawTexPath.IsRooted ? rawTexPath : TextureRoot / layerDatum.TexturePath;
+                    layer.Texture = resourceCache.GetResource<TextureResource>(texPath);
                 }
             }
 

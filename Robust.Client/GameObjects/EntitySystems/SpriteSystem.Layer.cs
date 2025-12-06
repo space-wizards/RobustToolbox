@@ -190,7 +190,8 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
 
-        if (!_resourceCache.TryGetResource<RSIResource>(TextureRoot / path, out var res))
+        var actualPath = path.IsRooted ? path : TextureRoot / path;
+        if (!_resourceCache.TryGetResource<RSIResource>(actualPath, out var res))
             Log.Error($"Unable to load RSI '{path}'. Trace:\n{Environment.StackTrace}");
 
         if (path.Extension != "rsi")
@@ -201,7 +202,8 @@ public sealed partial class SpriteSystem
 
     public int AddTextureLayer(Entity<SpriteComponent?> sprite, ResPath path, int? index = null)
     {
-        if (_resourceCache.TryGetResource<TextureResource>(TextureRoot / path, out var texture))
+        var actualPath = path.IsRooted ? path : TextureRoot / path;
+        if (_resourceCache.TryGetResource<TextureResource>(actualPath, out var texture))
             return AddTextureLayer(sprite, texture?.Texture, index);
 
         if (path.Extension == "rsi")

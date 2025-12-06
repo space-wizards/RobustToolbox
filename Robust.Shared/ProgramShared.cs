@@ -63,6 +63,22 @@ internal static class ProgramShared
             res.MountContentDirectory($@"{contentRootDir}Resources/");
         }
 #endif
+        var manifest = ResourceManifestData.LoadResourceManifest(res);
+        if (manifest.ModularResources != null)
+        {
+            foreach (var mod in manifest.ModularResources)
+            {
+                var virtualPath = new ResPath($"/{mod}/");
+
+#if FULL_RELEASE
+                res.MountContentDirectory($@"{mod}/", virtualPath);
+#else
+                var contentRootDir = FindContentRootDir(contentStart);
+                res.MountContentDirectory($@"{contentRootDir}{mod}/", virtualPath);
+#endif
+            }
+        }
+
 
         if (options == null)
             return;

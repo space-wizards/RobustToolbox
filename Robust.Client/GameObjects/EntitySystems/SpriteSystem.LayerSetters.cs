@@ -131,7 +131,8 @@ public sealed partial class SpriteSystem
 
     private void LayerSetTexture(Layer layer, ResPath path)
     {
-        if (!_resourceCache.TryGetResource<TextureResource>(TextureRoot / path, out var texture))
+        var actualPath = path.IsRooted ? path : TextureRoot / path;
+        if (!_resourceCache.TryGetResource<TextureResource>(actualPath, out var texture))
         {
             if (path.Extension == "rsi")
                 Log.Error($"Expected texture but got rsi '{path}', did you mean 'sprite:' instead of 'texture:'?");
@@ -228,7 +229,8 @@ public sealed partial class SpriteSystem
 
     public void LayerSetRsi(Layer layer, ResPath rsi, StateId? state = null)
     {
-        if (!_resourceCache.TryGetResource<RSIResource>(TextureRoot / rsi, out var res))
+        var actualPath = rsi.IsRooted ? rsi : TextureRoot / rsi;
+        if (!_resourceCache.TryGetResource<RSIResource>(actualPath, out var res))
             Log.Error($"Unable to load RSI '{rsi}' for entity {ToPrettyString(layer.Owner)}. Trace:\n{Environment.StackTrace}");
 
         LayerSetRsi(layer, res?.RSI, state);

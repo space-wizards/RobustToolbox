@@ -29,14 +29,10 @@ internal static class ProgramShared
 
 #if !FULL_RELEASE
     private static string FindContentRootDir(bool contentStart)
-    {
-        return PathOffset + (contentStart ? "../../" : "../../../");
-    }
+        => PathOffset + (contentStart ? "../../" : "../../../");
 
     private static string FindEngineRootDir(bool contentStart)
-    {
-        return PathOffset + (contentStart ? "../../RobustToolbox/" : "../../");
-    }
+        => PathOffset + (contentStart ? "../../RobustToolbox/" : "../../");
 #endif
 
     internal static void PrintRuntimeInfo(ISawmill sawmill)

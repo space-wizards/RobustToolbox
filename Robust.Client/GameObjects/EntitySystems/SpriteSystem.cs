@@ -187,7 +187,9 @@ namespace Robust.Client.GameObjects
             switch (spriteSpec)
             {
                 case SpriteSpecifier.Rsi rsi:
-                    var rsiActual = _resourceCache.GetResource<RSIResource>(rsi.RsiPath).RSI;
+                    var path = rsi.RsiPath;
+                    var actualPath = path.IsRooted ? path : TextureRoot / path;
+                    var rsiActual = _resourceCache.GetResource<RSIResource>(actualPath).RSI;
                     rsiActual.TryGetState(rsi.RsiState, out var state);
                     var frames = state!.GetFrames(RsiDirection.South);
                     var delays = state.GetDelays();

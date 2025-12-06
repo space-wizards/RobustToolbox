@@ -112,7 +112,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            return serializationManager.ValidateNode<ResPath>(new ValueDataNode($"{TextureRoot / node.Value}"), context);
+            var path = new ResPath(node.Value);
+            var actualPath = path.IsRooted ? path : TextureRoot / path;
+            return serializationManager.ValidateNode<ResPath>(new ValueDataNode($"{actualPath}"), context);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, MappingDataNode>.Validate(

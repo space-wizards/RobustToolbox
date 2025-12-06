@@ -1761,7 +1761,7 @@ namespace Robust.Shared.GameObjects
         private readonly EntityManager _entMan;
         private readonly Dictionary<EntityUid, IComponent> _traitDict;
 
-        public EntityQuery(EntityManager entMan, Dictionary<EntityUid, IComponent> traitDict)
+        internal EntityQuery(EntityManager entMan, Dictionary<EntityUid, IComponent> traitDict)
         {
             _entMan = entMan;
             _traitDict = traitDict;

@@ -30,6 +30,8 @@ jobs:
           git fetch origin ${{ github.sha }}
           git checkout FETCH_HEAD
           git submodule update --init --recursive
+      - name: Replace global.json
+        run: cp RobustToolbox/global.json .
       - name: Install dependencies
         run: dotnet restore
       - name: Build

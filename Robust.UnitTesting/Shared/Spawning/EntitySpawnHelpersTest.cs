@@ -25,7 +25,7 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
     protected SharedContainerSystem Container = default!;
 
     // Even if unused, content / downstream tests might use this class, so removal would be a breaking change?
-    protected IMapManager MapMan = default!; 
+    protected IMapManager MapMan = default!;
 
     protected EntityUid Map;
     protected MapId MapId;
@@ -100,6 +100,12 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
 
         Assert.That(ParentPos.Position, Is.EqualTo(new Vector2(1, 2)));
         Assert.That(GrandChildBPos.Position, Is.EqualTo(new Vector2(2, 1)));
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        Server?.Dispose();
     }
 
     /// <summary>

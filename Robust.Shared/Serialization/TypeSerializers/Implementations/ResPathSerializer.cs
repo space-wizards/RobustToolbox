@@ -47,7 +47,6 @@ public sealed class ResPathSerializer : ITypeSerializer<ResPath, ValueDataNode>,
         }
     }
 
-
     public ResPath Read(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies,
         SerializationHookContext hookCtx, ISerializationContext? context = null,

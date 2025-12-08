@@ -88,7 +88,7 @@ public sealed record ResourceManifestData(
         var clientAssemblies = ReadStringArray(mapping, "clientAssemblies");
 
         // Use the new Dictionary reader
-        var modularResources = ReadResourceMods(mapping, "resourceMods");
+        var modularResources = ReadResourceMods(mapping, "modularResources");
 
         return new ResourceManifestData(
             modules,

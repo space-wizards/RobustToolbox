@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -19,18 +18,12 @@ public sealed class ResPathSerializer : ITypeSerializer<ResPath, ValueDataNode>,
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null)
     {
+        // 1. Normalize separators (fixes Windows backslashes)
         var path = ResPath.FromRelativeSystemPath(node.Value);
-
         if (path.Extension.Equals("rsi"))
         {
             path /= "meta.json";
         }
-
-        if (!path.CanonPath.Split('/').First().Equals("Textures", StringComparison.InvariantCultureIgnoreCase))
-        {
-            path = SpriteSpecifierSerializer.TextureRoot / path;
-        }
-
         path = path.ToRootedPath();
 
         try
@@ -43,7 +36,6 @@ public sealed class ResPathSerializer : ITypeSerializer<ResPath, ValueDataNode>,
 
                 return new ErrorNode(node, $"Folder not found. ({path})");
             }
-
             if (resourceManager.ContentFileExists(path))
                 return new ValidatedValueNode(node);
 
@@ -54,6 +46,7 @@ public sealed class ResPathSerializer : ITypeSerializer<ResPath, ValueDataNode>,
             return new ErrorNode(node, $"Failed parsing filepath. ({path}) ({e.Message})");
         }
     }
+
 
     public ResPath Read(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies,

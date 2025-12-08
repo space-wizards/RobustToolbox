@@ -30,6 +30,18 @@ namespace Robust.Client.ResourceManagement
         [field: Dependency] public IFontManager FontManager { get; } = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        private IEnumerable<ResPath> GetTextureSearchPaths()
+        {
+            yield return new ResPath("/Textures/");
+
+            var manifest = ResourceManifestData.LoadResourceManifest(_manager);
+            if (manifest.ModularResources == null) yield break;
+            foreach (var path in manifest.ModularResources.Keys)
+            {
+
+                yield return new ResPath(path).ToRootedPath() / "Textures";
+            }
+        }
 
         public void PreloadTextures()
         {
@@ -51,7 +63,8 @@ namespace Robust.Client.ResourceManagement
             var sw = Stopwatch.StartNew();
             var resList = GetTypeData<TextureResource>().Resources;
 
-            var texList = _manager.ContentFindFiles("/Textures/")
+            var texList = GetTextureSearchPaths()
+                .SelectMany(path => _manager.ContentFindFiles(path))
                 // Skip PNG files inside RSIs.
                 .Where(p => p.Extension == "png" && !p.ToString().Contains(".rsi/") && !resList.ContainsKey(p))
                 .Select(p => new TextureResource.LoadStepData {Path = p})
@@ -137,6 +150,14 @@ namespace Robust.Client.ResourceManagement
         {
             var sw = Stopwatch.StartNew();
             var resList = GetTypeData<RSIResource>().Resources;
+
+            /*            var rsiList = GetTextureSearchPaths()
+                .SelectMany(path => _manager.ContentFindFiles(path))
+                .Where(p => p.ToString().EndsWith(".rsi/meta.json"))
+                .Select(c => c.Directory)
+                .Where(p => !resList.ContainsKey(p))
+                .Select(p => new RSIResource.LoadStepData {Path = p})
+                .ToArray();*/
 
             var foundRsiList = _manager.ContentFindFiles("/Textures/")
                 .Where(p => p.ToString().EndsWith(".rsi/meta.json"))

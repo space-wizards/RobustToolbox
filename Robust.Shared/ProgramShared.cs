@@ -29,14 +29,10 @@ internal static class ProgramShared
 
 #if !FULL_RELEASE
     private static string FindContentRootDir(bool contentStart)
-    {
-        return PathOffset + (contentStart ? "../../" : "../../../");
-    }
+        => PathOffset + (contentStart ? "../../" : "../../../");
 
     private static string FindEngineRootDir(bool contentStart)
-    {
-        return PathOffset + (contentStart ? "../../RobustToolbox/" : "../../");
-    }
+        => PathOffset + (contentStart ? "../../RobustToolbox/" : "../../");
 #endif
 
     internal static void PrintRuntimeInfo(ISawmill sawmill)
@@ -63,6 +59,21 @@ internal static class ProgramShared
             res.MountContentDirectory($@"{contentRootDir}Resources/");
         }
 #endif
+        var manifest = ResourceManifestData.LoadResourceManifest(res);
+        if (manifest.ModularResources != null)
+        {
+            foreach (var (vfsPath,diskName) in manifest.ModularResources)
+            {
+                var virtualPath = new ResPath($"/{vfsPath}/");
+#if FULL_RELEASE
+                res.MountContentDirectory($@"{diskName}/", virtualPath);
+#else
+                var contentRootDir = FindContentRootDir(contentStart);
+                res.MountContentDirectory($@"{contentRootDir}{diskName}/", virtualPath);
+#endif
+            }
+        }
+
 
         if (options == null)
             return;

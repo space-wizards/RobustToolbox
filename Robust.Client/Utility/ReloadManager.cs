@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Robust.Client.Graphics;
 using Robust.Shared;
@@ -28,6 +30,7 @@ internal sealed class ReloadManager : IReloadManager
     private CancellationTokenSource _reloadToken = new();
     private readonly HashSet<ResPath> _reloadQueue = new();
     private List<FileSystemWatcher> _watchers = new(); // this list is never used but needed to prevent them from being garbage collected
+    private ResourceManifestData _manifest = ResourceManifestData.Default; // cache it
 
     public event Action<ResPath>? OnChanged;
 
@@ -37,6 +40,7 @@ internal sealed class ReloadManager : IReloadManager
     {
         _sawmill = _logMan.GetSawmill("reload");
         _clyde.OnWindowFocused += WindowFocusedChanged;
+        _manifest = ResourceManifestData.LoadResourceManifest(_res);
     }
 
     private void WindowFocusedChanged(WindowFocusedEventArgs args)
@@ -71,6 +75,11 @@ internal sealed class ReloadManager : IReloadManager
     public void Register(ResPath directory, string filter)
     {
         Register(directory.ToRelativeSystemPath(), filter);
+    }
+
+    private void ResolveDirectory()
+    {
+
     }
 
     public void Register(string directory, string filter)
@@ -138,9 +147,30 @@ internal sealed class ReloadManager : IReloadManager
                     var file = ResPath.FromRelativeSystemPath(relPath).ToRootedPath();
                     if (!file.CanonPath.Contains("/../"))
                         _reloadQueue.Add(file);
+                    /*
+                    var path = ResolvePath(relative.Value, rootIter);
+                    _reloadQueue.Add(path);
+                    */
                 }
             });
         }
 #endif
+    }
+
+    private ResPath ResolvePath(ResPath relative, ResPath rootIter)
+    {
+        var finalPath = relative;
+        var rootName = new DirectoryInfo(rootIter.ToString()).Name;
+
+        if (_manifest.ModularResources == null)
+            return finalPath;
+
+        foreach (var (vfsPath, diskPath) in _manifest.ModularResources)
+        {
+            if (diskPath != rootName) continue;
+            finalPath = new ResPath(vfsPath) / relative;
+            break;
+        }
+        return finalPath;
     }
 }

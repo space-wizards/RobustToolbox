@@ -12,6 +12,7 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
+using TerraFX.Interop.Windows;
 using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.Utility;
@@ -143,24 +144,23 @@ internal sealed class ReloadManager : IReloadManager
                         // Different root (i.e., "C:/" and "D:/")
                         continue;
                     }
-
+                    if (relPath.Contains(".."))
+                        continue;
                     var file = ResPath.FromRelativeSystemPath(relPath).ToRootedPath();
                     if (!file.CanonPath.Contains("/../"))
                         _reloadQueue.Add(file);
-                    /*
-                    var path = ResolvePath(relative.Value, rootIter);
+                    var path = ResolveModularPath(file, rootIter);
                     _reloadQueue.Add(path);
-                    */
                 }
             });
         }
 #endif
     }
 
-    private ResPath ResolvePath(ResPath relative, ResPath rootIter)
+    private ResPath ResolveModularPath(ResPath relative, string rootIter)
     {
         var finalPath = relative;
-        var rootName = new DirectoryInfo(rootIter.ToString()).Name;
+        var rootName = new DirectoryInfo(rootIter).Name;
 
         if (_manifest.ModularResources == null)
             return finalPath;

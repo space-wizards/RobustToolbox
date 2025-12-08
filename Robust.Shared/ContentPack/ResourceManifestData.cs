@@ -16,11 +16,11 @@ public sealed record ResourceManifestData(
     bool? ShowLoadingBar,
     bool AutoConnect,
     string[]? ClientAssemblies,
-    Dictionary<string, string>? ModularResources // Changed to Dictionary
+    Dictionary<string, string>? ModularResources
 )
 {
     public static readonly ResourceManifestData Default =
-        new ResourceManifestData(Array.Empty<string>(), null, null, null, null, null, true, null);
+        new ResourceManifestData(Array.Empty<string>(), null, null, null, null, null, true, null, null);
 
     public static ResourceManifestData LoadResourceManifest(IResourceManager res)
     {

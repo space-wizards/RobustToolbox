@@ -148,6 +148,10 @@ internal sealed partial class ReloadManager : IReloadManager
                     var file = ResPath.FromRelativeSystemPath(path).ToRootedPath();
                     if (!file.CanonPath.Contains("/../"))
                         _reloadQueue.Add(file);
+                    /*
+                    var path = ResolvePath(relative.Value, rootIter);
+                    _reloadQueue.Add(path);
+                    */
                 }
             });
         }

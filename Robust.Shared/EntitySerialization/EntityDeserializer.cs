@@ -1300,6 +1300,9 @@ public sealed class EntityDeserializer :
         ISerializationContext? context,
         ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider)
     {
+        if (node.Value is "invalid")
+            return WeakEntityReference.Invalid;
+
         var uid = serializationManager.Read<EntityUid>(node, context);
         return new WeakEntityReference(uid);
     }

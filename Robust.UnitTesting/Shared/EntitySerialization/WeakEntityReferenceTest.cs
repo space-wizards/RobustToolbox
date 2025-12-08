@@ -103,4 +103,83 @@ public sealed class WeakEntityReferenceTest : RobustIntegrationTest
         // I love engine tests
         server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, true));
     }
+
+    [Test]
+    public async Task TestInvalidWeakEntityReference()
+    {
+        var server = StartServer();
+        var client = StartClient();
+
+        await Task.WhenAll(server.WaitIdleAsync(), client.WaitIdleAsync());
+
+        var sEntMan = server.EntMan;
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
+        var cEntMan = client.EntMan;
+        var cNetMan = client.ResolveDependency<IClientNetManager>();
+
+        NetEntity netEntA = default;
+
+        // Set up entities
+        await server.WaitPost(() =>
+        {
+            var entA = sEntMan.Spawn();
+            netEntA = sEntMan.GetNetEntity(entA);
+
+            // Give A WeakEntityReference fields, keep them initialized as invalid.
+            var comp = sEntMan.AddComponent<WeakEntityReferenceTestComponent>(entA);
+
+            // The base weak entity reference should be initialized as invalid
+            Assert.That(comp.Entity == WeakEntityReference.Invalid);
+
+            comp.EntityList = [WeakEntityReference.Invalid];
+            comp.EntitySet = [WeakEntityReference.Invalid];
+
+            sEntMan.Dirty(entA, comp);
+        });
+
+        // Connect client.
+        Assert.DoesNotThrow(() => client.SetConnectTarget(server));
+        await client.WaitPost(() => cNetMan.ClientConnect(null!, 0, null!));
+        // Disable PVS so everything gets networked
+        server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, false));
+
+        async Task RunTicks()
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                await server.WaitRunTicks(1);
+                await client.WaitRunTicks(1);
+            }
+        }
+        await RunTicks();
+
+        // Put the player into the game so they get entity data
+        await server.WaitAssertion(() =>
+        {
+            var session = sPlayerMan.Sessions.First();
+            sPlayerMan.JoinGame(session);
+        });
+
+        await RunTicks();
+
+        // Make sure the client got entity data
+        await client.WaitAssertion(() =>
+        {
+            Assert.That(cNetMan.IsConnected);
+            Assert.That(cEntMan.TryGetEntity(netEntA, out var entA));
+
+            Assert.That(cEntMan.TryGetComponent<WeakEntityReferenceTestComponent>(entA, out var comp));
+            Assert.That(!cEntMan.TryGetEntity(comp!.Entity, out _));
+            Assert.That(comp.Entity == WeakEntityReference.Invalid);
+            Assert.That(comp.EntityList, Contains.Item(WeakEntityReference.Invalid));
+            Assert.That(comp.EntitySet, Contains.Item(WeakEntityReference.Invalid));
+        });
+
+        // Disconnect client
+        await client.WaitPost(() => cNetMan.ClientDisconnect(string.Empty));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
+
+        server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, true));
+    }
 }

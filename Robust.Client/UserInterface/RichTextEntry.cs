@@ -52,17 +52,13 @@ namespace Robust.Client.UserInterface
         public readonly Dictionary<int, Control>? Controls;
 
 
-        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Color? defaultColor = null)
+        public RichTextEntry(
+            FormattedMessage message,
+            Control parent,
+            MarkupTagManager tagManager,
+            Color? defaultColor = null) : this(message, parent, tagManager, DefaultTags, defaultColor)
         {
-            Message = message;
-            Height = 0;
-            Width = 0;
-            LineBreaks = default;
-            _defaultColor = defaultColor ?? new(200, 200, 200);
-            Controls = GetControls(parent, tagManager);
-
-            // Default sane tags
-            _tagsAllowed = DefaultTags;
+            // RichTextEntry constructor but with DefaultTags
         }
 
         public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)

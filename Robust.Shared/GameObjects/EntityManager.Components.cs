@@ -1224,7 +1224,7 @@ namespace Robust.Shared.GameObjects
             var set = _entCompIndex[uid];
             if (set.Count > comps.Length)
             {
-                comps = new IComponent[set.Count];
+                comps = new IComponent?[set.Count];
             }
 
             var i = 0;

@@ -41,6 +41,28 @@ namespace Robust.Client.UserInterface
 
         public readonly Dictionary<int, Control>? Controls;
 
+
+        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Color? defaultColor = null)
+        {
+            Message = message;
+            Height = 0;
+            Width = 0;
+            LineBreaks = default;
+            _defaultColor = defaultColor ?? new(200, 200, 200);
+            Controls = GetControls(parent, tagManager);
+
+            // Default sane tags
+            _tagsAllowed =
+            [
+                typeof(BoldItalicTag),
+                typeof(BoldTag),
+                typeof(BulletTag),
+                typeof(ColorTag),
+                typeof(HeadingTag),
+                typeof(ItalicTag)
+            ];
+        }
+
         public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
             Message = message;
@@ -49,9 +71,14 @@ namespace Robust.Client.UserInterface
             LineBreaks = default;
             _defaultColor = defaultColor ?? new(200, 200, 200);
             _tagsAllowed = tagsAllowed;
-            Dictionary<int, Control>? tagControls = null;
+            Controls = GetControls(parent, tagManager);
+        }
 
+        private readonly Dictionary<int, Control>? GetControls(Control parent, MarkupTagManager tagManager)
+        {
+            Dictionary<int, Control>? tagControls = null;
             var nodeIndex = -1;
+
             foreach (var node in Message)
             {
                 nodeIndex++;
@@ -71,7 +98,7 @@ namespace Robust.Client.UserInterface
                 tagControls.Add(nodeIndex, control);
             }
 
-            Controls = tagControls;
+            return tagControls;
         }
 
         // TODO RICH TEXT

@@ -19,8 +19,18 @@ namespace Robust.Client.UserInterface
     /// </summary>
     internal struct RichTextEntry
     {
+        public static readonly Type[] DefaultTags =
+        [
+            typeof(BoldItalicTag),
+            typeof(BoldTag),
+            typeof(BulletTag),
+            typeof(ColorTag),
+            typeof(HeadingTag),
+            typeof(ItalicTag)
+        ];
+
         private readonly Color _defaultColor;
-        private readonly Type[]? _tagsAllowed;
+        private readonly Type[]? _tagsAllowed = DefaultTags;
 
         public readonly FormattedMessage Message;
 
@@ -52,15 +62,7 @@ namespace Robust.Client.UserInterface
             Controls = GetControls(parent, tagManager);
 
             // Default sane tags
-            _tagsAllowed =
-            [
-                typeof(BoldItalicTag),
-                typeof(BoldTag),
-                typeof(BulletTag),
-                typeof(ColorTag),
-                typeof(HeadingTag),
-                typeof(ItalicTag)
-            ];
+            _tagsAllowed = DefaultTags;
         }
 
         public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)

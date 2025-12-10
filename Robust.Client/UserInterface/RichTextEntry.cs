@@ -30,7 +30,7 @@ namespace Robust.Client.UserInterface
         ];
 
         private readonly Color _defaultColor;
-        private readonly Type[]? _tagsAllowed = DefaultTags;
+        private readonly Type[]? _tagsAllowed;
 
         public readonly FormattedMessage Message;
 
@@ -61,7 +61,7 @@ namespace Robust.Client.UserInterface
             // RichTextEntry constructor but with DefaultTags
         }
 
-        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed, Color? defaultColor = null)
         {
             Message = message;
             Height = 0;

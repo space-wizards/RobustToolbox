@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -15,6 +16,7 @@ internal abstract partial class SharedPlayerManager : ISharedPlayerManager
     [Dependency] protected readonly IComponentFactory Factory = default!;
     [Dependency] protected readonly ILogManager LogMan = default!;
     [Dependency] protected readonly IGameTiming Timing = default!;
+    [Dependency] protected readonly IConfigurationManager ConfigManager = default!;
     [Dependency] private readonly INetManager _netMan = default!;
 
     protected ISawmill Sawmill = default!;

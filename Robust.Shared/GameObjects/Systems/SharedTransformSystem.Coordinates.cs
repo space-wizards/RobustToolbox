@@ -3,6 +3,8 @@ using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -37,6 +39,7 @@ public abstract partial class SharedTransformSystem
     /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
     public EntityCoordinates WithEntityId(EntityCoordinates coordinates, EntityUid entity)
     {
+        DebugTools.Assert(entity == coordinates.EntityId || Transform(entity).MapUid == Transform(coordinates.EntityId).MapUid);
         return entity == coordinates.EntityId
             ? coordinates
             : ToCoordinates(entity, ToMapCoordinates(coordinates));
@@ -54,7 +57,12 @@ public abstract partial class SharedTransformSystem
             return MapCoordinates.Nullspace;
         }
 
-        Vector2 pos = xform._localRotation.RotateVec(coordinates.Position) + xform._localPosition;
+        return ToMapCoordinates(xform, coordinates.Position);
+    }
+
+    private MapCoordinates ToMapCoordinates(TransformComponent xform, Vector2 position)
+    {
+        var pos = xform._localRotation.RotateVec(position) + xform._localPosition;
 
         while (xform.ParentUid != xform.MapUid && xform.ParentUid.IsValid())
         {
@@ -238,5 +246,41 @@ public abstract partial class SharedTransformSystem
             return false;
 
         return mapA.InRange(mapB, range);
+    }
+
+    /// <summary>
+    /// This snaps the given coordinates to the center of a tile on the grid. The grid is taken from the entity that
+    /// the coordinates are relative to, this does not perform a grid lookup / intersection check.
+    /// </summary>
+    public EntityCoordinates SnapToGrid(EntityCoordinates coordinates)
+    {
+        if (!TryComp(coordinates.EntityId, out TransformComponent? xform))
+            return default;
+
+        if (xform.GridUid != null)
+        {
+            // This could be improved as it uneccesarily fetches the transform comp multiple times. But good enough for a simple helper method.
+            return SnapToGrid(coordinates, (xform.GridUid.Value, Comp<MapGridComponent>(xform.GridUid.Value)));
+        }
+
+        var mapPos = ToMapCoordinates(xform, coordinates.Position);
+        var mapX = (int) Math.Floor(mapPos.X) + 0.5f;
+        var mapY = (int) Math.Floor(mapPos.Y) + 0.5f;
+        mapPos = new MapCoordinates(new Vector2(mapX, mapY), mapPos.MapId);
+        return ToCoordinates((coordinates.EntityId, xform), mapPos);
+    }
+
+    /// <summary>
+    /// This snaps the given coordinates to the center of a tile on the given grid.
+    /// </summary>
+    public EntityCoordinates SnapToGrid(EntityCoordinates coordinates, Entity<MapGridComponent> grid)
+    {
+        // This could be improved as it uneccesarily fetches the transform comp multiple times. But good enough for a simple helper method.
+        var localPos = WithEntityId(coordinates, grid.Owner).Position;
+        var tileSize = grid.Comp.TileSize;
+        var x = (int) Math.Floor(localPos.X / tileSize) + tileSize / 2f;
+        var y = (int) Math.Floor(localPos.Y / tileSize) + tileSize / 2f;
+        var gridPos = new EntityCoordinates(grid.Owner, new Vector2(x, y));
+        return WithEntityId(gridPos, coordinates.EntityId);
     }
 }

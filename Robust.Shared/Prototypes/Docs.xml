@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<entries>
+  <entry name="IPrototype">
+    <remarks>
+      It is strongly discouraged to ever construct inheritors of this interface manually, if you need a prototype that
+      is also runtime-constructable data, consider moving all the data into its own class and using
+      <see cref="T:Robust.Shared.Serialization.Manager.Attributes.IncludeDataFieldAttribute"/> to flatten it into
+      the prototype class.
+      <br/>
+      <br/>
+      Prototypes should <b>never</b> be mutated at runtime, and should be treated as a read only source of truth. Keep
+      in mind that for example reading a container like a list from the prototype does not make a copy, and you must do
+      so yourself if you intend to mutate.
+    </remarks>
+  </entry>
+</entries>

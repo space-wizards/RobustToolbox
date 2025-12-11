@@ -1184,6 +1184,18 @@ namespace Robust.Shared.GameObjects
             return new EntityQuery<TComp1>(comps, _resolveSawmill);
         }
 
+        // this literally just exists to handle SharedLightComponent and is pretty hacky
+        // just move point light to shared and kill this.
+        // TODO LIGHT
+        internal EntityQuery<TCompShared> GetEntityQuery<TCompShared, TComp>()
+            where TCompShared : IComponent
+            where TComp : TCompShared
+        {
+            var comps = _entTraitArray[CompIdx.ArrayIndex<TComp>()];
+            DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp).Name}");
+            return new EntityQuery<TCompShared>(comps, _resolveSawmill);
+        }
+
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
             var comps = _entTraitDict[type];

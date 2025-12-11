@@ -140,13 +140,16 @@ internal partial class XamlAotCompiler
                     var classTypeDefinition = typeSystem.GetTypeReference(classType).Resolve()!;
                     var populateBuilder = typeSystem.CreateTypeBuilder(classTypeDefinition);
 
-                    xaml.ILCompiler.Compile(parsed, contextClass,
-                        xaml.ILCompiler.DefinePopulateMethod(populateBuilder, parsed, populateName, true),
-                        null,
-                        null,
-                        (closureName, closureBaseType) =>
-                            populateBuilder.DefineSubType(closureBaseType, closureName, false),
-                        res.Uri, res
+                    xaml.ILCompiler.Compile(
+                        doc: parsed,
+                        contextType: contextClass,
+                        populateMethod: xaml.ILCompiler.DefinePopulateMethod(populateBuilder, parsed, populateName, XamlVisibility.Public),
+                        populateDeclaringType: typeSystem.CreateTypeBuilder(contextDef),
+                        buildMethod: null,
+                        buildDeclaringType: null,
+                        namespaceInfoBuilder: null,
+                        baseUri: res.Uri,
+                        fileSource: res
                     );
 
                     var compiledPopulateMethod = typeSystem.GetTypeReference(populateBuilder).Resolve().Methods

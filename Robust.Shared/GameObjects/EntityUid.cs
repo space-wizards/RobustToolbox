@@ -9,9 +9,23 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
-    ///     This type contains a network identification number of an entity.
-    ///     This can be used by the EntityManager to access an entity
+    ///     This type contains the unique identifier for a given entity.
+    ///     This can be used with and obtained from <see cref="IEntityManager"/> to manipulate, query, and otherwise
+    ///     work with entities and their components.<br/>
+    ///     <br/>
+    ///     An entity is a unique identifier (this type) and a collection of assorted <see cref="Component"/>s that are
+    ///     attached to it. Components provide data to describe the entity, and entities+components are operated on by
+    ///     <see cref="EntitySystem"/>s.<br/>
     /// </summary>
+    /// <remarks>
+    ///     EntityUids are not guaranteed to be unique across individual instances of the game, or individual instances
+    ///     of <see cref="IEntityManager"/>. For network identification, see <see cref="NetEntity"/>, and for global
+    ///     uniqueness across time you'll need to make something yourself.<br/>
+    ///     <br/>
+    ///     Sharing EntityUids between <see cref="IEntityManager"/>s, or otherwise summoning IDs from thin air, is
+    ///     effectively undefined behavior and most likely will refer to some random other entity that may or may not
+    ///     still exist.
+    /// </remarks>
     [CopyByRef]
     public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>, ISpanFormattable
     {
@@ -28,7 +42,7 @@ namespace Robust.Shared.GameObjects
         public static readonly EntityUid FirstUid = new(1);
 
         /// <summary>
-        ///     Creates an instance of this structure, with the given network ID.
+        ///     Creates an instance of this structure, with the given unique id.
         /// </summary>
         public EntityUid(int id)
         {
@@ -58,8 +72,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Checks if the ID value is valid. Does not check if it identifies
-        ///     a valid Entity.
+        ///     Checks if the ID value is valid at all, but does not check if it identifies a currently living entity.
         /// </summary>
         [Pure]
         public bool IsValid()

@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -7,7 +8,19 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    /// <inheritdoc cref="IComponent"/>
+    /// <summary>
+    ///     The base class for all ECS components. A component is a piece of data, ideally without methods, that is
+    ///     attached to or will be attached to some <see cref="EntityUid"/>. Entities do not have any data without
+    ///     components to specify it.<br/>
+    ///     <br/>
+    ///     Components must be registered, usually with <see cref="RegisterComponentAttribute"/>, for the ECS to
+    ///     recognize them.<br/>
+    ///     Components implicitly have <see cref="DataDefinitionAttribute"/>, and are always valid for YAML ser/de.
+    /// </summary>
+    /// <seealso cref="NetworkedComponentAttribute"/>
+    /// <seealso cref="DataFieldAttribute"/>
+    /// <seealso cref="ComponentState"/>
+    /// <seealso cref="UnsavedComponentAttribute"/>
     [Reflect(false)]
     [ImplicitDataDefinitionForInheritors]
     public abstract partial class Component : IComponent

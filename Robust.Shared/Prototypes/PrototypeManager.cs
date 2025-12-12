@@ -1238,5 +1238,15 @@ namespace Robust.Shared.Prototypes
 
             throw new ArgumentOutOfRangeException($"Unable to pick valid prototype for {typeof(T)}?");
         }
+
+        public void LoadModularPrototypes(ResPath protoDir, Dictionary<Type, HashSet<string>>? changed)
+        {
+            var manifest = ResourceManifestData.LoadResourceManifest(Resources);
+            if (manifest.ModularResources == null) return;
+            foreach (var path in manifest.ModularResources.Keys)
+            {
+                LoadDirectory(new ResPath($"/{path}{protoDir}"), changed: changed);
+            }
+        }
     }
 }

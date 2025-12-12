@@ -35,15 +35,7 @@ namespace Robust.Client.Prototypes
         {
             LoadDirectory(new("/EnginePrototypes/"), changed: changed);
             LoadDirectory(_controller.Options.PrototypeDirectory, changed: changed);
-            var manifest = ResourceManifestData.LoadResourceManifest(Resources);
-            if (manifest.ModularResources != null)
-            {
-                foreach (var path in manifest.ModularResources.Keys)
-                {
-                    LoadDirectory(new ResPath($"/{path}/Prototypes/"), changed: changed);
-                }
-            }
-
+            LoadModularPrototypes(_controller.Options.PrototypeDirectory, changed);
             ResolveResults();
         }
 

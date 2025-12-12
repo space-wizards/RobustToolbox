@@ -31,7 +31,7 @@ internal sealed class ReloadManager : IReloadManager
     private CancellationTokenSource _reloadToken = new();
     private readonly HashSet<ResPath> _reloadQueue = new();
     private List<FileSystemWatcher> _watchers = new(); // this list is never used but needed to prevent them from being garbage collected
-    private ResourceManifestData _manifest = ResourceManifestData.Default; // cache it
+    private ResourceManifestData _manifest = ResourceManifestData.Default;
 
     public event Action<ResPath>? OnChanged;
 

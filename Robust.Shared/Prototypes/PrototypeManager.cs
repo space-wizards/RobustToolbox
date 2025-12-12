@@ -37,6 +37,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly IComponentFactory _factory = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
+        private ResourceManifestData _manifest = ResourceManifestData.Default;
 
         private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
         private EntityDiffContext _context = new();
@@ -65,6 +66,7 @@ namespace Robust.Shared.Prototypes
             _initialized = true;
             ReloadPrototypeKinds();
             PrototypesReloaded += OnReload;
+            _manifest = ResourceManifestData.LoadResourceManifest(Resources);
         }
 
         /// <inheritdoc />
@@ -1276,9 +1278,8 @@ namespace Robust.Shared.Prototypes
 
         public void LoadModularPrototypes(ResPath protoDir, Dictionary<Type, HashSet<string>>? changed)
         {
-            var manifest = ResourceManifestData.LoadResourceManifest(Resources);
-            if (manifest.ModularResources == null) return;
-            foreach (var path in manifest.ModularResources.Keys)
+            if (_manifest.ModularResources == null) return;
+            foreach (var path in _manifest.ModularResources.Keys)
             {
                 LoadDirectory(new ResPath($"/{path}{protoDir}"), changed: changed);
             }

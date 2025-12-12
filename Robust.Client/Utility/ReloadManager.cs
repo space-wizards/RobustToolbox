@@ -78,11 +78,6 @@ internal sealed partial class ReloadManager : IReloadManager
         Register(directory.ToRelativeSystemPath(), filter);
     }
 
-    private void ResolveDirectory()
-    {
-
-    }
-
     public void Register(string directory, string filter)
     {
         if (!_cfg.GetCVar(CVars.ResPrototypeReloadWatch))
@@ -166,7 +161,7 @@ internal sealed partial class ReloadManager : IReloadManager
         var rootName = new DirectoryInfo(rootIter).Name;
 
         if (_manifest.ModularResources == null)
-            return finalPath;
+            return relative;
 
         foreach (var (vfsPath, diskPath) in _manifest.ModularResources)
         {

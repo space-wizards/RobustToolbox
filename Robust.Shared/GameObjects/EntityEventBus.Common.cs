@@ -94,10 +94,6 @@ internal sealed partial class EntityEventBus : IEventBus
     /// </summary>
     private sealed class EventData
     {
-        /// <summary>
-        /// <see cref="ComponentEventAttribute"/> set?
-        /// </summary>
-        public bool ComponentEvent;
         public bool IsOrdered;
         public bool OrderingUpToDate;
         public ValueList<BroadcastRegistration> BroadcastRegistrations;

@@ -694,6 +694,7 @@ Types:
     CompilerGeneratedAttribute: { All: True }
     DefaultInterpolatedStringHandler: { All: True }
     ExtensionAttribute: { All: True }
+    ExtensionMarkerAttribute: { All: True }
     IAsyncStateMachine: { All: True }
     InternalsVisibleToAttribute: { All: True }
     InterpolatedStringHandlerAttribute: { All: True }

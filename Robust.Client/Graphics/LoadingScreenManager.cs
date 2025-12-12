@@ -208,6 +208,9 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
 
     private void DrawSplash(IRenderHandle handle, ref Vector2i startLocation, float scale)
     {
+        if (string.IsNullOrEmpty(_splashLogo))
+            return;
+
         if (!_resourceCache.TryGetResource<TextureResource>(_splashLogo, out var textureResource))
             return;
 

@@ -219,6 +219,7 @@ namespace Robust.Client.Graphics.Clyde
                     {GlfwKey.F24, Key.F24},
                     {GlfwKey.Pause, Key.Pause},
                     {GlfwKey.World1, Key.World1},
+                    {GlfwKey.CapsLock, Key.CapsLock}
                 }.ToFrozenDictionary();
 
                 var keyMapReverse = new Dictionary<Key, GlfwKey>();

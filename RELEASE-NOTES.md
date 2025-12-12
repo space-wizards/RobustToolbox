@@ -1,4 +1,4 @@
-# Release notes for RobustToolbox.
+﻿# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The project now targets .NET 10. You will have to install the new runtime on game servers when updating.
 
 ### New features
 
-*None yet*
+* Added `ExtensionMarkerAttribute`, used by the new C# 14 extension members, for the sandbox.
 
 ### Bugfixes
 
@@ -54,12 +54,45 @@ END TEMPLATE-->
 *None yet*
 
 
+## 268.1.0
+
+### New features
+
+* Added `IReplayFileWriter.WriteYaml()`, for writing yaml documents to a replay zip file.
+* Added Caps Lock as a proper bindable key.
+* Added `IParallelBulkRobustJob` as an alternative to `IParallelRobustJob`, taking ranges instead of indices.
+* Allow content to override `ProcessStream` and `GetOcclusion` in `AudioSystem`
+
+### Bugfixes
+
+* `ActorComponent` now has the `UnsavedComponentAttribute`
+  * Previously it was unintentionally get serialized to yaml, which could result in NREs when deserializing.
+* Don't spam error messages on startup trying to draw splash logos for projects that don't have one.
+* Fix `SpriteSystem.LayerExists` saying that layer 0 is invalid.
+* Fix `ButtonGroup`s unpressing buttons in an edge case with UI rebuilding.
+* Added `CreatedTime` to `NetUserData`.
+* Fix loading of `WebView`.
+
+### Other
+
+* Reverted undocumented change from 268.0.0 which obsoleted many `IoCManager` methods.
+* Fix .NET 10 serializer compatibility of `BitArray`. (backported to older engines).
+* Revert performance change to physics due to issues (double-buffered contact events).
+* Audio entities are marked as `HideSpawnMenu` now.
+* Make `SharedAudioSystem.Stop` not do nothing when the current tick has already been predicted.
+* Warning cleanup.
+
+### Internal
+
+* Consolidated and updated physics benchmarks.
+
+
 ## 268.0.0
 
 ### Breaking changes
 
 * Events that are raised via `IEventBus.RaiseComponentEvent()` now **must** be annotated with  the `ComponentEventAttribute`.
-  * By default, events annotated with this attribute can **only** be raised via `IEventBus.RaiseComponentEvent()`. This can be configured via `ComponentEventAttribute.Exclusive` 
+  * By default, events annotated with this attribute can **only** be raised via `IEventBus.RaiseComponentEvent()`. This can be configured via `ComponentEventAttribute.Exclusive`
 * StartCollide and EndCollide events are now buffered until the end of physics substeps instead of being raised during the CollideContacts step. EndCollide events are double-buffered and any new ones raised while the events are being dispatched will now go out on the next tick / substep.
 
 ### New features

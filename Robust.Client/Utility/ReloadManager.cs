@@ -140,12 +140,9 @@ internal sealed partial class ReloadManager : IReloadManager
                         continue;
                     }
 
-                    if (relPath.Contains(".."))
-                        continue;
-
                     var file = ResPath.FromRelativeSystemPath(relPath).ToRootedPath();
-                    if (!file.CanonPath.Contains("/../"))
-                        _reloadQueue.Add(file);
+                    if (file.CanonPath.Contains("/../"))
+                        continue;
 
                     var path = ResolveModularPath(file, rootIter);
                     _reloadQueue.Add(path);

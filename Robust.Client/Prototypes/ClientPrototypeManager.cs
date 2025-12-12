@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Client.Timing;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Client.Prototypes
 {
@@ -33,6 +35,7 @@ namespace Robust.Client.Prototypes
         {
             LoadDirectory(new("/EnginePrototypes/"), changed: changed);
             LoadDirectory(_controller.Options.PrototypeDirectory, changed: changed);
+            LoadModularPrototypes(_controller.Options.PrototypeDirectory, changed);
             ResolveResults();
         }
 

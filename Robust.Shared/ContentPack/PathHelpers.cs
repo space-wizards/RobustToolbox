@@ -90,5 +90,12 @@ namespace Robust.Shared.ContentPack
 
             return retPath;
         }
+        /// <summary>
+        ///     Resolves a path for a given root path.
+        ///     If the path is absolute (starts with /), it returns it as-is (ex: /ModResources/...).
+        ///     If the path is relative, it prepends /RootPathName/.
+        /// </summary>
+        public static ResPath ApparentPath(ResPath path, ResPath root) => path.IsRooted ? path : root / path;
+        public static ResPath ApparentPath(string path, string root) => ApparentPath(new ResPath(path), new ResPath(root));
     }
 }

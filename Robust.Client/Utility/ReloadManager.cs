@@ -139,11 +139,10 @@ internal sealed class ReloadManager : IReloadManager
                         // Different root (i.e., "C:/" and "D:/")
                         continue;
                     }
-                    if (relPath.Contains(".."))
-                        continue;
+
                     var file = ResPath.FromRelativeSystemPath(relPath).ToRootedPath();
-                    if (!file.CanonPath.Contains("/../"))
-                        _reloadQueue.Add(file);
+                    if (file.CanonPath.Contains("/../"))
+                        continue;
                     var path = ResolveModularPath(file, rootIter);
                     _reloadQueue.Add(path);
                 }

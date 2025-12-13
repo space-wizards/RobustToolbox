@@ -5,6 +5,9 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <WarningsAsErrors>
+        CS0105, <!-- Duplicate using directive -->
+    </WarningsAsErrors>
   </PropertyGroup>
 
   <Import Project="Robust.Custom.targets" Condition="Exists('Robust.Custom.targets')"/>

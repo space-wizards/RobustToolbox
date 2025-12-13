@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.UserInterface;
@@ -40,9 +40,9 @@ namespace Robust.Client.Input
         void KeyDown(KeyEventArgs e);
         void KeyUp(KeyEventArgs e);
 
-        IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified=true, bool invalid=false);
+        IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified = true, bool invalid = false);
 
-        void RemoveBinding(IKeyBinding binding, bool markModified=true);
+        void RemoveBinding(IKeyBinding binding, bool markModified = true);
 
         /// <summary>
         ///     Gets a key binding according to the function it is bound to.
@@ -134,5 +134,16 @@ namespace Robust.Client.Input
         bool IsKeyDown(Keyboard.Key key);
 
         void InputModeChanged();
+
+        /// <summary>
+        /// Returns list of keybindings which are marked with custom command prefix.
+        /// </summary>
+        /// <returns></returns>
+        IReadOnlyCollection<BoundKeyFunction> GetCustomCommands();
+
+        /// <summary>
+        /// Attempt to get custom command - related function which is not yet used in keybinding.
+        /// </summary>
+        bool TryGetUnusedCustomCommand([NotNullWhen(true)] out BoundKeyFunction? result);
     }
 }

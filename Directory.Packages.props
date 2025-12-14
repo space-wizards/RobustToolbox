@@ -11,7 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageVersion Include="DiscordRichPresence" Version="1.6.1.70" />
+    <PackageVersion Include="DiscordRichPresence" Version="1.2.1.24" />
     <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageVersion Include="JetBrains.Profiler.Api" Version="1.4.10" />
     <PackageVersion Include="Linguini.Bundle" Version="0.8.1" />

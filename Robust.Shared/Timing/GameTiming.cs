@@ -217,7 +217,7 @@ namespace Robust.Shared.Timing
         }
 
         /// <summary>
-        /// Resets the simulation time.
+        ///     Resets the simulation time.
         /// </summary>
         public void ResetSimTime()
         {

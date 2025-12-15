@@ -31,7 +31,6 @@ using Robust.Shared.Utility;
 using AppearanceSystem = Robust.Client.GameObjects.AppearanceSystem;
 using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
-using PointLightComponent = Robust.Client.GameObjects.PointLightComponent;
 
 namespace Robust.UnitTesting
 {
@@ -124,6 +123,7 @@ namespace Robust.UnitTesting
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
             systems.LoadExtraSystemType<CollisionWakeSystem>();
+            systems.LoadExtraSystemType<RecursiveMoveSystem>();
 
             if (Project == UnitTestProject.Client)
             {
@@ -139,7 +139,6 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.MapSystem>();
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.PointLightSystem>();
                 systems.LoadExtraSystemType<LightTreeSystem>();
-                systems.LoadExtraSystemType<RecursiveMoveSystem>();
                 systems.LoadExtraSystemType<SpriteSystem>();
                 systems.LoadExtraSystemType<SpriteTreeSystem>();
                 systems.LoadExtraSystemType<AppearanceSystem>();
@@ -160,6 +159,8 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<InputSystem>();
                 systems.LoadExtraSystemType<PvsOverrideSystem>();
                 systems.LoadExtraSystemType<MapSystem>();
+                systems.LoadExtraSystemType<Robust.Server.ComponentTrees.LightTreeSystem>();
+                systems.LoadExtraSystemType<Robust.Server.GameObjects.PointLightSystem>();
             }
 
             var entMan = deps.Resolve<IEntityManager>();
@@ -183,8 +184,12 @@ namespace Robust.UnitTesting
 
             if (Project != UnitTestProject.Server)
             {
-                compFactory.RegisterClass<PointLightComponent>();
+                compFactory.RegisterClass<Robust.Client.GameObjects.PointLightComponent>();
                 compFactory.RegisterClass<SpriteComponent>();
+            }
+            else
+            {
+                compFactory.RegisterClass<Robust.Server.GameObjects.PointLightComponent>();
             }
 
             deps.Resolve<IParallelManagerInternal>().Initialize();

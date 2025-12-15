@@ -392,6 +392,7 @@ namespace Robust.Client.WebView.Cef
                 _data.Browser.GetHost().WasResized();
                 _data.Texture.Dispose();
                 _data.Texture = _clyde.CreateBlankTexture<Rgba32>((Owner.PixelWidth, Owner.PixelHeight));
+                _data.Browser.GetHost().Invalidate(CefPaintElementType.View);
             }
 
             public void Draw(DrawingHandleScreen handle)

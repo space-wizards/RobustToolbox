@@ -40,10 +40,11 @@ END TEMPLATE-->
 ### New features
 
 * Added `ExtensionMarkerAttribute`, used by the new C# 14 extension members, for the sandbox.
+* Added `CommandWhenUIFocused` property to `Command` keybinds, to make them not fire when a UI control is focused.
 
 ### Bugfixes
 
-*None yet*
+* Fixed `FormattedMessage` not escaping plain text content properly with `.ToMarkup()`.
 
 ### Other
 

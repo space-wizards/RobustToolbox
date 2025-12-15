@@ -1,152 +1,112 @@
 <Solution>
   <Configurations>
-    <BuildType Name="Debug" />
-    <BuildType Name="Release" />
-    <BuildType Name="Tools" />
-    <Platform Name="Any CPU" />
-    <Platform Name="x64" />
+    <BuildType Name="Debug"/>
+    <BuildType Name="DebugOpt"/>
+    <BuildType Name="Release"/>
+    <BuildType Name="Tools"/>
   </Configurations>
   <Folder Name="/cefglue/">
     <Project Path="cefglue/CefGlue/CefGlue.csproj">
-      <BuildType Solution="Tools|Any CPU" Project="Release" />
-      <BuildType Solution="Tools|x64" Project="?" />
-      <Platform Solution="Tools|x64" Project="?" />
-      <Build Solution="Tools|x64" Project="false" />
+      <BuildType Solution="DebugOpt|*" Project="Debug"/>
+      <BuildType Solution="Tools|*" Project="Release"/>
+      <Properties Name="RobustToolbox">
+        <Property Name="Feature" Value="WebView" />
+      </Properties>
     </Project>
+  </Folder>
+  <Folder Name="/MSBuild/">
+    <File Path="MSBuild/Robust.Analyzers.targets"/>
+    <File Path="MSBuild/Robust.CompNetworkGenerator.targets"/>
+    <File Path="MSBuild/Robust.Configurations.props"/>
+    <File Path="MSBuild/Robust.DefineConstants.targets"/>
+    <File Path="MSBuild/Robust.Engine.props"/>
+    <File Path="MSBuild/Robust.Engine.targets"/>
+    <File Path="MSBuild/Robust.Engine.Version.props"/>
+    <File Path="MSBuild/Robust.Platform.props"/>
+    <File Path="MSBuild/Robust.Properties.targets"/>
+    <File Path="MSBuild/Robust.Trimming.targets"/>
+    <File Path="MSBuild/XamlIL.targets"/>
   </Folder>
   <Folder Name="/NetSerializer/">
     <Project Path="NetSerializer/NetSerializer/NetSerializer.csproj">
-      <BuildType Solution="Tools|Any CPU" Project="Release" />
-      <BuildType Solution="Tools|x64" Project="?" />
-      <Platform Solution="Tools|x64" Project="?" />
-      <Build Solution="Tools|x64" Project="false" />
+      <BuildType Solution="DebugOpt|*" Project="Debug"/>
+      <BuildType Solution="Tools|*" Project="Release"/>
     </Project>
+  </Folder>
+  <Folder Name="/Project Files/">
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+    <File Path="RELEASE-NOTES.md" />
   </Folder>
   <Folder Name="/Robust.LoaderApi/">
     <Project Path="Robust.LoaderApi/Robust.LoaderApi/Robust.LoaderApi.csproj">
-      <BuildType Solution="Tools|Any CPU" Project="Release" />
-      <BuildType Solution="Tools|x64" Project="?" />
-      <Platform Solution="Tools|x64" Project="?" />
-      <Build Solution="Tools|x64" Project="false" />
+      <BuildType Solution="DebugOpt|*" Project="Debug"/>
+      <BuildType Solution="Tools|*" Project="Release"/>
     </Project>
   </Folder>
   <Folder Name="/Roslyn/">
-    <Project Path="Robust.Analyzers.Tests/Robust.Analyzers.Tests.csproj">
-      <BuildType Solution="Tools|x64" Project="?" />
-      <Platform Solution="Tools|x64" Project="?" />
-      <Build Solution="Tools|x64" Project="false" />
-    </Project>
+    <Project Path="Robust.Analyzers.Tests/Robust.Analyzers.Tests.csproj"/>
     <Project Path="Robust.Analyzers/Robust.Analyzers.csproj">
-      <BuildType Solution="Tools|Any CPU" Project="Release" />
-      <BuildType Solution="Tools|x64" Project="?" />
-      <Platform Solution="Tools|x64" Project="?" />
-      <Build Solution="Tools|x64" Project="false" />
+      <BuildType Solution="DebugOpt|*" Project="Debug"/>
+      <BuildType Solution="Tools|*" Project="Release"/>
     </Project>
     <Project Path="Robust.Client.NameGenerator/Robust.Client.NameGenerator.csproj">
-      <BuildType Solution="Tools|Any CPU" Project="Release" />
-      <BuildType Solution="Tools|x64" Project="?" />
-      <Platform Solution="Tools|x64" Project="?" />
-      <Build Solution="Tools|x64" Project="false" />
+      <BuildType Solution="DebugOpt|*" Project="Debug"/>
+      <BuildType Solution="Tools|*" Project="Release"/>
     </Project>
     <Project Path="Robust.Serialization.Generator/Robust.Serialization.Generator.csproj">
-      <BuildType Solution="Tools|Any CPU" Project="Release" />
-      <BuildType Solution="Tools|x64" Project="?" />
-      <Platform Solution="Tools|x64" Project="?" />
-      <Build Solution="Tools|x64" Project="false" />
+      <BuildType Solution="DebugOpt|*" Project="Debug"/>
+      <BuildType Solution="Tools|*" Project="Release"/>
     </Project>
     <Project Path="Robust.Shared.CompNetworkGenerator/Robust.Shared.CompNetworkGenerator.csproj">
-      <BuildType Solution="Tools|Any CPU" Project="Release" />
-      <BuildType Solution="Tools|x64" Project="?" />
-      <Platform Solution="Tools|x64" Project="?" />
-      <Build Solution="Tools|x64" Project="false" />
+      <BuildType Solution="DebugOpt|*" Project="Debug"/>
+      <BuildType Solution="Tools|*" Project="Release"/>
+    </Project>
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="Tools/Robust.SolutionGen/Robust.SolutionGen.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug"/>
+      <BuildType Solution="Tools|*" Project="Release"/>
     </Project>
   </Folder>
   <Folder Name="/XamlX/">
     <Project Path="XamlX/src/XamlX.IL.Cecil/XamlX.IL.Cecil.csproj">
-      <BuildType Solution="Tools|Any CPU" Project="Release" />
-      <BuildType Solution="Tools|x64" Project="?" />
-      <Platform Solution="Tools|x64" Project="?" />
-      <Build Solution="Tools|x64" Project="false" />
+      <BuildType Solution="DebugOpt|*" Project="Debug"/>
+      <BuildType Solution="Tools|*" Project="Release"/>
     </Project>
     <Project Path="XamlX/src/XamlX.Runtime/XamlX.Runtime.csproj">
-      <BuildType Solution="Tools|Any CPU" Project="Release" />
-      <BuildType Solution="Tools|x64" Project="?" />
-      <Platform Solution="Tools|x64" Project="?" />
-      <Build Solution="Tools|x64" Project="false" />
+      <BuildType Solution="DebugOpt|*" Project="Debug"/>
+      <BuildType Solution="Tools|*" Project="Release"/>
     </Project>
     <Project Path="XamlX/src/XamlX/XamlX.csproj">
-      <BuildType Solution="Tools|Any CPU" Project="Release" />
-      <BuildType Solution="Tools|x64" Project="?" />
-      <Platform Solution="Tools|x64" Project="?" />
-      <Build Solution="Tools|x64" Project="false" />
+      <BuildType Solution="DebugOpt|*" Project="Debug"/>
+      <BuildType Solution="Tools|*" Project="Release"/>
     </Project>
   </Folder>
   <Project Path="Avalonia.Base/Avalonia.Base.csproj">
-    <BuildType Solution="Tools|Any CPU" Project="Release" />
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
+    <BuildType Solution="DebugOpt|*" Project="Debug"/>
+    <BuildType Solution="Tools|*" Project="Release"/>
   </Project>
-  <Project Path="Lidgren.Network/Lidgren.Network.csproj">
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
-  </Project>
-  <Project Path="OpenToolkit.GraphicsLibraryFramework/OpenToolkit.GraphicsLibraryFramework.csproj">
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
-  </Project>
+  <Project Path="Lidgren.Network/Lidgren.Network.csproj"/>
+  <Project Path="OpenToolkit.GraphicsLibraryFramework/OpenToolkit.GraphicsLibraryFramework.csproj"/>
   <Project Path="Robust.Client.Injectors/Robust.Client.Injectors.csproj">
-    <BuildType Solution="Tools|Any CPU" Project="Release" />
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
+    <BuildType Solution="DebugOpt|*" Project="Debug"/>
+    <BuildType Solution="Tools|*" Project="Release"/>
   </Project>
   <Project Path="Robust.Client.WebView/Robust.Client.WebView.csproj">
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
+    <Properties Name="RobustToolbox">
+      <Property Name="Feature" Value="WebView" />
+    </Properties>
   </Project>
-  <Project Path="Robust.Client/Robust.Client.csproj">
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
-  </Project>
-  <Project Path="Robust.Packaging/Robust.Packaging.csproj">
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
-  </Project>
-  <Project Path="Robust.Server/Robust.Server.csproj">
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
-  </Project>
-  <Project Path="Robust.Shared.Maths/Robust.Shared.Maths.csproj">
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
-  </Project>
-  <Project Path="Robust.Shared.Scripting/Robust.Shared.Scripting.csproj">
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
-  </Project>
-  <Project Path="Robust.Shared/Robust.Shared.csproj">
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
-  </Project>
-  <Project Path="Robust.UnitTesting/Robust.UnitTesting.csproj">
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
-  </Project>
+  <Project Path="Robust.Client/Robust.Client.csproj"/>
+  <Project Path="Robust.Packaging/Robust.Packaging.csproj"/>
+  <Project Path="Robust.Server/Robust.Server.csproj"/>
+  <Project Path="Robust.Shared.Maths/Robust.Shared.Maths.csproj"/>
+  <Project Path="Robust.Shared.Scripting/Robust.Shared.Scripting.csproj"/>
+  <Project Path="Robust.Shared/Robust.Shared.csproj"/>
+  <Project Path="Robust.UnitTesting/Robust.UnitTesting.csproj"/>
   <Project Path="Robust.Xaml/Robust.Xaml.csproj">
-    <BuildType Solution="Tools|Any CPU" Project="Release" />
-    <BuildType Solution="Tools|x64" Project="?" />
-    <Platform Solution="Tools|x64" Project="?" />
-    <Build Solution="Tools|x64" Project="false" />
+    <BuildType Solution="DebugOpt|*" Project="Debug"/>
+    <BuildType Solution="Tools|*" Project="Release"/>
   </Project>
 </Solution>

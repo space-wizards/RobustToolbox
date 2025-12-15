@@ -79,7 +79,7 @@ public struct RStopwatch
     }
 
     /// <summary>
-    ///     The amount of elapsed time in <see cref="TimeSpan.Ticks"/>
+    ///     The amount of elapsed time in <see cref="SStopwatch.Frequency"/>
     /// </summary>
     public readonly long ElapsedTicks => IsRunning ? SStopwatch.GetTimestamp() - _curTicks : _curTicks;
 

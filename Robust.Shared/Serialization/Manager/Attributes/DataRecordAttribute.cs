@@ -3,11 +3,10 @@ using JetBrains.Annotations;
 
 namespace Robust.Shared.Serialization.Manager.Attributes;
 
-/// <include file='Docs.xml' path='entries/entry[@name="MeansDataDefinitionHaver"]/*'/>
 /// <summary>
-///     Additionally marks all properties on the class with <see cref="DataFieldAttribute"/> automatically, for use with
-///     records.
+/// Marks this type as being data-serializable and automatically marks all properties as data fields.
 /// </summary>
+/// <include file='Docs.xml' path='entries/entry[@name="MeansDataDefinitionHaver"]/*'/>
 /// <example>
 ///     <code>
 ///         [DataRecord]

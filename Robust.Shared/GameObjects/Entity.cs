@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects;
 ///     and other <see cref="EntityQuery{TComp1}"/> methods.
 /// </summary>
 /// <remarks>
-///     This type exists for up to eight (i.e. Entity&lt;T1, T2, T3, T4, T5, T6, T7, T8&gt;) parameters.
+///     This type exists for up to eight (i.e. <c>Entity&lt;T1, T2, T3, T4, T5, T6, T7, T8&gt;</c>) parameters.
 /// </remarks>
 [NotYamlSerializable]
 public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>

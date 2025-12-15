@@ -2216,9 +2216,13 @@ namespace Robust.Shared.GameObjects
     ///     the entity they're on is not <see cref="EntitySystem.Paused">Paused</see>.
     /// </summary>
     /// <remarks>
+    /// <para>
     ///     Internally, checks for what components exist are done in the order of the generics, so the least frequently
-    ///     occurring component should always be the first argument, and so on.<br/>
+    ///     occurring component should always be the first argument, and so on.
+    /// </para>
+    /// <para>
     ///     This type exists for <b>up to</b> four components, TComp1 through TComp4, as generic arguments.
+    /// </para>
     /// </remarks>
     /// <example>
     ///     <code>
@@ -2557,9 +2561,13 @@ namespace Robust.Shared.GameObjects
     ///     of if the entity is <see cref="EntitySystem.Paused">Paused</see>.
     /// </summary>
     /// <remarks>
+    /// <para>
     ///     Internally, checks for what components exist are done in the order of the generics, so the least frequently
-    ///     occurring component should always be the first argument, and so on.<br/>
+    ///     occurring component should always be the first argument, and so on.
+    /// </para>
+    /// <para>
     ///     This type exists for <b>up to</b> four components, TComp1 through TComp4, as generic arguments.
+    /// </para>
     /// </remarks>
     /// <example>
     ///     <code>

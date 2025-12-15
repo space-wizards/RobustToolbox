@@ -4,15 +4,21 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.Network
 {
     /// <summary>
-    ///     A unique identifier for a given user. If connected to auth and auth is mandatory, this is guaranteed to be
-    ///     <b>globally unique</b> within that auth service, duplicate players will not exist.<br/>
-    ///     <br/>
-    ///     Similarly, the engine assumes that if the user is <see cref="LoginType.GuestAssigned">a known guest with an
-    ///     assigned ID</see>, their ID is also globally unique.
+    ///     A unique identifier for a given user's account.
     /// </summary>
     /// <remarks>
+    /// <para>
+    ///     If connected to auth and auth is mandatory, this is guaranteed to be
+    ///     <b>globally unique</b> within that auth service, duplicate players will not exist.
+    /// </para>
+    /// <para>
+    ///     Similarly, the engine assumes that if the user is <see cref="LoginType.GuestAssigned">a known guest with an
+    ///     assigned ID</see>, their ID is also globally unique.
+    /// </para>
+    /// <para>
     ///     This is independent of username, and in the current auth implementation users can freely change username.
     ///     Think of this as a way to refer to a given account regardless of what it's named.
+    /// </para>
     /// </remarks>
     [Serializable, NetSerializable]
     public struct NetUserId : IEquatable<NetUserId>, ISelfSerialize

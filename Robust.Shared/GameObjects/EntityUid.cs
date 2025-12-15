@@ -11,20 +11,24 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     This type contains the unique identifier for a given entity.
     ///     This can be used with and obtained from <see cref="IEntityManager"/> to manipulate, query, and otherwise
-    ///     work with entities and their components.<br/>
-    ///     <br/>
-    ///     An entity is a unique identifier (this type) and a collection of assorted <see cref="Component"/>s that are
-    ///     attached to it. Components provide data to describe the entity, and entities+components are operated on by
-    ///     <see cref="EntitySystem"/>s.<br/>
+    ///     work with entities and their components.
     /// </summary>
     /// <remarks>
+    /// <para>
+    ///     An entity is a unique identifier (this type) and a collection of assorted <see cref="Component"/>s that are
+    ///     attached to it. Components provide data to describe the entity, and entities+components are operated on by
+    ///     <see cref="EntitySystem"/>s.
+    /// </para>
+    /// <para>
     ///     EntityUids are not guaranteed to be unique across individual instances of the game, or individual instances
     ///     of <see cref="IEntityManager"/>. For network identification, see <see cref="NetEntity"/>, and for global
-    ///     uniqueness across time you'll need to make something yourself.<br/>
-    ///     <br/>
+    ///     uniqueness across time you'll need to make something yourself.
+    /// </para>
+    /// <para>
     ///     Sharing EntityUids between <see cref="IEntityManager"/>s, or otherwise summoning IDs from thin air, is
     ///     effectively undefined behavior and most likely will refer to some random other entity that may or may not
     ///     still exist.
+    /// </para>
     /// </remarks>
     [CopyByRef]
     public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>, ISpanFormattable

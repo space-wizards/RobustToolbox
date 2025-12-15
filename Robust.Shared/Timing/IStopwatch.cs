@@ -8,7 +8,7 @@ namespace Robust.Shared.Timing
     ///     <br/>
     ///     This is legacy and of low utility (it's for mocking), prefer using <see cref="RStopwatch"/>.
     /// </summary>
-    /// <see cref="Stopwatch"/>
+    /// <seealso cref="Stopwatch"/>
     public interface IStopwatch
     {
         /// <summary>

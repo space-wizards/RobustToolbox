@@ -5,16 +5,20 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.GameObjects;
 
 /// <summary>
-///     An abstract base class for a component's state. For simple cases, you can automatically generate this using
-///     <see cref="AutoGenerateComponentStateAttribute"/> and <see cref="AutoNetworkedFieldAttribute"/>.<br/>
-///     <br/>
-///     If your component's state is particularly complex, or you otherwise want manual control, you can implement this
-///     directly and register necessary event handlers for <see cref="ComponentHandleState"/> and
-///     <see cref="ComponentGetState"/>.<br/>
-///     <br/>
-///     How state is actually applied for a component, and what it looks like, is user defined. For an example, look at
-///     <see cref="OccluderComponent.OccluderComponentState"/>.
+///     An abstract base class for a component's network state. For simple cases, you can automatically generate this using
+///     <see cref="AutoGenerateComponentStateAttribute"/> and <see cref="AutoNetworkedFieldAttribute"/>.
 /// </summary>
+/// <remarks>
+/// <para>
+///     If your component's state is particularly complex, or you otherwise want manual control, you can implement this
+///         directly and register necessary event handlers for <see cref="ComponentHandleState"/> and
+///         <see cref="ComponentGetState"/>.
+/// </para>
+/// <para>
+///     How state is actually applied for a component, and what it looks like, is user defined. For an example, look at
+///         <see cref="OccluderComponent.OccluderComponentState"/>.
+/// </para>
+/// </remarks>
 [RequiresSerializable]
 [Serializable, NetSerializable]
 [Virtual]

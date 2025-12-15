@@ -27,10 +27,13 @@ public interface ICommonSession
 
     /// <summary>
     ///     The unique user ID of this session.
-    ///     If this user's <see cref="AuthType"/> is <see cref="LoginType.LoggedIn"/> or
-    ///     <see cref="LoginType.GuestAssigned"/>, their user id is globally unique as described on
-    ///     <see cref="NetUserId"/>.
     /// </summary>
+    /// <remarks>
+    ///     If this user's <see cref="AuthType"/> is <see cref="LoginType.LoggedIn"/> or
+    ///     <see cref="LoginType.GuestAssigned"/> (<see cref="LoginTypeExt.HasStaticUserId"/>),
+    ///     their user id is globally unique as described on
+    ///     <see cref="NetUserId"/>.
+    /// </remarks>
     NetUserId UserId { get; }
 
     /// <summary>

@@ -16,12 +16,13 @@ namespace Robust.Shared.Timing
         bool InSimulation { get; set; }
 
         /// <summary>
-        ///     Is the simulation currently paused?<br/>
-        ///     <br/>
+        ///     Is the simulation currently paused?
+        /// </summary>
+        /// <remarks>
         ///     When true, system update loops are not ran and relative time (like <see cref="CurTime"/>) does not
         ///     advance. This is useful for fully idling a game server and can be automatically managed by
         ///     <see cref="CVars.GameAutoPauseEmpty"/>.
-        /// </summary>
+        /// </remarks>
         bool Paused { get; set; }
 
         /// <summary>
@@ -153,11 +154,12 @@ namespace Robust.Shared.Timing
         bool IsFirstTimePredicted { get; }
 
         /// <summary>
-        ///     True if CurTick is ahead of LastRealTick, and <see cref="ApplyingState"/> is false.<br/>
-        ///     <br/>
+        ///     True if CurTick is ahead of LastRealTick, and <see cref="ApplyingState"/> is false.
+        /// </summary>
+        /// <remarks>
         ///     This means the client is currently running ahead of the server, to fill in the gaps for the player and
         ///     reduce latency while waiting for the next game state to arrive.
-        /// </summary>
+        /// </remarks>
         bool InPrediction { get; }
 
         /// <summary>

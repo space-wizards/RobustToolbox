@@ -10,7 +10,7 @@ namespace Robust.Shared.Timing
     ///     Non-serializable, but async friendly timers.
     /// </summary>
     /// <remarks>
-    ///     Using these in Space Station 14 is discouraged, it has it's own idioms that are all serialization friendly.
+    ///     Using these in Space Station 14 is discouraged, it has its own idioms that are all serialization friendly.
     /// </remarks>
     /// <seealso cref="ITimerManager"/>
     public sealed class Timer

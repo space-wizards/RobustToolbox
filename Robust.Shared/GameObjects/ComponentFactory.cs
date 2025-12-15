@@ -609,7 +609,7 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
-    ///     Exception fired when a component's name is entirely invalid. All component names must end with Component.
+    ///     Exception fired when a component's name is entirely invalid. All component type names must end with Component.
     /// </summary>
     public sealed class InvalidComponentNameException : Exception
     {

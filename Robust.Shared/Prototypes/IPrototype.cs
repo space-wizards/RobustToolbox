@@ -32,9 +32,10 @@ namespace Robust.Shared.Prototypes
     ///     An extension of <see cref="IPrototype"/> that allows for a prototype to have parents that it inherits data
     ///     from. This, alongside <see cref="AlwaysPushInheritanceAttribute"/> and
     ///     <see cref="NeverPushInheritanceAttribute"/>, allow data-based multiple inheritance.
-    ///     <br/>
-    ///     An example of this in practice is <see cref="EntityPrototype"/>.
     /// </summary>
+    /// <example>
+    ///     An example of this in practice is <see cref="EntityPrototype"/>.
+    /// </example>
     /// <include file='Docs.xml' path='entries/entry[@name="IPrototype"]/*'/>
     /// <seealso cref="IPrototypeManager"/>
     /// <seealso cref="PrototypeAttribute"/>

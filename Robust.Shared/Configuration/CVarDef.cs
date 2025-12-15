@@ -75,11 +75,14 @@ namespace Robust.Shared.Configuration
     ///     Marks a static class as containing CVar definitions.
     /// </summary>
     /// <remarks>
+    ///     <para>
     ///     There is no limit on the number of CVarDefs classes you can have, and all CVars will ultimately share the
-    ///     same namespace regardless of which class they're in.<br/>
-    ///     <br/>
+    ///     same namespace regardless of which class they're in.
+    ///     </para>
+    ///     <para>
     ///     CVar definitions can be in any assembly, but should never be marked <see cref="CVar.REPLICATED"/> or
     ///     <see cref="CVar.NOTIFY"/> if not in a shared assembly.
+    ///     </para>
     /// </remarks>
     /// <example>
     ///     <code>

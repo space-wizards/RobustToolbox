@@ -83,5 +83,18 @@ namespace Robust.UnitTesting.Shared.Utility
                 message.EnumerateRunes(),
                 Is.EquivalentTo(message.ToString().EnumerateRunes()));
         }
+
+        /// <summary>
+        /// Test that the given formatted message string provides equal result when output & parsed again.
+        /// </summary>
+        [Test]
+        [TestCase("\\[whaaaaa")]
+        public static void TestRoundTrip(string markup)
+        {
+            var message = FormattedMessage.FromMarkupOrThrow(markup);
+            var secondMessage = FormattedMessage.FromMarkupOrThrow(message.ToMarkup());
+
+            Assert.That(secondMessage, NUnit.Framework.Is.EqualTo(message));
+        }
     }
 }

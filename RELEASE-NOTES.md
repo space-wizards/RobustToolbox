@@ -44,7 +44,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed `FormattedMessage` not escaping plain text content properly with `.ToMarkup()`.
 
 ### Other
 

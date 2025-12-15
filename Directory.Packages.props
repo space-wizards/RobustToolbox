@@ -72,6 +72,7 @@
     <PackageVersion Include="prometheus-net" Version="8.2.1" />
     <PackageVersion Include="prometheus-net.DotNetRuntime" Version="4.4.1" />
     <PackageVersion Include="PolySharp" Version="1.15.0" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.1" />
     <!-- Transitive deps that we need to pin versions for to avoid NuGet warnings. -->
     <PackageVersion Include="System.Formats.Asn1" Version="10.0.0" />
     <PackageVersion Include="System.Reflection.Metadata" Version="10.0.0" />

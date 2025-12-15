@@ -88,7 +88,6 @@
     <BuildType Solution="Tools|*" Project="Release"/>
   </Project>
   <Project Path="Lidgren.Network/Lidgren.Network.csproj"/>
-  <Project Path="OpenToolkit.GraphicsLibraryFramework/OpenToolkit.GraphicsLibraryFramework.csproj"/>
   <Project Path="Robust.Client.Injectors/Robust.Client.Injectors.csproj">
     <BuildType Solution="DebugOpt|*" Project="Debug"/>
     <BuildType Solution="Tools|*" Project="Release"/>

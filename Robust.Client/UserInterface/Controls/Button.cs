@@ -21,11 +21,6 @@ namespace Robust.Client.UserInterface.Controls
             AddChild(Label);
         }
 
-        protected override void StylePropertiesChanged()
-        {
-            base.StylePropertiesChanged();
-        }
-
         /// <summary>
         ///     How to align the text inside the button.
         /// </summary>

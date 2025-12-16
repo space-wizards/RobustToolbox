@@ -56,7 +56,7 @@
   This is *not* done before Restore, so these references do *not* contribute
   to transitive dependency inclusion.
   -->
-  <Target Name="_RTMakeProjectReferences" BeforeTargets="BeforeResolveReferences"
+  <Target Name="_RTMakeProjectReferences" BeforeTargets="BeforeResolveReferences;AssignProjectConfiguration"
           DependsOnTargets="_RTFilterEnabledApi" Returns="@(ProjectReference)">
     <ItemGroup>
       <_RTProjectReference KeepDuplicates="false"

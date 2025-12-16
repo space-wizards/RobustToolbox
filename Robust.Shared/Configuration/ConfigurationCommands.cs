@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Console;
@@ -57,6 +58,25 @@ namespace Robust.Shared.Configuration
             }
 
             throw new NotSupportedException();
+        }
+
+        internal static IEnumerable<CompletionOption> GetCVarCompletionOptions(IConfigurationManager cfg)
+        {
+            return cfg.GetRegisteredCVars()
+                .Select(c => new CompletionOption(c, GetCVarValueHint(cfg, c)));
+        }
+
+        private static string GetCVarValueHint(IConfigurationManager cfg, string cVar)
+        {
+            var flags = cfg.GetCVarFlags(cVar);
+            if ((flags & CVar.CONFIDENTIAL) != 0)
+                return Loc.GetString("cmd-cvar-value-hidden");
+
+            var value = cfg.GetCVar<object>(cVar).ToString() ?? "";
+            if (value.Length > 50)
+                value = $"{value[..51]}…";
+
+            return value;
         }
     }
 
@@ -120,8 +140,7 @@ namespace Robust.Shared.Configuration
                 var helpQuestion = Loc.GetString("cmd-cvar-compl-list");
 
                 return CompletionResult.FromHintOptions(
-                    _cfg.GetRegisteredCVars()
-                        .Select(c => new CompletionOption(c, GetCVarValueHint(_cfg, c)))
+                    CVarCommandUtil.GetCVarCompletionOptions(_cfg)
                         .Union(new[] { new CompletionOption("?", helpQuestion) })
                         .OrderBy(c => c.Value),
                     Loc.GetString("cmd-cvar-arg-name"));
@@ -133,19 +152,6 @@ namespace Robust.Shared.Configuration
 
             var type = _cfg.GetCVarType(cvar);
             return CompletionResult.FromHint($"<{type.Name}>");
-        }
-
-        private string GetCVarValueHint(IConfigurationManager cfg, string cVar)
-        {
-            var flags = cfg.GetCVarFlags(cVar);
-            if ((flags & CVar.CONFIDENTIAL) != 0)
-                return Loc.GetString("cmd-cvar-value-hidden");
-
-            var value = cfg.GetCVar<object>(cVar).ToString() ?? "";
-            if (value.Length > 50)
-                value = $"{value[..51]}…";
-
-            return value;
         }
     }
 
@@ -189,6 +195,85 @@ namespace Robust.Shared.Configuration
             }
 
             return CompletionResult.Empty;
+        }
+    }
+
+    internal sealed class ConfigMarkRollbackCommand : IConsoleCommand
+    {
+        [Dependency] private readonly IConfigurationManager _cfg = null!;
+
+        public string Command => "config_rollback_mark";
+        public string Description => "";
+        public string Help => "";
+
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (args.Length is < 1 or > 2)
+            {
+                shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
+                return;
+            }
+
+            _cfg.MarkForRollback(args[0]);
+        }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                return CompletionResult.FromOptions(
+                    CVarCommandUtil.GetCVarCompletionOptions(_cfg)
+                        .OrderBy(c => c.Value));
+            }
+
+            return CompletionResult.Empty;
+        }
+    }
+
+    internal sealed class ConfigUnmarkRollbackCommand : IConsoleCommand
+    {
+        [Dependency] private readonly IConfigurationManager _cfg = null!;
+
+        public string Command => "config_rollback_unmark";
+        public string Description => "";
+        public string Help => "";
+
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (args.Length is < 1 or > 2)
+            {
+                shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
+                return;
+            }
+
+            _cfg.UnmarkForRollback(args[0]);
+        }
+
+        public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                return CompletionResult.FromOptions(
+                    CVarCommandUtil.GetCVarCompletionOptions(_cfg)
+                        .OrderBy(c => c.Value));
+            }
+
+            return CompletionResult.Empty;
+        }
+    }
+
+
+    internal sealed class ConfigApplyRollbackCommand : IConsoleCommand
+    {
+        [Dependency] private readonly IConfigurationManager _cfg = null!;
+
+        public string Command => "config_rollback_apply";
+        public string Description => "";
+        public string Help => "";
+
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            _cfg.ApplyRollback();
         }
     }
 }

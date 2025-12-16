@@ -41,7 +41,7 @@ namespace Robust.Client.WebView.Cef
             // commandLine.AppendSwitch("--single-process");
 
             //commandLine.AppendSwitch("--disable-gpu");
-            //commandLine.AppendSwitch("--disable-gpu-compositing");
+            commandLine.AppendSwitch("--disable-gpu-compositing");
             //commandLine.AppendSwitch("--in-process-gpu");
 
             commandLine.AppendSwitch("--off-screen-rendering-enabled");

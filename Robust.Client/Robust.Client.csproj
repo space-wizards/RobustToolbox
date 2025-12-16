@@ -20,6 +20,7 @@
     <PackageReference Include="OpenToolkit.Graphics" PrivateAssets="compile" />
     <PackageReference Include="OpenTK.Audio.OpenAL" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.SharpFont" PrivateAssets="compile" />
+    <PackageReference Include="SpaceWizards.Sdl" PrivateAssets="compile" />
     <PackageReference Include="Robust.Natives" />
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
     <PackageReference Condition="'$(RobustToolsBuild)' == 'True'" Include="JetBrains.Profiler.Api" PrivateAssets="compile" />
@@ -41,7 +42,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Avalonia.Base\Avalonia.Base.csproj" />
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
-    <ProjectReference Include="..\OpenToolkit.GraphicsLibraryFramework\OpenToolkit.GraphicsLibraryFramework.csproj" />
     <ProjectReference Include="..\Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
@@ -63,10 +63,16 @@
     <RobustLinkAssemblies Include="TerraFX.Interop.Windows" />
     <RobustLinkAssemblies Include="TerraFX.Interop.Xlib" />
     <RobustLinkAssemblies Include="OpenToolkit.Graphics" />
+    <RobustLinkAssemblies Include="SpaceWizards.Sdl" />
     <RobustLinkAssemblies Include="SpaceWizards.SharpFont" />
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />
+
+  <ItemGroup Condition="'$(IsFreedesktop)' == 'True'">
+    <PackageReference Include="SpaceWizards.Fontconfig.Interop" />
+    <RobustLinkAssemblies Include="SpaceWizards.Fontconfig.Interop" />
+  </ItemGroup>
 
   <Import Project="..\MSBuild\XamlIL.targets" />
 

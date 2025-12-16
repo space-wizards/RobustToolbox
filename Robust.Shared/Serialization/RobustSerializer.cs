@@ -89,7 +89,9 @@ namespace Robust.Shared.Serialization
                 CustomTypeSerializers = new[]
                 {
                     MappedStringSerializer.TypeSerializer,
-                    new NetMathSerializer()
+                    new NetMathSerializer(),
+                    new NetBitArraySerializer(),
+                    new NetFormattedStringSerializer()
                 }
             };
             _serializer = new Serializer(types, settings);

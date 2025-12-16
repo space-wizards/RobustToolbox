@@ -6,5 +6,6 @@
         <DevWindowTabUI Name="UI" />
         <DevWindowTabPerf Name="Perf" />
         <DevWindowTabTextures Name="Textures" />
+        <DevWindowTabRenderTargets Name="RenderTargets" />
     </TabContainer>
 </Control>

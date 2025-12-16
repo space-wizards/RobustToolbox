@@ -1,0 +1,83 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemDefinitionGroup>
+    <!--
+    Content should define <UseRobustApi> items to declare which parts of Robust they want a C# project to depend on.
+    Content MUST NOT create project references to Robust directly, as these are NOT stable.
+    -->
+    <UseRobustApi>
+      <Visible>false</Visible>
+    </UseRobustApi>
+
+    <!--
+    The actual definition items we use to declare what <UseRobustApi> maps to what references.
+    Can be either a project OR a NuGet package.
+    -->
+    <RobustApiDef>
+      <Visible>false</Visible>
+      <Project />
+      <ProjectDir />
+      <PackageReference />
+    </RobustApiDef>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <RobustApiDef Include="Lidgren" Project="Lidgren.Network" />
+    <RobustApiDef Include="Shared" Project="Robust.Shared.Maths" />
+    <RobustApiDef Include="Shared" Project="Robust.Shared" />
+    <RobustApiDef Include="Shared" ProjectDir="NetSerializer\" Project="NetSerializer" />
+    <RobustApiDef Include="Shared" PackageReference="Robust.Shared.AuthLib" />
+    <RobustApiDef Include="Server" Project="Robust.Server" />
+    <RobustApiDef Include="Packaging" Project="Robust.Packaging" />
+    <RobustApiDef Include="Client" Project="Robust.Client" />
+    <RobustApiDef Include="Client" Project="Avalonia.Base" />
+    <RobustApiDef Include="Testing" Project="Robust.Shared.Maths.Testing" />
+    <RobustApiDef Include="Testing" Project="Robust.Shared.Testing" />
+    <RobustApiDef Include="Testing" Project="Robust.Server.Testing" />
+    <RobustApiDef Include="Testing" Project="Robust.UnitTesting" />
+    <RobustApiDef Include="Benchmarks" Project="Robust.Benchmarks" />
+  </ItemGroup>
+
+  <Target Name="_RTFilterEnabledApi" Returns="@(_EnabledRobustApi)">
+    <JoinItems Left="@(RobustApiDef)" LeftMetadata="*"
+               Right="@(UseRobustApi)"
+               ItemSpecToUse="Left">
+      <Output TaskParameter="JoinResult" ItemName="_EnabledRobustApi" />
+    </JoinItems>
+  </Target>
+
+  <Target Name="_RTCheckForDirectReferences" BeforeTargets="_RTMakeProjectReferences">
+    <Error File="%(ProjectReference.DefiningProjectFullPath)"
+           Text="Direct ProjectReferences to Robust projects are not allowed, use &lt;UseRobustApi&gt;"
+           Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', 'RobustToolbox')) and !$([System.Text.RegularExpressions.Regex]::IsMatch('%(DefiningProjectDirectory)', 'RobustToolbox'))" />
+  </Target>
+
+  <!--
+  Add <ProjectReference>es for RT projects based on selected UseRobustApi.
+  This is *not* done before Restore, so these references do *not* contribute
+  to transitive dependency inclusion.
+  -->
+  <Target Name="_RTMakeProjectReferences" BeforeTargets="BeforeResolveReferences"
+          DependsOnTargets="_RTFilterEnabledApi" Returns="@(ProjectReference)">
+    <ItemGroup>
+      <_RTProjectReference KeepDuplicates="false"
+                           Include="%(_EnabledRobustApi.Project)\%(_EnabledRobustApi.Project).csproj"
+                           ProjectDir="%(_EnabledRobustApi.ProjectDir)"
+                           Condition="'%(_EnabledRobustApi.Project)' != ''" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="$(MSBuildThisFileDirectory)\..\%(_RTProjectReference.ProjectDir)%(_RTProjectReference.Identity)"
+                        Condition="'%(_RTProjectReference.Identity)' != ''" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+  Add <PackageReference>es for RT projects based on selected UseRobustApi.
+  -->
+  <Target Name="_RTAddPackageReferences" BeforeTargets="Restore"
+          DependsOnTargets="_RTFilterEnabledApi" Returns="@(PackageReference)">
+    <ItemGroup>
+      <PackageReference KeepDuplicates="false" Include="%(_EnabledRobustApi.PackageReference)"
+                        Version="" Condition="'%(_EnabledRobustApi.PackageReference)' != ''"/>
+    </ItemGroup>
+  </Target>
+</Project>

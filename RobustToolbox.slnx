@@ -97,11 +97,21 @@
       <Property Name="Feature" Value="WebView" />
     </Properties>
   </Project>
+  <Project Path="Robust.Client.IntegrationTests/Robust.Client.IntegrationTests.csproj" />
+  <Project Path="Robust.Client.Tests/Robust.Client.Tests.csproj" />
   <Project Path="Robust.Client/Robust.Client.csproj"/>
+  <Project Path="Robust.Packaging.Tests/Robust.Packaging.Tests.csproj" />
   <Project Path="Robust.Packaging/Robust.Packaging.csproj"/>
+  <Project Path="Robust.Server.IntegrationTests/Robust.Server.IntegrationTests.csproj" />
+  <Project Path="Robust.Server.Testing/Robust.Server.Testing.csproj" />
   <Project Path="Robust.Server/Robust.Server.csproj"/>
+  <Project Path="Robust.Shared.IntegrationTests/Robust.Shared.IntegrationTests.csproj" />
+  <Project Path="Robust.Shared.Maths.Testing/Robust.Shared.Maths.Testing.csproj" />
+  <Project Path="Robust.Shared.Maths.Tests/Robust.Shared.Maths.Tests.csproj" />
   <Project Path="Robust.Shared.Maths/Robust.Shared.Maths.csproj"/>
   <Project Path="Robust.Shared.Scripting/Robust.Shared.Scripting.csproj"/>
+  <Project Path="Robust.Shared.Testing/Robust.Shared.Testing.csproj" />
+  <Project Path="Robust.Shared.Tests/Robust.Shared.Tests.csproj" />
   <Project Path="Robust.Shared/Robust.Shared.csproj"/>
   <Project Path="Robust.UnitTesting/Robust.UnitTesting.csproj"/>
   <Project Path="Robust.Xaml/Robust.Xaml.csproj">

@@ -1,11 +1,12 @@
 using Robust.Shared.Threading;
 
-namespace Robust.Shared.Testing;
+// ReSharper disable once CheckNamespace
+namespace Robust.UnitTesting;
 
 /// <summary>
 /// Only allows 1 parallel process for testing purposes.
 /// </summary>j
-internal sealed class TestingParallelManager : IParallelManagerInternal
+public sealed class TestingParallelManager : IParallelManagerInternal
 {
     public event Action? ParallelCountChanged { add { } remove { } }
     public int ParallelProcessCount => 1;

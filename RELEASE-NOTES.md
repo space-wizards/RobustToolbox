@@ -36,23 +36,49 @@ END TEMPLATE-->
 ### Breaking changes
 
 * The project now targets .NET 10. You will have to install the new runtime on game servers when updating.
+* We have adopted a new "solution management" system for games.
+  * This enables us to add new projects to RT (e.g. split stuff up) without causing breaking changes.
+  * Games must move to `.slnx` solutions and run `dotnet run --project ./RobustToolbox/Tools/Robust.SolutionGen/ -- update` after updating RT. This should be done after *every* RT feature update.
+* Games may no longer directly reference RT projects. To depend on these, import the various `.props` files in the `Imports/` folder.
+* We've tidied up all the transitive dependencies RT projects used to expose, meaning packages used by *Robust* aren't automatically visible to content projects anymore. You will likely have both accidental usages that are now erroring, or valid usages that you will need to add a `<PackageReference>` for.
+* `OutputPanel` and `RichTextLabel` now set a default set of "safe" markup tags when using overloads that don't take in a `Type[]? allowedTags`. These tags are formatting only, so dangerous stuff like `[cmdlink]` is blocked by default.
+* The constructor of `EntityQuery<TComp1>` has been made internal.
 
 ### New features
 
 * Added `ExtensionMarkerAttribute`, used by the new C# 14 extension members, for the sandbox.
 * Added `CommandWhenUIFocused` property to `Command` keybinds, to make them not fire when a UI control is focused.
+* Startup logging now lists total memory and AVX10 intrinsics.
+* Added new `FormattedString` type that represents a plain `string` that has markup formatting.
 
 ### Bugfixes
 
 * Fixed `FormattedMessage` not escaping plain text content properly with `.ToMarkup()`.
+* Fixed wrapping on inline rich text controls like links.
+* Fixed some native libs getting packaged for Linux clients when they shouldn't.
+* Fixed `TilesEnumerator` being able to stack overflow due to the recursive implementation.
+* Fixed some typos in `EntityDeserializer` log messages.
+* Fixed WebView control resizing being fucky.
 
 ### Other
 
-*None yet*
+* Updated NuGet package dependencies.
+* Prototype loading now tries to do some basic interning to avoid duplicate string objects being stored. This saves some memory.
+* Avoid redundant texture uploads on WebView controls.
+* Updated and added a lot of documentation to various parts of the engine.
+* Moved to `.slnx`, and changed the default marker filename for hot reload to `.slnx` too.
+* Removed GLFW windowing implementation.
+* `EntityQuery.Resolve` now logs more info on error.
+* Disabled some unnecessary .NET SDK source generators that slowed down build.
 
 ### Internal
 
-*None yet*
+* Added a prototype `AspectRatioPanel` control. Not stabilized yet.
+* Added gay colors to uitest.
+* "Test content master" RT workflow now replaces `global.json` in SS14.
+* Updated `Robust.LoaderApi` and `NetSerializer` to .NET 10.
+* Fixed all the configurations in `RobustToolbox.sln`.
+* Split up `Robust.UnitTesting` into many more projects.
 
 
 ## 268.1.0

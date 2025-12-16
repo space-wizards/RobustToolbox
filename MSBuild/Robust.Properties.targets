@@ -29,4 +29,7 @@
 
   <!-- serialization generator -->
   <Import Project="Robust.Serialization.Generator.targets" Condition="'$(SkipRobustAnalyzer)' != 'true'" />
+
+  <!-- Robust API system -->
+  <Import Project="Robust.Api.targets" />
 </Project>

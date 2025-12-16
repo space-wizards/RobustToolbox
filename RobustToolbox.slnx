@@ -16,6 +16,7 @@
   </Folder>
   <Folder Name="/MSBuild/">
     <File Path="MSBuild/Robust.Analyzers.targets"/>
+    <File Path="MSBuild/Robust.Api.targets"/>
     <File Path="MSBuild/Robust.CompNetworkGenerator.targets"/>
     <File Path="MSBuild/Robust.Configurations.props"/>
     <File Path="MSBuild/Robust.DefineConstants.targets"/>

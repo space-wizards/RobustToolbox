@@ -6,8 +6,10 @@
       <OutputPath>../bin/Benchmarks</OutputPath>
       <OutputType>Exe</OutputType>
       <NoWarn>RA0003</NoWarn>
+      <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Robust.Server.Testing\Robust.Server.Testing.csproj" />
     <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
     <ProjectReference Include="..\Robust.UnitTesting\Robust.UnitTesting.csproj" />

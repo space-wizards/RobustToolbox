@@ -10,6 +10,7 @@
     <PackageReference Include="JetBrains.Annotations"/>
     <PackageReference Include="NUnit"/>
     <PackageReference Include="NUnit.Analyzers"/>
+    <PackageReference Include="Serilog"/>
   </ItemGroup>
 
   <ItemGroup>

@@ -11,11 +11,15 @@
   <ItemGroup>
     <ProjectReference Include="..\Robust.Server.Testing\Robust.Server.Testing.csproj" />
     <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
+    <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
     <ProjectReference Include="..\Robust.UnitTesting\Robust.UnitTesting.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="JetBrains.Annotations" />
+    <PackageReference Include="YamlDotNet" />
+    <PackageReference Include="prometheus-net" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

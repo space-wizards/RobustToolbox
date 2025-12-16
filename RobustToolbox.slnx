@@ -14,9 +14,17 @@
       </Properties>
     </Project>
   </Folder>
+  <Folder Name="/Imports/">
+    <File Path="Imports/Benchmarks.props"/>
+    <File Path="Imports/Client.props"/>
+    <File Path="Imports/Lidgren.props"/>
+    <File Path="Imports/Packaging.props"/>
+    <File Path="Imports/Server.props"/>
+    <File Path="Imports/Shared.props"/>
+    <File Path="Imports/Testing.props"/>
+  </Folder>
   <Folder Name="/MSBuild/">
     <File Path="MSBuild/Robust.Analyzers.targets"/>
-    <File Path="MSBuild/Robust.Api.targets"/>
     <File Path="MSBuild/Robust.CompNetworkGenerator.targets"/>
     <File Path="MSBuild/Robust.Configurations.props"/>
     <File Path="MSBuild/Robust.DefineConstants.targets"/>
@@ -24,6 +32,7 @@
     <File Path="MSBuild/Robust.Engine.targets"/>
     <File Path="MSBuild/Robust.Engine.Version.props"/>
     <File Path="MSBuild/Robust.Platform.props"/>
+    <File Path="MSBuild/Robust.ProjectReferences.targets"/>
     <File Path="MSBuild/Robust.Properties.targets"/>
     <File Path="MSBuild/Robust.Trimming.targets"/>
     <File Path="MSBuild/XamlIL.targets"/>
@@ -35,6 +44,7 @@
     </Project>
   </Folder>
   <Folder Name="/Project Files/">
+    <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
     <File Path="README.md" />
     <File Path="RELEASE-NOTES.md" />

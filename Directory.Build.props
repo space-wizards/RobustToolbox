@@ -1,0 +1,21 @@
+﻿<Project>
+  <ItemDefinitionGroup>
+    <PackageReference>
+      <!--
+      Make all packages used by RT default to having everything private except what's needed to run the game (runtime, native)
+      This is to avoid having them leak to content, as they are primarily an implementation detail.
+      Where necessary, this can be overriden by doing PrivateAssets="none" on the PackageReference entry.
+      -->
+      <PrivateAssets>compile;contentFiles;build;buildMultitargeting;buildTransitive;analyzers</PrivateAssets>
+    </PackageReference>
+  </ItemDefinitionGroup>
+
+  <PropertyGroup>
+    <!--
+    Disable transitive project references.
+    This is just to avoid venues of leaky implementation details into content.
+    Being strict is always good.
+    -->
+    <DisableTransitiveProjectReferences>True</DisableTransitiveProjectReferences>
+  </PropertyGroup>
+</Project>

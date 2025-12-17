@@ -92,14 +92,4 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
                     ));
         }
     }
-
-    private bool HasAttribute(ISymbol type, INamedTypeSymbol attributeType)
-    {
-        foreach (var attribute in type.GetAttributes())
-        {
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeType))
-                return true;
-        }
-        return false;
-    }
 }

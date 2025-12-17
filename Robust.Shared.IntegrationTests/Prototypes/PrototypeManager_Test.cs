@@ -15,7 +15,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 {
     [UsedImplicitly]
     [TestFixture]
-    internal sealed class PrototypeManager_Test : OurRobustUnitTest
+    internal sealed partial class PrototypeManager_Test : OurRobustUnitTest
     {
         private const string FakeWrenchProtoId = "wrench";
         private const string YamlTesterProtoId = "yamltester";

@@ -50,7 +50,7 @@ public sealed partial class DataRecordTest : OurSerializationTest
     public partial record struct DataRecordStruct(IntStruct Struct, string String, int Integer);
 
     [DataRecord]
-    public record struct DataRecordWithProperties
+    public partial record struct DataRecordWithProperties
     {
         public Vector2 Position;
         public int Foo { get; }
@@ -59,7 +59,7 @@ public sealed partial class DataRecordTest : OurSerializationTest
     }
 
     [DataRecord]
-    public readonly record struct ReadonlyDataRecord
+    public readonly partial record struct ReadonlyDataRecord
     {
         public readonly Vector2 Position;
         public int Foo { get; }

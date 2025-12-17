@@ -17,5 +17,11 @@
     Being strict is always good.
     -->
     <DisableTransitiveProjectReferences>True</DisableTransitiveProjectReferences>
+
+    <!--
+    Shut up broken package pruning warnings.
+    We need these unpruneable packages because of transitive dependency pinning.
+    -->
+    <NoWarn>$(NoWarn);NU1510</NoWarn>
   </PropertyGroup>
 </Project>

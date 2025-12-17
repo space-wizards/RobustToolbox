@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Animations;
 using Robust.Shared.Maths;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Animations
 {
@@ -56,8 +54,14 @@ namespace Robust.Client.Animations
             }
             else
             {
+                var next = KeyFrames[nextKeyFrame];
+
                 // Get us a scale 0 -> 1 here.
-                var t = playingTime / KeyFrames[nextKeyFrame].KeyTime;
+                var t = playingTime / next.KeyTime;
+
+                // Apply easing to time parameter, if one was specified
+                if (next.Easing != null)
+                    t = next.Easing(t);
 
                 switch (InterpolationMode)
                 {
@@ -122,9 +126,9 @@ namespace Robust.Client.Animations
                 case Vector2 vector2:
                     return Vector2Helpers.InterpolateCubic((Vector2) preA, vector2, (Vector2) b, (Vector2) postB, t);
                 case Vector3 vector3:
-                    return Vector3.InterpolateCubic((Vector3) preA, vector3, (Vector3) b, (Vector3) postB, t);
+                    return VectorHelpers.InterpolateCubic((Vector3) preA, vector3, (Vector3) b, (Vector3) postB, t);
                 case Vector4 vector4:
-                    return Vector4.InterpolateCubic((Vector4) preA, vector4, (Vector4) b, (Vector4) postB, t);
+                    return VectorHelpers.InterpolateCubic((Vector4) preA, vector4, (Vector4) b, (Vector4) postB, t);
                 case float f:
                     return MathHelper.InterpolateCubic((float) preA, f, (float) b, (float) postB, t);
                 case double d:
@@ -149,10 +153,20 @@ namespace Robust.Client.Animations
             /// </summary>
             public readonly float KeyTime;
 
-            public KeyFrame(object value, float keyTime)
+            /// <summary>
+            ///     An easing function to apply when interpolating to this keyframe's value.
+            ///     Modifies the time parameter (0..1) of the interpolation between the previous keyframe and this one.
+            /// </summary>
+            /// <remarks>
+            ///     See <see cref="Easings"/> for examples of easing functions, or provide your own.
+            /// </remarks>
+            public readonly Func<float, float>? Easing;
+
+            public KeyFrame(object value, float keyTime, Func<float, float>? easing = null)
             {
                 Value = value;
                 KeyTime = keyTime;
+                Easing = easing;
             }
         }
     }

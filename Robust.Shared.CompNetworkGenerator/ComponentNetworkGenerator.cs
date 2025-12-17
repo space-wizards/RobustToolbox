@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.SymbolDisplayFormat;
 using static Microsoft.CodeAnalysis.SymbolDisplayMiscellaneousOptions;
+using Robust.Roslyn.Shared;
 
 // Yes dude I know this source generator isn't incremental, I'll fix it eventually.
 #pragma warning disable RS1035
@@ -12,7 +13,9 @@ using static Microsoft.CodeAnalysis.SymbolDisplayMiscellaneousOptions;
 namespace Robust.Shared.CompNetworkGenerator
 {
     [Generator]
+#pragma warning disable RS1042
     public class ComponentNetworkGenerator : ISourceGenerator
+#pragma warning restore RS1042
     {
         private const string ClassAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
         private const string MemberAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
@@ -48,7 +51,7 @@ namespace Robust.Shared.CompNetworkGenerator
             var componentName = classSymbol.Name;
             var stateName = $"{componentName}_AutoState";
 
-            var members = classSymbol.GetMembers();
+            var members = TypeSymbolHelper.GetAllMembersIncludingInherited(classSymbol);
             var fields = new List<(ITypeSymbol Type, string FieldName)>();
             var fieldAttr = comp.GetTypeByMetadataName(MemberAttributeName);
 
@@ -715,7 +718,7 @@ public partial class {componentName}{deltaInterface}
 
                 if (relevantAttribute == null)
                 {
-                    foreach (var mem in typeSymbol.GetMembers())
+                    foreach (var mem in TypeSymbolHelper.GetAllMembersIncludingInherited(typeSymbol))
                     {
                         var attribute = mem.GetAttributes().FirstOrDefault(a =>
                             a.AttributeClass != null &&

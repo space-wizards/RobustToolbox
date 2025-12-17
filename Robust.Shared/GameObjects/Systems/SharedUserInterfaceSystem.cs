@@ -305,7 +305,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
     {
-        if (ent.Comp.LastFieldUpdate >= args.FromTick)
+        if (args.FromTick > ent.Comp.CreationTick && ent.Comp.LastFieldUpdate >= args.FromTick)
         {
             var fields = EntityManager.GetModifiedFields(ent.Comp, args.FromTick);
 

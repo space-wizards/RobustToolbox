@@ -22,6 +22,7 @@ using Robust.Shared.Utility;
 using Robust.Shared.Log;
 using Direction = Robust.Shared.Maths.Direction;
 using Robust.Shared.Map.Components;
+using System.Linq;
 
 namespace Robust.Client.Placement
 {
@@ -201,6 +202,15 @@ namespace Robust.Client.Placement
             {
                 _direction = value;
                 DirectionChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        private string[]? _allModeNames;
+        public string[] AllModeNames
+        {
+            get
+            {
+                return _allModeNames ??= [IPlacementManager.DefaultModeName, .. _modeDictionary.Keys.Order()];
             }
         }
 
@@ -552,7 +562,7 @@ namespace Robust.Client.Placement
             }
 
             coordinates = InputManager.MouseScreenPosition;
-            return true;
+            return coordinates.IsValid;
         }
 
         private bool CurrentEraserMouseCoordinates(out EntityCoordinates coordinates)

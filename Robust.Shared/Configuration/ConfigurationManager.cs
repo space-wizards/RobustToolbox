@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -18,14 +19,14 @@ namespace Robust.Shared.Configuration
     ///     Stores and manages global configuration variables.
     /// </summary>
     [Virtual]
-    internal class ConfigurationManager : IConfigurationManagerInternal
+    internal partial class ConfigurationManager : IConfigurationManagerInternal
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
         private const char TABLE_DELIMITER = '.';
         protected readonly Dictionary<string, ConfigVar> _configVars = new();
-        private string? _configFile;
+        private ConfigFileStorage? _configFile;
         protected bool _isServer;
 
         protected readonly ReaderWriterLockSlim Lock = new();
@@ -59,36 +60,53 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public HashSet<string> LoadFromTomlStream(Stream file)
         {
-            var loaded = new HashSet<string>();
+            TomlTable tblRoot;
             try
             {
-                var callbackEvents = new ValueList<ValueChangedInvoke>();
-
-                // Ensure callbacks are raised OUTSIDE the write lock.
-                using (Lock.WriteGuard())
-                {
-                    foreach (var (cvar, value) in ParseCVarValuesFromToml(file))
-                    {
-                        loaded.Add(cvar);
-                        LoadTomlVar(cvar, value, ref callbackEvents);
-                    }
-                }
-
-                foreach (var callback in callbackEvents)
-                {
-                    InvokeValueChanged(callback);
-                }
+                tblRoot = Toml.ReadStream(file);
             }
             catch (Exception e)
             {
-                loaded.Clear();
-                _sawmill.Error("Unable to load configuration from stream:\n{0}", e);
+                _sawmill.Error("Unable to load configuration from table:\n{0}", e);
+                return [];
+            }
+
+            return LoadFromTomlTable(tblRoot);
+        }
+
+        private HashSet<string> LoadFromTomlTable(TomlTable table)
+        {
+            var loaded = new HashSet<string>();
+            var callbackEvents = new ValueList<ValueChangedInvoke>();
+            try
+            {
+                // Ensure callbacks are raised OUTSIDE the write lock.
+                using (Lock.WriteGuard())
+                {
+                    foreach (var (cvar, value) in ParseCVarValuesFromToml(table))
+                    {
+                        loaded.Add(cvar);
+                        LoadParsedVar(cvar, value, ref callbackEvents);
+                    }
+                }
+            }
+            finally
+            {
+                RunDeferredInvokeCallbacks(in callbackEvents);
             }
 
             return loaded;
         }
 
-        private void LoadTomlVar(
+        private void RunDeferredInvokeCallbacks(in ValueList<ValueChangedInvoke> callbackEvents)
+        {
+            foreach (var callback in callbackEvents)
+            {
+                InvokeValueChanged(callback);
+            }
+        }
+
+        private void LoadParsedVar(
             string cvar,
             object value,
             ref ValueList<ValueChangedInvoke> changedInvokes)
@@ -107,7 +125,7 @@ namespace Robust.Shared.Configuration
                     }
                     catch
                     {
-                        _sawmill.Error($"TOML parsed cvar does not match registered cvar type. Name: {cvar}. Code Type: {cfgVar.Type}. Toml type: {value.GetType()}");
+                        _sawmill.Error($"Parsed cvar does not match registered cvar type. Name: {cvar}. Code Type: {cfgVar.Type}. Parsed type: {value.GetType()}");
                         return;
                     }
                 }
@@ -118,16 +136,24 @@ namespace Robust.Shared.Configuration
             else
             {
                 //or add another unregistered CVar
-                //Note: the initial defaultValue is null, but it will get overwritten when the cvar is registered.
-                cfgVar = new ConfigVar(cvar, null!, CVar.NONE) { Value = value };
-                _configVars.Add(cvar, cfgVar);
+                cfgVar = AddUnregisteredCVar(cvar, value);
             }
 
             cfgVar.ConfigModified = true;
         }
 
+        private ConfigVar AddUnregisteredCVar(string name, object value)
+        {
+            //Note: the initial defaultValue is null, but it will get overwritten when the cvar is registered.
+            var cfgVar = new ConfigVar(name, null!, CVar.NONE) { Value = value };
+            _configVars.Add(name, cfgVar);
+            return cfgVar;
+        }
+
         public HashSet<string> LoadDefaultsFromTomlStream(Stream stream)
         {
+            var tblRoot = Toml.ReadStream(stream);
+
             var loaded = new HashSet<string>();
 
             var callbackEvents = new ValueList<ValueChangedInvoke>();
@@ -135,7 +161,7 @@ namespace Robust.Shared.Configuration
             // Ensure callbacks are raised OUTSIDE the write lock.
             using (Lock.WriteGuard())
             {
-                foreach (var (cVarName, value) in ParseCVarValuesFromToml(stream))
+                foreach (var (cVarName, value) in ParseCVarValuesFromToml(tblRoot))
                 {
                     if (!_configVars.TryGetValue(cVarName, out var cVar) || !cVar.Registered)
                     {
@@ -180,9 +206,13 @@ namespace Robust.Shared.Configuration
         {
             try
             {
-                using var file = File.OpenRead(configFile);
-                var result = LoadFromTomlStream(file);
-                _configFile = configFile;
+                HashSet<string> result;
+                using (var file = File.OpenRead(configFile))
+                {
+                    result = LoadFromTomlStream(file);
+                }
+                SetSaveFile(configFile);
+                ApplyRollback();
                 _sawmill.Info($"Configuration loaded from file");
                 return result;
             }
@@ -195,7 +225,12 @@ namespace Robust.Shared.Configuration
 
         public void SetSaveFile(string configFile)
         {
-            _configFile = configFile;
+            _configFile = new ConfigFileStorageDisk { Path = configFile };
+        }
+
+        public void SetVirtualConfig()
+        {
+            _configFile = new ConfigFileStorageVirtual();
         }
 
         public void CheckUnusedCVars()
@@ -218,6 +253,13 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public void SaveToTomlStream(Stream stream, IEnumerable<string> cvars)
         {
+            var table = SaveToTomlTable(cvars);
+
+            Toml.WriteStream(table, stream);
+        }
+
+        private TomlTable SaveToTomlTable(IEnumerable<string> cvars, Func<string, object>? overrideValue = null)
+        {
             var tblRoot = Toml.Create();
 
             using (Lock.ReadGuard())
@@ -227,10 +269,18 @@ namespace Robust.Shared.Configuration
                     if (!_configVars.TryGetValue(name, out var cVar))
                         continue;
 
-                    var value = cVar.Value;
-                    if (value == null && cVar.Registered)
+                    object? value;
+                    if (overrideValue != null)
                     {
-                        value = cVar.DefaultValue;
+                        value = overrideValue(name);
+                    }
+                    else
+                    {
+                        value = cVar.Value;
+                        if (value == null && cVar.Registered)
+                        {
+                            value = cVar.DefaultValue;
+                        }
                     }
 
                     if (value == null)
@@ -257,6 +307,8 @@ namespace Robust.Shared.Configuration
                     }
 
                     //runtime unboxing, either this or generic hell... ¯\_(ツ)_/¯
+                    // If you add a type here, add it to .Rollback.cs too!!!
+                    // I can't share the code because of how the serialization layers work :(
                     switch (value)
                     {
                         case Enum val:
@@ -287,7 +339,7 @@ namespace Robust.Shared.Configuration
                 }
             }
 
-            Toml.WriteStream(tblRoot, stream);
+            return tblRoot;
         }
 
         /// <inheritdoc />
@@ -312,8 +364,27 @@ namespace Robust.Shared.Configuration
                 var memoryStream = new MemoryStream();
                 SaveToTomlStream(memoryStream, cvars);
                 memoryStream.Position = 0;
-                using var file = File.Create(_configFile);
-                memoryStream.CopyTo(file);
+
+                switch (_configFile)
+                {
+                    case ConfigFileStorageDisk disk:
+                    {
+                        using var file = File.Create(disk.Path);
+                        memoryStream.CopyTo(file);
+                        break;
+                    }
+                    case ConfigFileStorageVirtual @virtual:
+                    {
+                        @virtual.Stream.SetLength(0);
+                        memoryStream.CopyTo(@virtual.Stream);
+                        break;
+                    }
+                    default:
+                    {
+                        throw new UnreachableException();
+                    }
+                }
+
                 _sawmill.Info($"config saved to '{_configFile}'.");
             }
             catch (Exception e)
@@ -470,7 +541,7 @@ namespace Robust.Shared.Configuration
 
         public void LoadCVarsFromType(Type containingType)
         {
-            foreach (var defField in containingType.GetFields(BindingFlags.Public | BindingFlags.Static))
+            foreach (var defField in containingType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
             {
                 var fieldType = defField.FieldType;
                 if (!fieldType.IsGenericType || fieldType.GetGenericTypeDefinition() != typeof(CVarDef<>))
@@ -729,10 +800,25 @@ namespace Robust.Shared.Configuration
 
         private void InvokeValueChanged(in ValueChangedInvoke invoke)
         {
-            OnCVarValueChanged?.Invoke(invoke.Info);
+            try
+            {
+                OnCVarValueChanged?.Invoke(invoke.Info);
+            }
+            catch (Exception e)
+            {
+                _sawmill.Error($"Error while running OnCVarValueChanged callback: {e}");
+            }
+
             foreach (var entry in invoke.Invoke.Entries)
             {
-                entry.Value!.Invoke(invoke.Value, in invoke.Info);
+                try
+                {
+                    entry.Value!.Invoke(invoke.Value, in invoke.Info);
+                }
+                catch (Exception e)
+                {
+                    _sawmill.Error($"Error while running OnValueChanged callback: {e}");
+                }
             }
         }
 
@@ -743,10 +829,8 @@ namespace Robust.Shared.Configuration
             return new ValueChangedInvoke(info, var.ValueChanged);
         }
 
-        private IEnumerable<(string cvar, object value)> ParseCVarValuesFromToml(Stream stream)
+        private IEnumerable<(string cvar, object value)> ParseCVarValuesFromToml(TomlTable tblRoot)
         {
-            var tblRoot = Toml.ReadStream(stream);
-
             return ProcessTomlObject(tblRoot, "");
 
             IEnumerable<(string cvar, object value)> ProcessTomlObject(TomlObject obj, string tablePath)
@@ -954,6 +1038,30 @@ namespace Robust.Shared.Configuration
         }
 
         protected delegate void ValueChangedDelegate(object value, in CVarChangeInfo info);
+
+        private abstract class ConfigFileStorage;
+
+        private sealed class ConfigFileStorageDisk : ConfigFileStorage
+        {
+            public required string Path;
+
+            public override string ToString()
+            {
+                return Path;
+            }
+        }
+
+        private sealed class ConfigFileStorageVirtual : ConfigFileStorage
+        {
+            // I did not realize when adding this class that there is currently no way to *load* this data again.
+            // Oh well, might be useful for a future unit test.
+            public readonly MemoryStream Stream = new();
+
+            public override string ToString()
+            {
+                return "<VIRTUAL>";
+            }
+        }
     }
 
     [Serializable]

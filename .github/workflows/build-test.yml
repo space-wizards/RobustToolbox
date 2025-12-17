@@ -10,7 +10,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest] # , macos-latest] - temporarily disabled due to libfreetype.dll errors.
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -22,7 +22,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4.1.0
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       - name: Install dependencies
         run: dotnet restore
       - name: Build

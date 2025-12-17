@@ -105,7 +105,7 @@ public abstract partial class ToolshedCommand
                 throw new InvalidCommandImplementation($"{nameof(TypeParameterParsers)} element {typeParser} is not {nameof(TypeTypeParser)} or assignable to {typeof(CustomTypeParser<Type>).PrettyName()}");
         }
 
-        var impls = GetGenericImplementations().ToArray();
+        var impls = GetMethods();
         if (impls.Length == 0)
             throw new Exception($"Command has no implementations?");
 

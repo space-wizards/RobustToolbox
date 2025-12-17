@@ -36,8 +36,8 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Testing;
 using Robust.Shared.Timing;
-using Robust.UnitTesting.Pool;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -83,6 +83,9 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions? options = null)
         {
+            options ??= new ServerIntegrationOptions();
+            options.TestAssembly = GetType().Assembly;
+
             ServerIntegrationInstance instance;
 
             if (ShouldPool(options))
@@ -93,6 +96,10 @@ namespace Robust.UnitTesting
                     server.ServerOptions = options;
 
                     OnServerReturn(server).Wait();
+
+                    // Ensure the instance is properly idle to avoid inconsistencies in behavior
+                    // between pooled and non-pooled returns.
+                    server.MarkNonIdle();
 
                     _serversRunning[server] = 0;
                     instance = server;
@@ -128,6 +135,9 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions? options = null)
         {
+            options ??= new ClientIntegrationOptions();
+            options.TestAssembly = GetType().Assembly;
+
             ClientIntegrationInstance instance;
 
             if (ShouldPool(options))
@@ -138,6 +148,10 @@ namespace Robust.UnitTesting
                     client.ClientOptions = options;
 
                     OnClientReturn(client).Wait();
+
+                    // Ensure the instance is properly idle to avoid inconsistencies in behavior
+                    // between pooled and non-pooled returns.
+                    client.MarkNonIdle();
 
                     _clientsRunning[client] = 0;
                     instance = client;
@@ -329,6 +343,8 @@ namespace Robust.UnitTesting
             [Pure]
             public T System<T>() where T : IEntitySystem
             {
+                CheckThreadOrIdle();
+
                 return EntMan.System<T>();
             }
 
@@ -337,11 +353,15 @@ namespace Robust.UnitTesting
 
             public TransformComponent Transform(EntityUid uid)
             {
+                CheckThreadOrIdle();
+
                 return EntMan.GetComponent<TransformComponent>(uid);
             }
 
             public MetaDataComponent MetaData(EntityUid uid)
             {
+                CheckThreadOrIdle();
+
                 return EntMan.GetComponent<MetaDataComponent>(uid);
             }
 
@@ -361,11 +381,7 @@ namespace Robust.UnitTesting
             {
                 get
                 {
-                    if (!_isSurelyIdle)
-                    {
-                        throw new InvalidOperationException(
-                            "Cannot read this without ensuring that the instance is idle.");
-                    }
+                    CheckThreadOrIdle();
 
                     return _isAlive;
                 }
@@ -381,11 +397,7 @@ namespace Robust.UnitTesting
             {
                 get
                 {
-                    if (!_isSurelyIdle)
-                    {
-                        throw new InvalidOperationException(
-                            "Cannot read this without ensuring that the instance is idle.");
-                    }
+                    CheckThreadOrIdle();
 
                     return _unhandledException;
                 }
@@ -427,11 +439,7 @@ namespace Robust.UnitTesting
             [Pure]
             public T ResolveDependency<T>()
             {
-                if (!_isSurelyIdle)
-                {
-                    throw new InvalidOperationException(
-                        "Cannot resolve services without ensuring that the instance is idle.");
-                }
+                CheckThreadOrIdle();
 
                 return DependencyCollection.Resolve<T>();
             }
@@ -602,6 +610,11 @@ namespace Robust.UnitTesting
                 await WaitIdleAsync();
             }
 
+            internal void MarkNonIdle()
+            {
+                Post(() => {});
+            }
+
             public virtual Task Cleanup() => Task.CompletedTask;
 
             public void Dispose()
@@ -624,6 +637,18 @@ namespace Robust.UnitTesting
                         resMan.MountString($"/Prototypes/__integration_extra_{i}.yml", list[i]);
                     }
                 }
+            }
+
+            private void CheckThreadOrIdle()
+            {
+                if (_isSurelyIdle)
+                    return;
+
+                if (Thread.CurrentThread == InstanceThread)
+                    return;
+
+                throw new InvalidOperationException(
+                    "Cannot perform this operation without ensuring the instance is idle.");
             }
         }
 
@@ -698,8 +723,8 @@ namespace Robust.UnitTesting
                 //ServerProgram.SetupLogging();
                 ServerProgram.InitReflectionManager(deps);
 
-                if (Options?.LoadTestAssembly != false)
-                    deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
+                if (Options?.LoadTestAssembly != false && Options?.TestAssembly != null)
+                    deps.Resolve<IReflectionManager>().LoadAssemblies(Options.TestAssembly);
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
@@ -728,6 +753,7 @@ namespace Robust.UnitTesting
                 var cfg = deps.Resolve<IConfigurationManagerInternal>();
 
                 cfg.LoadCVarsFromAssembly(typeof(RobustIntegrationTest).Assembly);
+                cfg.LoadCVarsFromAssembly(typeof(RTCVars).Assembly);
 
                 if (Options != null)
                 {
@@ -745,6 +771,8 @@ namespace Robust.UnitTesting
 
                     (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
+
+                cfg.SetVirtualConfig();
 
                 server.ContentStart = Options?.ContentStart ?? false;
                 var logHandler = Options?.OverrideLogHandler ?? (() => new TestLogHandler(cfg, "SERVER", _testOut));
@@ -956,8 +984,8 @@ namespace Robust.UnitTesting
 
                 GameController.RegisterReflection(deps);
 
-                if (Options?.LoadTestAssembly != false)
-                    deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
+                if (Options?.LoadTestAssembly != false && Options?.TestAssembly != null)
+                    deps.Resolve<IReflectionManager>().LoadAssemblies(Options.TestAssembly);
 
                 var client = DependencyCollection.Resolve<GameController>();
 
@@ -986,6 +1014,7 @@ namespace Robust.UnitTesting
                 var cfg = deps.Resolve<IConfigurationManagerInternal>();
 
                 cfg.LoadCVarsFromAssembly(typeof(RobustIntegrationTest).Assembly);
+                cfg.LoadCVarsFromAssembly(typeof(RTCVars).Assembly);
 
                 if (Options != null)
                 {
@@ -1013,6 +1042,8 @@ namespace Robust.UnitTesting
 
                     (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
+
+                cfg.SetVirtualConfig();
 
                 GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                     _fromInstanceWriter, _toInstanceReader);
@@ -1080,6 +1111,7 @@ namespace Robust.UnitTesting
             public bool SingleStep { get; set; }
             public bool Running { get; set; }
             public int MaxQueuedTicks { get; set; }
+            public TimeSpan LimitMinFrameTime { get; set; }
             public SleepMode SleepMode { get; set; }
 
             public IntegrationGameLoop(IGameTiming gameTiming, ChannelWriter<object> channelWriter,
@@ -1190,6 +1222,7 @@ namespace Robust.UnitTesting
             public Assembly[]? ContentAssemblies { get; set; }
 
             public bool LoadTestAssembly { get; set; } = true;
+            public Assembly? TestAssembly { get; set; }
 
             /// <summary>
             /// String containing extra prototypes to load. Contents of the string are treated like a yaml file in the

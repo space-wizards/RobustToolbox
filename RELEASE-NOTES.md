@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 269.0.0
+
+### Breaking changes
+
 * The project now targets .NET 10. You will have to install the new runtime on game servers when updating.
 * We have adopted a new "solution management" system for games.
   * This enables us to add new projects to RT (e.g. split stuff up) without causing breaking changes.

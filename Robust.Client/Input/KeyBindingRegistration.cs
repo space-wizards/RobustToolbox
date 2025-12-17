@@ -26,5 +26,12 @@ namespace Robust.Client.Input
         public bool CanRepeat;
         [DataField("allowSubCombs")]
         public bool AllowSubCombs;
+
+        /// <summary>
+        ///     For a <see cref="KeyBindingType.Command"/>-type binding,
+        ///     whether the binding should activate if UI is focused.
+        /// </summary>
+        [DataField]
+        public bool CommandWhenUIFocused { get; set; } = true;
     }
 }

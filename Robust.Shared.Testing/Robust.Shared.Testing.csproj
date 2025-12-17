@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\MSBuild\Robust.Engine.props"/>
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations"/>
+    <PackageReference Include="NUnit"/>
+    <PackageReference Include="NUnit.Analyzers"/>
+    <PackageReference Include="Serilog"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj"/>
+  </ItemGroup>
+
+  <Import Project="..\MSBuild\Robust.Properties.targets"/>
+</Project>

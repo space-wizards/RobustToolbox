@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -14,9 +15,8 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 public sealed class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
     where T : class, IPrototype
 {
+    [Dependency] private readonly IConfigurationManager _config = default!;
     [Dependency] private readonly IPrototypeManager _proto = default!;
-
-    private CompletionResult? _completions;
 
     public override bool TryParse(ParserContext ctx, out ProtoId<T> result)
     {
@@ -49,18 +49,15 @@ public sealed class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
+    public override CompletionResult TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
-        if (_completions != null)
-            return _completions;
+        if (typeof(T) == typeof(EntityPrototype))
+            return CompletionResult.FromHint(GetArgHint(arg));
 
-        _proto.TryGetKindFrom<T>(out var kind);
         var hint = ToolshedCommand.GetArgHint(arg, typeof(ProtoId<T>));
-
-        _completions = _proto.Count<T>() < 256
-            ? CompletionResult.FromHintOptions( CompletionHelper.PrototypeIDs<T>(proto: _proto), hint)
-            : CompletionResult.FromHint(hint);
-        return _completions;
+        var maxCount = _config.GetCVar(CVars.ToolshedPrototypesAutocompleteLimit);
+        var options = CompletionHelper.PrototypeIdsLimited<T>(ctx.Input[ctx.Index..], proto: _proto, maxCount: maxCount);
+        return CompletionResult.FromHintOptions(options, hint);
     }
 }
 

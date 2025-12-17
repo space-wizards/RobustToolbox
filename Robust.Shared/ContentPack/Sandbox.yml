@@ -17,6 +17,10 @@ WhitelistedNamespaces:
 - Content
 - OpenDreamShared
 
+AllowedAssemblyPrefixes:
+- OpenDream
+- Content
+
 # The type whitelist does NOT care about which assembly types come from.
 # This is because types switch assembly all the time.
 # Just look up stuff like StreamReader on https://apisof.net.
@@ -305,6 +309,32 @@ Types:
   SixLabors.ImageSharp.Formats:
     IImageEncoder: { All: True }
     PixelTypeInfo: { All: True }
+  SixLabors.ImageSharp.Processing:
+    ResizeExtensions:
+      Methods:
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, SixLabors.ImageSharp.Size)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, SixLabors.ImageSharp.Size, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int, SixLabors.ImageSharp.Processing.Processors.Transforms.IResampler)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, SixLabors.ImageSharp.Size, SixLabors.ImageSharp.Processing.Processors.Transforms.IResampler, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int, SixLabors.ImageSharp.Processing.Processors.Transforms.IResampler, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int, SixLabors.ImageSharp.Processing.Processors.Transforms.IResampler, SixLabors.ImageSharp.Rectangle, SixLabors.ImageSharp.Rectangle, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int, SixLabors.ImageSharp.Processing.Processors.Transforms.IResampler, SixLabors.ImageSharp.Rectangle, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, SixLabors.ImageSharp.Processing.ResizeOptions)"
+    ProcessingExtensions:
+      Methods:
+      - "SixLabors.ImageSharp.Image Clone(SixLabors.ImageSharp.Image, System.Action`1<SixLabors.ImageSharp.Processing.IImageProcessingContext>)"
+      - "SixLabors.ImageSharp.Image Clone(SixLabors.ImageSharp.Image, SixLabors.ImageSharp.Configuration, System.Action`1<SixLabors.ImageSharp.Processing.IImageProcessingContext>)"
+      - "SixLabors.ImageSharp.Image`1<!!0> Clone<>(SixLabors.ImageSharp.Image`1<!!0>, System.Action`1<SixLabors.ImageSharp.Processing.IImageProcessingContext>)"
+      - "SixLabors.ImageSharp.Image`1<!!0> Clone<>(SixLabors.ImageSharp.Image`1<!!0>, SixLabors.ImageSharp.Configuration, System.Action`1<SixLabors.ImageSharp.Processing.IImageProcessingContext>)"
+      - "SixLabors.ImageSharp.Image`1<!!0> Clone<>(SixLabors.ImageSharp.Image`1<!!0>, SixLabors.ImageSharp.Processing.Processors.IImageProcessor[])"
+      - "SixLabors.ImageSharp.Image`1<!!0> Clone<>(SixLabors.ImageSharp.Image`1<!!0>, SixLabors.ImageSharp.Configuration, SixLabors.ImageSharp.Processing.Processors.IImageProcessor[])"
+    CropExtensions:
+      Methods:
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Crop(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Crop(SixLabors.ImageSharp.Processing.IImageProcessingContext, SixLabors.ImageSharp.Rectangle)"
+    IImageProcessingContext: { }
   SixLabors.ImageSharp.PixelFormats:
     A8: { All: True }
     Argb32: { All: True }
@@ -382,6 +412,7 @@ Types:
       - "void SaveAsPng(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Png.PngEncoder)"
       - "void SaveAsTga(SixLabors.ImageSharp.Image, System.IO.Stream)"
       - "void SaveAsTga(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Tga.TgaEncoder)"
+    Rectangle: {All: True}
     Size: { All: True }
     SizeF: { All: True }
   System.Buffers:
@@ -529,6 +560,7 @@ Types:
       - "string ToTitleCase(string)"
       - "string ToTitleCase(string)"
       - "string ToUpper(string)"
+    UnicodeCategory: { } # Enum
   System.IO.Compression:
     CompressionMode: { } # Enum
     CompressionLevel: { } # Enum
@@ -591,6 +623,7 @@ Types:
     Enumerable: { All: True }
     IGrouping`2: { All: True }
     IOrderedEnumerable`1: { All: True }
+    ImmutableArrayExtensions: { All: True }
   System.Net:
     DnsEndPoint: { }
     IPAddress: { All: True }
@@ -646,6 +679,8 @@ Types:
     MethodInfo: { }
     TypeAttributes: { } # Enum
     TypeInfo: { }
+  System.Reflection.Metadata:
+    MetadataUpdateHandlerAttribute: { All: True }
   System.Runtime.CompilerServices:
     AsyncStateMachineAttribute: { All: True }
     AsyncTaskMethodBuilder: { All: True }
@@ -659,6 +694,7 @@ Types:
     CompilerGeneratedAttribute: { All: True }
     DefaultInterpolatedStringHandler: { All: True }
     ExtensionAttribute: { All: True }
+    ExtensionMarkerAttribute: { All: True }
     IAsyncStateMachine: { All: True }
     InternalsVisibleToAttribute: { All: True }
     InterpolatedStringHandlerAttribute: { All: True }
@@ -854,13 +890,19 @@ Types:
       - "System.Text.StringBuilder AppendFormat(System.IFormatProvider, string, object, object)"
       - "System.Text.StringBuilder AppendFormat(System.IFormatProvider, string, object, object, object)"
       - "System.Text.StringBuilder AppendFormat(System.IFormatProvider, string, object[])"
+      - "System.Text.StringBuilder AppendJoin(char, System.ReadOnlySpan`1<object>)"
+      - "System.Text.StringBuilder AppendJoin(char, System.ReadOnlySpan`1<string>)"
       - "System.Text.StringBuilder AppendJoin(char, object[])"
       - "System.Text.StringBuilder AppendJoin(char, string[])"
+      - "System.Text.StringBuilder AppendJoin(string, System.ReadOnlySpan`1<object>)"
+      - "System.Text.StringBuilder AppendJoin(string, System.ReadOnlySpan`1<string>)"
       - "System.Text.StringBuilder AppendJoin(string, object[])"
       - "System.Text.StringBuilder AppendJoin(string, string[])"
       - "System.Text.StringBuilder AppendJoin<>(char, System.Collections.Generic.IEnumerable`1<!!0>)"
       - "System.Text.StringBuilder AppendJoin<>(string, System.Collections.Generic.IEnumerable`1<!!0>)"
       - "System.Text.StringBuilder AppendLine()"
+      - "System.Text.StringBuilder AppendLine(System.IFormatProvider, ref System.Text.StringBuilder/AppendInterpolatedStringHandler)"
+      - "System.Text.StringBuilder AppendLine(ref System.Text.StringBuilder/AppendInterpolatedStringHandler)"
       - "System.Text.StringBuilder AppendLine(string)"
       - "System.Text.StringBuilder Clear()"
       - "System.Text.StringBuilder Insert(int, bool)"
@@ -883,6 +925,8 @@ Types:
       - "System.Text.StringBuilder Insert(int, ulong)"
       - "System.Text.StringBuilder Insert(int, ushort)"
       - "System.Text.StringBuilder Remove(int, int)"
+      - "System.Text.StringBuilder Replace(System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>)"
+      - "System.Text.StringBuilder Replace(System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>, int, int)"
       - "System.Text.StringBuilder Replace(char, char)"
       - "System.Text.StringBuilder Replace(char, char, int, int)"
       - "System.Text.StringBuilder Replace(string, string)"
@@ -1087,6 +1131,7 @@ Types:
       - "string ToHexString(System.ReadOnlySpan`1<byte>)"
 
     Converter`2: { All: True } # Delegate
+    DateOnly: { All: True }
     DateTime: { All: True }
     DateTimeKind: { } # Enum
     DateTimeOffset: { All: True }
@@ -1419,6 +1464,7 @@ Types:
       - "void CopyTo(int, char[], int, int)"
     StringComparison: { } # Enum
     StringSplitOptions: { } # Enum
+    TimeOnly: { All: True }
     TimeSpan: { All: True }
     Type:
       # COM, marshalling, interop, etc... stuff omitted.
@@ -1558,6 +1604,11 @@ Types:
     ValueType: { All: True }
     Version: { All: True }
     Void: { All: True }
+    WeakReference`1:
+      Methods:
+      - "void .ctor(!0)"
+      - "bool TryGetTarget(ref !0)"
+      - "void SetTarget(!0)"
   YamlDotNet.Core.Events:
     MappingStyle: { } # Enum
     SequenceStyle: { } # Enum
@@ -1607,3 +1658,7 @@ Types:
     SourcePos: { }
   Pidgin.Configuration:
     IConfiguration`1: { All: True }
+  SpaceWizards.Sodium:
+    CryptoGenericHashBlake2B:
+      Methods:
+      - "byte[] Hash(int, System.ReadOnlySpan`1<byte>, System.ReadOnlySpan`1<byte>)"

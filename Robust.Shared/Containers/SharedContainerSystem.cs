@@ -391,13 +391,6 @@ namespace Robust.Shared.Containers
             return TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, foundComponents);
         }
 
-
-        [Obsolete("Use Entity<T> variant")]
-        public bool IsInSameOrNoContainer(EntityUid user, EntityUid other)
-        {
-            return IsInSameOrNoContainer((user, null, null), (other, null, null));
-        }
-
         /// <summary>
         ///     Returns true if the two entities are not contained, or are contained in the same container.
         /// </summary>
@@ -416,13 +409,6 @@ namespace Robust.Shared.Containers
 
             // Both entities are in the same container
             return userContainer == otherContainer;
-        }
-
-
-        [Obsolete("Use Entity<T> variant")]
-        public bool IsInSameOrParentContainer(EntityUid user, EntityUid other)
-        {
-            return IsInSameOrParentContainer((user, null), other);
         }
 
         /// <summary>
@@ -457,21 +443,6 @@ namespace Robust.Shared.Containers
 
             // Both entities are in the same container
             return userContainer == otherContainer;
-        }
-
-        [Obsolete("Use Entity<T> variant")]
-        public bool IsInSameOrTransparentContainer(
-            EntityUid user,
-            EntityUid other,
-            BaseContainer? userContainer = null,
-            BaseContainer? otherContainer = null,
-            bool userSeeInsideSelf = false)
-        {
-            return IsInSameOrTransparentContainer((user, null),
-                other,
-                userContainer,
-                otherContainer,
-                userSeeInsideSelf);
         }
 
         /// <summary>
@@ -660,7 +631,7 @@ namespace Robust.Shared.Containers
                     continue;
 
                 Remove(ent, container, force: true);
-                Del(ent);
+                PredictedDel(ent);
             }
         }
 

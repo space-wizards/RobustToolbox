@@ -279,7 +279,14 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            return _kinds[kind].Instances[id];
+            try
+            {
+                return _kinds[kind].Instances[id];
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new UnknownPrototypeException(id, kind);
+            }
         }
 
         /// <inheritdoc />
@@ -781,42 +788,76 @@ namespace Robust.Shared.Prototypes
             return index.Instances.TryGetValue(id, out prototype);
         }
 
-        /// <inheritdoc />
+
+        // For obsolete APIs.
+        // ReSharper disable MethodOverloadWithOptionalParameter
+
+        public bool Resolve(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype)
+        {
+            if (TryIndex(id.Id, out prototype))
+                return true;
+
+            Sawmill.Error($"Attempted to resolve invalid {nameof(EntProtoId)}: {id.Id}\n{Environment.StackTrace}");
+            return false;
+        }
+
+        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
         public bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
         {
-            if (TryIndex(id.Id, out prototype))
-                return true;
-
             if (logError)
-                Sawmill.Error($"Attempted to resolve invalid {nameof(EntProtoId)}: {id.Id}");
-            return false;
+                return Resolve(id, out prototype);
+            return TryIndex(id, out prototype);
         }
 
-        /// <inheritdoc />
-        public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype
+        public bool TryIndex([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype)
+        {
+            return TryIndex(id.Id, out prototype);
+        }
+
+        public bool Resolve<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
         {
             if (TryIndex(id.Id, out prototype))
                 return true;
 
-            if (logError)
-                Sawmill.Error($"Attempted to resolve invalid ProtoId<{typeof(T).Name}>: {id.Id}");
+            Sawmill.Error($"Attempted to resolve invalid ProtoId<{typeof(T).Name}>: {id.Id}\n{Environment.StackTrace}");
             return false;
         }
 
-        /// <inheritdoc />
+        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
+        public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true)
+            where T : class, IPrototype
+        {
+            if (logError)
+                return Resolve(id, out prototype);
+            return TryIndex(id, out prototype);
+        }
+
+        public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype)
+            where T : class, IPrototype
+        {
+            return TryIndex(id.Id, out prototype);
+        }
+
+        public bool Resolve(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype)
+        {
+            if (id == null)
+            {
+                prototype = null;
+                return false;
+            }
+
+            return Resolve(id.Value, out prototype);
+        }
+
+        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
         public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
         {
-            if (id == null)
-            {
-                prototype = null;
-                return false;
-            }
-
-            return TryIndex(id.Value, out prototype, logError);
+            if (logError)
+                return Resolve(id, out prototype);
+            return TryIndex(id, out prototype);
         }
 
-        /// <inheritdoc />
-        public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype
+        public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype)
         {
             if (id == null)
             {
@@ -824,8 +865,42 @@ namespace Robust.Shared.Prototypes
                 return false;
             }
 
-            return TryIndex(id.Value, out prototype, logError);
+            return TryIndex(id.Value, out prototype);
         }
+
+        public bool Resolve<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
+        {
+            if (id == null)
+            {
+                prototype = null;
+                return false;
+            }
+
+            return Resolve(id.Value, out prototype);
+        }
+
+        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
+        public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true)
+            where T : class, IPrototype
+        {
+            if (logError)
+                return Resolve(id, out prototype);
+            return TryIndex(id, out prototype);
+        }
+
+        public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype)
+            where T : class, IPrototype
+        {
+            if (id == null)
+            {
+                prototype = null;
+                return false;
+            }
+
+            return TryIndex(id.Value, out prototype);
+        }
+
+        // ReSharper restore MethodOverloadWithOptionalParameter
 
         /// <inheritdoc />
         public bool HasMapping<T>(string id)
@@ -930,12 +1005,7 @@ namespace Robust.Shared.Prototypes
 
         static string CalculatePrototypeName(Type type)
         {
-            const string prototype = "Prototype";
-            if (!type.Name.EndsWith(prototype))
-                throw new InvalidPrototypeNameException($"Prototype {type} must end with the word Prototype");
-
-            var name = type.Name.AsSpan();
-            return $"{char.ToLowerInvariant(name[0])}{name[1..^prototype.Length]}";
+            return PrototypeUtility.CalculatePrototypeName(type.Name);
         }
 
         /// <inheritdoc />
@@ -1197,13 +1267,6 @@ namespace Robust.Shared.Prototypes
             }
 
             throw new ArgumentOutOfRangeException($"Unable to pick valid prototype for {typeof(T)}?");
-        }
-    }
-
-    public sealed class InvalidPrototypeNameException : Exception
-    {
-        public InvalidPrototypeNameException(string message) : base(message)
-        {
         }
     }
 }

@@ -158,7 +158,7 @@ public abstract partial class SharedMapSystem
         // Just MapLoader things.
         if (component.MapProxy == DynamicTree.Proxy.Free) return;
 
-        var xform = EntityManager.GetComponent<TransformComponent>(uid);
+        var xform = Comp<TransformComponent>(uid);
         var aabb = GetWorldAABB(uid, component, xform);
 
         if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
@@ -1692,48 +1692,49 @@ public abstract partial class SharedMapSystem
 
         public bool MoveNext(out TileRef tile)
         {
-            if (_x >= _upperX)
+            while (true)
             {
-                tile = TileRef.Zero;
-                return false;
-            }
-
-            var gridTile = new Vector2i(_x, _y);
-
-            _y++;
-
-            if (_y >= _upperY)
-            {
-                _x++;
-                _y = _lowerY;
-            }
-
-            var gridChunk = _mapSystem.GridTileToChunkIndices(_uid, _grid, gridTile);
-
-            if (_grid.Chunks.TryGetValue(gridChunk, out var chunk))
-            {
-                var chunkTile = chunk.GridTileToChunkTile(gridTile);
-                tile = _mapSystem.GetTileRef(_uid, _grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y);
-
-                if (_ignoreEmpty && tile.Tile.IsEmpty)
-                    return MoveNext(out tile);
-
-                if (_predicate == null || _predicate(tile))
+                if (_x >= _upperX)
                 {
-                    return true;
+                    tile = TileRef.Zero;
+                    return false;
+                }
+
+                var gridTile = new Vector2i(_x, _y);
+
+                _y++;
+
+                if (_y >= _upperY)
+                {
+                    _x++;
+                    _y = _lowerY;
+                }
+
+                var gridChunk = _mapSystem.GridTileToChunkIndices(_uid, _grid, gridTile);
+
+                if (_grid.Chunks.TryGetValue(gridChunk, out var chunk))
+                {
+                    var chunkTile = chunk.GridTileToChunkTile(gridTile);
+                    tile = _mapSystem.GetTileRef(_uid, _grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y);
+
+                    if (_ignoreEmpty && tile.Tile.IsEmpty)
+                        continue;
+
+                    if (_predicate == null || _predicate(tile))
+                    {
+                        return true;
+                    }
+                }
+                else if (!_ignoreEmpty)
+                {
+                    tile = new TileRef(_uid, gridTile.X, gridTile.Y, Tile.Empty);
+
+                    if (_predicate == null || _predicate(tile))
+                    {
+                        return true;
+                    }
                 }
             }
-            else if (!_ignoreEmpty)
-            {
-                tile = new TileRef(_uid, gridTile.X, gridTile.Y, Tile.Empty);
-
-                if (_predicate == null || _predicate(tile))
-                {
-                    return true;
-                }
-            }
-
-            return MoveNext(out tile);
         }
     }
 }

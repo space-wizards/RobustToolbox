@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Shared.Map;
-using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.Placement.Modes
 {

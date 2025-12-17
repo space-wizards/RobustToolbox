@@ -40,6 +40,28 @@ public interface IParallelManager
     /// Takes in a parallel job and runs it without blocking.
     /// </summary>
     WaitHandle Process(IParallelRobustJob jobs, int amount);
+
+    /// <summary>
+    /// Takes in a bulk parallel job and runs it the specified amount.
+    /// </summary>
+    /// <param name="jobs">The bulk parallel job to process.</param>
+    /// <param name="amount">The total number of elements to process.</param>
+    void ProcessNow(IParallelBulkRobustJob jobs, int amount);
+
+    /// <summary>
+    /// Processes a bulk robust job sequentially if desired.
+    /// </summary>
+    /// <param name="jobs">The bulk parallel job to process.</param>
+    /// <param name="amount">The total number of elements to process.</param>
+    void ProcessSerialNow(IParallelBulkRobustJob jobs, int amount);
+
+    /// <summary>
+    /// Takes in a bulk parallel job and runs it without blocking.
+    /// </summary>
+    /// <param name="jobs">The bulk parallel job to process.</param>
+    /// <param name="amount">The total number of elements to process.</param>
+    /// <returns>A wait handle that signals when the job is complete.</returns>
+    WaitHandle Process(IParallelBulkRobustJob jobs, int amount);
 }
 
 internal interface IParallelManagerInternal : IParallelManager
@@ -66,8 +88,8 @@ internal sealed class ParallelManager : IParallelManagerInternal
     private readonly ObjectPool<InternalJob> _jobPool =
         new DefaultObjectPool<InternalJob>(new DefaultPooledObjectPolicy<InternalJob>(), 1024);
 
-    private readonly ObjectPool<InternalParallelJob> _parallelPool =
-        new DefaultObjectPool<InternalParallelJob>(new DefaultPooledObjectPolicy<InternalParallelJob>(), 1024);
+    private readonly ObjectPool<InternalParallelRangeJob> _parallelPool =
+        new DefaultObjectPool<InternalParallelRangeJob>(new DefaultPooledObjectPolicy<InternalParallelRangeJob>(), 1024);
 
     /// <summary>
     /// Used internally for Parallel jobs, for external callers it gets garbage collected.
@@ -95,7 +117,11 @@ internal sealed class ParallelManager : IParallelManagerInternal
         return robustJob;
     }
 
-    private InternalParallelJob GetParallelJob(IParallelRobustJob job, int start, int end, ParallelTracker tracker)
+    private InternalParallelRangeJob GetParallelJob(
+        IParallelRangeRobustJob job,
+        int start,
+        int end,
+        ParallelTracker tracker)
     {
         var internalJob = _parallelPool.Get();
         internalJob.Set(_sawmill, job, start, end, tracker, _parallelPool);
@@ -130,8 +156,25 @@ internal sealed class ParallelManager : IParallelManagerInternal
         job.Execute();
     }
 
-    /// <inheritdoc/>
-    public void ProcessNow(IParallelRobustJob job, int amount)
+    public void ProcessNow(IParallelRobustJob jobs, int amount) =>
+        ProcessNow((IParallelRangeRobustJob) jobs, amount);
+
+    public void ProcessNow(IParallelBulkRobustJob jobs, int amount) =>
+        ProcessNow((IParallelRangeRobustJob) jobs, amount);
+
+    public void ProcessSerialNow(IParallelRobustJob jobs, int amount) =>
+        ProcessSerialNow((IParallelRangeRobustJob) jobs, amount);
+
+    public void ProcessSerialNow(IParallelBulkRobustJob jobs, int amount) =>
+        ProcessSerialNow((IParallelRangeRobustJob) jobs, amount);
+
+    public WaitHandle Process(IParallelRobustJob jobs, int amount) =>
+        Process((IParallelRangeRobustJob) jobs, amount);
+
+    public WaitHandle Process(IParallelBulkRobustJob jobs, int amount) =>
+        Process((IParallelRangeRobustJob) jobs, amount);
+
+    public void ProcessNow(IParallelRangeRobustJob job, int amount)
     {
         var batches = amount / (float) job.BatchSize;
 
@@ -147,17 +190,15 @@ internal sealed class ParallelManager : IParallelManagerInternal
         _trackerPool.Return(tracker);
     }
 
-    /// <inheritdoc/>
-    public void ProcessSerialNow(IParallelRobustJob jobs, int amount)
+    public void ProcessSerialNow(IParallelRangeRobustJob jobs, int amount)
     {
-        for (var i = 0; i < amount; i++)
-        {
-            jobs.Execute(i);
-        }
+        if (amount <= 0)
+            return;
+
+        jobs.ExecuteRange(0, amount);
     }
 
-    /// <inheritdoc/>
-    public WaitHandle Process(IParallelRobustJob job, int amount)
+    public WaitHandle Process(IParallelRangeRobustJob job, int amount)
     {
         var tracker = InternalProcess(job, amount);
         return tracker.Event.WaitHandle;
@@ -167,7 +208,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
     /// Runs a parallel job internally. Used so we can pool the tracker task for ProcessParallelNow
     /// and not rely on external callers to return it where they don't want to wait.
     /// </summary>
-    private ParallelTracker InternalProcess(IParallelRobustJob job, int amount)
+    private ParallelTracker InternalProcess(IParallelRangeRobustJob job, int amount)
     {
         var batches = (int) MathF.Ceiling(amount / (float) job.BatchSize);
         var batchSize = job.BatchSize;
@@ -225,7 +266,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
             }
             catch (Exception exc)
             {
-                _sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
+                _sawmill.Error($"Exception in ParallelManager: {exc}");
             }
             finally
             {
@@ -236,27 +277,33 @@ internal sealed class ParallelManager : IParallelManagerInternal
     }
 
     /// <summary>
-    /// Runs an <see cref="IParallelRobustJob"/> and handles cleanup.
+    /// Runs a <see cref="IParallelRangeRobustJob"/> for a specified range and handles cleanup.
+    /// This is so jobs that process per-element (<see cref="IParallelRobustJob"/>)
+    /// and jobs that process in bulk (<see cref="IParallelBulkRobustJob"/>) can both use it.
     /// </summary>
-    private sealed class InternalParallelJob : IRobustJob, IThreadPoolWorkItem
+    private sealed class InternalParallelRangeJob : IRobustJob, IThreadPoolWorkItem
     {
-        private IParallelRobustJob _robust = default!;
+        private IParallelRangeRobustJob _robust = default!;
         private int _start;
         private int _end;
 
         private ISawmill _sawmill = default!;
 
         private ParallelTracker _tracker = default!;
-        private ObjectPool<InternalParallelJob> _parentPool = default!;
+        private ObjectPool<InternalParallelRangeJob> _parentPool = default!;
 
-        public void Set(ISawmill sawmill, IParallelRobustJob robust, int start, int end, ParallelTracker tracker, ObjectPool<InternalParallelJob> parentPool)
+        public void Set(
+            ISawmill sawmill,
+            IParallelRangeRobustJob robust,
+            int start,
+            int end,
+            ParallelTracker tracker,
+            ObjectPool<InternalParallelRangeJob> parentPool)
         {
             _sawmill = sawmill;
-
             _robust = robust;
             _start = start;
             _end = end;
-
             _tracker = tracker;
             _parentPool = parentPool;
         }
@@ -265,18 +312,16 @@ internal sealed class ParallelManager : IParallelManagerInternal
         {
             try
             {
-                for (var i = _start; i < _end; i++)
-                {
-                    _robust.Execute(i);
-                }
+                _robust.ExecuteRange(_start, _end);
             }
             catch (Exception exc)
             {
-                _sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
+                _sawmill.Error($"Exception in ParallelManager: {exc}");
             }
             finally
             {
-                // Set the event and return it to the pool for re-use.
+                // Task is done, so tell the tracker that it has one less task to process.
+                // And of course return the job to the pool.
                 _tracker.Set();
                 _parentPool.Return(this);
             }

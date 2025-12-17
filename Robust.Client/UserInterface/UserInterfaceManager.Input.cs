@@ -202,7 +202,14 @@ internal partial class UserInterfaceManager
             return;
         }
 
-        var shape = cursorTarget.DefaultCursorShape switch
+        var shape = MapCursorShape(cursorTarget.DefaultCursorShape);
+
+        _clyde.SetCursor(_clyde.GetStandardCursor(shape));
+    }
+
+    private static StandardCursorShape MapCursorShape(Control.CursorShape shape)
+    {
+        return shape switch
         {
             Control.CursorShape.Arrow => StandardCursorShape.Arrow,
             Control.CursorShape.IBeam => StandardCursorShape.IBeam,
@@ -210,10 +217,21 @@ internal partial class UserInterfaceManager
             Control.CursorShape.Crosshair => StandardCursorShape.Crosshair,
             Control.CursorShape.VResize => StandardCursorShape.VResize,
             Control.CursorShape.HResize => StandardCursorShape.HResize,
+            Control.CursorShape.Progress => StandardCursorShape.Progress,
+            Control.CursorShape.NWSEResize => StandardCursorShape.NWSEResize,
+            Control.CursorShape.NESWResize => StandardCursorShape.NESWResize,
+            Control.CursorShape.Move => StandardCursorShape.Move,
+            Control.CursorShape.NotAllowed => StandardCursorShape.NotAllowed,
+            Control.CursorShape.NWResize => StandardCursorShape.NWResize,
+            Control.CursorShape.NResize => StandardCursorShape.NResize,
+            Control.CursorShape.NEResize => StandardCursorShape.NEResize,
+            Control.CursorShape.EResize => StandardCursorShape.EResize,
+            Control.CursorShape.SEResize => StandardCursorShape.SEResize,
+            Control.CursorShape.SResize => StandardCursorShape.SResize,
+            Control.CursorShape.SWResize => StandardCursorShape.SWResize,
+            Control.CursorShape.WResize => StandardCursorShape.WResize,
             _ => StandardCursorShape.Arrow
         };
-
-        _clyde.SetCursor(_clyde.GetStandardCursor(shape));
     }
 
     public void MouseWheel(MouseWheelEventArgs args)
@@ -315,7 +333,7 @@ internal partial class UserInterfaceManager
 
         if (_suppliedTooltip != null)
         {
-            PopupRoot.RemoveChild(_suppliedTooltip);
+            _suppliedTooltip.Orphan();
             _suppliedTooltip = null;
         }
 
@@ -457,12 +475,17 @@ internal partial class UserInterfaceManager
 
         // If we are in a focused control or doing a CanFocus, return true
         // So that InputManager doesn't propagate events to simulation.
-        if (!args.CanFocus && KeyboardFocused != null)
+        if (!args.CanFocus && OnIsUIFocused())
         {
             return true;
         }
 
         return false;
+    }
+
+    private bool OnIsUIFocused()
+    {
+        return KeyboardFocused != null;
     }
 
     /// <inheritdoc />
@@ -520,7 +543,7 @@ internal partial class UserInterfaceManager
         if (_showingTooltip) return;
         _showingTooltip = true;
         var hovered = CurrentlyHovered;
-        if (hovered == null)
+        if (hovered == null || hovered.Root == null)
         {
             return;
         }
@@ -545,7 +568,7 @@ internal partial class UserInterfaceManager
         if (_suppliedTooltip == null)
             return;
 
-        PopupRoot.AddChild(_suppliedTooltip);
+        hovered.Root.PopupRoot.AddChild(_suppliedTooltip);
         Tooltips.PositionTooltip(_suppliedTooltip);
         hovered.PerformShowTooltip();
     }

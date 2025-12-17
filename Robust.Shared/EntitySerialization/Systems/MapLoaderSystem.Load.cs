@@ -4,16 +4,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
-using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Shared.EntitySerialization.Systems;
 
@@ -42,6 +39,31 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
+    /// Tries to load entities from a YAML file, taking in a raw byte stream.
+    /// </summary>
+    /// <param name="file">The file contents to load from.</param>
+    /// <param name="fileName">
+    /// The name of the file being loaded. This is used purely for logging/informational purposes.
+    /// </param>
+    /// <param name="result">The result of the load operation.</param>
+    /// <param name="options">Options for the load operation.</param>
+    /// <returns>True if the load succeeded, false otherwise.</returns>
+    /// <seealso cref="M:Robust.Shared.EntitySerialization.Systems.MapLoaderSystem.TryLoadGeneric(Robust.Shared.Utility.ResPath,Robust.Shared.EntitySerialization.LoadResult@,System.Nullable{Robust.Shared.EntitySerialization.MapLoadOptions})"/>
+    public bool TryLoadGeneric(
+        Stream file,
+        string fileName,
+        [NotNullWhen(true)] out LoadResult? result,
+        MapLoadOptions? options = null)
+    {
+        result = null;
+
+        if (!TryReadFile(new StreamReader(file), out var data))
+            return false;
+
+        return TryLoadGeneric(data, fileName, out result, options);
+    }
+
+    /// <summary>
     /// Tries to load entities from a yaml file. Whenever possible, you should try to use <see cref="TryLoadMap"/>,
     /// <see cref="TryLoadGrid"/>, or <see cref="TryLoadEntity"/> instead.
     /// </summary>
@@ -55,6 +77,17 @@ public sealed partial class MapLoaderSystem
         if (!TryReadFile(file, out var data))
             return false;
 
+        return TryLoadGeneric(data, file.ToString(), out result, options);
+    }
+
+    private bool TryLoadGeneric(
+        MappingDataNode data,
+        string fileName,
+        [NotNullWhen(true)] out LoadResult? result,
+        MapLoadOptions? options = null)
+    {
+        result = null;
+
         _stopwatch.Restart();
         var ev = new BeforeEntityReadEvent();
         RaiseLocalEvent(ev);
@@ -62,7 +95,7 @@ public sealed partial class MapLoaderSystem
         var opts = options ?? MapLoadOptions.Default;
 
         // If we are forcing a map id, we cannot auto-assign ids.
-        opts.DeserializationOptions.AssignMapids = opts.ForceMapId == null;
+        opts.DeserializationOptions.AssignMapIds = opts.ForceMapId == null;
 
         if (opts.MergeMap is { } targetId && !_mapSystem.MapExists(targetId))
             throw new Exception($"Target map {targetId} does not exist");
@@ -75,7 +108,7 @@ public sealed partial class MapLoaderSystem
 
         // Using a local deserializer instead of a cached value, both to ensure that we don't accidentally carry over
         // data from a previous serializations, and because some entities cause other maps/grids to be loaded during
-        // during mapinit.
+        // mapinit.
         var deserializer = new EntityDeserializer(
             _dependency,
             data,
@@ -85,7 +118,18 @@ public sealed partial class MapLoaderSystem
 
         if (!deserializer.TryProcessData())
         {
-            Log.Debug($"Failed to process entity data in {file}");
+            Log.Debug($"Failed to process entity data in {fileName}");
+            return false;
+        }
+
+        // If the file isn't of the expected category, stop before we ever create any entities.
+        if (opts.ExpectedCategory is { } expected
+            && expected != deserializer.Result.Category
+            && deserializer.Result.Category != FileCategory.Unknown)
+        {
+            // Did someone try to load a map file as a grid or vice versa?
+            Log.Error($"Map {fileName} does not contain the expected data. Expected {expected} but got {deserializer.Result.Category}");
+            Delete(deserializer.Result);
             return false;
         }
 
@@ -95,15 +139,17 @@ public sealed partial class MapLoaderSystem
         }
         catch (Exception e)
         {
-            Log.Error($"Caught exception while creating entities for map {file}: {e}");
+            Log.Error($"Caught exception while creating entities for map {fileName}: {e}");
             Delete(deserializer.Result);
             throw;
         }
 
+        // If the map file was an older version, the category has to be inferred from the file's contents in CreateEntities()
+        // Hence the category is checked again here.
         if (opts.ExpectedCategory is { } exp && exp != deserializer.Result.Category)
         {
             // Did someone try to load a map file as a grid or vice versa?
-            Log.Error($"Map {file} does not contain the expected data. Expected {exp} but got {deserializer.Result.Category}");
+            Log.Error($"Map {fileName} does not contain the expected data. Expected {exp} but got {deserializer.Result.Category}");
             Delete(deserializer.Result);
             return false;
         }

@@ -77,6 +77,15 @@ namespace Robust.Client.Input
         event Func<BoundKeyEventArgs, bool> UIKeyBindStateChanged;
 
         /// <summary>
+        /// Called to check if the UI is considered "focused".
+        /// </summary>
+        /// <remarks>
+        /// This is effectively similar to the return value of <see cref="UIKeyBindStateChanged"/>,
+        /// but may be called at different times.
+        /// </remarks>
+        event Func<bool> CheckUIIsFocused;
+
+        /// <summary>
         ///     If UIKeyBindStateChanged did not handle the BoundKeyEvent, KeyBindStateChanged is called.
         /// </summary>
         event Action<ViewportBoundKeyEventArgs>? KeyBindStateChanged;

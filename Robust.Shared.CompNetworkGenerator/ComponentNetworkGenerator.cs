@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.SymbolDisplayFormat;
 using static Microsoft.CodeAnalysis.SymbolDisplayMiscellaneousOptions;
+using Robust.Roslyn.Shared;
 
 // Yes dude I know this source generator isn't incremental, I'll fix it eventually.
 #pragma warning disable RS1035
@@ -12,7 +13,9 @@ using static Microsoft.CodeAnalysis.SymbolDisplayMiscellaneousOptions;
 namespace Robust.Shared.CompNetworkGenerator
 {
     [Generator]
+#pragma warning disable RS1042
     public class ComponentNetworkGenerator : ISourceGenerator
+#pragma warning restore RS1042
     {
         private const string ClassAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
         private const string MemberAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
@@ -35,6 +38,7 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string GlobalDictionaryName = "global::System.Collections.Generic.Dictionary<TKey, TValue>";
         private const string GlobalHashSetName = "global::System.Collections.Generic.HashSet<T>";
         private const string GlobalListName = "global::System.Collections.Generic.List<T>";
+        private const string GlobalIRobustCloneableName = "global::Robust.Shared.Serialization.IRobustCloneable";
 
         private static readonly SymbolDisplayFormat FullNullableFormat =
             FullyQualifiedFormat.WithMiscellaneousOptions(IncludeNullableReferenceTypeModifier);
@@ -47,7 +51,7 @@ namespace Robust.Shared.CompNetworkGenerator
             var componentName = classSymbol.Name;
             var stateName = $"{componentName}_AutoState";
 
-            var members = classSymbol.GetMembers();
+            var members = TypeSymbolHelper.GetAllMembersIncludingInherited(classSymbol);
             var fields = new List<(ITypeSymbol Type, string FieldName)>();
             var fieldAttr = comp.GetTypeByMetadataName(MemberAttributeName);
 
@@ -375,7 +379,39 @@ namespace Robust.Shared.CompNetworkGenerator
                         stateFields.Append($@"
         public {networkedType} {name} = default!;");
 
-                        if (IsCloneType(type))
+                        if (ImplementsInterface(type, GlobalIRobustCloneableName))
+                        {
+                            getField = $"component.{name}";
+                            cast = $"({castString})";
+
+                            var nullCast = nullable ? castString.Substring(0, castString.Length - 1) : castString;
+
+                            if (nullable)
+                            {
+                                handleStateSetters.Append($@"
+            component.{name} = state.{name} == null ? null! : state.{name}.Clone();");
+                                deltaHandleFields.Append($@"
+                    var {name}Value = {cast} {fieldHandleValue};
+                    if ({name}Value == null)
+                        component.{name} = null!;
+                    else
+                        component.{name} = {nullCast}({name}Value.Clone());");
+                                shallowClone.Append($@"
+                {name} = this.{name},");
+                                deltaApply.Add($"fullState.{name} = {name} == null ? null! : {name}.Clone();");
+                            }
+                            else
+                            {
+                                handleStateSetters.Append($@"
+            component.{name} = state.{name}.Clone();");
+                                deltaHandleFields.Append($@"
+                    component.{name} = {cast}({fieldHandleValue}.Clone());");
+                                shallowClone.Append($@"
+                {name} = this.{name},");
+                                deltaApply.Add($"fullState.{name} = {name}.Clone();");
+                            }
+                        }
+                        else if (IsCloneType(type))
                         {
                             getField = $"component.{name}";
                             cast = $"({castString})";
@@ -682,7 +718,7 @@ public partial class {componentName}{deltaInterface}
 
                 if (relevantAttribute == null)
                 {
-                    foreach (var mem in typeSymbol.GetMembers())
+                    foreach (var mem in TypeSymbolHelper.GetAllMembersIncludingInherited(typeSymbol))
                     {
                         var attribute = mem.GetAttributes().FirstOrDefault(a =>
                             a.AttributeClass != null &&
@@ -757,6 +793,20 @@ public partial class {componentName}{deltaInterface}
                 GlobalDictionaryName or GlobalHashSetName or GlobalListName => true,
                 _ => false
             };
+        }
+
+        private static bool ImplementsInterface(ITypeSymbol type, string interfaceName)
+        {
+            foreach (var interfaceType in type.AllInterfaces)
+            {
+                if (interfaceType.ToDisplayString(FullyQualifiedFormat).Contains(interfaceName)
+                    || interfaceType.ConstructedFrom.ToDisplayString(FullyQualifiedFormat).Contains(interfaceName))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

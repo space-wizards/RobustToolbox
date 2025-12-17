@@ -361,6 +361,9 @@ namespace Robust.Client.GameStates
                     // avoid exception spam from repeatedly trying to reset the same entity.
                     _entitySystemManager.GetEntitySystem<ClientDirtySystem>().Reset();
                     _runtimeLog.LogException(e, "ResetPredictedEntities");
+#if !EXCEPTION_TOLERANCE
+                    throw;
+#endif
                 }
 
                 // If we were waiting for a new state, we are now applying it.
@@ -541,6 +544,11 @@ namespace Robust.Client.GameStates
                     {
                         ((IBroadcastEventBusInternal)_entities.EventBus).ProcessEventQueue();
                     }
+
+                    using (_prof.Group("QueueDel"))
+                    {
+                        _entities.ProcessQueueudDeletions();
+                    }
                 }
 
                 _prof.WriteGroupEnd(groupStart, "Prediction tick", ProfData.Int64(_timing.CurTick.Value));
@@ -631,7 +639,7 @@ namespace Robust.Client.GameStates
                         if (_sawmill.Level <= LogLevel.Debug)
                             _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
 
-                        if (compState != null)
+                        if ((meta.Flags & MetaDataFlags.Detached) == 0 && compState != null)
                         {
                             var handleState = new ComponentHandleState(compState, null);
                             _entities.EventBus.RaiseComponentEvent(entity, comp, ref handleState);
@@ -949,6 +957,9 @@ namespace Robust.Client.GameStates
                 {
                     _sawmill.Error($"Caught exception while deleting entities");
                     _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)}");
+#if !EXCEPTION_TOLERANCE
+                    throw;
+#endif
                 }
             }
 

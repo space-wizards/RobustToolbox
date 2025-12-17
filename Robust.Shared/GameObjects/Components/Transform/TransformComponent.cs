@@ -17,8 +17,11 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
-    ///     Stores the position and orientation of the entity.
+    ///     Stores the relative and global position and orientation of the entity.<br/>
+    ///     This also tracks the overall transform hierarchy, which allows entities to be children of other entities
+    ///     and move when their parent moves cheaply.
     /// </summary>
+    /// <seealso cref="SharedTransformSystem"/>
     [RegisterComponent, NetworkedComponent]
     public sealed partial class TransformComponent : Component, IComponentDebug
     {
@@ -633,7 +636,7 @@ namespace Robust.Shared.GameObjects
     ///     An invalid entity UID indicates that this entity has intentionally been removed from broadphases and should
     ///     not automatically be re-added by movement events.
     /// </remarks>
-    internal record struct BroadphaseData(EntityUid Uid, EntityUid PhysicsMap, bool CanCollide, bool Static)
+    internal record struct BroadphaseData(EntityUid Uid, bool CanCollide, bool Static)
     {
         public bool IsValid() => Uid.IsValid();
         public bool Valid => IsValid();

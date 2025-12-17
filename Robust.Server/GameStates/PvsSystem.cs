@@ -14,6 +14,7 @@ using Robust.Server.Replays;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
@@ -105,6 +106,7 @@ internal sealed partial class PvsSystem : EntitySystem
     private bool _async;
 
     private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
+    private EntityEventBus.DirectedEventHandler?[]? _getStateHandlers;
 
     private static readonly Histogram Histogram = Metrics.CreateHistogram("robust_game_state_update_usage",
         "Amount of time spent processing different parts of the game state update", new HistogramConfiguration
@@ -173,6 +175,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         ClearPvsData();
         ShutdownDirty();
+        _getStateHandlers = null;
     }
 
     public override void Update(float frameTime)
@@ -185,6 +188,8 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     internal void SendGameStates(ICommonSession[] players)
     {
+        _getStateHandlers ??= EntityManager.EventBusInternal.GetNetCompEventHandlers<ComponentGetState>();
+
         // Wait for pending jobs and process disconnected players
         ProcessDisconnections();
 
@@ -199,7 +204,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var uid in _toDelete)
         {
-            EntityManager.QueueDeleteEntity(uid);
+            QueueDel(uid);
         }
         _toDelete.Clear();
 

@@ -8,6 +8,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
+using Robust.Client.Graphics.FontManagement;
 using Robust.Client.HWId;
 using Robust.Client.Input;
 using Robust.Client.Localization;
@@ -67,6 +68,7 @@ namespace Robust.Client
             deps.Register<IMapManagerInternal, NetworkedMapManager>();
             deps.Register<INetworkedMapManager, NetworkedMapManager>();
             deps.Register<IEntityManager, ClientEntityManager>();
+            deps.Register<FontTagHijackHolder>();
             deps.Register<IReflectionManager, ClientReflectionManager>();
             deps.Register<IConsoleHost, ClientConsoleHost>();
             deps.Register<IClientConsoleHost, ClientConsoleHost>();
@@ -108,6 +110,8 @@ namespace Robust.Client
             deps.Register<IReloadManager, ReloadManager>();
             deps.Register<ILocalizationManager, ClientLocalizationManager>();
             deps.Register<ILocalizationManagerInternal, ClientLocalizationManager>();
+            deps.Register<LoadingScreenManager>();
+            deps.Register<ILoadingScreenManager, LoadingScreenManager>();
 
             switch (mode)
             {
@@ -120,6 +124,8 @@ namespace Robust.Client
                     deps.Register<IInputManager, InputManager>();
                     deps.Register<IFileDialogManager, DummyFileDialogManager>();
                     deps.Register<IUriOpener, UriOpenerDummy>();
+                    deps.Register<ISystemFontManager, SystemFontManagerFallback>();
+                    deps.Register<ISystemFontManagerInternal, SystemFontManagerFallback>();
                     break;
                 case GameController.DisplayMode.Clyde:
                     deps.Register<IClyde, Clyde>();
@@ -130,6 +136,8 @@ namespace Robust.Client
                     deps.Register<IInputManager, ClydeInputManager>();
                     deps.Register<IFileDialogManager, FileDialogManager>();
                     deps.Register<IUriOpener, UriOpener>();
+                    deps.Register<ISystemFontManager, SystemFontManager>();
+                    deps.Register<ISystemFontManagerInternal, SystemFontManager>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -144,6 +152,7 @@ namespace Robust.Client
             deps.Register<IViewVariablesManager, ClientViewVariablesManager>();
             deps.Register<IClientViewVariablesManager, ClientViewVariablesManager>();
             deps.Register<IClientViewVariablesManagerInternal, ClientViewVariablesManager>();
+            deps.Register<IViewVariableControlFactory, ViewVariableControlFactory>();
             deps.Register<IClientConGroupController, ClientConGroupController>();
             deps.Register<IScriptClient, ScriptClient>();
             deps.Register<IRobustSerializer, ClientRobustSerializer>();

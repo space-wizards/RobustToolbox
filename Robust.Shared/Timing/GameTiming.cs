@@ -86,6 +86,8 @@ namespace Robust.Shared.Timing
         /// </summary>
         public TimeSpan RealTime => _realTimer.Elapsed;
 
+        public TimeSpan FrameStartTime => _lastRealTime;
+
         public virtual TimeSpan ServerTime => TimeSpan.Zero;
 
         /// <summary>
@@ -215,7 +217,7 @@ namespace Robust.Shared.Timing
         }
 
         /// <summary>
-        /// Resets the simulation time.
+        ///     Resets the simulation time.
         /// </summary>
         public void ResetSimTime()
         {

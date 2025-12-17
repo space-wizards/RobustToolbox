@@ -14,20 +14,19 @@ using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.EntitySerialization.Components;
-using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Controllers;
-using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
+using Robust.Shared.Testing;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
+using AppearanceSystem = Robust.Client.GameObjects.AppearanceSystem;
 using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
 using PointLightComponent = Robust.Client.GameObjects.PointLightComponent;
@@ -53,12 +52,10 @@ namespace Robust.UnitTesting
                 typeof(MetaDataComponent),
                 typeof(TransformComponent),
                 typeof(PhysicsComponent),
-                typeof(PhysicsMapComponent),
                 typeof(BroadphaseComponent),
                 typeof(FixturesComponent),
                 typeof(JointComponent),
                 typeof(GridTreeComponent),
-                typeof(MovedGridsComponent),
                 typeof(JointRelayTargetComponent),
                 typeof(OccluderComponent),
                 typeof(OccluderTreeComponent),
@@ -66,7 +63,6 @@ namespace Robust.UnitTesting
                 typeof(LightTreeComponent),
                 typeof(CollisionWakeComponent),
                 typeof(CollideOnAnchorComponent),
-                typeof(Gravity2DComponent),
                 typeof(ActorComponent)
             };
 
@@ -114,7 +110,7 @@ namespace Robust.UnitTesting
                 configurationManager.LoadCVarsFromAssembly(assembly);
             }
 
-            configurationManager.LoadCVarsFromAssembly(typeof(RobustUnitTest).Assembly);
+            configurationManager.LoadCVarsFromAssembly(typeof(RTCVars).Assembly);
 
             var systems = deps.Resolve<IEntitySystemManager>();
             // Required systems
@@ -125,7 +121,6 @@ namespace Robust.UnitTesting
 
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
-            systems.LoadExtraSystemType<Gravity2DController>();
             systems.LoadExtraSystemType<CollisionWakeSystem>();
 
             if (Project == UnitTestProject.Client)
@@ -145,6 +140,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<RecursiveMoveSystem>();
                 systems.LoadExtraSystemType<SpriteSystem>();
                 systems.LoadExtraSystemType<SpriteTreeSystem>();
+                systems.LoadExtraSystemType<AppearanceSystem>();
                 systems.LoadExtraSystemType<GridChunkBoundsDebugSystem>();
             }
             else

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -12,6 +13,7 @@ namespace Robust.Shared.GameObjects;
 public abstract partial class SharedMapSystem
 {
     protected int LastMapId;
+    private Dictionary<EntityUid, MapId> _reserved = new();
 
     private void InitializeMap()
     {
@@ -111,14 +113,31 @@ public abstract partial class SharedMapSystem
         args.State = new MapComponentState(component.MapId, component.LightingEnabled, component.MapPaused, component.MapInitialized);
     }
 
-    protected abstract MapId GetNextMapId();
+    protected MapId TakeNextMapId()
+    {
+        var id = GetNextMapId();
+        LastMapId = id.Value;
+        return id;
+    }
+
+    [Pure]
+    internal abstract MapId GetNextMapId();
 
     private void OnComponentAdd(EntityUid uid, MapComponent component, ComponentAdd args)
     {
         // ordered startups when
-        EnsureComp<PhysicsMapComponent>(uid);
         EnsureComp<GridTreeComponent>(uid);
-        EnsureComp<MovedGridsComponent>(uid);
+    }
+
+    /// <summary>
+    /// Generate & reserve a map-id for a map-entity before it is actually given the component.
+    /// </summary>
+    internal MapId AllocateMapId(EntityUid ent)
+    {
+        var id = _reserved[ent] = TakeNextMapId();
+        Maps.Add(id, ent);
+        UsedIds.Add(id);
+        return id;
     }
 
     internal void AssignMapId(Entity<MapComponent> map, MapId? id = null)
@@ -141,7 +160,16 @@ public abstract partial class SharedMapSystem
             return;
         }
 
-        map.Comp.MapId = id ?? GetNextMapId();
+        if (_reserved.TryGetValue(map.Owner, out var reserved))
+        {
+            DebugTools.AssertNull(id);
+            DebugTools.AssertEqual(Maps[reserved], map.Owner);
+            DebugTools.Assert(UsedIds.Contains(reserved));
+            map.Comp.MapId = reserved;
+            return;
+        }
+
+        map.Comp.MapId = id ?? TakeNextMapId();
 
         if (IsClientSide(map) != map.Comp.MapId.IsClientSide)
             throw new Exception($"Attempting to assign a client-side map id to a networked entity or vice-versa");
@@ -211,7 +239,7 @@ public abstract partial class SharedMapSystem
     /// </summary>
     public EntityUid CreateMap(out MapId mapId, bool runMapInit = true)
     {
-        mapId = GetNextMapId();
+        mapId = TakeNextMapId();
         var uid = CreateMap(mapId, runMapInit);
         return uid;
     }
@@ -264,10 +292,22 @@ public abstract partial class SharedMapSystem
         return (uid, AddComp<MapComponent>(uid), meta);
     }
 
+    /// <summary>
+    /// Deletes a map with the specified map id.
+    /// </summary>
     public void DeleteMap(MapId mapId)
     {
         if (TryGetMap(mapId, out var uid))
             Del(uid);
+    }
+
+    /// <summary>
+    /// Deletes a map with the specified map id in the next tick.
+    /// </summary>
+    public void QueueDeleteMap(MapId mapId)
+    {
+        if (TryGetMap(mapId, out var uid))
+            QueueDel(uid);
     }
 
     public IEnumerable<MapId> GetAllMapIds()

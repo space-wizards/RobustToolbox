@@ -123,24 +123,26 @@ public abstract partial class SharedPhysicsSystem
             DebugTools.Assert(obj.Flags is ContactFlags.None or ContactFlags.Deleted);
             SetContact(obj,
                 false,
-                EntityUid.Invalid, EntityUid.Invalid,
+                new Entity<PhysicsComponent?, TransformComponent?>(EntityUid.Invalid, null, null),
+                new Entity<PhysicsComponent?, TransformComponent?>(EntityUid.Invalid, null, null),
                 string.Empty, string.Empty,
                 null, 0,
-                null, 0,
-                null, null);
+                null, 0);
             return true;
         }
     }
 
     private static void SetContact(Contact contact,
         bool enabled,
-        EntityUid uidA, EntityUid uidB,
+        Entity<PhysicsComponent?, TransformComponent?> entA,
+        Entity<PhysicsComponent?, TransformComponent?> entB,
         string fixtureAId, string fixtureBId,
         Fixture? fixtureA, int indexA,
-        Fixture? fixtureB, int indexB,
-        PhysicsComponent? bodyA,
-        PhysicsComponent? bodyB)
+        Fixture? fixtureB, int indexB)
     {
+        var uidA = entA.Owner;
+        var uidB = entB.Owner;
+
         contact.Enabled = enabled;
         contact.IsTouching = false;
         DebugTools.Assert(contact.Flags is ContactFlags.None or ContactFlags.PreInit or ContactFlags.Deleted);
@@ -155,8 +157,11 @@ public abstract partial class SharedPhysicsSystem
         contact.FixtureA = fixtureA;
         contact.FixtureB = fixtureB;
 
-        contact.BodyA = bodyA;
-        contact.BodyB = bodyB;
+        contact.BodyA = entA.Comp1;
+        contact.BodyB = entB.Comp1;
+
+        contact.XformA = entA.Comp2;
+        contact.XformB = entB.Comp2;
 
         contact.ChildIndexA = indexA;
         contact.ChildIndexB = indexB;
@@ -213,11 +218,10 @@ public abstract partial class SharedPhysicsSystem
     }
 
     private Contact CreateContact(
-        EntityUid uidA, EntityUid uidB,
+        Entity<PhysicsComponent?, TransformComponent?> entA, Entity<PhysicsComponent?, TransformComponent?> entB,
         string fixtureAId, string fixtureBId,
         Fixture fixtureA, int indexA,
-        Fixture fixtureB, int indexB,
-        PhysicsComponent bodyA, PhysicsComponent bodyB)
+        Fixture fixtureB, int indexB)
     {
         var type1 = fixtureA.Shape.ShapeType;
         var type2 = fixtureB.Shape.ShapeType;
@@ -233,11 +237,11 @@ public abstract partial class SharedPhysicsSystem
         // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
         if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
         {
-            SetContact(contact, true, uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB, bodyA, bodyB);
+            SetContact(contact, true, entA, entB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB);
         }
         else
         {
-            SetContact(contact, true, uidB, uidA, fixtureBId, fixtureAId, fixtureB, indexB, fixtureA, indexA, bodyB, bodyA);
+            SetContact(contact, true, entB, entA, fixtureBId, fixtureAId, fixtureB, indexB, fixtureA, indexA);
         }
 
         contact.Type = _registers[(int)type1, (int)type2];
@@ -249,7 +253,7 @@ public abstract partial class SharedPhysicsSystem
     /// Try to create a contact between these 2 fixtures.
     /// </summary>
     internal void AddPair(
-        EntityUid uidA, EntityUid uidB,
+        Entity<PhysicsComponent, TransformComponent> entA, Entity<PhysicsComponent, TransformComponent> entB,
         string fixtureAId, string fixtureBId,
         Fixture fixtureA, int indexA,
         Fixture fixtureB, int indexB,
@@ -259,21 +263,17 @@ public abstract partial class SharedPhysicsSystem
         // Broadphase has already done the faster check for collision mask / layers
         // so no point duplicating
 
-        // Does a contact already exist?
-        if (fixtureA.Contacts.ContainsKey(fixtureB))
-            return;
-
+        DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB));
         DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
-
-        var xformA = _xformQuery.GetComponent(uidA);
-        var xformB = _xformQuery.GetComponent(uidB);
+        var xformA = entA.Comp2;
+        var xformB = entB.Comp2;
 
         // Does a joint override collision? Is at least one body dynamic?
-        if (!ShouldCollide(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB))
+        if (!ShouldCollideSlow(entA.Owner, entB.Owner, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB))
             return;
 
         // Call the factory.
-        var contact = CreateContact(uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB, bodyA, bodyB);
+        var contact = CreateContact((entA.Owner, entA.Comp1, entA.Comp2), (entB.Owner, entB.Comp1, entB.Comp2), fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB);
         contact.Flags = flags;
 
         // Contact creation may swap fixtures.
@@ -294,18 +294,27 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(!fixB.Contacts.ContainsKey(fixA));
         fixB.Contacts.Add(fixA, contact);
         bodB.Contacts.AddLast(contact.BodyBNode);
+
+        // If it's a spawned static ent then need to wake any contacting entities.
+        // The issue is that static ents can never be awake and if it spawns on an asleep entity never gets a contact.
+        // Checking only bodyA should be okay because if bodyA is the other ent (i.e. dynamic / kinematic) then it should already be awake.
+        if (bodyA.BodyType == BodyType.Static && !bodyB.Awake)
+        {
+            WakeBody(entB.Owner, body: bodyB);
+        }
     }
 
     /// <summary>
     ///     Go through the cached broadphase movement and update contacts.
     /// </summary>
-    internal void AddPair(string fixtureAId, string fixtureBId, in FixtureProxy proxyA, in FixtureProxy proxyB)
+    internal void AddPair(string fixtureAId, string fixtureBId, in FixtureProxy proxyA, in FixtureProxy proxyB, ContactFlags flags = ContactFlags.None)
     {
-        AddPair(proxyA.Entity, proxyB.Entity,
+        AddPair((proxyA.Entity, proxyA.Body, proxyA.Xform),
+            (proxyB.Entity, proxyB.Body, proxyB.Xform),
             fixtureAId, fixtureBId,
             proxyA.Fixture, proxyA.ChildIndex,
             proxyB.Fixture, proxyB.ChildIndex,
-            proxyA.Body, proxyB.Body);
+            proxyA.Body, proxyB.Body, flags: flags);
     }
 
     internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
@@ -421,8 +430,8 @@ public abstract partial class SharedPhysicsSystem
                 continue;
             }
 
-            var xformA = _xformQuery.GetComponent(uidA);
-            var xformB = _xformQuery.GetComponent(uidB);
+            var xformA = contact.XformA!;
+            var xformB = contact.XformB!;
 
             if (xformA.MapID == MapId.Nullspace || xformB.MapID == MapId.Nullspace)
             {
@@ -435,7 +444,8 @@ public abstract partial class SharedPhysicsSystem
             {
                 // Check default filtering
                 if (!ShouldCollide(fixtureA, fixtureB) ||
-                    !ShouldCollide(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB))
+                    !ShouldCollideSlow(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB) ||
+                    !ShouldCollideJoints(uidA, uidB))
                 {
                     DestroyContact(contact);
                     continue;
@@ -518,8 +528,8 @@ public abstract partial class SharedPhysicsSystem
                     // Instead of transforming both boxes (which enlarges both aabbs), maybe just transform one box.
                     // I.e. use (matrixA * invMatrixB).TransformBox(). Or (invMatrixB * matrixA), whichever is correct.
                     // Alternatively, maybe just directly construct the relative transform matrix?
-                    var proxyAWorldAABB = _transform.GetWorldMatrix(_xformQuery.GetComponent(broadphaseA.Value), _xformQuery).TransformBox(proxyA.AABB);
-                    var proxyBWorldAABB = _transform.GetWorldMatrix(_xformQuery.GetComponent(broadphaseB.Value), _xformQuery).TransformBox(proxyB.AABB);
+                    var proxyAWorldAABB = _transform.GetWorldMatrix(XformQuery.GetComponent(broadphaseA.Value)).TransformBox(proxyA.AABB);
+                    var proxyBWorldAABB = _transform.GetWorldMatrix(XformQuery.GetComponent(broadphaseB.Value)).TransformBox(proxyB.AABB);
                     overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                 }
             }
@@ -543,7 +553,7 @@ public abstract partial class SharedPhysicsSystem
         }
 
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);
-        var worldPoints = ArrayPool<Vector2>.Shared.Rent(index);
+        var worldPoints = ArrayPool<FixedArray4<Vector2>>.Shared.Rent(index);
 
         // Update contacts all at once.
         BuildManifolds(contacts, index, status, worldPoints);
@@ -565,63 +575,69 @@ public abstract partial class SharedPhysicsSystem
                 continue;
             }
 
-            switch (status[i])
-            {
-                case ContactStatus.StartTouching:
-                {
-                    if (!contact.IsTouching) continue;
-
-                    var fixtureA = contact.FixtureA!;
-                    var fixtureB = contact.FixtureB!;
-                    var bodyA = contact.BodyA!;
-                    var bodyB = contact.BodyB!;
-                    var uidA = contact.EntityA;
-                    var uidB = contact.EntityB;
-                    var worldPoint = worldPoints[i];
-
-                    var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, worldPoint);
-                    var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, worldPoint);
-
-                    RaiseLocalEvent(uidA, ref ev1, true);
-                    RaiseLocalEvent(uidB, ref ev2, true);
-                    break;
-                }
-                case ContactStatus.Touching:
-                    break;
-                case ContactStatus.EndTouching:
-                {
-                    var fixtureA = contact.FixtureA;
-                    var fixtureB = contact.FixtureB;
-
-                    // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
-                    // then we'll just skip the EndCollide.
-                    if (fixtureA == null || fixtureB == null) continue;
-
-                    var bodyA = contact.BodyA!;
-                    var bodyB = contact.BodyB!;
-                    var uidA = contact.EntityA;
-                    var uidB = contact.EntityB;
-
-                    var ev1 = new EndCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
-                    var ev2 = new EndCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
-
-                    RaiseLocalEvent(uidA, ref ev1);
-                    RaiseLocalEvent(uidB, ref ev2);
-                    break;
-                }
-                case ContactStatus.NoContact:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            RunContactEvents(status[i], contact, worldPoints[i]);
         }
 
         ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
-        ArrayPool<Vector2>.Shared.Return(worldPoints);
+        ArrayPool<FixedArray4<Vector2>>.Shared.Return(worldPoints);
     }
 
-    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
+    internal void RunContactEvents(ContactStatus status, Contact contact, FixedArray4<Vector2> worldPoint)
+    {
+        switch (status)
+        {
+            case ContactStatus.StartTouching:
+            {
+                if (!contact.IsTouching) return;
+
+                var fixtureA = contact.FixtureA!;
+                var fixtureB = contact.FixtureB!;
+                var bodyA = contact.BodyA!;
+                var bodyB = contact.BodyB!;
+                var uidA = contact.EntityA;
+                var uidB = contact.EntityB;
+                var points = new FixedArray2<Vector2>(worldPoint._00, worldPoint._01);
+                var worldNormal = worldPoint._02;
+
+                var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, points, contact.Manifold.PointCount, worldNormal);
+                var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, points, contact.Manifold.PointCount, worldNormal);
+
+                RaiseLocalEvent(uidA, ref ev1, true);
+                RaiseLocalEvent(uidB, ref ev2, true);
+                break;
+            }
+            case ContactStatus.Touching:
+                break;
+            case ContactStatus.EndTouching:
+            {
+                var fixtureA = contact.FixtureA;
+                var fixtureB = contact.FixtureB;
+
+                // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
+                // then we'll just skip the EndCollide.
+                if (fixtureA == null || fixtureB == null) return;
+
+                var bodyA = contact.BodyA!;
+                var bodyB = contact.BodyB!;
+                var uidA = contact.EntityA;
+                var uidB = contact.EntityB;
+
+                var ev1 = new EndCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
+                var ev2 = new EndCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
+
+                RaiseLocalEvent(uidA, ref ev1);
+                RaiseLocalEvent(uidB, ref ev2);
+                break;
+            }
+            case ContactStatus.NoContact:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, FixedArray4<Vector2>[] worldPoints)
     {
         if (count == 0)
             return;
@@ -664,7 +680,7 @@ public abstract partial class SharedPhysicsSystem
 
         public Contact[] Contacts;
         public ContactStatus[] Status;
-        public Vector2[] WorldPoints;
+        public FixedArray4<Vector2>[] WorldPoints;
         public bool[] Wake;
 
         public void Execute(int index)
@@ -673,7 +689,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void UpdateContact(Contact[] contacts, int index, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
+    private void UpdateContact(Contact[] contacts, int index, ContactStatus[] status, bool[] wake, FixedArray4<Vector2>[] worldPoints)
     {
         var contact = contacts[index];
 
@@ -698,14 +714,39 @@ public abstract partial class SharedPhysicsSystem
 
         if (contactStatus == ContactStatus.StartTouching)
         {
-            worldPoints[index] = Physics.Transform.Mul(bodyATransform, contacts[index].Manifold.LocalPoint);
+            var points = new FixedArray4<Vector2>();
+            contact.GetWorldManifold(bodyATransform, bodyBTransform, out var worldNormal, points.AsSpan);
+            // Use the 3rd Vector2 as the world normal, 4th is blank.
+            points._02 = worldNormal;
+            worldPoints[index] = points;
         }
+    }
+
+    /// <summary>
+    /// Is there a joint blocking collision between these bodies.
+    /// </summary>
+    internal bool ShouldCollideJoints(Entity<JointComponent?> entA, Entity<JointComponent?> entB)
+    {
+        // Does a joint prevent collision?
+        // if one of them doesn't have jointcomp then they can't share a common joint.
+        // otherwise, only need to iterate over the joints of one component as they both store the same joint.
+        if (JointQuery.Resolve(entA.Owner, ref entA.Comp, false) && JointQuery.HasComp(entB))
+        {
+            foreach (var joint in entA.Comp.Joints.Values)
+            {
+                // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
+                if (!joint.CollideConnected && (entB.Owner == joint.BodyAUid || entB.Owner == joint.BodyBUid))
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
     ///     Used to prevent bodies from colliding; may lie depending on joints.
     /// </summary>
-    protected bool ShouldCollide(
+    internal bool ShouldCollideSlow(
         EntityUid uid,
         EntityUid other,
         PhysicsComponent body,
@@ -739,18 +780,7 @@ public abstract partial class SharedPhysicsSystem
                 return false;
         }
 
-        // Does a joint prevent collision?
-        // if one of them doesn't have jointcomp then they can't share a common joint.
-        // otherwise, only need to iterate over the joints of one component as they both store the same joint.
-        if (TryComp(uid, out JointComponent? jointComponentA) && HasComp<JointComponent>(other))
-        {
-            foreach (var joint in jointComponentA.Joints.Values)
-            {
-                // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
-                if (!joint.CollideConnected && (other == joint.BodyAUid || other == joint.BodyBUid))
-                    return false;
-            }
-        }
+        // Joints already handled before the contact pair is made.
 
         var preventCollideMessage = new PreventCollideEvent(uid, other, body, otherBody, fixture, otherFixture);
         RaiseLocalEvent(uid, ref preventCollideMessage);

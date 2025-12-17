@@ -1,0 +1,12 @@
+﻿<Project>
+  <!--
+  Disallow content from using direct references to Robust project files.
+  Content should use the .props files in Imports/ instead.
+  -->
+
+  <Target Name="_RTCheckForDirectReferences" BeforeTargets="BeforeResolveReferences">
+    <Error File="%(ProjectReference.DefiningProjectFullPath)"
+           Text="Content may not reference %(Filename) directly"
+           Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', 'RobustToolbox')) and !$([System.Text.RegularExpressions.Regex]::IsMatch('%(DefiningProjectDirectory)', 'RobustToolbox'))" />
+  </Target>
+</Project>

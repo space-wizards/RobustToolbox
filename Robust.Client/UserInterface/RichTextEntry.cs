@@ -19,6 +19,16 @@ namespace Robust.Client.UserInterface
     /// </summary>
     internal struct RichTextEntry
     {
+        public static readonly Type[] DefaultTags =
+        [
+            typeof(BoldItalicTag),
+            typeof(BoldTag),
+            typeof(BulletTag),
+            typeof(ColorTag),
+            typeof(HeadingTag),
+            typeof(ItalicTag)
+        ];
+
         private readonly Color _defaultColor;
         private readonly Type[]? _tagsAllowed;
 
@@ -41,7 +51,17 @@ namespace Robust.Client.UserInterface
 
         public readonly Dictionary<int, Control>? Controls;
 
-        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
+
+        public RichTextEntry(
+            FormattedMessage message,
+            Control parent,
+            MarkupTagManager tagManager,
+            Color? defaultColor = null) : this(message, parent, tagManager, DefaultTags, defaultColor)
+        {
+            // RichTextEntry constructor but with DefaultTags
+        }
+
+        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed, Color? defaultColor = null)
         {
             Message = message;
             Height = 0;
@@ -49,9 +69,14 @@ namespace Robust.Client.UserInterface
             LineBreaks = default;
             _defaultColor = defaultColor ?? new(200, 200, 200);
             _tagsAllowed = tagsAllowed;
-            Dictionary<int, Control>? tagControls = null;
+            Controls = GetControls(parent, tagManager);
+        }
 
+        private readonly Dictionary<int, Control>? GetControls(Control parent, MarkupTagManager tagManager)
+        {
+            Dictionary<int, Control>? tagControls = null;
             var nodeIndex = -1;
+
             foreach (var node in Message)
             {
                 nodeIndex++;
@@ -71,7 +96,7 @@ namespace Robust.Client.UserInterface
                 tagControls.Add(nodeIndex, control);
             }
 
-            Controls = tagControls;
+            return tagControls;
         }
 
         // TODO RICH TEXT
@@ -141,7 +166,7 @@ namespace Robust.Client.UserInterface
                 if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
                     continue;
 
-                control.Measure(new Vector2(Width, Height));
+                control.Measure(new Vector2(maxSizeX, Height));
 
                 var desiredSize = control.DesiredPixelSize;
                 var controlMetrics = new CharMetrics(
@@ -219,6 +244,8 @@ namespace Robust.Client.UserInterface
             var baseLine = drawBox.TopLeft + new Vector2(0, defaultFont.GetAscent(uiScale) + verticalOffset);
             var controlYAdvance = 0f;
 
+            var spaceRune = new Rune(' ');
+
             var nodeIndex = -1;
             foreach (var node in Message)
             {
@@ -232,16 +259,25 @@ namespace Robust.Client.UserInterface
 
                 foreach (var rune in text.EnumerateRunes())
                 {
+                    bool skipSpaceBaseline = false;
+
                     if (lineBreakIndex < LineBreaks.Count &&
                         LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
                         baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(font, uiScale, lineHeightScale) + controlYAdvance);
                         controlYAdvance = 0;
                         lineBreakIndex += 1;
+
+                        // The baseline calc is kind of messed up, the newline is After the space but the space is being drawn after doing the newline
+                        // Which means if this metric Ends on a space, the next metric will use the wrong baseline when it starts, for some reason ..
+                        if (rune == spaceRune)
+                            skipSpaceBaseline = true;
                     }
 
                     var advance = font.DrawChar(handle, rune, baseLine, uiScale, color);
-                    baseLine += new Vector2(advance, 0);
+
+                    if (!skipSpaceBaseline)
+                        baseLine += new Vector2(advance, 0);
 
                     globalBreakCounter += 1;
                 }
@@ -254,8 +290,13 @@ namespace Robust.Client.UserInterface
                 control.Visible = true;
 
                 var invertedScale = 1f / uiScale;
-                control.Position = new Vector2(baseLine.X * invertedScale, (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale);
                 control.Measure(new Vector2(Width, Height));
+                control.Arrange(UIBox2.FromDimensions(
+                    baseLine.X * invertedScale,
+                    (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale,
+                    control.DesiredSize.X,
+                    control.DesiredSize.Y
+                ));
                 var advanceX = control.DesiredPixelSize.X;
                 controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(font, uiScale, lineHeightScale)) * invertedScale);
                 baseLine += new Vector2(advanceX, 0);

@@ -10,9 +10,9 @@ namespace Robust.Shared.Sandboxing
         ///     Effectively equivalent to <see cref="Activator.CreateInstance(Type)"/> but safe for content use.
         /// </summary>
         /// <exception cref="SandboxArgumentException">
-        /// Thrown if <paramref name="type"/> is not defined in content.
+        ///     Thrown if <paramref name="type"/> is not defined in content.
         /// </exception>
-        /// <seealso cref="IDynamicTypeFactory.CreateInstance(System.Type)"/>
+        /// <seealso cref="IDynamicTypeFactory.CreateInstance(System.Type, bool, bool)"/>
         object CreateInstance(Type type);
     }
 

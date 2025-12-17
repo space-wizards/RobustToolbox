@@ -15,7 +15,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using Vec4 = System.Numerics.Vector4;
+using System.Runtime.Intrinsics;
 
 namespace Robust.Shared.Maths
 {
@@ -530,13 +530,13 @@ namespace Robust.Shared.Maths
         /// Returns whether two vectors are within <paramref name="percentage"/> of each other
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool CloseToPercent(Vec4 a, Vec4 b, float percentage = .00001f)
+        public static bool CloseToPercent(Vector4 a, Vector4 b, float percentage = .00001f)
         {
-            a = Vec4.Abs(a);
-            b = Vec4.Abs(b);
-            var p = new Vec4(percentage);
-            var epsilon = Vec4.Max(Vec4.Max(a, b) * p, p);
-            var delta = Vec4.Abs(a - b);
+            a = Vector4.Abs(a);
+            b = Vector4.Abs(b);
+            var p = new Vector4(percentage);
+            var epsilon = Vector4.Max(Vector4.Max(a, b) * p, p);
+            var delta = Vector4.Abs(a - b);
             return delta.X <= epsilon.X && delta.Y <= epsilon.Y && delta.Z <= epsilon.Z && delta.W <= epsilon.W;
         }
 
@@ -580,6 +580,17 @@ namespace Robust.Shared.Maths
             return Math.Abs(a - b) <= epsilon;
         }
 
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="percentage"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(Vector128<float> a, Vector128<float> b, float percentage = .00001f)
+        {
+            var epsilon = Vector128.Max(Vector128.Max(Vector128.Abs(a), Vector128.Abs(b)) * Vector128.Create(percentage),
+                Vector128.Create(percentage));
+            var result = Vector128.LessThanOrEqual(Vector128.Abs(a - b), epsilon);
+            return Vector128.EqualsAll(result.AsInt32(), Vector128<int>.AllBitsSet);
+        }
         #endregion CloseToPercent
 
         #region CloseTo

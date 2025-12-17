@@ -30,8 +30,6 @@ using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 using Direction = Robust.Shared.Maths.Direction;
-using Vector4 = Robust.Shared.Maths.Vector4;
-using SysVec4 = System.Numerics.Vector4;
 #pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Robust.Client.GameObjects
@@ -295,6 +293,16 @@ namespace Robust.Client.GameObjects
             BoundsDirty = true;
             LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
         }
+
+        /// <summary>
+        /// If false, this will prevent any of this sprite's animated layers from looping their animation.
+        /// This will set <see cref="Layer.AutoAnimated"/> whenever any layer's animation finishes.
+        /// </summary>
+        /// <remarks>
+        /// If this is false, this effectively overrides each layer's own <see cref="Layer.Loop"/>.
+        /// </remarks>
+        [DataField]
+        public bool Loop = true;
 
         /// <summary>
         /// Update this sprite component to visibly match the current state of other at the time
@@ -603,6 +611,7 @@ namespace Robust.Client.GameObjects
 
             layer.RenderingStrategy = layerDatum.RenderingStrategy ?? layer.RenderingStrategy;
             layer.Cycle = layerDatum.Cycle;
+            layer.Loop = layerDatum.Loop;
 
             layer.Color = layerDatum.Color ?? layer.Color;
             layer._rotation = layerDatum.Rotation ?? layer._rotation;
@@ -1159,6 +1168,15 @@ namespace Robust.Client.GameObjects
             /// </remarks>
             [ViewVariables] public bool Cycle;
 
+            /// <summary>
+            /// If false, this will prevent the layer's animation from looping.
+            /// This will set <see cref="AutoAnimated"/> to false once the animation finishes.
+            /// </summary>
+            /// <remarks>
+            /// This may be overriden by the parent's loop property.
+            /// </remarks>
+            [ViewVariables] public bool Loop = true;
+
             // TODO SPRITE ACCESS
             internal RSI.State? _actualState;
             [ViewVariables] public RSI.State? ActualState => _actualState;
@@ -1223,6 +1241,8 @@ namespace Robust.Client.GameObjects
                     if (_visible == value)
                         return;
                     _visible = value;
+
+                    Owner.Comp.BoundsDirty = true;
 
                     // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
                     if (_parent.Owner != EntityUid.Invalid)
@@ -1336,6 +1356,8 @@ namespace Robust.Client.GameObjects
                 DirOffset = toClone.DirOffset;
                 _autoAnimated = toClone._autoAnimated;
                 RenderingStrategy = toClone.RenderingStrategy;
+                Cycle = toClone.Cycle;
+                Loop = toClone.Loop;
                 if (toClone.CopyToShaderParameters is { } copyToShaderParameters)
                     CopyToShaderParameters = new CopyToShaderParameters(copyToShaderParameters);
             }
@@ -1663,17 +1685,25 @@ namespace Robust.Client.GameObjects
 
             internal void AdvanceFrameAnimation(RSI.State state)
             {
-                // Can't advance frames without more than 1 delay which is already checked above.
                 var delayCount = state.DelayCount;
+
                 while (AnimationTimeLeft < 0)
                 {
                     if (Reversed)
                     {
                         AnimationFrame -= 1;
 
-                        // Animation finished, do we cycle back to positive or reset.
                         if (AnimationFrame < 0)
                         {
+                            if (!Loop || !_parent.Loop)
+                            {
+                                // stop at first frame
+                                AnimationFrame = 0;
+                                AnimationTimeLeft = 0;
+                                AutoAnimated = false;
+                                return;
+                            }
+
                             if (Cycle)
                             {
                                 AnimationFrame = 1;
@@ -1691,9 +1721,17 @@ namespace Robust.Client.GameObjects
                     {
                         AnimationFrame += 1;
 
-                        // Animation finished, do we reverse or reset.
                         if (AnimationFrame >= delayCount)
                         {
+                            if (!Loop || !_parent.Loop)
+                            {
+                                // stop at last frame
+                                AnimationFrame = delayCount - 1;
+                                AnimationTimeLeft = 0;
+                                AutoAnimated = false;
+                                return;
+                            }
+
                             if (Cycle)
                             {
                                 AnimationFrame = delayCount - 2;
@@ -1711,6 +1749,7 @@ namespace Robust.Client.GameObjects
                     AnimationTimeLeft += state.GetDelay(AnimationFrame);
                 }
             }
+
         }
 
         /// <summary>
@@ -1791,76 +1830,15 @@ namespace Robust.Client.GameObjects
         [Obsolete("Use SpriteSystem.GetPrototypeTextures() instead")]
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache, out bool noRot)
         {
-            var results = new List<IDirectionalTextureProvider>();
-            noRot = false;
-
-            // TODO when moving to a non-static method in a system, pass in IComponentFactory
-            if (prototype.TryGetComponent(out IconComponent? icon))
-            {
-                var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
-                results.Add(sys.GetIcon(icon));
-                return results;
-            }
-
-            if (!prototype.Components.TryGetValue("Sprite", out _))
-            {
-                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
-                return results;
-            }
-
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
-            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
-            EntitySystem.Get<AppearanceSystem>().OnChangeData(dummy, spriteComponent);
-
-            foreach (var layer in spriteComponent.AllLayers)
-            {
-                if (!layer.Visible) continue;
-
-                if (layer.Texture != null)
-                {
-                    results.Add(layer.Texture);
-                    continue;
-                }
-
-                if (!layer.RsiState.IsValid) continue;
-
-                var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
-                if (rsi == null ||
-                    !rsi.TryGetState(layer.RsiState, out var state))
-                    continue;
-
-                results.Add(state);
-            }
-
-            noRot = spriteComponent.NoRotation;
-
-            entityManager.DeleteEntity(dummy);
-
-            if (results.Count == 0)
-                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
-
-            return results;
+            var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
+            return sys.GetPrototypeTextures(prototype, out noRot);
         }
 
         [Obsolete("Use SpriteSystem.GetPrototypeIcon() instead")]
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
-            // TODO when moving to a non-static method in a system, pass in IComponentFactory
-            if (prototype.TryGetComponent(out IconComponent? icon))
-                return sys.GetIcon(icon);
-
-            if (!prototype.Components.ContainsKey("Sprite"))
-                return sys.GetFallbackState();
-
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
-            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
-            var result = spriteComponent.Icon ?? sys.GetFallbackState();
-            entityManager.DeleteEntity(dummy);
-
-            return result;
+            return sys.GetPrototypeIcon(prototype);
         }
     }
 }

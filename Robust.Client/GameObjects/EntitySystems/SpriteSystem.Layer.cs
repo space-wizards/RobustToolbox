@@ -310,7 +310,7 @@ public sealed partial class SpriteSystem
     /// </summary>
     public void SetAsParent(Entity<SpriteComponent> sprite, int layerIndex, int childLayerIndex)
     {
-        if (!TryGetLayer(sprite.AsNullable(), layerIndex, out var layer, true) || !TryGetLayer(sprite.AsNullable(), childLayerIndex, out var childLayer, true))
+        if (layerIndex == childLayerIndex || !TryGetLayer(sprite.AsNullable(), layerIndex, out var layer, true) || !TryGetLayer(sprite.AsNullable(), childLayerIndex, out var childLayer, true))
             return;
 
         if (childLayer.ParentLayer != null)

@@ -802,6 +802,41 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     }
 
     /// <summary>
+    /// Returns true if any of the specified UI keys are open for this entity by anyone.
+    /// </summary>
+    /// <param name="entity">The entity to check.</param>
+    /// <param name="uiKeys">The UI keys to check.</param>
+    /// <returns>True if any UI is open, false otherwise.</returns>
+    [PublicAPI]
+    public bool IsUiOpen(Entity<UserInterfaceComponent?> entity, List<Enum> uiKeys)
+    {
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return false;
+
+        foreach (var key in uiKeys)
+        {
+            if (entity.Comp.Actors.TryGetValue(key, out var actors) && actors.Count > 0)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Returns true if any UI is open for this entity by anyone.
+    /// </summary>
+    /// <param name="entity">The entity to check.</param>
+    /// <returns>True if any UI is open, false otherwise.</returns>
+    [PublicAPI]
+    public bool IsAnyUiOpen(Entity<UserInterfaceComponent?> entity)
+    {
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return false;
+
+        return entity.Comp.Actors.Count > 0;
+    }
+
+    /// <summary>
     /// Raises a BUI message locally (on client or server) without networking it.
     /// </summary>
     [PublicAPI]

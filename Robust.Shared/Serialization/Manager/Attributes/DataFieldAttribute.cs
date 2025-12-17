@@ -1,8 +1,8 @@
 using System;
+#if !ROBUST_ANALYZERS_TEST
+using Robust.Shared.ViewVariables;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
-using Robust.Shared.ViewVariables;
-#if !ROBUST_ANALYZERS_TEST
 using JetBrains.Annotations;
 #endif
 

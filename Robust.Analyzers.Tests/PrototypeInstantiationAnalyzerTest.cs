@@ -9,7 +9,6 @@ namespace Robust.Analyzers.Tests;
 [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
 [TestFixture]
 [TestOf(typeof(PrototypeInstantiationAnalyzer))]
-[Ignore("guh")]
 public sealed class PrototypeInstantiationAnalyzerTest
 {
     private static Task Verifier(string code, params DiagnosticResult[] expected)

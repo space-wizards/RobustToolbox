@@ -50,6 +50,8 @@ END TEMPLATE-->
 * Added `CommandWhenUIFocused` property to `Command` keybinds, to make them not fire when a UI control is focused.
 * Startup logging now lists total memory and AVX10 intrinsics.
 * Added new `FormattedString` type that represents a plain `string` that has markup formatting.
+* Added an analyzer to detect redundant `[Prototype("foobar")]` strings.
+* Added an analyzer to detect `DirtyField()` calls with incorrect field names.
 
 ### Bugfixes
 
@@ -59,6 +61,7 @@ END TEMPLATE-->
 * Fixed `TilesEnumerator` being able to stack overflow due to the recursive implementation.
 * Fixed some typos in `EntityDeserializer` log messages.
 * Fixed WebView control resizing being fucky.
+* Fixed `DataDefinitionAnalyzer` to recognize `[MeansDataDefinition]` attributes.
 
 ### Other
 
@@ -70,6 +73,7 @@ END TEMPLATE-->
 * Removed GLFW windowing implementation.
 * `EntityQuery.Resolve` now logs more info on error.
 * Disabled some unnecessary .NET SDK source generators that slowed down build.
+* Removed kdialog/nfd file dialog implementation.
 
 ### Internal
 
@@ -79,6 +83,7 @@ END TEMPLATE-->
 * Updated `Robust.LoaderApi` and `NetSerializer` to .NET 10.
 * Fixed all the configurations in `RobustToolbox.sln`.
 * Split up `Robust.UnitTesting` into many more projects.
+* Internal warning fixes.
 
 
 ## 268.1.0

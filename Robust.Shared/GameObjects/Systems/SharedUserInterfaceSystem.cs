@@ -808,14 +808,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <param name="uiKeys">The UI keys to check.</param>
     /// <returns>True if any UI is open, false otherwise.</returns>
     [PublicAPI]
-    public bool IsUiOpen(Entity<UserInterfaceComponent?> entity, List<Enum> uiKeys)
+    public bool IsUiOpen(Entity<UserInterfaceComponent?> entity, IEnumerable<Enum> uiKeys)
     {
         if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return false;
 
         foreach (var key in uiKeys)
         {
-            if (entity.Comp.Actors.TryGetValue(key, out var actors) && actors.Count > 0)
+            if (entity.Comp.Actors.ContainsKey(key))
                 return true;
         }
 

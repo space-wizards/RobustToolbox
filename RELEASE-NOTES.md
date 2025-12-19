@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed transitive project dependencies in content triggering "no direct project reference" detection.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 269.0.1
+
+### Bugfixes
+
+* Fixed transitive project dependencies in content triggering "no direct project reference" detection.
 
 
 ## 269.0.0

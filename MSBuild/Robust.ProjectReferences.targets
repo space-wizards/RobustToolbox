@@ -7,6 +7,6 @@
   <Target Name="_RTCheckForDirectReferences" BeforeTargets="BeforeResolveReferences">
     <Error File="%(ProjectReference.DefiningProjectFullPath)"
            Text="Content may not reference %(Filename) directly"
-           Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', 'RobustToolbox')) and !$([System.Text.RegularExpressions.Regex]::IsMatch('%(DefiningProjectDirectory)', 'RobustToolbox'))" />
+           Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', 'RobustToolbox')) and !$([System.Text.RegularExpressions.Regex]::IsMatch('%(DefiningProjectFullPath)', '([Mm]icrosoft|RobustToolbox)'))" />
   </Target>
 </Project>

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed transitive project dependencies in content triggering "no direct project reference" detection.
 
 ### Other
 

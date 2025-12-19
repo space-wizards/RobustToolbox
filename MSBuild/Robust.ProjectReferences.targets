@@ -4,9 +4,14 @@
   Content should use the .props files in Imports/ instead.
   -->
 
-  <Target Name="_RTCheckForDirectReferences" BeforeTargets="BeforeResolveReferences">
+  <PropertyGroup>
+    <AllowDirectRobustReferences Condition="'$(AllowDirectRobustReferences)' != ''">false</AllowDirectRobustReferences>
+  </PropertyGroup>
+
+  <Target Name="_RTCheckForDirectReferences" BeforeTargets="BeforeResolveReferences"
+          Condition="'$(AllowDirectRobustReferences)' != 'true'">
     <Error File="%(ProjectReference.DefiningProjectFullPath)"
            Text="Content may not reference %(Filename) directly"
-           Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', 'RobustToolbox')) and !$([System.Text.RegularExpressions.Regex]::IsMatch('%(DefiningProjectDirectory)', 'RobustToolbox'))" />
+           Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', 'RobustToolbox')) and !$([System.Text.RegularExpressions.Regex]::IsMatch('%(DefiningProjectFullPath)', '([Mm]icrosoft|RobustToolbox)'))" />
   </Target>
 </Project>

@@ -8,6 +8,7 @@ namespace Robust.Shared.Timing
     /// <summary>
     ///     This holds main loop timing information and helper functions.
     /// </summary>
+    [NotContentImplementable]
     public interface IGameTiming
     {
         /// <summary>

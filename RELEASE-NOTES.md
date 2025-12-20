@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `IsUiOpen` and `IsAnyUiOpen` to `SharedUserInterfaceSystem`. (was in previous engine release, missed in changelog)
 
 ### Bugfixes
 

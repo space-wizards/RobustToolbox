@@ -19,6 +19,9 @@ public struct RStopwatch
 
     private static readonly double TicksToTimeTicks = (double)TimeSpan.TicksPerSecond / SStopwatch.Frequency;
 
+    /// <summary>
+    ///     Creates and immediately starts a new stopwatch.
+    /// </summary>
     public static RStopwatch StartNew()
     {
         RStopwatch watch = new();
@@ -26,6 +29,12 @@ public struct RStopwatch
         return watch;
     }
 
+    /// <summary>
+    ///     Starts a stopwatch if it wasn't already.
+    /// </summary>
+    /// <remarks>
+    ///     Starting the same stopwatch twice does nothing.
+    /// </remarks>
     public void Start()
     {
         if (IsRunning)
@@ -36,12 +45,21 @@ public struct RStopwatch
         IsRunning = true;
     }
 
+    /// <summary>
+    ///     Restarts the stopwatch, ensuring it is running regardless of the state it was in before.
+    /// </summary>
     public void Restart()
     {
         IsRunning = true;
         _curTicks = SStopwatch.GetTimestamp();
     }
 
+    /// <summary>
+    ///     Stops the stopwatch, freezing its count if it is running.
+    /// </summary>
+    /// <remarks>
+    ///     Does nothing if the stopwatch wasn't already running.
+    /// </remarks>
     public void Stop()
     {
         if (!IsRunning)
@@ -51,12 +69,23 @@ public struct RStopwatch
         IsRunning = false;
     }
 
+    /// <summary>
+    ///     Completely resets the stopwatch to an unstarted state with no elapsed time.
+    ///     Strictly equivalent to <c>default</c>.
+    /// </summary>
     public void Reset()
     {
         this = default;
     }
 
+    /// <summary>
+    ///     The amount of elapsed time in <see cref="SStopwatch.Frequency"/>
+    /// </summary>
     public readonly long ElapsedTicks => IsRunning ? SStopwatch.GetTimestamp() - _curTicks : _curTicks;
+
+    /// <summary>
+    ///     The amount of elapsed time, in real time.
+    /// </summary>
     public readonly TimeSpan Elapsed => new(ElapsedTimeTicks());
 
     private readonly long ElapsedTimeTicks()

@@ -184,8 +184,7 @@ namespace Robust.Client
             _loadscr.LoadingStep(() =>
                 {
                     // Finish initialization of WebView if loaded.
-                    if (_webViewHook != null)
-                        _loadscr.LoadingStep(_webViewHook.Initialize, _webViewHook);
+                    _webViewHook?.Initialize();
                 },
                 "WebView init");
 

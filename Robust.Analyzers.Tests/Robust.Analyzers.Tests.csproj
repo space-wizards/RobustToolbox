@@ -16,6 +16,7 @@
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\PreferOtherTypeAttribute.cs" LogicalName="Robust.Shared.Analyzers.PreferOtherTypeAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\ForbidLiteralAttribute.cs" LogicalName="Robust.Shared.Analyzers.ForbidLiteralAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\ObsoleteInheritanceAttribute.cs" LogicalName="Robust.Shared.Analyzers.ObsoleteInheritanceAttribute.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Analyzers\ValidateMemberAttribute.cs" LogicalName="Robust.Shared.Analyzers.ValidateMemberAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\IoC\DependencyAttribute.cs" LogicalName="Robust.Shared.IoC.DependencyAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\GameObjects\EventBusAttributes.cs" LogicalName="Robust.Shared.GameObjects.EventBusAttributes.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Serialization\NetSerializableAttribute.cs" LogicalName="Robust.Shared.Serialization.NetSerializableAttribute.cs" LinkBase="Implementations" />

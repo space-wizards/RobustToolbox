@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -107,7 +108,11 @@ namespace Robust.Shared.Reflection
 
         public void LoadAssemblies(IEnumerable<Assembly> assemblies)
         {
-            this.assemblies.AddRange(assemblies);
+            var assembliesArray = assemblies.Distinct().ToArray();
+            if (this.assemblies.Intersect(assembliesArray).Any())
+                throw new InvalidOperationException("Attempted to load the same assembly multiple times!");
+
+            this.assemblies.AddRange(assembliesArray);
             _getAllTypesCache.Clear();
             OnAssemblyAdded?.Invoke(this, new ReflectionUpdateEventArgs(this));
         }

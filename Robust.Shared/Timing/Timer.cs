@@ -6,6 +6,13 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Timing
 {
+    /// <summary>
+    ///     Non-serializable, but async friendly timers.
+    /// </summary>
+    /// <remarks>
+    ///     Using these in Space Station 14 is discouraged, it has its own idioms that are all serialization friendly.
+    /// </remarks>
+    /// <seealso cref="ITimerManager"/>
     public sealed class Timer
     {
         /// <summary>

@@ -178,7 +178,10 @@ public static class RandomExtensions
         if (allowDuplicates == false && count >= source.Count)
         {
             var arr = source.ToArray();
-            random.Shuffle(arr);
+            // Explicit type cast to IList<T> to avoid calling the Span<T> overload.
+            // We have some tests that rely on mocking of this call, and Moq doesn't support Span<T> atm.
+            // https://github.com/space-wizards/RobustToolbox/issues/6329
+            random.Shuffle((IList<T>)arr);
             return arr;
         }
 
@@ -232,7 +235,10 @@ public static class RandomExtensions
         if (allowDuplicates == false && count >= source.Length)
         {
             var arr = source.ToArray();
-            random.Shuffle(arr);
+            // Explicit type cast to IList<T> to avoid calling the Span<T> overload.
+            // We have some tests that rely on mocking of this call, and Moq doesn't support Span<T> atm.
+            // https://github.com/space-wizards/RobustToolbox/issues/6329
+            random.Shuffle((IList<T>)arr);
             return arr;
         }
 

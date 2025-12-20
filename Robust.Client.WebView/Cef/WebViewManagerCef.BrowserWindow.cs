@@ -141,7 +141,7 @@ namespace Robust.Client.WebView.Cef
             {
                 Closed = true;
                 _manager._browserWindows.Remove(this);
-                Logger.Debug("Removing window");
+                _manager._sawmill.Debug("Removing window");
             }
 
             private void CheckClosed()

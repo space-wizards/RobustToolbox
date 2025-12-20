@@ -140,6 +140,7 @@ namespace Robust.Client.UserInterface
                     disabled: session => _rendering = true));
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
+            _inputManager.CheckUIIsFocused += OnIsUIFocused;
         }
 
         public void PostInitialize()
@@ -264,6 +265,7 @@ namespace Robust.Client.UserInterface
                     RunMeasure(control);
                     if (!control.IsMeasureValid && control.IsInsideTree)
                         _sawmillUI.Warning($"Control's measure is invalid after measuring. Control: {control}. Parent: {control.Parent}.");
+                    control.InvalidateArrange();
                     total += 1;
                 }
 

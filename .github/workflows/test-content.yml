@@ -20,7 +20,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4.1.0
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       - name: Disable submodule autoupdate
         run: touch BuildChecker/DISABLE_SUBMODULE_AUTOUPDATE
 
@@ -30,6 +30,8 @@ jobs:
           git fetch origin ${{ github.sha }}
           git checkout FETCH_HEAD
           git submodule update --init --recursive
+      - name: Replace global.json
+        run: cp RobustToolbox/global.json .
       - name: Install dependencies
         run: dotnet restore
       - name: Build

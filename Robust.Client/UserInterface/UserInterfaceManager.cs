@@ -364,7 +364,7 @@ namespace Robust.Client.UserInterface
                 var clipTestBox = new UIBox2i(controlBox.Left - clipMargin, controlBox.Top - clipMargin,
                     controlBox.Right + clipMargin, controlBox.Bottom + clipMargin);
 
-                if (!scissorBox.Value.Intersects(clipTestBox))
+                if (!scissorBox.Value.Intersects(clipTestBox) && !control.AlwaysRender)
                 {
                     return;
                 }

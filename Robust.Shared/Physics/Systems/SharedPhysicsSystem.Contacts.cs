@@ -353,8 +353,8 @@ public abstract partial class SharedPhysicsSystem
         {
             var ev1 = new EndCollideEvent(aUid, bUid, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
             var ev2 = new EndCollideEvent(bUid, aUid, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
-            _endCollideEvents[_endEventIndex].Add(ev1);
-            _endCollideEvents[_endEventIndex].Add(ev2);
+            RaiseLocalEvent(aUid, ref ev1);
+            RaiseLocalEvent(bUid, ref ev2);
         }
 
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
@@ -603,9 +603,8 @@ public abstract partial class SharedPhysicsSystem
                 var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, points, contact.Manifold.PointCount, worldNormal);
                 var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, points, contact.Manifold.PointCount, worldNormal);
 
-                _startCollideEvents.Add(ev1);
-                _startCollideEvents.Add(ev2);
-
+                RaiseLocalEvent(uidA, ref ev1, true);
+                RaiseLocalEvent(uidB, ref ev2, true);
                 break;
             }
             case ContactStatus.Touching:
@@ -627,8 +626,8 @@ public abstract partial class SharedPhysicsSystem
                 var ev1 = new EndCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
                 var ev2 = new EndCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
 
-                _endCollideEvents[_endEventIndex].Add(ev1);
-                _endCollideEvents[_endEventIndex].Add(ev2);
+                RaiseLocalEvent(uidA, ref ev1);
+                RaiseLocalEvent(uidB, ref ev2);
                 break;
             }
             case ContactStatus.NoContact:

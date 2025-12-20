@@ -13,18 +13,24 @@ namespace Robust.Shared.Player;
 public interface ISharedPlayerManager
 {
     /// <summary>
-    /// list of connected sessions.
+    ///     List of all connected sessions.
     /// </summary>
+    /// <remarks>
+    ///     You should not modify the contents of this list.
+    /// </remarks>
     ICommonSession[] Sessions { get; }
 
     /// <summary>
-    /// Sessions with a remote endpoint. On the server, this is equivalent to <see cref="Sessions"/>. On the client,
-    /// this will only ever contain <see cref="LocalSession"/>
+    ///     Sessions with a remote endpoint. On the server, this is equivalent to <see cref="Sessions"/>. On the client,
+    ///     this will only ever contain <see cref="LocalSession"/>
     /// </summary>
+    /// <remarks>
+    ///     You should not modify the contents of this list.
+    /// </remarks>
     ICommonSession[] NetworkedSessions { get; }
 
     /// <summary>
-    /// Dictionary mapping connected users to their sessions.
+    ///     Dictionary mapping connected users to their sessions.
     /// </summary>
     IReadOnlyDictionary<NetUserId, ICommonSession> SessionsDict { get; }
 
@@ -39,7 +45,7 @@ public interface ISharedPlayerManager
     int MaxPlayers { get; }
 
     /// <summary>
-    /// Initializes the manager.
+    ///     Initializes the manager.
     /// </summary>
     /// <param name="maxPlayers">Maximum number of players that can connect to this server at one time. Does nothing
     /// on the client.</param>
@@ -49,79 +55,123 @@ public interface ISharedPlayerManager
     void Shutdown();
 
     /// <summary>
-    /// Indicates that some session's networked data has changed. This will cause an updated player list to be sent to
-    /// all players.
+    ///     Indicates that some session's networked data has changed. This will cause an updated player list to be sent
+    ///     to all players.
     /// </summary>
     void Dirty();
 
     /// <summary>
-    /// The session of the local player. This will be null on the server.
+    ///     The session of the local player. This will be null on the server.
     /// </summary>
     [ViewVariables] ICommonSession? LocalSession { get; }
 
     /// <summary>
-    /// The user Id of the local player. This will be null on the server.
+    ///     The user id of the local player. This will be null on the server.
     /// </summary>
     [ViewVariables] NetUserId? LocalUser { get; }
 
     /// <summary>
-    /// The entity currently controlled by the local player. This will be null on the server.
+    ///     The entity currently controlled by the local player. This will be null on the server.
     /// </summary>
     [ViewVariables] EntityUid? LocalEntity { get; }
 
     /// <summary>
-    /// This gets invoked when a session's <see cref="ICommonSession.Status"/> changes.
+    ///     This gets invoked when a session's <see cref="ICommonSession.Status"/> changes.
     /// </summary>
     event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
     /// <summary>
-    /// Attempts to resolve a username into a <see cref="NetUserId"/>.
+    ///     Attempts to resolve a username into a <see cref="NetUserId"/>.
     /// </summary>
     bool TryGetUserId(string userName, out NetUserId userId);
 
     /// <summary>
-    /// Attempts to get the session that is currently attached to a given entity.
+    ///     Attempts to get the session that is currently attached to a given entity.
     /// </summary>
     bool TryGetSessionByEntity(EntityUid uid, [NotNullWhen(true)] out ICommonSession? session);
 
     /// <summary>
-    /// Attempts to get the session with the given <see cref="NetUserId"/>.
+    ///     Attempts to get the session with the given <see cref="NetUserId"/>.
     /// </summary>
     bool TryGetSessionById([NotNullWhen(true)] NetUserId? user, [NotNullWhen(true)] out ICommonSession? session);
 
     /// <summary>
-    /// Attempts to get the session with the given <see cref="ICommonSession.Name"/>.
+    ///     Attempts to get the session with the given <see cref="ICommonSession.Name"/>.
     /// </summary>
     bool TryGetSessionByUsername(string username, [NotNullWhen(true)] out ICommonSession? session);
 
     /// <summary>
-    /// Attempts to get the session that corresponds to the given channel.
+    ///     Attempts to get the session that corresponds to the given channel.
     /// </summary>
     bool TryGetSessionByChannel(INetChannel channel, [NotNullWhen(true)] out ICommonSession? session);
 
+    /// <summary>
+    ///     Gets the session that corresponds to the given channel, throwing if it doesn't exist.
+    /// </summary>
+    /// <exception cref="KeyNotFoundException">Thrown if no such session exists.</exception>
     ICommonSession GetSessionByChannel(INetChannel channel) => GetSessionById(channel.UserId);
 
+    /// <summary>
+    ///     Gets the session that corresponds to the given user id, throwing if it doesn't exist.
+    /// </summary>
+    /// <exception cref="KeyNotFoundException">Thrown if no such session exists.</exception>
     ICommonSession GetSessionById(NetUserId user);
 
     /// <summary>
-    /// Check if the given user id has an active session.
+    ///     Check if the given user id has an active session.
     /// </summary>
     bool ValidSessionId(NetUserId user) => TryGetSessionById(user, out _);
 
+    /// <summary>
+    ///     Alternate method to get <see cref="ICommonSession.Data"/>
+    /// </summary>
     SessionData GetPlayerData(NetUserId userId);
+    /// <summary>
+    ///     Grabs a session's <see cref="ICommonSession.Data"/> if it can be found.
+    /// </summary>
+    /// <param name="userId">The user ID to get data for.</param>
+    /// <param name="data">The session data if found.</param>
+    /// <returns>Success or failure.</returns>
     bool TryGetPlayerData(NetUserId userId, [NotNullWhen(true)] out SessionData? data);
+    /// <summary>
+    ///     Grabs a session's <see cref="ICommonSession.Data"/> if it can be found.
+    /// </summary>
+    /// <param name="userName">The username to get data for.</param>
+    /// <param name="data">The session data if found.</param>
+    /// <returns>Success or failure.</returns>
     bool TryGetPlayerDataByUsername(string userName, [NotNullWhen(true)] out SessionData? data);
+    /// <summary>
+    ///     Checks if a given user has any <see cref="ICommonSession.Data"/>.
+    /// </summary>
     bool HasPlayerData(NetUserId userId);
 
+    /// <summary>
+    ///     Returns all <see cref="ICommonSession.Data">session data</see>.
+    /// </summary>
+    /// <returns></returns>
     IEnumerable<SessionData> GetAllPlayerData();
     void GetPlayerStates(GameTick fromTick, List<SessionState> states);
     void UpdateState(ICommonSession commonSession);
 
+    /// <inheritdoc cref="RemoveSession(Robust.Shared.Player.ICommonSession,bool)"/>
     void RemoveSession(ICommonSession session, bool removeData = false);
+    /// <summary>
+    ///     Completely destroys a session, optionally also removing its data.
+    /// </summary>
     void RemoveSession(NetUserId user, bool removeData = false);
 
+    /// <summary>
+    ///     Creates a session from a network channel.
+    /// </summary>
     ICommonSession CreateAndAddSession(INetChannel channel);
 
+    /// <summary>
+    ///     Creates a new session, without a network channel attached.
+    /// </summary>
+    /// <remarks>
+    ///     This should be used carefully, games tend to expect a network channel to be present unless they're client
+    ///     side. This is for example used to create a session for singleplayer clients.
+    /// </remarks>
     ICommonSession CreateAndAddSession(NetUserId user, string name);
 
     /// <summary>

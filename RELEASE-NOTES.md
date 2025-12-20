@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added `IsUiOpen` and `IsAnyUiOpen` to `SharedUserInterfaceSystem`. (was in previous engine release, missed in changelog)
+* Added `game.time_scale` CVar.
 
 ### Bugfixes
 

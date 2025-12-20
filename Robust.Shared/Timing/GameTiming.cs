@@ -137,6 +137,8 @@ namespace Robust.Shared.Timing
             set => SetTickRateAt(value, CurTick);
         }
 
+        public float TimeScale { get; set; }
+
         /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.
         /// </summary>
@@ -156,13 +158,15 @@ namespace Robust.Shared.Timing
             }
         }
 
+        public TimeSpan TickRemainderRealtime => TickRemainder * TimeScale;
+
         public TimeSpan CalcAdjustedTickPeriod()
         {
             // ranges from -1 to 1, with 0 being 'default'
             var ratio = MathHelper.Clamp(TickTimingAdjustment, -0.99f, 0.99f);
 
             // Final period ranges from near 0 (runs very fast to catch up) or 2 * tick period (runs at half speed).
-            return TickPeriod * (1-ratio);
+            return TickPeriod * (1-ratio) * TimeScale;
         }
 
         /// <summary>
@@ -301,6 +305,11 @@ namespace Robust.Shared.Timing
 
             var variance = devSquared / (count - 1);
             return TimeSpan.FromTicks((long)Math.Sqrt(variance));
+        }
+
+        internal static bool IsTimescaleValid(float scale)
+        {
+            return scale > 0 && float.IsNormal(scale) && float.IsFinite(scale);
         }
     }
 }

@@ -137,7 +137,7 @@ namespace Robust.Shared.Timing
             set => SetTickRateAt(value, CurTick);
         }
 
-        public float TimeScale { get; set; }
+        public float TimeScale { get; set; } = 1;
 
         /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.

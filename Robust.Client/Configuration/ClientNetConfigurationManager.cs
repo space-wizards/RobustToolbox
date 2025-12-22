@@ -140,7 +140,7 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
     /// <inheritdoc />
     public override T GetClientCVar<T>(INetChannel channel, string name) => GetCVar<T>(name);
 
-    public override void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged, Action<ICommonSession>? onDisconnect)
+    public override void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged)
     {
         if (_player.LocalSession is not { } localSession)
         {
@@ -151,7 +151,7 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
         OnValueChanged<T>(name, (x) => onChanged(x, localSession), true);
     }
 
-    public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged, Action<ICommonSession>? onDisconnect)
+    public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged)
     {
         if (_player.LocalSession is not { } localSession)
         {

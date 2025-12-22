@@ -30,14 +30,12 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
         base.SetupNetworking();
         NetManager.Connected += PeerConnected;
         NetManager.Disconnect += PeerDisconnected;
-        _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
 
-        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
 
         _replicatedCVars.Clear();
         _replicatedInvokes.Clear();
@@ -51,27 +49,6 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     private void PeerDisconnected(object? sender, NetDisconnectedArgs e)
     {
         _replicatedCVars.Remove(e.Channel);
-    }
-
-    private void OnPlayerStatusChanged(object? _, SessionStatusEventArgs args)
-    {
-        if (args.NewStatus != SessionStatus.Disconnected)
-            return;
-
-        foreach (var (_, cVarInvoke) in _replicatedInvokes)
-        {
-            foreach (var entry in cVarInvoke.DisconnectDelegate.Entries)
-            {
-                try
-                {
-                    entry.Value!.Invoke(args.Session);
-                }
-                catch (Exception e)
-                {
-                    Sawmill.Error($"Error while running {nameof(DisconnectDelegate)} for replicated CVars callback: {e}");
-                }
-            }
-        }
     }
 
     /// <inheritdoc />
@@ -203,7 +180,7 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     }
 
     /// <inheritdoc />
-    public override void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged, Action<ICommonSession>? onDisconnect)
+    public override void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged)
     {
         if (!_configVars.TryGetValue(name, out var cVar))
         {
@@ -213,7 +190,7 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
 
         if (!cVar.Flags.HasFlag(CVar.REPLICATED) || !cVar.Flags.HasFlag(CVar.CLIENT))
         {
-            Sawmill.Error($"Tried to subscribe client cvar '{name}' without flags CLIENT | REPLICATED");
+            Sawmill.Error($"Tried to subscribe server to client cvar '{name}' but cvar don't have flags CLIENT | REPLICATED");
             return;
         }
 
@@ -230,16 +207,11 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
             {
                 cVarInvokes.ClientChangeInvoke.AddInPlace((object value, ICommonSession session, in CVarChangeInfo _) => onValueChanged((T)value, session), onValueChanged);
             }
-
-            if (onDisconnect is null)
-                return;
-
-            cVarInvokes.DisconnectDelegate.AddInPlace(session => onDisconnect(session), onDisconnect);
         }
     }
 
     /// <inheritdoc />
-    public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged, Action<ICommonSession>? onDisconnect)
+    public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged)
     {
         if (!_configVars.TryGetValue(name, out var cVar))
         {
@@ -262,11 +234,6 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
             }
 
             cVarInvokes.ClientChangeInvoke.RemoveInPlace(onValueChanged);
-
-            if (onDisconnect is null)
-                return;
-
-            cVarInvokes.DisconnectDelegate.RemoveInPlace(onDisconnect);
         }
     }
 
@@ -275,6 +242,5 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     private sealed class ReplicatedCVarInvokes
     {
         public InvokeList<ClientValueChangedDelegate> ClientChangeInvoke = new();
-        public InvokeList<DisconnectDelegate> DisconnectDelegate = new();
     }
 }

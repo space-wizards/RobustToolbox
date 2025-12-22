@@ -11,7 +11,6 @@ namespace Robust.Client.Replays.Commands;
 public abstract class BaseReplayCommand : LocalizedCommands
 {
     [Dependency] protected readonly IReplayPlaybackManager PlaybackManager = default!;
-    protected ILocalizationManager Loc => LocalizationManager;
 
     public override string Description => Loc.GetString($"cmd-{Command.Replace('_','-')}-desc");
 

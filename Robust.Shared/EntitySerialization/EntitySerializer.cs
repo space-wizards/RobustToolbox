@@ -38,7 +38,8 @@ namespace Robust.Shared.EntitySerialization;
 /// </remarks>
 public sealed class EntitySerializer : ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
-    ITypeSerializer<NetEntity, ValueDataNode>
+    ITypeSerializer<NetEntity, ValueDataNode>,
+    ITypeSerializer<MapId, ValueDataNode>
 {
     public const int MapFormatVersion = 7;
     // v6->v7: PR #5572 - Added more metadata, List maps/grids/orphans, include some life-stage information
@@ -56,11 +57,12 @@ public sealed class EntitySerializer : ISerializationContext,
     [Dependency] private readonly ITileDefinitionManager _tileDef = default!;
     [Dependency] private readonly IConfigurationManager _conf = default!;
     [Dependency] private readonly ILogManager _logMan = default!;
+    [Dependency] private readonly SharedMapSystem _map = default!;
 
     private readonly ISawmill _log;
     public readonly Dictionary<EntityUid, int> YamlUidMap = new();
     public readonly HashSet<int> YamlIds = new();
-
+    public readonly ValueDataNode InvalidNode = new("invalid");
 
     public string? CurrentComponent { get; private set; }
     public Entity<MetaDataComponent>? CurrentEntity { get; private set; }
@@ -221,6 +223,7 @@ public sealed class EntitySerializer : ISerializationContext,
     /// setting of <see cref="SerializationOptions.MissingEntityBehaviour"/> it may auto-include additional entities
     /// aside from the one provided.
     /// </summary>
+    /// <param name="entities">The set of entities to serialize</param>
     public void SerializeEntities(HashSet<EntityUid> entities)
     {
         foreach (var uid in entities)
@@ -250,6 +253,42 @@ public sealed class EntitySerializer : ISerializationContext,
         ReserveYamlIds(entities);
         SerializeEntitiesInternal(entities);
         Truncate = EntityUid.Invalid;
+    }
+
+    /// <summary>
+    /// Serializes several entities and all of their children. Note that this will not automatically serialize the
+    /// entity's parents.
+    /// </summary>
+    public void SerializeEntityRecursive(HashSet<EntityUid> roots)
+    {
+        if (roots.Count == 0)
+            return;
+
+        InitializeTileMap(roots.First());
+
+        HashSet<EntityUid> allEntities = new();
+        List<(EntityUid Root, HashSet<EntityUid> Children)> entities = new();
+
+        foreach(var root in roots)
+        {
+            if (!IsSerializable(root))
+                throw new Exception($"{EntMan.ToPrettyString(root)} is not serializable");
+
+            var ents = new HashSet<EntityUid>();
+            RecursivelyIncludeChildren(root, ents);
+            entities.Add((root, ents));
+            allEntities.UnionWith(ents);
+        }
+
+        ReserveYamlIds(allEntities);
+
+        foreach (var (root, children) in entities)
+        {
+            Truncate = _xformQuery.GetComponent(root).ParentUid;
+            Truncated.Add(Truncate);
+            SerializeEntitiesInternal(children);
+            Truncate = EntityUid.Invalid;
+        }
     }
 
     #endregion
@@ -292,7 +331,12 @@ public sealed class EntitySerializer : ISerializationContext,
             return true;
         }
 
-        // iterate over all of its children and grab the first grid with a mapping
+        map = null;
+
+        // if this is a map, iterate over all of its children and grab the first grid with a mapping
+        if (!_mapQuery.HasComponent(root))
+            return false;
+
         var xform = _xformQuery.GetComponent(root);
         foreach (var child in xform._children)
         {
@@ -302,7 +346,6 @@ public sealed class EntitySerializer : ISerializationContext,
             return true;
         }
 
-        map = null;
         return false;
     }
 
@@ -939,11 +982,10 @@ public sealed class EntitySerializer : ISerializationContext,
         if (YamlUidMap.TryGetValue(value, out var yamlId))
             return new ValueDataNode(yamlId.ToString(CultureInfo.InvariantCulture));
 
-
         if (CurrentComponent == _xformName)
         {
             if (value == EntityUid.Invalid)
-                return new ValueDataNode("invalid");
+                return InvalidNode;
 
             DebugTools.Assert(!Orphans.Contains(CurrentEntityYamlUid));
             Orphans.Add(CurrentEntityYamlUid);
@@ -951,13 +993,13 @@ public sealed class EntitySerializer : ISerializationContext,
             if (Options.ErrorOnOrphan && CurrentEntity != null && value != Truncate && !ErroringEntities.Contains(value))
                 _log.Error($"Serializing entity {EntMan.ToPrettyString(CurrentEntity)} without including its parent {EntMan.ToPrettyString(value)}");
 
-            return new ValueDataNode("invalid");
+            return InvalidNode;
         }
 
         if (ErroringEntities.Contains(value))
         {
             // Referenced entity already logged an error, so we just silently fail.
-            return new ValueDataNode("invalid");
+            return InvalidNode;
         }
 
         if (value == EntityUid.Invalid)
@@ -965,7 +1007,7 @@ public sealed class EntitySerializer : ISerializationContext,
             if (Options.MissingEntityBehaviour != MissingEntityBehaviour.Ignore)
                 _log.Error($"Encountered an invalid entityUid reference.");
 
-            return new ValueDataNode("invalid");
+            return InvalidNode;
         }
 
         if (value == Truncate)
@@ -980,9 +1022,9 @@ public sealed class EntitySerializer : ISerializationContext,
                 _log.Error(EntMan.Deleted(value)
                     ? $"Encountered a reference to a deleted entity {value} while serializing {EntMan.ToPrettyString(CurrentEntity)}."
                     : $"Encountered a reference to a missing entity: {value} while serializing {EntMan.ToPrettyString(CurrentEntity)}.");
-                return new ValueDataNode("invalid");
+                return InvalidNode;
             case MissingEntityBehaviour.Ignore:
-                return new ValueDataNode("invalid");
+                return InvalidNode;
             case MissingEntityBehaviour.IncludeNullspace:
                 if (!EntMan.TryGetComponent(value, out TransformComponent? xform)
                     || xform.ParentUid != EntityUid.Invalid
@@ -1050,6 +1092,42 @@ public sealed class EntitySerializer : ISerializationContext,
     {
         var uid = EntMan.GetEntity(value);
         return serializationManager.WriteValue(uid, alwaysWrite, context);
+    }
+
+    ValidationNode ITypeValidator<MapId, ValueDataNode>.Validate(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        ISerializationContext? context)
+    {
+        return seri.ValidateNode<EntityUid>(node, context);
+    }
+
+    MapId ITypeReader<MapId, ValueDataNode>.Read(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        SerializationHookContext hookCtx,
+        ISerializationContext? ctx,
+        ISerializationManager.InstantiationDelegate<MapId>? instanceProvider)
+    {
+        return EntMan.TryGetComponent(seri.Read<EntityUid>(node, ctx), out MapComponent? mapComp)
+            ? mapComp.MapId
+            : MapId.Nullspace;
+    }
+
+    DataNode ITypeWriter<MapId>.Write(
+        ISerializationManager seri,
+        MapId value,
+        IDependencyCollection deps,
+        bool alwaysWrite,
+        ISerializationContext? ctx)
+    {
+        if (_map.TryGetMap(value, out var uid))
+            return seri.WriteValue(uid, alwaysWrite, ctx);
+
+        _log.Error($"Attempted to serialize invalid map id {value} while serializing component '{CurrentComponent}' on entity '{EntMan.ToPrettyString(uid)}'");
+        return new ValueDataNode("invalid");
     }
 
     #endregion

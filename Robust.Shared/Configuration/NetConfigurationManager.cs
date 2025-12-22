@@ -11,6 +11,8 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
 {
+    public delegate void ClientCVarChanged<in T>(ICommonSession session, T newValue, in CVarChangeInfo info);
+
     /// <summary>
     /// A networked configuration manager that controls the replication of
     /// console variables between client and server.
@@ -61,7 +63,7 @@ namespace Robust.Shared.Configuration
          => GetClientCVar<T>(channel, definition.Name);
 
         /// <summary>
-        /// Listen for an event for if the config value changes on client changes. Does nothing on client side
+        /// Listen for an event for if the config value changes on client changes
         /// </summary>
         /// <typeparam name="T">CVar type.</typeparam>
         /// <param name="name">Name of the CVar.</param>
@@ -69,13 +71,20 @@ namespace Robust.Shared.Configuration
         void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged) where T : notnull;
 
         /// <summary>
-        /// Listen for an event for if the config value changes on client changes. Does nothing on client side
+        /// Listen for an event for if the config value changes on client changes
         /// </summary>
         /// <typeparam name="T">CVar type.</typeparam>
         /// <param name="definition">The CVar.</param>
         /// <param name="onChanged">The delegate to run when the cvar was changed.</param>
         void OnClientCVarChanges<T>(CVarDef<T> definition, Action<T, ICommonSession> onChanged) where T : notnull
          => OnClientCVarChanges(definition.Name, onChanged);
+
+        /// <inheritdoc cref="OnClientCVarChanges"/>
+        void OnClientCVarChanges<T>(string name, ClientCVarChanged<T> onChanged) where T : notnull;
+
+        /// <inheritdoc cref="OnClientCVarChanges"/>
+        void OnClientCVarChanges<T>(CVarDef<T> definition, ClientCVarChanged<T> onChanged) where T : notnull
+        => OnClientCVarChanges(definition.Name, onChanged);
 
         /// <summary>
         /// Unsubscribe an event previously registered with <see cref="OnClientCVarChanges{T}(string,System.Action{T})"/>.
@@ -94,6 +103,12 @@ namespace Robust.Shared.Configuration
         void UnsubClientCVarChanges<T>(CVarDef<T> definition, Action<T, ICommonSession> onChanged) where T : notnull
          => UnsubClientCVarChanges(definition.Name, onChanged);
 
+        /// <inheritdoc cref="UnsubClientCVarChanges"/>
+        void UnsubClientCVarChanges<T>(string name, ClientCVarChanged<T> onChanged) where T : notnull;
+
+        /// <inheritdoc cref="UnsubClientCVarChanges"/>
+        void UnsubClientCVarChanges<T>(CVarDef<T> definition, ClientCVarChanged<T> onChanged) where T : notnull
+         => UnsubClientCVarChanges(definition.Name, onChanged);
     }
 
     internal interface INetConfigurationManagerInternal : INetConfigurationManager, IConfigurationManagerInternal
@@ -238,7 +253,9 @@ namespace Robust.Shared.Configuration
         public abstract T GetClientCVar<T>(INetChannel channel, string name);
 
         public abstract void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged) where T : notnull;
+        public abstract void OnClientCVarChanges<T>(string name, ClientCVarChanged<T> onChanged) where T : notnull;
 
         public abstract void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged) where T : notnull;
+        public abstract void UnsubClientCVarChanges<T>(string name, ClientCVarChanged<T> onChanged) where T : notnull;
     }
 }

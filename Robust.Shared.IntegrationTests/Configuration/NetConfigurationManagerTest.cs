@@ -72,7 +72,7 @@ internal sealed class NetConfigurationManagerTest : RobustIntegrationTest
         // actually subscribe
         server.Post(() =>
         {
-            serverNetConfiguration.OnClientCVarChanges<int>(CVarName, ClientValueChanged, null);
+            serverNetConfiguration.OnClientCVarChanges<int>(CVarName, ClientValueChanged);
         });
 
         // set new value in client
@@ -99,7 +99,7 @@ internal sealed class NetConfigurationManagerTest : RobustIntegrationTest
         // unsubscribe
         server.Post(() =>
         {
-            serverNetConfiguration.UnsubClientCVarChanges<int>(CVarName, ClientValueChanged, null);
+            serverNetConfiguration.UnsubClientCVarChanges<int>(CVarName, ClientValueChanged);
         });
 
         // set new value in client
@@ -121,96 +121,6 @@ internal sealed class NetConfigurationManagerTest : RobustIntegrationTest
             Assert.That(timesRan, Is.EqualTo(1));
             Assert.That(SubscribeValue, Is.EqualTo(NewValue));
         });
-
-        // now check how disconnect subscribe works
-        ICommonSession? disconnectSession = null;
-        var disconnectTimesRun = 0;
-        void OnDisconnect(ICommonSession session)
-        {
-            disconnectSession = session;
-            disconnectTimesRun++;
-        }
-
-        server.Post(() =>
-        {
-            serverNetConfiguration.OnClientCVarChanges<int>(CVarName, ClientValueChanged, OnDisconnect);
-        });
-
-        // change value in client
-        client.Post(() =>
-        {
-            clientNetConfiguration.SetCVar(CVarName, DefaultValue);
-        });
-
-        await RunTicks(server, client);
-
-        // disconnect event don't fire on changing CVar
-        Assert.Multiple(() =>
-        {
-            Assert.That(disconnectTimesRun, Is.EqualTo(0));
-            Assert.That(disconnectSession, Is.EqualTo(null));
-        });
-
-        // disconnect
-        await client.WaitPost(() => client.Resolve<IClientNetManager>().ClientDisconnect(""));
-
-        await RunTicks(server, client);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(disconnectTimesRun, Is.EqualTo(1));
-            Assert.That(disconnectSession, Is.EqualTo(session));
-        });
-
-        // reset for proper handling assertions and prevent colliding with new session
-        disconnectSession = null;
-        // again connect client
-        Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-        await client.WaitPost(() =>
-        {
-            client.Resolve<IClientNetManager>().ClientConnect(null!, 0, null!);
-        });
-
-        await RunTicks(server, client);
-        session = server.PlayerMan.Sessions.First();
-
-        // also check if somehow disconnectSession not null and have a strange session
-        Assert.Multiple(() =>
-        {
-            Assert.That(disconnectTimesRun, Is.EqualTo(1));
-            Assert.That(disconnectSession, Is.EqualTo(null));
-            Assert.That(disconnectSession, Is.Not.EqualTo(session));
-        });
-
-        // now unsubscribe
-        server.Post(() =>
-        {
-            serverNetConfiguration.UnsubClientCVarChanges<int>(CVarName, ClientValueChanged, OnDisconnect);
-        });
-
-        await RunTicks(server, client);
-
-        // for current logic this shouldn't fire disconnect event.
-        Assert.Multiple(() =>
-        {
-            Assert.That(disconnectTimesRun, Is.EqualTo(1));
-            Assert.That(disconnectSession, Is.EqualTo(null));
-            Assert.That(disconnectSession, Is.Not.EqualTo(session));
-        });
-
-        // disconnect
-        await client.WaitPost(() => client.Resolve<IClientNetManager>().ClientDisconnect(""));
-
-        await RunTicks(server, client);
-
-        // assert that unsubscribed event wasn't fired
-        Assert.Multiple(() =>
-        {
-            Assert.That(disconnectTimesRun, Is.EqualTo(1));
-            Assert.That(disconnectSession, Is.EqualTo(null));
-            Assert.That(disconnectSession, Is.Not.EqualTo(session));
-        });
-
     }
 
     [Test]
@@ -233,17 +143,11 @@ internal sealed class NetConfigurationManagerTest : RobustIntegrationTest
             clientValues[session] = value;
         }
 
-        HashSet<ICommonSession> eventDisconnectedSessions = [];
-        void OnDisconnect(ICommonSession session)
-        {
-            eventDisconnectedSessions.Add(session);
-        }
-
         // setup debug CVar
         server.Post(() =>
         {
             server.Resolve<INetConfigurationManager>().RegisterCVar(CVarName, DefaultValue, CVarFlags);
-            server.Resolve<INetConfigurationManager>().OnClientCVarChanges<int>(CVarName, ClientValueChanged, OnDisconnect);
+            server.Resolve<INetConfigurationManager>().OnClientCVarChanges<int>(CVarName, ClientValueChanged);
 
         });
 
@@ -278,10 +182,10 @@ internal sealed class NetConfigurationManagerTest : RobustIntegrationTest
         // server invoke subscribed events of replicated CVar on client connect
         Assert.Multiple(() =>
         {
-            Assert.That(eventSessions.Count, Is.EqualTo(ClientAmount));
-            Assert.That(clientValues.Count, Is.EqualTo(ClientAmount));
+            Assert.That(eventSessions, Has.Count.EqualTo(ClientAmount));
+            Assert.That(clientValues, Has.Count.EqualTo(ClientAmount));
 
-            Assert.That(clientValues.Values.Distinct().Count, Is.EqualTo(1));
+            Assert.That(clientValues.Values.Distinct().Count(), Is.EqualTo(1));
             Assert.That(clientValues.Values.Distinct().First(), Is.EqualTo(DefaultValue));
         });
 
@@ -305,8 +209,7 @@ internal sealed class NetConfigurationManagerTest : RobustIntegrationTest
         Assert.Multiple(() =>
         {
             // session events worked correctly (reminder: last one haven't changed it CVar)
-            Assert.That(eventSessions.Count, Is.EqualTo(ClientAmount - 1));
-            Assert.That(eventDisconnectedSessions.Count, Is.EqualTo(0));
+            Assert.That(eventSessions, Has.Count.EqualTo(ClientAmount - 1));
 
             for (int i = 0; i < ClientAmount - 1; i++)
             {
@@ -320,24 +223,8 @@ internal sealed class NetConfigurationManagerTest : RobustIntegrationTest
             }
 
             var lastSession = clientSessions[ClientAmount - 1];
-            Assert.That(clientValues.ContainsKey(lastSession), Is.EqualTo(false));
+            Assert.That(clientValues.ContainsKey(lastSession), Is.False);
         });
-
-        for (int i = 0; i < ClientAmount; i++)
-        {
-            var client = clients[i];
-
-            await client.WaitPost(() => client.Resolve<IClientNetManager>().ClientDisconnect(""));
-
-            await RunTicks(server, client);
-
-            // assert that every disconnect result in event raising
-            Assert.That(eventDisconnectedSessions.Count, Is.EqualTo(i + 1));
-        }
-
-        // we received same sessions EXCEPT last one
-        Assert.That(eventDisconnectedSessions.Except(eventSessions), Is.EqualTo(new HashSet<ICommonSession> { clientSessions[ClientAmount - 1] }));
-        Assert.That(clientSessions, Is.EqualTo(eventDisconnectedSessions));
     }
 
     private async Task RunTicks(IntegrationInstance server, IntegrationInstance client, int numberOfTicks = 5)

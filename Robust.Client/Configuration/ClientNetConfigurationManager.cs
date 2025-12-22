@@ -151,6 +151,19 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
         OnValueChanged<T>(name, (x) => onChanged(x, localSession), true);
     }
 
+    /// <inheritdoc />
+    public override void OnClientCVarChanges<T>(string name, ClientCVarChanged<T> onChanged)
+    {
+        if (_player.LocalSession is not { } localSession)
+        {
+            Sawmill.Error("Got null local session for client!");
+            return;
+        }
+
+        OnValueChanged<T>(name, (T newValue, in CVarChangeInfo info) => onChanged(localSession, newValue, in info), true);
+    }
+
+    /// <inheritdoc />
     public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged)
     {
         if (_player.LocalSession is not { } localSession)
@@ -162,4 +175,15 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
         UnsubValueChanged<T>(name, (x) => onChanged(x, localSession));
     }
 
+    /// <inheritdoc />
+    public override void UnsubClientCVarChanges<T>(string name, ClientCVarChanged<T> onChanged)
+    {
+        if (_player.LocalSession is not { } localSession)
+        {
+            Sawmill.Error("Got null local session for client!");
+            return;
+        }
+
+        UnsubValueChanged<T>(name, (T newValue, in CVarChangeInfo info) => onChanged(localSession, newValue, in info));
+    }
 }

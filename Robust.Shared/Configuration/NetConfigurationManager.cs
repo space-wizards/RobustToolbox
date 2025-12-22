@@ -15,6 +15,7 @@ namespace Robust.Shared.Configuration
     /// A networked configuration manager that controls the replication of
     /// console variables between client and server.
     /// </summary>
+    [NotContentImplementable]
     public interface INetConfigurationManager : IConfigurationManager
     {
         /// <summary>

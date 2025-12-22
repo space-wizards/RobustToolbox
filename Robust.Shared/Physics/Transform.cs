@@ -24,6 +24,7 @@ using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -78,6 +79,23 @@ namespace Robust.Shared.Physics
             float y = (transform.Quaternion2D.S * vector.X + transform.Quaternion2D.C * vector.Y) + transform.Position.Y;
 
             return new Vector2(x, y);
+        }
+
+        // Simd version of Mul
+        // I wanted to put this in SimdHelpers, but ran into some Robust.Math project reference issues.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        internal static void MulSimd(
+            in Transform transform,
+            Vector128<float> x,
+            Vector128<float> y,
+            out Vector128<float> xOut,
+            out Vector128<float> yOut)
+        {
+            var cos = Vector128.Create(transform.Quaternion2D.C);
+            var sin = Vector128.Create(transform.Quaternion2D.S);
+            xOut = cos * x - sin * y + Vector128.Create(transform.Position.X);
+            yOut = sin * x + cos * y + Vector128.Create(transform.Position.Y);
         }
 
         [Pure]

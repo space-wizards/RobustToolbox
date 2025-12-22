@@ -1,0 +1,144 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="DebugOpt" />
+    <BuildType Name="Release" />
+    <BuildType Name="Tools" />
+  </Configurations>
+  <Folder Name="/.github/" />
+  <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/benchmarks.yml" />
+    <File Path=".github/workflows/build-all-configurations.yml" />
+    <File Path=".github/workflows/build-docfx.yml" />
+    <File Path=".github/workflows/build-test.yml" />
+    <File Path=".github/workflows/codeql-analysis.yml" />
+    <File Path=".github/workflows/publish-client.yml" />
+    <File Path=".github/workflows/test-content.yml" />
+  </Folder>
+  <Folder Name="/cefglue/">
+    <Project Path="cefglue/CefGlue/CefGlue.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+      <Properties Name="RobustToolbox">
+        <Property Name="Feature" Value="WebView" />
+      </Properties>
+    </Project>
+  </Folder>
+  <Folder Name="/Imports/">
+    <File Path="Imports/Benchmarks.props" />
+    <File Path="Imports/Client.props" />
+    <File Path="Imports/Lidgren.props" />
+    <File Path="Imports/Packaging.props" />
+    <File Path="Imports/Server.props" />
+    <File Path="Imports/Shared.props" />
+    <File Path="Imports/Testing.props" />
+    <File Path="Imports/WebView.props" />
+  </Folder>
+  <Folder Name="/MSBuild/">
+    <File Path="MSBuild/Robust.Analyzers.targets" />
+    <File Path="MSBuild/Robust.CompNetworkGenerator.targets" />
+    <File Path="MSBuild/Robust.Configurations.props" />
+    <File Path="MSBuild/Robust.DefineConstants.targets" />
+    <File Path="MSBuild/Robust.Engine.props" />
+    <File Path="MSBuild/Robust.Engine.targets" />
+    <File Path="MSBuild/Robust.Engine.Version.props" />
+    <File Path="MSBuild/Robust.Platform.props" />
+    <File Path="MSBuild/Robust.ProjectReferences.targets" />
+    <File Path="MSBuild/Robust.Properties.targets" />
+    <File Path="MSBuild/Robust.Trimming.targets" />
+    <File Path="MSBuild/XamlIL.targets" />
+  </Folder>
+  <Folder Name="/NetSerializer/">
+    <Project Path="NetSerializer/NetSerializer/NetSerializer.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+    </Project>
+  </Folder>
+  <Folder Name="/Project Files/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+    <File Path="RELEASE-NOTES.md" />
+  </Folder>
+  <Folder Name="/Robust.LoaderApi/">
+    <Project Path="Robust.LoaderApi/Robust.LoaderApi/Robust.LoaderApi.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+    </Project>
+  </Folder>
+  <Folder Name="/Roslyn/">
+    <Project Path="Robust.Analyzers.Tests/Robust.Analyzers.Tests.csproj" />
+    <Project Path="Robust.Analyzers/Robust.Analyzers.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+    </Project>
+    <Project Path="Robust.Client.NameGenerator/Robust.Client.NameGenerator.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+    </Project>
+    <Project Path="Robust.Serialization.Generator/Robust.Serialization.Generator.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+    </Project>
+    <Project Path="Robust.Shared.CompNetworkGenerator/Robust.Shared.CompNetworkGenerator.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+    </Project>
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="Tools/Robust.SolutionGen/Robust.SolutionGen.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+    </Project>
+  </Folder>
+  <Folder Name="/XamlX/">
+    <Project Path="XamlX/src/XamlX.IL.Cecil/XamlX.IL.Cecil.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+    </Project>
+    <Project Path="XamlX/src/XamlX.Runtime/XamlX.Runtime.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+    </Project>
+    <Project Path="XamlX/src/XamlX/XamlX.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+    </Project>
+  </Folder>
+  <Project Path="Avalonia.Base/Avalonia.Base.csproj">
+    <BuildType Solution="DebugOpt|*" Project="Debug" />
+    <BuildType Solution="Tools|*" Project="Release" />
+  </Project>
+  <Project Path="Lidgren.Network/Lidgren.Network.csproj" />
+  <Project Path="Robust.Benchmarks/Robust.Benchmarks.csproj" />
+  <Project Path="Robust.Client.Injectors/Robust.Client.Injectors.csproj">
+    <BuildType Solution="DebugOpt|*" Project="Debug" />
+    <BuildType Solution="Tools|*" Project="Release" />
+  </Project>
+  <Project Path="Robust.Client.WebView/Robust.Client.WebView.csproj">
+    <Properties Name="RobustToolbox">
+      <Property Name="Feature" Value="WebView" />
+    </Properties>
+  </Project>
+  <Project Path="Robust.Client.IntegrationTests/Robust.Client.IntegrationTests.csproj" />
+  <Project Path="Robust.Client.Tests/Robust.Client.Tests.csproj" />
+  <Project Path="Robust.Client/Robust.Client.csproj" />
+  <Project Path="Robust.Packaging.Tests/Robust.Packaging.Tests.csproj" />
+  <Project Path="Robust.Packaging/Robust.Packaging.csproj" />
+  <Project Path="Robust.Server.IntegrationTests/Robust.Server.IntegrationTests.csproj" />
+  <Project Path="Robust.Server.Testing/Robust.Server.Testing.csproj" />
+  <Project Path="Robust.Server/Robust.Server.csproj" />
+  <Project Path="Robust.Shared.IntegrationTests/Robust.Shared.IntegrationTests.csproj" />
+  <Project Path="Robust.Shared.Maths.Testing/Robust.Shared.Maths.Testing.csproj" />
+  <Project Path="Robust.Shared.Maths.Tests/Robust.Shared.Maths.Tests.csproj" />
+  <Project Path="Robust.Shared.Maths/Robust.Shared.Maths.csproj" />
+  <Project Path="Robust.Shared.Scripting/Robust.Shared.Scripting.csproj" />
+  <Project Path="Robust.Shared.Testing/Robust.Shared.Testing.csproj" />
+  <Project Path="Robust.Shared.Tests/Robust.Shared.Tests.csproj" />
+  <Project Path="Robust.Shared/Robust.Shared.csproj" />
+  <Project Path="Robust.UnitTesting/Robust.UnitTesting.csproj" />
+  <Project Path="Robust.Xaml/Robust.Xaml.csproj">
+    <BuildType Solution="DebugOpt|*" Project="Debug" />
+    <BuildType Solution="Tools|*" Project="Release" />
+  </Project>
+</Solution>

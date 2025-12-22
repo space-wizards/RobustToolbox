@@ -95,6 +95,7 @@ namespace Robust.Shared.Exceptions
     ///     The term "runtime" dates back to BYOND, in which an exception is called a "runtime error".
     ///     As such, what we call exceptions is called a "runtime" in BYOND.
     /// </remarks>
+    [NotContentImplementable]
     public interface IRuntimeLog
     {
         int ExceptionCount { get; }

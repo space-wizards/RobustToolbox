@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
 using Robust.Server.Player;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
-using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -11,6 +8,8 @@ using Robust.Shared.Player;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
 
 namespace Robust.Server.Configuration;
 

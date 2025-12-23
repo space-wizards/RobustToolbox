@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 270.0.0
+
+### Breaking changes
+
 * Fixed `IClydeWindowInternal` erroneously being public.
 * Added a new `[NotContentImplementable]` attribute and made many interfaces in the engine have it. This attribute marks that we may add members to these interfaces in the future, so content should not implement them.
 * Removed unused `IRenderableComponent`, `IRand`, and `IPlayerInput` interfaces.
@@ -52,10 +75,6 @@ END TEMPLATE-->
 ### Other
 
 * The size of the serializer string map is now logged.
-
-### Internal
-
-*None yet*
 
 
 ## 269.0.1

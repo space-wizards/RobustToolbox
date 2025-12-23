@@ -35,7 +35,9 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Fixed `IClydeWindowInternal` erroneously being public.
+* Added a new `[NotContentImplementable]` attribute and made many interfaces in the engine have it. This attribute marks that we may add members to these interfaces in the future, so content should not implement them.
+* Removed unused `IRenderableComponent`, `IRand`, and `IPlayerInput` interfaces.
 
 ### New features
 
@@ -44,11 +46,12 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix a fake error being logged every time when setting the clipboard.
+* Fixed audio loading by reverting dependency update to `VorbisPizza`.
 
 ### Other
 
-*None yet*
+* The size of the serializer string map is now logged.
 
 ### Internal
 

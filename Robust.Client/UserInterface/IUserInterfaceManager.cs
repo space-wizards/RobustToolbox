@@ -12,6 +12,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface
 {
+    [NotContentImplementable]
     public partial interface IUserInterfaceManager
     {
         void InitializeTesting();

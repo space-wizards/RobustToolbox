@@ -2,6 +2,7 @@ using Robust.Shared.Graphics.RSI;
 
 namespace Robust.Client.Graphics
 {
+    [NotContentImplementable]
     public interface IRsiStateLike : IDirectionalTextureProvider
     {
         RsiDirectionType RsiDirections { get; }

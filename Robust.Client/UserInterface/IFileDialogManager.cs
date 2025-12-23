@@ -11,6 +11,7 @@ namespace Robust.Client.UserInterface
     ///     File dialogs are native to the OS being ran on.
     ///     All operations are asynchronous to prevent locking up the main thread while the user makes his pick.
     /// </remarks>
+    [NotContentImplementable]
     public interface IFileDialogManager
     {
         /// <summary>

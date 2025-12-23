@@ -2,6 +2,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Client.GameObjects
 {
+    [NotContentImplementable]
     public interface IClientEntityManager : IEntityManager, IEntityNetworkManager
     {
         /// <summary>

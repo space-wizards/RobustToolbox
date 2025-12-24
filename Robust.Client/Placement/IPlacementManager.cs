@@ -8,6 +8,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Placement
 {
+    [NotContentImplementable]
     public interface IPlacementManager
     {
         void Initialize();

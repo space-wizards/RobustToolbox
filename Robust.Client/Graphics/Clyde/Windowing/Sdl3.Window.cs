@@ -606,7 +606,7 @@ internal partial class Clyde
         private void WinThreadSetClipboard(CmdSetClipboard cmd)
         {
             var res = SDL.SDL_SetClipboardText(cmd.Text);
-            if (res)
+            if (!res)
                 _sawmill.Error("Failed to set clipboard text: {error}", SDL.SDL_GetError());
         }
 

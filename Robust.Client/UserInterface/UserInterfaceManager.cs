@@ -135,6 +135,7 @@ namespace Robust.Client.UserInterface
                     disabled: session => _rendering = true));
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
+            _inputManager.CheckUIIsFocused += OnIsUIFocused;
             _initThemes();
 
             _stylesheet = new DefaultStylesheet(_resourceCache, this).Stylesheet;
@@ -262,6 +263,7 @@ namespace Robust.Client.UserInterface
                     RunMeasure(control);
                     if (!control.IsMeasureValid && control.IsInsideTree)
                         _sawmillUI.Warning($"Control's measure is invalid after measuring. Control: {control}. Parent: {control.Parent}.");
+                    control.InvalidateArrange();
                     total += 1;
                 }
 

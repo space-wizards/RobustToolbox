@@ -158,6 +158,7 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
         _tabContainer.AddChild(_sprite);
         _tabContainer.AddChild(TabCursorShapes());
         _tabContainer.AddChild(new TabWrapContainer { Name = nameof(Tab.WrapContainer) });
+        _tabContainer.AddChild(new TabOkLab());
     }
 
     public void OnClosed()

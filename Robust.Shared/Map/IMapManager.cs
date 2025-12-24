@@ -16,8 +16,9 @@ namespace Robust.Shared.Map
     public delegate bool GridCallback<TState>(EntityUid uid, MapGridComponent grid, ref TState state);
 
     /// <summary>
-    ///     This manages all of the grids in the world.
+    ///     This manages all the grids and maps in the world. Largely superseded by <see cref="SharedMapSystem"/>.
     /// </summary>
+    [NotContentImplementable]
     public interface IMapManager
     {
         public const bool Approximate = false;

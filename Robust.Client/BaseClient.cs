@@ -61,6 +61,7 @@ namespace Robust.Client
                 NetMessageAccept.Handshake | NetMessageAccept.Client);
 
             _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged, invokeImmediately: true);
+            _configManager.OnValueChanged(CVars.GameTimeScale, TimeScaleChanged, invokeImmediately: true);
 
             _playMan.Initialize(0);
             _playMan.PlayerListUpdated += OnPlayerListUpdated;
@@ -93,6 +94,18 @@ namespace Robust.Client
 
             _timing.SetTickRateAt((ushort) tickrate, info.TickChanged);
             _logger.Info($"Tickrate changed to: {tickrate} on tick {_timing.CurTick}");
+        }
+
+        private void TimeScaleChanged(float timeScale, in CVarChangeInfo info)
+        {
+            if (!GameTiming.IsTimescaleValid(timeScale))
+            {
+                _logger.Error($"Invalid time scale set: {timeScale}, ignoring");
+                return;
+            }
+
+            _timing.TimeScale = timeScale;
+            _logger.Info($"Tickrate changed to: {timeScale} on tick {_timing.CurTick}");
         }
 
         /// <inheritdoc />

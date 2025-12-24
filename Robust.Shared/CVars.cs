@@ -788,6 +788,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> GameAutoPauseEmpty =
             CVarDef.Create("game.auto_pause_empty", true, CVar.SERVERONLY);
 
+        /// <summary>
+        /// Scales the game simulation time. Higher values make the game slower.
+        /// </summary>
+        public static readonly CVarDef<float> GameTimeScale =
+            CVarDef.Create("game.time_scale", 1f, CVar.REPLICATED | CVar.SERVER);
+
         /*
          * LOG
          */
@@ -1916,7 +1922,7 @@ namespace Robust.Shared
         ///     By default, this is Space Station 14's sln, but it can be any file at the same root level.
         /// </summary>
         public static readonly CVarDef<string> XamlHotReloadMarkerName =
-            CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.sln", CVar.CLIENTONLY);
+            CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.slnx", CVar.CLIENTONLY);
 
         /// <summary>
         /// If true, all XAML UIs will be JITed for hot reload on client startup.

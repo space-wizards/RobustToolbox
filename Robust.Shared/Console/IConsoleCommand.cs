@@ -1,13 +1,17 @@
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Robust.Shared.Toolshed;
 
 namespace Robust.Shared.Console
 {
     /// <summary>
-    /// Basic interface to handle console commands. Any class implementing this will be
-    /// registered with the console system through reflection.
+    ///     Basic interface to handle console commands. Any class implementing this will be
+    ///     registered with the console system through reflection.
     /// </summary>
+    /// <remarks>
+    ///     For server commands, it is much preferred to use <see cref="ToolshedCommand"/>.
+    /// </remarks>
     [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
     public interface IConsoleCommand
     {

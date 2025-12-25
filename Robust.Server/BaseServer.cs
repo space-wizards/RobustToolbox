@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -174,25 +175,28 @@ namespace Robust.Server
 
             if (Options.LoadConfigAndUserData)
             {
-                string? path = _commandLineArgs?.ConfigFile;
+                List<string>? paths = _commandLineArgs?.ConfigFiles;
 
                 // Sets up the configMgr
                 // If a config file path was passed, use it literally.
                 // This ensures it's working-directory relative
                 // (for people passing config file through the terminal or something).
                 // Otherwise use the one next to the executable.
-                if (string.IsNullOrEmpty(path))
+                if (paths is null || paths.Count() == 0)
                 {
-                    path = PathHelpers.ExecutableRelativeFile("server_config.toml");
+                    paths = new() { PathHelpers.ExecutableRelativeFile("server_config.toml") };
                 }
 
-                if (File.Exists(path))
+                foreach (var path in paths)
                 {
-                    _config.LoadFromFile(path);
-                }
-                else
-                {
-                    _config.SetSaveFile(path);
+                    if (File.Exists(path))
+                    {
+                        _config.LoadFromFile(path);
+                    }
+                    else
+                    {
+                        _config.SetSaveFile(path);
+                    }
                 }
             }
 

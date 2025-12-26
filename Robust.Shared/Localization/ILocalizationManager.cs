@@ -154,10 +154,26 @@ namespace Robust.Shared.Localization
         void Initialize()
         {
         }
+
+        string FormatList(List<string> strings, ListType type = ListType.And, ListWidth width = ListWidth.Wide);
     }
 
     internal interface ILocalizationManagerInternal : ILocalizationManager
     {
         void AddLoadedToStringSerializer(IRobustMappedStringSerializer serializer);
+    }
+
+    public enum ListType
+    {
+        And,
+        Or,
+        Unit,
+    }
+
+    public enum ListWidth
+    {
+        Wide,
+        Short,
+        Narrow,
     }
 }

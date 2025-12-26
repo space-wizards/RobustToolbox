@@ -1,4 +1,5 @@
 using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -6,6 +7,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Serialization;
 
@@ -28,7 +30,7 @@ public sealed class ClientSpriteSpecifierSerializer : SpriteSpecifierSerializer
         }
 
         var res = dependencies.Resolve<IResourceCache>();
-        var rsiPath = TextureRoot / valuePathNode.Value;
+        var rsiPath = PathHelpers.ApparentPath(new ResPath(valuePathNode.Value), TextureRoot);
         if (!res.TryGetResource(rsiPath, out RSIResource? resource))
         {
             return new ErrorNode(node, "Failed to load RSI");

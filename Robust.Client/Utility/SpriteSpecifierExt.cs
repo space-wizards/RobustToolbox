@@ -2,6 +2,7 @@ using System;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
@@ -20,15 +21,17 @@ namespace Robust.Client.Utility
         [Obsolete("Use SpriteSystem.GetTexture() instead")]
         public static Texture GetTexture(this SpriteSpecifier.Texture texSpecifier, IResourceCache cache)
         {
+            var texPath = PathHelpers.ApparentPath(texSpecifier.TexturePath, SpriteSpecifierSerializer.TextureRoot);
             return cache
-                .GetResource<TextureResource>(SpriteSpecifierSerializer.TextureRoot / texSpecifier.TexturePath)
+                .GetResource<TextureResource>(texPath)
                 .Texture;
         }
 
         [Obsolete("Use SpriteSystem.GetState() instead")]
         public static RSI.State GetState(this SpriteSpecifier.Rsi rsiSpecifier, IResourceCache cache)
         {
-            if (!cache.TryGetResource<RSIResource>(SpriteSpecifierSerializer.TextureRoot / rsiSpecifier.RsiPath, out var theRsi))
+            var rsiPath = PathHelpers.ApparentPath(rsiSpecifier.RsiPath, SpriteSpecifierSerializer.TextureRoot);
+            if (!cache.TryGetResource<RSIResource>(rsiPath, out var theRsi))
             {
                 var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
                 Logger.Error("SpriteSpecifier failed to load RSI {0}", rsiSpecifier.RsiPath);

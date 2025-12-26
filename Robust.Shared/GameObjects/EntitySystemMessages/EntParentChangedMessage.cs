@@ -1,4 +1,4 @@
-using Robust.Shared.Map;
+using System;
 
 namespace Robust.Shared.GameObjects
 {
@@ -29,15 +29,31 @@ namespace Robust.Shared.GameObjects
         public readonly EntityUid? OldMapId;
 
         public TransformComponent Transform { get; }
+        public MetaDataComponent Metadata { get; }
 
         /// <summary>
         ///     Creates a new instance of <see cref="EntParentChangedMessage"/>.
         /// </summary>
-        public EntParentChangedMessage(EntityUid entity, EntityUid? oldParent, EntityUid? oldMapId, TransformComponent xform)
+        internal EntParentChangedMessage(EntityUid entity, EntityUid? oldParent, EntityUid? oldMapId, TransformComponent xform, MetaDataComponent meta)
         {
             Entity = entity;
             OldParent = oldParent;
             Transform = xform;
+            Metadata = meta;
+            OldMapId = oldMapId;
+        }
+
+        [Obsolete("Shoo, bad content.")]
+        public EntParentChangedMessage(
+            EntityUid entity,
+            EntityUid? oldParent,
+            EntityUid? oldMapId,
+            TransformComponent xform)
+        {
+            Entity = entity;
+            OldParent = oldParent;
+            Transform = xform;
+            Metadata = default!; // I CBF tying this to a content PR for now, so just marking the old constructor as obsolete.
             OldMapId = oldMapId;
         }
     }

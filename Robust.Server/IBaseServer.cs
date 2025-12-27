@@ -7,6 +7,7 @@ namespace Robust.Server
     /// <summary>
     ///     Top level class that controls the game logic of the server.
     /// </summary>
+    [NotContentImplementable]
     public interface IBaseServer
     {
         /// <summary>

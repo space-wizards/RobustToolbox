@@ -402,6 +402,7 @@ namespace Robust.Client.WebView.Cef
                 _data.Browser.GetHost().WasResized();
                 _data.Texture.Dispose();
                 _data.Texture = _clyde.CreateBlankTexture<Rgba32>((Owner.PixelWidth, Owner.PixelHeight));
+                _data.Browser.GetHost().Invalidate(CefPaintElementType.View);
             }
 
             public void Draw(DrawingHandleScreen handle)
@@ -409,15 +410,21 @@ namespace Robust.Client.WebView.Cef
                 if (_data == null)
                     return;
 
-                var bufImg = _data.Renderer.Buffer.Buffer;
+                // update texture only when CEF has rendered new content
+                if (_data.Renderer.IsDirty)
+                {
+                    _data.Renderer.IsDirty = false;
 
-                _data.Texture.SetSubImage(
-                    Vector2i.Zero,
-                    bufImg,
-                    new UIBox2i(
-                        0, 0,
-                        Math.Min(Owner.PixelWidth, bufImg.Width),
-                        Math.Min(Owner.PixelHeight, bufImg.Height)));
+                    var bufImg = _data.Renderer.Buffer.Buffer;
+
+                    _data.Texture.SetSubImage(
+                        Vector2i.Zero,
+                        bufImg,
+                        new UIBox2i(
+                            0, 0,
+                            Math.Min(Owner.PixelWidth, bufImg.Width),
+                            Math.Min(Owner.PixelHeight, bufImg.Height)));
+                }
 
                 handle.UseShader(_shaderInstance);
                 handle.DrawTexture(_data.Texture, Vector2.Zero);
@@ -543,6 +550,7 @@ namespace Robust.Client.WebView.Cef
         {
             public ImageBuffer Buffer { get; }
             private ControlImpl _control;
+            internal volatile bool IsDirty;
 
             internal ControlRenderHandler(ControlImpl control)
             {
@@ -596,6 +604,8 @@ namespace Robust.Client.WebView.Cef
                 {
                     Buffer.UpdateBuffer(width, height, buffer, dirtyRect);
                 }
+
+                IsDirty = true;
             }
 
             protected override void OnAcceleratedPaint(

@@ -17,6 +17,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
     /// <summary>
     /// A primitive physical shape that is used by a <see cref="PhysicsComponent"/>.
     /// </summary>
+    [NotContentImplementable]
     public interface IPhysShape : IEquatable<IPhysShape>
     {
         /// <summary>

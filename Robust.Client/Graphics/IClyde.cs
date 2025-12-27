@@ -15,6 +15,7 @@ namespace Robust.Client.Graphics
 {
     public delegate void CopyPixelsDelegate<T>(Image<T> pixels) where T : unmanaged, IPixel<T>;
 
+    [NotContentImplementable]
     public interface IClyde
     {
         IClydeWindow MainWindow { get; }

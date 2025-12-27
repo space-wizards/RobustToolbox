@@ -16,6 +16,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 {
     private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
+    private const string MeansDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.MeansDataDefinitionAttribute";
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string ViewVariablesNamespace = "Robust.Shared.ViewVariables.ViewVariablesAttribute";
     private const string NotYamlSerializableName = "Robust.Shared.Serialization.Manager.Attributes.NotYamlSerializableAttribute";
@@ -270,6 +271,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             return false;
 
         return HasAttribute(type, DataDefinitionNamespace) ||
+               MeansDataDefinition(type) ||
                IsImplicitDataDefinition(type);
     }
 
@@ -425,6 +427,19 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         return (VVAccess)accessByte == VVAccess.ReadWrite;
     }
 
+    private static bool MeansDataDefinition(ITypeSymbol type)
+    {
+        foreach (var attribute in type.GetAttributes())
+        {
+            if (attribute.AttributeClass is null)
+                continue;
+
+            if (HasAttribute(attribute.AttributeClass, MeansDataDefinitionNamespace))
+                return true;
+        }
+        return false;
+    }
+    
     private static bool IsNotYamlSerializable(ISymbol field, ITypeSymbol type)
     {
         return HasAttribute(type, NotYamlSerializableName);

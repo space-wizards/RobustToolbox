@@ -29,6 +29,11 @@ namespace Robust.Client.UserInterface
 {
     internal sealed partial class UserInterfaceManager : IUserInterfaceManagerInternal
     {
+        /// <summary>
+        /// A type that will always be instantiated anyways.
+        /// </summary>
+        public static readonly Type XamlHotReloadWarmupType = typeof(DropDownDebugConsole);
+
         [Dependency] private readonly IDependencyCollection _rootDependencies = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IFontManager _fontManager = default!;
@@ -95,6 +100,7 @@ namespace Robust.Client.UserInterface
         private Stylesheet? _stylesheet;
 
         private ISawmill _sawmillUI = default!;
+        public ISawmill ControlSawmill { get; private set; } = default!;
 
         public event Action<Control>? OnKeyBindDown;
 
@@ -129,6 +135,7 @@ namespace Robust.Client.UserInterface
                     disabled: session => _rendering = true));
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
+            _inputManager.CheckUIIsFocused += OnIsUIFocused;
             _initThemes();
 
             _stylesheet = new DefaultStylesheet(_resourceCache, this).Stylesheet;
@@ -142,6 +149,7 @@ namespace Robust.Client.UserInterface
         private void _initializeCommon()
         {
             _sawmillUI = _logManager.GetSawmill("ui");
+            ControlSawmill = _logManager.GetSawmill("ctrl");
 
             RootControl = CreateWindowRoot(_clyde.MainWindow);
             RootControl.Name = "MainWindowRoot";
@@ -255,6 +263,7 @@ namespace Robust.Client.UserInterface
                     RunMeasure(control);
                     if (!control.IsMeasureValid && control.IsInsideTree)
                         _sawmillUI.Warning($"Control's measure is invalid after measuring. Control: {control}. Parent: {control.Parent}.");
+                    control.InvalidateArrange();
                     total += 1;
                 }
 

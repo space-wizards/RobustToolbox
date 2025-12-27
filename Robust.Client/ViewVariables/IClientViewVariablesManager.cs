@@ -2,6 +2,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables
 {
+    [NotContentImplementable]
     public interface IClientViewVariablesManager : IViewVariablesManager
     {
         /// <summary>

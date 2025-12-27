@@ -166,7 +166,11 @@ namespace Robust.Server
         public bool Start(ServerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
             Options = options;
+
             _config.Initialize(true);
+
+            _config.LoadCVarsFromAssembly(typeof(BaseServer).Assembly); // Robust.Server
+            _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
 
             if (Options.LoadConfigAndUserData)
             {
@@ -191,9 +195,6 @@ namespace Robust.Server
                     _config.SetSaveFile(path);
                 }
             }
-
-            _config.LoadCVarsFromAssembly(typeof(BaseServer).Assembly); // Robust.Server
-            _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
 
             CVarDefaultOverrides.OverrideServer(_config);
 
@@ -598,6 +599,19 @@ namespace Robust.Server
 
                 _logger.Info($"Tickrate changed to: {b} on tick {_time.CurTick}");
             });
+
+            _config.OnValueChanged(CVars.GameTimeScale, f =>
+            {
+                if (!GameTiming.IsTimescaleValid(f))
+                {
+                    _logger.Error($"Invalid time scale set: {f}, ignoring");
+                    return;
+                }
+
+                _time.TimeScale = f;
+
+                _logger.Info($"Timescale changed to: {f} on tick {_time.CurTick}");
+            }, true);
 
             var startOffset = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetTimeStartOffset));
             _time.TimeBase = (startOffset, GameTick.First);

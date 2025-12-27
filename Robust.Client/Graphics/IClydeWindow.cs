@@ -8,6 +8,7 @@ namespace Robust.Client.Graphics
     /// <summary>
     ///     Represents a single operating system window.
     /// </summary>
+    [NotContentImplementable]
     public interface IClydeWindow : IDisposable
     {
         bool IsDisposed { get; }
@@ -67,7 +68,8 @@ namespace Robust.Client.Graphics
         void TextInputStop();
     }
 
-    public interface IClydeWindowInternal : IClydeWindow
+    [NotContentImplementable]
+    internal interface IClydeWindowInternal : IClydeWindow
     {
         nint? WindowsHWnd { get; }
     }

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map;
@@ -132,6 +133,7 @@ public abstract partial class SharedTransformSystem
     /// <summary>
     /// Creates map-relative <see cref="EntityCoordinates"/> given some <see cref="MapCoordinates"/>.
     /// </summary>
+    [Pure]
     public EntityCoordinates ToCoordinates(MapCoordinates coordinates)
     {
         if (_map.TryGetMap(coordinates.MapId, out var uid))
@@ -145,11 +147,13 @@ public abstract partial class SharedTransformSystem
     /// <summary>
     /// Returns the grid that the entity whose position the coordinates are relative to is on.
     /// </summary>
+    [Pure]
     public EntityUid? GetGrid(EntityCoordinates coordinates)
     {
         return GetGrid(coordinates.EntityId);
     }
 
+    [Pure]
     public EntityUid? GetGrid(Entity<TransformComponent?> entity)
     {
         return !Resolve(entity, ref entity.Comp, logMissing:false) ? null : entity.Comp.GridUid;
@@ -158,6 +162,7 @@ public abstract partial class SharedTransformSystem
     /// <summary>
     /// Returns the Map Id these coordinates are on.
     /// </summary>
+    [Pure]
     public MapId GetMapId(EntityCoordinates coordinates)
     {
         return GetMapId(coordinates.EntityId);

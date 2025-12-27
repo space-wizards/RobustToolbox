@@ -7,6 +7,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     A network channel between this peer and a remote peer.
     /// </summary>
+    [NotContentImplementable]
     public interface INetChannel
     {
         /// <summary>

@@ -1,4 +1,4 @@
-# Release notes for RobustToolbox.
+﻿# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -52,6 +52,175 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 270.0.0
+
+### Breaking changes
+
+* Fixed `IClydeWindowInternal` erroneously being public.
+* Added a new `[NotContentImplementable]` attribute and made many interfaces in the engine have it. This attribute marks that we may add members to these interfaces in the future, so content should not implement them.
+* Removed unused `IRenderableComponent`, `IRand`, and `IPlayerInput` interfaces.
+
+### New features
+
+* Added `IsUiOpen` and `IsAnyUiOpen` to `SharedUserInterfaceSystem`. (was in previous engine release, missed in changelog)
+* Added `game.time_scale` CVar.
+
+### Bugfixes
+
+* Fix a fake error being logged every time when setting the clipboard.
+* Fixed audio loading by reverting dependency update to `VorbisPizza`.
+
+### Other
+
+* The size of the serializer string map is now logged.
+
+
+## 269.0.1
+
+### Bugfixes
+
+* Fixed transitive project dependencies in content triggering "no direct project reference" detection.
+
+
+## 269.0.0
+
+### Breaking changes
+
+* The project now targets .NET 10. You will have to install the new runtime on game servers when updating.
+* We have adopted a new "solution management" system for games.
+  * This enables us to add new projects to RT (e.g. split stuff up) without causing breaking changes.
+  * Games must move to `.slnx` solutions and run `dotnet run --project ./RobustToolbox/Tools/Robust.SolutionGen/ -- update` after updating RT. This should be done after *every* RT feature update.
+* Games may no longer directly reference RT projects. To depend on these, import the various `.props` files in the `Imports/` folder.
+* We've tidied up all the transitive dependencies RT projects used to expose, meaning packages used by *Robust* aren't automatically visible to content projects anymore. You will likely have both accidental usages that are now erroring, or valid usages that you will need to add a `<PackageReference>` for.
+* `OutputPanel` and `RichTextLabel` now set a default set of "safe" markup tags when using overloads that don't take in a `Type[]? allowedTags`. These tags are formatting only, so dangerous stuff like `[cmdlink]` is blocked by default.
+* The constructor of `EntityQuery<TComp1>` has been made internal.
+
+### New features
+
+* Added `ExtensionMarkerAttribute`, used by the new C# 14 extension members, for the sandbox.
+* Added `CommandWhenUIFocused` property to `Command` keybinds, to make them not fire when a UI control is focused.
+* Startup logging now lists total memory and AVX10 intrinsics.
+* Added new `FormattedString` type that represents a plain `string` that has markup formatting.
+* Added an analyzer to detect redundant `[Prototype("foobar")]` strings.
+* Added an analyzer to detect `DirtyField()` calls with incorrect field names.
+
+### Bugfixes
+
+* Fixed `FormattedMessage` not escaping plain text content properly with `.ToMarkup()`.
+* Fixed wrapping on inline rich text controls like links.
+* Fixed some native libs getting packaged for Linux clients when they shouldn't.
+* Fixed `TilesEnumerator` being able to stack overflow due to the recursive implementation.
+* Fixed some typos in `EntityDeserializer` log messages.
+* Fixed WebView control resizing being fucky.
+* Fixed `DataDefinitionAnalyzer` to recognize `[MeansDataDefinition]` attributes.
+
+### Other
+
+* Updated NuGet package dependencies.
+* Prototype loading now tries to do some basic interning to avoid duplicate string objects being stored. This saves some memory.
+* Avoid redundant texture uploads on WebView controls.
+* Updated and added a lot of documentation to various parts of the engine.
+* Moved to `.slnx`, and changed the default marker filename for hot reload to `.slnx` too.
+* Removed GLFW windowing implementation.
+* `EntityQuery.Resolve` now logs more info on error.
+* Disabled some unnecessary .NET SDK source generators that slowed down build.
+* Removed kdialog/nfd file dialog implementation.
+
+### Internal
+
+* Added a prototype `AspectRatioPanel` control. Not stabilized yet.
+* Added gay colors to uitest.
+* "Test content master" RT workflow now replaces `global.json` in SS14.
+* Updated `Robust.LoaderApi` and `NetSerializer` to .NET 10.
+* Fixed all the configurations in `RobustToolbox.sln`.
+* Split up `Robust.UnitTesting` into many more projects.
+* Internal warning fixes.
+
+
+## 268.1.0
+
+### New features
+
+* Added `IReplayFileWriter.WriteYaml()`, for writing yaml documents to a replay zip file.
+* Added Caps Lock as a proper bindable key.
+* Added `IParallelBulkRobustJob` as an alternative to `IParallelRobustJob`, taking ranges instead of indices.
+* Allow content to override `ProcessStream` and `GetOcclusion` in `AudioSystem`
+
+### Bugfixes
+
+* `ActorComponent` now has the `UnsavedComponentAttribute`
+  * Previously it was unintentionally get serialized to yaml, which could result in NREs when deserializing.
+* Don't spam error messages on startup trying to draw splash logos for projects that don't have one.
+* Fix `SpriteSystem.LayerExists` saying that layer 0 is invalid.
+* Fix `ButtonGroup`s unpressing buttons in an edge case with UI rebuilding.
+* Added `CreatedTime` to `NetUserData`.
+* Fix loading of `WebView`.
+
+### Other
+
+* Reverted undocumented change from 268.0.0 which obsoleted many `IoCManager` methods.
+* Fix .NET 10 serializer compatibility of `BitArray`. (backported to older engines).
+* Revert performance change to physics due to issues (double-buffered contact events).
+* Audio entities are marked as `HideSpawnMenu` now.
+* Make `SharedAudioSystem.Stop` not do nothing when the current tick has already been predicted.
+* Warning cleanup.
+
+### Internal
+
+* Consolidated and updated physics benchmarks.
+
+
+## 268.0.0
+
+### Breaking changes
+
+* Events that are raised via `IEventBus.RaiseComponentEvent()` now **must** be annotated with  the `ComponentEventAttribute`.
+  * By default, events annotated with this attribute can **only** be raised via `IEventBus.RaiseComponentEvent()`. This can be configured via `ComponentEventAttribute.Exclusive`
+* StartCollide and EndCollide events are now buffered until the end of physics substeps instead of being raised during the CollideContacts step. EndCollide events are double-buffered and any new ones raised while the events are being dispatched will now go out on the next tick / substep.
+
+### New features
+
+* Added `IUserInterfaceManager.ControlSawmill` and `Control.Log` properties so that controls can easily use logging without using static methods.
+
+
+## 267.4.0
+
+### New features
+
+* Added two new custom yaml serializers `CustomListSerializer` and `CustomArraySerializer`.
+* CVars defined in `[CVarDefs]` can now be private or internal.
+* Added config rollback system to `IConfigurationManager`. This enables CVars to be snapshot and rolled back, even in the event of client crash.
+* `OptionButton` now has a `Filterable` property that gives it a text box to filter options.
+* Added `FontTagHijackHolder` to replace fonts resolved by `FontTag`.
+* Sandbox:
+  * Exposed `System.Reflection.Metadata.MetadataUpdateHandlerAttribute`.
+  * Exposed more overloads on `StringBuilder`.
+* The engine can now load system fonts.
+  * At the moment only available on Windows.
+  * See `ISystemFontManager` for API.
+* The client now display a loading screen during startup.
+
+### Bugfixes
+
+* Fix `Menu` and `NumpadDecimal` key codes on SDL3.
+* client-side predicted entity deletion ( `EntityManager.PredictedQueueDeleteEntity`) now behaves more like it does on the server. In particular, entities will be deleted on the same tick after all system have been updated. Previously, it would process deletions at the beginning of the next tick.
+* Fix modifying `Label.FontOverride` not causing a layout update.
+* Controls created by rich-text tags now get arranged to a proper size.
+* Fix `OutputPanel` scrollbar breaking if a style update changes the font size.
+
+### Other
+
+* ComponentNameSerializer will now ignore any components that have been ignored via `IComponentFactory.RegisterIgnore`.
+* Add pure to some SharedTransformSystem methods.
+* Significantly optimised collision detection in SharedBroadphaseSystem.
+* `Control.Stylesheet` does not do any work if assigning the value it already has.
+* XAML hot reload now JITs UIs when first opened rather than doing every single one at client startup. This reduces dev startup overhead significantly and probably helps with memory usage too.
+
+### Internal
+
+* The `dmetamem` command now sorts its output, and doesn't output to log anymore to avoid output interleaving.
 
 
 ## 267.3.0

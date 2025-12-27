@@ -39,7 +39,7 @@ public abstract partial class EntityManager
         Dirty(uid, comp, metadata);
     }
 
-    public virtual void DirtyField<T>(EntityUid uid, T comp, string fieldName, MetaDataComponent? metadata = null)
+    public virtual void DirtyField<T>(EntityUid uid, T comp, [ValidateMember] string fieldName, MetaDataComponent? metadata = null)
         where T : IComponentDelta
     {
         var compReg = ComponentFactory.GetRegistration(CompIdx.Index<T>());

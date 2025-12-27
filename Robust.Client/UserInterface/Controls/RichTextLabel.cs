@@ -67,14 +67,24 @@ namespace Robust.Client.UserInterface.Controls
             VerticalAlignment = VAlignment.Center;
         }
 
-        public void SetMessage(FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        public void SetMessage(FormattedMessage message, Color? defaultColor = null)
+        {
+            SetMessage(message, RichTextEntry.DefaultTags, defaultColor);
+        }
+
+        public void SetMessage(FormattedMessage message, Type[]? tagsAllowed, Color? defaultColor = null)
         {
             _entry?.RemoveControls();
             _entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
             InvalidateMeasure();
         }
 
-        public void SetMessage(string message, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        public void SetMessage(string message, Color? defaultColor = null)
+        {
+            SetMessage(message, RichTextEntry.DefaultTags, defaultColor);
+        }
+
+        public void SetMessage(string message, Type[]? tagsAllowed, Color? defaultColor = null)
         {
             var msg = new FormattedMessage();
             msg.AddText(message);

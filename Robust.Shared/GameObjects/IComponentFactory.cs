@@ -49,6 +49,7 @@ namespace Robust.Shared.GameObjects
     /// </remarks>
     /// <seealso cref="IComponentRegistration" />
     /// <seealso cref="IComponent" />
+    [NotContentImplementable]
     public interface IComponentFactory
     {
         event Action<ComponentRegistration[]> ComponentsAdded;

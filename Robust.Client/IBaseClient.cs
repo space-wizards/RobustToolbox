@@ -6,6 +6,7 @@ namespace Robust.Client
     /// <summary>
     ///     Top level class that controls the game logic of the client.
     /// </summary>
+    [NotContentImplementable]
     public interface IBaseClient
     {
         /// <summary>

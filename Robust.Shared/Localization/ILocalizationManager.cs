@@ -20,6 +20,7 @@ namespace Robust.Shared.Localization
     /// </remarks>
     /// <seealso cref="Loc"/>
     [PublicAPI]
+    [NotContentImplementable]
     public interface ILocalizationManager
     {
         /// <summary>

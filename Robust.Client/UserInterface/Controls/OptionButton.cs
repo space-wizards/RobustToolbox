@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
-using Robust.Shared.Graphics;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
 
@@ -20,9 +20,10 @@ namespace Robust.Client.UserInterface.Controls
         private readonly List<ButtonData> _buttonData = new();
         private readonly Dictionary<int, int> _idMap = new();
         private readonly Popup _popup;
-        private readonly BoxContainer _popupVBox;
+        private readonly BoxContainer _popupContentsBox;
         private readonly Label _label;
         private readonly TextureRect _triangle;
+        private readonly LineEdit _filterBox;
 
         public int ItemCount => _buttonData.Count;
 
@@ -39,6 +40,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
         private bool _hideTriangle;
+        private bool _filterable;
 
         /// <summary>
         /// StyleClasses to apply to the options that popup when clicking this button.
@@ -49,6 +51,17 @@ namespace Robust.Client.UserInterface.Controls
 
         public string Prefix { get; set; } = string.Empty;
         public bool PrefixMargin { get; set; } = true;
+
+        public bool Filterable
+        {
+            get => _filterable;
+            set
+            {
+                _filterable = value;
+                _filterBox.Visible = value;
+                UpdateFilters();
+            }
+        }
 
         public OptionButton()
         {
@@ -62,14 +75,26 @@ namespace Robust.Client.UserInterface.Controls
             };
             AddChild(hBox);
 
-            _popupVBox = new BoxContainer
+            var popupVBox = new BoxContainer
             {
-                Orientation = LayoutOrientation.Vertical
+                Orientation = LayoutOrientation.Vertical, Children =
+                {
+                    (_filterBox = new LineEdit
+                    {
+                        PlaceHolder = Loc.GetString("option-button-filter"),
+                        SelectAllOnFocus = true,
+                        Visible = false,
+                    }),
+                    (_popupContentsBox = new BoxContainer
+                    {
+                        Orientation = LayoutOrientation.Vertical
+                    })
+                }
             };
 
             OptionsScroll = new()
             {
-                Children = { _popupVBox },
+                Children = { popupVBox },
                 ReturnMeasure = true,
                 MaxHeight = 300
             };
@@ -100,6 +125,11 @@ namespace Robust.Client.UserInterface.Controls
                 Visible = !HideTriangle
             };
             hBox.AddChild(_triangle);
+
+            _filterBox.OnTextChanged += _ =>
+            {
+                UpdateFilters();
+            };
         }
 
         public void AddItem(Texture icon, string label, int? id = null)
@@ -140,13 +170,14 @@ namespace Robust.Client.UserInterface.Controls
             };
             _idMap.Add(id.Value, _buttonData.Count);
             _buttonData.Add(data);
-            _popupVBox.AddChild(button);
+            _popupContentsBox.AddChild(button);
             if (_buttonData.Count == 1)
             {
                 Select(0);
             }
 
             ButtonOverride(button);
+            UpdateFilter(data);
         }
 
         private void TogglePopup(bool show)
@@ -164,6 +195,9 @@ namespace Robust.Client.UserInterface.Controls
                 var box = UIBox2.FromDimensions(globalPos, new Vector2(Math.Max(minX, Width), minY));
                 Root.ModalRoot.AddChild(_popup);
                 _popup.Open(box);
+
+                if (_filterable)
+                    _filterBox.GrabKeyboardFocus();
             }
             else
             {
@@ -201,7 +235,7 @@ namespace Robust.Client.UserInterface.Controls
                 buttonDatum.Button.OnPressed -= ButtonOnPressed;
             }
             _buttonData.Clear();
-            _popupVBox.DisposeAllChildren();
+            _popupContentsBox.DisposeAllChildren();
             SelectedId = 0;
         }
 
@@ -229,7 +263,7 @@ namespace Robust.Client.UserInterface.Controls
             var data = _buttonData[idx];
             data.Button.OnPressed -= ButtonOnPressed;
             _idMap.Remove(data.Id);
-            _popupVBox.RemoveChild(data.Button);
+            _popupContentsBox.RemoveChild(data.Button);
             _buttonData.RemoveAt(idx);
             var newIdx = 0;
             foreach (var buttonData in _buttonData)
@@ -328,6 +362,25 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.ExitedTree();
             TogglePopup(false);
+        }
+
+        private void UpdateFilters()
+        {
+            foreach (var entry in _buttonData)
+            {
+                UpdateFilter(entry);
+            }
+        }
+
+        private void UpdateFilter(ButtonData data)
+        {
+            if (!_filterable)
+            {
+                data.Button.Visible = true;
+                return;
+            }
+
+            data.Button.Visible = data.Text.Contains(_filterBox.Text, StringComparison.CurrentCultureIgnoreCase);
         }
 
         public sealed class ItemSelectedEventArgs : EventArgs

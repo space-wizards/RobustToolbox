@@ -45,6 +45,7 @@ namespace Robust.Client.WebView.Cef
                 _localization.GetString("cmd-flushcookies-help"),
                 (_, _, _) => CefCookieManager.GetGlobal(null).FlushStore(null));
 
+#if !MACOS
             string subProcessName;
             if (OperatingSystem.IsWindows())
                 subProcessName = "Robust.Client.WebView.exe";
@@ -53,7 +54,6 @@ namespace Robust.Client.WebView.Cef
             else
                 throw new NotSupportedException("Unsupported platform for CEF!");
 
-#if !MACOS
             var subProcessPath = Path.Combine(BasePath, subProcessName);
             var cefResourcesPath = LocateCefResources();
             _sawmill.Debug($"Subprocess path: {subProcessPath}, resources: {cefResourcesPath}");
@@ -80,12 +80,15 @@ namespace Robust.Client.WebView.Cef
 
                     return 0;
                 });
+
+            // Needed to implement CefAppProtocol on our NSApplication.
+            NativeLibrary.Load("robust_native_webview", typeof(WebViewManagerCef).Assembly, null);
 #endif
 
             var settings = new CefSettings()
             {
                 WindowlessRenderingEnabled = true, // So we can render to our UI controls.
-                ExternalMessagePump = false, // Unsure, honestly. TODO CEF: Research this?
+                ExternalMessagePump = true,
                 NoSandbox = true, // Not disabling the sandbox crashes CEF.
 #if !MACOS
                 BrowserSubprocessPath = subProcessPath,

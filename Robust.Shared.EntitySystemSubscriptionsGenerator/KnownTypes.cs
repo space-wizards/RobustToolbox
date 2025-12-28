@@ -2,7 +2,7 @@
 
 public static class KnownTypes
 {
-    public const string IEntitySystemTypeName = "Robust.Shared.GameObjects.IEntitySystem";
+    public const string EntitySystemTypeName = "Robust.Shared.GameObjects.EntitySystem";
     public const string EntityUidTypeName = "Robust.Shared.GameObjects.EntityUid";
     public const string EntityTypeName = "Robust.Shared.GameObjects.Entity<T>";
     public const string EntitySessionEventArgsTypeName = "Robust.Shared.GameObjects.EntitySessionEventArgs";
@@ -15,9 +15,6 @@ public static class KnownTypes
         "Robust.Shared.Analyzers.NetworkEventSubscriptionAttribute";
 
     public const string AllSubscriptionMemberAttributeName = "Robust.Shared.Analyzers.EventSubscriptionAttribute";
-
-    public const string CallAfterSubscriptionsAttributeName =
-        "Robust.Shared.Analyzers.CallAfterSubscriptionsAttribute";
 
     public static readonly string ComponentSubscriptionHandlerTypes = string.Join(
         ", ",
@@ -32,8 +29,6 @@ public static class KnownTypes
         "Robust.Shared.GameObjects.EntityEventRefHandler",
         "Robust.Shared.GameObjects.EntitySessionEventHandler"
     );
-
-    public const string CallAfterSubscriptionsHandlerTypes = nameof(Action);
 
     public static SubscriptionType? ToSubscriptionType(this string annotation)
     {

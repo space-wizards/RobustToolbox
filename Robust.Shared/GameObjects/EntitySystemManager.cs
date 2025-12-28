@@ -198,6 +198,7 @@ namespace Robust.Shared.GameObjects
             {
                 var system = (IEntitySystem)SystemDependencyCollection.ResolveType(systemType);
                 system.Initialize();
+                system.AutoSubscriptions();
                 SystemLoaded?.Invoke(this, new SystemChangedArgs(system));
             }
 

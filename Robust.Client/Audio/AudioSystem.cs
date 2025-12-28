@@ -103,9 +103,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
     }
 
-    [CallAfterSubscriptions]
-    private void Init()
+    /// <inheritdoc />
+    public override void Initialize()
     {
+        base.Initialize();
+
         _updateAudioJob = new UpdateAudioJob
         {
             System = this,
@@ -122,6 +124,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
         Subs.CVar(CfgManager, CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
         Subs.CVar(CfgManager, CVars.AudioTickRate, OnAudioTickRate, true);
+        InitializeLimit();
     }
 
     private void OnAudioBuffer(float value)

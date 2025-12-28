@@ -15,7 +15,6 @@ public sealed partial class AudioSystem
 
     private int _maxConcurrent;
 
-    [CallAfterSubscriptions]
     private void InitializeLimit()
     {
         Subs.CVar(CfgManager, CVars.AudioDefaultConcurrent, SetConcurrentLimit, true);

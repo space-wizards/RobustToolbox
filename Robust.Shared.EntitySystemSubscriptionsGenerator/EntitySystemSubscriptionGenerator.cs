@@ -8,59 +8,68 @@ using static Robust.Shared.EntitySystemSubscriptionsGenerator.KnownTypes;
 
 namespace Robust.Shared.EntitySystemSubscriptionsGenerator;
 
+/// <summary>
+/// This generator implements <c>EntitySystem.AutoSubscriptions()</c> for all <c>EntitySystem</c>s with methods
+/// annotated by auto-subscription attributes. In case any attributes are applied to methods incorrectly, this generator
+/// just silently ignores them and expects <see cref="EntitySystemSubscriptionGeneratorErrorAnalyzer"/> will complain
+/// on its behalf (except in the case of attempting to add generated code to a non-partial type -- we complain about
+/// that here).
+/// </summary>
+/// <seealso cref="EntitySystemSubscriptionGeneratorErrorAnalyzer"/>
 [Generator(LanguageNames.CSharp)]
 public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
 {
+    private static readonly DiagnosticDescriptor NotPartial = new(
+        Diagnostics.IdNonPartialContainingTypeForGeneratedSubscription,
+        "Containing class must be declared as Partial",
+        "Method is declared in type \"{0}\" which is not Partial",
+        "Usage",
+        DiagnosticSeverity.Error,
+        true
+    );
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var annotatedIEntitySystems = Aggregate(
-                GetIEntityTypeCandidatesContainingAnnotatedMethods(context, AllSubscriptionMemberAttributeName),
-                GetIEntityTypeCandidatesContainingAnnotatedMethods(context, NetworkSubscriptionMemberAttributeName),
-                GetIEntityTypeCandidatesContainingAnnotatedMethods(context, LocalSubscriptionMemberAttributeName),
-                GetIEntityTypeCandidatesContainingAnnotatedMethods(context, CallAfterSubscriptionsAttributeName)
+        var annotatedEntitySystems = Aggregate(
+                GetEntityTypeCandidatesContainingAnnotatedMethods(context, AllSubscriptionMemberAttributeName),
+                GetEntityTypeCandidatesContainingAnnotatedMethods(context, NetworkSubscriptionMemberAttributeName),
+                GetEntityTypeCandidatesContainingAnnotatedMethods(context, LocalSubscriptionMemberAttributeName)
             ) // Get all candidate types containing subscription annotated methods
-            .SelectMany((array, _) => array.ToImmutableHashSet(PartialTypeInfo.WithoutLocationEqualityComparer)) // Dedupe
+            .SelectMany((array, _) =>
+                array.ToImmutableHashSet(PartialTypeInfo.WithoutLocationEqualityComparer)) // Dedupe
             .Combine(context.CompilationProvider)
             .Select((inputs, cancel) =>
                 {
+                    // For each EntitySystem we've identified as containing subscriptions...
+
                     var (partialTypeInfo, compilation) = inputs;
                     if (compilation.GetTypeByMetadataName(partialTypeInfo.GetQualifiedName()) is not
                         { } entitySystemType)
-                        return null;
+                        return new EntitySystemInfo(partialTypeInfo, []);
 
-                    var subs = ImmutableArray.CreateBuilder<SubscriptionInfo>();
-                    var postSubs = ImmutableArray.CreateBuilder<PostSubscriptionInfo>();
-                    foreach (var method in entitySystemType.GetMembers().OfType<IMethodSymbol>())
-                    {
-                        cancel.ThrowIfCancellationRequested();
-
-                        if (TryParseSubscriptions(method) is { } sub)
+                    // ... check all methods in the type to see if it's a subscription, assembling subscriptions into an array.
+                    var subs = entitySystemType.GetMembers()
+                        .OfType<IMethodSymbol>()
+                        .Select(method =>
                         {
-                            subs.Add(sub);
-                        }
+                            cancel.ThrowIfCancellationRequested();
+                            return TryParseSubscriptions(method);
+                        })
+                        .OfType<SubscriptionInfo>()
+                        .ToImmutableArray();
 
-                        if (TryParsePostSubscription(method) is { } postSub)
-                        {
-                            postSubs.Add(postSub);
-                        }
-                    }
-
-                    if (subs.Count == 0 && postSubs.Count == 0)
-                        return null;
-
-                    return new IEntitySystemInfo(
-                        partialTypeInfo,
-                        subs.ToImmutable(),
-                        postSubs.ToImmutable()
-                    );
+                    return new EntitySystemInfo(partialTypeInfo, subs);
                 }
             );
 
         context.RegisterImplementationSourceOutput(
-            annotatedIEntitySystems.Where(it => it is not null),
+            // Only deal with types that have subscriptions.
+            annotatedEntitySystems.Where(it => !it.Subscriptions.IsEmpty),
             (productionContext, info) =>
             {
-                var (partialTypeInfo, subscriptions, postSubscriptions) = info!;
+                var (partialTypeInfo, subscriptions) = info;
+                if (partialTypeInfo.CheckPartialDiagnostic(productionContext, NotPartial))
+                    return;
 
                 var subscriptionsSyntax = new StringBuilder();
                 foreach (var method in subscriptions)
@@ -69,13 +78,6 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
                     var subscriptionMethod = method.Type.ToSubscriptionMethod();
                     var typeArgs = string.Join(", ", method.TypeArgs);
                     subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{typeArgs}>({method.MethodName});");
-                }
-
-                var callAfterSyntax = new StringBuilder();
-                foreach (var method in postSubscriptions)
-                {
-                    productionContext.CancellationToken.ThrowIfCancellationRequested();
-                    callAfterSyntax.AppendLine($"        {method.MethodName}();");
                 }
 
                 var builder = new StringBuilder(@"
@@ -89,12 +91,11 @@ using Robust.Shared.GameObjects;
 {{
     /// <inheritdoc />
     [MustCallBase]
-    public override void Initialize()
+    public override void AutoSubscriptions()
     {{
-        base.Initialize();
+        base.AutoSubscriptions();
 
 {subscriptionsSyntax}
-{callAfterSyntax}
     }}
 }}
 ");
@@ -105,11 +106,12 @@ using Robust.Shared.GameObjects;
         );
     }
 
-    private static IncrementalValuesProvider<PartialTypeInfo>
-        GetIEntityTypeCandidatesContainingAnnotatedMethods(
-            IncrementalGeneratorInitializationContext context,
-            string attributeName
-        )
+    /// Returns <see cref="PartialTypeInfo"/>s for all types in the compilation that contain methods with the given
+    /// <paramref name="attributeName">attribute</paramref>.
+    private static IncrementalValuesProvider<PartialTypeInfo> GetEntityTypeCandidatesContainingAnnotatedMethods(
+        IncrementalGeneratorInitializationContext context,
+        string attributeName
+    )
     {
         return context.SyntaxProvider.ForAttributeWithMetadataName(
                 attributeName,
@@ -126,6 +128,9 @@ using Robust.Shared.GameObjects;
             .Select((it, _) => it ?? throw new("Unreachable"));
     }
 
+    /// Tries to parse <paramref name="method"/>'s signature as an even subscription, returning the information required
+    /// to make the subscription function call in the generated code. Returns <c>null</c> if the method is not a
+    /// subscription, or is a subscription and its signature is invalid.
     private static SubscriptionInfo? TryParseSubscriptions(IMethodSymbol method)
     {
         return TryParseSubscription(
@@ -146,6 +151,8 @@ using Robust.Shared.GameObjects;
         );
     }
 
+    /// Tries to parse <paramref name="method"/>'s signature as <c>Robust.Shared.GameObjects.EntityEventHandler</c>.
+    /// <returns>The type argument syntax to include in the subscription function call.</returns>
     public static ImmutableArray<string>? TryParseEntityEventHandler(IMethodSymbol method)
     {
         if (method.Parameters.Length != 1 ||
@@ -155,6 +162,8 @@ using Robust.Shared.GameObjects;
         return [eventType.ToString()];
     }
 
+    /// Tries to parse <paramref name="method"/>'s signature as <c>Robust.Shared.GameObjects.EntitySessionEventHandler</c>.
+    /// <returns>The type argument syntax to include in the subscription function call.</returns>
     public static ImmutableArray<string>? TryParseEntitySessionEventHandler(IMethodSymbol method)
     {
         if (method.Parameters.Length != 2 ||
@@ -168,6 +177,8 @@ using Robust.Shared.GameObjects;
         return [eventType.ToString()];
     }
 
+    /// Tries to parse <paramref name="method"/>'s signature as <c>Robust.Shared.GameObjects.EntityEventRefHandler</c>.
+    /// <returns>The type argument syntax to include in the subscription function call.</returns>
     public static ImmutableArray<string>? TryParseEntityEventRefHandler(IMethodSymbol method)
     {
         if (method.Parameters.Length != 2 ||
@@ -183,6 +194,8 @@ using Robust.Shared.GameObjects;
         return [componentType.ToString(), eventType.ToString()];
     }
 
+    /// Tries to parse <paramref name="method"/>'s signature as <c>Robust.Shared.GameObjects.ComponentEventHandler</c>.
+    /// <returns>The type argument syntax to include in the subscription function call.</returns>
     public static ImmutableArray<string>? TryParseComponentEventHandler(IMethodSymbol method)
     {
         if (method.Parameters.Length != 3 ||
@@ -210,20 +223,8 @@ using Robust.Shared.GameObjects;
         return new SubscriptionInfo(method.Name, subType, parameters);
     }
 
-    public static bool TakesNoParameters(IMethodSymbol method)
-    {
-        return method.Parameters.Length == 0 && method.TypeArguments.Length == 0;
-    }
-
-    private static PostSubscriptionInfo? TryParsePostSubscription(IMethodSymbol method)
-    {
-        if (!AttributeHelper.HasAttribute(method, CallAfterSubscriptionsAttributeName, out _) ||
-            !TakesNoParameters(method))
-            return null;
-
-        return new PostSubscriptionInfo(method.Name);
-    }
-
+    /// Aggregates all of the <typeparamref name="T"/>s across all the given providers into a single array value
+    /// provided by the returned provider.
     private static IncrementalValueProvider<ImmutableArray<T>> Aggregate<T>(
         IncrementalValuesProvider<T> first,
         params IncrementalValuesProvider<T>[] more
@@ -237,13 +238,7 @@ using Robust.Shared.GameObjects;
         );
     }
 
-    private sealed record IEntitySystemInfo(
-        PartialTypeInfo Type,
-        EquatableArray<SubscriptionInfo> Subscriptions,
-        EquatableArray<PostSubscriptionInfo> PostSubscriptions
-    );
+    private record struct EntitySystemInfo(PartialTypeInfo Type, EquatableArray<SubscriptionInfo> Subscriptions);
 
-    private sealed record SubscriptionInfo(string MethodName, SubscriptionType Type, EquatableArray<string> TypeArgs);
-
-    private sealed record PostSubscriptionInfo(string MethodName);
+    private record struct SubscriptionInfo(string MethodName, SubscriptionType Type, EquatableArray<string> TypeArgs);
 }

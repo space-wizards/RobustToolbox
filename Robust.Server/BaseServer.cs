@@ -1,9 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Net.Sockets;
-using System.Threading;
-using Prometheus;
 using Robust.Server.Console;
 using Robust.Server.DataMetrics;
 using Robust.Server.GameObjects;
@@ -25,24 +19,18 @@ using Robust.Shared.Enums;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
-using Robust.Shared.Replays;
-using Robust.Shared.Toolshed;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
-using Serilog.Debugging;
-using Serilog.Sinks.Loki;
 
 namespace Robust.Server
 {
@@ -107,6 +95,7 @@ namespace Robust.Server
         [Dependency] private readonly UploadedContentManager _uploadedContMan = default!;
         [Dependency] private readonly NetworkResourceManager _netResMan = default!;
         [Dependency] private readonly IReflectionManager _refMan = default!;
+        [Dependency] private readonly IHttpManagerInternal _http = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -662,6 +651,7 @@ namespace Robust.Server
         // called right before main loop returns, do all saving/cleanup in here
         public void Cleanup()
         {
+            _http.Shutdown();
             _replay.Shutdown();
 
             _modLoader.Shutdown();

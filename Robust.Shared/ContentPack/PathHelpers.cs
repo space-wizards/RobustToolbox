@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using Robust.Shared.Utility;
@@ -18,8 +19,18 @@ namespace Robust.Shared.ContentPack
         {
             // TODO: remove this shitty hack, either through making it less hardcoded into shared,
             //   or by making our file structure less spaghetti somehow.
-            var assembly = typeof(PathHelpers).Assembly;
-            var location = assembly.Location;
+            string location;
+            if (Process.GetCurrentProcess().MainModule is { } mod)
+            {
+                location = mod.FileName;
+            }
+            else
+            {
+                // Fallback in case the above doesn't work ig?
+                var assembly = typeof(PathHelpers).Assembly;
+                location = assembly.Location;
+            }
+
             if (location == string.Empty)
             {
                 // See https://docs.microsoft.com/en-us/dotnet/api/system.reflection.assembly.location?view=net-5.0#remarks

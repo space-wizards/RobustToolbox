@@ -303,8 +303,14 @@ namespace Robust.Server
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
 
+            var startType = ContentStart ? StartType.Content : StartType.Engine;
+#if FULL_RELEASE
+            if (Options.ResourceMountDisabled)
+                startType = StartType.Loader;
+#endif
+
             ProgramShared.DoMounts(_resources, mountOptions, Options.ContentBuildDirectory, Options.AssemblyDirectory,
-                Options.LoadContentResources, Options.ResourceMountDisabled, ContentStart);
+                Options.LoadContentResources, startType);
 
             // When the game is ran with the startup executable being content,
             // we have to disable the separate load context.

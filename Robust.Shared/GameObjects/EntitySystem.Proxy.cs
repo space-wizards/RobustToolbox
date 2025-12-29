@@ -530,7 +530,7 @@ public partial class EntitySystem
     /// Retrieves the given entity's component of the specified type, assembled into an <see cref="Entity{T}"/>. If no
     /// such component exists, returns null.
     /// </summary>
-    /// <typeparam name="T">A trait or type of component to retrieve.</typeparam>
+    /// <typeparam name="T">The type of component to retrieve.</typeparam>
     /// <param name="uid">The UID of the entity whose component will be retrieved.</param>
     /// <returns>The assembled entity UID and component, if the component exists; otherwise <c>null</c>.</returns>
     protected Entity<T>? WithCompOrNull<T>(EntityUid uid) where T : IComponent
@@ -543,7 +543,7 @@ public partial class EntitySystem
     /// given entity already contains a component value, that is returned in the assembled return value. If the given
     /// entity has no such component, returns null.
     /// </summary>
-    /// <typeparam name="T">A trait or type of component to retrieve.</typeparam>
+    /// <typeparam name="T">The type of component to retrieve.</typeparam>
     /// <param name="entity">
     /// An <see cref="Entity{T}"/> containing the UID of the entity whose component will be retrieved. Note that this
     /// MAY already contain a component value.

@@ -433,7 +433,7 @@ namespace Robust.Shared.Localization
                 return personList;
 
             var parent = info;
-            while (parent != parent.Parent)
+            while (!parent.Equals(parent.Parent))
             {
                 parent = parent.Parent;
 
@@ -453,7 +453,7 @@ namespace Robust.Shared.Localization
                 return data.Item2.ListPatterns;
 
             var parent = info;
-            while (parent != parent.Parent)
+            while (!parent.Equals(parent.Parent))
             {
                 parent = parent.Parent;
                 if (_contexts.TryGetValue(parent, out data) && data.Item2.ListPatterns is not null)

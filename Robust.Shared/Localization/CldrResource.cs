@@ -39,7 +39,7 @@ internal class CldrCultureKeyJsonConverter : JsonConverter<CldrCultureKey>
 {
     public override CldrCultureKey Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return new(CultureInfo.GetCultureInfo(reader.GetString()!));
+        return new(CultureInfo.GetCultureInfo(reader.GetString()!, false));
     }
     public override CldrCultureKey ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -72,6 +72,7 @@ internal class CldrListPatternKeyJsonConverter : JsonConverter<CldrListPatternKe
             "listPattern-type-unit" => new(ListType.Unit, ListWidth.Wide),
             "listPattern-type-unit-narrow" => new(ListType.Unit, ListWidth.Narrow),
             "listPattern-type-unit-short" => new(ListType.Unit, ListWidth.Short),
+            var pattern => throw new InvalidOperationException($"Invalid list pattern key '{pattern}'"),
         };
     }
     public override CldrListPatternKey ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -84,10 +85,12 @@ internal class CldrListPatternKeyJsonConverter : JsonConverter<CldrListPatternKe
             ListType.Or => "listPattern-type-or",
             ListType.And => "listPattern-type-standard",
             ListType.Unit => "listPattern-type-unit",
+            _ => throw new ArgumentOutOfRangeException(nameof(key), "List pattern key's type is out of range"),
         } + key.Width switch {
             ListWidth.Wide => "",
             ListWidth.Narrow => "-narrow",
             ListWidth.Short => "-short",
+            _ => throw new ArgumentOutOfRangeException(nameof(key), "List pattern key's width is out of range"),
         });
     }
     public override void WriteAsPropertyName(Utf8JsonWriter writer, CldrListPatternKey key, JsonSerializerOptions options)
@@ -171,8 +174,7 @@ internal sealed record CldrSupplementalGenderData(
         var personList = new Dictionary<CldrCultureKey, CldrPersonListGender>(child.PersonList);
         foreach (var kvp in parent.PersonList)
         {
-            if (!personList.ContainsKey(kvp.Key))
-                personList.Add(kvp.Key, kvp.Value);
+            personList.TryAdd(kvp.Key, kvp.Value);
         }
         return new(personList);
     }

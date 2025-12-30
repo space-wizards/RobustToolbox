@@ -389,11 +389,9 @@ namespace Robust.Shared.Localization
 
             var context = new LocContext(bundle, this);
 
-            if (args.Options.TryGetValue("wrapper", out var argWrapper) && argWrapper is LocValueString)
+            if (args.Options.TryGetValue("wrapper", out var argWrapper) && argWrapper is LocValueString str)
             {
-                LocId locId = argWrapper switch {
-                    LocValueString str => str.Value,
-                };
+                LocId locId = str.Value;
 
                 Func<ILocValue, string> formatter = item =>
                 {

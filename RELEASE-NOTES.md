@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+ILocalizationManager.GetString now logs a warning when failing to find a string. In cases where you expect this to happen use TryGetString instead.
 
 ### Internal
 

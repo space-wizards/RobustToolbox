@@ -98,9 +98,21 @@ def symlink_files(src_dir: str, dest_dir: str, relative: str):
         if not symlinkable_re.match(file):
             continue
 
+        src_path = p(src_dir, file)
         dest_symlink = p(dest_dir, file)
-        if not os.path.islink(dest_symlink):
-            os.symlink(f"../../../{relative}{file}", dest_symlink)
+        if os.path.isdir(src_path):
+            # Symlink directories
+            if not os.path.islink(dest_symlink):
+                os.symlink(f"../../../{relative}{file}", dest_symlink)
+        else:
+            # Hardlink files
+            # (so that .NET doesn't report the real file path for assembly locations)
+            try:
+                os.remove(dest_symlink)
+            except FileNotFoundError:
+                pass # Fine
+
+            os.link(src_path, dest_symlink)
 
 
 main()

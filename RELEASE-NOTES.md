@@ -39,13 +39,28 @@ END TEMPLATE-->
 
 ### New features
 
-* macOS: there is now tooling in place to build a content start binary to an app bundle in the development environment. This is a prerequisite for WebView support.
-* Added override of `SharedPhysicsSystem.GetHardCollision` that takes a sole component.
-* Added more parameters to `OutputPanel.AddMessage` & overloads.
+*None yet*
 
 ### Bugfixes
 
 *None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 170.1.0
+
+### New features
+
+* macOS: there is now tooling in place to build a content start binary to an app bundle in the development environment. This is a prerequisite for WebView support.
+* Added override of `SharedPhysicsSystem.GetHardCollision` that takes a sole component.
+* Added more parameters to `OutputPanel.AddMessage` & overloads.
 
 ### Other
 
@@ -56,10 +71,6 @@ END TEMPLATE-->
 * Re-enable GPU compositing as the proper solution to the resizing bug has been found.
 * `RichTextLabel.Text` sets all tags as allowed again, unlike `SetMessage()`.
 * `EntProtoId<T>.TryGet` no longer throws if the prototype ID is invalid.
-
-### Internal
-
-*None yet*
 
 
 ## 270.0.0

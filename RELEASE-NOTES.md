@@ -41,6 +41,7 @@ END TEMPLATE-->
 
 * macOS: there is now tooling in place to build a content start binary to an app bundle in the development environment. This is a prerequisite for WebView support.
 * Added override of `SharedPhysicsSystem.GetHardCollision` that takes a sole component.
+* Added more parameters to `OutputPanel.AddMessage` & overloads.
 
 ### Bugfixes
 

@@ -19,6 +19,7 @@ namespace Robust.Shared.Localization
     /// </remarks>
     /// <seealso cref="Loc"/>
     [PublicAPI]
+    [NotContentImplementable]
     public interface ILocalizationManager
     {
         /// <summary>
@@ -27,6 +28,7 @@ namespace Robust.Shared.Localization
         /// <param name="messageId">Unique Identifier for a translated message.</param>
         /// <returns>
         ///     The language appropriate message if available, otherwise the messageId is returned.
+        ///     Logs a warning if the message does not exist.
         /// </returns>
         string GetString(string messageId);
 

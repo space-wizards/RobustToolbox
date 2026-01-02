@@ -7,6 +7,7 @@ namespace Robust.Client.Audio;
 /// <summary>
 /// Public audio API for stuff that can't go through <see cref="AudioSystem"/>
 /// </summary>
+[NotContentImplementable]
 public interface IAudioManager
 {
     IAudioSource? CreateAudioSource(AudioStream stream);

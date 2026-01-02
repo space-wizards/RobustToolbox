@@ -15,7 +15,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 {
     [UsedImplicitly]
     [TestFixture]
-    internal sealed class PrototypeManager_Test : OurRobustUnitTest
+    internal sealed partial class PrototypeManager_Test : OurRobustUnitTest
     {
         private const string FakeWrenchProtoId = "wrench";
         private const string YamlTesterProtoId = "yamltester";
@@ -151,7 +151,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             [ParentDataField(typeof(AbstractPrototypeIdArraySerializer<CircleTestPrototype>))]
             public string[]? Parents { get; private set; }
             [AbstractDataField]
-            public bool Abstract { get; }
+            public bool Abstract { get; private set; }
         }
 
         public enum YamlTestEnum : byte

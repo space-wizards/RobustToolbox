@@ -35,16 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* The project now targets .NET 10. You will have to install the new runtime on game servers when updating.
+*None yet*
 
 ### New features
 
-* Added `ExtensionMarkerAttribute`, used by the new C# 14 extension members, for the sandbox.
-* Added `CommandWhenUIFocused` property to `Command` keybinds, to make them not fire when a UI control is focused.
+*None yet*
 
 ### Bugfixes
 
-* Fixed `FormattedMessage` not escaping plain text content properly with `.ToMarkup()`.
+*None yet*
 
 ### Other
 
@@ -53,6 +52,110 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 270.1.0
+
+### New features
+
+* macOS: there is now tooling in place to build a content start binary to an app bundle in the development environment. This is a prerequisite for WebView support.
+* Added override of `SharedPhysicsSystem.GetHardCollision` that takes a sole component.
+* Added more parameters to `OutputPanel.AddMessage` & overloads.
+
+### Other
+
+* `ILocalizationManager.GetString` now logs a warning when failing to find a string. In cases where you expect this to happen use `TryGetString` instead.
+* `run_server.bat` in published servers now `cd`s to the correct directory.
+* `IRobustRandom.GetRandom()` is now obsolete. This API should've never existed.
+* Started work on macOS support for WebView. This is not complete yet and will not work out of the box.
+* Re-enable GPU compositing as the proper solution to the resizing bug has been found.
+* `RichTextLabel.Text` sets all tags as allowed again, unlike `SetMessage()`.
+* `EntProtoId<T>.TryGet` no longer throws if the prototype ID is invalid.
+
+
+## 270.0.0
+
+### Breaking changes
+
+* Fixed `IClydeWindowInternal` erroneously being public.
+* Added a new `[NotContentImplementable]` attribute and made many interfaces in the engine have it. This attribute marks that we may add members to these interfaces in the future, so content should not implement them.
+* Removed unused `IRenderableComponent`, `IRand`, and `IPlayerInput` interfaces.
+
+### New features
+
+* Added `IsUiOpen` and `IsAnyUiOpen` to `SharedUserInterfaceSystem`. (was in previous engine release, missed in changelog)
+* Added `game.time_scale` CVar.
+
+### Bugfixes
+
+* Fix a fake error being logged every time when setting the clipboard.
+* Fixed audio loading by reverting dependency update to `VorbisPizza`.
+
+### Other
+
+* The size of the serializer string map is now logged.
+
+
+## 269.0.1
+
+### Bugfixes
+
+* Fixed transitive project dependencies in content triggering "no direct project reference" detection.
+
+
+## 269.0.0
+
+### Breaking changes
+
+* The project now targets .NET 10. You will have to install the new runtime on game servers when updating.
+* We have adopted a new "solution management" system for games.
+  * This enables us to add new projects to RT (e.g. split stuff up) without causing breaking changes.
+  * Games must move to `.slnx` solutions and run `dotnet run --project ./RobustToolbox/Tools/Robust.SolutionGen/ -- update` after updating RT. This should be done after *every* RT feature update.
+* Games may no longer directly reference RT projects. To depend on these, import the various `.props` files in the `Imports/` folder.
+* We've tidied up all the transitive dependencies RT projects used to expose, meaning packages used by *Robust* aren't automatically visible to content projects anymore. You will likely have both accidental usages that are now erroring, or valid usages that you will need to add a `<PackageReference>` for.
+* `OutputPanel` and `RichTextLabel` now set a default set of "safe" markup tags when using overloads that don't take in a `Type[]? allowedTags`. These tags are formatting only, so dangerous stuff like `[cmdlink]` is blocked by default.
+* The constructor of `EntityQuery<TComp1>` has been made internal.
+
+### New features
+
+* Added `ExtensionMarkerAttribute`, used by the new C# 14 extension members, for the sandbox.
+* Added `CommandWhenUIFocused` property to `Command` keybinds, to make them not fire when a UI control is focused.
+* Startup logging now lists total memory and AVX10 intrinsics.
+* Added new `FormattedString` type that represents a plain `string` that has markup formatting.
+* Added an analyzer to detect redundant `[Prototype("foobar")]` strings.
+* Added an analyzer to detect `DirtyField()` calls with incorrect field names.
+
+### Bugfixes
+
+* Fixed `FormattedMessage` not escaping plain text content properly with `.ToMarkup()`.
+* Fixed wrapping on inline rich text controls like links.
+* Fixed some native libs getting packaged for Linux clients when they shouldn't.
+* Fixed `TilesEnumerator` being able to stack overflow due to the recursive implementation.
+* Fixed some typos in `EntityDeserializer` log messages.
+* Fixed WebView control resizing being fucky.
+* Fixed `DataDefinitionAnalyzer` to recognize `[MeansDataDefinition]` attributes.
+
+### Other
+
+* Updated NuGet package dependencies.
+* Prototype loading now tries to do some basic interning to avoid duplicate string objects being stored. This saves some memory.
+* Avoid redundant texture uploads on WebView controls.
+* Updated and added a lot of documentation to various parts of the engine.
+* Moved to `.slnx`, and changed the default marker filename for hot reload to `.slnx` too.
+* Removed GLFW windowing implementation.
+* `EntityQuery.Resolve` now logs more info on error.
+* Disabled some unnecessary .NET SDK source generators that slowed down build.
+* Removed kdialog/nfd file dialog implementation.
+
+### Internal
+
+* Added a prototype `AspectRatioPanel` control. Not stabilized yet.
+* Added gay colors to uitest.
+* "Test content master" RT workflow now replaces `global.json` in SS14.
+* Updated `Robust.LoaderApi` and `NetSerializer` to .NET 10.
+* Fixed all the configurations in `RobustToolbox.sln`.
+* Split up `Robust.UnitTesting` into many more projects.
+* Internal warning fixes.
 
 
 ## 268.1.0

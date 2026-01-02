@@ -303,8 +303,14 @@ namespace Robust.Server
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
 
+            var startType = ContentStart ? StartType.Content : StartType.Engine;
+#if FULL_RELEASE
+            if (Options.ResourceMountDisabled)
+                startType = StartType.Loader;
+#endif
+
             ProgramShared.DoMounts(_resources, mountOptions, Options.ContentBuildDirectory, Options.AssemblyDirectory,
-                Options.LoadContentResources, Options.ResourceMountDisabled, ContentStart);
+                Options.LoadContentResources, startType);
 
             // When the game is ran with the startup executable being content,
             // we have to disable the separate load context.
@@ -593,6 +599,19 @@ namespace Robust.Server
 
                 _logger.Info($"Tickrate changed to: {b} on tick {_time.CurTick}");
             });
+
+            _config.OnValueChanged(CVars.GameTimeScale, f =>
+            {
+                if (!GameTiming.IsTimescaleValid(f))
+                {
+                    _logger.Error($"Invalid time scale set: {f}, ignoring");
+                    return;
+                }
+
+                _time.TimeScale = f;
+
+                _logger.Info($"Timescale changed to: {f} on tick {_time.CurTick}");
+            }, true);
 
             var startOffset = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetTimeStartOffset));
             _time.TimeBase = (startOffset, GameTick.First);

@@ -28,6 +28,7 @@ namespace Robust.Shared.Prototypes;
 /// <seealso cref="IPrototype"/>
 /// <seealso cref="IInheritingPrototype"/>
 /// <seealso cref="PrototypeAttribute"/>
+[NotContentImplementable]
 public interface IPrototypeManager
 {
     void Initialize();

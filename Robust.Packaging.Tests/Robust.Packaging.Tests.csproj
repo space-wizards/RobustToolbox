@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Robust.Packaging\Robust.Packaging.csproj"/>
+    <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets"/>

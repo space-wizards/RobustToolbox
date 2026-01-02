@@ -50,6 +50,7 @@ namespace Robust.Shared.Asynchronous
         private static readonly SendOrPostCallback _runCallback = o => { ((Action?)o)?.Invoke(); };
     }
 
+    [NotContentImplementable]
     public interface ITaskManager
     {
         void Initialize();

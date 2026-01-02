@@ -1,6 +1,6 @@
 namespace Robust.Shared.Graphics;
 
-public interface IClydeHandle
+internal interface IClydeHandle
 {
     long Value { get; }
 }

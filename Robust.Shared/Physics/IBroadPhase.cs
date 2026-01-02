@@ -6,6 +6,7 @@ using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Shared.Physics;
 
+[NotContentImplementable]
 public interface IBroadPhase
 {
     int Count { get; }
@@ -61,6 +62,7 @@ public interface IBroadPhase
     void RebuildBottomUp();
 }
 
+[NotContentImplementable]
 public interface IBroadPhase<T> : ICollection<T> where T : notnull {
 
     int Capacity { get; }

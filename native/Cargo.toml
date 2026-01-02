@@ -1,0 +1,9 @@
+[workspace]
+resolver = "3"
+members = ["cef-helper", "robust-apphost", "robust-native-webview"]
+
+[workspace.dependencies]
+cef = { path = "../../../cef-rs/cef", default-features = false }
+objc2 = "0.6.3"
+objc2-app-kit = "0.3.2"
+cc = "1.0"

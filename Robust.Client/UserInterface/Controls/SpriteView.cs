@@ -170,6 +170,7 @@ namespace Robust.Client.UserInterface.Controls
 
             Entity = new(uid.Value, sprite, xform);
             NetEnt = EntMan.GetNetEntity(uid);
+            UpdateSize();
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)

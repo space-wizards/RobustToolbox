@@ -1,10 +1,16 @@
-using Robust.Shared.Collections;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Collections;
+using System.Numerics;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ComponentTrees;
@@ -299,7 +305,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         // errors. Currently there is no easy way to enforce this, but this should work as long as nothing queries the
         // trees directly:
         UpdateTreePositions();
-        var trees = new ValueList<>();
+        var trees = new ValueList<(EntityUid Uid, TTreeComp Comp)>();
 
         if (mapId == MapId.Nullspace)
             return trees;

@@ -1,16 +1,10 @@
-using JetBrains.Annotations;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.Collections;
-using System.Numerics;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ComponentTrees;
@@ -205,60 +199,67 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     /// </summary>
     public void UpdateTreePositions()
     {
-        if (!CheckEnabled())
-            return;
-
-        if (_updateQueue.Count == 0)
-            return;
-
-        var trees = GetEntityQuery<TTreeComp>();
-
-        while (_updateQueue.TryDequeue(out var entry))
+        try
         {
-            var (comp, xform) = entry;
+            if (!CheckEnabled())
+                return;
 
-            // Was this entity queued multiple times?
-            DebugTools.Assert(comp.TreeUpdateQueued, "Entity was queued multiple times?");
+            if (_updateQueue.Count == 0)
+                return;
 
-            comp.TreeUpdateQueued = false;
-            if (!comp.Running)
-                continue;
+            var trees = GetEntityQuery<TTreeComp>();
 
-            if (!comp.AddToTree || comp.Deleted || xform.MapUid == null)
+            while (_updateQueue.TryDequeue(out var entry))
             {
+                var (comp, xform) = entry;
+
+                // Was this entity queued multiple times?
+                DebugTools.Assert(comp.TreeUpdateQueued, "Entity was queued multiple times?");
+
+                comp.TreeUpdateQueued = false;
+                if (!comp.Running)
+                    continue;
+
+                if (!comp.AddToTree || comp.Deleted || xform.MapUid == null)
+                {
+                    RemoveFromTree(comp);
+                    continue;
+                }
+
+                var newTree = xform.GridUid ?? xform.MapUid;
+                if (!trees.TryGetComponent(newTree, out var newTreeComp) && comp.TreeUid == null)
+                    continue;
+
+                Vector2 pos;
+                Angle rot;
+                if (comp.TreeUid == newTree)
+                {
+                    (pos, rot) = XformSystem.GetRelativePositionRotation(
+                        entry.Transform,
+                        newTree!.Value);
+
+                    newTreeComp!.Tree.Update(entry, ExtractAabb(entry, pos, rot));
+                    continue;
+                }
+
                 RemoveFromTree(comp);
-                continue;
-            }
 
-            var newTree = xform.GridUid ?? xform.MapUid;
-            if (!trees.TryGetComponent(newTree, out var newTreeComp) && comp.TreeUid == null)
-                continue;
+                if (newTreeComp == null)
+                    return;
 
-            Vector2 pos;
-            Angle rot;
-            if (comp.TreeUid == newTree)
-            {
+                comp.TreeUid = newTree;
+                comp.Tree = newTreeComp.Tree;
+
                 (pos, rot) = XformSystem.GetRelativePositionRotation(
                     entry.Transform,
                     newTree!.Value);
 
-                newTreeComp!.Tree.Update(entry, ExtractAabb(entry, pos, rot));
-                continue;
+                newTreeComp.Tree.Add(entry, ExtractAabb(entry, pos, rot));
             }
-
-            RemoveFromTree(comp);
-
-            if (newTreeComp == null)
-                return;
-
-            comp.TreeUid = newTree;
-            comp.Tree = newTreeComp.Tree;
-
-            (pos, rot) = XformSystem.GetRelativePositionRotation(
-                entry.Transform,
-                newTree!.Value);
-
-            newTreeComp.Tree.Add(entry, ExtractAabb(entry, pos, rot));
+        }
+        finally
+        {
+            _updateQueue.Clear();
         }
     }
 
@@ -298,7 +299,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         // errors. Currently there is no easy way to enforce this, but this should work as long as nothing queries the
         // trees directly:
         UpdateTreePositions();
-        var trees = new ValueList<(EntityUid Uid, TTreeComp Comp)>();
+        var trees = new ValueList<>();
 
         if (mapId == MapId.Nullspace)
             return trees;

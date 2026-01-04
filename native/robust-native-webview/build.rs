@@ -10,6 +10,8 @@ fn main() {
             .cpp(true)
             .flag("--std=c++17")
             .file("src/mac_application.mm")
+            .link_lib_modifier("+whole-archive")
+            .warnings(false)
             .compile("mac_application");
 
         println!("cargo::rerun-if-changed=src/mac_application.mm");

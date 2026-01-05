@@ -65,11 +65,11 @@ public sealed partial class ColorSelectorSliders : Control
     private ColorSelectorType _currentType = ColorSelectorType.Rgb;
     private bool _isAlphaVisible = false;
 
-    private List<ColorSelectorType> _types = new();
+    private readonly List<ColorSelectorType> _types = new();
 
-    private ColorSelectorStyleBox _topStyle;
-    private ColorSelectorStyleBox _middleStyle;
-    private ColorSelectorStyleBox _bottomStyle;
+    private readonly ColorSelectorStyleBox _topStyle;
+    private readonly ColorSelectorStyleBox _middleStyle;
+    private readonly ColorSelectorStyleBox _bottomStyle;
 
     public ColorSelectorSliders()
     {

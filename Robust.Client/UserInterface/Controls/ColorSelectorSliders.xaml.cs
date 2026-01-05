@@ -34,7 +34,7 @@ public sealed partial class ColorSelectorSliders : Control
         set
         {
             _currentType = value;
-            _typeSelector.Select(_types.IndexOf(value));
+            TypeSelector.Select(_types.IndexOf(value));
             _colorData = GetStrategy().ToColorData(_currentColor);
 
             UpdateType();
@@ -49,7 +49,7 @@ public sealed partial class ColorSelectorSliders : Control
         {
             _isAlphaVisible = value;
 
-            _alphaSliderBox.Visible = _isAlphaVisible;
+            AlphaSliderBox.Visible = _isAlphaVisible;
         }
     }
 
@@ -65,25 +65,6 @@ public sealed partial class ColorSelectorSliders : Control
     private ColorSelectorType _currentType = ColorSelectorType.Rgb;
     private bool _isAlphaVisible = false;
 
-    private ColorableSlider _topColorSlider;
-    private ColorableSlider _middleColorSlider;
-    private ColorableSlider _bottomColorSlider;
-    private Slider _alphaSlider;
-
-    private BoxContainer _alphaSliderBox = new();
-
-    private SpinBox _topInputBox;
-    private SpinBox _middleInputBox;
-    private SpinBox _bottomInputBox;
-    private SpinBox _alphaInputBox;
-
-    private Label _topSliderLabel = new();
-    private Label _middleSliderLabel = new();
-    private Label _bottomSliderLabel = new();
-    private Label _alphaSliderLabel = new();
-    private Label _colorDescriptionLabel = new();
-
-    private OptionButton _typeSelector;
     private List<ColorSelectorType> _types = new();
 
     private ColorSelectorStyleBox _topStyle;
@@ -95,137 +76,47 @@ public sealed partial class ColorSelectorSliders : Control
         RobustXamlLoader.Load(this);
         IoCManager.InjectDependencies(this);
 
-        _topColorSlider = new ColorableSlider
-        {
-            HorizontalExpand = true,
-            VerticalAlignment = VAlignment.Center,
-            BackgroundStyleBoxOverride = _topStyle = new(),
-            MaxValue = 1.0f
-        };
+        TopColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Top); };
+        TopColorSlider.BackgroundStyleBoxOverride = _topStyle = new();
 
-        _middleColorSlider = new ColorableSlider
-        {
-            HorizontalExpand = true,
-            VerticalAlignment = VAlignment.Center,
-            BackgroundStyleBoxOverride = _middleStyle = new(),
-            MaxValue = 1.0f
-        };
+        MiddleColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Middle); };
+        MiddleColorSlider.BackgroundStyleBoxOverride = _middleStyle = new();
 
-        _bottomColorSlider = new ColorableSlider
-        {
-            HorizontalExpand = true,
-            VerticalAlignment = VAlignment.Center,
-            BackgroundStyleBoxOverride = _bottomStyle = new(),
-            MaxValue = 1.0f
-        };
+        BottomColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Bottom); };
+        BottomColorSlider.BackgroundStyleBoxOverride = _bottomStyle = new();
 
-        _alphaSlider = new Slider
-        {
-            HorizontalExpand = true,
-            VerticalAlignment = VAlignment.Center,
-            MaxValue = 1.0f,
-        };
+        AlphaSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Alpha); };
+        AlphaSliderBox.Visible = IsAlphaVisible;
 
-        _topColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Top); };
-        _middleColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Middle); };
-        _bottomColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Bottom); };
-        _alphaSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Alpha); };
+        TopInputBox.IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Top);
+        TopInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Top); };
+        TopInputBox.InitDefaultButtons();
 
-        _topInputBox = new SpinBox
-        {
-            IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Top)
-        };
-        _topInputBox.InitDefaultButtons();
+        MiddleInputBox.IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Middle);
+        MiddleInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Middle); };
+        MiddleInputBox.InitDefaultButtons();
 
-        _middleInputBox = new SpinBox
-        {
-            IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Middle)
-        };
-        _middleInputBox.InitDefaultButtons();
+        BottomInputBox.IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Bottom);
+        BottomInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Bottom); };
+        BottomInputBox.InitDefaultButtons();
 
-        _bottomInputBox = new SpinBox
-        {
-            IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Bottom)
-        };
-        _bottomInputBox.InitDefaultButtons();
+        AlphaInputBox.IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Alpha);
+        AlphaInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Alpha); };
+        AlphaInputBox.InitDefaultButtons();
 
-        _alphaInputBox = new SpinBox
-        {
-            IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Alpha)
-        };
-        _alphaInputBox.InitDefaultButtons();
-
-        _topInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Top); };
-        _middleInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Middle); };
-        _bottomInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Bottom); };
-        _alphaInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Alpha); };
-
-        _alphaSliderLabel.Text = Loc.GetString("color-selector-sliders-alpha");
-
-        _typeSelector = new OptionButton();
         foreach (var ty in Enum.GetValues<ColorSelectorType>())
         {
-            _typeSelector.AddItem(Loc.GetString($"color-selector-sliders-{ty.ToString().ToLower()}"));
+            TypeSelector.AddItem(Loc.GetString($"color-selector-sliders-{ty.ToString().ToLower()}"));
             _types.Add(ty);
         }
 
-        _typeSelector.OnItemSelected += args =>
+        TypeSelector.OnItemSelected += args =>
         {
             SelectorType = _types[args.Id];
-            _typeSelector.Select(args.Id);
+            TypeSelector.Select(args.Id);
         };
 
-        _colorDescriptionLabel.Text = ColorNaming.Describe(_currentColor, _localization);
-
-        // TODO: Maybe some engine widgets could be laid out in XAML?
-
-        var rootBox = new BoxContainer
-        {
-            Orientation = BoxContainer.LayoutOrientation.Vertical
-        };
-        AddChild(rootBox);
-
-        var headerBox = new BoxContainer();
-        rootBox.AddChild(headerBox);
-
-        headerBox.AddChild(_typeSelector);
-        headerBox.AddChild(_colorDescriptionLabel);
-
-        var bodyBox = new BoxContainer()
-        {
-            Orientation = BoxContainer.LayoutOrientation.Vertical
-        };
-
-        // pita
-        var topSliderBox = new BoxContainer();
-
-        topSliderBox.AddChild(_topSliderLabel);
-        topSliderBox.AddChild(_topColorSlider);
-        topSliderBox.AddChild(_topInputBox);
-
-        var middleSliderBox = new BoxContainer();
-
-        middleSliderBox.AddChild(_middleSliderLabel);
-        middleSliderBox.AddChild(_middleColorSlider);
-        middleSliderBox.AddChild(_middleInputBox);
-
-        var bottomSliderBox = new BoxContainer();
-
-        bottomSliderBox.AddChild(_bottomSliderLabel);
-        bottomSliderBox.AddChild(_bottomColorSlider);
-        bottomSliderBox.AddChild(_bottomInputBox);
-
-        _alphaSliderBox.Visible = IsAlphaVisible;
-        _alphaSliderBox.AddChild(_alphaSliderLabel);
-        _alphaSliderBox.AddChild(_alphaSlider);
-        _alphaSliderBox.AddChild(_alphaInputBox);
-
-        bodyBox.AddChild(topSliderBox);
-        bodyBox.AddChild(middleSliderBox);
-        bodyBox.AddChild(bottomSliderBox);
-        bodyBox.AddChild(_alphaSliderBox);
-
-        rootBox.AddChild(bodyBox);
+        ColorDescriptionLabel.Text = ColorNaming.Describe(_currentColor, _localization);
 
         UpdateType();
         Color = _currentColor;
@@ -245,10 +136,10 @@ public sealed partial class ColorSelectorSliders : Control
     {
         return order switch
         {
-            ColorSliderOrder.Top => (_topColorSlider, _topInputBox),
-            ColorSliderOrder.Middle => (_middleColorSlider, _middleInputBox),
-            ColorSliderOrder.Bottom => (_bottomColorSlider, _bottomInputBox),
-            ColorSliderOrder.Alpha => (_alphaSlider, _alphaInputBox),
+            ColorSliderOrder.Top => (TopColorSlider, TopInputBox),
+            ColorSliderOrder.Middle => (MiddleColorSlider, MiddleInputBox),
+            ColorSliderOrder.Bottom => (BottomColorSlider, BottomInputBox),
+            ColorSliderOrder.Alpha => (AlphaSlider, AlphaInputBox),
             _ => throw new ArgumentOutOfRangeException(),
         };
     }
@@ -264,9 +155,9 @@ public sealed partial class ColorSelectorSliders : Control
     {
         var strategy = GetStrategy();
         var labels = strategy.GetSliderLabelTexts();
-        _topSliderLabel.Text = labels.top;
-        _middleSliderLabel.Text = labels.middle;
-        _bottomSliderLabel.Text = labels.bottom;
+        TopSliderLabel.Text = labels.top;
+        MiddleSliderLabel.Text = labels.middle;
+        BottomSliderLabel.Text = labels.bottom;
 
         _topStyle.ConfigureSlider(strategy.TopSliderStyle);
         _middleStyle.ConfigureSlider(strategy.MiddleSliderStyle);
@@ -296,7 +187,7 @@ public sealed partial class ColorSelectorSliders : Control
         _topStyle.SetBaseColor(_colorData);
         _middleStyle.SetBaseColor(_colorData);
         _bottomStyle.SetBaseColor(_colorData);
-        _colorDescriptionLabel.Text = ColorNaming.Describe(Color, _localization);
+        ColorDescriptionLabel.Text = ColorNaming.Describe(Color, _localization);
     }
 
     private void UpdateAllSliders()
@@ -329,10 +220,10 @@ public sealed partial class ColorSelectorSliders : Control
     private void OnSliderValueChanged(ColorSliderOrder order)
     {
         _colorData = new Vector4(
-            _topColorSlider.Value,
-            _middleColorSlider.Value,
-            _bottomColorSlider.Value,
-            _alphaSlider.Value);
+            TopColorSlider.Value,
+            MiddleColorSlider.Value,
+            BottomColorSlider.Value,
+            AlphaSlider.Value);
 
         _currentColor = GetStrategy().FromColorData(_colorData);
         OnColorChanged?.Invoke(_currentColor);

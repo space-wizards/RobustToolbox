@@ -74,6 +74,7 @@ public sealed partial class ColorSelectorSliders : Control
     private readonly ColorSelectorStyleBox _bottomStyle;
     private readonly StyleBoxFlat _colorPanelStyle;
 
+    private readonly Thickness ColorPanelPadding = new(0.0f, 2.0f);
     private const int HexLength = 8;
     private const int HexWithoutAlphaLength = 6;
     private int HexColorLength => _isAlphaVisible ? HexLength : HexWithoutAlphaLength;
@@ -123,6 +124,7 @@ public sealed partial class ColorSelectorSliders : Control
         };
 
         ColorPreviewPanel.PanelOverride = _colorPanelStyle = new();
+        _colorPanelStyle.Padding = ColorPanelPadding;
 
         HexLineEdit.IsValid = value => value.Length <= HexColorLength;
         HexLineEdit.OnTextChanged += OnHexCodeChanged;

@@ -52,8 +52,12 @@
         <BoxContainer Name="HexBox"
             Orientation="Horizontal"
             HorizontalExpand="True">
-            <PanelContainer Name="ColorPreviewPanel" SetWidth="80" Margin="2" />
-            <Control HorizontalExpand="True" />
+            <PanelContainer Name="ColorPreviewPanel"
+                Margin="2"
+                HorizontalExpand="True"
+                SizeFlagsStretchRatio="1" />
+            <Control HorizontalExpand="True"
+                SizeFlagsStretchRatio="3" />
             <BoxContainer Orientation="Horizontal">
                 <Label Text="#" />
                 <MonoLineEdit Name="HexLineEdit" />

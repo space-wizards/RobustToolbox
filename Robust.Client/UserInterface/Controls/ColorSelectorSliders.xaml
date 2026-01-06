@@ -49,5 +49,15 @@
                 <SpinBox Name="AlphaInputBox" />
             </BoxContainer>
         </BoxContainer>
+        <BoxContainer Name="HexBox"
+            Orientation="Horizontal"
+            HorizontalExpand="True">
+            <PanelContainer Name="ColorPreviewPanel" SetWidth="80" Margin="2" />
+            <Control HorizontalExpand="True" />
+            <BoxContainer Orientation="Horizontal">
+                <Label Text="#" />
+                <MonoLineEdit Name="HexLineEdit" />
+            </BoxContainer>
+        </BoxContainer>
     </BoxContainer>
 </Control>

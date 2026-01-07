@@ -105,5 +105,7 @@ namespace Robust.Shared.Network
                 }
             }
         }
+
+        public virtual int SequenceChannel => 0;
     }
 }

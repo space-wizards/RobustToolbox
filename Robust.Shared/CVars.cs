@@ -406,6 +406,15 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetHWId =
             CVarDef.Create("net.hwid", true, CVar.SERVERONLY);
 
+        /**
+         * TRANSFER
+         */
+
+        public static readonly CVarDef<bool> TransferHttp =
+            CVarDef.Create("transfer.http", false, CVar.SERVERONLY);
+
+        public static readonly CVarDef<string> TransferHttpEndpoint =
+            CVarDef.Create("transfer.http_endpoint", "http://localhost:1212/", CVar.SERVERONLY);
 
         /**
          * SUS

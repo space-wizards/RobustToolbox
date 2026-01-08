@@ -36,6 +36,7 @@ public interface ITransferManager
     // Engine API.
 
     internal void Initialize();
+    internal void FrameUpdate();
     internal Task ServerHandshake(INetChannel channel);
     internal event Action ClientHandshakeComplete;
 }

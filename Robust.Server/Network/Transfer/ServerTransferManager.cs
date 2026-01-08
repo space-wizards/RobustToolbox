@@ -25,7 +25,7 @@ internal sealed class ServerTransferManager : BaseTransferManager, ITransferMana
     private readonly Dictionary<NetUserId, Player> _onlinePlayers = new();
 
     internal ServerTransferManager(IConfigurationManager cfg, IStatusHost statusHost, IServerNetManager netManager, ILogManager logManager, ITaskManager taskManager)
-        : base(logManager, NetMessageAccept.Server, taskManager)
+        : base(logManager, NetMessageAccept.Server, taskManager, netManager)
     {
         _cfg = cfg;
         _statusHost = statusHost;
@@ -45,12 +45,26 @@ internal sealed class ServerTransferManager : BaseTransferManager, ITransferMana
 
     private void RxTransferData(MsgTransferData message)
     {
-        throw new NotImplementedException();
+        if (!_onlinePlayers.TryGetValue(message.MsgChannel.UserId, out var player)
+            || player.Impl is not TransferImplLidgren lidgren)
+        {
+            message.MsgChannel.Disconnect("Not lidgren");
+            return;
+        }
+
+        lidgren.ReceiveData(message);
     }
 
     private void RxTransferAckInit(MsgTransferAckInit message)
     {
-        throw new NotImplementedException();
+        if (!_onlinePlayers.TryGetValue(message.MsgChannel.UserId, out var player)
+            || player.Impl is not TransferImplLidgren lidgren)
+        {
+            message.MsgChannel.Disconnect("Not lidgren");
+            return;
+        }
+
+        lidgren.ReceiveInitAck();
     }
 
     public Stream StartTransfer(INetChannel channel, TransferStartInfo startInfo)

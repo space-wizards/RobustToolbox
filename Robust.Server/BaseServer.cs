@@ -780,6 +780,8 @@ namespace Robust.Server
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
 
+            _transfer.FrameUpdate();
+
             _metricsManager.FrameUpdate();
         }
 

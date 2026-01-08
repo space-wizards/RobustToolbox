@@ -2,23 +2,33 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Collections;
 using Robust.Shared.Log;
+using Robust.Shared.Network.Messages.Transfer;
 
 namespace Robust.Shared.Network.Transfer;
 
-internal abstract class BaseTransferManager
+internal abstract partial class BaseTransferManager
 {
     private readonly NetMessageAccept _side;
     private readonly ITaskManager _taskManager;
+    private readonly INetManager _netManager;
 
     protected readonly Dictionary<string, RegisteredKey> RegisteredKeys = [];
     protected readonly ISawmill Sawmill;
 
-    private protected BaseTransferManager(ILogManager logManager, NetMessageAccept side, ITaskManager taskManager)
+    private protected BaseTransferManager(
+        ILogManager logManager,
+        NetMessageAccept side,
+        ITaskManager taskManager,
+        INetManager netManager)
     {
         _side = side;
         _taskManager = taskManager;
+        _netManager = netManager;
         Sawmill = logManager.GetSawmill("net.transfer");
     }
 

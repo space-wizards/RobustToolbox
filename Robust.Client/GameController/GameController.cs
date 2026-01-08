@@ -696,6 +696,11 @@ namespace Robust.Client
                 _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
             }
 
+            using (_prof.Group("Transfer"))
+            {
+                _transfer.FrameUpdate();
+            }
+
             _audio.FlushALDisposeQueues();
         }
 

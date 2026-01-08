@@ -20,7 +20,7 @@ internal sealed class ClientTransferManager : BaseTransferManager, ITransferMana
         IClientNetManager netManager,
         ILogManager logManager,
         ITaskManager taskManager)
-        : base(logManager, NetMessageAccept.Client, taskManager)
+        : base(logManager, NetMessageAccept.Client, taskManager, netManager)
     {
         _netManager = netManager;
     }
@@ -38,12 +38,12 @@ internal sealed class ClientTransferManager : BaseTransferManager, ITransferMana
 
     public void Initialize()
     {
-        _netManager.RegisterNetMessage<MsgTransferInit>(ReceivedTransferInit, NetMessageAccept.Client | NetMessageAccept.Handshake);
+        _netManager.RegisterNetMessage<MsgTransferInit>(RxTransferInit, NetMessageAccept.Client | NetMessageAccept.Handshake);
         _netManager.RegisterNetMessage<MsgTransferAckInit>();
-        _netManager.RegisterNetMessage<MsgTransferData>(ReceivedTransferData, NetMessageAccept.Client | NetMessageAccept.Handshake);
+        _netManager.RegisterNetMessage<MsgTransferData>(RxTransferData, NetMessageAccept.Client | NetMessageAccept.Handshake);
     }
 
-    private async void ReceivedTransferInit(MsgTransferInit message)
+    private async void RxTransferInit(MsgTransferInit message)
     {
         BaseTransferImpl impl;
         if (message.HttpInfo is { } httpInfo)
@@ -61,9 +61,15 @@ internal sealed class ClientTransferManager : BaseTransferManager, ITransferMana
         ClientHandshakeComplete?.Invoke();
     }
 
-    private void ReceivedTransferData(MsgTransferData message)
+    private void RxTransferData(MsgTransferData message)
     {
-        throw new NotImplementedException();
+        if (_transferImpl is not TransferImplLidgren lidgren)
+        {
+            message.MsgChannel.Disconnect("Not lidgren");
+            return;
+        }
+
+        lidgren.ReceiveData(message);
     }
 
     public Task ServerHandshake(INetChannel channel)

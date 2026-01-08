@@ -432,6 +432,15 @@ namespace Robust.Shared
         public static readonly CVarDef<string> TransferHttpEndpoint =
             CVarDef.Create("transfer.http_endpoint", "http://localhost:1212/", CVar.SERVERONLY);
 
+        /// <summary>
+        /// Amount of concurrent client->server transfer streams allowed.
+        /// </summary>
+        /// <remarks>
+        /// Clients will be disconnected if they exceed this limit.
+        /// </remarks>
+        public static readonly CVarDef<int> TransferStreamLimit =
+            CVarDef.Create("transfer.stream_limit", 10, CVar.SERVERONLY);
+
         /**
          * SUS
          */

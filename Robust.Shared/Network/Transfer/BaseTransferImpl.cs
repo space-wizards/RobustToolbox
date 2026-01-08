@@ -34,6 +34,7 @@ internal abstract class BaseTransferImpl(ISawmill sawmill, BaseTransferManager p
     protected readonly ISawmill Sawmill = sawmill;
 
     protected long OutgoingIdCounter;
+    public int MaxChannelCount = int.MaxValue;
 
     private readonly Dictionary<long, ChannelWriter<ArraySegment<byte>>> _receivingChannels = [];
 
@@ -46,13 +47,17 @@ internal abstract class BaseTransferImpl(ISawmill sawmill, BaseTransferManager p
 
     protected abstract bool BoundedChannel { get; }
 
-    /// <summary>
-    /// Called by transfer implementations to indicate that a *new* transfer has been initiated by the remote side.
-    /// </summary>
-    protected void TransferReceived(string key, ChannelReader<ArraySegment<byte>> reader)
+    private void TransferReceived(string key, ChannelReader<ArraySegment<byte>> reader)
     {
-        var stream = new ReceiveStream(reader);
-        Parent.TransferReceived(key, Channel, stream);
+        if (_receivingChannels.Count >= MaxChannelCount)
+        {
+            Sawmill.Warning($"Disconnecting client {Channel} for breaching max channel count of {_receivingChannels}");
+            Channel.Disconnect("Reached max transfer channel count");
+            return;
+        }
+
+        // var stream = new ReceiveStream(reader);
+        // Parent.TransferReceived(key, Channel, stream);
     }
 
     protected void HandleHeaderReceived(

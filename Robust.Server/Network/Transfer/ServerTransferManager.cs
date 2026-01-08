@@ -137,6 +137,8 @@ internal sealed class ServerTransferManager : BaseTransferManager, ITransferMana
             impl = new TransferImplLidgren(Sawmill, channel, this, _netManager);
         }
 
+        impl.MaxChannelCount = _cfg.GetCVar(CVars.TransferStreamLimit);
+
         var datum = new Player
         {
             Impl = impl,

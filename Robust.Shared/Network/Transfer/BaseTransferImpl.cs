@@ -162,10 +162,43 @@ internal abstract class BaseTransferImpl(ISawmill sawmill, BaseTransferManager p
             return read;
         }
 
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+        public override async ValueTask<int> ReadAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken = default)
         {
-            // TODO: Async impl.
-            return base.ReadAsync(buffer, cancellationToken);
+            var read = 0;
+            var remainingSpan = buffer;
+
+            while (remainingSpan.Length > 0)
+            {
+                if (_currentBuffer.Array == null || _currentBuffer.Count <= 0)
+                {
+                    if (_currentBuffer.Array != null)
+                    {
+                        ArrayPool<byte>.Shared.Return(_currentBuffer.Array);
+                        _currentBuffer = default;
+                    }
+
+                    if (!_bufferChannel.TryRead(out _currentBuffer))
+                    {
+                        // Only block if we haven't read any bytes yet.
+                        if (read > 0 || !await ReadNewBufferAsync())
+                            return read;
+                    }
+                }
+
+                DebugTools.Assert(_currentBuffer.Array != null);
+
+                var remainingBuffer = _currentBuffer.Count;
+                var thisRead = Math.Min(remainingSpan.Length, remainingBuffer);
+
+                _currentBuffer.AsMemory(0, thisRead).CopyTo(remainingSpan);
+                remainingSpan = remainingSpan[thisRead..];
+                _currentBuffer = _currentBuffer[thisRead..];
+                read += thisRead;
+            }
+
+            return read;
         }
 
         private bool ReadNewBufferSync()
@@ -177,6 +210,17 @@ internal abstract class BaseTransferImpl(ISawmill sawmill, BaseTransferManager p
             var waitToReadResult = waitToRead.AsTask().Result;
 #pragma warning restore RA0004
             if (!waitToReadResult)
+                return false;
+
+            return _bufferChannel.TryRead(out _currentBuffer);
+        }
+
+        private async Task<bool> ReadNewBufferAsync()
+        {
+            DebugTools.Assert(_currentBuffer.Array == null);
+
+            var waitToRead = await _bufferChannel.WaitToReadAsync();
+            if (!waitToRead)
                 return false;
 
             return _bufferChannel.TryRead(out _currentBuffer);

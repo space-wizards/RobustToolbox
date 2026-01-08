@@ -69,6 +69,20 @@ public sealed partial class ClientEntityManager
         return true;
     }
 
+    public override bool PredictedTrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        if (!TrySpawnInContainer(protoName, container, out uid, containerComp, overrides))
+            return false;
+
+        FlagPredicted(uid.Value);
+        return true;
+    }
+
     public override EntityUid PredictedSpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
     {
         var ent = SpawnNextToOrDrop(protoName, target, xform, overrides);
@@ -101,6 +115,38 @@ public sealed partial class ClientEntityManager
         var ent = SpawnInContainerOrDrop(protoName,
             containerUid,
             containerId,
+            out inserted,
+            xform,
+            containerComp,
+            overrides);
+
+        FlagPredicted(ent);
+        return ent;
+    }
+
+    public override EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        var ent = SpawnInContainerOrDrop(protoName, container, xform, containerComp, overrides);
+
+        FlagPredicted(ent);
+        return ent;
+    }
+
+    public override EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        var ent = SpawnInContainerOrDrop(protoName,
+            container,
             out inserted,
             xform,
             containerComp,

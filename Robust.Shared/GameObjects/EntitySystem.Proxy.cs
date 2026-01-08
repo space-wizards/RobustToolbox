@@ -1412,6 +1412,14 @@ public partial class EntitySystem
     {
         return EntityManager.GetNetEntityArray(uids);
     }
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected NetEntity[] GetNetEntityArray(IReadOnlyCollection<EntityUid> uids)
+    {
+        return EntityManager.GetNetEntityArray(uids);
+    }
 
     /// <summary>
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
@@ -1427,6 +1435,15 @@ public partial class EntitySystem
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity?[] GetNetEntityArray(EntityUid?[] uids)
+    {
+        return EntityManager.GetNetEntityArray(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected NetEntity?[] GetNetEntityArray(IReadOnlyCollection<EntityUid?> uids)
     {
         return EntityManager.GetNetEntityArray(uids);
     }

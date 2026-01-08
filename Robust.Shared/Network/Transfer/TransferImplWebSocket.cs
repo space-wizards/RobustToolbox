@@ -31,6 +31,8 @@ internal abstract class TransferImplWebSocket : BaseTransferImpl
     {
     }
 
+    protected override bool BoundedChannel => true;
+
     public override Stream StartTransfer(TransferStartInfo startInfo)
     {
         if (WebSocket == null)

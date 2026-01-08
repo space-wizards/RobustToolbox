@@ -44,6 +44,8 @@ internal abstract class BaseTransferImpl(ISawmill sawmill, BaseTransferManager p
     public abstract Task ClientInit(CancellationToken cancel);
     public abstract Stream StartTransfer(TransferStartInfo startInfo);
 
+    protected abstract bool BoundedChannel { get; }
+
     protected void TransferReceived(string key, ChannelReader<ArraySegment<byte>> reader)
     {
         var stream = new ReceiveStream(reader);
@@ -67,8 +69,14 @@ internal abstract class BaseTransferImpl(ISawmill sawmill, BaseTransferManager p
 
             Sawmill.Verbose($"Starting transfer stream {transferId} with key {key}");
 
-            var fullChannel = System.Threading.Channels.Channel.CreateBounded<ArraySegment<byte>>(
-                new BoundedChannelOptions(4)
+            var fullChannel = BoundedChannel
+                ? System.Threading.Channels.Channel.CreateBounded<ArraySegment<byte>>(
+                    new BoundedChannelOptions(4)
+                    {
+                        SingleReader = true,
+                        SingleWriter = true
+                    })
+                : System.Threading.Channels.Channel.CreateUnbounded<ArraySegment<byte>>(new UnboundedChannelOptions
                 {
                     SingleReader = true,
                     SingleWriter = true

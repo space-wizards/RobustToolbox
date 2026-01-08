@@ -46,6 +46,9 @@ internal sealed class TransferImplLidgren(
         return new SendStream(Channel, this, id, startInfo.MessageKey);
     }
 
+    // We can't meaningfully communicate backpressure into Lidgren so this is our only option.
+    protected override bool BoundedChannel => false;
+
     public void ReceiveInitAck()
     {
         _serverInitTcs?.TrySetResult();

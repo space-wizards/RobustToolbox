@@ -25,7 +25,7 @@ internal sealed class ServerTransferManager : BaseTransferManager, ITransferMana
     private readonly Dictionary<NetUserId, Player> _onlinePlayers = new();
 
     internal ServerTransferManager(IConfigurationManager cfg, IStatusHost statusHost, IServerNetManager netManager, ILogManager logManager, ITaskManager taskManager)
-        : base(logManager, NetMessageAccept.Server, taskManager, netManager)
+        : base(logManager, NetMessageAccept.Server, taskManager)
     {
         _cfg = cfg;
         _statusHost = statusHost;

@@ -104,6 +104,12 @@ namespace Robust.Shared.Network
         /// <param name="sendBye">If false, we ghost the remote client and don't tell them they got disconnected properly.</param>
         void Disconnect(string reason, bool sendBye);
 
+        /// <summary>
+        ///     Check whether the networking layer has space to immediately send a message with the given parameters.
+        /// </summary>
+        /// <remarks>
+        ///     If this returns true, messages may still be sent, but they will be queued until there is space available.
+        /// </remarks>
         bool CanSendImmediately(NetDeliveryMethod method, int sequenceChannel);
     }
 }

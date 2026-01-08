@@ -3,6 +3,10 @@ using System.IO;
 
 namespace Robust.Shared.Utility;
 
+/// <summary>
+/// Base class for <see cref="Stream"/> that has everything stubbed out in a "not supported" fashion,
+/// so you don't need to implement a dozen overloads yourself.
+/// </summary>
 internal abstract class SaneStream : Stream
 {
     public override void Flush()

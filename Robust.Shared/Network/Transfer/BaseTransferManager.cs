@@ -20,7 +20,6 @@ internal abstract partial class BaseTransferManager
 
     private readonly NetMessageAccept _side;
     private readonly ITaskManager _taskManager;
-    private readonly INetManager _netManager;
 
     protected readonly Dictionary<string, RegisteredKey> RegisteredKeys = [];
     protected readonly ISawmill Sawmill;
@@ -28,12 +27,10 @@ internal abstract partial class BaseTransferManager
     private protected BaseTransferManager(
         ILogManager logManager,
         NetMessageAccept side,
-        ITaskManager taskManager,
-        INetManager netManager)
+        ITaskManager taskManager)
     {
         _side = side;
         _taskManager = taskManager;
-        _netManager = netManager;
         Sawmill = logManager.GetSawmill("net.transfer");
     }
 
@@ -67,6 +64,12 @@ internal abstract partial class BaseTransferManager
         {
             registered.Callback(new TransferReceivedEvent(key, channel, stream));
         });
+    }
+
+    protected void CheckRegistered(TransferStartInfo info)
+    {
+        if (!RegisteredKeys.ContainsKey(info.MessageKey))
+            throw new ArgumentException($"Key is not registered: {info.MessageKey}");
     }
 
     protected sealed class RegisteredKey

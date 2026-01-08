@@ -21,6 +21,8 @@ internal sealed class ServerTransferImplWebSocket : TransferImplWebSocket
     private readonly SemaphoreSlim _apiLock = new(1, 1);
     private readonly TaskCompletionSource _connectTcs = new();
 
+    // To authenticate the client doing the HTTP request,
+    // we ask that they provide a key we gave them via Lidgren traffic.
     public byte[]? Key;
 
     public ServerTransferImplWebSocket(

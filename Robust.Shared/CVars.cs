@@ -410,9 +410,25 @@ namespace Robust.Shared
          * TRANSFER
          */
 
+        /// <summary>
+        /// If true, enable the WebSocket-based high bandwidth transfer channel.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// If set, <see cref="TransferHttpEndpoint"/> must be set to the API address of the server,
+        /// and you must ensure your reverse proxy (if you have one) is configured to allow WebSocket connections.
+        /// </para>
+        /// <para>
+        /// The transfer channel has no additional encryption layer. Unless your API is exposed behind HTTPS,
+        /// traffic over the channel will not be encrypted, and you are discouraged from enabling it.
+        /// </para>
+        /// </remarks>
         public static readonly CVarDef<bool> TransferHttp =
             CVarDef.Create("transfer.http", false, CVar.SERVERONLY);
 
+        /// <summary>
+        /// The base HTTP URL of the game server, used for the high-bandwidth transfer channel.
+        /// </summary>
         public static readonly CVarDef<string> TransferHttpEndpoint =
             CVarDef.Create("transfer.http_endpoint", "http://localhost:1212/", CVar.SERVERONLY);
 

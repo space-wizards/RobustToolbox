@@ -20,7 +20,7 @@ internal sealed class ClientTransferManager : BaseTransferManager, ITransferMana
         IClientNetManager netManager,
         ILogManager logManager,
         ITaskManager taskManager)
-        : base(logManager, NetMessageAccept.Client, taskManager, netManager)
+        : base(logManager, NetMessageAccept.Client, taskManager)
     {
         _netManager = netManager;
     }

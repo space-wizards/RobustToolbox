@@ -46,6 +46,9 @@ internal abstract class BaseTransferImpl(ISawmill sawmill, BaseTransferManager p
 
     protected abstract bool BoundedChannel { get; }
 
+    /// <summary>
+    /// Called by transfer implementations to indicate that a *new* transfer has been initiated by the remote side.
+    /// </summary>
     protected void TransferReceived(string key, ChannelReader<ArraySegment<byte>> reader)
     {
         var stream = new ReceiveStream(reader);

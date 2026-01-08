@@ -2,17 +2,22 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
+using Prometheus;
 using Robust.Shared.Asynchronous;
-using Robust.Shared.Collections;
 using Robust.Shared.Log;
-using Robust.Shared.Network.Messages.Transfer;
 
 namespace Robust.Shared.Network.Transfer;
 
 internal abstract partial class BaseTransferManager
 {
+    internal static readonly Counter SentDataMetrics = Metrics.CreateCounter(
+        "robust_transfer_sent_bytes",
+        "Number of bytes sent via the transfer system");
+
+    internal static readonly Counter ReceivedDataMetrics = Metrics.CreateCounter(
+        "robust_transfer_received_bytes",
+        "Number of bytes received via the transfer system");
+
     private readonly NetMessageAccept _side;
     private readonly ITaskManager _taskManager;
     private readonly INetManager _netManager;

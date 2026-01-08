@@ -56,6 +56,8 @@ internal abstract class TransferImplWebSocket : BaseTransferImpl
                     .ReceiveAsync(_headerBuffer.AsMemory(), cancel)
                     .ConfigureAwait(false);
 
+                BaseTransferManager.ReceivedDataMetrics.Inc(receiveResult.Count);
+
                 if (!receiveResult.EndOfMessage)
                     throw new ProtocolViolationException("Header did not fit in one receive");
 
@@ -89,6 +91,8 @@ internal abstract class TransferImplWebSocket : BaseTransferImpl
         {
             var ws = ((TransferImplWebSocket)Parent).WebSocket!;
 
+            BaseTransferManager.SentDataMetrics.Inc(buffer.Count);
+
             await ws.SendAsync(
                     buffer,
                     WebSocketMessageType.Binary,
@@ -107,6 +111,8 @@ internal abstract class TransferImplWebSocket : BaseTransferImpl
         {
             var buf = ArrayPool<byte>.Shared.Rent(BufferSize);
             var result = await ws.ReceiveAsync(buf.AsMemory(), cancel).ConfigureAwait(false);
+
+            BaseTransferManager.ReceivedDataMetrics.Inc(result.Count);
 
             if (result.MessageType != WebSocketMessageType.Binary)
                 throw new ProtocolViolationException("Data must be binary!");

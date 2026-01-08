@@ -58,6 +58,8 @@ internal sealed class TransferImplLidgren(
     {
         DebugTools.Assert(data.Data.Array != null);
 
+        BaseTransferManager.ReceivedDataMetrics.Inc(data.Data.Count);
+
         // Header message
         if (!_parsedHeader.HasValue)
         {
@@ -98,6 +100,8 @@ internal sealed class TransferImplLidgren(
         {
             if (!_channel.IsConnected)
                 throw new InvalidOperationException("Channel is disconnected");
+
+            BaseTransferManager.SentDataMetrics.Inc(buffer.Count);
 
             await Parent.Parent.WaitToSend(_channel);
 

@@ -106,6 +106,12 @@ namespace Robust.Shared.Network
             }
         }
 
+        /// <summary>
+        /// The lidgren sequence channel to send this message on.
+        /// </summary>
+        /// <remarks>
+        /// Channels 16 and higher are reserved for internal RT usage.
+        /// </remarks>
         public virtual int SequenceChannel => 0;
     }
 }

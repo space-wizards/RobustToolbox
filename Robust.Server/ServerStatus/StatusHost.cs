@@ -14,6 +14,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
+using System.Net.WebSockets;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -242,6 +243,7 @@ namespace Robust.Server.ServerStatus
             public Uri Url => _context.Request.Url!;
             public bool IsGetLike => RequestMethod == HttpMethod.Head || RequestMethod == HttpMethod.Get;
             public IReadOnlyDictionary<string, StringValues> RequestHeaders { get; }
+            public bool IsWebSocketRequest => _context.Request.IsWebSocketRequest;
 
             public bool KeepAlive
             {
@@ -351,6 +353,12 @@ namespace Robust.Server.ServerStatus
                 _context.Response.StatusCode = (int)code;
 
                 return Task.FromResult(_context.Response.OutputStream);
+            }
+
+            public async Task<WebSocket> AcceptWebSocketAsync()
+            {
+                var context = await _context.AcceptWebSocketAsync(null);
+                return context.WebSocket;
             }
 
             private void RespondShared()

@@ -722,9 +722,9 @@ namespace Robust.Shared.GameObjects
             {
                 var reg = _componentFactory.GetRegistration(component);
                 DebugTools.Assert(component.Networked == (reg.NetID != null));
-                if (reg.NetID != null)
+                if (reg.NetID is {} id)
                 {
-                    if (!metadata.NetComponents.Remove(reg.NetID.Value))
+                    if (!metadata.NetComponents.Remove(id) && !metadata.IgnoredNetComponents.Contains(id))
                         _sawmill.Error($"Entity {ToPrettyString(entityUid, metadata)} did not have {component.GetType().Name} in its networked component dictionary during component deletion.");
 
                     if (component.NetSyncEnabled)

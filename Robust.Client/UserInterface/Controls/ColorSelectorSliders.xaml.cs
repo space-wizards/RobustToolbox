@@ -74,6 +74,7 @@ public sealed partial class ColorSelectorSliders : Control
     private readonly ColorSelectorStyleBox _middleStyle;
     private readonly ColorSelectorStyleBox _bottomStyle;
     private readonly StyleBoxFlat _colorPanelStyle;
+    private readonly MonoLineEdit _hexLineEdit;
 
     // TODO: There should probably be a generic reusable function somewhere to validate that a
     // string is 100% hex characters...? As opposed to putting it in color sliders. But I don't
@@ -131,8 +132,10 @@ public sealed partial class ColorSelectorSliders : Control
         ColorPreviewPanel.PanelOverride = _colorPanelStyle = new();
         _colorPanelStyle.Padding = ColorPanelPadding;
 
-        HexLineEdit.IsValid = IsHexCodeInputValid;
-        HexLineEdit.OnTextChanged += OnHexCodeChanged;
+        _hexLineEdit = new();
+        _hexLineEdit.IsValid = IsHexCodeInputValid;
+        _hexLineEdit.OnTextChanged += OnHexCodeChanged;
+        HexEditBox.AddChild(_hexLineEdit);
 
         UpdateType();
         UpdateColorDescription();
@@ -228,7 +231,7 @@ public sealed partial class ColorSelectorSliders : Control
             ? _currentColor.ToHex()
             : _currentColor.ToHexNoAlpha();
 
-        HexLineEdit.SetText(hexColor[1..], invokeEvent: false);
+        _hexLineEdit.SetText(hexColor[1..], invokeEvent: false);
     }
 
     private void UpdateAllSliders()
@@ -243,7 +246,7 @@ public sealed partial class ColorSelectorSliders : Control
     private void UpdateAlphaVisible()
     {
         AlphaSliderBox.Visible = _isAlphaVisible;
-        HexLineEdit.MeasureText = new string('A', HexColorLength);
+        _hexLineEdit.MeasureText = new string('A', HexColorLength);
     }
 
     private bool IsSpinBoxValid(int value, ColorSliderOrder ordering)
@@ -317,6 +320,41 @@ public sealed partial class ColorSelectorSliders : Control
     {
         Rgb,
         Hsv,
+    }
+
+    /// <summary>
+    ///     A LineEdit control that displays in a monospace font.
+    ///     This control can be resized to fit a particular text string using <see cref="MeasureText"/>.
+    ///     Due to being monospace, this effectively allows the control to be sized to a certain # of characters.
+    /// </summary>
+    private sealed class MonoLineEdit : LineEdit
+    {
+        public string? MeasureText { get; set; } = null;
+
+        public MonoLineEdit()
+        {
+            AddStyleClass("monospace");
+        }
+
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
+        {
+            var baseOverride = base.MeasureOverride(availableSize);
+
+            if (MeasureText is null)
+                return baseOverride;
+
+            var font = GetFont();
+            var textOverride = new Vector2(1.0f, 0.0f);
+            foreach (var rune in MeasureText.EnumerateRunes())
+            {
+                if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
+                    continue;
+
+                textOverride += new Vector2(metrics.Advance, 0);
+            }
+
+            return baseOverride + textOverride;
+        }
     }
 
     private abstract class ColorSliderStrategy

@@ -58,9 +58,9 @@
                 SizeFlagsStretchRatio="1" />
             <Control HorizontalExpand="True"
                 SizeFlagsStretchRatio="3" />
-            <BoxContainer Orientation="Horizontal">
+            <BoxContainer Name="HexEditBox" Orientation="Horizontal">
                 <Label Text="#" />
-                <MonoLineEdit Name="HexLineEdit" />
+                <!-- mono line edit added in c# -->
             </BoxContainer>
         </BoxContainer>
     </BoxContainer>

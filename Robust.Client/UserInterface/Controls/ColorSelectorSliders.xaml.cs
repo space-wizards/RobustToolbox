@@ -90,32 +90,14 @@ public sealed partial class ColorSelectorSliders : Control
         RobustXamlLoader.Load(this);
         IoCManager.InjectDependencies(this);
 
-        TopColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Top); };
-        TopColorSlider.BackgroundStyleBoxOverride = _topStyle = new();
+        TopChannel.SliderStyleBoxOverride = _topStyle = new();
+        MiddleChannel.SliderStyleBoxOverride = _middleStyle = new();
+        BottomChannel.SliderStyleBoxOverride = _bottomStyle = new();
 
-        MiddleColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Middle); };
-        MiddleColorSlider.BackgroundStyleBoxOverride = _middleStyle = new();
-
-        BottomColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Bottom); };
-        BottomColorSlider.BackgroundStyleBoxOverride = _bottomStyle = new();
-
-        AlphaSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Alpha); };
-
-        TopInputBox.IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Top);
-        TopInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Top); };
-        TopInputBox.InitDefaultButtons();
-
-        MiddleInputBox.IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Middle);
-        MiddleInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Middle); };
-        MiddleInputBox.InitDefaultButtons();
-
-        BottomInputBox.IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Bottom);
-        BottomInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Bottom); };
-        BottomInputBox.InitDefaultButtons();
-
-        AlphaInputBox.IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Alpha);
-        AlphaInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Alpha); };
-        AlphaInputBox.InitDefaultButtons();
+        InitializeChannel(TopChannel, ColorSliderOrder.Top);
+        InitializeChannel(MiddleChannel, ColorSliderOrder.Middle);
+        InitializeChannel(BottomChannel, ColorSliderOrder.Bottom);
+        InitializeChannel(AlphaChannel, ColorSliderOrder.Alpha);
 
         foreach (var ty in Enum.GetValues<ColorSelectorType>())
         {
@@ -132,8 +114,7 @@ public sealed partial class ColorSelectorSliders : Control
         ColorPreviewPanel.PanelOverride = _colorPanelStyle = new();
         _colorPanelStyle.Padding = ColorPanelPadding;
 
-        _hexLineEdit = new();
-        _hexLineEdit.IsValid = IsHexCodeInputValid;
+        _hexLineEdit = new() { IsValid = IsHexCodeInputValid };
         _hexLineEdit.OnTextChanged += OnHexCodeChanged;
         HexEditBox.AddChild(_hexLineEdit);
 
@@ -155,14 +136,14 @@ public sealed partial class ColorSelectorSliders : Control
         };
     }
 
-    private (Slider slider, SpinBox inputBox) GetSliderByOrder(ColorSliderOrder order)
+    private ISliderChannel GetChannelByOrder(ColorSliderOrder order)
     {
         return order switch
         {
-            ColorSliderOrder.Top => (TopColorSlider, TopInputBox),
-            ColorSliderOrder.Middle => (MiddleColorSlider, MiddleInputBox),
-            ColorSliderOrder.Bottom => (BottomColorSlider, BottomInputBox),
-            ColorSliderOrder.Alpha => (AlphaSlider, AlphaInputBox),
+            ColorSliderOrder.Top => TopChannel,
+            ColorSliderOrder.Middle => MiddleChannel,
+            ColorSliderOrder.Bottom => BottomChannel,
+            ColorSliderOrder.Alpha => AlphaChannel,
             _ => throw new ArgumentOutOfRangeException(),
         };
     }
@@ -174,13 +155,20 @@ public sealed partial class ColorSelectorSliders : Control
             : GetStrategy().GetColorValueDivisor(order);
     }
 
+    private void InitializeChannel(ISliderChannel channel, ColorSliderOrder order)
+    {
+        channel.OnSliderValueChanged += r => { OnSliderValueChanged(order); };
+        channel.IsInputValid = value => IsSpinBoxValid(value, order);
+        channel.OnSpinValueChanged += value => { OnInputBoxValueChanged(value, order); };
+    }
+
     private void UpdateType()
     {
         var strategy = GetStrategy();
         var labels = strategy.GetSliderLabelTexts();
-        TopSliderLabel.Text = labels.top;
-        MiddleSliderLabel.Text = labels.middle;
-        BottomSliderLabel.Text = labels.bottom;
+        TopChannel.LabelText = labels.top;
+        MiddleChannel.LabelText = labels.middle;
+        BottomChannel.LabelText = labels.bottom;
 
         _topStyle.ConfigureSlider(strategy.TopSliderStyle);
         _middleStyle.ConfigureSlider(strategy.MiddleSliderStyle);
@@ -189,9 +177,8 @@ public sealed partial class ColorSelectorSliders : Control
 
     private void UpdateSlider(ColorSliderOrder order)
     {
-        var (slider, inputBox) = GetSliderByOrder(order);
+        var channel = GetChannelByOrder(order);
         var divisor = GetColorValueDivisor(order);
-
         var dataValue = order switch
         {
             ColorSliderOrder.Top => _colorData.X,
@@ -201,8 +188,7 @@ public sealed partial class ColorSelectorSliders : Control
             _ => throw new ArgumentOutOfRangeException(nameof(order))
         };
 
-        slider.SetValueWithoutEvent(dataValue);
-        inputBox.OverrideValue((int)(dataValue * divisor));
+        channel.OverrideValue(dataValue, divisor);
     }
 
     private void UpdateColorPanel()
@@ -245,7 +231,7 @@ public sealed partial class ColorSelectorSliders : Control
 
     private void UpdateAlphaVisible()
     {
-        AlphaSliderBox.Visible = _isAlphaVisible;
+        AlphaChannel.Visible = _isAlphaVisible;
         _hexLineEdit.MeasureText = new string('A', HexColorLength);
     }
 
@@ -265,12 +251,12 @@ public sealed partial class ColorSelectorSliders : Control
 
     private void OnInputBoxValueChanged(ValueChangedEventArgs args, ColorSliderOrder order)
     {
-        var (slider, _) = GetSliderByOrder(order);
+        var channel = GetChannelByOrder(order);
         var value = args.Value / GetColorValueDivisor(order);
 
         // We are intentionally triggering the slider OnValueChanged event here.
         // This is so that the color data values of the sliders are updated accordingly.
-        slider.Value = value;
+        channel.Value = value;
     }
 
     private void OnHexCodeChanged(LineEdit.LineEditEventArgs args)
@@ -295,10 +281,10 @@ public sealed partial class ColorSelectorSliders : Control
     private void OnSliderValueChanged(ColorSliderOrder order)
     {
         _colorData = new Vector4(
-            TopColorSlider.Value,
-            MiddleColorSlider.Value,
-            BottomColorSlider.Value,
-            AlphaSlider.Value);
+            TopChannel.Value,
+            MiddleChannel.Value,
+            BottomChannel.Value,
+            AlphaChannel.Value);
 
         _currentColor = GetStrategy().FromColorData(_colorData);
         OnColorChanged?.Invoke(_currentColor);
@@ -473,4 +459,15 @@ public sealed partial class ColorSelectorSliders : Control
                 Loc.GetString("color-selector-sliders-value"));
         }
     }
+}
+
+public interface ISliderChannel
+{
+    event Action<Range>? OnSliderValueChanged;
+    event Action<ValueChangedEventArgs>? OnSpinValueChanged;
+
+    Func<int, bool>? IsInputValid { set; }
+    float Value { get; set; }
+
+    void OverrideValue(float value, float divisor);
 }

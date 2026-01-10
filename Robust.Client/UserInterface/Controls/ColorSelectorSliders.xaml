@@ -7,47 +7,10 @@
             <Label Name="ColorDescriptionLabel" />
         </BoxContainer>
         <BoxContainer Name="BodyBox" Orientation="Vertical">
-            <BoxContainer Name="TopSliderBox"
-                Orientation="Horizontal"
-                SeparationOverride="3">
-                <Label Name="TopSliderLabel" />
-                <ColorableSlider Name="TopColorSlider"
-                    HorizontalExpand="True"
-                    VerticalAlignment="Center"
-                    MaxValue="1.0" />
-                <SpinBox Name="TopInputBox" />
-            </BoxContainer>
-            <BoxContainer Name="MiddleSliderBox"
-                Orientation="Horizontal"
-                SeparationOverride="3">
-                <Label Name="MiddleSliderLabel" />
-                <ColorableSlider Name="MiddleColorSlider"
-                    HorizontalExpand="True"
-                    VerticalAlignment="Center"
-                    MaxValue="1.0" />
-                <SpinBox Name="MiddleInputBox" />
-            </BoxContainer>
-            <BoxContainer Name="BottomSliderBox"
-                Orientation="Horizontal"
-                SeparationOverride="3">
-                <Label Name="BottomSliderLabel" />
-                <ColorableSlider Name="BottomColorSlider"
-                    HorizontalExpand="True"
-                    VerticalAlignment="Center"
-                    MaxValue="1.0" />
-                <SpinBox Name="BottomInputBox" />
-            </BoxContainer>
-            <BoxContainer Name="AlphaSliderBox"
-                Orientation="Horizontal"
-                SeparationOverride="3">
-                <Label Name="AlphaSliderLabel"
-                    Text="{Loc 'color-selector-sliders-alpha'}" />
-                <Slider Name="AlphaSlider"
-                    HorizontalExpand="True"
-                    VerticalAlignment="Center"
-                    MaxValue="1.0" />
-                <SpinBox Name="AlphaInputBox" />
-            </BoxContainer>
+            <ColorSliderChannel Name="TopChannel" />
+            <ColorSliderChannel Name="MiddleChannel" />
+            <ColorSliderChannel Name="BottomChannel" />
+            <AlphaSliderChannel Name="AlphaChannel" />
         </BoxContainer>
         <BoxContainer Name="HexBox"
             Orientation="Horizontal"

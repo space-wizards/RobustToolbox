@@ -18,12 +18,14 @@ from dataclasses import dataclass, field
 
 @dataclass
 class LinkerData:
+    name: str
     out_file: str
     inputs: list[str] = field(default_factory=list)
     libs: list[str] = field(default_factory=list)
     lib_search_paths: list[str] = field(default_factory=list)
     pkg_config_libs: list[str] = field(default_factory=list)
     export_symbols: list[str] = field(default_factory=list)
+    debug: bool = True
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
@@ -32,7 +34,7 @@ def main():
     parser.add_argument("--release", action="store_true")
 
     args = parser.parse_args()
-    cmd = ["cargo", "build", "-p", "robust-native-server", "-p", "robust-native-client"]
+    cmd = ["cargo", "build", "-p", "robust-native-server", "-p", "robust-native-client", "-p", "robust-native-universal"]
     if args.release:
         cmd.append("--release")
 
@@ -43,22 +45,43 @@ def main():
         target_dir = os.path.join("target", "release")
 
     link(LinkerData(
+        name="robust_native_client",
         out_file=os.path.join(target_dir, platform_dylib_name("robust_native_client")),
         inputs=[os.path.join(target_dir, platform_staticlib_name("robust_native_client"))],
         pkg_config_libs=["ogg", "opus", "vorbis"],
         export_symbols=read_symbols_def("ogg")
             + read_symbols_def("vorbis")
             + read_symbols_def("opus")
-            + read_symbols_def("client")))
+            + read_symbols_def("client"),
+        debug=not args.release))
 
     link(LinkerData(
+        name="robust_native_server",
         out_file=os.path.join(target_dir, platform_dylib_name("robust_native_server")),
-        inputs=[os.path.join(target_dir, platform_staticlib_name("robust_native_server"))]))
+        inputs=[os.path.join(target_dir, platform_staticlib_name("robust_native_server"))],
+        pkg_config_libs=["ogg", "vorbis"],
+        export_symbols=read_symbols_def("ogg")
+            + read_symbols_def("vorbis"),
+        debug=not args.release))
+
+    link(LinkerData(
+        name="robust_native_universal",
+        out_file=os.path.join(target_dir, platform_dylib_name("robust_native_universal")),
+        inputs=[os.path.join(target_dir, platform_staticlib_name("robust_native_universal"))],
+        pkg_config_libs=["ogg", "opus", "vorbis"],
+        export_symbols=read_symbols_def("ogg")
+            + read_symbols_def("vorbis")
+            + read_symbols_def("opus")
+            + read_symbols_def("client"),
+        debug=not args.release))
+
 
 def link(data: LinkerData):
     system = platform.system()
     if system == "Darwin":
         link_macos(data)
+    if system == "Windows":
+        link_windows(data)
     else:
         raise NotImplementedError()
 
@@ -90,11 +113,54 @@ def link_macos(data: LinkerData):
 
     subprocess.run(args, check=True)
 
-def get_pkg_config_linker_flags(names: list[str]) -> list[str]:
+def link_windows(data: LinkerData):
+    with tempfile.NamedTemporaryFile("w+", delete_on_close=False) as def_list_file:
+        def_list_file.write(f"LIBRARY {data.name}\n")
+        def_list_file.write(f"EXPORTS\n")
+        def_list_file.writelines((f"    {n.strip()}\n" for n in data.export_symbols))
+        def_list_file.close()
+
+        (path, _) = os.path.splitext(data.out_file)
+        out_file_temp = path + "_.dll"
+
+        args = [
+            "link.exe",
+            "/NOLOGO",
+            "/IGNORE:4001",
+            "/MACHINE:X64",
+            f"/DEF:{def_list_file.name}",
+            "/NXCOMPAT",
+            "/DEBUG",
+            ("/OPT:REF,NOICF" if data.debug else "/OPT:REF,ICF"),
+            f"/OUT:{out_file_temp}"
+        ] + get_pkg_config_linker_flags(data.pkg_config_libs, msvc=True) + data.inputs
+
+        args.extend(("/LIBPATH:" + p for p in data.lib_search_paths))
+        args.extend(data.libs)
+
+        args.extend(["psapi.lib", "shell32.lib", "user32.lib", "advapi32.lib", "bcrypt.lib", "legacy_stdio_definitions.lib", "kernel32.lib", "ntdll.lib", "userenv.lib", "ws2_32.lib", "dbghelp.lib", "/defaultlib:msvcrt"])
+
+        subprocess.run(args, check=True)
+
+        if os.path.exists(data.out_file):
+            os.remove(data.out_file)
+
+        if os.path.exists(path + ".pdb"):
+            os.remove(path + ".pdb")
+
+        os.rename(out_file_temp, data.out_file)
+        os.rename(path + "_.pdb", path + ".pdb")
+
+def get_pkg_config_linker_flags(names: list[str], msvc: bool = False) -> list[str]:
     if not names:
         return []
 
-    result = subprocess.run(["pkg-config", "--libs"] + names, check=True, stdout=subprocess.PIPE)
+    args = ["pkgconf", "--libs"]
+    if msvc:
+        args.append("--msvc-syntax")
+    args.extend(names)
+
+    result = subprocess.run(args + names, check=True, stdout=subprocess.PIPE)
     return shlex.split(result.stdout.decode("utf-8"))
 
 def read_symbols_def(name: str) -> list[str]:

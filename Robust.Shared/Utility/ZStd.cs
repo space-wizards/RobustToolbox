@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpZstd.Interop;
-using static Robust.Shared.Native.Libc;
 using static SharpZstd.Interop.Zstd;
 
 namespace Robust.Shared.Utility;

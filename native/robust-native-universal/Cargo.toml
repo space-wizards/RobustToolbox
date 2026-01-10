@@ -1,0 +1,12 @@
+[package]
+name = "robust-native-universal"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+mimalloc = { workspace = true }
+robust-native-client = { path = "../robust-native-client" }
+robust-native-server = { path = "../robust-native-server" }

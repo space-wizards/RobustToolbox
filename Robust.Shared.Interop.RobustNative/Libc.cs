@@ -1,9 +1,9 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿// ReSharper disable IdentifierTypo
+// ReSharper disable InconsistentNaming
 
-namespace Robust.Shared.Native;
+namespace Robust.Shared.Interop.RobustNative;
 
-internal static class Libc
+internal static partial class Libc
 {
     public const int RTLD_LAZY = 0x00001;
     public const int RTLD_NOW = 0x00002;
@@ -14,6 +14,6 @@ internal static class Libc
     public const int RTLD_LOCAL = 0;
     public const int RTLD_NODELETE = 0x01000;
 
-    [DllImport("libdl.so.2")]
-    public static extern IntPtr dlopen([MarshalAs(UnmanagedType.LPUTF8Str)] string name, int flags);
+    [LibraryImport("dl", StringMarshalling = StringMarshalling.Utf8)]
+    public static partial IntPtr dlopen(string name, int flags);
 }

@@ -1,0 +1,23 @@
+--config
+generate-helper-types
+generate-file-scoped-namespaces
+multi-file
+--language
+c
+--output
+Vorbis/Gen/
+--namespace
+Robust.Shared.Interop.RobustNative.Vorbis
+--libraryPath
+robust-native
+--with-access-specifier
+*=Internal
+--file
+include_vorbis.h
+--traverse
+E:\ss14\native-build\vcpkg_installed\x64-windows\include\vorbis\codec.h
+--methodClassName
+Vorbis
+--remap
+long=CLong
+unsigned long=CULong

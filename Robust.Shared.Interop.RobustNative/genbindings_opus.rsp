@@ -1,0 +1,25 @@
+--config
+generate-helper-types
+generate-file-scoped-namespaces
+multi-file
+--language
+c
+--output
+Opus/Gen/
+--namespace
+Robust.Shared.Interop.RobustNative.Opus
+--libraryPath
+robust-native
+--with-access-specifier
+*=Internal
+--file
+include_opus.h
+--traverse
+E:\ss14\native-build\vcpkg_installed\x64-windows\include\opus\opus.h
+E:\ss14\native-build\vcpkg_installed\x64-windows\include\opus\opus_defines.h
+E:\ss14\native-build\vcpkg_installed\x64-windows\include\opus\opus_types.h
+--methodClassName
+Opus
+--remap
+long=CLong
+unsigned long=CULong

@@ -331,6 +331,15 @@ name = "robust-native-shared"
 version = "0.1.0"
 
 [[package]]
+name = "robust-native-universal"
+version = "0.1.0"
+dependencies = [
+ "mimalloc",
+ "robust-native-client",
+ "robust-native-server",
+]
+
+[[package]]
 name = "robust-native-webview"
 version = "0.1.0"
 dependencies = [

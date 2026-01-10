@@ -131,6 +131,10 @@
   <Project Path="Robust.Server.Testing/Robust.Server.Testing.csproj" />
   <Project Path="Robust.Server/Robust.Server.csproj" />
   <Project Path="Robust.Shared.IntegrationTests/Robust.Shared.IntegrationTests.csproj" />
+  <Project Path="Robust.Shared.Interop.RobustNative/Robust.Shared.Interop.RobustNative.csproj">
+    <BuildType Solution="DebugOpt|*" Project="Debug" />
+    <BuildType Solution="Tools|*" Project="Debug" />
+  </Project>
   <Project Path="Robust.Shared.Maths.Testing/Robust.Shared.Maths.Testing.csproj" />
   <Project Path="Robust.Shared.Maths.Tests/Robust.Shared.Maths.Tests.csproj" />
   <Project Path="Robust.Shared.Maths/Robust.Shared.Maths.csproj" />

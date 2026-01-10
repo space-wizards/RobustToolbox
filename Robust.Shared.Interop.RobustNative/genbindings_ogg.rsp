@@ -1,0 +1,23 @@
+﻿--config
+generate-helper-types
+generate-file-scoped-namespaces
+multi-file
+--language
+c
+--output
+Ogg/Gen/
+--namespace
+Robust.Shared.Interop.RobustNative.Ogg
+--libraryPath
+robust-native
+--with-access-specifier
+*=Internal
+--file
+include_ogg.h
+--traverse
+E:\ss14\native-build\vcpkg_installed\x64-windows\include\ogg\ogg.h
+--methodClassName
+Ogg
+--remap
+long=CLong
+unsigned long=CULong

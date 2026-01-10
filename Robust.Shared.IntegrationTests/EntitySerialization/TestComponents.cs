@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
+using Robust.Shared.Analyzers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
@@ -40,6 +40,20 @@ internal sealed partial class EntitySaveTestComponent : Component
             entMan.GetComponent<TransformComponent>(uid),
             entMan.EnsureComponent<EntitySaveTestComponent>(uid));
     }
+}
+
+[RegisterComponent]
+[NetworkedComponent, AutoGenerateComponentState]
+public sealed partial class WeakEntityReferenceTestComponent : Component
+{
+    [DataField, AutoNetworkedField]
+    public WeakEntityReference Entity;
+
+    [DataField, AutoNetworkedField]
+    public List<WeakEntityReference> EntityList = new();
+
+    [DataField, AutoNetworkedField]
+    public HashSet<WeakEntityReference> EntitySet = new();
 }
 
 /// <summary>

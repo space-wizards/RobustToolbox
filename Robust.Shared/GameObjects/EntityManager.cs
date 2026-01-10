@@ -1053,6 +1053,17 @@ namespace Robust.Shared.GameObjects
             EventBusInternal.RaiseLocalEvent(entity, MapInitEventInstance);
         }
 
+        public bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity)
+        {
+            entity = null;
+            if (weakRef.Entity == EntityUid.Invalid
+                || !EntityExists(weakRef.Entity))
+                return false;
+
+            entity = weakRef.Entity;
+            return true;
+        }
+
         /// <inheritdoc />
         [return: NotNullIfNotNull("uid")]
         public EntityStringRepresentation? ToPrettyString(EntityUid? uid, MetaDataComponent? metadata = null)
@@ -1071,6 +1082,15 @@ namespace Robust.Shared.GameObjects
                 return new EntityStringRepresentation(entity.Owner, default, true);
 
             return new EntityStringRepresentation(entity.Owner, entity.Comp, _actorQuery.CompOrNull(entity));
+        }
+
+        /// <inheritdoc />
+        public EntityStringRepresentation ToPrettyString(WeakEntityReference weakEntityRef)
+        {
+            if (!TryGetEntity(weakEntityRef, out var entity))
+                return new EntityStringRepresentation(EntityUid.Invalid, NetEntity.Invalid, true);
+
+            return ToPrettyString(entity.Value);
         }
 
         /// <inheritdoc />

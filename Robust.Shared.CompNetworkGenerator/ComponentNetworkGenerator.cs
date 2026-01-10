@@ -13,7 +13,9 @@ using Robust.Roslyn.Shared;
 namespace Robust.Shared.CompNetworkGenerator
 {
     [Generator]
+#pragma warning disable RS1042
     public class ComponentNetworkGenerator : ISourceGenerator
+#pragma warning restore RS1042
     {
         private const string ClassAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
         private const string MemberAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";

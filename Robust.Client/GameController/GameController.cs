@@ -96,6 +96,8 @@ namespace Robust.Client
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IReloadManager _reload = default!;
         [Dependency] private readonly ILocalizationManager _loc = default!;
+        [Dependency] private readonly ISystemFontManagerInternal _systemFontManager = default!;
+        [Dependency] private readonly LoadingScreenManager _loadscr = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -105,6 +107,7 @@ namespace Robust.Client
         private IMainArgs? _loaderArgs;
 
         public bool ContentStart { get; set; } = false;
+        public StartType StartTypeValue { get; private set; }
         public GameControllerOptions Options { get; private set; } = new();
         public InitialLaunchState LaunchState { get; private set; } = default!;
 
@@ -132,27 +135,39 @@ namespace Robust.Client
             return Options.SplashLogo?.ToString() ?? _resourceManifest!.SplashLogo ?? "";
         }
 
+        public bool ShowLoadingBar()
+        {
+            return _resourceManifest!.ShowLoadingBar ?? _configurationManager.GetCVar(CVars.LoadingShowBar);
+        }
+
         internal bool StartupContinue(DisplayMode displayMode)
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
-            _clyde.InitializePostWindowing();
-            _audio.InitializePostWindowing();
-            _clyde.SetWindowTitle(GameTitle());
+            _loadscr.Initialize(42);
 
-            _taskManager.Initialize();
-            _parallelMgr.Initialize();
+            _loadscr.BeginLoadingSection("Init graphics", dontRender: true);
+            _clyde.InitializePostWindowing();
+            _clyde.SetWindowTitle(GameTitle());
+            _loadscr.EndLoadingSection();
+
+            _loadscr.LoadingStep(_audio.InitializePostWindowing, "Init audio");
+
+            _loadscr.LoadingStep(_taskManager.Initialize, _taskManager);
+            _loadscr.LoadingStep(_parallelMgr.Initialize, _parallelMgr);
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
 
-            // Load optional Robust modules.
-            LoadOptionalRobustModules(displayMode, _resourceManifest!);
+            _loadscr.LoadingStep(_systemFontManager.Initialize, "System fonts");
 
+            // Load optional Robust modules.
+            _loadscr.LoadingStep(() => LoadOptionalRobustModules(displayMode, _resourceManifest!), "Robust Modules");
+
+            _loadscr.BeginLoadingSection(_modLoader);
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
             _modLoader.SetUseLoadContext(!ContentStart);
             var disableSandbox = Environment.GetEnvironmentVariable("ROBUST_DISABLE_SANDBOX") == "1";
             _modLoader.SetEnableSandboxing(!disableSandbox && Options.Sandboxing);
-
             if (!LoadModules())
                 return false;
 
@@ -161,16 +176,22 @@ namespace Robust.Client
                 _configurationManager.LoadCVarsFromAssembly(loadedModule);
             }
 
-            _serializationManager.Initialize();
-            _loc.Initialize();
+            _loadscr.EndLoadingSection();
+
+            _loadscr.LoadingStep(_serializationManager.Initialize, _serializationManager);
+            _loadscr.LoadingStep(_loc.Initialize, _loc);
 
             // Call Init in game assemblies.
-            _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
+            _loadscr.LoadingStep(() => _modLoader.BroadcastRunLevel(ModRunLevel.PreInit), "Content PreInit");
 
-            // Finish initialization of WebView if loaded.
-            _webViewHook?.Initialize();
+            _loadscr.LoadingStep(() =>
+                {
+                    // Finish initialization of WebView if loaded.
+                    _webViewHook?.Initialize();
+                },
+                "WebView init");
 
-            _modLoader.BroadcastRunLevel(ModRunLevel.Init);
+            _loadscr.LoadingStep(() => _modLoader.BroadcastRunLevel(ModRunLevel.Init), "Content Init");
 
             // Start bad file extensions check after content init,
             // in case content screws with the VFS.
@@ -179,42 +200,51 @@ namespace Robust.Client
                 _configurationManager,
                 _logManager.GetSawmill("res"));
 
-            _resourceCache.PreloadTextures();
-            _networkManager.Initialize(false);
-            _configurationManager.SetupNetworking();
-            _serializer.Initialize();
-            _inputManager.Initialize();
-            _console.Initialize();
+            _loadscr.LoadingStep(_resourceCache.PreloadTextures, "Texture preload");
+            _loadscr.LoadingStep(() => { _networkManager.Initialize(false); }, _networkManager);
+            _loadscr.LoadingStep(_configurationManager.SetupNetworking, _configurationManager);
+            _loadscr.LoadingStep(_serializer.Initialize, _serializer);
+            _loadscr.LoadingStep(_inputManager.Initialize, _inputManager);
+            _loadscr.LoadingStep(_console.Initialize, _console);
 
             // Make sure this is done before we try to load prototypes,
             // avoid any possibility of race conditions causing the check to not finish
             // before prototype load.
-            ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
+            _loadscr.LoadingStep(
+                () => ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions),
+                "Check bad file extensions");
 
-            _reload.Initialize();
-            _reflectionManager.Initialize();
+            _loadscr.LoadingStep(_reload.Initialize, _reload);
+            _loadscr.LoadingStep(_reflectionManager.Initialize, _reflectionManager);
+            _loadscr.LoadingStep(_xamlProxyManager.Initialize, _xamlProxyManager);
+            _loadscr.LoadingStep(_xamlHotReloadManager.Initialize, _xamlHotReloadManager);
+            _loadscr.BeginLoadingSection(_prototypeManager);
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
-            _xamlProxyManager.Initialize();
-            _xamlHotReloadManager.Initialize();
-            _userInterfaceManager.Initialize();
-            _eyeManager.Initialize();
-            _entityManager.Initialize();
-            _mapManager.Initialize();
-            _gameStateManager.Initialize();
-            _placementManager.Initialize();
-            _viewVariablesManager.Initialize();
-            _scriptClient.Initialize();
-            _client.Initialize();
-            _discord.Initialize();
-            _tagManager.Initialize();
-            _protoLoadMan.Initialize();
-            _netResMan.Initialize();
-            _replayLoader.Initialize();
-            _replayPlayback.Initialize();
-            _replayRecording.Initialize();
-            _userInterfaceManager.PostInitialize();
-            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
+            _loadscr.EndLoadingSection();
+            _loadscr.LoadingStep(_userInterfaceManager.Initialize, "UI init");
+            _loadscr.LoadingStep(_eyeManager.Initialize, _eyeManager);
+            _loadscr.LoadingStep(_entityManager.Initialize, _entityManager);
+            _loadscr.LoadingStep(_mapManager.Initialize, _mapManager);
+            _loadscr.LoadingStep(_gameStateManager.Initialize, _gameStateManager);
+            _loadscr.LoadingStep(_placementManager.Initialize, _placementManager);
+            _loadscr.LoadingStep(_viewVariablesManager.Initialize, _viewVariablesManager);
+            _loadscr.LoadingStep(_scriptClient.Initialize, _scriptClient);
+            _loadscr.LoadingStep(_client.Initialize, _client);
+            _loadscr.LoadingStep(_discord.Initialize, _discord);
+            _loadscr.LoadingStep(_tagManager.Initialize, _tagManager);
+            _loadscr.LoadingStep(_protoLoadMan.Initialize, _protoLoadMan);
+            _loadscr.LoadingStep(_netResMan.Initialize, _netResMan);
+            _loadscr.LoadingStep(_replayLoader.Initialize, _replayLoader);
+            _loadscr.LoadingStep(_replayPlayback.Initialize, _replayPlayback);
+            _loadscr.LoadingStep(_replayRecording.Initialize, _replayRecording);
+            _loadscr.LoadingStep(_userInterfaceManager.PostInitialize, "UI postinit");
+
+            // Init stuff before this if at all possible.
+
+            _loadscr.LoadingStep(() => _modLoader.BroadcastRunLevel(ModRunLevel.PostInit), "Content PostInit");
+
+            _loadscr.Finish();
 
             if (_commandLineArgs?.Username != null)
             {
@@ -358,9 +388,6 @@ namespace Robust.Client
             var userDataDir = GetUserDataDir();
 
             _configurationManager.Initialize(false);
-
-            // MUST load cvars before loading from config file so the cfg manager is aware of secure cvars.
-            // So SECURE CVars are blacklisted from config.
             _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
             _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
 
@@ -398,9 +425,18 @@ namespace Robust.Client
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions)
                 : Options.MountOptions;
 
+            StartTypeValue = ContentStart ? StartType.Content : StartType.Engine;
+#if FULL_RELEASE
+            if (_loaderArgs != null || Options.ResourceMountDisabled)
+                StartTypeValue = StartType.Loader;
+#else
+            if (StartTypeValue == StartType.Content && Path.GetFileName(PathHelpers.GetExecutableDirectory()) == "MacOS")
+                StartTypeValue = StartType.ContentAppBundle;
+#endif
+
             ProgramShared.DoMounts(_resManager, mountOptions, Options.ContentBuildDirectory,
                 Options.AssemblyDirectory,
-                Options.LoadContentResources, _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
+                Options.LoadContentResources, StartTypeValue);
 
             if (_loaderArgs != null)
             {
@@ -424,7 +460,8 @@ namespace Robust.Client
                 _configurationManager.OverrideConVars(new[]
                 {
                     (CVars.DisplayWindowIconSet.Name, WindowIconSet()),
-                    (CVars.DisplaySplashLogo.Name, SplashLogo())
+                    (CVars.DisplaySplashLogo.Name, SplashLogo()),
+                    (CVars.LoadingShowBar.Name, ShowLoadingBar().ToString()),
                 });
             }
 
@@ -489,10 +526,18 @@ namespace Robust.Client
 
         public void Shutdown(string? reason = null)
         {
-            DebugTools.AssertNotNull(_mainLoop);
+            if (_mainLoop == null)
+            {
+                if (!_dontStart)
+                {
+                    _logger.Info($"Shutdown called before client init completed: {reason ?? "No reason provided"}");
+                    _dontStart = true;
+                }
+                return;
+            }
 
             // Already got shut down I assume,
-            if (!_mainLoop!.Running)
+            if (!_mainLoop.Running)
             {
                 return;
             }

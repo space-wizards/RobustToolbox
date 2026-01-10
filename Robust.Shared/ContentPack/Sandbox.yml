@@ -679,6 +679,8 @@ Types:
     MethodInfo: { }
     TypeAttributes: { } # Enum
     TypeInfo: { }
+  System.Reflection.Metadata:
+    MetadataUpdateHandlerAttribute: { All: True }
   System.Runtime.CompilerServices:
     AsyncStateMachineAttribute: { All: True }
     AsyncTaskMethodBuilder: { All: True }
@@ -692,6 +694,7 @@ Types:
     CompilerGeneratedAttribute: { All: True }
     DefaultInterpolatedStringHandler: { All: True }
     ExtensionAttribute: { All: True }
+    ExtensionMarkerAttribute: { All: True }
     IAsyncStateMachine: { All: True }
     InternalsVisibleToAttribute: { All: True }
     InterpolatedStringHandlerAttribute: { All: True }
@@ -887,13 +890,19 @@ Types:
       - "System.Text.StringBuilder AppendFormat(System.IFormatProvider, string, object, object)"
       - "System.Text.StringBuilder AppendFormat(System.IFormatProvider, string, object, object, object)"
       - "System.Text.StringBuilder AppendFormat(System.IFormatProvider, string, object[])"
+      - "System.Text.StringBuilder AppendJoin(char, System.ReadOnlySpan`1<object>)"
+      - "System.Text.StringBuilder AppendJoin(char, System.ReadOnlySpan`1<string>)"
       - "System.Text.StringBuilder AppendJoin(char, object[])"
       - "System.Text.StringBuilder AppendJoin(char, string[])"
+      - "System.Text.StringBuilder AppendJoin(string, System.ReadOnlySpan`1<object>)"
+      - "System.Text.StringBuilder AppendJoin(string, System.ReadOnlySpan`1<string>)"
       - "System.Text.StringBuilder AppendJoin(string, object[])"
       - "System.Text.StringBuilder AppendJoin(string, string[])"
       - "System.Text.StringBuilder AppendJoin<>(char, System.Collections.Generic.IEnumerable`1<!!0>)"
       - "System.Text.StringBuilder AppendJoin<>(string, System.Collections.Generic.IEnumerable`1<!!0>)"
       - "System.Text.StringBuilder AppendLine()"
+      - "System.Text.StringBuilder AppendLine(System.IFormatProvider, ref System.Text.StringBuilder/AppendInterpolatedStringHandler)"
+      - "System.Text.StringBuilder AppendLine(ref System.Text.StringBuilder/AppendInterpolatedStringHandler)"
       - "System.Text.StringBuilder AppendLine(string)"
       - "System.Text.StringBuilder Clear()"
       - "System.Text.StringBuilder Insert(int, bool)"
@@ -916,6 +925,8 @@ Types:
       - "System.Text.StringBuilder Insert(int, ulong)"
       - "System.Text.StringBuilder Insert(int, ushort)"
       - "System.Text.StringBuilder Remove(int, int)"
+      - "System.Text.StringBuilder Replace(System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>)"
+      - "System.Text.StringBuilder Replace(System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>, int, int)"
       - "System.Text.StringBuilder Replace(char, char)"
       - "System.Text.StringBuilder Replace(char, char, int, int)"
       - "System.Text.StringBuilder Replace(string, string)"

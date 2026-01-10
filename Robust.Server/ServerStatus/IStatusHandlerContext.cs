@@ -8,6 +8,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace Robust.Server.ServerStatus
 {
+    [NotContentImplementable]
     public interface IStatusHandlerContext
     {
         HttpMethod RequestMethod { get; }

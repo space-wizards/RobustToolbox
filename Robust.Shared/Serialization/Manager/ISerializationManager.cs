@@ -9,6 +9,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.Manager
 {
+    [NotContentImplementable]
     public interface ISerializationManager
     {
         public delegate T InstantiationDelegate<out T>();

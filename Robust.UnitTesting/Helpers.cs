@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Text;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting
 {

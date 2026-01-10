@@ -4,6 +4,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client;
 
+[NotContentImplementable]
 public interface IGameController
 {
     InitialLaunchState LaunchState { get; }

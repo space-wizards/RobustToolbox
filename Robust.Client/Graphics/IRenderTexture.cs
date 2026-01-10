@@ -5,6 +5,7 @@ namespace Robust.Client.Graphics
     /// <summary>
     ///     A render target that renders into a texture that can be re-used later.
     /// </summary>
+    [NotContentImplementable]
     public interface IRenderTexture : IRenderTarget
     {
         /// <summary>

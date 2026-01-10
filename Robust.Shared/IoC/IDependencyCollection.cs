@@ -31,6 +31,7 @@ namespace Robust.Shared.IoC
     /// </para>
     /// </remarks>
     /// <seealso cref="IReflectionManager"/>
+    [NotContentImplementable]
     public interface IDependencyCollection
     {
         IDependencyCollection FromParent(IDependencyCollection parentCollection);

@@ -11,12 +11,13 @@ internal sealed record ResourceManifestData(
     string? DefaultWindowTitle,
     string? WindowIconSet,
     string? SplashLogo,
+    bool? ShowLoadingBar,
     bool AutoConnect,
     string[]? ClientAssemblies
 )
 {
     public static readonly ResourceManifestData Default =
-        new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true, null);
+        new ResourceManifestData(Array.Empty<string>(), null, null, null, null, null, true, null);
 
     public static ResourceManifestData LoadResourceManifest(IResourceManager res)
     {
@@ -58,6 +59,10 @@ internal sealed record ResourceManifestData(
         if (mapping.TryGetNode("splashLogo", out var splashNode))
             splashLogo = splashNode.AsString();
 
+        bool? showBar = null;
+        if (mapping.TryGetNode("show_loading_bar", out var showBarNode))
+            showBar = showBarNode.AsBool();
+
         bool autoConnect = true;
         if (mapping.TryGetNode("autoConnect", out var autoConnectNode))
             autoConnect = autoConnectNode.AsBool();
@@ -70,6 +75,7 @@ internal sealed record ResourceManifestData(
             defaultWindowTitle,
             windowIconSet,
             splashLogo,
+            showBar,
             autoConnect,
             clientAssemblies
         );

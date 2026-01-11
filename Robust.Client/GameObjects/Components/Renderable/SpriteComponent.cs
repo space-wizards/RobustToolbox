@@ -1338,8 +1338,8 @@ namespace Robust.Client.GameObjects
                 if (toClone.Shader != null)
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
 
-                UnShaded = toClone.UnShaded; // this isn't included in the Shader null check, since Shader is null when UnShaded is true
-                ShaderPrototype = toClone.ShaderPrototype; // also not in null check to catch when ShaderPrototype is unshaded
+                UnShaded = toClone.UnShaded;
+                ShaderPrototype = toClone.ShaderPrototype;
                 Texture = toClone.Texture;
                 RSI = toClone.RSI;
                 State = toClone.State;

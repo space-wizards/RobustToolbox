@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Numerics;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Shared.Audio;
 using Robust.Shared.ContentPack;
@@ -56,7 +53,7 @@ internal sealed class ViewVariableControlFactory : IViewVariableControlFactory
         RegisterForType<TimeSpan>(_ =>  new VVPropEditorTimeSpan());
 
         RegisterWithCondition(
-            type => type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType,
+            type => type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken),
             _ => new VVPropEditorReference()
         );
         RegisterWithCondition(

@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Robust.Server.ViewVariables.Traits;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -22,6 +19,7 @@ namespace Robust.Server.ViewVariables
         public object Object { get; }
         public uint SessionId { get; }
         public Type ObjectType { get; }
+        public Action<object>? ObjectChangeDelegate { get; }
 
         /// <param name="playerUser">The session ID of the player who opened this session.</param>
         /// <param name="o">The object we represent.</param>
@@ -29,13 +27,14 @@ namespace Robust.Server.ViewVariables
         ///     The session ID for this session. This is what the server and client use to talk about this session.
         /// </param>
         /// <param name="host">The view variables host owning this session.</param>
-        public ViewVariablesSession(NetUserId playerUser, object o, uint sessionId, IServerViewVariablesInternal host,
+        public ViewVariablesSession(NetUserId playerUser, object o, Action<object>? objectChangeDelegate, uint sessionId, IServerViewVariablesInternal host,
             IRobustSerializer robustSerializer, IEntityManager entMan, ISawmill logger)
         {
             PlayerUser = playerUser;
             Object = o;
             SessionId = sessionId;
             ObjectType = o.GetType();
+            ObjectChangeDelegate = objectChangeDelegate;
             Host = host;
             RobustSerializer = robustSerializer;
             EntityManager = entMan;

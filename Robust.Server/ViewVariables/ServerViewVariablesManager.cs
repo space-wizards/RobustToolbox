@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Robust.Server.Console;
 using Robust.Server.Player;
-using Robust.Shared.Audio;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -13,7 +9,6 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.ViewVariables
@@ -138,6 +133,7 @@ namespace Robust.Server.ViewVariables
             }
 
             object theObject;
+            Action<object>? objectChangeDelegate = null;
 
             switch (message.Selector)
             {
@@ -200,13 +196,14 @@ namespace Robust.Server.ViewVariables
                         return;
                     }
 
-                    if (value == null || value.GetType().IsValueType)
+                    if (value == null)
                     {
                         Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }
 
                     theObject = value;
+                    objectChangeDelegate = obj => relSession.Modify(sessionRelativeSelector.PropertyIndex, obj);
                     break;
                 }
                 case ViewVariablesIoCSelector ioCSelector:
@@ -250,7 +247,7 @@ namespace Robust.Server.ViewVariables
             }
 
             var sessionId = _nextSessionId++;
-            var session = new ViewVariablesSession(message.MsgChannel.UserId, theObject, sessionId, this,
+            var session = new ViewVariablesSession(message.MsgChannel.UserId, theObject, objectChangeDelegate, sessionId, this,
                 _robustSerializer, _entityManager, Sawmill);
 
             _sessions.Add(sessionId, session);

@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using static Robust.Shared.ViewVariables.ViewVariablesBlobMembers;
@@ -198,6 +192,8 @@ namespace Robust.Server.ViewVariables.Traits
                     try
                     {
                         field.SetValue(Session.Object, value);
+                        Session.ObjectChangeDelegate?.Invoke(Session.Object);
+
                         return true;
                     }
                     catch (Exception e)

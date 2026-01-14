@@ -1,4 +1,11 @@
-﻿namespace Robust.Shared.Network;
+﻿using System;
+using System.IO;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Robust.Shared.Network;
 
 public sealed class HttpManager : IHttpManagerInternal
 {

@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Network;
+﻿using System;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 
 namespace Robust.Server.ViewVariables

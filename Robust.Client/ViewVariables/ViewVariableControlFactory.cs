@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Shared.Audio;
 using Robust.Shared.ContentPack;

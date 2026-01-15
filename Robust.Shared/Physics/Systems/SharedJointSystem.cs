@@ -504,17 +504,35 @@ public abstract partial class SharedJointSystem : EntitySystem
         }
     }
 
-    public void RemoveJoint(EntityUid uid, string id)
+    /// <summary>
+    /// Removes any joints attached to this object with a specified ID.
+    /// </summary>
+    /// <param name="uid">Entity UID of the object to remove the joint from</param>
+    /// <param name="id">ID of the joint to remove</param>
+    /// <param name="recursive">Whether to also remove any relayed joints. Optional, defaults to true</param>
+    public void RemoveJoint(EntityUid uid, string id, bool recursive = true)
     {
-        if (!_jointsQuery.TryComp(uid, out var jointComp))
+        if (_jointsQuery.TryComp(uid, out var jointComp) &&
+            jointComp.Joints.TryGetValue(id, out var joint))
+            RemoveJoint(joint);
+
+        if (!recursive || !_relayQuery.TryComp(uid, out var relayComp))
             return;
 
-        if (!jointComp.Joints.TryGetValue(id, out var joint))
-            return;
-
-        RemoveJoint(joint);
+        foreach (var relay in relayComp.Relayed)
+        {
+            if(_jointsQuery.TryComp(relay, out var relayJointComp))
+            {
+                if(relayJointComp.Joints.TryGetValue(id, out var relayJoint))
+                    RemoveJoint(relayJoint);
+            }
+        }
     }
 
+    /// <summary>
+    /// Removes a specific joint from existence
+    /// </summary>
+    /// <param name="joint">The joint to remove</param>
     public void RemoveJoint(Joint joint)
     {
         AddedJoints.Remove(joint);

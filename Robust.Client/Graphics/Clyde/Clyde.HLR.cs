@@ -493,7 +493,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             if (viewport.Eye == null || viewport.Eye.Position.MapId == MapId.Nullspace)
             {
-                if (viewport.ClearOnMissingEye)
+                if (viewport.ClearWhenMissingEye)
                     RenderInRenderTarget(viewport.RenderTarget, () => { }, viewport.ClearColor);
 
                 return;

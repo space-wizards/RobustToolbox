@@ -141,6 +141,7 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2 RenderScale { get; set; } = Vector2.One;
             public bool AutomaticRender { get; set; }
             public long Id { get; }
+            public bool ClearOnMissingEye { get; set; }
 
             void IClydeViewport.Render()
             {

@@ -218,7 +218,7 @@ namespace Robust.Client.GameObjects
         public AnimationPlayerComponent AnimationPlayer { get; init; }
 
         /// <summary>
-        /// The key associated with the animation that was completed.
+        /// The key associated with the animation that was started.
         /// </summary>
         public string Key { get; init; } = string.Empty;
 

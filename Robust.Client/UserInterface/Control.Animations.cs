@@ -12,8 +12,8 @@ namespace Robust.Client.UserInterface
     {
         private Dictionary<string, AnimationPlayback>? _playingAnimations;
 
-        public Action<string>? AnimationCompleted;
         public Action<string>? AnimationStarted;
+        public Action<string>? AnimationCompleted;
 
         /// <summary>
         ///     Start playing an animation.

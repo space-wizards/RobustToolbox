@@ -1,11 +1,15 @@
+using Robust.Server.Player;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
+using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
 using System.Collections.Generic;
-using Robust.Shared.IoC;
-using Robust.Shared.Replays;
 
 namespace Robust.Server.Configuration;
 
@@ -13,8 +17,12 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
 {
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
+    [Dependency] private readonly IPlayerManager _playerManager = default!;
 
     private readonly Dictionary<INetChannel, Dictionary<string, object>> _replicatedCVars = new();
+
+    private readonly Dictionary<string, ReplicatedCVarInvokes> _replicatedInvokes = new();
+
 
     public override void SetupNetworking()
     {
@@ -26,7 +34,10 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     public override void Shutdown()
     {
         base.Shutdown();
+
+
         _replicatedCVars.Clear();
+        _replicatedInvokes.Clear();
     }
 
     private void PeerConnected(object? sender, NetChannelArgs e)
@@ -106,31 +117,187 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
             return;
         }
 
-        using var _ = Lock.ReadGuard();
-
-        foreach (var (name, value) in networkedVars)
+        var cVarChanges = new List<CVarChangeInfo>();
+        using (Lock.ReadGuard())
         {
-            if (!_configVars.TryGetValue(name, out var cVar))
+            foreach (var (name, value) in networkedVars)
             {
-                Sawmill.Warning($"{msgChannel} tried to replicate an unknown CVar '{name}.'");
-                continue;
-            }
+                if (!_configVars.TryGetValue(name, out var cVar))
+                {
+                    Sawmill.Warning($"{msgChannel} tried to replicate an unknown CVar '{name}.'");
+                    continue;
+                }
 
-            if (!cVar.Registered)
-            {
-                Sawmill.Warning($"{msgChannel} tried to replicate an unregistered CVar '{name}.'");
-                continue;
-            }
+                if (!cVar.Registered)
+                {
+                    Sawmill.Warning($"{msgChannel} tried to replicate an unregistered CVar '{name}.'");
+                    continue;
+                }
 
-            if ((cVar.Flags & CVar.REPLICATED) != 0)
+                if ((cVar.Flags & CVar.REPLICATED) != 0)
+                {
+                    clientCVars.TryGetValue(name, out var oldValue);
+                    cVarChanges.Add(new(name, tick, value, oldValue ?? value));
+                    clientCVars[name] = value;
+                    Sawmill.Debug($"name={name}, val={value}");
+                }
+                else
+                {
+                    Sawmill.Warning($"{msgChannel} tried to replicate an un-replicated CVar '{name}.'");
+                }
+            }
+        }
+
+        foreach (var info in cVarChanges)
+        {
+            InvokeClientCvarChange(info, msgChannel);
+        }
+    }
+
+    private void InvokeClientCvarChange(CVarChangeInfo info, INetChannel msgChannel)
+    {
+        if (!_playerManager.TryGetSessionByChannel(msgChannel, out var session))
+        {
+            Sawmill.Error($"Got client cvar change for NetChannel {msgChannel.UserId} without session!");
+            return;
+        }
+
+        if (!_replicatedInvokes.TryGetValue(info.Name, out var cVarInvokes))
+            return;
+
+        foreach (var entry in cVarInvokes.ClientChangeInvoke.Entries)
+        {
+            try
             {
-                clientCVars[name] = value;
-                Sawmill.Debug($"name={name}, val={value}");
+                entry.Value!.Invoke(info.NewValue, session, in info);
+            }
+            catch (Exception e)
+            {
+                Sawmill.Error($"Error while running {nameof(ClientValueChangedDelegate)} for replicated CVars callback: {e}");
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public override void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged)
+    {
+        if (!_configVars.TryGetValue(name, out var cVar))
+        {
+            Sawmill.Error($"Tried to subscribe an unknown CVar '{name}.'");
+            return;
+        }
+
+        if (!cVar.Flags.HasFlag(CVar.REPLICATED) || !cVar.Flags.HasFlag(CVar.CLIENT))
+        {
+            Sawmill.Error($"Tried to subscribe server to client cvar '{name}' but cvar don't have flags CLIENT | REPLICATED");
+            return;
+        }
+
+        using (Lock.WriteGuard())
+        {
+            if (!_replicatedInvokes.TryGetValue(name, out var cVarInvokes))
+            {
+                cVarInvokes = new ReplicatedCVarInvokes { };
+                cVarInvokes.ClientChangeInvoke.AddInPlace((object value, ICommonSession session, in CVarChangeInfo _) => onChanged((T)value, session), onChanged);
+
+                _replicatedInvokes.Add(name, cVarInvokes);
             }
             else
             {
-                Sawmill.Warning($"{msgChannel} tried to replicate an un-replicated CVar '{name}.'");
+                cVarInvokes.ClientChangeInvoke.AddInPlace((object value, ICommonSession session, in CVarChangeInfo _) => onChanged((T)value, session), onChanged);
             }
         }
+    }
+
+    /// <inheritdoc />
+    public override void OnClientCVarChanges<T>(string name, ClientCVarChanged<T> onChanged)
+    {
+        if (!_configVars.TryGetValue(name, out var cVar))
+        {
+            Sawmill.Error($"Tried to subscribe an unknown CVar '{name}.'");
+            return;
+        }
+
+        if (!cVar.Flags.HasFlag(CVar.REPLICATED) || !cVar.Flags.HasFlag(CVar.CLIENT))
+        {
+            Sawmill.Error($"Tried to subscribe server to client cvar '{name}' but cvar don't have flags CLIENT | REPLICATED");
+            return;
+        }
+
+        using (Lock.WriteGuard())
+        {
+            if (!_replicatedInvokes.TryGetValue(name, out var cVarInvokes))
+            {
+                cVarInvokes = new ReplicatedCVarInvokes { };
+                cVarInvokes.ClientChangeInvoke.AddInPlace((object value, ICommonSession session, in CVarChangeInfo info) => onChanged(session, (T)value, info), onChanged);
+
+                _replicatedInvokes.Add(name, cVarInvokes);
+            }
+            else
+            {
+                cVarInvokes.ClientChangeInvoke.AddInPlace((object value, ICommonSession session, in CVarChangeInfo info) => onChanged(session, (T)value , info), onChanged);
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged)
+    {
+        if (!_configVars.TryGetValue(name, out var cVar))
+        {
+            Sawmill.Error($"Tried to unsubscribe an unknown CVar '{name}.'");
+            return;
+        }
+
+        if (!cVar.Flags.HasFlag(CVar.REPLICATED) || !cVar.Flags.HasFlag(CVar.CLIENT))
+        {
+            Sawmill.Error($"Tried to unsubscribe client cvar '{name}' without flags CLIENT | REPLICATED");
+            return;
+        }
+
+        using (Lock.WriteGuard())
+        {
+            if (!_replicatedInvokes.TryGetValue(name, out var cVarInvokes))
+            {
+                Sawmill.Warning($"Trying to unsubscribe for cvar {name} changes that dont have any subscriptions at all!");
+                return;
+            }
+
+            cVarInvokes.ClientChangeInvoke.RemoveInPlace(onValueChanged);
+        }
+    }
+
+    /// <inheritdoc />
+    public override void UnsubClientCVarChanges<T>(string name, ClientCVarChanged<T> onChanged)
+    {
+        if (!_configVars.TryGetValue(name, out var cVar))
+        {
+            Sawmill.Error($"Tried to unsubscribe an unknown CVar '{name}.'");
+            return;
+        }
+
+        if (!cVar.Flags.HasFlag(CVar.REPLICATED) || !cVar.Flags.HasFlag(CVar.CLIENT))
+        {
+            Sawmill.Error($"Tried to unsubscribe client cvar '{name}' without flags CLIENT | REPLICATED");
+            return;
+        }
+
+        using (Lock.WriteGuard())
+        {
+            if (!_replicatedInvokes.TryGetValue(name, out var cVarInvokes))
+            {
+                Sawmill.Warning($"Trying to unsubscribe for cvar {name} changes that dont have any subscriptions at all!");
+                return;
+            }
+
+            cVarInvokes.ClientChangeInvoke.RemoveInPlace(onChanged);
+        }
+    }
+
+    private delegate void DisconnectDelegate(ICommonSession session);
+
+    private sealed class ReplicatedCVarInvokes
+    {
+        public InvokeList<ClientValueChangedDelegate> ClientChangeInvoke = new();
     }
 }

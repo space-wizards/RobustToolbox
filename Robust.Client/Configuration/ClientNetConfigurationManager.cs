@@ -7,6 +7,8 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Network;
 using Robust.Shared.Replays;
 using Robust.Shared.Utility;
+using Robust.Shared.Player;
+using Robust.Client.Player;
 
 namespace Robust.Client.Configuration;
 
@@ -15,6 +17,7 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
     [Dependency] private readonly IBaseClient _client = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IReplayRecordingManager _replay = default!;
+    [Dependency] private readonly IPlayerManager _player = default!;
 
     private bool _receivedInitialNwVars = false;
 
@@ -136,4 +139,51 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
 
     /// <inheritdoc />
     public override T GetClientCVar<T>(INetChannel channel, string name) => GetCVar<T>(name);
+
+    public override void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged)
+    {
+        if (_player.LocalSession is not { } localSession)
+        {
+            Sawmill.Error("Got null local session for client!");
+            return;
+        }
+
+        OnValueChanged<T>(name, (x) => onChanged(x, localSession), true);
+    }
+
+    /// <inheritdoc />
+    public override void OnClientCVarChanges<T>(string name, ClientCVarChanged<T> onChanged)
+    {
+        if (_player.LocalSession is not { } localSession)
+        {
+            Sawmill.Error("Got null local session for client!");
+            return;
+        }
+
+        OnValueChanged<T>(name, (T newValue, in CVarChangeInfo info) => onChanged(localSession, newValue, in info), true);
+    }
+
+    /// <inheritdoc />
+    public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged)
+    {
+        if (_player.LocalSession is not { } localSession)
+        {
+            Sawmill.Error("Got null local session for client!");
+            return;
+        }
+
+        UnsubValueChanged<T>(name, (x) => onChanged(x, localSession));
+    }
+
+    /// <inheritdoc />
+    public override void UnsubClientCVarChanges<T>(string name, ClientCVarChanged<T> onChanged)
+    {
+        if (_player.LocalSession is not { } localSession)
+        {
+            Sawmill.Error("Got null local session for client!");
+            return;
+        }
+
+        UnsubValueChanged<T>(name, (T newValue, in CVarChangeInfo info) => onChanged(localSession, newValue, in info));
+    }
 }

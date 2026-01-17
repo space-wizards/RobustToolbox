@@ -4,6 +4,7 @@ using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Robust.Server.Configuration;
+using Robust.Server.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -89,6 +90,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             deps.RegisterInstance<IModLoader>(new Mock<IModLoader>().Object);
             deps.Register<IEntitySystemManager, EntitySystemManager>();
             deps.RegisterInstance<IEntityManager>(new Mock<IEntityManager>().Object);
+            deps.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);
             // WHEN WILL THE SUFFERING END
             deps.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
 

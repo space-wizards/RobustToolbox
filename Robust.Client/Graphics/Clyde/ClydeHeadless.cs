@@ -524,6 +524,7 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2i Size { get; }
             public event Action<ClearCachedViewportResourcesEvent>? ClearCachedResources;
             public Color? ClearColor { get; set; } = Color.Black;
+            public bool ClearWhenMissingEye { get; set; }
             public Vector2 RenderScale { get; set; }
             public bool AutomaticRender { get; set; }
 

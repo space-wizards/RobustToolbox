@@ -44,6 +44,11 @@ namespace Robust.Client.Graphics
         Color? ClearColor { get; set; }
 
         /// <summary>
+        /// On frames where Eye is null or in nullspace, whether the viewport may clear.
+        /// </summary>
+        bool ClearWhenMissingEye { get; set; }
+
+        /// <summary>
         ///     This is, effectively, a multiplier to the eye's zoom.
         /// </summary>
         Vector2 RenderScale { get; set; }

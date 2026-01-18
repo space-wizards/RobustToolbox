@@ -22,8 +22,10 @@ namespace Robust.Client.UserInterface.Controls
 
         private int _currentTab;
         private bool _tabsVisible = true;
-        // The right-most coordinate of each tab header
-        private List<float> _tabRight = new();
+
+        // the laid out tabs
+        private List<TabBox> _tabBoxes = new();
+        private float _enclosingTabHeight;
 
         public int CurrentTab
         {
@@ -146,41 +148,66 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             // First, draw panel.
-            var headerSize = _getHeaderSize();
+            var headerSize = _enclosingTabHeight;
             var panel = _getPanel();
             var panelBox = new UIBox2(0, headerSize, PixelWidth, PixelHeight);
 
             panel?.Draw(handle, panelBox, UIScale);
 
             var font = _getFont();
-            var boxActive = _getTabBoxActive();
-            var boxInactive = _getTabBoxInactive();
             var fontColorActive = _getTabFontColorActive();
             var fontColorInactive = _getTabFontColorInactive();
 
-            var headerOffset = 0f;
+            // Then draw the tabs
+            foreach (var tabBox in _tabBoxes)
+            {
+                if (tabBox.Box is { } styleBox)
+                {
+                    styleBox.Draw(handle, tabBox.Bounding, UIScale);
+                }
 
-            _tabRight.Clear();
+                var baseLine = new Vector2(0, font.GetAscent(UIScale)) + tabBox.Content.TopLeft;
+                foreach (var rune in tabBox.Title.EnumerateRunes())
+                {
+                    if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
+                        continue;
 
-            // Then, draw the tabs.
+                    font.DrawChar(handle, rune, baseLine, UIScale, tabBox.Index == _currentTab ? fontColorActive : fontColorInactive);
+                    baseLine += new Vector2(metrics.Advance, 0);
+                }
+            }
+        }
+
+        private readonly record struct TabBox(UIBox2 Bounding, UIBox2 Content, StyleBox? Box, string Title, int Index);
+
+        private void CalculateTabBoxes(Vector2 availableSize)
+        {
+            availableSize *= UIScale;
+            var tabLeft = 0f;
+            var tabTop = 0f;
+            var tabHeight = 0f;
+
+            var font = _getFont();
+            var boxActive = _getTabBoxActive();
+            var boxInactive = _getTabBoxInactive();
+
+            _tabBoxes.Clear();
+
+            if (!_tabsVisible)
+                return;
+
             for (var i = 0; i < ChildCount; i++)
             {
                 if (!GetTabVisible(i))
-                {
-                    _tabRight.Add(headerOffset);
                     continue;
-                }
 
                 var title = GetActualTabTitle(i);
 
                 var titleLength = 0;
-                // Get string length.
                 foreach (var rune in title.EnumerateRunes())
                 {
                     if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
-                    {
                         continue;
-                    }
 
                     titleLength += metrics.Advance;
                 }
@@ -188,50 +215,57 @@ namespace Robust.Client.UserInterface.Controls
                 var active = _currentTab == i;
                 var box = active ? boxActive : boxInactive;
 
-                UIBox2 contentBox;
-                var topLeft = new Vector2(headerOffset, 0);
+                var topLeft = new Vector2(tabLeft, tabTop);
                 var size = new Vector2(titleLength, font.GetHeight(UIScale));
-                float boxAdvance;
 
                 if (box != null)
                 {
-                    var drawBox = box.GetEnvelopBox(topLeft, size, UIScale);
-                    boxAdvance = drawBox.Width;
-                    box.Draw(handle, drawBox, UIScale);
-                    contentBox = box.GetContentBox(drawBox, UIScale);
+                    size = box.GetEnvelopBox(topLeft, size, UIScale).Size;
+                }
+
+                if (tabLeft + size.X > availableSize.X)
+                {
+                    tabLeft = 0;
+                    tabTop += tabHeight;
+                    tabHeight = 0;
+                }
+
+                topLeft = new(tabLeft, tabTop);
+                size = new(titleLength, font.GetHeight(UIScale));
+
+                UIBox2 boundingBox;
+                UIBox2 contentBox;
+                if (box != null)
+                {
+                    boundingBox = box.GetEnvelopBox(topLeft, size, UIScale);
+                    contentBox = box.GetContentBox(boundingBox, UIScale);
                 }
                 else
                 {
-                    boxAdvance = size.X;
                     contentBox = UIBox2.FromDimensions(topLeft, size);
+                    boundingBox = contentBox;
                 }
 
-                var baseLine = new Vector2(0, font.GetAscent(UIScale)) + contentBox.TopLeft;
-
-                foreach (var rune in title.EnumerateRunes())
-                {
-                    if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
-                    {
-                        continue;
-                    }
-
-                    font.DrawChar(handle, rune, baseLine, UIScale, active ? fontColorActive : fontColorInactive);
-                    baseLine += new Vector2(metrics.Advance, 0);
-                }
-
-                headerOffset += boxAdvance;
-                // Remember the right-most point of this tab, for testing clicked areas
-                _tabRight.Add(headerOffset);
+                tabLeft += boundingBox.Size.X;
+                tabHeight = Math.Max(tabHeight, boundingBox.Size.Y);
+                _tabBoxes.Add(new(boundingBox, contentBox, box, title, i));
             }
+
+            if (Math.Abs(_enclosingTabHeight - (tabTop + tabHeight)) >= 0.1)
+            {
+                InvalidateArrange();
+            }
+            _enclosingTabHeight = tabTop + tabHeight;
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
+            CalculateTabBoxes(availableSize);
             var headerSize = Vector2.Zero;
 
             if (TabsVisible)
             {
-                headerSize = new Vector2(0, _getHeaderSize() / UIScale);
+                headerSize = new Vector2(0, _enclosingTabHeight / UIScale);
             }
 
             var panel = _getPanel();
@@ -254,12 +288,13 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
+            CalculateTabBoxes(finalSize);
             if (ChildCount == 0 || _currentTab >= ChildCount)
             {
                 return finalSize;
             }
 
-            var headerSize = _getHeaderSize();
+            var headerSize = (int)_enclosingTabHeight;
             var panel = _getPanel();
             var contentBox = new UIBox2i(0, headerSize, (int) (finalSize.X * UIScale), (int) (finalSize.Y * UIScale));
             if (panel != null)
@@ -283,48 +318,21 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             // Outside of header size, ignore.
-            if (args.RelativePixelPosition.Y < 0 || args.RelativePixelPosition.Y > _getHeaderSize())
+            if (args.RelativePixelPosition.Y < 0 || args.RelativePixelPosition.Y > _enclosingTabHeight)
             {
                 return;
             }
 
             args.Handle();
 
-            var relX = args.RelativePixelPosition.X;
-            float tabLeft = 0;
-            for (var i = 0; i < ChildCount; i++)
+            foreach (var box in _tabBoxes)
             {
-                if (relX > tabLeft && relX <= _tabRight[i])
+                if (box.Bounding.Contains(args.RelativePixelPosition))
                 {
-                    CurrentTab = i;
+                    CurrentTab = box.Index;
                     return;
                 }
-
-                // Next tab starts here
-                tabLeft = _tabRight[i];
             }
-        }
-
-        // Returns the size of the header, in real pixels
-        [System.Diagnostics.Contracts.Pure]
-        private int _getHeaderSize()
-        {
-            var headerSize = 0;
-
-            if (TabsVisible)
-            {
-                var active = _getTabBoxActive();
-                var inactive = _getTabBoxInactive();
-                var font = _getFont();
-
-                var activeSize = (active?.MinimumSize ?? Vector2.Zero) * UIScale;
-                var inactiveSize = (inactive?.MinimumSize ?? Vector2.Zero) * UIScale;
-
-                headerSize = (int) MathF.Max(activeSize.Y, inactiveSize.Y);
-                headerSize += font.GetHeight(UIScale);
-            }
-
-            return headerSize;
         }
 
         [System.Diagnostics.Contracts.Pure]

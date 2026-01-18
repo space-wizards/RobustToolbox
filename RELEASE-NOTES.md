@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* `DebugTools.AssertNotNull()` has been marked with `[NotNull]`, making C# nullable analysis recognize it.
 
 ### Internal
 

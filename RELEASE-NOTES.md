@@ -42,19 +42,33 @@ END TEMPLATE-->
 * Added a new "high-bandwidth transfer" subsystem accessible via `ITransferManager`. Requires server-side setup with new CVars to get full benefit.
 * Added `NetMessage.SequenceChannel`.
 * Added `INetChannel.CanSendImmediately`.
+* Added `[Animatable]` to some control properties.
 
 ### Bugfixes
 
-*None yet*
+* Localization string fixes that were causing warning spam.
+* Fixed `MarkupNode.ToString()` not properly separating attributes with whitespace.
+* Fixed `SpriteComponent.Layer` copy constructor not properly copying unshaded shaders.
+* Fixed looped audio playback getting stuck in some cases by "exceeding" the length of the audio track.
 
 ### Other
 
 * Resource uploads/downloads now use the new high-bandwidth transfer system.
 * `DebugTools.AssertNotNull()` has been marked with `[NotNull]`, making C# nullable analysis recognize it.
+* `SpriteView` updates its size when changing the set entity.
+* Improved error message when directly referencing RT projects.
+* Improve container remove assert message.
+* `TabContainer` now wraps tabs if there are too many for the width of the control.
+* The game now displays task bar progress when loading.
+* Switched order of `TileChangedEvent` and `RegenerateCollision()` when setting tiles on grids, so the grid gets deleted *after* raising the event.
+* Reverted change that made `SharedAudioSystem.Stop` not do nothing when the current tick has already been predicted.
+* VV works with structs in components.
+* Fixed `Robust.Benchmarks` failing to run due to project structure changes.
+* Made component tree system more robust to errors to avoid entire game freezing.
 
 ### Internal
 
-*None yet*
+* Updated SDL3 to 3.4.0
 
 
 ## 270.1.0

@@ -118,6 +118,13 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
 
         _currentSectionName = sectionName;
 
+        if (_clyde.IsInitialized)
+        {
+            _clyde.MainWindow.SetWindowProgress(
+                WindowProgressState.Normal,
+                _currentSection / (float)_numberOfLoadingSections);
+        }
+
         if (!dontRender)
         {
             // This ensures that if the screen was resized or something the new size is properly updated to clyde.
@@ -175,6 +182,8 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
 
         if (_currentSection != _numberOfLoadingSections)
             _sawmill.Error($"The number of seen loading sections isn't equal to the total number of loading sections! Seen: {_currentSection}, Total: {_numberOfLoadingSections}");
+
+        _clyde.MainWindow.SetWindowProgress(WindowProgressState.None, 1);
 
         _finished = true;
     }

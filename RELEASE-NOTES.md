@@ -50,6 +50,7 @@ END TEMPLATE-->
 ### Other
 
 * Resource uploads/downloads now use the new high-bandwidth transfer system.
+* `DebugTools.AssertNotNull()` has been marked with `[NotNull]`, making C# nullable analysis recognize it.
 
 ### Internal
 

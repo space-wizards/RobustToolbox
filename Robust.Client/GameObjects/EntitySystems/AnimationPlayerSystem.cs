@@ -156,7 +156,7 @@ namespace Robust.Client.GameObjects
             ent.Comp.PlayingAnimations.Add(key, playback);
 
             var startedEvent = new AnimationStartedEvent(ent.Owner, ent.Comp, key);
-            EntityManager.EventBus.RaiseLocalEvent(ent.Owner, startedEvent, true);
+            RaiseLocalEvent(ent.Owner, startedEvent, true);
         }
 
         public bool HasRunningAnimation(EntityUid uid, string key)
@@ -222,7 +222,7 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public string Key { get; init; } = string.Empty;
 
-        public AnimationStartedEvent(EntityUid uid, AnimationPlayerComponent animationPlayer, string key)
+        internal AnimationStartedEvent(EntityUid uid, AnimationPlayerComponent animationPlayer, string key)
         {
             Uid = uid;
             AnimationPlayer = animationPlayer;

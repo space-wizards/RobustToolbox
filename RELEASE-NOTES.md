@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 271.0.0
+
+### Breaking changes
+
 * Made types & methods related to `SharedNetworkResourceManager` internals `internal`.
 
 ### New features

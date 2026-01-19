@@ -11,6 +11,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
+using Robust.Client.Network.Transfer;
 using Robust.Client.Placement;
 using Robust.Client.Replays.Loading;
 using Robust.Client.Replays.Playback;
@@ -35,6 +36,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -98,6 +100,8 @@ namespace Robust.Client
         [Dependency] private readonly ILocalizationManager _loc = default!;
         [Dependency] private readonly ISystemFontManagerInternal _systemFontManager = default!;
         [Dependency] private readonly LoadingScreenManager _loadscr = default!;
+        [Dependency] private readonly ITransferManager _transfer = default!;
+        [Dependency] private readonly ClientTransferTestManager _transferTest = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -201,7 +205,14 @@ namespace Robust.Client
                 _logManager.GetSawmill("res"));
 
             _loadscr.LoadingStep(_resourceCache.PreloadTextures, "Texture preload");
-            _loadscr.LoadingStep(() => { _networkManager.Initialize(false); }, _networkManager);
+            _loadscr.LoadingStep(() =>
+                {
+                    _networkManager.Initialize(false);
+                    _transfer.Initialize();
+                    _transferTest.Initialize();
+                },
+                _networkManager);
+
             _loadscr.LoadingStep(_configurationManager.SetupNetworking, _configurationManager);
             _loadscr.LoadingStep(_serializer.Initialize, _serializer);
             _loadscr.LoadingStep(_inputManager.Initialize, _inputManager);
@@ -683,6 +694,11 @@ namespace Robust.Client
             using (_prof.Group("Content Post Engine"))
             {
                 _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+            }
+
+            using (_prof.Group("Transfer"))
+            {
+                _transfer.FrameUpdate();
             }
 
             _audio.FlushALDisposeQueues();

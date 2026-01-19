@@ -102,6 +102,11 @@ namespace Robust.Shared.Network
                     _connection.Disconnect(reason, sendBye);
             }
 
+            public bool CanSendImmediately(NetDeliveryMethod method, int sequenceChannel)
+            {
+                return _connection.CanSendImmediately(method, sequenceChannel);
+            }
+
             public override string ToString()
             {
                 return $"{ConnectionId}/{UserId}";

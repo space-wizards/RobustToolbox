@@ -35,11 +35,13 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Made types & methods related to `SharedNetworkResourceManager` internals `internal`.
 
 ### New features
 
-*None yet*
+* Added a new "high-bandwidth transfer" subsystem accessible via `ITransferManager`. Requires server-side setup with new CVars to get full benefit.
+* Added `NetMessage.SequenceChannel`.
+* Added `INetChannel.CanSendImmediately`.
 
 ### Bugfixes
 
@@ -47,6 +49,7 @@ END TEMPLATE-->
 
 ### Other
 
+* Resource uploads/downloads now use the new high-bandwidth transfer system.
 * `DebugTools.AssertNotNull()` has been marked with `[NotNull]`, making C# nullable analysis recognize it.
 
 ### Internal

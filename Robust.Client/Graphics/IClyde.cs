@@ -18,6 +18,8 @@ namespace Robust.Client.Graphics
     [NotContentImplementable]
     public interface IClyde
     {
+        internal bool IsInitialized { get; }
+
         IClydeWindow MainWindow { get; }
         IRenderTarget MainWindowRenderTarget => MainWindow.RenderTarget;
 

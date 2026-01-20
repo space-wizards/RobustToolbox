@@ -441,6 +441,12 @@ namespace Robust.Shared
         public static readonly CVarDef<int> TransferStreamLimit =
             CVarDef.Create("transfer.stream_limit", 10, CVar.SERVERONLY);
 
+        /// <summary>
+        /// Artificially delay transfer operations to simulate slow network. Debug option.
+        /// </summary>
+        internal static readonly CVarDef<bool> TransferArtificialDelay =
+            CVarDef.Create("transfer.artificial_delay", false);
+
         /**
          * SUS
          */

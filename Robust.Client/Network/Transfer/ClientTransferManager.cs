@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages.Transfer;
@@ -12,6 +14,7 @@ namespace Robust.Client.Network.Transfer;
 internal sealed class ClientTransferManager : BaseTransferManager, ITransferManager
 {
     private readonly IClientNetManager _netManager;
+    private readonly IConfigurationManager _cfg;
     private BaseTransferImpl? _transferImpl;
 
     public event Action? ClientHandshakeComplete;
@@ -19,10 +22,12 @@ internal sealed class ClientTransferManager : BaseTransferManager, ITransferMana
     internal ClientTransferManager(
         IClientNetManager netManager,
         ILogManager logManager,
-        ITaskManager taskManager)
+        ITaskManager taskManager,
+        IConfigurationManager cfg)
         : base(logManager, NetMessageAccept.Client, taskManager)
     {
         _netManager = netManager;
+        _cfg = cfg;
     }
 
     public Stream StartTransfer(INetChannel channel, TransferStartInfo startInfo)
@@ -48,7 +53,12 @@ internal sealed class ClientTransferManager : BaseTransferManager, ITransferMana
         BaseTransferImpl impl;
         if (message.HttpInfo is { } httpInfo)
         {
-            impl = new ClientTransferImplWebSocket(httpInfo, Sawmill, this, message.MsgChannel);
+            impl = new ClientTransferImplWebSocket(
+                httpInfo,
+                Sawmill,
+                this,
+                message.MsgChannel,
+                _cfg.GetCVar(CVars.TransferArtificialDelay));
         }
         else
         {

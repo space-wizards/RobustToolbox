@@ -39,15 +39,16 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `AnimationStartedEvent` and `Control.AnimationStarted` events.
 
 ### Bugfixes
 
-*None yet*
+* Fixed the new transfer system not working.
+* Fixed `NetManager` client state not getting reset properly when disconnected without call to `ClientDisconnect()`.
 
 ### Other
 
-*None yet*
+* The `launchauth` command now displays completions.
 
 ### Internal
 

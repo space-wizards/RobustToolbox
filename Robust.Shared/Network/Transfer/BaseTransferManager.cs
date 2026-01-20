@@ -66,12 +66,6 @@ internal abstract partial class BaseTransferManager
         });
     }
 
-    protected void CheckRegistered(TransferStartInfo info)
-    {
-        if (!RegisteredKeys.ContainsKey(info.MessageKey))
-            throw new ArgumentException($"Key is not registered: {info.MessageKey}");
-    }
-
     protected sealed class RegisteredKey
     {
         public Action<TransferReceivedEvent>? Callback;

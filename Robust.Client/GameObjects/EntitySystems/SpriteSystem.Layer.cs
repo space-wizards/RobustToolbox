@@ -45,6 +45,28 @@ public sealed partial class SpriteSystem
         return false;
     }
 
+    /// <summary>
+    /// Alternate implementation of TryGetLayer that does not require a valid entity to be attached to the sprite component.
+    /// </summary>
+    public bool TryGetLayer(
+        SpriteComponent sprite,
+        int index,
+        [NotNullWhen(true)] out Layer? layer,
+        bool logMissing)
+    {
+        layer = null;
+        if (index >= 0 && index < sprite.Layers.Count)
+        {
+            layer = sprite.Layers[index];
+            DebugTools.AssertEqual(layer.Index, index);
+            return true;
+        }
+
+        if(logMissing)
+            Log.Error($"Layer index '{index}' on {sprite} does not exist! Trace:\n{Environment.StackTrace}");
+        return false;
+    }
+
     public bool RemoveLayer(Entity<SpriteComponent?> sprite, int index, bool logMissing = true)
     {
         return RemoveLayer(sprite.Owner, index, out _, logMissing);

@@ -144,6 +144,7 @@ namespace Robust.Shared.Network
 
         private bool _clientSerializerComplete;
         private bool _clientTransferComplete;
+        private bool _clientResetPending;
 
         /// <inheritdoc />
         public int Port => _config.GetCVar(CVars.NetPort);
@@ -420,6 +421,10 @@ namespace Robust.Shared.Network
 
         public void Reset(string reason)
         {
+            _logger.Info($"Resetting NetManager: {reason}");
+
+            _clientResetPending = false;
+
             foreach (var kvChannel in _channels)
             {
                 DisconnectChannel(kvChannel.Value, reason);
@@ -606,6 +611,9 @@ namespace Robust.Shared.Network
             MessagesUnsentMetrics.Set(unsent);
             MessagesStoredMetrics.Set(stored);
             */
+
+            if (_clientResetPending)
+                Reset("Channel closed");
         }
 
         /// <inheritdoc />
@@ -875,14 +883,7 @@ namespace Robust.Shared.Network
 #endif
 
             if (IsClient)
-            {
-                connection.Peer.Shutdown(reason);
-                _toCleanNetPeers.Add(connection.Peer);
-                _strings.Reset();
-
-                _cancelConnectTokenSource?.Cancel();
-                ClientConnectState = ClientConnectionState.NotConnecting;
-            }
+                _clientResetPending = true;
         }
 
         /// <inheritdoc />

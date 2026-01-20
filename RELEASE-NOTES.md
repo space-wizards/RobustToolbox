@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 271.1.0
+
+### New features
+
 * Added `AnimationStartedEvent` and `Control.AnimationStarted` events.
 
 ### Bugfixes
@@ -49,10 +68,6 @@ END TEMPLATE-->
 ### Other
 
 * The `launchauth` command now displays completions.
-
-### Internal
-
-*None yet*
 
 
 ## 271.0.0

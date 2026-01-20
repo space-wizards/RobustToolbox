@@ -56,8 +56,8 @@ internal abstract class BaseTransferImpl(ISawmill sawmill, BaseTransferManager p
             return;
         }
 
-        // var stream = new ReceiveStream(reader);
-        // Parent.TransferReceived(key, Channel, stream);
+        var stream = new ReceiveStream(reader);
+        Parent.TransferReceived(key, Channel, stream);
     }
 
     protected void HandleHeaderReceived(

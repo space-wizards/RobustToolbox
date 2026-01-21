@@ -194,7 +194,7 @@ command-description-take =
 command-description-spawn-at =
     Spawns an entity at the given coordinates.
 command-description-spawn-on =
-    Spawns an entity on the given entity, at it's coordinates.
+    Spawns an entity on the given entity, at its coordinates.
 command-description-spawn-in =
     Spawns an entity in the given container on the given entity, dropping it at its coordinates if it doesn't fit
 command-description-spawn-attached =

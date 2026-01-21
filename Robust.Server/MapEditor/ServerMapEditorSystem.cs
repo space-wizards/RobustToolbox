@@ -1,11 +1,12 @@
 ﻿using Robust.Server.Console;
+using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.MapEditor;
 using Robust.Shared.Player;
 using MEM = Robust.Shared.MapEditor.MapEditorMessages;
-using EState = Robust.Shared.GameObjects.Entity<Robust.Shared.MapEditor.MapEditorStateComponent>;
+using GState = Robust.Shared.GameObjects.Entity<Robust.Shared.MapEditor.MapEditorGlobalStateComponent>;
 
 namespace Robust.Server.MapEditor;
 
@@ -15,6 +16,7 @@ internal sealed partial class ServerMapEditorSystem : MapEditorSystem
     [Dependency] private readonly MetaDataSystem _metaSys = null!;
     [Dependency] private readonly SharedPvsOverrideSystem _pvsOverride = null!;
     [Dependency] private readonly ISharedPlayerManager _playerManager = null!;
+    [Dependency] private readonly MapLoaderSystem _mapLoader = null!;
 
     private EntityUid? _stateEntity;
 
@@ -23,32 +25,43 @@ internal sealed partial class ServerMapEditorSystem : MapEditorSystem
         base.Initialize();
 
         SubscribeNetworkEvent<MEM.StartEditing>(HandleStartEditing);
-        SubscribeNetworkEvent<MEM.CreateNewMap>(HandleCreateMap);
-        SubscribeNetworkEvent<MEM.CreateNewView>(HandleCreateView);
-        SubscribeNetworkEvent<MEM.DestroyView>(HandleDestroyView);
+
+        SubscribeMapCommand<MEM.CreateNewMap>(HandleCreateMap);
+        SubscribeMapCommand<MEM.OpenMap>(HandleOpenMap);
+        SubscribeMapCommand<MEM.SaveMap>(HandleSaveMap);
+        SubscribeMapCommand<MEM.CreateNewView>(HandleCreateView);
+        SubscribeMapCommand<MEM.DestroyView>(HandleDestroyView);
 
         Subs.PlayerStatusChanged(_playerManager, PlayerStatusChanged);
+
+        _mapLoader.OnIsSerializable += MapLoaderOnOnIsSerializable;
     }
 
-    private EState GetOrInitState()
+    private void MapLoaderOnOnIsSerializable(Entity<MetaDataComponent> ent, ref bool serializable)
+    {
+        if (HasComp<MapEditorUnsavedComponent>(ent))
+            serializable = false;
+    }
+
+    private GState GetOrInitState()
     {
         if (_stateEntity is null)
         {
             Log.Debug("Initializing map editor state!");
             _stateEntity = Spawn();
             _metaSys.SetEntityName(_stateEntity.Value, "MapEditorState");
-            var comp = AddComp<MapEditorStateComponent>(_stateEntity.Value);
+            var comp = AddComp<MapEditorGlobalStateComponent>(_stateEntity.Value);
             return (_stateEntity.Value, comp);
         }
 
         return GetState()!.Value;
     }
 
-    private EState? GetState()
+    private GState? GetState()
     {
         if (_stateEntity is null)
             return null;
 
-        return (_stateEntity.Value, Comp<MapEditorStateComponent>(_stateEntity.Value));
+        return (_stateEntity.Value, Comp<MapEditorGlobalStateComponent>(_stateEntity.Value));
     }
 }

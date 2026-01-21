@@ -46,13 +46,18 @@ public sealed partial class MapLoaderSystem : EntitySystem
     {
         Log.Info($"Saving serialized results to {path}");
         path = path.ToRootedPath();
-        var document = new YamlDocument(data.ToYaml());
         _resourceManager.UserData.CreateDir(path.Directory);
-        using var writer = _resourceManager.UserData.OpenWriteText(path);
-        {
-            var stream = new YamlStream {document};
-            stream.Save(new YamlMappingFix(new Emitter(writer)), false);
-        }
+        using var stream = _resourceManager.UserData.OpenWrite(path);
+        Write(stream, data);
+    }
+
+    internal static void Write(Stream stream, MappingDataNode data)
+    {
+        using var textWriter = new StreamWriter(stream);
+
+        var document = new YamlDocument(data.ToYaml());
+        var yamlStream = new YamlStream {document};
+        yamlStream.Save(new YamlMappingFix(new Emitter(textWriter)), false);
     }
 
     public bool TryReadFile(ResPath file, [NotNullWhen(true)] out MappingDataNode? data)

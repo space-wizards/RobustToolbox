@@ -10,7 +10,7 @@ namespace Robust.Shared.MapEditor;
 /// </summary>
 [RegisterComponent]
 [NetworkedComponent, AutoGenerateComponentState]
-internal sealed partial class MapEditorStateComponent : Component
+internal sealed partial class MapEditorGlobalStateComponent : Component
 {
     [AutoNetworkedField]
     public List<EntityUid> Users = [];
@@ -24,7 +24,7 @@ internal sealed partial class MapEditorStateComponent : Component
 /// </summary>
 [RegisterComponent]
 [NetworkedComponent, AutoGenerateComponentState(true)]
-internal sealed partial class MapEditorUserDataComponent : Component
+internal sealed partial class MapEditorUserStateComponent : Component
 {
     [AutoNetworkedField]
     public NetUserId User;

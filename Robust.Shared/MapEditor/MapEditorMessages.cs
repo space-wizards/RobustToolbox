@@ -32,4 +32,46 @@ internal static class MapEditorMessages
     {
         public required NetEntity Eye;
     }
+
+    /// <summary>
+    /// C->S, indicates client wants to save the file.
+    /// </summary>
+    /// <remarks>
+    /// Server is expected to respond with <see cref="SaveMapData"/>
+    /// </remarks>
+    [Serializable, NetSerializable]
+    internal sealed class SaveMap : EntityEventArgs
+    {
+        public required NetEntity MapData;
+        public required MapFileHandle Handle;
+        public string? NewName;
+    }
+
+    // Server -> Client
+    [Serializable, NetSerializable]
+    internal sealed class SaveMapData : EntityEventArgs
+    {
+        public required NetEntity MapData;
+        public required MapFileHandle Handle;
+        // Must be zstd-compressed.
+        public required byte[] Data;
+    }
+
+    // Client -> Server
+    [Serializable, NetSerializable]
+    internal sealed class OpenMap : EntityEventArgs
+    {
+        // Must be zstd-compressed.
+        public required byte[] Data;
+        public MapFileHandle? Handle;
+        public string? Name;
+    }
+
+    // Server -> Client
+    [Serializable, NetSerializable]
+    internal sealed class OpenMapFailed : EntityEventArgs
+    {
+        public required string Name;
+        public MapFileHandle? Handle;
+    }
 }

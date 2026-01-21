@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
 using Robust.Client.UserInterface;
@@ -26,15 +27,38 @@ internal sealed class MapFileHandleManager : IDisposable
         _sawmill = logManager.GetSawmill("map_editor.file_handles");
     }
 
-    public async Task<(MapFileHandle, OpenFileResult)?> OpenFile(bool readOnly = false)
+    public MapFileHandle CreateHandleForExistingStream(Stream stream)
     {
-        var result = await _fileDialog.OpenFile2(MapFileFilters, readOnly ? FileAccess.Read : FileAccess.ReadWrite);
-        if (result == null)
-            return null;
+        if (!stream.CanSeek)
+            throw new ArgumentException("Stream must be seekable", nameof(stream));
 
         var handle = MapFileHandle.CreateUnique();
 
-        _handles[handle] = result.File;
+        _handles[handle] = stream;
+
+        return handle;
+    }
+
+    public async Task<(MapFileHandle Handle, OpenFileResult FileResult)?> SaveFile()
+    {
+        return await HandleFileDialogCore(_fileDialog.SaveFile2(MapFileFilters, share: FileShare.Read));
+    }
+
+    public async Task<(MapFileHandle Handle, OpenFileResult FileResult)?> OpenFile(bool readOnly = false)
+    {
+        return await HandleFileDialogCore(
+            _fileDialog.OpenFile2(MapFileFilters, readOnly ? FileAccess.Read : FileAccess.ReadWrite, share: FileShare.Read));
+    }
+
+    private async Task<(MapFileHandle Handle, OpenFileResult FileResult)?> HandleFileDialogCore(
+        Task<OpenFileResult?> task)
+    {
+        var result = await task;
+        if (result == null)
+            return null;
+
+        var handle = CreateHandleForExistingStream(result.File);
+
         _sawmill.Debug($"Opened map file {result.FileName} handle {handle}");
 
         return (handle, result);
@@ -47,6 +71,11 @@ internal sealed class MapFileHandleManager : IDisposable
             _sawmill.Debug($"Closing map file handle {handle}");
             value.Dispose();
         }
+    }
+
+    public bool TryGetStream(MapFileHandle handle, [NotNullWhen(true)] out Stream? stream)
+    {
+        return _handles.TryGetValue(handle, out stream);
     }
 
     void IDisposable.Dispose()

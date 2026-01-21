@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.MapEditor;
 using Robust.Shared.Player;
+using UState = Robust.Shared.GameObjects.Entity<Robust.Shared.MapEditor.MapEditorUserStateComponent>;
 
 namespace Robust.Server.MapEditor;
 
@@ -11,16 +12,14 @@ internal sealed partial class ServerMapEditorSystem
 {
     [Dependency] private readonly SharedViewSubscriberSystem _viewSub = null!;
 
-    private void HandleCreateView(MapEditorMessages.CreateNewView msg, EntitySessionEventArgs args)
+    private void HandleCreateView(MapEditorMessages.CreateNewView msg, UState uState, EntitySessionEventArgs args)
     {
-        if (!CommandCheck(args, msg, out _, out var uState))
-            return;
-
         var mapEnt = GetEntity(msg.MapData);
         var mapData = Comp<MapEditorMapDataComponent>(mapEnt);
 
         var eyeEnt = Spawn(null, new EntityCoordinates(mapData.MapEntity, msg.Position));
         _metaSys.SetEntityName(eyeEnt, $"MapEditorEye for {args.SenderSession}");
+        AddComp<MapEditorUnsavedComponent>(eyeEnt);
         AddComp<EyeComponent>(eyeEnt);
         var eyeData = AddComp<MapEditorEyeComponent>(eyeEnt);
         eyeData.User = uState;
@@ -36,11 +35,8 @@ internal sealed partial class ServerMapEditorSystem
         Dirty(eyeEnt, eyeData);
     }
 
-    private void HandleDestroyView(MapEditorMessages.DestroyView msg, EntitySessionEventArgs args)
+    private void HandleDestroyView(MapEditorMessages.DestroyView msg, UState uState, EntitySessionEventArgs args)
     {
-        if (!CommandCheck(args, msg, out _, out var uState))
-            return;
-
         var eyeEnt = GetEntity(msg.Eye);
         var eyeData = Comp<MapEditorEyeComponent>(eyeEnt);
         if (eyeData.User != uState.Owner)
@@ -52,7 +48,7 @@ internal sealed partial class ServerMapEditorSystem
         DestroyEye((eyeEnt, eyeData), uState);
     }
 
-    private void DestroyEye(Entity<MapEditorEyeComponent> eyeEnt, Entity<MapEditorUserDataComponent> uState)
+    private void DestroyEye(Entity<MapEditorEyeComponent> eyeEnt, UState uState)
     {
         uState.Comp.Eyes.Remove(eyeEnt);
         Dirty(uState);

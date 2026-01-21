@@ -4,7 +4,8 @@ using Robust.Shared.Map;
 using Robust.Shared.MapEditor;
 using Robust.Shared.Player;
 using MEM = Robust.Shared.MapEditor.MapEditorMessages;
-using EState = Robust.Shared.GameObjects.Entity<Robust.Shared.MapEditor.MapEditorStateComponent>;
+using GState = Robust.Shared.GameObjects.Entity<Robust.Shared.MapEditor.MapEditorGlobalStateComponent>;
+using UState = Robust.Shared.GameObjects.Entity<Robust.Shared.MapEditor.MapEditorUserStateComponent>;
 
 namespace Robust.Server.MapEditor;
 
@@ -47,13 +48,13 @@ internal sealed partial class ServerMapEditorSystem
         InitSessionState(args.SenderSession, state);
     }
 
-    private Entity<MapEditorUserDataComponent> InitSessionState(ICommonSession session, EState state)
+    private Entity<MapEditorUserStateComponent> InitSessionState(ICommonSession session, GState state)
     {
         _pvsOverride.AddSessionOverride(state, session);
 
         // Ensure parented so it's accessible via PVS override.
         var userDataEnt = Spawn(null, new EntityCoordinates(state, default));
-        var userData = AddComp<MapEditorUserDataComponent>(userDataEnt);
+        var userData = AddComp<MapEditorUserStateComponent>(userDataEnt);
         userData.User = session.UserId;
         _metaSys.SetEntityName(userDataEnt, $"MapEditorUserData {session}");
 
@@ -65,7 +66,7 @@ internal sealed partial class ServerMapEditorSystem
         return (userDataEnt, userData);
     }
 
-    private Entity<MapEditorUserDataComponent>? GetSessionState(ICommonSession session)
+    private Entity<MapEditorUserStateComponent>? GetSessionState(ICommonSession session)
     {
         if (GetState() is not { } gState)
             return null;
@@ -73,11 +74,11 @@ internal sealed partial class ServerMapEditorSystem
         return GetSessionState(session, gState);
     }
 
-    private Entity<MapEditorUserDataComponent>? GetSessionState(ICommonSession session, EState state)
+    private Entity<MapEditorUserStateComponent>? GetSessionState(ICommonSession session, GState state)
     {
         foreach (var user in state.Comp.Users)
         {
-            var comp = Comp<MapEditorUserDataComponent>(user);
+            var comp = Comp<MapEditorUserStateComponent>(user);
             if (comp.User == session.UserId)
                 return (user, comp);
         }
@@ -88,8 +89,8 @@ internal sealed partial class ServerMapEditorSystem
     private bool CommandCheck(
         EntitySessionEventArgs eventArgs,
         EntityEventArgs forCommand,
-        out EState globalState,
-        out Entity<MapEditorUserDataComponent> userState)
+        out GState globalState,
+        out UState userState)
     {
         var session = eventArgs.SenderSession;
         if (GetState() is not { } gState)
@@ -111,5 +112,65 @@ internal sealed partial class ServerMapEditorSystem
 
         userState = uState;
         return true;
+    }
+
+    private delegate void MapCommandSessionHandler<in T>(
+        T msg,
+        GState gState,
+        UState uState,
+        EntitySessionEventArgs args);
+
+    private delegate void MapCommandHandler<in T>(
+        T msg,
+        GState gState,
+        UState uState);
+
+    private delegate void MapCommandUserSessionHandler<in T>(
+        T msg,
+        UState uState,
+        EntitySessionEventArgs args);
+
+    private void SubscribeMapCommand<T>(MapCommandSessionHandler<T> handler) where T : EntityEventArgs
+    {
+        SubscribeNetworkEvent<T>((ev, args) =>
+        {
+            if (!CommandCheck(args, ev, out var gState, out var uState))
+                return;
+
+            handler(ev, gState, uState, args);
+        });
+    }
+
+    private void SubscribeMapCommand<T>(MapCommandHandler<T> handler) where T : EntityEventArgs
+    {
+        SubscribeNetworkEvent<T>((ev, args) =>
+        {
+            if (!CommandCheck(args, ev, out var gState, out var uState))
+                return;
+
+            handler(ev, gState, uState);
+        });
+    }
+
+    private void SubscribeMapCommand<T>(EntitySessionEventHandler<T> handler) where T : EntityEventArgs
+    {
+        SubscribeNetworkEvent<T>((ev, args) =>
+        {
+            if (!CommandCheck(args, ev, out _, out _))
+                return;
+
+            handler(ev, args);
+        });
+    }
+
+    private void SubscribeMapCommand<T>(MapCommandUserSessionHandler<T> handler) where T : EntityEventArgs
+    {
+        SubscribeNetworkEvent<T>((ev, args) =>
+        {
+            if (!CommandCheck(args, ev, out _, out var uState))
+                return;
+
+            handler(ev, uState, args);
+        });
     }
 }

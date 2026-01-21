@@ -164,7 +164,7 @@ internal partial class Clyde
 
             var button = ConvertSdl3Button(ev.Button);
             var key = Mouse.MouseButtonToKey(button);
-            EmitKeyEvent(key, ev.Type, false, ev.Mods, 0);
+            EmitKeyEvent(key, ev.Type, false, ev.Mods, 0, 0);
         }
 
         private void ProcessEventMouseMotion(EventMouseMotion ev)
@@ -228,10 +228,10 @@ internal partial class Clyde
 
         private void ProcessEventKey(EventKey ev)
         {
-            EmitKeyEvent(ConvertSdl3Scancode(ev.Scancode), ev.Type, ev.Repeat, ev.Mods, ev.Scancode);
+            EmitKeyEvent(ConvertSdl3Scancode(ev.Scancode), ev.Type, ev.Repeat, ev.Mods, ev.Scancode, ev.Raw);
         }
 
-        private void EmitKeyEvent(Key key, ET type, bool repeat, SDL.SDL_Keymod mods, SDL.SDL_Scancode scancode)
+        private void EmitKeyEvent(Key key, ET type, bool repeat, SDL.SDL_Keymod mods, SDL.SDL_Scancode scancode, ushort rawCode)
         {
             var shift = (mods & SDL_Keymod.SDL_KMOD_SHIFT) != 0;
             var alt = (mods & SDL_Keymod.SDL_KMOD_ALT) != 0;
@@ -242,7 +242,8 @@ internal partial class Clyde
                 key,
                 repeat,
                 alt, control, shift, system,
-                (int)scancode);
+                (int)scancode,
+                rawCode);
 
             switch (type)
             {

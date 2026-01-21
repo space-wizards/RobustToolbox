@@ -8,6 +8,7 @@ namespace Robust.Shared.Timing
     /// <summary>
     ///     This holds main loop timing information and helper functions.
     /// </summary>
+    [NotContentImplementable]
     public interface IGameTiming
     {
         /// <summary>
@@ -98,7 +99,18 @@ namespace Robust.Shared.Timing
         /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
+        /// <remarks>
+        /// This is specified in simulation time, not real time.
+        /// </remarks>
         ushort TickRate { get; set; }
+
+        /// <summary>
+        /// The scale of simulation time to real time.
+        /// </summary>
+        /// <remarks>
+        /// A scale of 2 means the game should go "twice as slow"
+        /// </remarks>
+        float TimeScale { get; set; }
 
         /// <summary>
         /// The baseline time value that CurTime is calculated relatively to.
@@ -108,6 +120,9 @@ namespace Robust.Shared.Timing
         /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.
         /// </summary>
+        /// <remarks>
+        /// This is in simulation time, not necessarily real time.
+        /// </remarks>
         TimeSpan TickPeriod { get; }
 
         /// <summary>
@@ -115,6 +130,18 @@ namespace Robust.Shared.Timing
         /// </summary>
         TimeSpan TickRemainder { get; set; }
 
+        /// <summary>
+        /// <see cref="TickRemainder"/> in real time.
+        /// </summary>
+        TimeSpan TickRemainderRealtime { get; }
+
+        /// <summary>
+        /// Calculate the amount of <b>real time</b> to wait between ticks.
+        /// </summary>
+        /// <remarks>
+        /// This is adjusted for various "out of simulation"
+        /// factors such as <see cref="TickTimingAdjustment"/> and <see cref="TimeScale"/>.
+        /// </remarks>
         TimeSpan CalcAdjustedTickPeriod();
 
         /// <summary>

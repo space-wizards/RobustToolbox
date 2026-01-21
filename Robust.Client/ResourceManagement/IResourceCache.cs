@@ -11,6 +11,7 @@ namespace Robust.Client.ResourceManagement;
 /// <summary>
 /// Handles caching of <see cref="BaseResource"/>
 /// </summary>
+[NotContentImplementable]
 public interface IResourceCache : IResourceManager
 {
     T GetResource<T>(string path, bool useFallback = true)

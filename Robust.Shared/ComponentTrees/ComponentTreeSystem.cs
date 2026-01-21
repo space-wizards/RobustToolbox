@@ -205,60 +205,67 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     /// </summary>
     public void UpdateTreePositions()
     {
-        if (!CheckEnabled())
-            return;
-
-        if (_updateQueue.Count == 0)
-            return;
-
-        var trees = GetEntityQuery<TTreeComp>();
-
-        while (_updateQueue.TryDequeue(out var entry))
+        try
         {
-            var (comp, xform) = entry;
+            if (!CheckEnabled())
+                return;
 
-            // Was this entity queued multiple times?
-            DebugTools.Assert(comp.TreeUpdateQueued, "Entity was queued multiple times?");
+            if (_updateQueue.Count == 0)
+                return;
 
-            comp.TreeUpdateQueued = false;
-            if (!comp.Running)
-                continue;
+            var trees = GetEntityQuery<TTreeComp>();
 
-            if (!comp.AddToTree || comp.Deleted || xform.MapUid == null)
+            while (_updateQueue.TryDequeue(out var entry))
             {
+                var (comp, xform) = entry;
+
+                // Was this entity queued multiple times?
+                DebugTools.Assert(comp.TreeUpdateQueued, "Entity was queued multiple times?");
+
+                comp.TreeUpdateQueued = false;
+                if (!comp.Running)
+                    continue;
+
+                if (!comp.AddToTree || comp.Deleted || xform.MapUid == null)
+                {
+                    RemoveFromTree(comp);
+                    continue;
+                }
+
+                var newTree = xform.GridUid ?? xform.MapUid;
+                if (!trees.TryGetComponent(newTree, out var newTreeComp) && comp.TreeUid == null)
+                    continue;
+
+                Vector2 pos;
+                Angle rot;
+                if (comp.TreeUid == newTree)
+                {
+                    (pos, rot) = XformSystem.GetRelativePositionRotation(
+                        entry.Transform,
+                        newTree!.Value);
+
+                    newTreeComp!.Tree.Update(entry, ExtractAabb(entry, pos, rot));
+                    continue;
+                }
+
                 RemoveFromTree(comp);
-                continue;
-            }
 
-            var newTree = xform.GridUid ?? xform.MapUid;
-            if (!trees.TryGetComponent(newTree, out var newTreeComp) && comp.TreeUid == null)
-                continue;
+                if (newTreeComp == null)
+                    return;
 
-            Vector2 pos;
-            Angle rot;
-            if (comp.TreeUid == newTree)
-            {
+                comp.TreeUid = newTree;
+                comp.Tree = newTreeComp.Tree;
+
                 (pos, rot) = XformSystem.GetRelativePositionRotation(
                     entry.Transform,
                     newTree!.Value);
 
-                newTreeComp!.Tree.Update(entry, ExtractAabb(entry, pos, rot));
-                continue;
+                newTreeComp.Tree.Add(entry, ExtractAabb(entry, pos, rot));
             }
-
-            RemoveFromTree(comp);
-
-            if (newTreeComp == null)
-                return;
-
-            comp.TreeUid = newTree;
-            comp.Tree = newTreeComp.Tree;
-
-            (pos, rot) = XformSystem.GetRelativePositionRotation(
-                entry.Transform,
-                newTree!.Value);
-
-            newTreeComp.Tree.Add(entry, ExtractAabb(entry, pos, rot));
+        }
+        finally
+        {
+            _updateQueue.Clear();
         }
     }
 

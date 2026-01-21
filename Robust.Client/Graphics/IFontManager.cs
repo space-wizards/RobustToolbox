@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Robust.Client.Graphics
 {
+    [NotContentImplementable]
     public interface IFontManager
     {
         public void ClearFontCache();

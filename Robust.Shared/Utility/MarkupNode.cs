@@ -40,7 +40,7 @@ public sealed class MarkupNode : IComparable<MarkupNode>, IEquatable<MarkupNode>
         var attributesString = "";
         foreach (var (k, v) in Attributes)
         {
-            attributesString += $"{k}{v}";
+            attributesString += $" {k}{v}";
         }
 
         return $"[{(Closing ? "/" : "")}{Name}{Value.ToString().ReplaceLineEndings("\\n")}{attributesString}]";

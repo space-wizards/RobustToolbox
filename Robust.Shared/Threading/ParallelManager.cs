@@ -7,6 +7,7 @@ using Robust.Shared.Log;
 
 namespace Robust.Shared.Threading;
 
+[NotContentImplementable]
 public interface IParallelManager
 {
     event Action ParallelCountChanged;

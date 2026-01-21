@@ -11,6 +11,7 @@ namespace Robust.Client.Input
     /// <summary>
     ///     Manages key bindings, input commands and other misc. input systems.
     /// </summary>
+    [NotContentImplementable]
     public interface IInputManager
     {
         bool Enabled { get; set; }

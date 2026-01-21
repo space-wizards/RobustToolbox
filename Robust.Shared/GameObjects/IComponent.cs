@@ -10,6 +10,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     /// <include file='../Serialization/Manager/Attributes/Docs.xml' path='entries/entry[@name="ImpliesDataDefinition"]/*'/>
     [ImplicitDataDefinitionForInheritors]
+    [NotContentImplementable]
     public partial interface IComponent
     {
         /// <summary>

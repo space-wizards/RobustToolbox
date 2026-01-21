@@ -3,6 +3,7 @@ namespace Robust.Client.UserInterface;
 /// <summary>
 /// Manages the debug monitors overlay, AKA "F3 screen".
 /// </summary>
+[NotContentImplementable]
 public interface IDebugMonitors
 {
     /// <summary>

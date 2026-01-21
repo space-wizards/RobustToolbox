@@ -6,6 +6,7 @@ using Robust.Shared.Network;
 
 namespace Robust.Shared.Serialization
 {
+    [NotContentImplementable]
     public interface IRobustSerializer
     {
         void Initialize();

@@ -35,6 +35,7 @@
     <File Path="Imports/WebView.props" />
   </Folder>
   <Folder Name="/MSBuild/">
+    <File Path="MSBuild/MacOSAppBundle.targets" />
     <File Path="MSBuild/Robust.Analyzers.targets" />
     <File Path="MSBuild/Robust.CompNetworkGenerator.targets" />
     <File Path="MSBuild/Robust.Configurations.props" />
@@ -47,6 +48,7 @@
     <File Path="MSBuild/Robust.Properties.targets" />
     <File Path="MSBuild/Robust.Trimming.targets" />
     <File Path="MSBuild/XamlIL.targets" />
+    <File Path="MSBuild/WebView.targets" />
   </Folder>
   <Folder Name="/NetSerializer/">
     <Project Path="NetSerializer/NetSerializer/NetSerializer.csproj">

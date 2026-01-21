@@ -7,6 +7,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     This manages tile definitions for grid tiles.
     /// </summary>
+    [NotContentImplementable]
     public interface ITileDefinitionManager : IEnumerable<ITileDefinition>
     {
         Tile GetVariantTile(string name, IRobustRandom random);

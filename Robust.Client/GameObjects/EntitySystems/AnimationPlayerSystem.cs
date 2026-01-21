@@ -154,6 +154,9 @@ namespace Robust.Client.GameObjects
             }
 
             ent.Comp.PlayingAnimations.Add(key, playback);
+
+            var startedEvent = new AnimationStartedEvent(ent.Owner, ent.Comp, key);
+            RaiseLocalEvent(ent.Owner, startedEvent, true);
         }
 
         public bool HasRunningAnimation(EntityUid uid, string key)
@@ -196,6 +199,34 @@ namespace Robust.Client.GameObjects
         public void Stop(EntityUid uid, AnimationPlayerComponent? component, string key)
         {
             Stop((uid, component), key);
+        }
+    }
+
+    /// <summary>
+    /// Raised whenever an animation started playing.
+    /// </summary>
+    public sealed class AnimationStartedEvent : EntityEventArgs
+    {
+        /// <summary>
+        /// The entity associated with the event.
+        /// </summary>
+        public EntityUid Uid { get; init; }
+
+        /// <summary>
+        /// The animation player component associated with the entity this event was raised on.
+        /// </summary>
+        public AnimationPlayerComponent AnimationPlayer { get; init; }
+
+        /// <summary>
+        /// The key associated with the animation that was started.
+        /// </summary>
+        public string Key { get; init; } = string.Empty;
+
+        internal AnimationStartedEvent(EntityUid uid, AnimationPlayerComponent animationPlayer, string key)
+        {
+            Uid = uid;
+            AnimationPlayer = animationPlayer;
+            Key = key;
         }
     }
 

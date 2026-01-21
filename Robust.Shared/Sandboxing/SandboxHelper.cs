@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Sandboxing
 {
+    [NotContentImplementable]
     public interface ISandboxHelper
     {
         /// <summary>

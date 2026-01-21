@@ -5,6 +5,7 @@ namespace Robust.Shared.Timing
     /// <summary>
     ///     Manages <see cref="Timer"/>-based timing, allowing you to register new timers with optional cancellation.
     /// </summary>
+    [NotContentImplementable]
     public interface ITimerManager
     {
         /// <summary>

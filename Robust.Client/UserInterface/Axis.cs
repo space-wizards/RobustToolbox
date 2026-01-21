@@ -52,6 +52,7 @@ public enum Axis : byte
 /// <seealso cref="HorizontalReverseAxis"/>
 /// <seealso cref="VerticalAxis"/>
 /// <seealso cref="VerticalReverseAxis"/>
+[NotContentImplementable]
 public interface IAxisImplementation
 {
     //

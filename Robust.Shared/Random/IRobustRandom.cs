@@ -13,6 +13,7 @@ namespace Robust.Shared.Random;
 public interface IRobustRandom
 {
     /// <summary> Get the underlying <see cref="Random"/>.</summary>
+    [Obsolete("Do not access the underlying implementation")]
     System.Random GetRandom();
 
     /// <summary> Set seed for underlying <see cref="Random"/>. </summary>

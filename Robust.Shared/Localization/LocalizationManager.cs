@@ -67,7 +67,7 @@ namespace Robust.Shared.Localization
 
             if (!TryGetString(messageId, out var msg))
             {
-                _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+                _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                     messageId);
                 msg = messageId;
             }
@@ -85,7 +85,7 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, arg))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+            _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                 messageId);
             return messageId;
         }
@@ -98,7 +98,7 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, arg1, arg2))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+            _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                 messageId);
             return messageId;
         }
@@ -111,7 +111,7 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, args))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+            _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                 messageId);
             return messageId;
         }

@@ -8,6 +8,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.MapEditor;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 using MEM = Robust.Shared.MapEditor.MapEditorMessages;
 
 namespace Robust.Client.MapEditor;
@@ -21,6 +22,8 @@ internal sealed class ClientMapEditorSystem : MapEditorSystem
     internal event Action<IEnumerable<EntityUid>>? OpenMapsUpdated;
     internal event Action<Entity<MapEditorEyeComponent>>? EyeCreated;
 
+    [ViewVariables(VVAccess.ReadWrite)]
+    private bool _readyToMap;
     public override void Initialize()
     {
         base.Initialize();
@@ -40,14 +43,25 @@ internal sealed class ClientMapEditorSystem : MapEditorSystem
             _stateManager.RequestStateChange<DefaultState>();
     }
 
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        if (_readyToMap)
+        {
+            _readyToMap = false;
+            Log.Info("We're mapping, gamers!");
+
+            _stateManager.RequestStateChange<MapEditorState>();
+        }
+    }
+
     private void EditorUserDataStartup(Entity<MapEditorUserStateComponent> ent, ref ComponentStartup args)
     {
         if (ent.Comp.User != _playerManager.LocalUser)
             return;
 
-        Log.Info("We're mapping, gamers!");
-
-        _stateManager.RequestStateChange<MapEditorState>();
+        _readyToMap = true;
     }
 
     private void AfterUserDataState(Entity<MapEditorUserStateComponent> ent, ref AfterAutoHandleStateEvent args)

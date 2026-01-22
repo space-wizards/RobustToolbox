@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.Serialization;
-using JetBrains.Annotations;
 using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
@@ -33,7 +30,8 @@ namespace Robust.Shared.EntitySerialization;
 public sealed class EntityDeserializer :
     ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
-    ITypeSerializer<NetEntity, ValueDataNode>
+    ITypeSerializer<NetEntity, ValueDataNode>,
+    ITypeSerializer<MapId, ValueDataNode>
 {
     // See the comments around EntitySerializer's version const for information about the different versions.
     // TBH version three isn't even really fully supported anymore, simply due to changes in engine component serialization.
@@ -93,6 +91,7 @@ public sealed class EntityDeserializer :
     public readonly LoadResult Result = new();
     public readonly Dictionary<int, string> TileMap = new();
     public readonly Dictionary<int, EntityUid> UidMap = new();
+    public readonly Dictionary<int, MapId> AllocatedMapIds = new();
     public readonly List<int> MapYamlIds = new();
     public readonly List<int> GridYamlIds = new();
     public readonly List<int> OrphanYamlIds = new();
@@ -185,6 +184,10 @@ public sealed class EntityDeserializer :
         // Alloc entities, and populate the yaml uid -> EntityUid maps
         AllocateEntities();
 
+        // Assign a map id to each map entity. This is required to de-serialize map coordinates & map ids
+        if (Options.AssignMapIds)
+            AllocateMapIds();
+
         // Load the prototype data onto entities, e.g. transform parents, etc.
         LoadEntities();
 
@@ -197,7 +200,7 @@ public sealed class EntityDeserializer :
         // Assign MapSaveTileMapComponent to all read grids. This is used to avoid large file diffs if the tile map changes.
         StoreGridTileMap();
 
-        if (Options.AssignMapids)
+        if (Options.AssignMapIds)
             AssignMapIds();
 
         CheckCategory();
@@ -224,6 +227,15 @@ public sealed class EntityDeserializer :
         InitializeMaps();
 
         ProcessDeletions();
+
+        if (!Options.AssignMapIds)
+            return;
+
+        foreach (var yamlId in MapYamlIds)
+        {
+            if (AllocatedMapIds.TryGetValue(yamlId, out var alloc) && EntMan.EntityExists(UidMap[yamlId]))
+                DebugTools.AssertEqual(_map.GetMap(alloc), UidMap[yamlId]);
+        }
     }
 
     private void ReadMetadata()
@@ -520,6 +532,18 @@ public sealed class EntityDeserializer :
         _log.Debug($"Allocated {Entities.Count} entities in {_stopwatch.Elapsed}");
     }
 
+    private void AllocateMapIds()
+    {
+        if (Result.Version < 7)
+            return; // MapYamlIds is not populated untill later in older versions
+
+        foreach (var yamlMapId in MapYamlIds)
+        {
+            var mapUid = UidMap[yamlMapId];
+            AllocatedMapIds[yamlMapId] = _map.AllocateMapId(mapUid);
+        }
+    }
+
     private void ReadMapsAndGrids()
     {
         if (Result.Version < 7)
@@ -685,38 +709,38 @@ public sealed class EntityDeserializer :
 
         foreach (var yamlId in MapYamlIds)
         {
-            var uid = UidMap[yamlId];
-            if (_mapQuery.TryComp(uid, out var map))
+            if (UidMap.TryGetValue(yamlId, out var uid) && _mapQuery.TryComp(uid, out var map))
             {
                 Result.Maps.Add((uid, map));
                 EntMan.EnsureComponent<LoadedMapComponent>(uid);
             }
             else
-                _log.Error($"Missing map entity: {EntMan.ToPrettyString(uid)}");
+                _log.Error($"Missing map entity: {EntMan.ToPrettyString(uid)}. YamlId: {yamlId}");
         }
 
         foreach (var yamlId in GridYamlIds)
         {
-            var uid = UidMap[yamlId];
-            if (_gridQuery.TryComp(uid, out var grid))
+            if (UidMap.TryGetValue(yamlId, out var uid) && _gridQuery.TryComp(uid, out var grid))
                 Result.Grids.Add((uid, grid));
             else
-                _log.Error($"Missing grid entity: {EntMan.ToPrettyString(uid)}");
+                _log.Error($"Missing grid entity: {EntMan.ToPrettyString(uid)}. YamlId: {yamlId}");
         }
 
         foreach (var yamlId in OrphanYamlIds)
         {
-            var uid = UidMap[yamlId];
-            if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
-                _log.Error($"Entity {EntMan.ToPrettyString(uid)} was incorrectly labelled as an orphan?");
+            if (!UidMap.TryGetValue(yamlId, out var uid))
+                _log.Error($"Missing orphan entity with YamlId: {yamlId}");
+            else if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
+                _log.Error($"Entity {EntMan.ToPrettyString(uid)} was incorrectly labelled as an orphan? YamlId: {yamlId}");
             else
                 Result.Orphans.Add(uid);
         }
 
         foreach (var yamlId in NullspaceYamlIds)
         {
-            var uid = UidMap[yamlId];
-            if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
+            if (!UidMap.TryGetValue(yamlId, out var uid))
+                _log.Error($"Missing nullspace entity with YamlId: {yamlId}");
+            else if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
                 _log.Error($"Entity {EntMan.ToPrettyString(uid)} was incorrectly labelled as a null-space entity?");
             else
                 Result.NullspaceEntities.Add(uid);
@@ -1152,6 +1176,7 @@ public sealed class EntityDeserializer :
         ISerializationContext? context,
         ISerializationManager.InstantiationDelegate<EntityUid>? _)
     {
+        string msg;
         if (node.Value == "invalid")
         {
             if (CurrentComponent == "Transform")
@@ -1160,9 +1185,9 @@ public sealed class EntityDeserializer :
             if (!Options.LogInvalidEntities)
                 return EntityUid.Invalid;
 
-            var msg = CurrentReadingEntity is not { } curr
+            msg = CurrentReadingEntity is not { } curr
                 ? $"Encountered invalid EntityUid reference"
-                : $"Encountered invalid EntityUid reference wile reading entity {curr.YamlId}, component: {CurrentComponent}";
+                : $"Encountered invalid EntityUid reference while reading entity {curr.YamlId}, component: {CurrentComponent}";
             _log.Error(msg);
             return EntityUid.Invalid;
         }
@@ -1170,7 +1195,10 @@ public sealed class EntityDeserializer :
         if (int.TryParse(node.Value, out var val) && UidMap.TryGetValue(val, out var entity))
             return entity;
 
-        _log.Error($"Invalid yaml entity id: '{val}'");
+        msg = CurrentReadingEntity is not { } ent
+            ? "Encountered unknown entity yaml uid"
+            : $"Encountered unknown entity yaml uid while reading entity {ent.YamlId}, component: {CurrentComponent}";
+        _log.Error(msg);
         return EntityUid.Invalid;
     }
 
@@ -1216,6 +1244,49 @@ public sealed class EntityDeserializer :
         return value.IsValid()
             ? new ValueDataNode(value.Id.ToString(CultureInfo.InvariantCulture))
             : new ValueDataNode("invalid");
+    }
+
+    ValidationNode ITypeValidator<MapId, ValueDataNode>.Validate(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        ISerializationContext? context)
+    {
+        return seri.ValidateNode<EntityUid>(node, context);
+    }
+
+    MapId ITypeReader<MapId, ValueDataNode>.Read(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        SerializationHookContext hookCtx,
+        ISerializationContext? ctx,
+        ISerializationManager.InstantiationDelegate<MapId>? instanceProvider)
+    {
+        if (!Options.AssignMapIds || Result.Version < 7)
+        {
+            _log.Error("Cannot deserialize map ids without pre-allocated ids");
+            return MapId.Nullspace;
+        }
+
+        if (int.TryParse(node.Value, out var val) && AllocatedMapIds.TryGetValue(val, out var map))
+            return map;
+
+        var msg = CurrentReadingEntity is not { } ent
+            ? "Encountered unknown yaml map id"
+            : $"Encountered unknown yaml map id while reading entity {ent.YamlId}, component: {CurrentComponent}";
+        _log.Error(msg);
+        return MapId.Nullspace;
+    }
+
+    DataNode ITypeWriter<MapId>.Write(
+        ISerializationManager seri,
+        MapId value,
+        IDependencyCollection deps,
+        bool alwaysWrite,
+        ISerializationContext? ctx)
+    {
+        return seri.WriteValue(_map.GetMapOrInvalid(value), alwaysWrite, ctx);
     }
 
     #endregion

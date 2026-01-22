@@ -52,6 +52,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly ClientEntityManager _entityManager = default!;
         [Dependency] private readonly IPrototypeManager _proto = default!;
         [Dependency] private readonly IReloadManager _reloads = default!;
+        [Dependency] private readonly LoadingScreenManager _loadingScreenManager = default!;
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
@@ -68,7 +69,7 @@ namespace Robust.Client.Graphics.Clyde
         // VAO is per-window and not stored (not necessary!)
         private GLBuffer WindowVBO = default!;
 
-        private bool _drawingSplash = true;
+        private bool _drawingLoadingScreen = true;
 
         private GLShaderProgram? _currentProgram;
 
@@ -89,6 +90,8 @@ namespace Robust.Client.Graphics.Clyde
         private IBindingsContext _glBindingsContext = default!;
         private bool _earlyGLInit;
         private bool _threadWindowApi;
+
+        public bool IsInitialized { get; private set; }
 
         public Clyde()
         {
@@ -182,6 +185,8 @@ namespace Robust.Client.Graphics.Clyde
             if (!InitMainWindowAndRenderer())
                 return false;
 
+            IsInitialized = true;
+
             return true;
         }
 
@@ -213,7 +218,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Ready()
         {
-            _drawingSplash = false;
+            _drawingLoadingScreen = false;
 
             InitLighting();
         }

@@ -9,7 +9,8 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 /// <summary>
-/// Simple string serializer that just validates that strings correspond to valid component names
+/// Simple string serializer that just validates that strings correspond to valid component names.
+/// This will not fail when it encounters explicitly ignored components.
 /// </summary>
 public sealed class ComponentNameSerializer : ITypeSerializer<string, ValueDataNode>
 {
@@ -17,7 +18,7 @@ public sealed class ComponentNameSerializer : ITypeSerializer<string, ValueDataN
         IDependencyCollection dependencies, ISerializationContext? context = null)
     {
         var factory = dependencies.Resolve<IComponentFactory>();
-        if (!factory.TryGetRegistration(node.Value, out _))
+        if (!factory.TryGetRegistration(node.Value, out _) && factory.GetComponentAvailability(node.Value) != ComponentAvailability.Ignore)
             return new ErrorNode(node, $"Unknown component kind: {node.Value}");
 
         return new ValidatedValueNode(node);

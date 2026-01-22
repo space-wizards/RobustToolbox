@@ -10,7 +10,6 @@ using Lidgren.Network;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -496,6 +495,11 @@ namespace Robust.UnitTesting
                 {
                     // Don't handle bye sending in here I guess.
                     Disconnect(reason);
+                }
+
+                public bool CanSendImmediately(NetDeliveryMethod method, int sequenceChannel)
+                {
+                    return true;
                 }
             }
 

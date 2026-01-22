@@ -1,0 +1,17 @@
+﻿<Project>
+  <!--
+  Disallow content from using direct references to Robust project files.
+  Content should use the .props files in Imports/ instead.
+  -->
+
+  <PropertyGroup>
+    <AllowDirectRobustReferences Condition="'$(AllowDirectRobustReferences)' != ''">false</AllowDirectRobustReferences>
+  </PropertyGroup>
+
+  <Target Name="_RTCheckForDirectReferences" BeforeTargets="BeforeResolveReferences"
+          Condition="'$(AllowDirectRobustReferences)' != 'true'">
+    <Error File="%(ProjectReference.DefiningProjectFullPath)"
+           Text="Direct reference to %(Filename) is not allowed. Use RobustToolbox/Imports/*.props instead (e.g., Shared.props, Client.props, Server.props)"
+           Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', 'RobustToolbox')) and !$([System.Text.RegularExpressions.Regex]::IsMatch('%(DefiningProjectFullPath)', '([Mm]icrosoft|RobustToolbox)'))" />
+  </Target>
+</Project>

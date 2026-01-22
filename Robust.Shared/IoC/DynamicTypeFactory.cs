@@ -12,6 +12,7 @@ namespace Robust.Shared.IoC
     /// </summary>
     /// <seealso cref="DynamicTypeFactoryExt"/>
     [PublicAPI]
+    [NotContentImplementable]
     public interface IDynamicTypeFactory
     {
         /// <summary>

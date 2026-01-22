@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using Robust.Client.Console;
 using Robust.Shared.Configuration;
@@ -24,6 +26,7 @@ namespace Robust.Client.WebView.Cef
 
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly IGameControllerInternal _gameController = default!;
         [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
         [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
@@ -42,10 +45,11 @@ namespace Robust.Client.WebView.Cef
                 _localization.GetString("cmd-flushcookies-help"),
                 (_, _, _) => CefCookieManager.GetGlobal(null).FlushStore(null));
 
+#if !MACOS
             string subProcessName;
             if (OperatingSystem.IsWindows())
                 subProcessName = "Robust.Client.WebView.exe";
-            else if (OperatingSystem.IsLinux())
+            else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                 subProcessName = "Robust.Client.WebView";
             else
                 throw new NotSupportedException("Unsupported platform for CEF!");
@@ -58,20 +62,40 @@ namespace Robust.Client.WebView.Cef
 
             if (cefResourcesPath == null)
                 throw new InvalidOperationException("Unable to locate cef_resources directory!");
+#endif
 
-            var cachePath = "";
-            if (_resourceManager.UserData is WritableDirProvider userData)
-                cachePath = userData.GetFullPath(new ResPath("/cef_cache"));
+            var remoteDebugPort = _cfg.GetCVar(WCVars.WebRemoteDebugPort);
+
+            var cachePath = FindAndLockCacheDirectory();
+
+#if MACOS
+            NativeLibrary.SetDllImportResolver(typeof(CefSettings).Assembly,
+                (name, assembly, path) =>
+                {
+                    if (name == "libcef")
+                    {
+                        var libPath = PathHelpers.ExecutableRelativeFile("../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework");
+                        return NativeLibrary.Load(libPath, assembly, path);
+                    }
+
+                    return 0;
+                });
+
+            // Needed to implement CefAppProtocol on our NSApplication.
+            NativeLibrary.Load("robust_native_webview", typeof(WebViewManagerCef).Assembly, null);
+#endif
 
             var settings = new CefSettings()
             {
                 WindowlessRenderingEnabled = true, // So we can render to our UI controls.
-                ExternalMessagePump = false, // Unsure, honestly. TODO CEF: Research this?
+                ExternalMessagePump = true,
                 NoSandbox = true, // Not disabling the sandbox crashes CEF.
+#if !MACOS
                 BrowserSubprocessPath = subProcessPath,
                 LocalesDirPath = Path.Combine(cefResourcesPath, "locales"),
                 ResourcesDirPath = cefResourcesPath,
-                RemoteDebuggingPort = 9222,
+#endif
+                RemoteDebuggingPort = remoteDebugPort,
                 CookieableSchemesList = "usr,res",
                 CachePath = cachePath,
             };
@@ -111,7 +135,6 @@ namespace Robust.Client.WebView.Cef
             if (ProbeDir(BasePath, out var path))
                 return path;
 
-
             foreach (var searchDir in NativeDllSearchDirectories())
             {
                 if (ProbeDir(searchDir, out path))
@@ -145,6 +168,16 @@ namespace Robust.Client.WebView.Cef
 
         public void Shutdown()
         {
+            foreach (var control in _activeControls.ToArray())
+            {
+                control.CloseBrowser();
+            }
+
+            foreach (var window in _browserWindows.ToArray())
+            {
+                window.Dispose();
+            }
+
             CefRuntime.Shutdown();
         }
 

@@ -10,73 +10,75 @@
     <ManagePackageVersionsCentrally />
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="BenchmarkDotNet" Version="0.14.0" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="DiscordRichPresence" Version="1.2.1.24" />
-    <PackageVersion Include="JetBrains.Annotations" Version="2024.3.0" />
-    <PackageVersion Include="JetBrains.Profiler.Api" Version="1.4.8" />
+    <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageVersion Include="JetBrains.Profiler.Api" Version="1.4.10" />
     <PackageVersion Include="Linguini.Bundle" Version="0.8.1" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzer.Testing" Version="1.1.2" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.2" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.2" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.12.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.12.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.12.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.12.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.12.0" />
-    <PackageVersion Include="Microsoft.CodeCoverage" Version="17.12.0" />
-    <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Features" Version="5.0.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.0.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="5.0.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="5.0.0" />
+    <PackageVersion Include="Microsoft.CodeCoverage" Version="18.0.1" />
+    <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="10.0.0" />
     <PackageVersion Include="Microsoft.DotNet.RemoteExecutor" Version="8.0.0-beta.24059.4" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.ObjectPool" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Primitives" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.ILVerification" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.ObjectPool" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Primitives" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.ILVerification" Version="10.0.0" />
     <PackageVersion Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
-    <PackageVersion Include="Microsoft.NET.ILLink.Tasks" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageVersion Include="Microsoft.NET.ILLink.Tasks" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Moq" Version="4.20.72" />
-    <PackageVersion Include="NUnit" Version="4.3.2" />
-    <PackageVersion Include="NUnit.Analyzers" Version="4.5.0" />
-    <PackageVersion Include="NUnit3TestAdapter" Version="4.6.0" />
+    <PackageVersion Include="NUnit" Version="4.4.0" />
+    <PackageVersion Include="NUnit.Analyzers" Version="4.11.2" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="5.2.0" />
     <PackageVersion Include="Nett" Version="0.15.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
     <PackageVersion Include="OpenTK.Audio.OpenAL" Version="4.9.4" />
     <PackageVersion Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
-    <PackageVersion Include="Pidgin" Version="3.3.0" />
-    <PackageVersion Include="Robust.Natives" Version="0.2.1" />
-    <PackageVersion Include="Robust.Natives.Zstd" Version="0.1.0-zstd1.5.7" />
+    <PackageVersion Include="Pidgin" Version="3.5.1" />
+    <PackageVersion Include="Robust.Natives" Version="0.2.3" />
+    <PackageVersion Include="Robust.Natives.Zstd" Version="0.1.1-zstd1.5.7" />
     <PackageVersion Include="Robust.Natives.Cef" Version="131.3.5" />
     <PackageVersion Include="Robust.Shared.AuthLib" Version="0.1.2" />
-    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
     <PackageVersion Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.10" />
-    <PackageVersion Include="Serilog" Version="4.2.0" />
+    <PackageVersion Include="Serilog" Version="4.3.0" />
     <PackageVersion Include="Serilog.Sinks.Loki" Version="4.0.0-beta3" />
     <PackageVersion Include="SharpZstd.Interop" Version="1.5.2-beta2" />
-    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.11" />
-    <PackageVersion Include="SpaceWizards.HttpListener" Version="0.1.1" />
-    <PackageVersion Include="SpaceWizards.NFluidsynth" Version="0.2.1" />
-    <PackageVersion Include="SpaceWizards.Sdl" Version="1.0.0" />
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.12" />
+    <PackageVersion Include="SpaceWizards.HttpListener" Version="0.2.0" />
+    <PackageVersion Include="SpaceWizards.NFluidsynth" Version="0.2.2" />
+    <PackageVersion Include="SpaceWizards.Sdl" Version="1.1.1" />
     <PackageVersion Include="SpaceWizards.SharpFont" Version="1.1.0" />
-    <PackageVersion Include="SpaceWizards.Sodium" Version="0.2.1" />
+    <PackageVersion Include="SpaceWizards.Sodium" Version="0.3.0" />
+    <PackageVersion Include="SpaceWizards.Fontconfig.Interop" Version="1.0.0" />
     <PackageVersion Include="libsodium" Version="1.0.20.1" />
-    <PackageVersion Include="System.Management" Version="9.0.8" />
-    <PackageVersion Include="TerraFX.Interop.Windows" Version="10.0.26100.1" />
-    <PackageVersion Include="TerraFX.Interop.Xlib" Version="6.4.0" />
+    <PackageVersion Include="System.Management" Version="10.0.0" />
+    <PackageVersion Include="TerraFX.Interop.Windows" Version="10.0.26100.5" />
+    <PackageVersion Include="TerraFX.Interop.Xlib" Version="6.4.0.2" />
+    <!-- Intentionally kept back, there is a bug that breaks audio for systems without AVX instructions. And the fix is not yet published. -->
     <PackageVersion Include="VorbisPizza" Version="1.3.0" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <PackageVersion Include="prometheus-net" Version="8.2.1" />
-    <PackageVersion Include="prometheus-net.DotNetRuntime" Version="4.4.0" />
+    <PackageVersion Include="prometheus-net.DotNetRuntime" Version="4.4.1" />
     <PackageVersion Include="PolySharp" Version="1.15.0" />
-
+    <PackageVersion Include="System.CommandLine" Version="2.0.1" />
     <!-- Transitive deps that we need to pin versions for to avoid NuGet warnings. -->
-    <PackageVersion Include="System.Formats.Asn1" Version="9.0.0" />
-    <PackageVersion Include="System.Reflection.Metadata" Version="9.0.0" />
-    <PackageVersion Include="System.Text.Json" Version="9.0.0" />
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.12.0" />
+    <PackageVersion Include="System.Formats.Asn1" Version="10.0.0" />
+    <PackageVersion Include="System.Reflection.Metadata" Version="10.0.0" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.0" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.0.0" />
   </ItemGroup>
 </Project>

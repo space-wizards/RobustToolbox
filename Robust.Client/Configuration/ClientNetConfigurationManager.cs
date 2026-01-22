@@ -71,7 +71,7 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
         // Actually set the CVar
         base.SetCVar(name, value, force);
 
-        if ((flags & CVar.REPLICATED) == 0)
+        if ((flags & CVar.REPLICATED) == 0 || !NetManager.IsConnected)
             return;
 
         var msg = new MsgConVars();

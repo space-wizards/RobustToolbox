@@ -93,6 +93,10 @@ internal partial class Clyde
                     WinThreadWinRequestAttention(cmd);
                     break;
 
+                case CmdWinSetProgress cmd:
+                    WinThreadWinSetProgress(cmd);
+                    break;
+
                 case CmdWinSetSize cmd:
                     WinThreadWinSetSize(cmd);
                     break;
@@ -259,6 +263,13 @@ internal partial class Clyde
         private sealed class CmdWinRequestAttention : CmdBase
         {
             public nint Window;
+        }
+
+        private sealed class CmdWinSetProgress : CmdBase
+        {
+            public nint Window;
+            public SDL.SDL_ProgressState State;
+            public float Value;
         }
 
         private sealed class CmdWinSetSize : CmdBase

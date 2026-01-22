@@ -132,13 +132,13 @@ namespace Robust.Shared
         /// Whether to interpolate between server game states for render frames on the client.
         /// </summary>
         public static readonly CVarDef<bool> NetInterp =
-            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
         /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
-            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
         /// The maximum size of the game state buffer. If this is exceeded the client will request a full game state.
@@ -406,6 +406,46 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetHWId =
             CVarDef.Create("net.hwid", true, CVar.SERVERONLY);
 
+        /**
+         * TRANSFER
+         */
+
+        /// <summary>
+        /// If true, enable the WebSocket-based high bandwidth transfer channel.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// If set, <see cref="TransferHttpEndpoint"/> must be set to the API address of the server,
+        /// and you must ensure your reverse proxy (if you have one) is configured to allow WebSocket connections.
+        /// </para>
+        /// <para>
+        /// The transfer channel has no additional encryption layer. Unless your API is exposed behind HTTPS,
+        /// traffic over the channel will not be encrypted, and you are discouraged from enabling it.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<bool> TransferHttp =
+            CVarDef.Create("transfer.http", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// The base HTTP URL of the game server, used for the high-bandwidth transfer channel.
+        /// </summary>
+        public static readonly CVarDef<string> TransferHttpEndpoint =
+            CVarDef.Create("transfer.http_endpoint", "http://localhost:1212/", CVar.SERVERONLY);
+
+        /// <summary>
+        /// Amount of concurrent client->server transfer streams allowed.
+        /// </summary>
+        /// <remarks>
+        /// Clients will be disconnected if they exceed this limit.
+        /// </remarks>
+        public static readonly CVarDef<int> TransferStreamLimit =
+            CVarDef.Create("transfer.stream_limit", 10, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Artificially delay transfer operations to simulate slow network. Debug option.
+        /// </summary>
+        internal static readonly CVarDef<bool> TransferArtificialDelay =
+            CVarDef.Create("transfer.artificial_delay", false);
 
         /**
          * SUS
@@ -787,6 +827,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> GameAutoPauseEmpty =
             CVarDef.Create("game.auto_pause_empty", true, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Scales the game simulation time. Higher values make the game slower.
+        /// </summary>
+        public static readonly CVarDef<float> GameTimeScale =
+            CVarDef.Create("game.time_scale", 1f, CVar.REPLICATED | CVar.SERVER);
 
         /*
          * LOG
@@ -1204,7 +1250,7 @@ namespace Robust.Shared
             CVarDef.Create("display.use_US_QWERTY_hotkeys", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<string> DisplayWindowingApi =
-            CVarDef.Create("display.windowing_api", "glfw", CVar.CLIENTONLY);
+            CVarDef.Create("display.windowing_api", "sdl3", CVar.CLIENTONLY);
 
         /// <summary>
         /// If true and on Windows 11 Build 22000,
@@ -1279,13 +1325,6 @@ namespace Robust.Shared
         /*
          * PHYSICS
          */
-
-        /// <summary>
-        /// How much to expand broadphase checking for. This is useful for cross-grid collisions.
-        /// Performance impact if additional broadphases are being checked.
-        /// </summary>
-        public static readonly CVarDef<float> BroadphaseExpand =
-            CVarDef.Create("physics.broadphase_expand", 2f, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
         /// The target minimum ticks per second on the server.
@@ -1836,6 +1875,15 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<bool> CfgCheckUnused = CVarDef.Create("cfg.check_unused", true);
 
+        /// <summary>
+        /// Storage for CVars that should be rolled back next client startup.
+        /// </summary>
+        /// <remarks>
+        /// This CVar is utilized through <see cref="IConfigurationManager"/>'s rollback functionality.
+        /// </remarks>
+        internal static readonly CVarDef<string>
+            CfgRollbackData = CVarDef.Create("cfg.rollback_data", "", CVar.ARCHIVE);
+
         /*
         * Network Resource Manager
         */
@@ -1914,6 +1962,51 @@ namespace Robust.Shared
         ///     By default, this is Space Station 14's sln, but it can be any file at the same root level.
         /// </summary>
         public static readonly CVarDef<string> XamlHotReloadMarkerName =
-            CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.sln", CVar.CLIENTONLY);
+            CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.slnx", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true, all XAML UIs will be JITed for hot reload on client startup.
+        /// If false, they will be JITed on demand.
+        /// </summary>
+        public static readonly CVarDef<bool> UIXamlJitPreload =
+            CVarDef.Create("ui.xaml_jit_preload", false, CVar.CLIENTONLY);
+
+        /*
+         * FONT
+         */
+
+        /// <summary>
+        /// If false, disable system font support.
+        /// </summary>
+        public static readonly CVarDef<bool> FontSystem =
+            CVarDef.Create("font.system", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true, allow Windows "downloadable" fonts to be exposed to the system fonts API.
+        /// </summary>
+        public static readonly CVarDef<bool> FontWindowsDownloadable =
+            CVarDef.Create("font.windows_downloadable", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /*
+         * LOADING
+         */
+
+        /// <summary>
+        /// Whether to show explicit loading bar during client initialization.
+        /// </summary>
+        public static readonly CVarDef<bool> LoadingShowBar =
+            CVarDef.Create("loading.show_bar", true, CVar.CLIENTONLY);
+
+#if TOOLS
+        private const bool DefaultShowDebug = true;
+#else
+        private const bool DefaultShowDebug = false;
+#endif
+
+        /// <summary>
+        /// Whether to show "debug" info in the loading screen.
+        /// </summary>
+        public static readonly CVarDef<bool> LoadingShowDebug =
+            CVarDef.Create("loading.show_debug", DefaultShowDebug, CVar.CLIENTONLY);
     }
 }

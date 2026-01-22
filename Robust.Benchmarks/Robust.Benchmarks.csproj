@@ -6,14 +6,24 @@
       <OutputPath>../bin/Benchmarks</OutputPath>
       <OutputType>Exe</OutputType>
       <NoWarn>RA0003</NoWarn>
+      <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Robust.Server.Testing\Robust.Server.Testing.csproj" />
     <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
+    <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
     <ProjectReference Include="..\Robust.UnitTesting\Robust.UnitTesting.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" />
+    <!-- BenchmarkDotNet autogenerates files that attempt to reference BenchmarkDotNet through Robust.Benchmarks.
+     By default the RT project privates these files, so we have to explicitly state that these files should be made available
+     to the BenchmarkDotNet project so it can build the runner that executes the benchmark. -->
+    <PackageReference Include="BenchmarkDotNet" PrivateAssets="none" />
+
+    <PackageReference Include="JetBrains.Annotations" />
+    <PackageReference Include="YamlDotNet" />
+    <PackageReference Include="prometheus-net" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

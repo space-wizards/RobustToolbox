@@ -35,12 +35,12 @@ public sealed class MarkupNode : IComparable<MarkupNode>, IEquatable<MarkupNode>
     public override string ToString()
     {
         if(Name == null)
-            return Value.StringValue ?? "";
+            return FormattedMessage.EscapeText(Value.StringValue ?? "");
 
         var attributesString = "";
         foreach (var (k, v) in Attributes)
         {
-            attributesString += $"{k}{v}";
+            attributesString += $" {k}{v}";
         }
 
         return $"[{(Closing ? "/" : "")}{Name}{Value.ToString().ReplaceLineEndings("\\n")}{attributesString}]";

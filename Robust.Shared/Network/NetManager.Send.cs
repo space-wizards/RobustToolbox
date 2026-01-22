@@ -64,6 +64,7 @@ public sealed partial class NetManager
 
         var packet = BuildMessage(message, channel.Connection.Peer);
         var method = message.DeliveryMethod;
+        var seqChannel = message.SequenceChannel;
 
         LogSend(message, method, packet);
 
@@ -71,6 +72,7 @@ public sealed partial class NetManager
         {
             Message = packet,
             Method = method,
+            SequenceChannel = seqChannel,
             Owner = this,
             RobustMessage = message,
         };
@@ -114,7 +116,7 @@ public sealed partial class NetManager
     {
         channel.Encryption?.Encrypt(item.Message);
 
-        var result = channel.Connection.Peer.SendMessage(item.Message, channel.Connection, item.Method);
+        var result = channel.Connection.Peer.SendMessage(item.Message, channel.Connection, item.Method, item.SequenceChannel);
         if (result is not (NetSendResult.Sent or NetSendResult.Queued))
         {
             // Logging stack trace here won't be useful as it'll likely be thread pooled on production scenarios.
@@ -127,6 +129,7 @@ public sealed partial class NetManager
     {
         public required NetOutgoingMessage Message;
         public required NetDeliveryMethod Method;
+        public required int SequenceChannel;
         public required NetMessage RobustMessage;
         public required NetManager Owner;
     }

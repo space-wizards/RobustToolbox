@@ -42,19 +42,22 @@ internal sealed partial class MapEditorMain : Control
                 new MenuBar.MenuButton
                 {
                     Text = "New",
-                    OnPressed = NewFilePressed
+                    OnPressed = NewFilePressed,
+                    KeyFunction = MapEditorKeyFunctions.NewFile,
                 },
                 new MenuBar.MenuSeparator(),
                 new MenuBar.MenuButton
                 {
                     Text = "Open...",
-                    OnPressed = OpenFilePressed
+                    OnPressed = OpenFilePressed,
+                    KeyFunction = MapEditorKeyFunctions.OpenFile,
                 },
                 new MenuBar.MenuSeparator(),
                 new MenuBar.MenuButton
                 {
                     Text = "Save",
-                    OnPressed = SaveFilePressed
+                    OnPressed = SaveFilePressed,
+                    KeyFunction = MapEditorKeyFunctions.SaveFile,
                 },
                 new MenuBar.MenuButton
                 {
@@ -63,12 +66,14 @@ internal sealed partial class MapEditorMain : Control
                 new MenuBar.MenuButton
                 {
                     Text = "Save As",
+                    KeyFunction = MapEditorKeyFunctions.SaveAsFile,
                 },
                 new MenuBar.MenuSeparator(),
                 new MenuBar.MenuButton
                 {
                     Text = "Close",
-                    OnPressed = CloseFilePressed
+                    OnPressed = CloseFilePressed,
+                    KeyFunction = MapEditorKeyFunctions.CloseFile,
                 }
             }
         });
@@ -81,10 +86,12 @@ internal sealed partial class MapEditorMain : Control
                 new MenuBar.MenuButton
                 {
                     Text = "Undo",
+                    KeyFunction = MapEditorKeyFunctions.Undo,
                 },
                 new MenuBar.MenuButton
                 {
                     Text = "Redo",
+                    KeyFunction = MapEditorKeyFunctions.Redo,
                 }
             }
         });

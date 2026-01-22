@@ -1,0 +1,32 @@
+﻿version: 1 # Currently unused.
+binds: # These are all the current engine keybinds.
+- function: MapEditorNewFile
+  type: State
+  key: N
+  mod1: Control
+- function: MapEditorOpenFile
+  type: State
+  key: O
+  mod1: Control
+- function: MapEditorSaveFile
+  type: State
+  key: S
+  mod1: Control
+- function: MapEditorSaveAsFile
+  type: State
+  key: S
+  mod1: Control
+  mod2: Shift
+- function: MapEditorCloseFile
+  type: State
+  key: W
+  mod1: Control
+- function: MapEditorUndo
+  type: State
+  key: Z
+  mod1: Control
+- function: MapEditorRedo
+  type: State
+  key: Z
+  mod1: Control
+  mod2: Shift

@@ -39,6 +39,7 @@ namespace Robust.Client.Input
     {
         // This is for both userdata and resources.
         private const string KeybindsPath = "/keybinds.yml";
+        private const string EngineKeybindsPath = "/Engine/keybinds.yml";
 
         [ViewVariables] public bool Enabled { get; set; } = true;
 
@@ -148,6 +149,11 @@ namespace Robust.Client.Input
             if (_resourceMan.ContentFileExists(path))
             {
                 LoadKeyFile(path, true);
+            }
+
+            if (_resourceMan.ContentFileExists(EngineKeybindsPath))
+            {
+                LoadKeyFile(new ResPath(EngineKeybindsPath), true);
             }
         }
 

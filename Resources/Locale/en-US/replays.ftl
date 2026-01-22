@@ -53,6 +53,7 @@ cmd-replay-recording-stats-desc = Displays information about the current replay 
 cmd-replay-recording-stats-help = Usage: replay_recording_stats
 cmd-replay-recording-stats-result = Duration: {$time} min, Ticks: {$ticks}, Size: {$size} MB, rate: {$rate} MB/min.
 
+cmd-replay-toggleui-desc = Toggles the replay control UI.
 
 # Time Control UI
 replay-time-box-scrubbing-label = Dynamic Scrubbing

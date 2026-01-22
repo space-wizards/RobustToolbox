@@ -13,6 +13,20 @@ internal sealed class ButtonSheetlet : EngineSheetlet<BaseEditorStylesheet>
 {
     public override StyleRule[] GetRules(BaseEditorStylesheet sheet, object config)
     {
+        var box = CreateBox(sheet);
+        var selectedBox = new StyleBoxTexture(box) { Modulate = sheet.ButtonBackgroundHover };
+
+        return
+        [
+            Element<ContainerButton>()
+                .Prop(ContainerButton.StylePropertyStyleBox, box),
+            Element<ContainerButton>().Pseudo(ContainerButton.StylePseudoClassHover)
+                .Prop(ContainerButton.StylePropertyStyleBox, selectedBox)
+        ];
+    }
+
+    internal static StyleBoxTexture CreateBox(BaseEditorStylesheet sheet)
+    {
         var boxTex =
             sheet.Resources.GetResource<TextureResource>("/Engine/Editor/Interface/Controls/button.svg.192dpi.png");
 
@@ -25,14 +39,6 @@ internal sealed class ButtonSheetlet : EngineSheetlet<BaseEditorStylesheet>
         box.SetPatchMargin(StyleBox.Margin.All, 8);
         box.SetContentMarginOverride(StyleBox.Margin.Vertical, 2);
 
-        var selectedBox = new StyleBoxTexture(box) { Modulate = sheet.ButtonBackgroundHover };
-
-        return
-        [
-            Element<ContainerButton>()
-                .Prop(ContainerButton.StylePropertyStyleBox, box),
-            Element<ContainerButton>().Pseudo(ContainerButton.StylePseudoClassHover)
-                .Prop(ContainerButton.StylePropertyStyleBox, selectedBox)
-        ];
+        return box;
     }
 }

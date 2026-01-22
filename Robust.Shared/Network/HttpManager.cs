@@ -28,37 +28,37 @@ public sealed class HttpManager : IHttpManagerInternal
         // No, so we copy the original string instead just in case
         // !!FUN!!
         uri = new Uri(uri.OriginalString);
-        await ThrowIfLocalAddress(uri);
+        await ThrowIfLocalUri(uri);
         return await _client.GetStreamAsync(uri, cancel);
     }
 
     public async Task<string> GetStringAsync(Uri uri, CancellationToken cancel = default)
     {
         uri = new Uri(uri.OriginalString);
-        await ThrowIfLocalAddress(uri);
+        await ThrowIfLocalUri(uri);
         return await _client.GetStringAsync(uri, cancel);
     }
 
     public async Task<T?> GetFromJsonAsync<T>(Uri uri, CancellationToken cancel = default)
     {
         uri = new Uri(uri.OriginalString);
-        await ThrowIfLocalAddress(uri);
+        await ThrowIfLocalUri(uri);
         return await _client.GetFromJsonAsync<T>(uri, cancel);
     }
 
-    private async Task ThrowIfLocalAddress(Uri uri)
+    private async Task ThrowIfLocalUri(Uri uri)
     {
         if (IPAddress.TryParse(uri.Host, out var ip))
-            ThrowIfLocalAddress(ip);
+            ThrowIfLocalIP(ip);
 
         var addresses = await Dns.GetHostAddressesAsync(uri.Host);
         foreach (var dnsIP in addresses)
         {
-            ThrowIfLocalAddress(dnsIP);
+            ThrowIfLocalIP(dnsIP);
         }
     }
 
-    private void ThrowIfLocalAddress(IPAddress ip)
+    private void ThrowIfLocalIP(IPAddress ip)
     {
         // IPv4
         var ipv4 = ip.ToString()

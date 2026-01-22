@@ -24,6 +24,18 @@ internal sealed class ClientMapEditorSystem : MapEditorSystem
 
     [ViewVariables(VVAccess.ReadWrite)]
     private bool _readyToMap;
+
+    internal IEnumerable<EntityUid> OpenMaps
+    {
+        get
+        {
+            if (GetUserState() is not { } uState)
+                return [];
+
+            return uState.Comp.OpenMaps;
+        }
+    }
+
     public override void Initialize()
     {
         base.Initialize();
@@ -166,5 +178,18 @@ internal sealed class ClientMapEditorSystem : MapEditorSystem
         stream.SetLength(0);
         decompression.CopyTo(stream);
         stream.Flush();
+    }
+
+    private Entity<MapEditorUserStateComponent>? GetUserState()
+    {
+        var q = EntityQueryEnumerator<MapEditorUserStateComponent>();
+
+        while (q.MoveNext(out var ent, out var comp))
+        {
+            if (comp.User == _playerManager.LocalUser)
+                return (ent, comp);
+        }
+
+        return null;
     }
 }

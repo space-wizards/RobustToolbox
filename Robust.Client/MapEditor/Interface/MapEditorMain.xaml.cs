@@ -91,9 +91,10 @@ internal sealed partial class MapEditorMain : Control
 
         NewFileButton.OnPressed += _ => NewFilePressed();
 
-        editorSystem.OpenMapsUpdated += EditorSystemOnOpenMapsUpdated;
-
         _sawmill = _logManager.GetSawmill("map_editor.ui.main");
+
+        editorSystem.OpenMapsUpdated += EditorSystemOnOpenMapsUpdated;
+        EditorSystemOnOpenMapsUpdated(editorSystem.OpenMaps);
     }
 
     public void Shutdown()

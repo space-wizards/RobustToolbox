@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Robust.Client.Graphics;
+using Robust.Client.Input;
+using Robust.Shared.Input;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
 
@@ -15,6 +18,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class MenuBar : PanelContainer
     {
+        private readonly IInputManager _inputManager;
+
         public const string StyleClassMenuBarPopup = "menuBarPopup";
         public const string StyleClassMenuBarButton = "menuBarButton";
         public const string StyleClassMenuBarSeparator = "menuBarSeparator";
@@ -41,6 +46,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public MenuBar(bool isSubmenu = false)
         {
+            _inputManager = IoCManager.Resolve<IInputManager>();
+
             _isSubmenu = isSubmenu;
             _popup = new Popup
             {
@@ -151,13 +158,37 @@ namespace Robust.Client.UserInterface.Controls
                 switch (entry)
                 {
                     case MenuButton menuButton:
-                        var pushButton = new Button
+                        var buttonContents = new BoxContainer
                         {
-                            Text = menuButton.Text,
-                            ClipText = true,
+                            Orientation = LayoutOrientation.Horizontal,
+                            Children =
+                            {
+                                new Label
+                                {
+                                    Text = menuButton.Text,
+                                    ClipText = true,
+                                    HorizontalExpand = true
+                                }
+                            }
+                        };
+
+                        if (menuButton.KeyFunction is { } keyFunc
+                            && _inputManager.TryGetKeyBinding(keyFunc, out var binding))
+                        {
+                            buttonContents.AddChild(new Label
+                            {
+                                Text = binding.GetKeyString()
+                            });
+                        }
+
+                        var pushButton = new ContainerButton()
+                        {
                             Disabled = menuButton.Disabled,
-                            TextAlign = Label.AlignMode.Left,
-                            StyleClasses = { StyleClassMenuBarButton }
+                            StyleClasses = { StyleClassMenuBarButton },
+                            Children =
+                            {
+                                buttonContents
+                            }
                         };
                         pushButton.OnPressed += _ =>
                         {
@@ -365,6 +396,8 @@ namespace Robust.Client.UserInterface.Controls
             public string? Text { get; set; }
             public bool Disabled { get; set; }
             public Action? OnPressed { get; set; }
+
+            public BoundKeyFunction? KeyFunction { get; set; }
         }
 
         public sealed class MenuSeparator : MenuEntry

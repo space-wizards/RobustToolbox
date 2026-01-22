@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network;
 
@@ -22,39 +23,73 @@ public sealed class HttpManager : IHttpManagerInternal
     public async Task<Stream> GetStreamAsync(Uri uri, CancellationToken cancel = default)
     {
         // Uri can be inherited which means it could be inherited by the user
-        // Am I going to check if that means they could modify it after the local address check?
+        // Am I going to check if that means they could modify it after the
+        // local address check?
         // No, so we copy the original string instead just in case
         // !!FUN!!
         uri = new Uri(uri.OriginalString);
-        ThrowIfLocalAddress(uri);
+        await ThrowIfLocalAddress(uri);
         return await _client.GetStreamAsync(uri, cancel);
     }
 
     public async Task<string> GetStringAsync(Uri uri, CancellationToken cancel = default)
     {
         uri = new Uri(uri.OriginalString);
-        ThrowIfLocalAddress(uri);
+        await ThrowIfLocalAddress(uri);
         return await _client.GetStringAsync(uri, cancel);
     }
 
     public async Task<T?> GetFromJsonAsync<T>(Uri uri, CancellationToken cancel = default)
     {
         uri = new Uri(uri.OriginalString);
-        ThrowIfLocalAddress(uri);
+        await ThrowIfLocalAddress(uri);
         return await _client.GetFromJsonAsync<T>(uri, cancel);
     }
 
-    private void ThrowIfLocalAddress(Uri uri)
+    private async Task ThrowIfLocalAddress(Uri uri)
     {
-        if (!IPAddress.TryParse(uri.Host, out var ip))
-            return;
+        if (IPAddress.TryParse(uri.Host, out var ip))
+            ThrowIfLocalAddress(ip);
 
-        if (IPAddress.IsLoopback(ip) ||
-            ip.AddressFamily == AddressFamily.InterNetwork ||
-            ip.AddressFamily == AddressFamily.InterNetworkV6)
+        var addresses = await Dns.GetHostAddressesAsync(uri.Host);
+        foreach (var dnsIP in addresses)
         {
-            throw new InvalidAddressException($"{uri} is a local address");
+            ThrowIfLocalAddress(dnsIP);
         }
+    }
+
+    private void ThrowIfLocalAddress(IPAddress ip)
+    {
+        // IPv4
+        var ipv4 = ip.ToString()
+            .Split(".")
+            .Select(s => (int?) (int.TryParse(s, out var i) ? i : null))
+            .Where(i => i != null)
+            .ToArray();
+        ipv4.TryGetValue(0, out var first);
+        ipv4.TryGetValue(1, out var second);
+        switch (first)
+        {
+            case 10:
+            case 192 when second == 168:
+            case 172 when second is >= 16 and <= 31:
+                ThrowLocalAddressException(ip);
+                break;
+        }
+
+        // IPv6
+        if (IPAddress.IsLoopback(ip) ||
+            ip.IsIPv6LinkLocal ||
+            ip.IsIPv6SiteLocal ||
+            ip.IsIPv6UniqueLocal)
+        {
+            ThrowLocalAddressException(ip);
+        }
+    }
+
+    private void ThrowLocalAddressException(IPAddress ip)
+    {
+        throw new InvalidAddressException($"{ip.ToString()} is a local address");
     }
 }
 

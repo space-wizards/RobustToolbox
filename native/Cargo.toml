@@ -1,0 +1,10 @@
+[workspace]
+resolver = "3"
+members = ["cef-helper", "robust-apphost", "robust-native-client", "robust-native-server", "robust-native-shared", "robust-native-webview"]
+
+[workspace.dependencies]
+cef = { git = "https://github.com/space-wizards/cef-rs.git", rev = "10afdf90bcafb0491adc4ef535530eeee77f4ef9", default-features = false }
+objc2 = "0.6.3"
+objc2-app-kit = "0.3.2"
+cc = "1.0"
+mimalloc = "0.1.48"

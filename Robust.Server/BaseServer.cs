@@ -9,6 +9,7 @@ using Robust.Server.DataMetrics;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Log;
+using Robust.Server.Network.Transfer;
 using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Scripting;
@@ -29,6 +30,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
@@ -107,6 +109,8 @@ namespace Robust.Server
         [Dependency] private readonly UploadedContentManager _uploadedContMan = default!;
         [Dependency] private readonly NetworkResourceManager _netResMan = default!;
         [Dependency] private readonly IReflectionManager _refMan = default!;
+        [Dependency] private readonly ITransferManager _transfer = default!;
+        [Dependency] private readonly ServerTransferTestManager _transferTest = default!;
         [Dependency] private readonly IHttpManagerInternal _http = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
@@ -294,6 +298,9 @@ namespace Robust.Server
                 return true;
             }
 
+            _transfer.Initialize();
+            _transferTest.Initialize();
+
             var dataDir = Options.LoadConfigAndUserData
                 ? _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data")
                 : null;
@@ -304,8 +311,14 @@ namespace Robust.Server
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
 
+            var startType = ContentStart ? StartType.Content : StartType.Engine;
+#if FULL_RELEASE
+            if (Options.ResourceMountDisabled)
+                startType = StartType.Loader;
+#endif
+
             ProgramShared.DoMounts(_resources, mountOptions, Options.ContentBuildDirectory, Options.AssemblyDirectory,
-                Options.LoadContentResources, Options.ResourceMountDisabled, ContentStart);
+                Options.LoadContentResources, startType);
 
             // When the game is ran with the startup executable being content,
             // we have to disable the separate load context.
@@ -768,6 +781,8 @@ namespace Robust.Server
             _hubManager.Heartbeat();
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+
+            _transfer.FrameUpdate();
 
             _metricsManager.FrameUpdate();
         }

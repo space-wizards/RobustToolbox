@@ -1336,11 +1336,10 @@ namespace Robust.Client.GameObjects
             public Layer(Layer toClone, SpriteComponent parent) : this(parent)
             {
                 if (toClone.Shader != null)
-                {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
-                    UnShaded = toClone.UnShaded;
-                    ShaderPrototype = toClone.ShaderPrototype;
-                }
+
+                UnShaded = toClone.UnShaded;
+                ShaderPrototype = toClone.ShaderPrototype;
                 Texture = toClone.Texture;
                 RSI = toClone.RSI;
                 State = toClone.State;

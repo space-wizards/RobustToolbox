@@ -56,7 +56,7 @@ internal sealed class ViewVariableControlFactory : IViewVariableControlFactory
         RegisterForType<TimeSpan>(_ =>  new VVPropEditorTimeSpan());
 
         RegisterWithCondition(
-            type => type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType,
+            type => type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken),
             _ => new VVPropEditorReference()
         );
         RegisterWithCondition(

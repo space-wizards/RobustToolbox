@@ -151,14 +151,15 @@ internal sealed class ClientMapEditorSystem : MapEditorSystem
     public void RequestCloseFile(EntityUid map)
     {
         var data = Comp<MapEditorMapDataComponent>(map);
-        var handle = data.FileHandles[_playerManager.LocalUser!.Value];
+        if (data.FileHandles.TryGetValue(_playerManager.LocalUser!.Value, out var handle))
+        {
+            _mapFileHandles.CloseHandle(handle);
+        }
 
         RaiseNetworkEvent(new MEM.CloseMap
         {
             MapData = GetNetEntity(map)
         });
-
-        _mapFileHandles.CloseHandle(handle);
     }
 
     private void HandleSaveMapData(MEM.SaveMapData msg)

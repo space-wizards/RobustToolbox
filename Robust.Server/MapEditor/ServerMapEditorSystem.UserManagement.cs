@@ -93,6 +93,9 @@ internal sealed partial class ServerMapEditorSystem
         out UState userState)
     {
         var session = eventArgs.SenderSession;
+
+        Log.Verbose($"{session}: {forCommand}");
+
         if (GetState() is not { } gState)
         {
             Log.Warning($"Client {session} tried to execute command {forCommand}, but there's no valid mapping state!");

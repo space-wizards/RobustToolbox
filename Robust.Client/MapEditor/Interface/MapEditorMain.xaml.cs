@@ -17,7 +17,6 @@ internal sealed partial class MapEditorMain : Control
 {
     [Dependency] private readonly IEngineStylesheetManager _stylesheetManager = null!;
     [Dependency] private readonly ILogManager _logManager = null!;
-    [Dependency] private readonly IFileDialogManager _fileDialog = null!;
     [Dependency] private readonly MapFileHandleManager _fileHandleManager = null!;
 
     private readonly ClientMapEditorSystem _editorSystem;
@@ -49,6 +48,7 @@ internal sealed partial class MapEditorMain : Control
                 new MenuBar.MenuButton
                 {
                     Text = "Open...",
+                    OnPressed = OpenFilePressed
                 },
                 new MenuBar.MenuSeparator(),
                 new MenuBar.MenuButton
@@ -63,6 +63,12 @@ internal sealed partial class MapEditorMain : Control
                 new MenuBar.MenuButton
                 {
                     Text = "Save As",
+                },
+                new MenuBar.MenuSeparator(),
+                new MenuBar.MenuButton
+                {
+                    Text = "Close",
+                    OnPressed = CloseFilePressed
                 }
             }
         });
@@ -172,5 +178,22 @@ internal sealed partial class MapEditorMain : Control
     private MapEditorLayout? GetFocusedEditor()
     {
         return FileDocker.GetAllPanels().OfType<MapEditorLayout>().SingleOrDefault(l => l.VisibleInTree);
+    }
+
+    private async void OpenFilePressed()
+    {
+        var result = await _fileHandleManager.OpenFile();
+        if (result == null)
+            return;
+
+        _editorSystem.RequestOpenFile(result.Value.FileResult.FileName, result.Value.Handle);
+    }
+
+    private void CloseFilePressed()
+    {
+        if (GetFocusedEditor() is not { } focusedEditor)
+            return;
+
+        _editorSystem.RequestCloseFile(focusedEditor.MapData);
     }
 }

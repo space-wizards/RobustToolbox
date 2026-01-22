@@ -141,4 +141,55 @@ internal sealed partial class ServerMapEditorSystem
             Data = ms.ToArray()
         }, args.SenderSession);
     }
+
+    private void HandleCloseMap(MEM.CloseMap msg, GState gState, UState uState, EntitySessionEventArgs args)
+    {
+        var mapDataEnt = GetEntity(msg.MapData);
+        var mapData = Comp<MapEditorMapDataComponent>(mapDataEnt);
+
+        // Remove file handle.
+        mapData.FileHandles.Remove(uState.Comp.User);
+        Dirty(mapDataEnt, mapData);
+
+        // Destroy eyes
+        // TODO: Dedicated function for this.
+        foreach (var eye in uState.Comp.Eyes.ToArray())
+        {
+            var eyeComp = Comp<MapEditorEyeComponent>(eye);
+            if (eyeComp.MapData == mapDataEnt)
+            {
+                Del(eye);
+                uState.Comp.Eyes.Remove(eye);
+            }
+        }
+
+        // Remove from open maps
+        uState.Comp.OpenMaps.Remove(mapDataEnt);
+        Dirty(uState);
+
+        CheckDestroyMap((mapDataEnt, mapData), gState);
+    }
+
+    private void CheckDestroyMap(Entity<MapEditorMapDataComponent> mapData, GState gState)
+    {
+        foreach (var user in gState.Comp.Users)
+        {
+            var userComp = Comp<MapEditorUserStateComponent>(user);
+            if (userComp.OpenMaps.Contains(mapData))
+                return;
+        }
+
+        // No user has this map open, delete it.
+        Log.Info($"Last user closed map {ToPrettyString(mapData)}. Destroying");
+        DestroyMap(mapData, gState);
+    }
+
+    private void DestroyMap(Entity<MapEditorMapDataComponent> mapData, GState gState)
+    {
+        var success = gState.Comp.Maps.Remove(mapData);
+        DebugTools.Assert(success, "Map was not in maps list?");
+
+        Del(mapData.Comp.MapEntity);
+        Del(mapData);
+    }
 }

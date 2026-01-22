@@ -74,4 +74,13 @@ internal static class MapEditorMessages
         public required string Name;
         public MapFileHandle? Handle;
     }
+
+    /// <summary>
+    /// C->S
+    /// </summary>
+    [Serializable, NetSerializable]
+    internal sealed class CloseMap : EntityEventArgs
+    {
+        public required NetEntity MapData;
+    }
 }

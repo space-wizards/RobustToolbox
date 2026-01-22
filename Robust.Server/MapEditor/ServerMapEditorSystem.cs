@@ -28,6 +28,7 @@ internal sealed partial class ServerMapEditorSystem : MapEditorSystem
 
         SubscribeMapCommand<MEM.CreateNewMap>(HandleCreateMap);
         SubscribeMapCommand<MEM.OpenMap>(HandleOpenMap);
+        SubscribeMapCommand<MEM.CloseMap>(HandleCloseMap);
         SubscribeMapCommand<MEM.SaveMap>(HandleSaveMap);
         SubscribeMapCommand<MEM.CreateNewView>(HandleCreateView);
         SubscribeMapCommand<MEM.DestroyView>(HandleDestroyView);

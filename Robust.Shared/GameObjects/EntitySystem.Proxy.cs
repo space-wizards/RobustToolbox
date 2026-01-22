@@ -891,7 +891,7 @@ public partial class EntitySystem
         return EntityManager.TrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
     }
 
-    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,BaseContainer,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)" />
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,BaseContainer,out EntityUid?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TrySpawnInContainer(
         string? protoName,
@@ -900,7 +900,7 @@ public partial class EntitySystem
         ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null)
     {
-        return EntityManager.TrySpawnInContainer(protoName, container, out uid, containerComp, overrides);
+        return EntityManager.TrySpawnInContainer(protoName, container, out uid, overrides);
     }
 
     /// <inheritdoc cref="IEntityManager.TrySpawnNextTo" />
@@ -970,7 +970,7 @@ public partial class EntitySystem
     protected EntityUid PredictedSpawnAtPosition(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         => EntityManager.PredictedSpawnAtPosition(prototype, coordinates, overrides);
 
-    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,EntityUid,string,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool PredictedTrySpawnInContainer(
         string? protoName,
@@ -983,16 +983,27 @@ public partial class EntitySystem
         return EntityManager.PredictedTrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
     }
 
-    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,EntityUid,string,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool PredictedTrySpawnInContainer(
         string? protoName,
         BaseContainer container,
         [NotNullWhen(true)] out EntityUid? uid,
-        ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null)
     {
-        return EntityManager.PredictedTrySpawnInContainer(protoName, container, out uid, containerComp, overrides);
+        return EntityManager.PredictedTrySpawnInContainer(protoName, container, out uid, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,EntityUid,string,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool PredictedTrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        EntityUid? mapUid,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedTrySpawnInContainer(protoName, container, out uid, mapUid, overrides);
     }
 
     /// <inheritdoc cref="IEntityManager.TrySpawnNextTo" />

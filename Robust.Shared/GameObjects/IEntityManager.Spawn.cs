@@ -66,7 +66,14 @@ public partial interface IEntityManager
         string? protoName,
         BaseContainer container,
         [NotNullWhen(true)] out EntityUid? uid,
-        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null);
+
+    /// <inheritdoc cref="TrySpawnInContainer(string?,EntityUid,string,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)"/>
+    bool TrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        EntityUid? mapUid,
         ComponentRegistry? overrides = null);
 
     /// <summary>

@@ -73,10 +73,23 @@ public sealed partial class ClientEntityManager
         string? protoName,
         BaseContainer container,
         [NotNullWhen(true)] out EntityUid? uid,
-        ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null)
     {
-        if (!TrySpawnInContainer(protoName, container, out uid, containerComp, overrides))
+        if (!TrySpawnInContainer(protoName, container, out uid, overrides))
+            return false;
+
+        FlagPredicted(uid.Value);
+        return true;
+    }
+
+    public override bool PredictedTrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        EntityUid? mapUid,
+        ComponentRegistry? overrides = null)
+    {
+        if (!TrySpawnInContainer(protoName, container, out uid, mapUid, overrides))
             return false;
 
         FlagPredicted(uid.Value);

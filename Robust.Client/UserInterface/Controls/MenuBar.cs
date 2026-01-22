@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
 
@@ -15,11 +16,20 @@ namespace Robust.Client.UserInterface.Controls
     public class MenuBar : PanelContainer
     {
         public const string StyleClassMenuBarPopup = "menuBarPopup";
+        public const string StyleClassMenuBarButton = "menuBarButton";
+        public const string StyleClassMenuBarSeparator = "menuBarSeparator";
+        public const string StylePropPopupBackground = "popupBackground";
+        public const string StylePropButtonSeparation = "buttonSeparation";
+
+        private const int DefaultSeparation = 8;
+
         private readonly List<Menu> _menus = new();
         private readonly List<MenuTopButton> _buttons = new();
         private readonly BoxContainer _hBox;
         private readonly Popup _popup;
         private readonly BoxContainer _popupVBox;
+        private readonly PanelContainer _popupBackground;
+
         private bool _popupOpen;
         private bool _isSubmenu = false;
 
@@ -37,11 +47,17 @@ namespace Robust.Client.UserInterface.Controls
                 Name = "MenuBarPopup",
                 Children =
                 {
-                    (_popupVBox = new BoxContainer
+                    (_popupBackground = new PanelContainer
                     {
-                        Orientation = LayoutOrientation.Vertical,
-                        MinSize = new Vector2(300, 0)
-                    })
+                        Children =
+                        {
+                            (_popupVBox = new BoxContainer
+                            {
+                                Orientation = LayoutOrientation.Vertical,
+                                MinSize = new Vector2(300, 0)
+                            })
+                        }
+                    }),
                 },
                 StyleClasses = { StyleClassMenuBarPopup }
             };
@@ -50,7 +66,7 @@ namespace Robust.Client.UserInterface.Controls
             AddChild(_hBox = new BoxContainer
             {
                 Orientation = LayoutOrientation.Horizontal,
-                SeparationOverride = 8
+                SeparationOverride = DefaultSeparation
             });
         }
 
@@ -78,6 +94,9 @@ namespace Robust.Client.UserInterface.Controls
             var menu = button.ChildMenu;
             ConstructMenu(menu, _popupVBox);
 
+            TryGetStyleProperty(StylePropPopupBackground, out StyleBox? popupBackground);
+            _popupBackground.PanelOverride = popupBackground;
+
             var globalPos = button.GlobalPosition;
             globalPos += new Vector2(_isSubmenu ? button.Width : 0, _isSubmenu ? 0 : button.Height);
             _popup.Open(UIBox2.FromDimensions(globalPos, _popupVBox.Size));
@@ -92,6 +111,15 @@ namespace Robust.Client.UserInterface.Controls
             base.StylesheetChanged(actualSheet);
 
             _popup.Stylesheet = actualSheet;
+        }
+
+        protected override void StylePropertiesChanged()
+        {
+            base.StylePropertiesChanged();
+
+            _hBox.SeparationOverride = TryGetStyleProperty(StylePropButtonSeparation, out int sep)
+                ? sep
+                : DefaultSeparation;
         }
 
         private void PopupHidden()
@@ -128,7 +156,8 @@ namespace Robust.Client.UserInterface.Controls
                             Text = menuButton.Text,
                             ClipText = true,
                             Disabled = menuButton.Disabled,
-                            TextAlign = Label.AlignMode.Left
+                            TextAlign = Label.AlignMode.Left,
+                            StyleClasses = { StyleClassMenuBarButton }
                         };
                         pushButton.OnPressed += _ =>
                         {
@@ -139,8 +168,10 @@ namespace Robust.Client.UserInterface.Controls
                         break;
 
                     case MenuSeparator _:
-                        var control = new Control {MinSize = new Vector2(0, 6)};
-                        container.AddChild(control);
+                        container.AddChild(new PanelContainer
+                        {
+                            StyleClasses = { StyleClassMenuBarSeparator }
+                        });
                         break;
 
                     case SubMenu submenuButton:

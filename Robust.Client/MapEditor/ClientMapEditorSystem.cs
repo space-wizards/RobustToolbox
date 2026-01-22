@@ -66,6 +66,9 @@ internal sealed class ClientMapEditorSystem : MapEditorSystem
 
     private void AfterUserDataState(Entity<MapEditorUserStateComponent> ent, ref AfterAutoHandleStateEvent args)
     {
+        if (ent.Comp.User != _playerManager.LocalUser)
+            return;
+
         OpenMapsUpdated?.Invoke(ent.Comp.OpenMaps);
     }
 

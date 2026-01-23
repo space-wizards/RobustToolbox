@@ -1,3 +1,5 @@
+using System;
+using System.Net;
 using Robust.Client.Configuration;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
@@ -10,6 +12,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;

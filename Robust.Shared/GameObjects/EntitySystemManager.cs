@@ -212,7 +212,7 @@ namespace Robust.Shared.GameObjects
                 SystemDependencyCollection.RegisterInstance(type, instance);
             }
 
-            _sawmill.Info($"Added {nameof(EntityQuery<>)} for all component types to IoC in {stopwatch.ElapsedMilliseconds:F0} ms");
+            _sawmill.Debug($"Added {nameof(EntityQuery<>)} for all component types to IoC in {stopwatch.ElapsedMilliseconds:F0} ms");
 
             SystemDependencyCollection.BuildGraph();
 

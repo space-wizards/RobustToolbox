@@ -144,7 +144,7 @@ namespace Robust.Xaml
                     mnode.Manipulation = new XamlManipulationGroupNode(mnode,
                         new[]
                         {
-                            mnode.Manipulation,
+                            mnode.Manipulation!,
                             new HandleRootObjectScopeNode(mnode)
                         });
                 }

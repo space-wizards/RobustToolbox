@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using XamlX;
 using XamlX.Ast;
 using XamlX.Emit;
@@ -115,7 +116,7 @@ internal sealed class XamlCustomizations
         IXamlAstValueNode node,
         IReadOnlyList<IXamlCustomAttribute>? customAttributes,
         IXamlType type,
-        out IXamlAstValueNode? result)
+        [NotNullWhen(true)] out IXamlAstValueNode? result)
     {
         if (!(node is XamlAstTextNode textNode))
         {

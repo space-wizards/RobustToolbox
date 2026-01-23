@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Build.Framework" Version="18.0.2" />
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />
     <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />

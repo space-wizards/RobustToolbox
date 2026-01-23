@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
@@ -22,12 +23,11 @@ namespace Robust.Shared.GameObjects
 {
     public sealed class EntitySystemManager : IEntitySystemManager, IPostInjectInit
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly ProfManager _profManager = default!;
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IComponentFactory _compFactory = default!;
+        [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
+        [IoC.Dependency] private readonly ProfManager _profManager = default!;
+        [IoC.Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [IoC.Dependency] private readonly ILogManager _logManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -196,14 +196,23 @@ namespace Robust.Shared.GameObjects
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             var queryMethod = typeof(EntityManager).GetMethod(nameof(EntityManager.GetEntityQuery), 1, []);
-            foreach (var type in _compFactory.AllRegisteredTypes)
+            var registeredComponentTypes = _entityManager.ComponentFactory.AllRegisteredTypes.ToArray();
+            var queryList = new List<(Type Type, object Instance)>(registeredComponentTypes.Length);
+            Parallel.ForEach(registeredComponentTypes,
+                type =>
+                {
+                    var queryType = typeof(EntityQuery<>).MakeGenericType(type);
+                    var query = queryMethod!.MakeGenericMethod(type).Invoke(_entityManager, null)!;
+                    queryList.Add((queryType, query));
+                }
+            );
+
+            foreach (var (type, instance) in queryList)
             {
-                var queryType = typeof(EntityQuery<>).MakeGenericType(type);
-                var query = queryMethod!.MakeGenericMethod(type).Invoke(_entityManager, null)!;
-                SystemDependencyCollection.RegisterInstance(queryType, query);
+                SystemDependencyCollection.RegisterInstance(type, instance);
             }
 
-            _sawmill.Debug($"Added {nameof(EntityQuery<>)} for all component types to IoC in {stopwatch.ElapsedMilliseconds:F2} ms");
+            _sawmill.Info($"Added {nameof(EntityQuery<>)} for all component types to IoC in {stopwatch.ElapsedMilliseconds:F2} ms");
 
             SystemDependencyCollection.BuildGraph();
 

@@ -107,10 +107,10 @@ namespace Robust.Xaml
                         var scopeField = context.RuntimeContext.ContextType.Fields.First(f =>
                             f.Name == XamlCustomizations.ContextNameScopeFieldName);
                         var namescopeRegisterFunction = context.Configuration.TypeSystem
-                            .FindType("Robust.Client.UserInterface.XAML.NameScope").Methods
+                            .FindType("Robust.Client.UserInterface.XAML.NameScope")!.Methods
                             .First(m => m.Name == "Register");
 
-                        using (var targetLoc = context.GetLocalOfType(context.Configuration.TypeSystem.FindType("Robust.Client.UserInterface.Control")))
+                        using (var targetLoc = context.GetLocalOfType(context.Configuration.TypeSystem.FindType("Robust.Client.UserInterface.Control")!))
                         {
 
                             codeGen
@@ -165,7 +165,7 @@ namespace Robust.Xaml
                         return null!;  // PYREX NOTE: This doesn't seem safe, but it predates Nullable on this file
                     }
 
-                    var controlType = context.Configuration.TypeSystem.FindType("Robust.Client.UserInterface.Control");
+                    var controlType = context.Configuration.TypeSystem.FindType("Robust.Client.UserInterface.Control")!;
 
                     var next = codeGen.DefineLabel();
                     var dontAbsorb = codeGen.DefineLabel();
@@ -174,7 +174,7 @@ namespace Robust.Xaml
                         f.Name == XamlCustomizations.ContextNameScopeFieldName);
                     var controlNameScopeField = controlType.Fields.First(f => f.Name == "NameScope");
                     var nameScopeType = context.Configuration.TypeSystem
-                        .FindType("Robust.Client.UserInterface.XAML.NameScope");
+                        .FindType("Robust.Client.UserInterface.XAML.NameScope")!;
                     var nameScopeCompleteMethod = nameScopeType.Methods.First(m => m.Name == "Complete");
                     var nameScopeAbsorbMethod = nameScopeType.Methods.First(m => m.Name == "Absorb");
                     using (var local = codeGen.LocalsPool.GetLocal(controlType))

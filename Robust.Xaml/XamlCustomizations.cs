@@ -82,7 +82,7 @@ internal sealed class XamlCustomizations
         IXamlILContextDefinition<IXamlILEmitter> xaml
     )
     {
-        var nameScopeType = TypeSystem.FindType("Robust.Client.UserInterface.XAML.NameScope");
+        var nameScopeType = TypeSystem.FindType("Robust.Client.UserInterface.XAML.NameScope")!;
         var field = xaml.TypeBuilder.DefineField(nameScopeType,
             ContextNameScopeFieldName,
             XamlVisibility.Public,

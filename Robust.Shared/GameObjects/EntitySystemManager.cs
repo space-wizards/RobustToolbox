@@ -23,11 +23,11 @@ namespace Robust.Shared.GameObjects
 {
     public sealed class EntitySystemManager : IEntitySystemManager, IPostInjectInit
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly ProfManager _profManager = default!;
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
+        [IoC.Dependency] private readonly ProfManager _profManager = default!;
+        [IoC.Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [IoC.Dependency] private readonly ILogManager _logManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -197,18 +197,22 @@ namespace Robust.Shared.GameObjects
             stopwatch.Start();
             var queryMethod = typeof(EntityManager).GetMethod(nameof(EntityManager.GetEntityQuery), 1, []);
             var registeredComponentTypes = _entityManager.ComponentFactory.AllRegisteredTypes.ToArray();
-            var queryList = new List<(Type Type, object Instance)>(registeredComponentTypes.Length);
-            Parallel.ForEach(registeredComponentTypes,
-                type =>
+            var queryArray = new (Type Type, object Instance)[registeredComponentTypes.Length];
+            Parallel.For(
+                0,
+                registeredComponentTypes.Length,
+                i =>
                 {
+                    var type = registeredComponentTypes[i];
                     var queryType = typeof(EntityQuery<>).MakeGenericType(type);
                     var query = queryMethod!.MakeGenericMethod(type).Invoke(_entityManager, null)!;
-                    queryList.Add((queryType, query));
+                    queryArray[i] = (queryType, query);
                 }
             );
 
-            foreach (var (type, instance) in queryList)
+            foreach (var (type, instance) in queryArray)
             {
+                // This runs a lock so probably no point in parallelizing it, if this changes just move it up
                 SystemDependencyCollection.RegisterInstance(type, instance);
             }
 

@@ -206,7 +206,7 @@ internal sealed class XamlJitCompiler
     )
     {
 
-        var xaml = new XamlCustomizations(_typeSystem, _typeSystem.FindAssembly(t.Assembly.FullName)!);
+        var xaml = new XamlCustomizations(_typeSystem, _typeSystem.FindAssembly(t.Assembly.FullName!)!);
 
         // attempt to parse the code
         var document = XDocumentXamlParser.Parse(contents);

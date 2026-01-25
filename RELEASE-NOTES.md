@@ -50,11 +50,11 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Improved some debug asserts related to contacts.
 
 ### Internal
 
-*None yet*
+* Warning cleanup.
 
 
 ## 271.1.0

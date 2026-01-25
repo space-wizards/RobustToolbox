@@ -193,30 +193,13 @@ namespace Robust.Shared.GameObjects
                 _systemTypes.Remove(baseType);
             }
 
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            var queryMethod = typeof(EntityManager).GetMethod(nameof(EntityManager.GetEntityQuery), 1, []);
-            var registeredComponentTypes = _entityManager.ComponentFactory.AllRegisteredTypes.ToArray();
-            var queryArray = new (Type Type, object Instance)[registeredComponentTypes.Length];
-            Parallel.For(
-                0,
-                registeredComponentTypes.Length,
-                i =>
-                {
-                    var type = registeredComponentTypes[i];
-                    var queryType = typeof(EntityQuery<>).MakeGenericType(type);
-                    var query = queryMethod!.MakeGenericMethod(type).Invoke(_entityManager, null)!;
-                    queryArray[i] = (queryType, query);
-                }
+            var queryMethod = typeof(EntityManager).GetMethod(nameof(EntityManager.GetEntityQuery), 1, [])!;
+            SystemDependencyCollection.RegisterBaseGenericLazy(
+                typeof(EntityQuery<>),
+                (queryType, dep) => queryMethod
+                    .MakeGenericMethod(queryType.GetGenericArguments()[0])
+                    .Invoke(dep.Resolve<IEntityManager>(), null)!
             );
-
-            foreach (var (type, instance) in queryArray)
-            {
-                // This runs a lock so probably no point in parallelizing it, if this changes just move it up
-                SystemDependencyCollection.RegisterInstance(type, instance);
-            }
-
-            _sawmill.Debug($"Added {nameof(EntityQuery<>)} for all component types to IoC in {stopwatch.ElapsedMilliseconds:F0} ms");
 
             SystemDependencyCollection.BuildGraph();
 

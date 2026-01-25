@@ -32,6 +32,7 @@ namespace Robust.Shared.GameObjects
 
         protected BoundUserInterface(EntityUid owner, Enum uiKey)
         {
+            IoCManager.Resolve(ref EntMan);
             EntMan.EntitySysManager.DependencyCollection.InjectDependencies(this);
             UiSystem = EntMan.System<SharedUserInterfaceSystem>();
 

@@ -4,20 +4,41 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to build (e.g. v268.0.2)"
+        required: true
+        type: string
+      version:
+        description: "Version to publish (defaults to tag without leading 'v')"
+        required: false
+        default: ""
+        type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Parse version
-        id: parse_version
+      - name: Resolve tag + version
+        id: vars
         shell: pwsh
         run: |
-          $ver = [regex]::Match($env:GITHUB_REF, "refs/tags/v?(.+)").Groups[1].Value
-          echo ("::set-output name=version::{0}" -f $ver)
+          $tag = if ("${{ github.event_name }}" -eq "workflow_dispatch") { "${{ inputs.tag }}" } else { "${{ github.ref_name }}" }
+          if ([string]::IsNullOrWhiteSpace($tag)) { throw "Unable to resolve tag." }
+
+          $ver = "${{ inputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($ver)) {
+            $ver = $tag
+            if ($ver.StartsWith("v")) { $ver = $ver.Substring(1) }
+          }
+
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "version=$ver" >> $env:GITHUB_OUTPUT
 
       - uses: actions/checkout@v4.2.2
         with:
+          ref: ${{ steps.vars.outputs.tag }}
           submodules: true
 
       - name: Setup .NET Core
@@ -30,16 +51,16 @@ jobs:
 
       - name: Shuffle files around
         run: |
-          mkdir "release/${{ steps.parse_version.outputs.version }}"
-          mv release/*.zip "release/${{ steps.parse_version.outputs.version }}"
+          mkdir "release/${{ steps.vars.outputs.version }}"
+          mv release/*.zip "release/${{ steps.vars.outputs.version }}"
 
       - name: Publish to Robust.Cdn (multi-request)
         run: |
           python3 Tools/publish_client_multi_request.py \
             --cdn-url "https://cdn.luaworld.ru/" \
             --fork "robust" \
-            --version "${{ steps.parse_version.outputs.version }}" \
-            --engine-version "${{ steps.parse_version.outputs.version }}" \
-            --dir "release/${{ steps.parse_version.outputs.version }}"
+            --version "${{ steps.vars.outputs.version }}" \
+            --engine-version "${{ steps.vars.outputs.version }}" \
+            --dir "release/${{ steps.vars.outputs.version }}"
         env:
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}

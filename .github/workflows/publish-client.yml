@@ -1,4 +1,4 @@
-﻿name: Publish Client Build
+name: Publish Client Build
 
 on:
   push:
@@ -33,20 +33,13 @@ jobs:
           mkdir "release/${{ steps.parse_version.outputs.version }}"
           mv release/*.zip "release/${{ steps.parse_version.outputs.version }}"
 
-      - name: Upload files to Suns
-        uses: appleboy/scp-action@master
-        with:
-          host: suns.spacestation14.com
-          username: robust-build-push
-          key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
-          source: "release/${{ steps.parse_version.outputs.version }}"
-          target: "/var/lib/robust-builds/builds/"
-          strip_components: 1
-
-      - name: Update manifest JSON
-        uses: appleboy/ssh-action@master
-        with:
-          host: suns.spacestation14.com
-          username: robust-build-push
-          key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
-          script: /home/robust-build-push/push.ps1 ${{ steps.parse_version.outputs.version }}
+      - name: Publish to Robust.Cdn (multi-request)
+        run: |
+          python3 Tools/publish_client_multi_request.py \
+            --cdn-url "https://cdn.luaworld.ru/" \
+            --fork "robust" \
+            --version "${{ steps.parse_version.outputs.version }}" \
+            --engine-version "${{ steps.parse_version.outputs.version }}" \
+            --dir "release/${{ steps.parse_version.outputs.version }}"
+        env:
+          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}

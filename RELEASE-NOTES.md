@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Reversed an undocumented breaking change from `v267.3.0`: entity spawning with a `MapCoordinates` now takes the rotation as relative to the map again instead of relative to the grid the entity was attached to.
 
 ### New features
 
@@ -52,6 +52,24 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 271.2.0
+
+### New features
+
+* `IRobustSerializer` can now be configured to remove float NaN values when reading.
+  * This is intended to blanket block cheat clients from sending NaN values in input commands they shouldn't.
+  * To enable, set `IRobustSerializer.FloatFlags` from your content entrypoint.
+  * If you do really want to send NaN values while using the above, you can use the new `UnsafeFloat`, `UnsafeHalf`, and `UnsafeDouble` types to indicate a field that is exempt.
+
+### Other
+
+* Improved some debug asserts related to contacts.
+
+### Internal
+
+* Warning cleanup.
 
 
 ## 271.1.0

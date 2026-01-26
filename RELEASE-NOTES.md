@@ -54,6 +54,24 @@ END TEMPLATE-->
 *None yet*
 
 
+## 271.2.0
+
+### New features
+
+* `IRobustSerializer` can now be configured to remove float NaN values when reading.
+  * This is intended to blanket block cheat clients from sending NaN values in input commands they shouldn't.
+  * To enable, set `IRobustSerializer.FloatFlags` from your content entrypoint.
+  * If you do really want to send NaN values while using the above, you can use the new `UnsafeFloat`, `UnsafeHalf`, and `UnsafeDouble` types to indicate a field that is exempt.
+
+### Other
+
+* Improved some debug asserts related to contacts.
+
+### Internal
+
+* Warning cleanup.
+
+
 ## 271.1.0
 
 ### New features

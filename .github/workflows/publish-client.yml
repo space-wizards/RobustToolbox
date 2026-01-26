@@ -1,49 +1,23 @@
-name: Publish Client Build
+﻿name: Publish Client Build
 
 on:
   push:
     tags:
       - "v*"
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Git tag to build (e.g. v268.0.2)"
-        required: true
-        type: string
-      version:
-        description: "Version to publish (defaults to tag without leading 'v')"
-        required: false
-        default: ""
-        type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Resolve tag + version
-        id: vars
+      - name: Parse version
+        id: parse_version
         shell: pwsh
         run: |
-          $tag = if ("${{ github.event_name }}" -eq "workflow_dispatch") { "${{ inputs.tag }}" } else { "${{ github.ref_name }}" }
-          if ([string]::IsNullOrWhiteSpace($tag)) { throw "Unable to resolve tag." }
-
-          # wawawawawawawwawawawaw
-          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
-            if (-not $tag.StartsWith("v")) { $tag = "v$tag" }
-          }
-
-          $ver = "${{ inputs.version }}"
-          if ([string]::IsNullOrWhiteSpace($ver)) {
-            $ver = $tag
-            if ($ver.StartsWith("v")) { $ver = $ver.Substring(1) }
-          }
-
-          "tag=$tag" >> $env:GITHUB_OUTPUT
-          "version=$ver" >> $env:GITHUB_OUTPUT
+          $ver = [regex]::Match($env:GITHUB_REF, "refs/tags/v?(.+)").Groups[1].Value
+          echo ("::set-output name=version::{0}" -f $ver)
 
       - uses: actions/checkout@v4.2.2
         with:
-          ref: ${{ steps.vars.outputs.tag }}
           submodules: true
 
       - name: Setup .NET Core
@@ -56,109 +30,23 @@ jobs:
 
       - name: Shuffle files around
         run: |
-          mkdir "release/${{ steps.vars.outputs.version }}"
-          mv release/*.zip "release/${{ steps.vars.outputs.version }}"
+          mkdir "release/${{ steps.parse_version.outputs.version }}"
+          mv release/*.zip "release/${{ steps.parse_version.outputs.version }}"
 
-      - name: Publish to Robust.Cdn (multi-request)
-        run: |
-          python3 - <<'PY'
-          import argparse
-          import http.client
-          import json
-          import os
-          import sys
-          from pathlib import Path
-          from urllib.parse import urlsplit
+      - name: Upload files to Suns
+        uses: appleboy/scp-action@master
+        with:
+          host: suns.spacestation14.com
+          username: robust-build-push
+          key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
+          source: "release/${{ steps.parse_version.outputs.version }}"
+          target: "/var/lib/robust-builds/builds/"
+          strip_components: 1
 
-          def split_base_url(base_url: str):
-            if not base_url.endswith("/"):
-              raise SystemExit("CDN base URL must end with '/'")
-            u = urlsplit(base_url)
-            if u.scheme not in ("http", "https") or not u.netloc:
-              raise SystemExit("Invalid CDN base URL")
-            return u.scheme, u.netloc, u.path.rstrip("/")
-
-          def connection(scheme: str, netloc: str):
-            return http.client.HTTPSConnection(netloc, timeout=300) if scheme == "https" else http.client.HTTPConnection(netloc, timeout=300)
-
-          def check(resp, action: str):
-            if 200 <= resp.status < 300:
-              resp.read()
-              return
-            body = resp.read().decode("utf-8", errors="replace")
-            raise SystemExit(f"{action} failed: HTTP {resp.status} {resp.reason}\n{body}")
-
-          def post_json(conn, path, token, payload, action):
-            data = json.dumps(payload).encode("utf-8")
-            headers = {
-              "Authorization": f"Bearer {token}",
-              "Content-Type": "application/json",
-              "Content-Length": str(len(data)),
-            }
-            conn.request("POST", path, body=data, headers=headers)
-            check(conn.getresponse(), action)
-
-          def post_file(conn, path, token, version, file_path: Path):
-            size = file_path.stat().st_size
-            headers = {
-              "Authorization": f"Bearer {token}",
-              "Content-Type": "application/octet-stream",
-              "Content-Length": str(size),
-              "Robust-Cdn-Publish-File": file_path.name,
-              "Robust-Cdn-Publish-Version": version,
-            }
-            conn.putrequest("POST", path)
-            for k, v in headers.items():
-              conn.putheader(k, v)
-            conn.endheaders()
-            with file_path.open("rb") as f:
-              while True:
-                chunk = f.read(1024 * 1024)
-                if not chunk:
-                  break
-                conn.send(chunk)
-            check(conn.getresponse(), f"upload {file_path.name}")
-
-          parser = argparse.ArgumentParser()
-          parser.add_argument("--cdn-url", required=True)
-          parser.add_argument("--fork", required=True)
-          parser.add_argument("--version", required=True)
-          parser.add_argument("--engine-version", required=True)
-          parser.add_argument("--dir", required=True)
-          args = parser.parse_args([
-            "--cdn-url", "https://cdn.luaworld.ru/",
-            "--fork", "robust",
-            "--version", "${{ steps.vars.outputs.version }}",
-            "--engine-version", "${{ steps.vars.outputs.version }}",
-            "--dir", "release/${{ steps.vars.outputs.version }}",
-          ])
-
-          token = os.environ.get("PUBLISH_TOKEN", "")
-          if not token:
-            raise SystemExit("PUBLISH_TOKEN is not set")
-
-          scheme, netloc, base_path = split_base_url(args.cdn_url)
-          prefix = f"{base_path}/fork/{args.fork}/publish"
-          start_path = f"{prefix}/start"
-          file_path = f"{prefix}/file"
-          finish_path = f"{prefix}/finish"
-
-          d = Path(args.dir)
-          files = sorted([p for p in d.iterdir() if p.is_file()])
-          if not files:
-            raise SystemExit(f"No files found in {d}")
-
-          conn = connection(scheme, netloc)
-          try:
-            post_json(conn, start_path, token, {"version": args.version, "engineVersion": args.engine_version}, "start publish")
-            for f in files:
-              print(f"Uploading {f.name}...")
-              post_file(conn, file_path, token, args.version, f)
-            post_json(conn, finish_path, token, {"version": args.version}, "finish publish")
-          finally:
-            conn.close()
-
-          print("SUCCESS")
-          PY
-        env:
-          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+      - name: Update manifest JSON
+        uses: appleboy/ssh-action@master
+        with:
+          host: suns.spacestation14.com
+          username: robust-build-push
+          key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
+          script: /home/robust-build-push/push.ps1 ${{ steps.parse_version.outputs.version }}

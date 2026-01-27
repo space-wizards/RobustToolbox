@@ -1,9 +1,6 @@
-#!/usr/bin/env python3
-# Packages a full release build of the client that can be loaded by the launcher.
-# Native libraries are not included.
-
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import zipfile
@@ -18,7 +15,6 @@ try:
     init()
 
 except ImportError:
-    # Just give an empty string for everything, no colored logging.
     class ColorDummy(object):
         def __getattr__(self, name):
             return ""
@@ -62,58 +58,8 @@ IGNORED_RESOURCES = {
     ".directory",
     ".DS_Store"
 }
-
-IGNORED_FILES_WINDOWS = {
-    "libGLESv2.dll",
-    "openal32.dll",
-    "e_sqlite3.dll",
-    "libsndfile-1.dll",
-    "libglib-2.0-0.dll",
-    "freetype6.dll",
-    "libinstpatch-2.dll",
-    "fluidsynth.dll",
-    "libgobject-2.0-0.dll",
-    "libintl-8.dll",
-    "Robust.Client.exe",
-    "glfw3.dll",
-    "libgthread-2.0-0.dll",
-    "libEGL.dll",
-    "swnfd.dll",
-    "zstd.dll",
-    "zstd.pdb",
-    "libsodium.dll",
-    "zlib1.dll",
-    "SDL3.dll",
-    "OpenAL32.dll",
-    "libfluidsynth-3.dll"
-}
-
-IGNORED_FILES_MACOS = {
-    "libe_sqlite3.dylib",
-    "libfreetype.6.dylib",
-    "libglfw.3.dylib",
-    "Robust.Client",
-    "libswnfd.dylib",
-    "zstd.dylib",
-    "libsodium.dylib",
-    "libopenal.1.dylib",
-    "libSDL3.0.dylib",
-    "libfluidsynth.3.dylib",
-    "libzstd.1.dylib"
-}
-
-IGNORED_FILES_LINUX = {
-    "libe_sqlite3.so",
-    "libopenal.so",
-    "libglfw.so.3",
-    "Robust.Client",
-    "libswnfd.so",
-    "zstd.so",
-    "libsodium.so",
-    "libopenal.so.1",
-    "libSDL3.so.0",
-    "libfluidsynth.so.3",
-    "libzstd.so.1"
+IGNORED_FILES_CLIENT = {
+    "Robust.Client", "Robust.Client.exe",
 }
 
 def main() -> None:
@@ -136,8 +82,6 @@ def main() -> None:
 
     if not platforms:
         platforms = DEFAULT_RIDS
-
-    # Validate that nobody put invalid platform names in.
     for rid in platforms:
         if rid not in ALL_RIDS:
             print(Fore.RED + f"Invalid platform specified: '{rid}'" + Style.RESET_ALL)
@@ -176,7 +120,18 @@ def wipe_bin():
           "Clearing old build artifacts (if any)..." + Style.RESET_ALL)
 
     if os.path.exists("bin"):
-        shutil.rmtree("bin")
+        def _on_rm_error(func, path, exc_info):
+            try:
+                os.chmod(path, stat.S_IWRITE)
+                func(path)
+            except Exception:
+                raise
+
+        try:
+            shutil.rmtree("bin", onerror=_on_rm_error)
+        except PermissionError as e:
+            print(Fore.YELLOW + f"Watning: failed to delete 'bin' due to permissions: {e}" + Style.RESET_ALL)
+            print(Fore.YELLOW + "Continuing without wiwing 'bim' (you may want to closr processes locking files)." + Style.RESET_ALL)
 
 
 def build_windows(rid: str, skip_build: bool) -> None:
@@ -191,9 +146,8 @@ def build_windows(rid: str, skip_build: bool) -> None:
         p("release", f"Robust.Client_{rid}.zip"), "w",
         compression=zipfile.ZIP_DEFLATED)
 
-    copy_dir_into_zip(p("bin", "Client", rid, "publish"), "", client_zip, IGNORED_FILES_WINDOWS)
+    copy_dir_into_zip(p("bin", "Client", rid, "publish"), "", client_zip, IGNORED_FILES_CLIENT)
     copy_resources("Resources", client_zip)
-    # Cool we're done.
     client_zip.close()
 
 def build_macos(rid: str, skip_build: bool) -> None:
@@ -201,13 +155,12 @@ def build_macos(rid: str, skip_build: bool) -> None:
         publish_client(rid, TargetOS.MacOS)
 
     print(Fore.GREEN + f"Packaging {rid} client..." + Style.RESET_ALL)
-    # Client has to go in an app bundle.
     client_zip = zipfile.ZipFile(p("release", f"Robust.Client_{rid}.zip"), "a",
                                  compression=zipfile.ZIP_DEFLATED)
 
     contents = p("Space Station 14.app", "Contents", "Resources")
     copy_dir_into_zip(p("BuildFiles", "Mac", "Space Station 14.app"), "Space Station 14.app", client_zip)
-    copy_dir_into_zip(p("bin", "Client", rid, "publish"), contents, client_zip, IGNORED_FILES_MACOS)
+    copy_dir_into_zip(p("bin", "Client", rid, "publish"), contents, client_zip, IGNORED_FILES_CLIENT)
     copy_resources(p(contents, "Resources"), client_zip)
     client_zip.close()
 
@@ -222,9 +175,8 @@ def build_linux_like(rid: str, target_os: TargetOS, skip_build: bool) -> None:
         p("release", "Robust.Client_%s.zip" % rid), "w",
         compression=zipfile.ZIP_DEFLATED, strict_timestamps=False)
 
-    copy_dir_into_zip(p("bin", "Client", rid, "publish"), "", client_zip, IGNORED_FILES_LINUX)
+    copy_dir_into_zip(p("bin", "Client", rid, "publish"), "", client_zip, IGNORED_FILES_CLIENT)
     copy_resources("Resources", client_zip)
-    # Cool we're done.
     client_zip.close()
 
 
@@ -262,7 +214,6 @@ def do_resource_copy(target, source, zipf, ignore_set):
 
 def zip_entry_exists(zipf, name):
     try:
-        # Trick ZipInfo into sanitizing the name for us so this awful module stops spewing warnings.
         zinfo = zipfile.ZipInfo.from_file("Resources", name)
         zipf.getinfo(zinfo.filename)
     except KeyError:

@@ -138,7 +138,10 @@ jobs:
             raise SystemExit("PUBLISH_TOKEN is not set")
 
           scheme, netloc, base_path = split_base_url(args.cdn_url)
-          prefix = f"{base_path}/fork/{args.fork}/publish"
+          if args.fork == "robust":
+            prefix = f"{base_path}/robust/publish"
+          else:
+            prefix = f"{base_path}/fork/{args.fork}/publish"
           start_path = f"{prefix}/start"
           file_path = f"{prefix}/file"
           finish_path = f"{prefix}/finish"

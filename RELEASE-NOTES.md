@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Reversed an undocumented breaking change from `v267.3.0`: entity spawning with a `MapCoordinates` now takes the rotation as relative to the map again instead of relative to the grid the entity was attached to.
 
 ### New features
 

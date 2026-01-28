@@ -279,6 +279,7 @@ namespace Robust.Server
 
             // Load metrics really early so that we can profile startup times in the future maybe.
             _metricsManager.Initialize();
+            _prof.Initialize();
 
             try
             {

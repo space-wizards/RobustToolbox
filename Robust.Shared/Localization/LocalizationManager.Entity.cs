@@ -21,11 +21,7 @@ namespace Robust.Shared.Localization
         {
             _logSawmill.Debug("Flushing entity localization cache.");
             _entityCache.Clear();
-            if (DefaultCulture is { } culture)
-            {
-                var bundle = _contexts[culture];
-                AddPrototypeFunctions(bundle);
-            }
+            AddPrototypeFunctions();
         }
 
         private bool TryGetEntityLocAttrib(EntityUid entity, string attribute, [NotNullWhen(true)] out string? value)

@@ -16,7 +16,11 @@
     <ProjectReference Include="..\Robust.UnitTesting\Robust.UnitTesting.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" />
+    <!-- BenchmarkDotNet autogenerates files that attempt to reference BenchmarkDotNet through Robust.Benchmarks.
+     By default the RT project privates these files, so we have to explicitly state that these files should be made available
+     to the BenchmarkDotNet project so it can build the runner that executes the benchmark. -->
+    <PackageReference Include="BenchmarkDotNet" PrivateAssets="none" />
+
     <PackageReference Include="JetBrains.Annotations" />
     <PackageReference Include="YamlDotNet" />
     <PackageReference Include="prometheus-net" />

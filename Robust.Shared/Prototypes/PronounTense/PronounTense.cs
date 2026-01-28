@@ -3,6 +3,19 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.Prototypes;
 
+/*
+    HOW PRONOUNS WORK:
+    Grammatical tenses can be defined in yml as a pronounTense.
+    RobustToolbox has a base list of commonly used tenses. More can be added.
+
+    On startup, RT will automatically generate a CTX function for every defined
+    tense, so their conjugation can be called in ftl.
+
+    When adding a new pronounTense, you should also add default conjugations
+    for that pronoun for each value of the Gender enum. See engine ftl files
+    for an example of how to do this.
+*/
+
 /// <summary>
 ///     Prototype data for a PronounTense.
 /// </summary>

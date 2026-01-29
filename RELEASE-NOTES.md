@@ -39,15 +39,16 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `ProfManager.Value` guard method.
 
 ### Bugfixes
 
+* Fixed `ValidateMemberAnalyzer` taking a ridiculous amount of compile time.
 *None yet*
 
 ### Other
 
-* Fixed `ValidateMemberAnalyzer` taking a ridiculous amount of compile time.
+* `ProfManager` is now initialized on the server.
 
 ### Internal
 

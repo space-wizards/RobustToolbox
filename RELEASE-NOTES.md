@@ -64,6 +64,9 @@ END TEMPLATE-->
 
 * Added `ProfManager.Value` guard method.
 
+### Bugfixes
+
+* Fixed `ValidateMemberAnalyzer` taking a ridiculous amount of compile time.
 
 ### Other
 

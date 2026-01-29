@@ -25,6 +25,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
+using Robust.Shared.Sprite;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
@@ -62,7 +63,7 @@ namespace Robust.Client.GameObjects
         // VV convenience variable to examine layer objects using layer keys
         // ReSharper disable once UnusedMember.Local
         [ViewVariables]
-        private Dictionary<object, Layer> MappedLayers => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value]);
+        private Dictionary<LayerKey, Layer> MappedLayers => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value]);
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Visible
@@ -231,18 +232,32 @@ namespace Robust.Client.GameObjects
         [DataField]
         public bool RaiseShaderEvent;
 
-        [ViewVariables] internal Dictionary<object, int> LayerMap { get; set; } = new();
+        [ViewVariables] internal Dictionary<LayerKey, int> LayerMap { get; set; } = new();
         [ViewVariables] internal List<Layer> Layers = new();
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; internal set; }
 
+        [Obsolete("Use SpriteSystem.TryGetLayer()")]
         public ISpriteLayer this[int layer] => Layers[layer];
-        public ISpriteLayer this[Index layer] => Layers[layer];
-        public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
-        public IEnumerable<ISpriteLayer> AllLayers => Layers;
 
+        [Obsolete("Use SpriteSystem.TryGetLayer()")]
+        public ISpriteLayer this[Index layer] => Layers[layer];
+
+        [Obsolete("Use SpriteSystem.TryGetLayer()")]
+
+        public ISpriteLayer this[object layerKey] => this[LayerMap[AsKey(layerKey)]];
+
+        private static LayerKey AsKey(object obj) => obj switch
+        {
+            string s => s,
+            Enum e => e,
+            LayerKey k => k,
+            _ => throw new Exception($"Key must be either string, enum, or LayerKey but got {obj.GetType().Name}")
+        };
+
+        public IEnumerable<ISpriteLayer> AllLayers => Layers;
         void ISerializationHooks.AfterDeserialization()
         {
             // Please somebody burn this to the ground. There is so much spaghetti.
@@ -329,25 +344,25 @@ namespace Robust.Client.GameObjects
                 throw new ArgumentOutOfRangeException();
             }
 
-            LayerMap.Add(key, layer);
+            LayerMap.Add(AsKey(key), layer);
         }
 
         [Obsolete("Use SpriteSystem.LayerMapRemove() instead.")]
         public void LayerMapRemove(object key)
         {
-            LayerMap.Remove(key);
+            LayerMap.Remove(AsKey(key));
         }
 
         [Obsolete("Use SpriteSystem.LayerMapGet() instead.")]
         public int LayerMapGet(object key)
         {
-            return LayerMap[key];
+            return LayerMap[AsKey(key)];
         }
 
         [Obsolete("Use SpriteSystem.LayerMapTryGet() instead.")]
         public bool LayerMapTryGet(object key, out int layer, bool logError = false)
         {
-            var result = LayerMap.TryGetValue(key, out layer);
+            var result = LayerMap.TryGetValue(AsKey(key), out layer);
 
             if (!result && logError)
             {
@@ -596,7 +611,7 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var keyString in layerDatum.MapKeys)
                 {
-                    var key = ParseKey(keyString);
+                    var key = LayerKey.Parse(reflection, keyString);
 
                     if (LayerMap.TryGetValue(key, out var mappedIndex))
                     {
@@ -624,7 +639,7 @@ namespace Robust.Client.GameObjects
 
             if (layerDatum.CopyToShaderParameters is { } copyParameters)
             {
-                layer.CopyToShaderParameters = new CopyToShaderParameters(ParseKey(copyParameters.LayerKey))
+                layer.CopyToShaderParameters = new CopyToShaderParameters(copyParameters.LayerKey)
                 {
                     ParameterTexture = copyParameters.ParameterTexture,
                     ParameterUV = copyParameters.ParameterUV
@@ -640,14 +655,6 @@ namespace Robust.Client.GameObjects
             // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
             if (Owner != EntityUid.Invalid)
                 TreeSys?.QueueTreeUpdate((Owner, this));
-        }
-
-        private object ParseKey(string keyString)
-        {
-            if (reflection.TryParseEnumReference(keyString, out var @enum))
-                return @enum;
-
-            return keyString;
         }
 
         [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
@@ -1755,9 +1762,9 @@ namespace Robust.Client.GameObjects
         /// Instantiated version of <see cref="PrototypeCopyToShaderParameters"/>.
         /// Has <see cref="LayerKey"/> actually resolved to a a real key.
         /// </summary>
-        public sealed class CopyToShaderParameters(object layerKey)
+        public sealed class CopyToShaderParameters(LayerKey layerKey)
         {
-            public object LayerKey = layerKey;
+            public LayerKey LayerKey = layerKey;
             public string? ParameterTexture;
             public string? ParameterUV;
 
@@ -1765,6 +1772,11 @@ namespace Robust.Client.GameObjects
             {
                 ParameterTexture = toClone.ParameterTexture;
                 ParameterUV = toClone.ParameterUV;
+            }
+
+            [Obsolete("Use LayerKey instead of object")]
+            public CopyToShaderParameters(object layerKey) : this(AsKey(layerKey))
+            {
             }
         }
 

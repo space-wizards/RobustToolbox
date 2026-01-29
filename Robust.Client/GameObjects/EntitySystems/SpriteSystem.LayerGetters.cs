@@ -2,6 +2,7 @@ using System;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics.RSI;
+using Robust.Shared.Sprite;
 using static Robust.Client.GameObjects.SpriteComponent;
 using static Robust.Client.Graphics.RSI;
 
@@ -18,34 +19,16 @@ public sealed partial class SpriteSystem
     /// </summary>
     public StateId LayerGetRsiState(Entity<SpriteComponent?> sprite, int index)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
-            return layer.StateId;
-
-        return StateId.Invalid;
+        return ResolveLayer(sprite, index, out var layer) ? layer.StateId : StateId.Invalid;
     }
 
     /// <summary>
     /// Get the RSI state being used by the current layer. Note that the return value may be an invalid state. E.g.,
     /// this might be a texture layer that does not use RSIs.
     /// </summary>
-    public StateId LayerGetRsiState(Entity<SpriteComponent?> sprite, string key, StateId state)
+    public StateId LayerGetRsiState(Entity<SpriteComponent?> sprite, LayerKey key, StateId state)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            return layer.StateId;
-
-        return StateId.Invalid;
-    }
-
-    /// <summary>
-    /// Get the RSI state being used by the current layer. Note that the return value may be an invalid state. E.g.,
-    /// this might be a texture layer that does not use RSIs.
-    /// </summary>
-    public StateId LayerGetRsiState(Entity<SpriteComponent?> sprite, Enum key, StateId state)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            return layer.StateId;
-
-        return StateId.Invalid;
+        return ResolveLayer(sprite, key, out var layer) ? layer.StateId : StateId.Invalid;
     }
 
     #endregion
@@ -58,7 +41,7 @@ public sealed partial class SpriteSystem
     /// </summary>
     public RSI? LayerGetEffectiveRsi(Entity<SpriteComponent?> sprite, int index)
     {
-        TryGetLayer(sprite, index, out var layer, true);
+        ResolveLayer(sprite, index, out var layer);
         return layer?.ActualRsi;
     }
 
@@ -66,19 +49,9 @@ public sealed partial class SpriteSystem
     /// Returns the RSI being used by the layer to resolve it's RSI state. If the layer does not specify an RSI, this
     /// will just be the base RSI of the owning sprite (<see cref="SpriteComponent.BaseRSI"/>).
     /// </summary>
-    public RSI? LayerGetEffectiveRsi(Entity<SpriteComponent?> sprite, string key, StateId state)
+    public RSI? LayerGetEffectiveRsi(Entity<SpriteComponent?> sprite, LayerKey key, StateId state)
     {
-        TryGetLayer(sprite, key, out var layer, true);
-        return layer?.ActualRsi;
-    }
-
-    /// <summary>
-    /// Returns the RSI being used by the layer to resolve it's RSI state. If the layer does not specify an RSI, this
-    /// will just be the base RSI of the owning sprite (<see cref="SpriteComponent.BaseRSI"/>).
-    /// </summary>
-    public RSI? LayerGetEffectiveRsi(Entity<SpriteComponent?> sprite, Enum key, StateId state)
-    {
-        TryGetLayer(sprite, key, out var layer, true);
+        ResolveLayer(sprite, key, out var layer);
         return layer?.ActualRsi;
     }
 
@@ -88,22 +61,14 @@ public sealed partial class SpriteSystem
 
     public RsiDirectionType LayerGetDirections(Entity<SpriteComponent?> sprite, int index)
     {
-        return TryGetLayer(sprite, index, out var layer, true)
+        return ResolveLayer(sprite, index, out var layer)
             ? LayerGetDirections(layer)
             : RsiDirectionType.Dir1;
     }
 
-
-    public RsiDirectionType LayerGetDirections(Entity<SpriteComponent?> sprite, Enum key)
+    public RsiDirectionType LayerGetDirections(Entity<SpriteComponent?> sprite, LayerKey key)
     {
-        return TryGetLayer(sprite, key, out var layer, true)
-            ? LayerGetDirections(layer)
-            : RsiDirectionType.Dir1;
-    }
-
-    public RsiDirectionType LayerGetDirections(Entity<SpriteComponent?> sprite, string key)
-    {
-        return TryGetLayer(sprite, key, out var layer, true)
+        return ResolveLayer(sprite, key, out var layer)
             ? LayerGetDirections(layer)
             : RsiDirectionType.Dir1;
     }
@@ -122,17 +87,12 @@ public sealed partial class SpriteSystem
 
     public int LayerGetDirectionCount(Entity<SpriteComponent?> sprite, int index)
     {
-        return TryGetLayer(sprite, index, out var layer, true) ? LayerGetDirectionCount(layer) : 1;
+        return ResolveLayer(sprite, index, out var layer) ? LayerGetDirectionCount(layer) : 1;
     }
 
-    public int LayerGetDirectionCount(Entity<SpriteComponent?> sprite, Enum key)
+    public int LayerGetDirectionCount(Entity<SpriteComponent?> sprite, LayerKey key)
     {
-        return TryGetLayer(sprite, key, out var layer, true) ? LayerGetDirectionCount(layer) : 1;
-    }
-
-    public int LayerGetDirectionCount(Entity<SpriteComponent?> sprite, string key)
-    {
-        return TryGetLayer(sprite, key, out var layer, true) ? LayerGetDirectionCount(layer) : 1;
+        return ResolveLayer(sprite, key, out var layer) ? LayerGetDirectionCount(layer) : 1;
     }
 
     public int LayerGetDirectionCount(Layer layer)

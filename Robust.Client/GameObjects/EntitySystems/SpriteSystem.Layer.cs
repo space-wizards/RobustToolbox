@@ -20,15 +20,48 @@ public sealed partial class SpriteSystem
         return index >= 0 && index < sprite.Comp.Layers.Count;
     }
 
+    [Obsolete("Use ResolveLayer or the override without a bool argument")]
     public bool TryGetLayer(
         Entity<SpriteComponent?> sprite,
         int index,
         [NotNullWhen(true)] out Layer? layer,
         bool logMissing)
     {
-        layer = null;
+        return logMissing
+            ? ResolveLayer(sprite, index, out layer)
+            : TryGetLayer(sprite, index, out layer);
+    }
 
-        if (!_query.Resolve(sprite.Owner, ref sprite.Comp, logMissing))
+    /// <summary>
+    /// Attempt to get the layer corresponding to the given index.
+    /// </summary>
+    public bool TryGetLayer(
+        Entity<SpriteComponent?> sprite,
+        int index,
+        [NotNullWhen(true)] out Layer? layer)
+    {
+        layer = null;
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return false;
+
+        if (index >= 0 && index < sprite.Comp.Layers.Count)
+        {
+            layer = sprite.Comp.Layers[index];
+            DebugTools.AssertEqual(layer.Owner, sprite!);
+            DebugTools.AssertEqual(layer.Index, index);
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Attempt to resolve the layer corresponding to the given index. This will log an error if there is no layer
+    /// with the given index.
+    /// </summary>
+    public bool ResolveLayer(Entity<SpriteComponent?> sprite, int index, [NotNullWhen(true)] out Layer? layer)
+    {
+        layer = null;
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return false;
 
         if (index >= 0 && index < sprite.Comp.Layers.Count)
@@ -39,9 +72,7 @@ public sealed partial class SpriteSystem
             return true;
         }
 
-        if (logMissing)
-            Log.Error($"Layer index '{index}' on entity {ToPrettyString(sprite)} does not exist! Trace:\n{Environment.StackTrace}");
-
+        Log.Error($"Layer index '{index}' on entity {ToPrettyString(sprite)} does not exist! Trace:\n{Environment.StackTrace}");
         return false;
     }
 
@@ -60,8 +91,16 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp, logMissing))
             return false;
 
-        if (!TryGetLayer(sprite, index, out layer, logMissing))
-            return false;
+        if (logMissing)
+        {
+            if (!ResolveLayer(sprite, index, out layer))
+                return false;
+        }
+        else
+        {
+            if (!TryGetLayer(sprite, index, out layer))
+                return false;
+        }
 
         sprite.Comp.Layers.RemoveAt(index);
 

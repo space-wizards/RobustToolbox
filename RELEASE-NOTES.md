@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Fixed `ValidateMemberAnalyzer` taking a ridiculous amount of compile time.
 
 ### Internal
 

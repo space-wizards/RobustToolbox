@@ -305,7 +305,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
     {
-        if (ent.Comp.LastFieldUpdate >= args.FromTick)
+        if (args.FromTick > ent.Comp.CreationTick && ent.Comp.LastFieldUpdate >= args.FromTick)
         {
             var fields = EntityManager.GetModifiedFields(ent.Comp, args.FromTick);
 
@@ -799,6 +799,41 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return false;
 
         return actors.Contains(actor);
+    }
+
+    /// <summary>
+    /// Returns true if any of the specified UI keys are open for this entity by anyone.
+    /// </summary>
+    /// <param name="entity">The entity to check.</param>
+    /// <param name="uiKeys">The UI keys to check.</param>
+    /// <returns>True if any UI is open, false otherwise.</returns>
+    [PublicAPI]
+    public bool IsUiOpen(Entity<UserInterfaceComponent?> entity, IEnumerable<Enum> uiKeys)
+    {
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return false;
+
+        foreach (var key in uiKeys)
+        {
+            if (entity.Comp.Actors.ContainsKey(key))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Returns true if any UI is open for this entity by anyone.
+    /// </summary>
+    /// <param name="entity">The entity to check.</param>
+    /// <returns>True if any UI is open, false otherwise.</returns>
+    [PublicAPI]
+    public bool IsAnyUiOpen(Entity<UserInterfaceComponent?> entity)
+    {
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return false;
+
+        return entity.Comp.Actors.Count > 0;
     }
 
     /// <summary>

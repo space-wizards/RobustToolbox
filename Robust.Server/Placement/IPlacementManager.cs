@@ -4,6 +4,7 @@ using Robust.Shared.Network.Messages;
 
 namespace Robust.Server.Placement
 {
+    [NotContentImplementable]
     public interface IPlacementManager
     {
         /// <summary>

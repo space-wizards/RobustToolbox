@@ -46,7 +46,7 @@ public static class AttributeHelper
 
     public static bool HasAttribute(
         ISymbol symbol,
-        INamedTypeSymbol attribute,
+        ITypeSymbol attribute,
         [NotNullWhen(true)] out AttributeData? matchedAttribute)
     {
         matchedAttribute = null;

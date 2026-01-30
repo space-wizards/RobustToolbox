@@ -1,5 +1,8 @@
 ﻿namespace Robust.Shared.Network
 {
+    /// <summary>
+    ///     The possible kinds of login a user can engage in.
+    /// </summary>
     public enum LoginType : byte
     {
         /// <summary>

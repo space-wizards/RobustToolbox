@@ -1,0 +1,6 @@
+﻿<Project>
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client\Robust.Client.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Avalonia.Base\Avalonia.Base.csproj" />
+  </ItemGroup>
+</Project>

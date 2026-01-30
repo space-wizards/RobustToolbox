@@ -55,12 +55,27 @@ public sealed partial class NetManager
         NetChannel channel,
         NetMessage message)
     {
+        if (!channel.IsConnected)
+        {
+            _logger.Error(
+                $"Tried to send message \"{message}\" to disconnected channel {channel}\n{Environment.StackTrace}");
+            return;
+        }
+
         var packet = BuildMessage(message, channel.Connection.Peer);
         var method = message.DeliveryMethod;
+        var seqChannel = message.SequenceChannel;
 
         LogSend(message, method, packet);
 
-        var item = new EncryptChannelItem { Message = packet, Method = method };
+        var item = new EncryptChannelItem
+        {
+            Message = packet,
+            Method = method,
+            SequenceChannel = seqChannel,
+            Owner = this,
+            RobustMessage = message,
+        };
 
         // If the message is ordered, we have to send it to the encryption channel.
         if (method is NetDeliveryMethod.ReliableOrdered
@@ -70,7 +85,7 @@ public sealed partial class NetManager
             if (channel.EncryptionChannel is { } encryptionChannel)
             {
                 var task = encryptionChannel.WriteAsync(item);
-                if (!task.IsCompleted)
+                if (!task.IsCompletedSuccessfully)
                     task.AsTask().Wait();
             }
             else
@@ -101,12 +116,21 @@ public sealed partial class NetManager
     {
         channel.Encryption?.Encrypt(item.Message);
 
-        channel.Connection.Peer.SendMessage(item.Message, channel.Connection, item.Method);
+        var result = channel.Connection.Peer.SendMessage(item.Message, channel.Connection, item.Method, item.SequenceChannel);
+        if (result is not (NetSendResult.Sent or NetSendResult.Queued))
+        {
+            // Logging stack trace here won't be useful as it'll likely be thread pooled on production scenarios.
+            item.Owner._logger.Warning(
+                $"Failed to send message {item.RobustMessage} to {channel} via Lidgren: {result}");
+        }
     }
 
     private struct EncryptChannelItem
     {
-        public required NetOutgoingMessage Message { get; init; }
-        public required NetDeliveryMethod Method { get; init; }
+        public required NetOutgoingMessage Message;
+        public required NetDeliveryMethod Method;
+        public required int SequenceChannel;
+        public required NetMessage RobustMessage;
+        public required NetManager Owner;
     }
 }

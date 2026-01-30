@@ -6,6 +6,7 @@ namespace Robust.Shared.Input
     /// <summary>
     ///     An Input Context to determine which key binds are currently available to the player.
     /// </summary>
+    [NotContentImplementable]
     public interface IInputCmdContext : IEnumerable<BoundKeyFunction>
     {
         /// <summary>

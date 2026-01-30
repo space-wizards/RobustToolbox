@@ -7,8 +7,10 @@ using Robust.Shared.Maths;
 using SDL3;
 using TerraFX.Interop.Windows;
 using TerraFX.Interop.Xlib;
+#if WINDOWS
 using BOOL = TerraFX.Interop.Windows.BOOL;
 using Windows = TerraFX.Interop.Windows.Windows;
+#endif
 using GLAttr = SDL3.SDL.SDL_GLAttr;
 using X11Window = TerraFX.Interop.Xlib.Window;
 
@@ -19,6 +21,7 @@ internal partial class Clyde
     private sealed partial class Sdl3WindowingImpl
     {
         private int _nextWindowId = 1;
+        private bool _progressUnavailable;
 
         public (WindowReg?, string? error) WindowCreate(
             GLContextSpec? spec,
@@ -142,9 +145,12 @@ internal partial class Clyde
             });
         }
 
-        private static void WinThreadWinDestroy(CmdWinDestroy cmd)
+        private void WinThreadWinDestroy(CmdWinDestroy cmd)
         {
             SDL.SDL_DestroyWindow(cmd.Window);
+#if MACOS
+            SendEvent(new EventWindowDestroyed());
+#endif
         }
 
         private (nint window, nint context) CreateSdl3WindowForRenderer(
@@ -456,11 +462,48 @@ internal partial class Clyde
                 _sawmill.Error("Failed to flash window: {error}", SDL.SDL_GetError());
         }
 
+        public void WindowSetProgress(WindowReg window, WindowProgressState state, float value)
+        {
+            SendCmd(new CmdWinSetProgress
+            {
+                Window = WinPtr(window),
+                State = (SDL.SDL_ProgressState)state,
+                Value = value
+            });
+        }
+
+        private void WinThreadWinSetProgress(CmdWinSetProgress cmd)
+        {
+            if (_progressUnavailable)
+                return;
+
+            try
+            {
+                var res = SDL.SDL_SetWindowProgressState(cmd.Window, cmd.State);
+                if (!res)
+                {
+                    _sawmill.Error("Failed to set window progress state: {error}", SDL.SDL_GetError());
+                    return;
+                }
+
+                res = SDL.SDL_SetWindowProgressValue(cmd.Window, cmd.Value);
+                if (!res)
+                    _sawmill.Error("Failed to set window progress value: {error}", SDL.SDL_GetError());
+            }
+            catch (EntryPointNotFoundException)
+            {
+                // Allowing it to fail means I don't have to update the launcher immediately :)
+                _progressUnavailable = true;
+                _sawmill.Debug("SDL3 progress APIs unavailable");
+            }
+        }
+
         public unsafe void WindowSwapBuffers(WindowReg window)
         {
             var reg = (Sdl3WindowReg)window;
             var windowPtr = WinPtr(reg);
 
+#if WINDOWS
             // On Windows, SwapBuffers does not correctly sync to the DWM compositor.
             // This means OpenGL vsync is effectively broken by default on Windows.
             // We manually sync via DwmFlush(). GLFW does this automatically, SDL3 does not.
@@ -473,7 +516,7 @@ internal partial class Clyde
             var dwmFlush = false;
             var swapInterval = 0;
 
-            if (OperatingSystem.IsWindows() && !reg.Fullscreen && reg.SwapInterval > 0)
+            if (!reg.Fullscreen && reg.SwapInterval > 0)
             {
                 BOOL compositing;
                 // 6.2 is Windows 8
@@ -492,9 +535,12 @@ internal partial class Clyde
                     swapInterval = reg.SwapInterval;
                 }
             }
+#endif
 
+            //_sawmill.Debug($"Swapping: {window.Id} @ {_clyde._gameTiming.CurFrame}");
             SDL.SDL_GL_SwapWindow(windowPtr);
 
+#if WINDOWS
             if (dwmFlush)
             {
                 var i = swapInterval;
@@ -505,6 +551,7 @@ internal partial class Clyde
 
                 SDL.SDL_GL_SetSwapInterval(swapInterval);
             }
+#endif
         }
 
         public uint? WindowGetX11Id(WindowReg window)
@@ -547,17 +594,18 @@ internal partial class Clyde
 
         public void TextInputSetRect(WindowReg reg, UIBox2i rect, int cursor)
         {
+            var ratio = ((Sdl3WindowReg)reg).PixelRatio;
             SendCmd(new CmdTextInputSetRect
             {
                 Window = WinPtr(reg),
                 Rect = new SDL.SDL_Rect
                 {
-                    x = rect.Left,
-                    y = rect.Top,
-                    w = rect.Width,
-                    h = rect.Height
+                    x = (int)(rect.Left / ratio.X),
+                    y = (int)(rect.Top / ratio.Y),
+                    w = (int)(rect.Width / ratio.X),
+                    h = (int)(rect.Height / ratio.Y)
                 },
-                Cursor = cursor
+                Cursor = (int)(cursor / ratio.X)
             });
         }
 
@@ -595,7 +643,7 @@ internal partial class Clyde
         private void WinThreadSetClipboard(CmdSetClipboard cmd)
         {
             var res = SDL.SDL_SetClipboardText(cmd.Text);
-            if (res)
+            if (!res)
                 _sawmill.Error("Failed to set clipboard text: {error}", SDL.SDL_GetError());
         }
 

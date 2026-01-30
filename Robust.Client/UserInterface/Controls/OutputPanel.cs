@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.RichText;
@@ -135,9 +136,14 @@ namespace Robust.Client.UserInterface.Controls
             AddMessage(msg);
         }
 
-        public void AddMessage(FormattedMessage message)
+        public void AddMessage(FormattedMessage message, Color? defaultColor = null)
         {
-            var entry = new RichTextEntry(message, this, _tagManager, null);
+            AddMessage(message, RichTextEntry.DefaultTags, defaultColor);
+        }
+
+        public void AddMessage(FormattedMessage message, Type[]? tagsAllowed, Color? defaultColor = null)
+        {
+            var entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
 
             entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
 
@@ -152,8 +158,14 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public void SetMessage(Index index, FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        public void SetMessage(Index index, FormattedMessage message, Color? defaultColor = null)
         {
+            SetMessage(index, message, RichTextEntry.DefaultTags, defaultColor);
+        }
+
+        public void SetMessage(Index index, FormattedMessage message, Type[]? tagsAllowed, Color? defaultColor = null)
+        {
+            var atBottom = !_scrollDownButton.Visible;
             var oldEntry = _entries[index];
             var font = _getFont();
             _totalContentHeight -= oldEntry.Height + font.GetLineSeparation(UIScale);
@@ -164,6 +176,10 @@ namespace Robust.Client.UserInterface.Controls
             _entries[index] = entry;
 
             AddNewItemHeight(font, in entry);
+
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+            if (atBottom)
+                _scrollBar.Value = _scrollBar.MaxValue;
         }
 
         private void AddNewItemHeight(Font font, in RichTextEntry entry)
@@ -260,7 +276,7 @@ namespace Robust.Client.UserInterface.Controls
             return _getStyleBox()?.MinimumSize ?? Vector2.Zero;
         }
 
-        private void _invalidateEntries()
+        internal void _invalidateEntries()
         {
             _totalContentHeight = 0;
             var font = _getFont();
@@ -278,7 +294,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        [System.Diagnostics.Contracts.Pure]
+        [Pure]
         private Font _getFont()
         {
             if (TryGetStyleProperty<Font>("font", out var font))
@@ -289,7 +305,7 @@ namespace Robust.Client.UserInterface.Controls
             return UserInterfaceManager.ThemeDefaults.DefaultFont;
         }
 
-        [System.Diagnostics.Contracts.Pure]
+        [Pure]
         private StyleBox? _getStyleBox()
         {
             if (StyleBoxOverride != null)
@@ -301,14 +317,14 @@ namespace Robust.Client.UserInterface.Controls
             return box;
         }
 
-        [System.Diagnostics.Contracts.Pure]
+        [Pure]
         private float _getScrollSpeed()
         {
             // The scroll speed depends on the UI scale because the scroll bar is working with physical pixels.
             return GetScrollSpeed(_getFont(), UIScale);
         }
 
-        [System.Diagnostics.Contracts.Pure]
+        [Pure]
         private UIBox2 _getContentBox()
         {
             var style = _getStyleBox();
@@ -328,6 +344,14 @@ namespace Robust.Client.UserInterface.Controls
                 _invalidateEntries();
 
             base.UIScaleChanged();
+        }
+
+        protected override void StylePropertiesChanged()
+        {
+            base.StylePropertiesChanged();
+
+            // Font may have changed.
+            _invalidateEntries();
         }
 
         internal static float GetScrollSpeed(Font font, float scale)

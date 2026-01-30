@@ -103,6 +103,7 @@ namespace Robust.Server.Player
             if (!TryGetSessionById(user, out var session))
                 return;
 
+            RemoveSession(session.UserId);
             SetStatus(session, SessionStatus.Disconnected);
             SetAttachedEntity(session, null, out _, true);
 
@@ -112,7 +113,6 @@ namespace Robust.Server.Player
                 viewSys.RemoveViewSubscriber(eye, session);
             }
 
-            RemoveSession(session.UserId);
             PlayerCountMetric.Set(PlayerCount);
             Dirty();
         }
@@ -120,13 +120,34 @@ namespace Robust.Server.Player
         private void HandlePlayerListReq(MsgPlayerListReq message)
         {
             var channel = message.MsgChannel;
+            var session = (CommonSession) GetSessionByChannel(channel);
+            session.InitialPlayerListReqDone = true;
+
+            if (!session.InitialResourcesDone)
+                return;
+
+            SendPlayerList(channel, session);
+        }
+
+        public void MarkPlayerResourcesSent(INetChannel channel)
+        {
+            var session = (CommonSession) GetSessionByChannel(channel);
+            session.InitialResourcesDone = true;
+
+            if (!session.InitialPlayerListReqDone)
+                return;
+
+            SendPlayerList(channel, session);
+        }
+
+        private void SendPlayerList(INetChannel channel, CommonSession session)
+        {
             var players = Sessions;
             var netMsg = new MsgPlayerList();
 
             // client session is complete, set their status accordingly.
             // This is done before the packet is built, so that the client
             // can see themselves Connected.
-            var session = GetSessionByChannel(channel);
             session.ConnectedTime = DateTime.UtcNow;
             SetStatus(session, SessionStatus.Connected);
 

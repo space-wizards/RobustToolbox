@@ -11,8 +11,14 @@ namespace Robust.Client.Graphics
     ///     A viewport is an API for rendering a section of the game map centered around an eye,
     ///     complete with lighting, FOV and grid rendering.
     /// </summary>
+    [NotContentImplementable]
     public interface IClydeViewport : IDisposable
     {
+        /// <summary>
+        /// A unique ID for this viewport. No other viewport with this ID can ever exist in the app lifetime.
+        /// </summary>
+        long Id { get; }
+
         /// <summary>
         ///     The render target that is rendered to when rendering this viewport.
         /// </summary>
@@ -23,9 +29,24 @@ namespace Robust.Client.Graphics
         Vector2i Size { get; }
 
         /// <summary>
+        /// Raised when the viewport indicates that any cached rendering resources (e.g. render targets)
+        /// should be purged.
+        /// </summary>
+        /// <remarks>
+        /// This event is raised if the viewport is disposed (manually or via finalization).
+        /// However, code should expect this event to be raised at any time, even if the viewport is not disposed fully.
+        /// </remarks>
+        event Action<ClearCachedViewportResourcesEvent> ClearCachedResources;
+
+        /// <summary>
         /// Color to clear the render target to before rendering. If null, no clearing will happen.
         /// </summary>
         Color? ClearColor { get; set; }
+
+        /// <summary>
+        /// On frames where Eye is null or in nullspace, whether the viewport may clear.
+        /// </summary>
+        bool ClearWhenMissingEye { get; set; }
 
         /// <summary>
         ///     This is, effectively, a multiplier to the eye's zoom.
@@ -84,5 +105,24 @@ namespace Robust.Client.Graphics
             IRenderHandle handle,
             IViewportControl control,
             in UIBox2i viewportBounds);
+    }
+
+    public struct ClearCachedViewportResourcesEvent
+    {
+        /// <summary>
+        /// The <see cref="IClydeViewport.Id"/> of the viewport.
+        /// </summary>
+        public readonly long ViewportId;
+
+        /// <summary>
+        /// The viewport itself. This is not available if the viewport was disposed.
+        /// </summary>
+        public readonly IClydeViewport? Viewport;
+
+        internal ClearCachedViewportResourcesEvent(long viewportId, IClydeViewport? viewport)
+        {
+            ViewportId = viewportId;
+            Viewport = viewport;
+        }
     }
 }

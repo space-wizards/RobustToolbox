@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 using System.IO;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -6,7 +6,6 @@ using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Network;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 
@@ -14,9 +13,9 @@ namespace Robust.Client.Upload.Commands;
 
 public sealed class UploadFolderCommand : IConsoleCommand
 {
-    [Dependency] private IResourceManager _resourceManager = default!;
-    [Dependency] private IConfigurationManager _configManager = default!;
-    [Dependency] private INetManager _netMan = default!;
+    [Dependency] private readonly IResourceManager _resourceManager = default!;
+    [Dependency] private readonly IConfigurationManager _configManager = default!;
+    [Dependency] private readonly NetworkResourceManager _netRes = default!;
 
     public string Command => "uploadfolder";
     public string Description => Loc.GetString("uploadfolder-command-description");
@@ -50,6 +49,7 @@ public sealed class UploadFolderCommand : IConsoleCommand
         }
 
         //Grab all files in specified folder and upload them
+        var files = new List<(ResPath Relative, byte[] Data)>();
         foreach (var filepath in _resourceManager.UserData.Find($"{folderPath.ToRelativePath()}/").files )
         {
             await using var filestream = _resourceManager.UserData.Open(filepath, FileMode.Open);
@@ -63,16 +63,13 @@ public sealed class UploadFolderCommand : IConsoleCommand
 
                 var data = filestream.CopyToArray();
 
-                var msg = new NetworkResourceUploadMessage
-                {
-                    RelativePath = filepath.RelativeTo(BaseUploadFolderPath),
-                    Data = data
-                };
+                files.Add((filepath.RelativeTo(BaseUploadFolderPath), data));
 
-                _netMan.ClientSendMessage(msg);
                 fileCount++;
             }
         }
+
+        _netRes.UploadResources(files);
 
         shell.WriteLine( Loc.GetString("uploadfolder-command-success",("fileCount",fileCount)));
     }

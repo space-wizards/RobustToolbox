@@ -17,6 +17,7 @@ public enum MidiRendererStatus : byte
     File,
 }
 
+[NotContentImplementable]
 public interface IMidiRenderer : IDisposable
 {
     /// <summary>
@@ -213,4 +214,6 @@ public interface IMidiRenderer : IDisposable
     ///     Actually disposes of this renderer. Do NOT use outside the MIDI thread.
     /// </summary>
     internal void InternalDispose();
+
+    byte MinVolume { get; set; }
 }

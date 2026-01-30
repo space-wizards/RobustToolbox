@@ -148,7 +148,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var sub in _subscriptions)
             {
-                sub.Unsubscribe(this, EntityManager.EventBus);
+                sub.Unsubscribe(this, EntityManager.EventBusInternal);
             }
 
             _subscriptions = default;

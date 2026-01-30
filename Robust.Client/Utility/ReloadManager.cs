@@ -19,10 +19,10 @@ internal sealed class ReloadManager : IReloadManager
     [Dependency] private readonly IClyde _clyde = default!;
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly IResourceManager _res = default!;
-#pragma warning disable CS0414
+    [Dependency] private readonly IResourceManagerInternal _res = default!;
+#if TOOLS
     [Dependency] private readonly ITaskManager _tasks = default!;
-#pragma warning restore CS0414
+#endif
 
     private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
     private CancellationTokenSource _reloadToken = new();
@@ -58,13 +58,11 @@ internal sealed class ReloadManager : IReloadManager
     {
         foreach (var file in _reloadQueue)
         {
-            var rootedFile = file.ToRootedPath();
-
-            if (!_res.ContentFileExists(rootedFile))
+            if (!_res.ContentFileExists(file))
                 continue;
 
-            _sawmill.Info($"Reloading {rootedFile}");
-            OnChanged?.Invoke(rootedFile);
+            _sawmill.Info($"Reloading {file}");
+            OnChanged?.Invoke(file);
         }
 
         _reloadQueue.Clear();
@@ -72,7 +70,7 @@ internal sealed class ReloadManager : IReloadManager
 
     public void Register(ResPath directory, string filter)
     {
-        Register(directory.ToString(), filter);
+        Register(directory.ToRelativeSystemPath(), filter);
     }
 
     public void Register(string directory, string filter)
@@ -83,7 +81,7 @@ internal sealed class ReloadManager : IReloadManager
 #if TOOLS
         foreach (var root in _res.GetContentRoots())
         {
-            var path = root + directory;
+            var path = Path.Join(root, directory);
 
             if (!Directory.Exists(path))
             {
@@ -128,17 +126,18 @@ internal sealed class ReloadManager : IReloadManager
 
             _tasks.RunOnMainThread(() =>
             {
-                var fullPath = args.FullPath.Replace(Path.DirectorySeparatorChar, '/');
-                var file = new ResPath(fullPath);
-
                 foreach (var rootIter in _res.GetContentRoots())
                 {
-                    if (!file.TryRelativeTo(rootIter, out var relative))
+                    var relPath = Path.GetRelativePath(rootIter, args.FullPath);
+                    if (relPath == args.FullPath)
                     {
+                        // Different root (i.e., "C:/" and "D:/")
                         continue;
                     }
 
-                    _reloadQueue.Add(relative.Value);
+                    var file = ResPath.FromRelativeSystemPath(relPath).ToRootedPath();
+                    if (!file.CanonPath.Contains("/../"))
+                        _reloadQueue.Add(file);
                 }
             });
         }

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* If a sandbox error is caused by a compiler-generated method, the engine will now attempt to point out which using code is responsible.
 
 ### Bugfixes
 

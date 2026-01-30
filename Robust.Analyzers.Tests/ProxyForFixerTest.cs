@@ -7,6 +7,9 @@ using VerifyCS =
 
 namespace Robust.Analyzers.Tests;
 
+[Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
+[TestFixture]
+[TestOf(typeof(ProxyForFixer))]
 public sealed class ProxyForFixerTest
 {
     private static Task Verifier(string code, string fixedCode, params DiagnosticResult[] expected)

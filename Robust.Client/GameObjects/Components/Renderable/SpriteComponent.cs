@@ -231,6 +231,13 @@ namespace Robust.Client.GameObjects
         [DataField]
         public bool RaiseShaderEvent;
 
+        /// <summary>
+        ///     If set, overrides the default start-to-end rendering order of the <see cref="Layers"/> List with the provided index order.
+        ///     Layers not included in the override will only be rendered if their index in the <see cref="Layers"/> List is positioned after the highest index in the override.
+        /// </summary>
+        [ViewVariables]
+        public LinkedList<int>? LayersOrderOverride;
+
         [ViewVariables] internal Dictionary<object, int> LayerMap { get; set; } = new();
         [ViewVariables] internal List<Layer> Layers = new();
 
@@ -1110,6 +1117,16 @@ namespace Robust.Client.GameObjects
             [ViewVariables] public ShaderInstance? Shader;
             [ViewVariables] public Texture? Texture;
 
+            /// <summary>
+            /// If this belongs to a parent layer and should be rendered after it.
+            /// </summary>
+            [ViewVariables] internal int? ParentLayer;
+
+            /// <summary>
+            /// If this layer has child layers that should be rendered after it.
+            /// </summary>
+            [ViewVariables] internal List<int> ChildLayers = new();
+
             internal RSI? _rsi;
 
             /// <summary>
@@ -1341,6 +1358,8 @@ namespace Robust.Client.GameObjects
                 UnShaded = toClone.UnShaded;
                 ShaderPrototype = toClone.ShaderPrototype;
                 Texture = toClone.Texture;
+                ParentLayer = toClone.ParentLayer;
+                ChildLayers = toClone.ChildLayers;
                 RSI = toClone.RSI;
                 State = toClone.State;
                 AnimationTimeLeft = toClone.AnimationTimeLeft;

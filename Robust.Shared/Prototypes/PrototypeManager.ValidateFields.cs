@@ -94,7 +94,7 @@ public partial class PrototypeManager
     private bool TryGetIds(FieldInfo field, [NotNullWhen(true)] out string[]? ids)
     {
         ids = null;
-        if (field.DeclaringType.IsGenericTypeDefinition)
+        if (field.DeclaringType?.IsGenericTypeDefinition == true)
         {
             // field's class has generic parameters, rethrow to say what the field is because
             // c# is a great language and doesn't tell you anything in its exception in GetValue

@@ -93,6 +93,10 @@ namespace Robust.Shared.GameObjects
         public virtual void Initialize() { }
 
         /// <inheritdoc />
+        [MustCallBase(true)]
+        public virtual void AutoSubscriptions() { }
+
+        /// <inheritdoc />
         /// <remarks>
         /// Not ran on the client if prediction is disabled and
         /// <see cref="UpdatesOutsidePrediction"/> is false (the default).

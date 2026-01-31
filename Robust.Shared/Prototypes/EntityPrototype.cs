@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -201,6 +202,33 @@ namespace Robust.Shared.Prototypes
             component = cast;
             return true;
         }
+
+        /// <summary>
+        /// Returns true if this prototype contains a component.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasComp<T>(IComponentFactory factory) where T : IComponent, new()
+            => HasComp(factory.GetComponentName<T>());
+
+        /// <summary>
+        /// Returns true if this prototype contains a component with a given type.
+        /// It is a programmer error if the name does not belong to a component.
+        /// This is not caught by a debug assert, so only use it with types from a
+        /// component registry, <c>typeof(SomeComponent)</c>, etc.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasComp(Type type, IComponentFactory factory)
+            => HasComp(factory.GetComponentName(type));
+
+        /// <summary>
+        /// Returns true if this prototype contains a component with a given name.
+        /// It is a programmer error if the name does not belong to a component.
+        /// This is not caught by a debug assert so if you use this method,
+        /// make sure you got the name from <see cref="IComponentFactory.GetComponentName"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasComp([ForbidLiteral] string name)
+            => Components.ContainsKey(name);
 
         internal static void LoadEntity(
             Entity<MetaDataComponent> ent,

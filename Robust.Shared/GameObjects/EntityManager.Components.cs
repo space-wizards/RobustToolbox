@@ -838,18 +838,16 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool EnsureComponent<T>(ref Entity<T?> entity) where T : IComponent, new()
         {
-            if (entity.Comp != null)
-            {
-                // Check for deferred component removal.
-                if (entity.Comp.LifeStage <= ComponentLifeStage.Running)
-                {
-                    DebugTools.AssertOwner(entity, entity.Comp);
-                    return true;
-                }
+            if (entity.Comp == null)
+                return EnsureComponent<T>(entity.Owner, out entity.Comp);
 
-                RemoveComponent(entity, entity.Comp);
-            }
+            DebugTools.AssertOwner(entity, entity.Comp);
 
+            // Check for deferred component removal.
+            if (entity.Comp.LifeStage <= ComponentLifeStage.Running)
+                return true;
+
+            RemoveComponent(entity, entity.Comp);
             entity.Comp = AddComponent<T>(entity);
             return false;
         }

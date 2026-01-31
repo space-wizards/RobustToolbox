@@ -94,18 +94,16 @@ public partial class PrototypeManager
     private bool TryGetIds(FieldInfo field, [NotNullWhen(true)] out string[]? ids)
     {
         ids = null;
-        object? value;
-        try
+        if (field.DeclaringType.IsGenericTypeDefinition)
         {
-            value = field.GetValue(null);
-            if (value == null)
-                return false;
-        }
-        catch (InvalidOperationException e)
-        {
-            // field has generic parameters, rethrow to say what the field is because c# is a great language and doesn't tell you anything
+            // field's class has generic parameters, rethrow to say what the field is because
+            // c# is a great language and doesn't tell you anything in its exception in GetValue
             throw new InvalidOperationException($"Field {field.FieldType} {field.Name} cannot be a static field inside a generic class");
         }
+
+        object? value = field.GetValue(null);
+        if (value == null)
+            return false;
 
         if (value is string str)
         {

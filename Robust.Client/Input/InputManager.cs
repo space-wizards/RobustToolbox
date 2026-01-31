@@ -229,6 +229,7 @@ namespace Robust.Client.Input
                 return;
             }
 
+            UpdateModifierKeyState(args);
             _keysPressed[(int) args.Key] = true;
 
             PackedKeyCombo matchedCombo = default;
@@ -313,6 +314,13 @@ namespace Robust.Client.Input
             return block;
         }
 
+        private void UpdateModifierKeyState(KeyEventArgs args)
+        {
+            _keysPressed[(int) Key.Control] = args.Control;
+            _keysPressed[(int) Key.Shift] = args.Shift;
+            _keysPressed[(int) Key.Alt] = args.Alt;
+        }
+
         /// <inheritdoc />
         public void KeyUp(KeyEventArgs args)
         {
@@ -337,6 +345,8 @@ namespace Robust.Client.Input
                     UpBind(binding);
                 }
             }
+
+            UpdateModifierKeyState(args);
 
             _keysPressed[(int) args.Key] = false;
 

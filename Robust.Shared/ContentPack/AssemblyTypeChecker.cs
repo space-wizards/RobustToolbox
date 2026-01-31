@@ -227,6 +227,8 @@ namespace Robust.Shared.ContentPack
 #if TOOLS
             if (!badRefs.IsEmpty)
             {
+                _sawmill.Info("Started search for originator of bad references...");
+
                 ReportBadReferences(peReader, reader, badRefs);
             }
 #endif
@@ -298,6 +300,9 @@ namespace Robust.Shared.ContentPack
 
                 verifyErrors = true;
                 _sawmill.Error(msg);
+
+                if (!res.Method.IsNil)
+                    PrintCompilerGeneratedMethodUsage(peReader, reader, res.Method);
             }
 
             _sawmill.Debug($"{name}: Verified IL in {sw.Elapsed.TotalMilliseconds}ms");
@@ -308,6 +313,24 @@ namespace Robust.Shared.ContentPack
             }
 
             return true;
+        }
+
+        private void PrintCompilerGeneratedMethodUsage(
+            PEReader peReader,
+            MetadataReader reader,
+            MethodDefinitionHandle method)
+        {
+#if TOOLS
+            var methodDef = reader.GetMethodDefinition(method);
+            var type = GetTypeFromDefinition(reader, methodDef.GetDeclaringType());
+
+            if (!type.Name.Contains('<'))
+                return;
+
+            _sawmill.Error("Hint: method is compiler-generated. Check for params collections and/or collection expressions:");
+
+            ReportBadReferences(peReader, reader, [method]);
+#endif
         }
 
         private static string FormatMethodName(MetadataReader reader, MethodDefinition method)

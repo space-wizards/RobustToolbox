@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -15,6 +16,11 @@ using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 namespace Robust.Shared.IoC
 {
     public delegate T DependencyFactoryDelegate<out T>()
+        where T : class;
+
+    public delegate T DependencyFactoryBaseGenericLazyDelegate<out T>(
+        Type type,
+        IDependencyCollection services)
         where T : class;
 
     /// <inheritdoc />
@@ -37,6 +43,12 @@ namespace Robust.Shared.IoC
         /// </remarks>
         private FrozenDictionary<Type, object> _services = FrozenDictionary<Type, object>.Empty;
 
+        /// <summary>
+        /// Dictionary that maps the types passed to <see cref="Resolve{T}()"/> to their implementation
+        /// for any types registered through <see cref="RegisterBaseGenericLazy"/>.
+        /// </summary>
+        private readonly ConcurrentDictionary<Type, object> _lazyServices = new();
+
         // Start fields used for building new services.
 
         /// <summary>
@@ -47,6 +59,8 @@ namespace Robust.Shared.IoC
 
         private readonly Dictionary<Type, DependencyFactoryDelegateInternal<object>> _resolveFactories = new();
         private readonly Queue<Type> _pendingResolves = new();
+
+        private readonly ConcurrentDictionary<Type, DependencyFactoryBaseGenericLazyDelegate<object>> _baseGenericLazyFactories = new();
 
         private readonly object _serviceBuildLock = new();
 
@@ -79,8 +93,8 @@ namespace Robust.Shared.IoC
         public IEnumerable<Type> GetRegisteredTypes()
         {
             return _parentCollection != null
-                ? _services.Keys.Concat(_parentCollection.GetRegisteredTypes())
-                : _services.Keys;
+                ? _services.Keys.Concat(_lazyServices.Keys).Concat(_parentCollection.GetRegisteredTypes())
+                : _services.Keys.Concat(_lazyServices.Keys);
         }
 
         public Type[] GetCachedInjectorTypes()
@@ -116,10 +130,7 @@ namespace Robust.Shared.IoC
             FrozenDictionary<Type, object> services,
             [MaybeNullWhen(false)] out object instance)
         {
-            if (!services.TryGetValue(objectType, out instance))
-                return _parentCollection is not null && _parentCollection.TryResolveType(objectType, out instance);
-
-            return true;
+            return TryResolveType(objectType, (IReadOnlyDictionary<Type, object>) services, out instance);
         }
 
         private bool TryResolveType(
@@ -128,7 +139,19 @@ namespace Robust.Shared.IoC
             [MaybeNullWhen(false)] out object instance)
         {
             if (!services.TryGetValue(objectType, out instance))
+            {
+                if (_lazyServices.TryGetValue(objectType, out instance))
+                    return true;
+
+                if (objectType.IsGenericType && _baseGenericLazyFactories.TryGetValue(objectType.GetGenericTypeDefinition(), out var factory))
+                {
+                    instance = factory(objectType, this);
+                    _lazyServices[objectType] = instance;
+                    return true;
+                }
+
                 return _parentCollection is not null && _parentCollection.TryResolveType(objectType, out instance);
+            }
 
             return true;
         }
@@ -267,7 +290,7 @@ namespace Robust.Shared.IoC
                 _pendingResolves.Enqueue(interfaceType);
             }
         }
-        
+
         private void CheckRegisterInterface(Type interfaceType, Type implementationType, bool overwrite)
         {
             lock (_serviceBuildLock)
@@ -312,15 +335,24 @@ namespace Robust.Shared.IoC
             Register(type, implementation.GetType(), () => implementation, overwrite);
         }
 
+        public void RegisterBaseGenericLazy(Type interfaceType, DependencyFactoryBaseGenericLazyDelegate<object> factory)
+        {
+            lock (_serviceBuildLock)
+            {
+                _baseGenericLazyFactories[interfaceType] = factory;
+            }
+        }
+
         /// <inheritdoc />
         public void Clear()
         {
-            foreach (var service in _services.Values.OfType<IDisposable>().Distinct())
+            foreach (var service in _services.Values.Concat(_lazyServices.Values).OfType<IDisposable>().Distinct())
             {
                 service.Dispose();
             }
 
             _services = FrozenDictionary<Type, object>.Empty;
+            _lazyServices.Clear();
 
             lock (_serviceBuildLock)
             {

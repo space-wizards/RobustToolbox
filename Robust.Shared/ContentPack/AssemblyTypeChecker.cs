@@ -320,6 +320,7 @@ namespace Robust.Shared.ContentPack
             MetadataReader reader,
             MethodDefinitionHandle method)
         {
+#if TOOLS
             var methodDef = reader.GetMethodDefinition(method);
             var type = GetTypeFromDefinition(reader, methodDef.GetDeclaringType());
 
@@ -329,6 +330,7 @@ namespace Robust.Shared.ContentPack
             _sawmill.Error("Hint: method is compiler-generated. Check for params collections and/or collection expressions:");
 
             ReportBadReferences(peReader, reader, [method]);
+#endif
         }
 
         private static string FormatMethodName(MetadataReader reader, MethodDefinition method)

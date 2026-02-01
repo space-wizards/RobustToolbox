@@ -16,8 +16,11 @@ public sealed class HttpManagerTest
     {
         var manager = new HttpManager();
         var uri = new Uri(url);
+        var stream = new MemoryStream();
         Assert.DoesNotThrowAsync(() => manager.GetStreamAsync(uri));
         Assert.DoesNotThrowAsync(() => manager.GetStringAsync(uri));
+        Assert.DoesNotThrowAsync(() => manager.GetByteArrayAsync(uri));
+        Assert.DoesNotThrowAsync(() => manager.CopyToAsync(uri, stream));
     }
 
     [Test]
@@ -32,8 +35,6 @@ public sealed class HttpManagerTest
     {
         var manager = new HttpManager();
         var uri = new Uri(url);
-        Assert.ThrowsAsync<InvalidAddressException>(() => manager.GetStreamAsync(uri));
-        Assert.ThrowsAsync<InvalidAddressException>(() => manager.GetStringAsync(uri));
-        Assert.ThrowsAsync<InvalidAddressException>(() => manager.GetFromJsonAsync<string>(uri));
+        Assert.ThrowsAsync<InvalidAddressException>(() => manager.ThrowIfLocalUri(uri));
     }
 }

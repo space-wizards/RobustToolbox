@@ -46,7 +46,7 @@ public sealed class CustomBaseTypeSerializerAnalyzer : DiagnosticAnalyzer
             if (variableTypeInfo == null)
                 return;
 
-            if (!variableTypeInfo.OriginalDefinition.Equals(serializerType))
+            if (!SymbolEqualityComparer.Default.Equals(variableTypeInfo.OriginalDefinition, serializerType))
                 return;
 
             var arguments = (typeOfNode.Type as GenericNameSyntax)?.TypeArgumentList.Arguments;

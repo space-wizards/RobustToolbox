@@ -29,11 +29,11 @@ namespace Robust.Shared.Map
         ///     Possible sprites to use if we're neighboring another tile.
         /// </summary>
         Dictionary<Direction, ResPath> EdgeSprites { get; }
-        
+
         /// <summary>
         ///     Possible sprites to use if we're neighboring empty tile.
         /// </summary>
-        Dictionary<Direction, ResPath> EdgeSpaceSprites { get; }
+        Dictionary<Direction, ResPath> EdgeSpaceSprites => new();
 
         /// <summary>
         ///     When drawing adjacent tiles that both specify edge sprites, the one with the higher priority

@@ -27,6 +27,10 @@
     <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
     <PackageReference Include="TerraFX.Interop.Xlib" />
+    <PackageReference Include="YamlDotNet" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" />
+    <PackageReference Include="prometheus-net" />
+    <PackageReference Include="Serilog" />
 
     <!-- Needed to pin transitive dependency versions. -->
     <PackageReference Include="System.Text.Json" />
@@ -42,7 +46,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Avalonia.Base\Avalonia.Base.csproj" />
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
-    <ProjectReference Include="..\OpenToolkit.GraphicsLibraryFramework\OpenToolkit.GraphicsLibraryFramework.csproj" />
+    <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
     <ProjectReference Include="..\Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />

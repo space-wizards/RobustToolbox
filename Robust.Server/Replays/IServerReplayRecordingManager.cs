@@ -2,6 +2,7 @@ using Robust.Shared.Replays;
 
 namespace Robust.Server.Replays;
 
+[NotContentImplementable]
 public interface IServerReplayRecordingManager : IReplayRecordingManager
 {
     /// <summary>

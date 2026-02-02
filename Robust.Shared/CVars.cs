@@ -406,6 +406,46 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetHWId =
             CVarDef.Create("net.hwid", true, CVar.SERVERONLY);
 
+        /**
+         * TRANSFER
+         */
+
+        /// <summary>
+        /// If true, enable the WebSocket-based high bandwidth transfer channel.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// If set, <see cref="TransferHttpEndpoint"/> must be set to the API address of the server,
+        /// and you must ensure your reverse proxy (if you have one) is configured to allow WebSocket connections.
+        /// </para>
+        /// <para>
+        /// The transfer channel has no additional encryption layer. Unless your API is exposed behind HTTPS,
+        /// traffic over the channel will not be encrypted, and you are discouraged from enabling it.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<bool> TransferHttp =
+            CVarDef.Create("transfer.http", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// The base HTTP URL of the game server, used for the high-bandwidth transfer channel.
+        /// </summary>
+        public static readonly CVarDef<string> TransferHttpEndpoint =
+            CVarDef.Create("transfer.http_endpoint", "http://localhost:1212/", CVar.SERVERONLY);
+
+        /// <summary>
+        /// Amount of concurrent client->server transfer streams allowed.
+        /// </summary>
+        /// <remarks>
+        /// Clients will be disconnected if they exceed this limit.
+        /// </remarks>
+        public static readonly CVarDef<int> TransferStreamLimit =
+            CVarDef.Create("transfer.stream_limit", 10, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Artificially delay transfer operations to simulate slow network. Debug option.
+        /// </summary>
+        internal static readonly CVarDef<bool> TransferArtificialDelay =
+            CVarDef.Create("transfer.artificial_delay", false);
 
         /**
          * SUS
@@ -787,6 +827,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> GameAutoPauseEmpty =
             CVarDef.Create("game.auto_pause_empty", true, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Scales the game simulation time. Higher values make the game slower.
+        /// </summary>
+        public static readonly CVarDef<float> GameTimeScale =
+            CVarDef.Create("game.time_scale", 1f, CVar.REPLICATED | CVar.SERVER);
 
         /*
          * LOG
@@ -1279,13 +1325,6 @@ namespace Robust.Shared
         /*
          * PHYSICS
          */
-
-        /// <summary>
-        /// How much to expand broadphase checking for. This is useful for cross-grid collisions.
-        /// Performance impact if additional broadphases are being checked.
-        /// </summary>
-        public static readonly CVarDef<float> BroadphaseExpand =
-            CVarDef.Create("physics.broadphase_expand", 2f, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
         /// The target minimum ticks per second on the server.
@@ -1923,7 +1962,7 @@ namespace Robust.Shared
         ///     By default, this is Space Station 14's sln, but it can be any file at the same root level.
         /// </summary>
         public static readonly CVarDef<string> XamlHotReloadMarkerName =
-            CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.sln", CVar.CLIENTONLY);
+            CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.slnx", CVar.CLIENTONLY);
 
         /// <summary>
         /// If true, all XAML UIs will be JITed for hot reload on client startup.

@@ -136,9 +136,14 @@ namespace Robust.Client.UserInterface.Controls
             AddMessage(msg);
         }
 
-        public void AddMessage(FormattedMessage message)
+        public void AddMessage(FormattedMessage message, Color? defaultColor = null)
         {
-            var entry = new RichTextEntry(message, this, _tagManager, null);
+            AddMessage(message, RichTextEntry.DefaultTags, defaultColor);
+        }
+
+        public void AddMessage(FormattedMessage message, Type[]? tagsAllowed, Color? defaultColor = null)
+        {
+            var entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
 
             entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
 
@@ -153,7 +158,12 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public void SetMessage(Index index, FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        public void SetMessage(Index index, FormattedMessage message, Color? defaultColor = null)
+        {
+            SetMessage(index, message, RichTextEntry.DefaultTags, defaultColor);
+        }
+
+        public void SetMessage(Index index, FormattedMessage message, Type[]? tagsAllowed, Color? defaultColor = null)
         {
             var atBottom = !_scrollDownButton.Visible;
             var oldEntry = _entries[index];

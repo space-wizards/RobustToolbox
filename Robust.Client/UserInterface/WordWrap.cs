@@ -107,6 +107,14 @@ internal struct WordWrap
         if (PosX <= _maxSizeX)
             return;
 
+        // Break the "word" at the last word index
+        if (WordStartBreakIndex.HasValue && oldWordSizePixels != 0)
+        {
+            breakLine = WordStartBreakIndex!.Value.index;
+            MaxUsedWidth = Math.Max(MaxUsedWidth, WordStartBreakIndex.Value.lineSize);
+            PosX = WordSizePixels;
+        }
+
         if (!ForceSplitData.HasValue)
         {
             ForceSplitData = (BreakIndexCounter, oldWordSizePixels);

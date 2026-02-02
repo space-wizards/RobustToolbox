@@ -16,7 +16,7 @@
     <PackageReference Include="VorbisPizza" PrivateAssets="compile" />
     <PackageReference Include="Pidgin" />
     <PackageReference Include="prometheus-net" />
-    <PackageReference Include="Robust.Shared.AuthLib" />
+    <PackageReference Include="Robust.Shared.AuthLib" PrivateAssets="none" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="YamlDotNet" />
     <PackageReference Include="Microsoft.Win32.Registry" PrivateAssets="compile" />

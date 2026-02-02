@@ -11,6 +11,7 @@ namespace Robust.Client.Graphics
     ///     A viewport is an API for rendering a section of the game map centered around an eye,
     ///     complete with lighting, FOV and grid rendering.
     /// </summary>
+    [NotContentImplementable]
     public interface IClydeViewport : IDisposable
     {
         /// <summary>
@@ -41,6 +42,11 @@ namespace Robust.Client.Graphics
         /// Color to clear the render target to before rendering. If null, no clearing will happen.
         /// </summary>
         Color? ClearColor { get; set; }
+
+        /// <summary>
+        /// On frames where Eye is null or in nullspace, whether the viewport may clear.
+        /// </summary>
+        bool ClearWhenMissingEye { get; set; }
 
         /// <summary>
         ///     This is, effectively, a multiplier to the eye's zoom.

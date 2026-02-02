@@ -279,10 +279,7 @@ public sealed partial class ReplayLoadManager
                     var path = resUpload.RelativePath.Clean().ToRelativePath();
                     if (uploadedFiles.Add(path) && !_netResMan.FileExists(path))
                     {
-                        _netMan.DispatchLocalNetMessage(new NetworkResourceUploadMessage
-                        {
-                            RelativePath = path, Data = resUpload.Data
-                        });
+                        _netResMan.StoreFile(path, resUpload.Data);
                         message.Messages.RemoveSwap(i);
                         break;
                     }

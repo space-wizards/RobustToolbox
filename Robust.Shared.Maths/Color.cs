@@ -107,7 +107,6 @@ namespace Robust.Shared.Maths
         /// <param name="a">The alpha component of the new Color structure.</param>
         public Color(byte r, byte g, byte b, byte a = 255)
         {
-            Unsafe.SkipInit(out this);
             R = r / (float) byte.MaxValue;
             G = g / (float) byte.MaxValue;
             B = b / (float) byte.MaxValue;

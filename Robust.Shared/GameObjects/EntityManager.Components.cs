@@ -21,7 +21,6 @@ using Robust.Shared.Exceptions;
 
 namespace Robust.Shared.GameObjects
 {
-    /// <inheritdoc />
     public partial class EntityManager
     {
         [IoC.Dependency] private readonly IComponentFactory _componentFactory = default!;
@@ -406,7 +405,7 @@ namespace Robust.Shared.GameObjects
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
             ComponentAdded?.Invoke(eventArgs);
-            _eventBus.OnComponentAdded(eventArgs);
+            EventBusInternal.OnComponentAdded(eventArgs);
 
             LifeAddToEntity(uid, component, reg.Idx);
 
@@ -427,7 +426,7 @@ namespace Robust.Shared.GameObjects
                 LifeStartup(uid, component, reg.Idx);
 
             if (metadata.EntityLifeStage >= EntityLifeStage.MapInitialized)
-                EventBus.RaiseComponentEvent(uid, component, reg.Idx, MapInitEventInstance);
+                EventBusInternal.RaiseComponentEvent(uid, component, reg.Idx, MapInitEventInstance);
         }
 
         /// <inheritdoc />
@@ -717,7 +716,7 @@ namespace Robust.Shared.GameObjects
 
             var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, entityUid), false, metadata, idx);
             ComponentRemoved?.Invoke(eventArgs);
-            _eventBus.OnComponentRemoved(eventArgs);
+            EventBusInternal.OnComponentRemoved(eventArgs);
 
             if (!terminating)
             {
@@ -839,18 +838,16 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool EnsureComponent<T>(ref Entity<T?> entity) where T : IComponent, new()
         {
-            if (entity.Comp != null)
-            {
-                // Check for deferred component removal.
-                if (entity.Comp.LifeStage <= ComponentLifeStage.Running)
-                {
-                    DebugTools.AssertOwner(entity, entity.Comp);
-                    return true;
-                }
+            if (entity.Comp == null)
+                return EnsureComponent<T>(entity.Owner, out entity.Comp);
 
-                RemoveComponent(entity, entity.Comp);
-            }
+            DebugTools.AssertOwner(entity, entity.Comp);
 
+            // Check for deferred component removal.
+            if (entity.Comp.LifeStage <= ComponentLifeStage.Running)
+                return true;
+
+            RemoveComponent(entity, entity.Comp);
             entity.Comp = AddComponent<T>(entity);
             return false;
         }
@@ -1181,14 +1178,14 @@ namespace Robust.Shared.GameObjects
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp1).Name}");
-            return new EntityQuery<TComp1>(comps, _resolveSawmill);
+            return new EntityQuery<TComp1>(this, comps);
         }
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
             var comps = _entTraitDict[type];
             DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
-            return new EntityQuery<IComponent>(comps, _resolveSawmill);
+            return new EntityQuery<IComponent>(this, comps);
         }
 
         /// <inheritdoc />
@@ -1224,7 +1221,7 @@ namespace Robust.Shared.GameObjects
             var set = _entCompIndex[uid];
             if (set.Count > comps.Length)
             {
-                comps = new IComponent[set.Count];
+                comps = new IComponent?[set.Count];
             }
 
             var i = 0;
@@ -1708,9 +1705,12 @@ namespace Robust.Shared.GameObjects
         }
 
         public bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
+            => CanGetComponentState(component, player);
+
+        public bool CanGetComponentState(IComponent component, ICommonSession player)
         {
             var attempt = new ComponentGetStateAttemptEvent(player);
-            eventBus.RaiseComponentEvent(component.Owner, component, ref attempt);
+            EventBusInternal.RaiseComponentEvent(component.Owner, component, ref attempt);
             return !attempt.Cancelled;
         }
 
@@ -1753,17 +1753,61 @@ namespace Robust.Shared.GameObjects
         }
     }
 
+    /// <summary>
+    ///     An index of all entities with a given component, avoiding looking up the component's storage every time.
+    ///     Using these saves on dictionary lookups, making your code slightly more efficient, and ties in nicely with
+    ///     <see cref="Entity{T}"/>.
+    /// </summary>
+    /// <typeparam name="TComp1">Any component type.</typeparam>
+    /// <example>
+    ///     <code>
+    ///         public sealed class MySystem : EntitySystem
+    ///         {
+    ///             private EntityQuery&lt;TransformComponent&gt; _transforms = default!;
+    ///             <br/>
+    ///             public override void Initialize()
+    ///             {
+    ///                 _transforms = GetEntityQuery&lt;TransformComponent&gt;();
+    ///             }
+    ///             <br/>
+    ///             public void DoThings(EntityUid myEnt)
+    ///             {
+    ///                 var ent = _transforms.Get(myEnt);
+    ///                 // ...
+    ///             }
+    ///         }
+    ///     </code>
+    /// </example>
+    /// <remarks>
+    ///     Queries hold references to <see cref="IEntityManager"/> internals, and are always up to date with the world.
+    ///     They can not however perform mutation, if you need to add or remove components you must use
+    ///     <see cref="EntitySystem"/> or <see cref="IEntityManager"/> methods.
+    /// </remarks>
+    /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.GetEntityQuery``1">EntitySystem.GetEntityQuery()</seealso>
+    /// <seealso cref="M:Robust.Shared.GameObjects.EntityManager.GetEntityQuery``1">EntityManager.GetEntityQuery()</seealso>
     public readonly struct EntityQuery<TComp1> where TComp1 : IComponent
     {
+        private readonly EntityManager _entMan;
         private readonly Dictionary<EntityUid, IComponent> _traitDict;
-        private readonly ISawmill _sawmill;
 
-        public EntityQuery(Dictionary<EntityUid, IComponent> traitDict, ISawmill sawmill)
+        internal EntityQuery(EntityManager entMan, Dictionary<EntityUid, IComponent> traitDict)
         {
+            _entMan = entMan;
             _traitDict = traitDict;
-            _sawmill = sawmill;
         }
 
+        /// <summary>
+        ///     Gets <typeparamref name="TComp1"/> for an entity, throwing if it can't find it.
+        /// </summary>
+        /// <param name="uid">The entity to do a lookup for.</param>
+        /// <returns>The located component.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the entity does not have a component of type <typeparamref name="TComp1"/>.</exception>
+        /// <seealso cref="M:Robust.Shared.GameObjects.IEntityManager.GetComponent``1(Robust.Shared.GameObjects.EntityUid)">
+        ///     IEntityManager.GetComponent&lt;T&gt;(EntityUid)
+        /// </seealso>
+        /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.Comp``1(Robust.Shared.GameObjects.EntityUid)">
+        ///     EntitySystem.Comp&lt;T&gt;(EntityUid)
+        /// </seealso>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public TComp1 GetComponent(EntityUid uid)
@@ -1774,6 +1818,7 @@ namespace Robust.Shared.GameObjects
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
 
+        /// <inheritdoc cref="GetComponent"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
         public Entity<TComp1> Get(EntityUid uid)
         {
@@ -1783,6 +1828,22 @@ namespace Robust.Shared.GameObjects
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
 
+        /// <summary>
+        ///     Gets <typeparamref name="TComp1"/> for an entity, if it's present.
+        /// </summary>
+        /// <remarks>
+        ///     If it is strictly errorenous for a component to not be present, you may want to use
+        ///     <see cref="Resolve(Robust.Shared.GameObjects.EntityUid,ref TComp1?,bool)"/> instead.
+        /// </remarks>
+        /// <param name="uid">The entity to do a lookup for.</param>
+        /// <param name="component">The located component, if any.</param>
+        /// <returns>Whether the component was found.</returns>
+        /// <seealso cref="M:Robust.Shared.GameObjects.IEntityManager.TryGetComponent``1(Robust.Shared.GameObjects.EntityUid,``0@)">
+        ///     IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T?)
+        /// </seealso>
+        /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.TryComp``1(Robust.Shared.GameObjects.EntityUid,``0@)">
+        ///     EntitySystem.TryComp&lt;T&gt;(EntityUid, out T?)
+        /// </seealso>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
@@ -1796,6 +1857,7 @@ namespace Robust.Shared.GameObjects
             return TryGetComponent(uid.Value, out component);
         }
 
+        /// <inheritdoc cref="TryGetComponent(Robust.Shared.GameObjects.EntityUid?,out TComp1?)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
@@ -1810,24 +1872,40 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
+        /// <inheritdoc cref="TryGetComponent(Robust.Shared.GameObjects.EntityUid?,out TComp1?)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool TryComp(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
             => TryGetComponent(uid, out component);
 
+        /// <inheritdoc cref="TryGetComponent(Robust.Shared.GameObjects.EntityUid?,out TComp1?)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool TryComp([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
             => TryGetComponent(uid, out component);
 
+        /// <summary>
+        ///     Tests if the given entity has <typeparamref name="TComp1"/>.
+        /// </summary>
+        /// <param name="uid">The entity to do a lookup for.</param>
+        /// <returns>Whether the component exists for that entity.</returns>
+        /// <remarks>If you immediately need to then look up that component, it's more efficient to use <see cref="TryComp(Robust.Shared.GameObjects.EntityUid,out TComp1?)"/>.</remarks>
+        /// <seealso cref="M:Robust.Shared.GameObjects.IEntityManager.HasComponent``1(Robust.Shared.GameObjects.EntityUid)">
+        ///     IEntityManager.HasComponent&lt;T&gt;(EntityUid)
+        /// </seealso>
+        /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.HasComp``1(Robust.Shared.GameObjects.EntityUid)">
+        ///     EntitySystem.HasComp&lt;T&gt;(EntityUid)
+        /// </seealso>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool HasComp(EntityUid uid) => HasComponent(uid);
 
+        /// <inheritdoc cref="HasComp(Robust.Shared.GameObjects.EntityUid)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool HasComp([NotNullWhen(true)] EntityUid? uid) => HasComponent(uid);
 
+        /// <inheritdoc cref="HasComp(Robust.Shared.GameObjects.EntityUid)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool HasComponent(EntityUid uid)
@@ -1835,6 +1913,7 @@ namespace Robust.Shared.GameObjects
             return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
+        /// <inheritdoc cref="HasComp(Robust.Shared.GameObjects.EntityUid)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool HasComponent([NotNullWhen(true)] EntityUid? uid)
@@ -1842,6 +1921,14 @@ namespace Robust.Shared.GameObjects
             return uid != null && HasComponent(uid.Value);
         }
 
+        /// <include file='Docs.xml' path='entries/entry[@name="EntityQueryResolve"]/*'/>
+        /// <param name="uid">The entity to do a lookup for.</param>
+        /// <param name="component">The space to write the component into if found.</param>
+        /// <param name="logMissing">Whether to log if the component is missing, for diagnostics.</param>
+        /// <returns>Whether the component was found.</returns>
+        /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.Resolve``1(Robust.Shared.GameObjects.EntityUid,``0@,System.Boolean)">
+        ///     EntitySystem.Resolve&lt;T&gt;(EntityUid, out T?)
+        /// </seealso>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Resolve(EntityUid uid, [NotNullWhen(true)] ref TComp1? component, bool logMissing = true)
         {
@@ -1858,19 +1945,29 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-            {
-                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{Environment.StackTrace}");
-            }
+                _entMan.ResolveSawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {_entMan.ToPrettyString(uid)}!\n{Environment.StackTrace}");
 
             return false;
         }
 
+        /// <include file='Docs.xml' path='entries/entry[@name="EntityQueryResolve"]/*'/>
+        /// <param name="entity">The space to write the component into if found.</param>
+        /// <param name="logMissing">Whether to log if the component is missing, for diagnostics.</param>
+        /// <returns>Whether the component was found.</returns>
+        /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.Resolve``1(Robust.Shared.GameObjects.EntityUid,``0@,System.Boolean)">
+        ///     EntitySystem.Resolve&lt;T&gt;(EntityUid, out T?)
+        /// </seealso>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Resolve(ref Entity<TComp1?> entity, bool logMissing = true)
         {
             return Resolve(entity.Owner, ref entity.Comp, logMissing);
         }
 
+        /// <summary>
+        ///     Gets <typeparamref name="TComp1"/> for an entity if it's present, or null if it's not.
+        /// </summary>
+        /// <param name="uid">The entity to do the lookup on.</param>
+        /// <returns>The component, if it exists.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public TComp1? CompOrNull(EntityUid uid)
@@ -1881,6 +1978,7 @@ namespace Robust.Shared.GameObjects
             return default;
         }
 
+        /// <inheritdoc cref="GetComponent"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public TComp1 Comp(EntityUid uid)
@@ -1966,7 +2064,7 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+                _entMan.ResolveSawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {_entMan.ToPrettyString(uid)}!\n{new StackTrace(1, true)}");
 
             return false;
         }
@@ -2110,8 +2208,35 @@ namespace Robust.Shared.GameObjects
     #region Query
 
     /// <summary>
-    /// Returns all matching unpaused components.
+    ///     Iterates all entities that have the given components, including the components themselves, but only if
+    ///     the entity they're on is not <see cref="EntitySystem.Paused">Paused</see>.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    ///     Internally, checks for what components exist are done in the order of the generics, so the least frequently
+    ///     occurring component should always be the first argument, and so on.
+    /// </para>
+    /// <para>
+    ///     This type exists for <b>up to</b> four components, TComp1 through TComp4, as generic arguments.
+    /// </para>
+    /// </remarks>
+    /// <example>
+    ///     <code>
+    ///         // within a system.
+    ///         var enumerator = EntityQueryEnumerator&lt;TransformComponent&gt;();
+    ///         <br/>
+    ///         while (enumerator.MoveNext(out var ent, out var xform))
+    ///         {
+    ///             // ... do work with the entity we just found.
+    ///         }
+    ///     </code>
+    /// </example>
+    /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.EntityQueryEnumerator``1">
+    ///     EntitySystem.EntityQueryEnumerator&lt;TComp1, ...&gt;()
+    /// </seealso>
+    /// <seealso cref="M:Robust.Shared.GameObjects.IEntityManager.EntityQueryEnumerator``1">
+    ///     IEntityManager.EntityQueryEnumerator&lt;TComp1, ...&gt;()
+    /// </seealso>
     public struct EntityQueryEnumerator<TComp1> : IDisposable
         where TComp1 : IComponent
     {
@@ -2126,6 +2251,12 @@ namespace Robust.Shared.GameObjects
             _metaQuery = metaQuery;
         }
 
+        /// <summary>
+        ///     Provides the next entity and component in the enumerator, if there are still more to iterate through.
+        /// </summary>
+        /// <param name="uid">The found entity, if any.</param>
+        /// <param name="comp1">A component on the found entity.</param>
+        /// <returns>Whether the enumerator was empty (and as such no entity nor component were returned)</returns>
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1)
         {
             while (true)
@@ -2167,9 +2298,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    /// <summary>
-    /// Returns all matching unpaused components.
-    /// </summary>
+    /// <inheritdoc cref="EntityQueryEnumerator{TComp1}"/>
     public struct EntityQueryEnumerator<TComp1, TComp2> : IDisposable
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -2188,6 +2317,8 @@ namespace Robust.Shared.GameObjects
             _metaQuery = metaQuery;
         }
 
+        /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`1.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@)"/>
+        /// <param name="comp2">A component on the found entity.</param>
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
             while (true)
@@ -2236,9 +2367,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    /// <summary>
-    /// Returns all matching unpaused components.
-    /// </summary>
+    /// <inheritdoc cref="EntityQueryEnumerator{TComp1}"/>
     public struct EntityQueryEnumerator<TComp1, TComp2, TComp3> : IDisposable
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -2261,6 +2390,9 @@ namespace Robust.Shared.GameObjects
             _metaQuery = metaQuery;
         }
 
+        /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`1.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@)"/>
+        /// <param name="comp2">A component on the found entity.</param>
+        /// <param name="comp3">A component on the found entity.</param>
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
         {
             while (true)
@@ -2319,9 +2451,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    /// <summary>
-    /// Returns all matching unpaused components.
-    /// </summary>
+    /// <inheritdoc cref="EntityQueryEnumerator{TComp1}"/>
     public struct EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> : IDisposable
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -2348,6 +2478,10 @@ namespace Robust.Shared.GameObjects
             _metaQuery = metaQuery;
         }
 
+        /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`1.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@)"/>
+        /// <param name="comp2">A component on the found entity.</param>
+        /// <param name="comp3">A component on the found entity.</param>
+        /// <param name="comp4">A component on the found entity.</param>
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
         {
             while (true)
@@ -2419,8 +2553,35 @@ namespace Robust.Shared.GameObjects
     #region All query
 
     /// <summary>
-    /// Returns all matching components, paused or not.
+    ///     Iterates all entities that have the given components, including the components themselves, regardless
+    ///     of if the entity is <see cref="EntitySystem.Paused">Paused</see>.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    ///     Internally, checks for what components exist are done in the order of the generics, so the least frequently
+    ///     occurring component should always be the first argument, and so on.
+    /// </para>
+    /// <para>
+    ///     This type exists for <b>up to</b> four components, TComp1 through TComp4, as generic arguments.
+    /// </para>
+    /// </remarks>
+    /// <example>
+    ///     <code>
+    ///         // within a system.
+    ///         var enumerator = AllEntityQueryEnumerator&lt;TransformComponent&gt;();
+    ///         <br/>
+    ///         while (enumerator.MoveNext(out var ent, out var xform))
+    ///         {
+    ///             // ... do work with the entity we just found.
+    ///         }
+    ///     </code>
+    /// </example>
+    /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.AllEntityQuery``1">
+    ///     EntitySystem.AllEntityQuery&lt;TComp1, ...&gt;()
+    /// </seealso>
+    /// <seealso cref="M:Robust.Shared.GameObjects.IEntityManager.AllEntityQueryEnumerator``1">
+    ///     IEntityManager.AllEntityQueryEnumerator&lt;TComp1, ...&gt;()
+    /// </seealso>
     public struct AllEntityQueryEnumerator<TComp1> : IDisposable
         where TComp1 : IComponent
     {
@@ -2432,6 +2593,7 @@ namespace Robust.Shared.GameObjects
             _traitDict = traitDict.GetEnumerator();
         }
 
+        /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`1.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@)"/>
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1)
         {
             while (true)
@@ -2468,9 +2630,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    /// <summary>
-    /// Returns all matching components, paused or not.
-    /// </summary>
+    /// <inheritdoc cref="AllEntityQueryEnumerator{TComp1}"/>
     public struct AllEntityQueryEnumerator<TComp1, TComp2> : IDisposable
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -2486,6 +2646,7 @@ namespace Robust.Shared.GameObjects
             _traitDict2 = traitDict2;
         }
 
+        /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`2.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@,`1@)"/>
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
             while (true)
@@ -2529,9 +2690,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    /// <summary>
-    /// Returns all matching components, paused or not.
-    /// </summary>
+    /// <inheritdoc cref="AllEntityQueryEnumerator{TComp1}"/>
     public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3> : IDisposable
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -2551,6 +2710,7 @@ namespace Robust.Shared.GameObjects
             _traitDict3 = traitDict3;
         }
 
+        /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`3.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@,`1@,`2@)"/>
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
         {
             while (true)
@@ -2604,9 +2764,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    /// <summary>
-    /// Returns all matching components, paused or not.
-    /// </summary>
+    /// <inheritdoc cref="AllEntityQueryEnumerator{TComp1}"/>
     public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> : IDisposable
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -2630,6 +2788,7 @@ namespace Robust.Shared.GameObjects
             _traitDict4 = traitDict4;
         }
 
+        /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`4.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@,`1@,`2@,`3@)"/>
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
         {
             while (true)

@@ -34,7 +34,7 @@ namespace Robust.Shared.Map
         Dictionary<Direction, ResPath> EdgeSprites { get; }
 
         /// <summary>
-        ///     Possible sprites to use if we're neighboring empty tile.
+        ///     Possible sprites to use if we're neighboring space (empty) tile.
         /// </summary>
         Dictionary<Direction, ResPath> EdgeSpaceSprites => new();
 

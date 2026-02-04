@@ -216,9 +216,8 @@ namespace Robust.Shared.IoC
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
         {
-            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
-
-            _container.Value!.Resolve(ref instance1, ref instance2);
+            Resolve(ref instance1);
+            Resolve(ref instance2);
         }
 
         /// <inheritdoc cref="Resolve{T1, T2}(ref T1?, ref T2?)"/>
@@ -228,9 +227,8 @@ namespace Robust.Shared.IoC
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3)
         {
-            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
-
-            _container.Value!.Resolve(ref instance1, ref instance2, ref instance3);
+            Resolve(ref instance1, ref instance2);
+            Resolve(ref instance3);
         }
 
         /// <inheritdoc cref="Resolve{T1, T2, T3}(ref T1?, ref T2?, ref T3?)"/>
@@ -240,9 +238,8 @@ namespace Robust.Shared.IoC
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
         {
-            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
-
-            _container.Value!.Resolve(ref instance1, ref instance2, ref instance3, ref instance4);
+            Resolve(ref instance1, ref instance2);
+            Resolve(ref instance4, ref instance3);
         }
 
         /// <summary>

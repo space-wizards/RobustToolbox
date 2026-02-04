@@ -262,6 +262,11 @@ internal partial class UserInterfaceManager
         _stateManager.OnStateChanged += OnStateChanged;
 
         _dependencies.BuildGraph();
+
+        foreach (var controller in _uiControllers.Values)
+        {
+            _configurationManager.RegisterCVarAttributes(controller);
+        }
     }
 
     private void InitializeControllers()

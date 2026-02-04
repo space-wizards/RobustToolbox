@@ -137,6 +137,28 @@ namespace Robust.Shared.IntegrationTests.Configuration
             Assert.That(mgr.GetCVar<int>("foo.bar"), Is.EqualTo(7));
         }
 
+        [Test]
+        public void TestCVarAttribute()
+        {
+            var mgr = MakeCfg();
+            ((IConfigurationManagerInternal) mgr).LoadCVarsFromType(typeof(RITCVars));
+
+            var test = new CVarTest();
+
+            // Sanity check
+            Assert.That(test.Value, Is.Zero);
+
+            ((IConfigurationManagerInternal) mgr).RegisterCVarAttributes(test);
+
+            // Default CVar value is 1, this should be reflected instantly
+            Assert.That(test.Value, Is.EqualTo(1));
+
+            mgr.SetCVar(RITCVars.IntegrationTestCVar, 2);
+
+            // Value should have changed to the new one set manually
+            Assert.That(test.Value, Is.EqualTo(2));
+        }
+
         private IConfigurationManager MakeCfg()
         {
             var collection = new DependencyCollection();
@@ -149,6 +171,24 @@ namespace Robust.Shared.IntegrationTests.Configuration
             collection.BuildGraph();
 
             return collection.Resolve<ConfigurationManager>();
+        }
+
+        private sealed class CVarTest
+        {
+            [CVar<RITCVars>(nameof(RITCVars.IntegrationTestCVar))]
+            public int Value;
+
+            [CVar<RITCVars>(nameof(RITCVars.IntegrationTestCVar))]
+            public void Test(int v)
+            {
+                Assert.That(v, Is.EqualTo(Value));
+            }
+        }
+
+        [CVarDefs]
+        private sealed class RITCVars
+        {
+            public static readonly CVarDef<int> IntegrationTestCVar = CVarDef.Create("ritcvars.integration_test_cvar", 1);
         }
     }
 }

@@ -10,6 +10,7 @@ using Nett;
 using Robust.Shared.Collections;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -19,8 +20,9 @@ namespace Robust.Shared.Configuration
     ///     Stores and manages global configuration variables.
     /// </summary>
     [Virtual]
-    internal partial class ConfigurationManager : IConfigurationManagerInternal
+    internal partial class ConfigurationManager : IConfigurationManagerInternal, IPostInjectInit
     {
+        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
@@ -28,6 +30,7 @@ namespace Robust.Shared.Configuration
         protected readonly Dictionary<string, ConfigVar> _configVars = new();
         private ConfigFileStorage? _configFile;
         protected bool _isServer;
+        private readonly HashSet<Type> _registeredCVarAttributeTypes = new();
 
         protected readonly ReaderWriterLockSlim Lock = new();
 
@@ -731,6 +734,60 @@ namespace Robust.Shared.Configuration
             }
         }
 
+        public void RegisterCVarAttributes(object obj)
+        {
+            var type = obj.GetType();
+            if (!_registeredCVarAttributeTypes.Add(type))
+                return;
+
+            var fieldProperties = type.GetFields().Cast<MemberInfo>().Concat(type.GetProperties());
+            foreach (var fieldProperty in fieldProperties)
+            {
+                if (!fieldProperty.TryGetCustomAttribute(out CVarAttribute? attribute))
+                    continue;
+
+                var name = ValidateAttribute(attribute);
+                OnValueChanged<object>(name, value => fieldProperty.SetValue(obj, value), true);
+            }
+
+            foreach (var method in type.GetMethods())
+            {
+                if (!method.TryGetCustomAttribute(out CVarAttribute? attribute))
+                    continue;
+
+                var name = ValidateAttribute(attribute);
+                OnValueChanged<object>(name, value => method.Invoke(obj, [value]), true);
+            }
+
+            return;
+
+            string ValidateAttribute(CVarAttribute attribute)
+            {
+                var attributeType = attribute.Type;
+                var attributePath = attribute.CVarPath;
+                var attributeField = attributeType.GetField(attributePath);
+                if (attributeField == null)
+                    throw new NullReferenceException($"No field found on type {attributeType} with name {attributePath}");
+
+                if (!attributeField.FieldType.IsGenericType ||
+                    attributeField.FieldType.GetGenericTypeDefinition() != typeof(CVarDef<>))
+                {
+                    throw new ArgumentException($"Field on type {attributeType} with name {attributePath} is not of generic type {typeof(CVarDef<>)}");
+                }
+
+                if (!attributeField.IsStatic)
+                    throw new ArgumentException($"Field on type {attributeType} with name {attributePath} is not static");
+
+                if (attributeField.GetValue(null) is not CVarDef cVar)
+                    throw new ArgumentException($"Field on type {attributeType} with name {attributePath} is not of type {nameof(CVarDef)}");
+
+                if (!_configVars.TryGetValue(cVar.Name, out var configVar) || !configVar.Registered)
+                    throw new ArgumentException($"No registered CVar found with name {attributePath}");
+
+                return cVar.Name;
+            }
+        }
+
         private static object ParseOverrideValue(string value, Type? type)
         {
             if (type == typeof(int))
@@ -1060,6 +1117,15 @@ namespace Robust.Shared.Configuration
             public override string ToString()
             {
                 return "<VIRTUAL>";
+            }
+        }
+
+        public void PostInject()
+        {
+            foreach (var type in _dependencyCollection.GetRegisteredTypes())
+            {
+                var obj = _dependencyCollection.ResolveType(type);
+                RegisterCVarAttributes(obj);
             }
         }
     }

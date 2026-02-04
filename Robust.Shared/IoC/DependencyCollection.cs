@@ -140,13 +140,10 @@ namespace Robust.Shared.IoC
         {
             if (!services.TryGetValue(objectType, out instance))
             {
-                if (_lazyServices.TryGetValue(objectType, out instance))
-                    return true;
-
-                if (objectType.IsGenericType && _baseGenericLazyFactories.TryGetValue(objectType.GetGenericTypeDefinition(), out var factory))
+                if (objectType.IsGenericType &&
+                    _baseGenericLazyFactories.TryGetValue(objectType.GetGenericTypeDefinition(), out var factory))
                 {
-                    instance = factory(objectType, this);
-                    _lazyServices[objectType] = instance;
+                    instance = _lazyServices.GetOrAdd(objectType, type => factory(type, this));
                     return true;
                 }
 

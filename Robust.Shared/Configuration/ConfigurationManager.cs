@@ -1120,7 +1120,7 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        public void PostInject()
+        void IPostInjectInit.PostInject()
         {
             foreach (var type in _dependencyCollection.GetRegisteredTypes())
             {

@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * If a sandbox error is caused by a compiler-generated method, the engine will now attempt to point out which using code is responsible.
+* Added `OrderedDictionary<TKey, TValue>` to the sandbox whitelist.
 
 ### Bugfixes
 

@@ -444,6 +444,7 @@ Types:
     LinkedList`1: { All: True }
     LinkedListNode`1: { All: True }
     List`1: { All: True }
+    OrderedDictionary`2: { All: True }
     Queue`1: { All: True }
     ReferenceEqualityComparer: { All: True }
     SortedDictionary`2: { All: True }

@@ -32,9 +32,9 @@ namespace Robust.Client.Map
 
         /// <summary>
         ///     Gets the region inside the texture atlas to use to draw a tile type.
-        ///     Also handles edge sprites.
+        ///     Also handles edge sprites, both those touching space and those touching other tiles
         /// </summary>
         /// <returns>If null, do not draw the tile at all.</returns>
-        public Box2[]? TileAtlasRegion(int tileType, Direction direction);
+        public Box2[]? TileAtlasRegion(int tileType, Direction direction, bool space);
     }
 }

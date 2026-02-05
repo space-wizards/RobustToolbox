@@ -28,6 +28,15 @@ namespace Robust.Shared.GameObjects
         void Initialize();
 
         /// <summary>
+        ///     Called just after <see cref="Initialize"/>, this method exists for
+        /// <c>Robust.Shared.EntitySystemSubscriptionsGenerator.EntitySystemSubscriptionGenerator</c> to have a place to
+        /// put generated event handler subscriptions.
+        /// <br/>
+        /// <b>This should not be implemented manually.</b>
+        /// </summary>
+        void AutoSubscriptions();
+
+        /// <summary>
         ///     Called once before the system is destroyed so that the system can clean up.
         /// </summary>
         void Shutdown();

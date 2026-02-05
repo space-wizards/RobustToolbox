@@ -1463,6 +1463,7 @@ Types:
       - "void .ctor(char[], int, int)"
       - "void .ctor(System.ReadOnlySpan`1<char>)"
       - "void CopyTo(int, char[], int, int)"
+    StringComparer: { All: True }
     StringComparison: { } # Enum
     StringSplitOptions: { } # Enum
     TimeOnly: { All: True }

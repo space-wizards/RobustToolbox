@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
@@ -191,6 +192,14 @@ namespace Robust.Shared.GameObjects
                 SystemDependencyCollection.Register(baseType, type, overwrite: true);
                 _systemTypes.Remove(baseType);
             }
+
+            var queryMethod = typeof(EntityManager).GetMethod(nameof(EntityManager.GetEntityQuery), 1, [])!;
+            SystemDependencyCollection.RegisterBaseGenericLazy(
+                typeof(EntityQuery<>),
+                (queryType, dep) => queryMethod
+                    .MakeGenericMethod(queryType.GetGenericArguments()[0])
+                    .Invoke(dep.Resolve<IEntityManager>(), null)!
+            );
 
             SystemDependencyCollection.BuildGraph();
 

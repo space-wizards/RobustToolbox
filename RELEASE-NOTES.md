@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Reversed an undocumented breaking change from `v267.3.0`: entity spawning with a `MapCoordinates` now takes the rotation as relative to the map again instead of relative to the grid the entity was attached to.
+*None yet*
 
 ### New features
 
-*None yet*
+* If a sandbox error is caused by a compiler-generated method, the engine will now attempt to point out which using code is responsible.
 
 ### Bugfixes
 
@@ -52,6 +52,25 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 272.0.0
+
+### Breaking changes
+
+* Reversed an undocumented breaking change from `v267.3.0`: entity spawning with a `MapCoordinates` now takes the rotation as relative to the map again instead of relative to the grid the entity was attached to.
+
+### New features
+
+* Added `ProfManager.Value` guard method.
+
+### Bugfixes
+
+* Fixed `ValidateMemberAnalyzer` taking a ridiculous amount of compile time.
+
+### Other
+
+* `ProfManager` is now initialized on the server.
 
 
 ## 271.2.0

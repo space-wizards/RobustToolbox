@@ -2,7 +2,6 @@
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
@@ -83,7 +82,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
                 symbolContext.RegisterOperationAction(state.AnalyzeInvocation, OperationKind.Invocation);
             }, SymbolKind.NamedType);
 
-            ctx.RegisterSyntaxNodeAction(nodeContext => AnalyzeDeclaration(nodeContext, proxyForAttributeType), SyntaxKind.MethodDeclaration);
+            ctx.RegisterOperationAction(operationContext => AnalyzeAttribute(operationContext, proxyForAttributeType), OperationKind.Attribute);
         });
 
     }
@@ -191,31 +190,34 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    /// <summary>
-    /// Check for incorrect use of the attribute.
-    /// </summary>
-    private static void AnalyzeDeclaration(SyntaxNodeAnalysisContext context, INamedTypeSymbol proxyForAttribute)
+    private static void AnalyzeAttribute(OperationAnalysisContext context, INamedTypeSymbol proxyForAttribute)
     {
-        if (context.Node is not MethodDeclarationSyntax declarationSyntax)
+        if (context.ContainingSymbol is not IMethodSymbol methodSymbol)
             return;
 
-        if (context.SemanticModel.GetDeclaredSymbol(declarationSyntax) is not { } methodSymbol)
+        if (context.Operation is not IAttributeOperation operation)
             return;
 
-        // We only care about methods that have our attribute
-        if (!AttributeHelper.HasAttribute(methodSymbol, proxyForAttribute, out var attribute))
+        if (operation.Syntax is not AttributeSyntax attributeSyntax)
             return;
 
-        // Get the syntax node for the attribute
-        if (attribute.ApplicationSyntaxReference?.GetSyntax() is not AttributeSyntax attributeSyntax)
+        if (operation.Operation is not IObjectCreationOperation creationOperation)
+            return;
+
+        // Make sure we're looking at the right attribute
+        if (!SymbolEqualityComparer.Default.Equals(creationOperation.Type, proxyForAttribute))
+            return;
+
+        // Get the target Type specified by the attribute
+        if ((creationOperation.Arguments[0].Value as ITypeOfOperation)?.TypeOperand is not { } targetType)
             return;
 
         // Try to get the set method name from the attribute constructor
-        var targetMethodName = attribute.ConstructorArguments[1].Value as string;
+        var targetMethodName = creationOperation.Arguments[1].Value.ConstantValue.Value as string;
         // Check for a redundant set method name
         if (targetMethodName == methodSymbol.Name)
         {
-            var location = attributeSyntax.ArgumentList?.Arguments[1].GetLocation() ?? declarationSyntax.GetLocation();
+            var location = creationOperation.Arguments[1].Syntax.GetLocation();
             context.ReportDiagnostic(Diagnostic.Create(
                 RedundantMethodNameDescriptor,
                 location
@@ -224,15 +226,11 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         // Fall back to the method name
         targetMethodName ??= methodSymbol.Name;
 
-        // Get the target Type specified by the attribute
-        if (attribute.ConstructorArguments[0].Value is not ITypeSymbol targetType)
-            return;
-
         // Find all methods belonging to the target Type that have the right name
         var members = targetType.GetMembers(targetMethodName).Where(m => m is IMethodSymbol).Cast<IMethodSymbol>();
 
         // Find the location of the argument's node
-        var targetArgumentLocation = attributeSyntax?.ArgumentList?.Arguments[0].GetLocation() ?? declarationSyntax.GetLocation();
+        var targetArgumentLocation = creationOperation.Arguments[0].Syntax.GetLocation();
 
         // Make sure there's a method with the right name and matching signature
         var found = false;

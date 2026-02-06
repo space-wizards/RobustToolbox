@@ -190,6 +190,9 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         }
     }
 
+    /// <summary>
+    /// Check for incorrect use of the attribute.
+    /// </summary>
     private static void AnalyzeAttribute(OperationAnalysisContext context, INamedTypeSymbol proxyForAttribute)
     {
         if (context.ContainingSymbol is not IMethodSymbol methodSymbol)

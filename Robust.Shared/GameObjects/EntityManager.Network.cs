@@ -183,7 +183,10 @@ public partial class EntityManager
         if (uid == EntityUid.Invalid)
             return NetEntity.Invalid;
 
-        if (!MetaQuery.Resolve(uid, ref metadata))
+        // Logging is disabled because this was causing over 24000 errors each day when networking EntityUid datafields referencing deleted entities.
+        // TODO: Re-enable once we have WeakEntityReference or entity relations.
+        // See https://github.com/space-wizards/RobustToolbox/issues/6152
+        if (!MetaQuery.Resolve(uid, ref metadata, logMissing: false))
             return NetEntity.Invalid;
 
         return metadata.NetEntity;

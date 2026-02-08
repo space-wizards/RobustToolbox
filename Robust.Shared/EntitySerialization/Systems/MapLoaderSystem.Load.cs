@@ -71,7 +71,7 @@ public sealed partial class MapLoaderSystem
     {
         result = null;
 
-        if (!TryReadFile(file, out var data))
+        if (!TryReadFile(file.ToRootedPath(), out var data))
             return false;
 
         return TryLoadGeneric(data, file.ToString(), out result, options);
@@ -227,7 +227,7 @@ public sealed partial class MapLoaderSystem
         DeserializationOptions? options = null)
     {
         entity = null;
-        if (!TryGetReader(file, out var reader))
+        if (!TryGetReader(file.ToRootedPath(), out var reader))
             return false;
 
         using (reader)
@@ -281,7 +281,7 @@ public sealed partial class MapLoaderSystem
         Angle rot = default)
     {
         grid = null;
-        if (!TryGetReader(file, out var reader))
+        if (!TryGetReader(file.ToRootedPath(), out var reader))
             return false;
 
         using (reader)
@@ -340,7 +340,7 @@ public sealed partial class MapLoaderSystem
     {
         grid = null;
         map = null;
-        if (!TryGetReader(file, out var reader))
+        if (!TryGetReader(file.ToRootedPath(), out var reader))
             return false;
 
         using (reader)

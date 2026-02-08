@@ -49,7 +49,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Public APIs involving `System.Random` have been obsoleted. Use `IRobustRandom`/`RobustRandom` and such instead.
 
 ### Internal
 

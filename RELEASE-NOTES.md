@@ -41,6 +41,7 @@ END TEMPLATE-->
 
 * If a sandbox error is caused by a compiler-generated method, the engine will now attempt to point out which using code is responsible.
 * Added `OrderedDictionary<TKey, TValue>` and `System.StringComparer` to the sandbox whitelist.
+* Added more overloads to `MapLoaderSystem` taking `TextReader`/`TextWriter` where appropriate.
 
 ### Bugfixes
 

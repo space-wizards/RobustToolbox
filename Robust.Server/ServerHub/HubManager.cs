@@ -51,7 +51,7 @@ internal sealed class HubManager
             _sawmill.Info("hub.server_url unset. Trying to determine IP address automatically...");
             try
             {
-                url = await GuessAddress();
+                _cfg.SetCVar(CVars.HubServerUrl, url);
             }
             catch (Exception e)
             {

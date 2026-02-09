@@ -43,7 +43,9 @@ public abstract class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent
     protected override Box2 ExtractAabb(in ComponentTreeEntry<OccluderComponent> entry)
     {
         DebugTools.Assert(entry.Transform.ParentUid == entry.Component.TreeUid);
-        return entry.Component.BoundingBox.Translated(entry.Transform.LocalPosition);
+
+        var transform = Matrix3Helpers.CreateTransform(entry.Transform.LocalPosition, entry.Transform.LocalRotation);
+        return transform.TransformBox(entry.Component.BoundingBox);
     }
 
     protected override Box2 ExtractAabb(in ComponentTreeEntry<OccluderComponent> entry, Vector2 pos, Angle rot)
@@ -147,9 +149,12 @@ public abstract class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent
     /// </summary>
     public static bool IsTouchingEndpoint(Entity<OccluderComponent, TransformComponent> ent, (SharedTransformSystem Sys, Vector2 Start, Vector2 End) state)
     {
-        var occluderBox = ent.Comp1.BoundingBox;
-        occluderBox = occluderBox.Translated(state.Sys.GetWorldPosition(ent.Comp2));
-        return occluderBox.Contains(state.Start) || occluderBox.Contains(state.End);
+        var invWorldMatrix = state.Sys.GetInvWorldMatrix(ent.Comp2);
+
+        var localStart = Vector2.Transform(state.Start, invWorldMatrix);
+        var localEnd = Vector2.Transform(state.End, invWorldMatrix);
+
+        return ent.Comp1.BoundingBox.Contains(localStart) || ent.Comp1.BoundingBox.Contains(localEnd);
     }
 
     #endregion

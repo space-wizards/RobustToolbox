@@ -5,10 +5,17 @@ namespace Robust.Serialization.Generator;
 public sealed record DataField(
     ISymbol Symbol,
     ITypeSymbol Type,
-    (INamedTypeSymbol Serializer, CustomSerializerType Type)? CustomSerializer);
+    DataFieldAttribute Attribute,
+    (INamedTypeSymbol Serializer, CustomSerializerType Type)? CustomSerializer
+);
 
+[Flags]
 public enum CustomSerializerType
 {
-    Copier,
-    CopyCreator
+    None = 0,
+    Copier = 1 << 0,
+    CopyCreator = 1 << 1,
+    MappingValidator = 1 << 2,
+    SequenceValidator = 1 << 3,
+    ValueValidator = 1 << 4,
 }

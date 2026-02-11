@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using JetBrains.Annotations;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Exceptions;
+using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -81,7 +83,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             var fields = fieldDefs;
 
-            fields.Sort((a, b) => b.Attribute.Priority.CompareTo(a.Attribute.Priority));
+            fields.Sort((a, b) =>
+            {
+                var priority = b.Attribute.Priority.CompareTo(a.Attribute.Priority);
+                if (priority != 0)
+                    return priority;
+
+                return b.FieldInfo.Name.CompareTo(a.FieldInfo.Name, StringComparison.OrdinalIgnoreCase);
+            });
 
             BaseFieldDefinitions = fields.ToImmutableArray();
 
@@ -183,10 +192,24 @@ namespace Robust.Shared.Serialization.Manager.Definition
             FieldAssigners = fieldAssigners.ToImmutableArray();
             FieldAccessors = fieldAccessors.ToImmutableArray();
 
-            for (int i = 0; i < BaseFieldDefinitions.Length; i++)
+            //has to be done after fieldinterfaceinfos are done
+            if (typeof(T).IsAssignableTo(typeof(ISerializationGenerated<T>)))
             {
-                //has to be done after fieldinterfaceinfos are done
-                fieldValidators[i] = EmitFieldValidationDelegate(manager, i);
+#pragma warning disable CS0618 // Type or member is obsolete
+                var method = (ValidateAllFieldsDelegate) typeof(T).GetMethod(
+#pragma warning restore CS0618 // Type or member is obsolete
+                        nameof(ISerializationGenerated<>.RobustValidateDelegate),
+                        BindingFlags.Static | BindingFlags.Public)!
+                    .Invoke(null, null)!;
+
+                FieldValidatorGenerated = method;
+            }
+            else
+            {
+                for (var i = 0; i < BaseFieldDefinitions.Length; i++)
+                {
+                    fieldValidators[i] = EmitFieldValidationDelegate(manager, i);
+                }
             }
 
             FieldValidators = fieldValidators.ToImmutableArray();
@@ -205,6 +228,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
         private ImmutableArray<object> FieldAccessors { get; }
 
         private ImmutableArray<ValidateFieldDelegate> FieldValidators { get; }
+
+        private ValidateAllFieldsDelegate? FieldValidatorGenerated { get; }
 
         private bool TryGetIndex(string tag, out int index)
         {
@@ -244,12 +269,19 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             var includeValidations = new List<ValidatedMappingNode>();
 
+            Dictionary<string, ValidationNode>? validations = null;
+            if (FieldValidatorGenerated != null)
+            {
+                validations = new Dictionary<string, ValidationNode>();
+                FieldValidatorGenerated(validations, mapping, serialization, context);
+            }
+
             for (var i = 0; i < BaseFieldDefinitions.Length; i++)
             {
                 var fieldDefinition = BaseFieldDefinitions[i];
                 if (fieldDefinition.Attribute is not IncludeDataFieldAttribute) continue;
 
-                var validationNode = FieldValidators[i](mapping, context);
+                var validationNode = validations == null ? FieldValidators[i](mapping, context) : validations[fieldDefinition.CamelCasedName];
                 if (validationNode is ErrorNode errorNode)
                 {
                     validatedMapping.Add(new InconclusiveNode(new ValueDataNode($"<{nameof(IncludeDataFieldAttribute)}={fieldDefinition.FieldInfo.Name}>")), errorNode);
@@ -299,7 +331,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
                 else
                 {
-                    valNode = FieldValidators[idx](val, context);
+                    valNode = validations == null ? FieldValidators[idx](val, context) : validations[key];
                 }
 
                 //include node errors override successful nodes on the main datadef

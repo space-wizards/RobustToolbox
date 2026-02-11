@@ -12,13 +12,18 @@ internal static class Types
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string CopyByRefNamespace = "Robust.Shared.Serialization.Manager.Attributes.CopyByRefAttribute";
+    private const string DataFieldAttributeName = "Robust.Shared.Serialization.Manager.Attributes.DataFieldAttribute";
+    private const string IdDataFieldAttributeName = "Robust.Shared.Prototypes.IdDataFieldAttribute";
+    private const string ParentDataFieldAttributeName = "Robust.Shared.Prototypes.ParentDataFieldAttribute";
+    private const string AbstractDataFieldAttributeName = "Robust.Shared.Prototypes.AbstractDataFieldAttribute";
+    private const string IncludeDataFieldAttributeName = "Robust.Shared.Serialization.Manager.Attributes.IncludeDataFieldAttribute";
 
     internal static bool IsPartial(TypeDeclarationSyntax type)
     {
         return type.Modifiers.IndexOf(SyntaxKind.PartialKeyword) != -1;
     }
 
-    internal static bool IsDataDefinition(ITypeSymbol? type)
+    internal static bool IsDataDefinition([NotNullWhen(true)] ITypeSymbol? type)
     {
         if (type == null)
             return false;
@@ -27,18 +32,66 @@ internal static class Types
                IsImplicitDataDefinition(type);
     }
 
-    internal static bool IsDataField(ISymbol member, out ITypeSymbol type, out AttributeData attribute)
+    internal static DataFieldAttribute? GetDataFieldAttribute(AttributeData data, string fieldName)
+    {
+        if (data.AttributeClass == null)
+            return null;
+
+        string? name = null;
+        var priorityIndex = 0;
+        var include = false;
+        if (data.AttributeClass.ToDisplayString().Contains(DataFieldAttributeName))
+        {
+            name = (string?) data.ConstructorArguments[0].Value;
+            priorityIndex = 2;
+        }
+        else if (data.AttributeClass.ToDisplayString().Contains(IdDataFieldAttributeName))
+        {
+            name = "id";
+            priorityIndex = 0;
+        }
+        else if (data.AttributeClass.ToDisplayString().Contains(ParentDataFieldAttributeName))
+        {
+            name = "parent";
+            priorityIndex = 1;
+        }
+        else if (data.AttributeClass.ToDisplayString().Contains(AbstractDataFieldAttributeName))
+        {
+            name = "abstract";
+            priorityIndex = 0;
+        }
+        else if (data.AttributeClass.ToDisplayString().Contains(IncludeDataFieldAttributeName))
+        {
+            var span = fieldName.AsSpan();
+            name = $"{char.ToLowerInvariant(span[0])}{span.Slice(1).ToString()}";
+            priorityIndex = 1;
+            include = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            var span = fieldName.AsSpan();
+            name = $"{char.ToLowerInvariant(span[0])}{span.Slice(1).ToString()}";
+        }
+
+        return new DataFieldAttribute(data, name!, (int) data.ConstructorArguments[priorityIndex].Value!, include);
+    }
+
+    internal static bool IsDataField(ISymbol member, out ITypeSymbol type, [NotNullWhen(true)] out DataFieldAttribute? attribute)
     {
         // TODO data records and other attributes
+        type = null!;
+        attribute = null;
         if (member is IFieldSymbol field)
         {
             foreach (var attr in field.GetAttributes())
             {
-                if (attr.AttributeClass != null && Inherits(attr.AttributeClass, DataFieldBaseNamespace))
+                if (attr.AttributeClass != null &&
+                    Inherits(attr.AttributeClass, DataFieldBaseNamespace))
                 {
                     type = field.Type;
-                    attribute = attr;
-                    return true;
+                    attribute = GetDataFieldAttribute(attr, field.Name);
+                    break;
                 }
             }
         }
@@ -46,18 +99,17 @@ internal static class Types
         {
             foreach (var attr in property.GetAttributes())
             {
-                if (attr.AttributeClass != null && Inherits(attr.AttributeClass, DataFieldBaseNamespace))
+                if (attr.AttributeClass != null &&
+                    Inherits(attr.AttributeClass, DataFieldBaseNamespace))
                 {
                     type = property.Type;
-                    attribute = attr;
-                    return true;
+                    attribute = GetDataFieldAttribute(attr, property.Name);
+                    break;
                 }
             }
         }
 
-        type = null!;
-        attribute = null!;
-        return false;
+        return attribute != null;
     }
 
     internal static bool IsImplicitDataDefinition(ITypeSymbol type)
@@ -234,17 +286,28 @@ internal static class Types
         return false;
     }
 
-    internal static bool ImplementsInterface(ITypeSymbol type, string interfaceName)
+    internal static bool ImplementsInterface(ITypeSymbol type, string interfaceName, List<INamedTypeSymbol> symbols)
     {
+        symbols.Clear();
         foreach (var interfaceType in type.AllInterfaces)
         {
             if (interfaceType.ToDisplayString().Contains(interfaceName))
+                symbols.Add(interfaceType);
+
+            if (interfaceType.BaseType is { } baseInterface &&
+                ImplementsInterface(baseInterface, interfaceName, symbols))
             {
                 return true;
             }
         }
 
-        return false;
+        return symbols.Count > 0;
+    }
+
+    internal static bool ImplementsInterface(ITypeSymbol type, string interfaceName)
+    {
+        var symbols = new List<INamedTypeSymbol>();
+        return ImplementsInterface(type, interfaceName, symbols);
     }
 
     internal static bool IsReadOnlyMember(ITypeSymbol type, ISymbol member)
@@ -326,5 +389,30 @@ internal static class Types
             yield return baseType;
             baseType = baseType.BaseType;
         }
+    }
+
+    internal static (string Flat, string NonNullable) GetCleanNameForGenericType(ITypeSymbol type, out bool isNullableValueType)
+    {
+        var typeName = type.ToDisplayString();
+        if (IsMultidimensionalArray(type))
+            typeName = typeName.Replace("*", "");
+
+        isNullableValueType = IsNullableValueType(type);
+        var nonNullableTypeName = type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
+        if (isNullableValueType) nonNullableTypeName = typeName.Substring(0, typeName.Length - 1);
+
+        return (typeName, nonNullableTypeName);
+    }
+
+    internal static string GetNonNullableNameForGenericParameter(ITypeSymbol type)
+    {
+        var typeName = type.ToDisplayString();
+        if (IsMultidimensionalArray(type))
+            typeName = typeName.Replace("*", "");
+
+        if (typeName.EndsWith("?"))
+            typeName = typeName.Substring(0, typeName.Length - 1);
+
+        return typeName;
     }
 }

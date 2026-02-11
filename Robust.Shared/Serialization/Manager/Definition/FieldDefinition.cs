@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace Robust.Shared.Serialization.Manager.Definition
 {
@@ -18,6 +19,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             DefaultValue = defaultValue;
             FieldInfo = fieldInfo;
             InheritanceBehavior = inheritanceBehavior;
+            CamelCasedName = DataDefinitionUtility.AutoGenerateTag(fieldInfo.Name);
         }
 
         public DataFieldBaseAttribute Attribute { get; }
@@ -31,6 +33,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
         public AbstractFieldInfo FieldInfo { get; }
 
         public Type FieldType => FieldInfo.FieldType;
+
+        public string CamelCasedName { get; }
 
         public object? GetValue(object? obj)
         {

@@ -343,15 +343,18 @@ namespace Robust.Shared.Serialization.Manager
             }
         }
 
+        private bool TryResolveConcreteType(Type baseType, string typeName, [NotNullWhen(true)] out Type? concreteType)
+        {
+            concreteType = ReflectionManager.YamlTypeTagLookup(baseType, typeName);
+            return concreteType != null;
+        }
+
         private Type ResolveConcreteType(Type baseType, string typeName)
         {
-            var type = ReflectionManager.YamlTypeTagLookup(baseType, typeName);
-            if (type == null)
-            {
-                throw new InvalidOperationException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
-            }
+            if (TryResolveConcreteType(baseType, typeName, out var concreteType))
+                return concreteType;
 
-            return type;
+            throw new InvalidOperationException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
         }
 
 #pragma warning disable CS0618

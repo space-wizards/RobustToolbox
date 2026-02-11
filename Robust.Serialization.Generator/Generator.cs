@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -13,9 +14,13 @@ public class Generator : IIncrementalGenerator
 {
     private const string TypeCopierInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier";
     private const string TypeCopyCreatorInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator";
+    private const string TypeValidatorInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator";
     private const string SerializationHooksNamespace = "Robust.Shared.Serialization.ISerializationHooks";
     private const string AutoStateAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
     private const string ComponentDeltaInterfaceName = "Robust.Shared.GameObjects.IComponentDelta";
+    private const string MappingDataNodeName = "Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode";
+    private const string SequenceDataNodeName = "Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode";
+    private const string ValueDataNodeName = "Robust.Shared.Serialization.Markdown.Value.ValueDataNode";
 
     public void Initialize(IncrementalGeneratorInitializationContext initContext)
     {
@@ -101,12 +106,19 @@ public class Generator : IIncrementalGenerator
         builder.AppendLine($$"""
             #nullable enable
             using System;
+            using System.Collections.Generic;
             using Robust.Shared.Analyzers;
             using Robust.Shared.IoC;
             using Robust.Shared.GameObjects;
             using Robust.Shared.Serialization;
             using Robust.Shared.Serialization.Manager;
+            using Robust.Shared.Serialization.Manager.Definition;
             using Robust.Shared.Serialization.Manager.Exceptions;
+            using Robust.Shared.Serialization.Markdown;
+            using Robust.Shared.Serialization.Markdown.Mapping;
+            using Robust.Shared.Serialization.Markdown.Sequence;
+            using Robust.Shared.Serialization.Markdown.Validation;
+            using Robust.Shared.Serialization.Markdown.Value;
             using Robust.Shared.Serialization.TypeSerializers.Interfaces;
             #pragma warning disable CS0618 // Type or member is obsolete
             #pragma warning disable CS0612 // Type or member is obsolete
@@ -124,6 +136,8 @@ public class Generator : IIncrementalGenerator
                 {{GetCopyMethods(definition)}}
 
                 {{GetInstantiators(definition)}}
+
+                {{GetValidators(definition)}}
             }
 
             {{containingTypesEnd}}
@@ -135,6 +149,7 @@ public class Generator : IIncrementalGenerator
     private static DataDefinition GetDataDefinition(ITypeSymbol definition)
     {
         var fields = new List<DataField>();
+        var symbols = new List<INamedTypeSymbol>();
         var invalidFields = false;
 
         foreach (var member in definition.GetMembers())
@@ -147,31 +162,60 @@ public class Generator : IIncrementalGenerator
 
             if (IsDataField(member, out var type, out var attribute))
             {
-                if (attribute.ConstructorArguments.FirstOrDefault(arg => arg.Kind == TypedConstantKind.Type).Value is INamedTypeSymbol customSerializer)
+                if (attribute.Data.ConstructorArguments.FirstOrDefault(arg => arg.Kind == TypedConstantKind.Type).Value is INamedTypeSymbol customSerializer)
                 {
+                    var serializerType = None;
                     if (ImplementsInterface(customSerializer, TypeCopierInterfaceNamespace))
-                    {
-                        fields.Add(new DataField(member, type, (customSerializer, Copier)));
-                        continue;
-                    }
+                        serializerType |= Copier;
                     else if (ImplementsInterface(customSerializer, TypeCopyCreatorInterfaceNamespace))
+                        serializerType |= CopyCreator;
+
+                    if (ImplementsInterface(customSerializer, TypeValidatorInterfaceNamespace, symbols))
                     {
-                        fields.Add(new DataField(member, type, (customSerializer, CopyCreator)));
+                        foreach (var symbol in symbols)
+                        {
+                            if (symbol.IsGenericType &&
+                                symbol.TypeArguments is { Length: >= 2 } arguments)
+                            {
+                                var nodeType = arguments[1];
+                                if (nodeType.ToDisplayString().Contains(MappingDataNodeName))
+                                    serializerType |= MappingValidator;
+
+                                if (nodeType.ToDisplayString().Contains(SequenceDataNodeName))
+                                    serializerType |= SequenceValidator;
+
+                                if (nodeType.ToDisplayString().Contains(ValueDataNodeName))
+                                    serializerType |= ValueValidator;
+                            }
+                        }
+                    }
+
+                    if (serializerType != None)
+                    {
+                        fields.Add(new DataField(member, type, attribute, (customSerializer, serializerType)));
                         continue;
                     }
                 }
 
-                fields.Add(new DataField(member, type, null));
+                fields.Add(new DataField(member, type, attribute, null));
 
                 if (IsReadOnlyMember(definition, type))
-                {
                     invalidFields = true;
-                }
             }
         }
 
         var typeName = GetGenericTypeName(definition);
         var hasHooks = ImplementsInterface(definition, SerializationHooksNamespace);
+
+        // Same as DataDefinition.cs
+        fields.Sort((a, b) =>
+        {
+            var priority = b.Attribute.Priority.CompareTo(a.Attribute.Priority);
+            if (priority != 0)
+                return priority;
+
+            return string.Compare(b.Symbol.Name, a.Symbol.Name, StringComparison.OrdinalIgnoreCase);
+        });
 
         return new DataDefinition(definition, typeName, fields, hasHooks, invalidFields);
     }
@@ -350,6 +394,90 @@ public class Generator : IIncrementalGenerator
         return builder.ToString();
     }
 
+    private static string GetValidators(DataDefinition definition)
+    {
+        var builder = new StringBuilder();
+        var validateBuilder = new StringBuilder();
+
+        for (var i = 0; i < definition.Fields.Count; i++)
+        {
+            validateBuilder.Clear();
+
+            var field = definition.Fields[i];
+            var fieldTypeName = GetNonNullableNameForGenericParameter(field.Type);
+            var tagName = field.Attribute.Name;
+            if (field.Attribute.Include)
+            {
+                builder.AppendLine($"var node{i} = node;");
+            }
+            else
+            {
+                builder.AppendLine($$"""
+                    if (node.TryGetValue("{{tagName}}", out var node{{i}}))
+                    {
+                    """);
+            }
+
+            var validator = field.CustomSerializer;
+            var validatorName = validator?.Serializer.ToDisplayString();
+            if (validator != null && (validator.Value.Type & MappingValidator) != 0)
+            {
+                validateBuilder.AppendLine($"""
+                    case MappingDataNode mapping:
+                        nodes["{tagName}"] = serialization.ValidateNode<{fieldTypeName}, MappingDataNode, {validatorName}>(mapping, context);
+                        break;
+                    """);
+            }
+
+            if (validator != null && (validator.Value.Type & SequenceValidator) != 0)
+            {
+                validateBuilder.AppendLine($"""
+                    case SequenceDataNode sequence:
+                        nodes["{tagName}"] = serialization.ValidateNode<{fieldTypeName}, SequenceDataNode, {validatorName}>(sequence, context);
+                        break;
+                    """);
+            }
+
+            if (validator != null && (validator.Value.Type & ValueValidator) != 0)
+            {
+                validateBuilder.AppendLine($"""
+                    case ValueDataNode value:
+                        nodes["{tagName}"] = serialization.ValidateNode<{fieldTypeName}, ValueDataNode, {validatorName}>(value, context);
+                        break;
+                    """);
+            }
+
+            builder.AppendLine($$"""
+                switch (node{{i}})
+                {
+                    {{validateBuilder}}
+                    default:
+                        nodes["{{tagName}}"] = serialization.ValidateNode<{{fieldTypeName}}>(node{{i}}, context);
+                        break;
+                }
+                """);
+
+            if (!field.Attribute.Include)
+                builder.AppendLine("}");
+        }
+
+        var baseType = definition.Type.BaseType;
+        if (IsDataDefinition(baseType))
+            builder.AppendLine($"{baseType.ToDisplayString()}.Validate(nodes, node, serialization, context);");
+
+        return $$"""
+            public static void Validate(Dictionary<string, ValidationNode> nodes, MappingDataNode node, ISerializationManager serialization, ISerializationContext? context = null)
+            {
+                {{builder}}
+            }
+
+            public static ValidateAllFieldsDelegate RobustValidateDelegate()
+            {
+                return (nodes, node, serialization, context) => Validate(nodes, node, serialization, context);
+            }
+            """;
+    }
+
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     private static IEnumerable<string> InternalGetImplicitDataDefinitionInterfaces(
         ITypeSymbol type,
@@ -391,18 +519,7 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
         foreach (var field in definition.Fields)
         {
             var type = field.Type;
-            var typeName = type.ToDisplayString();
-            if (IsMultidimensionalArray(type))
-            {
-                typeName = typeName.Replace("*", "");
-            }
-
-            var isNullableValueType = IsNullableValueType(type);
-            var nonNullableTypeName = type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
-            if (isNullableValueType)
-            {
-                nonNullableTypeName = typeName.Substring(0, typeName.Length - 1);
-            }
+            var (typeName, nonNullableTypeName) = GetCleanNameForGenericType(type, out var isNullableValueType);
 
             var isClass = type.IsReferenceType || type.SpecialType == SpecialType.System_String;
             var isNullable = type.NullableAnnotation == NullableAnnotation.Annotated;
@@ -441,31 +558,32 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
                 }
 
                 var serializerName = serializer.ToDisplayString();
-                switch (serializerType)
+
+                // TODO ROBUST should these both be created if both are present?
+                if ((serializerType & Copier) != 0)
                 {
-                    case Copier:
-                        CopyToCustom(
-                            builder,
-                            nonNullableTypeName,
-                            serializerName,
-                            tempVarName,
-                            name,
-                            isNullable,
-                            isClass,
-                            isNullableValueType
-                        );
-                        break;
-                    case CopyCreator:
-                        CreateCopyCustom(
-                            builder,
-                            name,
-                            tempVarName,
-                            nonNullableTypeName,
-                            serializerName,
-                            nullableValue,
-                            nullableOverride
-                        );
-                        break;
+                    CopyToCustom(
+                        builder,
+                        nonNullableTypeName,
+                        serializerName,
+                        tempVarName,
+                        name,
+                        isNullable,
+                        isClass,
+                        isNullableValueType
+                    );
+                }
+                else if ((serializerType & CopyCreator) != 0)
+                {
+                    CreateCopyCustom(
+                        builder,
+                        name,
+                        tempVarName,
+                        nonNullableTypeName,
+                        serializerName,
+                        nullableValue,
+                        nullableOverride
+                    );
                 }
 
                 if (isNullable || isNullableValueType)

@@ -18,6 +18,12 @@ public sealed class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, 
     protected override bool Recursive => true;
     protected override int InitialCapacity => 1024;
 
+    protected override void OnCompInit(Entity<SpriteComponent> ent, ref ComponentInit args)
+    {
+        base.OnCompInit(ent, ref args);
+        _sprite.QueueUpdateIsInert(ent);
+    }
+
     protected override Box2 ExtractAabb(in ComponentTreeEntry<SpriteComponent> entry, Vector2 pos, Angle rot)
     {
         // TODO SPRITE optimize this

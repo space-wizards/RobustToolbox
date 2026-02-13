@@ -285,7 +285,9 @@ namespace Robust.Shared.GameObjects
             {
                 _physics.OnParentChange(ent, oldParent, oldMap);
                 OnBeforeMoveEvent?.Invoke(ref ev);
-                var entParentChangedMessage = new EntParentChangedMessage(ev.Sender, oldParent, oldMap, ev.Component);
+                // TODO EXCEPTION TOLERANCE
+                // add internal C# event that gets invoked on parent change.
+                var entParentChangedMessage = new EntParentChangedMessage(ev.Sender, oldParent, oldMap, ev.Component, ent.Comp2);
                 RaiseLocalEvent(ev.Sender, ref entParentChangedMessage, true);
             }
             else

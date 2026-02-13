@@ -61,7 +61,6 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(SpriteTreeSystem));
 
             SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-            SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
             _sawmill = _logManager.GetSawmill("sprite");
@@ -71,12 +70,6 @@ namespace Robust.Client.GameObjects
         public bool IsVisible(Layer layer)
         {
             return layer.Visible && layer.CopyToShaderParameters == null;
-        }
-
-        private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
-        {
-            // I'm not 100% this is needed, but I CBF with this ATM. Somebody kill server sprite component please.
-            QueueUpdateInert(uid, component);
         }
 
         private void OnBiasChanged(double value)

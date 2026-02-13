@@ -9,14 +9,9 @@ public sealed class ServerOccluderSystem : OccluderSystem
 {
     [Dependency] private readonly MetaDataSystem _metadata = default!;
 
-    public override void Initialize()
+    protected override void OnFlagRemoveAttempt(Entity<OccluderComponent> ent, ref MetaFlagRemoveAttemptEvent args)
     {
-        base.Initialize();
-        SubscribeLocalEvent<OccluderComponent, MetaFlagRemoveAttemptEvent>(OnFlagRemoveAttempt);
-    }
-
-    private void OnFlagRemoveAttempt(Entity<OccluderComponent> ent, ref MetaFlagRemoveAttemptEvent args)
-    {
+        base.OnFlagRemoveAttempt(ent, ref args);
         if (ent.Comp is {Enabled: true, LifeStage: <= ComponentLifeStage.Running})
             args.ToRemove &= ~MetaDataFlags.PvsPriority;
     }

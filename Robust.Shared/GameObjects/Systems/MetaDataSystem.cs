@@ -152,6 +152,8 @@ public abstract class MetaDataSystem : EntitySystem
     /// </summary>
     public void RemoveFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)
     {
+        // TODO PERFORMANCE
+        // skip if terminating?
         if (!_metaQuery.Resolve(uid, ref component))
             return;
 
@@ -159,10 +161,8 @@ public abstract class MetaDataSystem : EntitySystem
         if (toRemove == 0x0)
             return;
 
-        // TODO PERF
-        // does this need to be a broadcast event?
         var ev = new MetaFlagRemoveAttemptEvent(toRemove);
-        RaiseLocalEvent(uid, ref ev, true);
+        RaiseLocalEvent(uid, ref ev);
 
         component.Flags &= ~ev.ToRemove;
     }
@@ -172,12 +172,7 @@ public abstract class MetaDataSystem : EntitySystem
 /// Raised if <see cref="MetaDataSystem"/> is trying to remove a particular flag.
 /// </summary>
 [ByRefEvent]
-public struct MetaFlagRemoveAttemptEvent
+public struct MetaFlagRemoveAttemptEvent(MetaDataFlags toRemove)
 {
-    public MetaDataFlags ToRemove;
-
-    public MetaFlagRemoveAttemptEvent(MetaDataFlags toRemove)
-    {
-        ToRemove = toRemove;
-    }
+    public MetaDataFlags ToRemove = toRemove;
 }

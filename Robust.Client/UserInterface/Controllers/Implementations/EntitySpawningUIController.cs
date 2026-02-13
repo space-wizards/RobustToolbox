@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using Robust.Client.GameObjects;
 using Robust.Client.Placement;
-using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
+using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using static Robust.Client.UserInterface.Controls.BaseButton;
 using static Robust.Client.UserInterface.Controls.LineEdit;
@@ -24,6 +21,7 @@ public sealed class EntitySpawningUIController : UIController
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly IPlacementManager _placement = default!;
     [Dependency] private readonly IPrototypeManager _prototypes = default!;
+    [Dependency] private readonly IClipboardManager _clipboard = default!;
 
     private EntitySpawnWindow? _window;
     private readonly List<EntityPrototype> _shownEntities = new();
@@ -67,6 +65,42 @@ public sealed class EntitySpawningUIController : UIController
         _window.OverrideMenu.Disabled = args.Pressed;
     }
 
+    private void OnAdvancedToggled(ButtonToggledEventArgs args)
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        _window.AdvancedOptions.Visible = args.Pressed;
+        args.Button.Pressed = args.Pressed;
+    }
+
+    private void OnCopyProtoId(ButtonEventArgs args)
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        if (_window.SelectedPrototype is null)
+            return;
+
+        _clipboard.SetText(_window.SelectedPrototype.ID);
+    }
+
+    private async void OnPasteAdditionalSpawn(ButtonEventArgs args)
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        _window.AdditionalSpawn.SetText(await _clipboard.GetText(), true);
+    }
+
+    private void OnClearAdditionalSpawn(ButtonEventArgs args)
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        _window.AdditionalSpawn.Clear();
+    }
+
     public void ToggleWindow()
     {
         EnsureWindow();
@@ -93,10 +127,15 @@ public sealed class EntitySpawningUIController : UIController
         _window.OnClose += WindowClosed;
         _window.ReplaceButton.Pressed = _placement.Replacement;
         _window.ReplaceButton.OnToggled += OnEntityReplaceToggled;
+        _window.AdvancedButton.OnToggled += OnAdvancedToggled;
+        _window.CopyProtoId.OnPressed += OnCopyProtoId;
+        _window.PasteAdditionalSpawnButton.OnPressed += OnPasteAdditionalSpawn;
+        _window.ClearAdditionalSpawnButton.OnPressed += OnClearAdditionalSpawn;
         _window.EraseButton.Pressed = _placement.Eraser;
         _window.EraseButton.OnToggled += OnEntityEraseToggled;
         _window.OverrideMenu.OnItemSelected += OnEntityOverrideSelected;
         _window.SearchBar.OnTextChanged += OnEntitySearchChanged;
+        _window.PasteButton.OnPressed += OnEntityPastePressed;
         _window.ClearButton.OnPressed += OnEntityClearPressed;
         _window.PrototypeScrollContainer.OnScrolled += UpdateVisiblePrototypes;
         _window.OnResized += UpdateVisiblePrototypes;
@@ -180,6 +219,14 @@ public sealed class EntitySpawningUIController : UIController
         _placement.Clear();
         _window.SearchBar.Clear();
         BuildEntityList("");
+    }
+
+    private async void OnEntityPastePressed(ButtonEventArgs args)
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        _window.SearchBar.SetText(await _clipboard.GetText(), true);
     }
 
     private void BuildEntityList(string? searchStr = null)
@@ -276,7 +323,7 @@ public sealed class EntitySpawningUIController : UIController
             return;
 
         // Calculate index of first prototype to render based on current scroll.
-        var height = _window.MeasureButton.DesiredSize.Y + PrototypeListContainer.Separation;
+        var height = 32 + PrototypeListContainer.Separation;
         var offset = Math.Max(-_window.PrototypeList.Position.Y, 0);
         var startIndex = (int) Math.Floor(offset / height);
         _window.PrototypeList.ItemOffset = startIndex;
@@ -364,12 +411,12 @@ public sealed class EntitySpawningUIController : UIController
         _window.SelectedButton = null;
         _window.SelectedPrototype = null;
 
-
         var overrideMode = _placement.AllModeNames[_window.OverrideMenu.SelectedId];
         var newObjInfo = new PlacementInformation
         {
             PlacementOption = overrideMode != IPlacementManager.DefaultModeName ? overrideMode : item.Prototype.PlacementMode,
-            EntityType = item.PrototypeID,
+            EntityType = item.PrototypeId,
+            AdditionalSpawn = _window.AdditionalSpawn.Text,
             Range = 2,
             IsTile = false
         };

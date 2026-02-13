@@ -1,0 +1,20 @@
+﻿<Control
+    xmlns="https://spacestation14.io">
+    <Button Name="ActualButton"
+            Access="Public"
+            ToggleMode="True"/>
+    <BoxContainer Orientation="Horizontal">
+        <EntityPrototypeView Name="EntityTextureRects"
+                             Access="Public"
+                             SetSize = "32, 32"
+                             HorizontalAlignment = "Center"
+                             VerticalAlignment = "Center"
+                             Stretch = "Fill"/>
+        <Label Name="EntityLabel"
+               Access="Public"
+               VerticalAlignment = "Center"
+               HorizontalExpand = "True"
+               Text = "None"
+               ClipText = "True"/>
+    </BoxContainer>
+</Control>

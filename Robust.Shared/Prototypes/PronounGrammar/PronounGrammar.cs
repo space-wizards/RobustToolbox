@@ -1,26 +1,26 @@
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Localization;
 
-namespace Robust.Shared.Prototypes;
+namespace Robust.Shared.Prototypes.PronounGrammar;
 
 /*
     HOW PRONOUNS WORK:
-    Grammatical tenses can be defined in yml as a pronounTense.
-    RobustToolbox has a base list of commonly used tenses. More can be added.
+    Grammatical pronoun inflections can be defined in yml as pronounGrammar prototypes.
+    RobustToolbox has a base list of commonly used inflections. More can be added.
 
     On startup, RT will automatically generate a CTX function for every defined
-    tense, so their conjugation can be called in ftl.
+    inflection, so any relevant pronouns can have their case modified in ftl.
 
-    When adding a new pronounTense, you should also add default conjugations
-    for that pronoun for each value of the Gender enum. See engine ftl files
+    When adding a new pronounGrammar prototype, you should also add default cases
+    for each value of the Gender enum to the FtlReturn function. See engine ftl files
     for an example of how to do this.
 */
 
 /// <summary>
-///     Prototype data for a PronounTense.
+///     Prototype data for a PronounGrammar prototype.
 /// </summary>
 [Prototype]
-public sealed partial class PronounTensePrototype : IPrototype
+public sealed partial class PronounGrammarPrototype : IPrototype
 {
     [IdDataField]
     public string ID { get; private set; } = default!;
@@ -40,22 +40,22 @@ public sealed partial class PronounTensePrototype : IPrototype
     public string? FtlReturn { get; private set; }
 
     /// <summary>
-    ///     Locale string denoting name of this tense.
+    ///     Locale string denoting name of this inflection.
     /// </summary>
     [DataField]
     public LocId Name { get; private set; }
 
     /// <summary>
-    ///     Locale string with a summary of this tense.
+    ///     Locale string with a summary of this inflection, and how it modifies the case of a pronoun.
     /// </summary>
     [DataField]
     public LocId Description { get; private set; }
 
 
-    private static readonly IPrototypeManager _protoMan = default!; // TODO: DO THIS PROPERLY
-    public static ProtoId<PronounTensePrototype>? ParseFromDbString(string input)
+    private static readonly IPrototypeManager _protoMan = default!; // TODO: DO THIS PROPERLY. NOT SURE HOW. SORRY.
+    public static ProtoId<PronounGrammarPrototype>? ParseFromDbString(string input)
     {
-        if (_protoMan.TryIndex<PronounTensePrototype>(input, out var pronoun))
+        if (_protoMan.TryIndex<PronounGrammarPrototype>(input, out var pronoun))
             return pronoun;
         return null;
     }

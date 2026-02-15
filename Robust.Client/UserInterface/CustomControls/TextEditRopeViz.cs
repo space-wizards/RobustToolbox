@@ -153,7 +153,7 @@ internal sealed class TextEditRopeViz : OSWindow
 
                 var color = LinearSrgbColor.InterpolateBetween(a, b, λ);
 
-                colors[i] = color.ToSrgb().ToColor();
+                colors[i] = color.ToColor();
             }
         }
 

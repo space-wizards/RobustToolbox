@@ -7,7 +7,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Maths.Colors;
 
 /// <summary>
-///     Represents a color with alpha in the Oklab colorspace.
+///     Represents a color with alpha in the Oklch colorspace.
 /// </summary>
 [Serializable]
 [StructLayout(LayoutKind.Sequential)]

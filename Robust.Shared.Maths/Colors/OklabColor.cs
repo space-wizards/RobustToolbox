@@ -79,6 +79,17 @@ public partial struct OklabColor : IEquatable<OklabColor>, ISpanFormattable
     }
 
     /// <summary>
+    ///     Converts a OklabColor value to a sRGB Color value.
+    /// </summary>
+    /// <remarks>
+    ///     Does NOT do gamut clipping, may return out-of-gamut colors. Use ToColorGamutClipped if clipping is desired.
+    /// </remarks>
+    public readonly Color ToColor()
+    {
+        return ToLinear().ToSrgb().ToColor();
+    }
+
+    /// <summary>
     ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of
     ///     <paramref name="λ" />.
     /// </summary>

@@ -52,6 +52,25 @@ public struct OklchColor : IEquatable<OklchColor>, ISpanFormattable
         return new OklabColor(L, a, b, Alpha);
     }
 
+    /// <summary>
+    ///     Converts a OklchColor value to a sRGB Color value.
+    /// </summary>
+    /// <remarks>
+    ///     Does NOT do gamut clipping, may return out-of-gamut colors. Use ToColorGamutClipped if clipping is desired.
+    /// </remarks>
+    public readonly Color ToColor()
+    {
+        return ToOklab().ToLinear().ToSrgb().ToColor();
+    }
+
+    /// <summary>
+    ///     Converts a OklchColor value to a sRGB Color value, after doing gamut clipping.
+    /// </summary>
+    public readonly Color ToColorClipped()
+    {
+        return ToOklab().GamutClipPreserveChroma().ToLinear().ToSrgb().ToColor();
+    }
+
     public static bool operator ==(OklchColor left, OklchColor right)
     {
         return left.Equals(right);

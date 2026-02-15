@@ -102,6 +102,17 @@ public struct LinearSrgbColor : IEquatable<LinearSrgbColor>, ISpanFormattable
     }
 
     /// <summary>
+    ///     Converts a LinearSrgbColor value to a sRGB Color value.
+    /// </summary>
+    /// <remarks>
+    ///     This does NOT return a Linear sRGB Color. It converts the values to sRGB and returns a sRGB color. Do NOT use this if you want a Linear sRGB Color.
+    /// </remarks>
+    public readonly Color ToColor()
+    {
+        return ToSrgb().ToColor();
+    }
+
+    /// <summary>
     ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of
     ///     <paramref name="λ" />.
     /// </summary>

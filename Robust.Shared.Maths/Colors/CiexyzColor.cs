@@ -44,6 +44,13 @@ public struct CiexyzColor : IEquatable<CiexyzColor>, ISpanFormattable
         return new LinearSrgbColor(r, g, b, Alpha);
     }
 
+    /// <summary>
+    ///     Converts a CiexyzColor value to a sRGB Color value.
+    /// </summary>
+    public readonly Color ToColor()
+    {
+        return ToLinear().ToSrgb().ToColor();
+    }
 
     /// <summary>
     ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of

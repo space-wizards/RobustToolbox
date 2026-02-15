@@ -320,6 +320,65 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        ///     Converts a sRGB Color value to a LinearSrgbColor value.
+        /// </summary>
+        /// <remarks>
+        ///     This expects sRGB, not Linear sRGB which is also represented via Color.
+        /// </remarks>
+        public readonly LinearSrgbColor ToLinear()
+        {
+            return ToColors().ToLinear();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to a CiexyzColor value.
+        /// </summary>
+        public readonly CiexyzColor ToXyz()
+        {
+            return ToColors().ToLinear().ToCiexyz();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to a HslColor value.
+        /// </summary>
+        public readonly HslColor ToHsl()
+        {
+            return ToColors().ToHsl();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to a HsvColor value.
+        /// </summary>
+        public readonly HsvColor ToHsv()
+        {
+            return ToColors().ToHsv();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to an OklabColor value.
+        /// </summary>
+        public readonly OklabColor ToLab()
+        {
+            return ToColors().ToLinear().ToOklab();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to an OklchColor value.
+        /// </summary>
+        public readonly OklchColor ToLch()
+        {
+            return ToColors().ToLinear().ToOklab().ToOklch();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to an SyccColor value.
+        /// </summary>
+        public readonly SyccColor ToYcbcr()
+        {
+            return ToColors().ToSycc();
+        }
+
+        /// <summary>
         ///     Converts sRGB color values to linear RGB color values.
         /// </summary>
         /// <returns>

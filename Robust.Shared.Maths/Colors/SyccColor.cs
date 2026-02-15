@@ -47,6 +47,14 @@ public struct SyccColor : IEquatable<SyccColor>, ISpanFormattable
         return new SrgbColor(r, g, b, Alpha);
     }
 
+    /// <summary>
+    ///     Converts a SyccColor value to a sRGB Color value.
+    /// </summary>
+    public readonly Color ToColor()
+    {
+        return ToSrgb().ToColor();
+    }
+
     public static bool operator ==(SyccColor left, SyccColor right)
     {
         return left.Equals(right);

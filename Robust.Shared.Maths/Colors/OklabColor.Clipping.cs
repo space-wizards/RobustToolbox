@@ -217,4 +217,12 @@ public partial struct OklabColor
 
         return new OklabColor(L_clipped, C_clipped * a_, C_clipped * b_, Alpha);
     }
+
+    /// <summary>
+    ///     Converts a OklabColor value to a sRGB Color value, after doing gamut clipping.
+    /// </summary>
+    public readonly Color ToColorClipped()
+    {
+        return GamutClipPreserveChroma().ToLinear().ToSrgb().ToColor();
+    }
 }

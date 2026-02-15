@@ -144,8 +144,8 @@ internal sealed class TextEditRopeViz : OSWindow
 
         static void InterpColors(Span<Color> colors, Color α, Color β)
         {
-            var a = α.ToColors().ToLinear();
-            var b = β.ToColors().ToLinear();
+            var a = α.ToLinear();
+            var b = β.ToLinear();
 
             for (var i = 0; i < colors.Length; i++)
             {

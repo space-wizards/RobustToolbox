@@ -448,8 +448,8 @@ public sealed class ColorSelectorSliders : Control
         public override ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle
             => ColorSelectorStyleBox.ColorSliderPreset.Value;
 
-        public override Vector4 ToColorData(Color color) => color.ToColors().ToHsv().AsVector;
-        public override Color FromColorData(Vector4 colorData) => new HsvColor(colorData).ToSrgb().ToColor();
+        public override Vector4 ToColorData(Color color) => color.ToHsv().AsVector;
+        public override Color FromColorData(Vector4 colorData) => new HsvColor(colorData).ToColor();
 
         public override float GetColorValueDivisor(ColorSliderOrder order)
         {

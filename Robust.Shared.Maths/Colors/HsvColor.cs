@@ -92,6 +92,14 @@ public struct HsvColor : IEquatable<HsvColor>, ISpanFormattable
         return new SrgbColor(r + m, g + m, b + m, Alpha);
     }
 
+    /// <summary>
+    ///     Converts a HsvColor value to a sRGB Color value.
+    /// </summary>
+    public readonly Color ToColor()
+    {
+        return ToSrgb().ToColor();
+    }
+
     public static bool operator ==(HsvColor left, HsvColor right)
     {
         return left.Equals(right);

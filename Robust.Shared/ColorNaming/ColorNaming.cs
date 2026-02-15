@@ -134,7 +134,7 @@ public static class ColorNaming
     /// <param name="srgb">A Color that is assumed to be in SRGB (the default for most cases)</param>
     public static string Describe(Color srgb, ILocalizationManager localization)
     {
-        var oklch = srgb.ToColors().ToLinear().ToOklab().ToOklch();
+        var oklch = srgb.ToLch();
 
         if (oklch.L >= WhiteLightnessThreshold)
             return localization.GetString(WhiteString);

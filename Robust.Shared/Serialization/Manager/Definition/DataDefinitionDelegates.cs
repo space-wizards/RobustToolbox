@@ -7,8 +7,16 @@ using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.Manager.Definition;
 
+//todo paul make these use the mngr delegates
 [Obsolete("Used only in source generation")]
-public delegate void PopulateDelegateSignature<T>(
+internal delegate void CopyDelegateSignature<T>(
+    T source,
+    ref T target,
+    SerializationHookContext hookCtx,
+    ISerializationContext? context);
+
+[Obsolete("Used only in source generation")]
+internal delegate void PopulateDelegateSignature<T>(
     ref T target,
     MappingDataNode mappingDataNode,
     ISerializationManager serialization,
@@ -17,7 +25,7 @@ public delegate void PopulateDelegateSignature<T>(
 );
 
 [Obsolete("Used only in source generation")]
-public delegate void SerializeDelegateSignature<T>(
+internal delegate void SerializeDelegateSignature<T>(
     T obj,
     MappingDataNode mapping,
     ISerializationManager serialization,
@@ -27,7 +35,7 @@ public delegate void SerializeDelegateSignature<T>(
 );
 
 [Obsolete("Used only in source generation")]
-public delegate void ValidateAllFieldsDelegate(
+internal delegate void ValidateAllFieldsDelegate(
     Dictionary<string, ValidationNode> nodes,
     MappingDataNode node,
     ISerializationManager serialization,

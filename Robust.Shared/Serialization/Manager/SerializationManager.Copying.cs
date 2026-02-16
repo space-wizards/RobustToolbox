@@ -338,7 +338,7 @@ public sealed partial class SerializationManager
         return copy;
     }
 
-    private T CreateCopyInternal<T>(T source, SerializationHookContext hookCtx, ISerializationContext context, DataDefinition<T>? definition) where T : notnull, ISerializationGenerated<T>
+    private T CreateCopyInternal<T>(T source, SerializationHookContext hookCtx, ISerializationContext context, DataDefinition<T>? definition) where T : ISerializationGenerated<T>
     {
         if (source is DataNode node)
             return (T)(object)node.Copy();

@@ -294,9 +294,11 @@ namespace Robust.Shared.Serialization.Manager
         private DataDefinition CreateDataDefinition(Type t, bool isRecord)
         {
             return (DataDefinition)typeof(DataDefinition<>).MakeGenericType(t)
-                .GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, new[]
-                    { typeof(SerializationManager), typeof(bool) })!
-                .Invoke(new object[]{this, isRecord});
+                .GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic,
+                [
+                    typeof(SerializationManager), typeof(bool)
+                ])!
+                .Invoke([this, isRecord]);
         }
 
         public void Shutdown()
@@ -322,9 +324,7 @@ namespace Robust.Shared.Serialization.Manager
 
         internal DataDefinition? GetDefinition(Type type)
         {
-            return _dataDefinitions.TryGetValue(type, out var dataDefinition)
-                ? dataDefinition
-                : null;
+            return _dataDefinitions.GetValueOrDefault(type);
         }
 
         internal bool TryGetDefinition<T>([NotNullWhen(true)] out DataDefinition<T>? dataDefinition) where T : ISerializationGenerated<T>

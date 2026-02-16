@@ -19,6 +19,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     internal partial class DataDefinition<T>
     {
+        [Obsolete]
         private PopulateDelegateSignature<T> EmitPopulateDelegate(SerializationManager manager)
         {
             var isServer = manager.DependencyCollection.Resolve<INetManager>().IsServer;
@@ -167,6 +168,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 contextParam).Compile();
         }
 
+        [Obsolete]
         private SerializeDelegateSignature<T> EmitSerializeDelegate(SerializationManager manager)
         {
             var isServer = manager.DependencyCollection.Resolve<INetManager>().IsServer;

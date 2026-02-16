@@ -238,14 +238,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     .Invoke(null, null)!;
 
                 Serialize = serialize;
+                CopyTo = default!;
             }
             else
             {
                 Populate = EmitPopulateDelegate(manager);
                 Serialize = EmitSerializeDelegate(manager);
+                CopyTo = EmitCopyDelegate(manager);
             }
-
-            CopyTo = EmitCopyDelegate(manager);
         }
 
         private string[] Duplicates { get; }

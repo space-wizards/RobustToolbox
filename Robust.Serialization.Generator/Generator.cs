@@ -257,16 +257,38 @@ public class Generator : IIncrementalGenerator
 
          var builder = new StringBuilder();
 
-         if (NeedsEmptyConstructor(definition.Type))
+         if (NeedsEmptyConstructor(definition.Type, out var shortestMandatoryConstructor))
          {
+             var thisCall = new StringBuilder();
+             if (shortestMandatoryConstructor != null)
+             {
+                 thisCall.Append(" : this(");
+                 foreach (var parameter in shortestMandatoryConstructor.Parameters)
+                 {
+                     thisCall.Append($"({parameter.Type.ToDisplayString()}) default!,");
+                 }
+
+                 if (thisCall[thisCall.Length - 1] == ',')
+                     thisCall = thisCall.Remove(thisCall.Length - 1, 1);
+
+                 thisCall.Append(')');
+             }
+
+             var requiredFields = new StringBuilder();
+             foreach (var member in GetRequiredFieldsProperties(definition.Type))
+             {
+                 requiredFields.AppendLine($"{member.Name} = default!;");
+             }
+
              builder.AppendLine($$"""
-                                  // Implicit constructor
-                                  #pragma warning disable CS8618
-                                  public {{definition.Type.Name}}()
-                                  #pragma warning restore CS8618
-                                  {
-                                  }
-                                  """);
+                 // Implicit constructor
+                 #pragma warning disable CS8618
+                 public {{definition.Type.Name}}(){{thisCall}}
+                 #pragma warning restore CS8618
+                 {
+                    {{requiredFields}}
+                 }
+                 """);
          }
 
          return builder.ToString();
@@ -396,14 +418,26 @@ public class Generator : IIncrementalGenerator
         }
         else
         {
+            var requiredFields = new StringBuilder();
+            foreach (var member in GetRequiredFieldsProperties(definition.Type))
+            {
+                requiredFields.AppendLine($"{member.Name} = default!,");
+            }
+
+            if (requiredFields.Length > 0)
+            {
+                requiredFields.Insert(0, '{');
+                requiredFields.Append('}');
+            }
+
             builder.AppendLine($$"""
-                                 /// <seealso cref="ISerializationManager.CreateCopy"/>
-                                 [Obsolete("Use ISerializationManager.CreateCopy instead")]
-                                 public {{modifiers}} {{definition.GenericTypeName}} Instantiate()
-                                 {
-                                     return new {{definition.GenericTypeName}}();
-                                 }
-                                 """);
+                /// <seealso cref="ISerializationManager.CreateCopy"/>
+                [Obsolete("Use ISerializationManager.CreateCopy instead")]
+                public {{modifiers}} {{definition.GenericTypeName}} Instantiate()
+                {
+                    return new {{definition.GenericTypeName}}(){{requiredFields}};
+                }
+                """);
         }
 
         foreach (var interfaceName in InternalGetImplicitDataDefinitionInterfaces(definition.Type, false))

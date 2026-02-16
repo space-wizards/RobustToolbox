@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -10,6 +11,7 @@ internal static class Types
 {
     private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
+    private const string MeansDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.MeansDataDefinitionAttribute";
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string CopyByRefNamespace = "Robust.Shared.Serialization.Manager.Attributes.CopyByRefAttribute";
     private const string DataFieldAttributeName = "Robust.Shared.Serialization.Manager.Attributes.DataFieldAttribute";
@@ -142,8 +144,20 @@ internal static class Types
 
     internal static bool IsImplicitDataDefinition(ITypeSymbol type)
     {
-        if (HasAttribute(type, ImplicitDataDefinitionNamespace))
-            return true;
+        foreach (var attribute in type.GetAttributes())
+        {
+            if (attribute.AttributeClass is not { } attributeClass)
+                continue;
+
+            if (attributeClass.ToDisplayString() == ImplicitDataDefinitionNamespace)
+                return true;
+
+            foreach (var subAttribute in attributeClass.GetAttributes())
+            {
+                if (subAttribute.AttributeClass?.ToDisplayString() == MeansDataDefinitionNamespace)
+                    return true;
+            }
+        }
 
         foreach (var baseType in GetBaseTypes(type))
         {
@@ -344,28 +358,29 @@ internal static class Types
         {
             return field.IsReadOnly;
         }
-        else if (member is IPropertySymbol property)
+
+        if (member is IPropertySymbol property)
         {
             if (property.SetMethod == null)
                 return true;
 
             if (property.SetMethod.IsInitOnly)
                 return type.IsReferenceType;
-
-            return false;
         }
 
         return false;
     }
 
-    internal static bool NeedsEmptyConstructor(ITypeSymbol type)
+    internal static bool NeedsEmptyConstructor(ITypeSymbol type, out IMethodSymbol? shortestMandatoryConstructor)
     {
+        shortestMandatoryConstructor = null;
         if (type is not INamedTypeSymbol named)
             return false;
 
-        if (named.InstanceConstructors.Length == 0)
+        if (named.InstanceConstructors.Length == 0 || named.InstanceConstructors.All(c => c.IsImplicitlyDeclared))
             return true;
 
+        var mandatoryThisCall = false;
         foreach (var constructor in named.InstanceConstructors)
         {
             if (constructor.Parameters.Length == 0 &&
@@ -373,7 +388,29 @@ internal static class Types
             {
                 return false;
             }
+
+            // Record with no user-declared constructor
+            if (type.IsRecord &&
+                constructor.Parameters.Length == 1 &&
+                constructor.IsImplicitlyDeclared &&
+                named.InstanceConstructors.All(c => c.IsImplicitlyDeclared))
+            {
+                return false;
+            }
+
+            if (!constructor.IsImplicitlyDeclared &&
+                (shortestMandatoryConstructor == null ||
+                shortestMandatoryConstructor.Parameters.Length > constructor.Parameters.Length))
+            {
+                shortestMandatoryConstructor = constructor;
+            }
+
+            if (constructor is { IsImplicitlyDeclared: true, Parameters.Length: > 0 })
+                mandatoryThisCall = true;
         }
+
+        if (!mandatoryThisCall)
+            shortestMandatoryConstructor = null;
 
         return true;
     }
@@ -443,5 +480,22 @@ internal static class Types
             typeName = typeName.Substring(0, typeName.Length - 1);
 
         return typeName;
+    }
+
+    internal static IEnumerable<ISymbol> GetRequiredFieldsProperties(ITypeSymbol type)
+    {
+        foreach (var member in type.GetMembers())
+        {
+            if (member.IsImplicitlyDeclared)
+                continue;
+
+            if (member is not IFieldSymbol { IsRequired: true } &&
+                member is not IPropertySymbol { IsRequired: true })
+            {
+                continue;
+            }
+
+            yield return member;
+        }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.Metrics;
 using Robust.Client.Audio;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Configuration;
@@ -36,6 +37,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
+using Robust.Shared.DataMetrics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -112,6 +114,8 @@ namespace Robust.Client
             deps.Register<ILocalizationManagerInternal, ClientLocalizationManager>();
             deps.Register<LoadingScreenManager>();
             deps.Register<ILoadingScreenManager, LoadingScreenManager>();
+            deps.Register<IMeterFactory, MeterFactory>();
+            deps.Register<IMeterFactoryInternal, MeterFactory>();
 
             switch (mode)
             {

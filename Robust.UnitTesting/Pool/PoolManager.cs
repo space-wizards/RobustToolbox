@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -15,6 +16,8 @@ namespace Robust.UnitTesting.Pool;
 
 public abstract class BasePoolManager
 {
+    internal static readonly Meter MetricsMeter = new("Robust.UnitTesting.PoolManager");
+
     internal abstract void Return(ITestPair pair);
     public abstract Assembly[] ClientAssemblies { get; }
     public abstract Assembly[] ServerAssemblies { get; }
@@ -50,6 +53,16 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
 
     public override Assembly[] ClientAssemblies => _clientAssemblies;
     public override Assembly[] ServerAssemblies => _serverAssemblies;
+
+    protected PoolManager()
+    {
+        MetricsMeter.CreateObservableGauge(
+            "pair_count",
+            MeasurePairCount,
+            null,
+            null,
+            tags: [new KeyValuePair<string, object?>("type", typeof(TPair).FullName)]);
+    }
 
     /// <summary>
     /// Initialize the pool manager. Override this to configure what assemblies should get loaded.
@@ -329,5 +342,24 @@ we are just going to end this here to save a lot of time. This is the exception 
                 TestPrototypes.Add(str);
             }
         }
+    }
+
+    private IEnumerable<Measurement<int>> MeasurePairCount()
+    {
+        var inUse = 0;
+        var notInUse = 0;
+        lock (_pairLock)
+        {
+            foreach (var useBool in Pairs.Values)
+            {
+                if (useBool)
+                    inUse += 1;
+                else
+                    notInUse += 1;
+            }
+        }
+
+        yield return new Measurement<int>(inUse, new KeyValuePair<string, object?>("in_use", "true"));
+        yield return new Measurement<int>(notInUse, new KeyValuePair<string, object?>("in_use", "false"));
     }
 }

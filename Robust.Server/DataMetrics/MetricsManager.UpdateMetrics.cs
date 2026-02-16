@@ -23,7 +23,7 @@ internal sealed partial class MetricsManager
 
     private void InitializeUpdateMetrics()
     {
-        _cfg.OnValueChanged(
+        Cfg.OnValueChanged(
             CVars.MetricsUpdateInterval,
             seconds =>
             {

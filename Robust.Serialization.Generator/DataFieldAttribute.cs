@@ -2,4 +2,12 @@
 
 namespace Robust.Serialization.Generator;
 
-public sealed record DataFieldAttribute(AttributeData Data, string Name, int Priority, bool Include);
+public sealed record DataFieldAttribute(
+    AttributeData Data,
+    string Name,
+    int Priority,
+    bool Include,
+    bool IsDataFieldAttribute,
+    bool Required,
+    bool ServerOnly
+);

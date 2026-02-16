@@ -142,6 +142,18 @@ public sealed partial class SerializationManager
             return true;
         }
 
+        internal bool TryGetTypeNodeSerializerArray<TInterface, TType, TNode>([NotNullWhen(true)] out TInterface? serializer)
+            where TInterface : BaseSerializerInterfaces.ITypeNodeInterface<TType[], TNode>
+            where TNode : DataNode
+        {
+            serializer = default;
+            if (!TryGetTypeNodeSerializer(typeof(TInterface).GetGenericTypeDefinition(), typeof(TType[]), typeof(TNode), out var rawSerializer))
+                return false;
+
+            serializer = (TInterface)rawSerializer;
+            return true;
+        }
+
         public bool TryGetTypeNodeSerializer(Type interfaceType, Type objectType, Type nodeType, [NotNullWhen(true)] out object? serializer)
         {
             lock (_lock)

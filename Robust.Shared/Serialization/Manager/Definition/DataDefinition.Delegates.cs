@@ -7,12 +7,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
     internal partial class DataDefinition<T>
     {
         //todo paul make these use the mngr delegates
-        public delegate void PopulateDelegateSignature(
-            ref T target,
-            MappingDataNode mappingDataNode,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context);
-
         public delegate MappingDataNode SerializeDelegateSignature(
             T obj,
             ISerializationContext? context,

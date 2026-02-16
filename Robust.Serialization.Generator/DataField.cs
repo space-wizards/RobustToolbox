@@ -18,4 +18,7 @@ public enum CustomSerializerType
     MappingValidator = 1 << 2,
     SequenceValidator = 1 << 3,
     ValueValidator = 1 << 4,
+    MappingReader = 1 << 5,
+    SequenceReader = 1 << 6,
+    ValueReader = 1 << 7,
 }

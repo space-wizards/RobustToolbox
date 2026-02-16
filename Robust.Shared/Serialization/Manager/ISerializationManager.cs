@@ -14,6 +14,8 @@ namespace Robust.Shared.Serialization.Manager
     {
         public delegate T InstantiationDelegate<out T>();
 
+        bool IsServer { get; }
+
         /// <summary>
         ///     Initializes the serialization manager.
         /// </summary>

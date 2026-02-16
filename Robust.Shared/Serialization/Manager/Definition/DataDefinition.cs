@@ -28,7 +28,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
         public abstract bool TryGetDuplicates([NotNullWhen(true)] out string[] duplicates);
     }
 
-    internal sealed partial class DataDefinition<T> : DataDefinition where T : notnull
+    internal sealed partial class DataDefinition<T> : DataDefinition
     {
         private readonly struct FieldInterfaceInfo
         {
@@ -49,7 +49,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             }
         }
 
-        internal readonly PopulateDelegateSignature Populate;
+        internal readonly PopulateDelegateSignature<T> Populate;
         internal readonly SerializeDelegateSignature Serialize;
         internal readonly CopyDelegateSignature CopyTo;
 
@@ -193,7 +193,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
             FieldAccessors = fieldAccessors.ToImmutableArray();
 
             //has to be done after fieldinterfaceinfos are done
-            if (typeof(T).IsAssignableTo(typeof(ISerializationGenerated<T>)))
+            var generated = typeof(T).IsAssignableTo(typeof(ISerializationGenerated<T>));
+            if (generated)
             {
 #pragma warning disable CS0618 // Type or member is obsolete
                 var method = (ValidateAllFieldsDelegate) typeof(T).GetMethod(
@@ -214,7 +215,22 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             FieldValidators = fieldValidators.ToImmutableArray();
 
-            Populate = EmitPopulateDelegate(manager);
+            if (generated)
+            {
+#pragma warning disable CS0618 // Type or member is obsolete
+                var method = (PopulateDelegateSignature<T>) typeof(T).GetMethod(
+#pragma warning restore CS0618 // Type or member is obsolete
+                        nameof(ISerializationGenerated<>.RobustReadDelegate),
+                        BindingFlags.Static | BindingFlags.Public)!
+                    .Invoke(null, null)!;
+
+                Populate = method;
+            }
+            else
+            {
+                Populate = EmitPopulateDelegate(manager);
+            }
+
             Serialize = EmitSerializeDelegate(manager);
             CopyTo = EmitCopyDelegate(manager);
         }

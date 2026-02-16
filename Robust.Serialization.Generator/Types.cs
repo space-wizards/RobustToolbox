@@ -40,32 +40,48 @@ internal static class Types
         string? name = null;
         var priorityIndex = 0;
         var include = false;
+        var isDataFieldAttribute = false;
+        var required = false;
+        var serverOnly = false;
+
+        // (string? tag = null, bool readOnly = false, int priority = 1, bool required = false, bool serverOnly = false, Type? customTypeSerializer = null)
         if (data.AttributeClass.ToDisplayString().Contains(DataFieldAttributeName))
         {
             name = (string?) data.ConstructorArguments[0].Value;
             priorityIndex = 2;
+            isDataFieldAttribute = true;
+            required = (bool) data.ConstructorArguments[3].Value!;
+            serverOnly = (bool) data.ConstructorArguments[4].Value!;
         }
+        // (int priority = 1, Type? customTypeSerializer = null)
         else if (data.AttributeClass.ToDisplayString().Contains(IdDataFieldAttributeName))
         {
             name = "id";
             priorityIndex = 0;
+            isDataFieldAttribute = true;
         }
+        // (Type prototypeIdSerializer, int priority = 1)
         else if (data.AttributeClass.ToDisplayString().Contains(ParentDataFieldAttributeName))
         {
             name = "parent";
             priorityIndex = 1;
+            isDataFieldAttribute = true;
         }
+        // (int priority = 1)
         else if (data.AttributeClass.ToDisplayString().Contains(AbstractDataFieldAttributeName))
         {
             name = "abstract";
             priorityIndex = 0;
+            isDataFieldAttribute = true;
         }
+        // (bool readOnly = false, int priority = 1, bool serverOnly = false, Type? customTypeSerializer = null)
         else if (data.AttributeClass.ToDisplayString().Contains(IncludeDataFieldAttributeName))
         {
             var span = fieldName.AsSpan();
             name = $"{char.ToLowerInvariant(span[0])}{span.Slice(1).ToString()}";
             priorityIndex = 1;
             include = true;
+            serverOnly = (bool) data.ConstructorArguments[2].Value!;
         }
 
         if (string.IsNullOrWhiteSpace(name))
@@ -74,7 +90,15 @@ internal static class Types
             name = $"{char.ToLowerInvariant(span[0])}{span.Slice(1).ToString()}";
         }
 
-        return new DataFieldAttribute(data, name!, (int) data.ConstructorArguments[priorityIndex].Value!, include);
+        return new DataFieldAttribute(
+            data,
+            name!,
+            (int)data.ConstructorArguments[priorityIndex].Value!,
+            include,
+            isDataFieldAttribute,
+            required,
+            serverOnly
+        );
     }
 
     internal static bool IsDataField(ISymbol member, out ITypeSymbol type, [NotNullWhen(true)] out DataFieldAttribute? attribute)
@@ -399,7 +423,8 @@ internal static class Types
 
         isNullableValueType = IsNullableValueType(type);
         var nonNullableTypeName = type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
-        if (isNullableValueType) nonNullableTypeName = typeName.Substring(0, typeName.Length - 1);
+        if (isNullableValueType)
+            nonNullableTypeName = typeName.Substring(0, typeName.Length - 1);
 
         return (typeName, nonNullableTypeName);
     }

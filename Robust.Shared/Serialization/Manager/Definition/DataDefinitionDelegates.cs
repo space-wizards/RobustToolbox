@@ -7,6 +7,14 @@ using Robust.Shared.Serialization.Markdown.Validation;
 namespace Robust.Shared.Serialization.Manager.Definition;
 
 [Obsolete("Used only in source generation")]
+public delegate void PopulateDelegateSignature<T>(
+    ref T target,
+    MappingDataNode mappingDataNode,
+    ISerializationManager serialization,
+    SerializationHookContext hookCtx,
+    ISerializationContext? context);
+
+[Obsolete("Used only in source generation")]
 public delegate void ValidateAllFieldsDelegate(
     Dictionary<string, ValidationNode> nodes,
     MappingDataNode node,

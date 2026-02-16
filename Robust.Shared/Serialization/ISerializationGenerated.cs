@@ -47,6 +47,23 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
     {
         throw new NotImplementedException();
     }
+
+    [Obsolete("Use ISerializationManager.Read instead")]
+    static virtual void Read(
+        ref T target,
+        MappingDataNode mappingDataNode,
+        ISerializationManager serialization,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context)
+    {
+        throw new NotImplementedException();
+    }
+
+    [Obsolete("Use ISerializationManager.Read instead")]
+    static virtual PopulateDelegateSignature<T> RobustReadDelegate()
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public interface ISerializationGenerated

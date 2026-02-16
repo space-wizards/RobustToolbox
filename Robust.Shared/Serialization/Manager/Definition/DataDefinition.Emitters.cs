@@ -18,14 +18,13 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     internal partial class DataDefinition<T>
     {
-        private PopulateDelegateSignature EmitPopulateDelegate(SerializationManager manager)
+        private PopulateDelegateSignature<T> EmitPopulateDelegate(SerializationManager manager)
         {
             var isServer = manager.DependencyCollection.Resolve<INetManager>().IsServer;
 
-            var managerConst = Expression.Constant(manager);
-
             var targetParam = Expression.Parameter(typeof(T).MakeByRefType());
             var mappingDataParam = Expression.Parameter(typeof(MappingDataNode));
+            var managerParam = Expression.Parameter(typeof(ISerializationManager));
             var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext));
             var contextParam = Expression.Parameter(typeof(ISerializationContext));
 
@@ -57,7 +56,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(
                                     Expression.Call(
-                                        managerConst,
+                                        managerParam,
                                         "Read",
                                         new []{fieldType, typeof(ValueDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                                         Expression.Convert(nodeVariable, typeof(ValueDataNode)),
@@ -72,7 +71,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     {
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(Expression.Call(
-                                    managerConst,
+                                    managerParam,
                                     "Read",
                                     new []{fieldType, typeof(SequenceDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                                     Expression.Convert(nodeVariable, typeof(SequenceDataNode)),
@@ -87,7 +86,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     {
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(Expression.Call(
-                                    managerConst,
+                                    managerParam,
                                     "Read",
                                     new []{fieldType, typeof(MappingDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                                     Expression.Convert(nodeVariable, typeof(MappingDataNode)),
@@ -107,14 +106,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         isNullable
                             ? Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable,
-                                    SerializationManager.GetNullExpression(managerConst, fieldType)))
+                                    SerializationManager.GetNullExpression(managerParam, fieldType)))
                             : ExpressionUtils.ThrowExpression<NullNotAllowedException>(),
                         call);
                 }
                 else
                 {
                     call = Expression.Assign(valueVariable, Expression.Call(
-                        managerConst,
+                        managerParam,
                         "Read",
                         new[] { fieldDefinition.FieldType },
                         nodeVariable,
@@ -158,10 +157,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
             }
 
-            return Expression.Lambda<PopulateDelegateSignature>(
+            return Expression.Lambda<PopulateDelegateSignature<T>>(
                 Expression.Block(expressions),
                 targetParam,
                 mappingDataParam,
+                managerParam,
                 hookCtxParam,
                 contextParam).Compile();
         }

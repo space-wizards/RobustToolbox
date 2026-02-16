@@ -9,16 +9,19 @@ using System.Text;
 using System.Threading.Tasks;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Definition;
+using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
     public sealed partial class SerializationManager : ISerializationManager
     {
+        [Dependency] private readonly INetManager _net = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         public IReflectionManager ReflectionManager => _reflectionManager;
@@ -36,6 +39,8 @@ namespace Robust.Shared.Serialization.Manager
         [field: IoC.Dependency]
         public IDependencyCollection DependencyCollection { get; } = default!;
 
+        public bool IsServer { get; private set; }
+
         public void Initialize()
         {
             if (_initializing)
@@ -44,7 +49,18 @@ namespace Robust.Shared.Serialization.Manager
             if (_initialized)
                 throw new InvalidOperationException($"{nameof(SerializationManager)} has already been initialized.");
 
+            IsServer = _net.IsServer;
             _initializing = true;
+
+            _read = typeof(SerializationManager)
+                .GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                .First(m => m.Name == nameof(Read) &&
+                            m.GetGenericArguments().Length == 1 &&
+                            GetParametersBase(m)
+                                .SequenceEqual([
+                                    typeof(DataNode), typeof(SerializationHookContext), typeof(ISerializationContext),
+                                    typeof(ISerializationManager.InstantiationDelegate<>), typeof(bool)
+                                ]));
 
             var flagsTypes = new ConcurrentBag<Type>();
             var constantsTypes = new ConcurrentBag<Type>();
@@ -299,7 +315,7 @@ namespace Robust.Shared.Serialization.Manager
             _initialized = false;
         }
 
-        internal DataDefinition<T>? GetDefinition<T>() where T : notnull
+        internal DataDefinition<T>? GetDefinition<T>()
         {
             return GetDefinition(typeof(T)) as DataDefinition<T>;
         }
@@ -311,7 +327,7 @@ namespace Robust.Shared.Serialization.Manager
                 : null;
         }
 
-        internal bool TryGetDefinition<T>([NotNullWhen(true)] out DataDefinition<T>? dataDefinition) where T : notnull
+        internal bool TryGetDefinition<T>([NotNullWhen(true)] out DataDefinition<T>? dataDefinition)
         {
             dataDefinition = GetDefinition<T>();
             return dataDefinition != null;
@@ -375,6 +391,15 @@ namespace Robust.Shared.Serialization.Manager
                 ctx.DeferQueue.TryWrite(instance);
             else
                 instance.AfterDeserialization();
+        }
+
+        private static IEnumerable<Type> GetParametersBase(MethodInfo method)
+        {
+            return method.GetParameters()
+                .Select(p =>
+                    p.ParameterType.IsGenericType
+                        ? p.ParameterType.GetGenericTypeDefinition()
+                        : p.ParameterType);
         }
 #pragma warning restore CS0618
     }

@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -245,7 +246,8 @@ public sealed partial class SerializationManager
         if(definition == null)
             throw new InvalidOperationException($"No data definition found for type {typeof(T)} when writing");
 
-        var mapping = definition.Serialize(value, context, alwaysWrite);
+        var mapping = new MappingDataNode();
+        definition.Serialize(value, mapping, this, context, alwaysWrite, definition.DefaultValuesDict);
 
         return mapping;
     }

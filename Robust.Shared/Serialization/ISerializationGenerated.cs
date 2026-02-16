@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
@@ -61,6 +62,24 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
 
     [Obsolete("Use ISerializationManager.Read instead")]
     static virtual PopulateDelegateSignature<T> RobustReadDelegate()
+    {
+        throw new NotImplementedException();
+    }
+
+    [Obsolete("Use ISerializationManager.Write instead")]
+    static virtual MappingDataNode Write(
+        T obj,
+        MappingDataNode mapping,
+        ISerializationManager serialization,
+        ISerializationContext? context,
+        bool alwaysWrite,
+        ImmutableDictionary<string, object?> defaultValues)
+    {
+        throw new NotImplementedException();
+    }
+
+    [Obsolete("Use ISerializationManager.Write instead")]
+    static virtual SerializeDelegateSignature<T> RobustWriteDelegate()
     {
         throw new NotImplementedException();
     }

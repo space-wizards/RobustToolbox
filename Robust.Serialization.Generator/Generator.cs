@@ -16,6 +16,7 @@ public class Generator : IIncrementalGenerator
     private const string TypeCopyCreatorInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator";
     private const string TypeValidatorInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator";
     private const string TypeReaderInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader";
+    private const string TypeWriterInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter";
     private const string SerializationHooksNamespace = "Robust.Shared.Serialization.ISerializationHooks";
     private const string AutoStateAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
     private const string ComponentDeltaInterfaceName = "Robust.Shared.GameObjects.IComponentDelta";
@@ -109,6 +110,7 @@ public class Generator : IIncrementalGenerator
             #nullable enable
             using System;
             using System.Collections.Generic;
+            using System.Collections.Immutable;
             using Robust.Shared.Analyzers;
             using Robust.Shared.IoC;
             using Robust.Shared.GameObjects;
@@ -142,6 +144,8 @@ public class Generator : IIncrementalGenerator
                 {{GetValidators(definition)}}
 
                 {{GetReaders(definition)}}
+
+                {{GetWriters(definition)}}
             }
 
             {{containingTypesEnd}}
@@ -213,6 +217,8 @@ public class Generator : IIncrementalGenerator
                             }
                         }
                     }
+
+                    if (ImplementsInterface(customSerializer, TypeWriterInterfaceNamespace, symbols)) serializerType |= Writer;
 
                     if (serializerType != None)
                     {
@@ -429,7 +435,7 @@ public class Generator : IIncrementalGenerator
 
             var field = definition.Fields[i];
             var fieldTypeName = GetNonNullableNameForGenericParameter(field.Type);
-            var tagName = field.Attribute.Name;
+            var tagName = field.Attribute.Tag;
             if (field.Attribute.Include)
             {
                 builder.AppendLine($"var node{i} = node;");
@@ -502,7 +508,7 @@ public class Generator : IIncrementalGenerator
             """;
     }
 
-    public static string GetReaders(DataDefinition definition)
+    private static string GetReaders(DataDefinition definition)
     {
         var builder = new StringBuilder();
         var structCopier = new StringBuilder();
@@ -522,13 +528,11 @@ public class Generator : IIncrementalGenerator
             }
 
             var fieldName = field.Symbol.Name;
-            builder.AppendLine($"""
-            {tempTypeName} {fieldName}Temp = target.{fieldName};
-            """);
+            builder.AppendLine($"{tempTypeName} {fieldName}Temp = target.{fieldName};");
             if (field.Attribute.IsDataFieldAttribute)
             {
                 builder.AppendLine($$"""
-                    if (mappingDataNode.TryGet("{{field.Attribute.Name}}", out var node{{i}}))
+                    if (mappingDataNode.TryGet("{{field.Attribute.Tag}}", out var node{{i}}))
                     {
                     """);
             }
@@ -541,9 +545,9 @@ public class Generator : IIncrementalGenerator
             }
 
             var (fieldTypeName, nonNullableFieldTypeName) = GetCleanNameForGenericType(field.Type, out var isNullableValueType);
-            var tagName = field.Attribute.Name;
+            var tagName = field.Attribute.Tag;
             var reader = field.CustomSerializer;
-            var validatorName = reader?.Serializer.ToDisplayString();
+            var readerName = reader?.Serializer.ToDisplayString();
             var nullable = field.Type.NullableAnnotation == NullableAnnotation.Annotated ||
                            field.Type.ToDisplayString().EndsWith("?");
             var nullableString = string.Empty;
@@ -582,7 +586,7 @@ public class Generator : IIncrementalGenerator
                 {
                     builder.AppendLine($"""
                         case MappingDataNode mapping:
-                            {fieldName}Temp = target.{field.Symbol.Name} = serialization.Read<{nonNullableFieldTypeName}, MappingDataNode, {validatorName}>(mapping, hookCtx, context, null{nullableString});
+                            {fieldName}Temp = target.{field.Symbol.Name} = serialization.Read<{nonNullableFieldTypeName}, MappingDataNode, {readerName}>(mapping, hookCtx, context, null{nullableString});
                             break;
                         """);
                 }
@@ -591,7 +595,7 @@ public class Generator : IIncrementalGenerator
                 {
                     builder.AppendLine($"""
                         case SequenceDataNode sequence:
-                            {fieldName}Temp = serialization.Read<{nonNullableFieldTypeName}, SequenceDataNode, {validatorName}>(sequence, hookCtx, context, null{nullableString});
+                            {fieldName}Temp = serialization.Read<{nonNullableFieldTypeName}, SequenceDataNode, {readerName}>(sequence, hookCtx, context, null{nullableString});
                             break;
                         """);
                 }
@@ -600,7 +604,7 @@ public class Generator : IIncrementalGenerator
                 {
                     builder.AppendLine($"""
                         case ValueDataNode value:
-                            {fieldName}Temp = serialization.Read<{nonNullableFieldTypeName}, ValueDataNode, {validatorName}>(value, hookCtx, context, null{nullableString});
+                            {fieldName}Temp = serialization.Read<{nonNullableFieldTypeName}, ValueDataNode, {readerName}>(value, hookCtx, context, null{nullableString});
                             break;
                         """);
                 }
@@ -679,6 +683,152 @@ public class Generator : IIncrementalGenerator
             {
                 return (ref target, node, serialization, hookCtx, context) =>
                     Read(ref target, node, serialization, hookCtx, context);
+            }
+            """;
+    }
+
+    private static string GetWriters(DataDefinition definition)
+    {
+        var builder = new StringBuilder();
+        for (var i = 0; i < definition.Fields.Count; i++)
+        {
+            var field = definition.Fields[i];
+            if (field.Attribute.ReadOnly)
+                continue;
+
+            var fieldType = field.Type.ToDisplayString();
+            if (IsMultidimensionalArray(field.Type))
+                fieldType = fieldType.Replace("*", "");
+
+            if (field.Type.NullableAnnotation == NullableAnnotation.Annotated &&
+                !fieldType.EndsWith("?"))
+            {
+                fieldType += "?";
+            }
+
+            var nonNullableFieldType = GetNonNullableNameForGenericParameter(field.Type);
+            var nullable = fieldType.EndsWith("?");
+            var nullableString = string.Empty;
+            if (!field.Type.IsValueType)
+            {
+                if (!nullable)
+                    nullableString = ", true";
+
+                if (nonNullableFieldType.EndsWith("?"))
+                    nonNullableFieldType = nonNullableFieldType.Substring(0, nonNullableFieldType.Length - 1);
+            }
+
+            if (field.Attribute.ServerOnly)
+            {
+                builder.AppendLine("""
+                    if (serialization.IsServer)
+                    {
+                    """);
+            }
+
+            if (!field.Attribute.IsDataFieldAttribute || !field.Attribute.Required)
+            {
+                builder.AppendLine($$"""
+                if (alwaysWrite || !EqualityComparer<{{fieldType}}>.Default.Equals(obj.{{field.Symbol.Name}}, ({{fieldType}}) defaultValues["{{field.Attribute.Tag}}"]!))
+                {
+                """);
+            }
+
+            builder.AppendLine($"""DataNode node{i};""");
+
+            if (field.Attribute.IsDataFieldAttribute)
+            {
+                builder.AppendLine($$"""
+                if (!mapping.Has("{{field.Attribute.Tag}}"))
+                {
+                """);
+            }
+
+            if (field.CustomSerializer is { } serializer &&
+                (serializer.Type & Writer) != 0)
+            {
+                var nullableValueType = field.Type.IsValueType && nullable;
+                if (nullableValueType)
+                {
+                    builder.AppendLine($$"""
+                    if (obj.{{field.Symbol.Name}} == null)
+                    {
+                        node{{i}} = ValueDataNode.Null();
+                    }
+                    else
+                    {
+                    """);
+                }
+
+                var nullableValueTypeString = nullableValueType ? ".Value" : string.Empty;
+                var writerName = serializer.Serializer.ToDisplayString();
+                builder.AppendLine($"""
+                    #pragma warning disable RA0008 notNullableOverride
+                    node{i} = serialization.WriteValue<{nonNullableFieldType}, {writerName}>(obj.{field.Symbol.Name}{nullableValueTypeString}!, alwaysWrite, context{nullableString});
+                    #pragma warning disable RA0008
+                    """);
+
+                if (nullableValueType)
+                    builder.Append("}");
+            }
+            else
+            {
+                builder.AppendLine($"""
+                    node{i} = serialization.WriteValue<{fieldType}>(obj.{field.Symbol.Name}, alwaysWrite, context{nullableString});
+                    """);
+            }
+
+            if (field.Attribute.IsDataFieldAttribute)
+            {
+                builder.AppendLine($$"""
+                        mapping.Add("{{field.Attribute.Tag}}", node{{i}});
+                    }
+                    """);
+            }
+            else
+            {
+                builder.AppendLine($$"""
+                        if (node{{i}} is MappingDataNode mapping{{i}})
+                        {
+                            mapping.Insert(mapping{{i}}, true);
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"Writing field {{field.Symbol.Name}} for type {typeof({{definition.GenericTypeName}})} did not return a {nameof(MappingDataNode)} but was annotated to be included.");
+                        }
+                    """);
+            }
+
+            if (!field.Attribute.IsDataFieldAttribute || !field.Attribute.Required)
+                builder.AppendLine("}");
+
+            if (field.Attribute.ServerOnly)
+                builder.AppendLine("}");
+
+            var baseType = definition.Type.BaseType;
+            if (IsDataDefinition(baseType))
+            {
+                var baseTypeName = baseType.ToDisplayString();
+                builder.AppendLine($"{baseTypeName}.Write(obj, mapping, serialization, context, alwaysWrite, defaultValues);");
+            }
+        }
+
+        return $$"""
+            public static void Write(
+                {{definition.GenericTypeName}} obj,
+                MappingDataNode mapping,
+                ISerializationManager serialization,
+                ISerializationContext? context,
+                bool alwaysWrite,
+                ImmutableDictionary<string, object?> defaultValues)
+            {
+                {{builder}}
+            }
+
+            public static SerializeDelegateSignature<{{definition.GenericTypeName}}> RobustWriteDelegate()
+            {
+                return (obj, mapping, serialization, context, alwaysWrite, defaultValues) =>
+                    Write(obj, mapping, serialization, context, alwaysWrite, defaultValues);
             }
             """;
     }

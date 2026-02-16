@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -166,23 +167,18 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 contextParam).Compile();
         }
 
-        private SerializeDelegateSignature EmitSerializeDelegate(SerializationManager manager)
+        private SerializeDelegateSignature<T> EmitSerializeDelegate(SerializationManager manager)
         {
-            var managerConst = Expression.Constant(manager);
             var isServer = manager.DependencyCollection.Resolve<INetManager>().IsServer;
 
             var objParam = Expression.Parameter(typeof(T));
+            var mappingDataParam = Expression.Parameter(typeof(MappingDataNode));
+            var managerParam = Expression.Parameter(typeof(ISerializationManager));
             var contextParam = Expression.Parameter(typeof(ISerializationContext));
             var alwaysWriteParam = Expression.Parameter(typeof(bool));
+            var defaultValuesParam = Expression.Parameter(typeof(ImmutableDictionary<string, object?>));
 
             var expressions = new List<Expression>();
-            var mappingDataVar = Expression.Variable(typeof(MappingDataNode));
-
-            expressions.Add(
-                Expression.Assign(
-                    mappingDataVar,
-                    ExpressionUtils.NewExpression<MappingDataNode>()
-                ));
 
             for (var i = BaseFieldDefinitions.Length - 1; i >= 0; i--)
             {
@@ -210,7 +206,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         : Expression.Convert(valueVar, fieldType);
 
                     call = Expression.Call(
-                        managerConst,
+                        managerParam,
                         "WriteValue",
                         new[]{fieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         valueAccess,
@@ -238,7 +234,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 else
                 {
                     call = Expression.Call(
-                        managerConst,
+                        managerParam,
                         "WriteValue",
                         new[] { fieldDefinition.FieldType },
                         valueVar,
@@ -252,12 +248,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 if (fieldDefinition.Attribute is DataFieldAttribute dfa)
                 {
                     writeExpression = Expression.IfThen(Expression.Not(Expression.Call(
-                            mappingDataVar,
+                            mappingDataParam,
                             typeof(MappingDataNode).GetMethod("Has", new[] { typeof(string) })!,
                             Expression.Constant(dfa
                                 .Tag))), //check if this node was already written by a type higher up the includetree
                         Expression.Call(
-                            mappingDataVar,
+                            mappingDataParam,
                             typeof(MappingDataNode).GetMethod("Add", new[] { typeof(string), typeof(DataNode) })!,
                             Expression.Constant(dfa.Tag),
                             nodeVariable));
@@ -266,7 +262,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 {
                     writeExpression = Expression.IfThenElse(Expression.TypeIs(nodeVariable, typeof(MappingDataNode)),
                         Expression.Call(
-                            mappingDataVar,
+                            mappingDataParam,
                             "Insert",
                             Type.EmptyTypes,
                             Expression.Convert(nodeVariable, typeof(MappingDataNode)),
@@ -300,15 +296,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
             }
 
-            expressions.Add(mappingDataVar);
-
-            return Expression.Lambda<SerializeDelegateSignature>(
-                Expression.Block(
-                    new []{mappingDataVar},
-                    expressions),
+            return Expression.Lambda<SerializeDelegateSignature<T>>(
+                Expression.Block(expressions),
                 objParam,
+                mappingDataParam,
+                managerParam,
                 contextParam,
-                alwaysWriteParam).Compile();
+                alwaysWriteParam,
+                defaultValuesParam).Compile();
         }
 
         private CopyDelegateSignature EmitCopyDelegate(SerializationManager manager)

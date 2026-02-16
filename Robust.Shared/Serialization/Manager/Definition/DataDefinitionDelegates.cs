@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -12,7 +13,18 @@ public delegate void PopulateDelegateSignature<T>(
     MappingDataNode mappingDataNode,
     ISerializationManager serialization,
     SerializationHookContext hookCtx,
-    ISerializationContext? context);
+    ISerializationContext? context
+);
+
+[Obsolete("Used only in source generation")]
+public delegate void SerializeDelegateSignature<T>(
+    T obj,
+    MappingDataNode mapping,
+    ISerializationManager serialization,
+    ISerializationContext? context,
+    bool alwaysWrite,
+    ImmutableDictionary<string, object?> defaultValues
+);
 
 [Obsolete("Used only in source generation")]
 public delegate void ValidateAllFieldsDelegate(

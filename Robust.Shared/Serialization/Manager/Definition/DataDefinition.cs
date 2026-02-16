@@ -50,7 +50,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
         }
 
         internal readonly PopulateDelegateSignature<T> Populate;
-        internal readonly SerializeDelegateSignature Serialize;
+        internal readonly SerializeDelegateSignature<T> Serialize;
         internal readonly CopyDelegateSignature CopyTo;
 
         [UsedImplicitly]
@@ -70,6 +70,15 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 attribute.Tag = DataDefinitionUtility.AutoGenerateTag(field.FieldInfo.Name);
             }
 
+            fieldDefs.Sort((a, b) =>
+            {
+                var priority = b.Attribute.Priority.CompareTo(a.Attribute.Priority);
+                if (priority != 0)
+                    return priority;
+
+                return b.FieldInfo.Name.CompareTo(a.FieldInfo.Name, StringComparison.OrdinalIgnoreCase);
+            });
+
             var dataFields = fieldDefs
                 .Select(f => f.Attribute)
                 .OfType<DataFieldAttribute>().ToArray();
@@ -81,20 +90,15 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 .Distinct()
                 .ToArray();
 
-            var fields = fieldDefs;
+            BaseFieldDefinitions = fieldDefs.ToImmutableArray();
 
-            fields.Sort((a, b) =>
-            {
-                var priority = b.Attribute.Priority.CompareTo(a.Attribute.Priority);
-                if (priority != 0)
-                    return priority;
-
-                return b.FieldInfo.Name.CompareTo(a.FieldInfo.Name, StringComparison.OrdinalIgnoreCase);
-            });
-
-            BaseFieldDefinitions = fields.ToImmutableArray();
-
-            DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
+            DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToImmutableArray();
+            DefaultValuesDict = fieldDefs.ToImmutableDictionary(
+                f => f.Attribute is DataFieldAttribute attr
+                    ? attr.Tag ?? f.CamelCasedName
+                    : f.CamelCasedName,
+                f => f.DefaultValue
+            );
             var fieldAssigners = new object[BaseFieldDefinitions.Length];
             var fieldAccessors = new object[BaseFieldDefinitions.Length];
             var fieldValidators = new ValidateFieldDelegate[BaseFieldDefinitions.Length];
@@ -218,25 +222,35 @@ namespace Robust.Shared.Serialization.Manager.Definition
             if (generated)
             {
 #pragma warning disable CS0618 // Type or member is obsolete
-                var method = (PopulateDelegateSignature<T>) typeof(T).GetMethod(
+                var populate = (PopulateDelegateSignature<T>) typeof(T).GetMethod(
 #pragma warning restore CS0618 // Type or member is obsolete
                         nameof(ISerializationGenerated<>.RobustReadDelegate),
                         BindingFlags.Static | BindingFlags.Public)!
                     .Invoke(null, null)!;
 
-                Populate = method;
+                Populate = populate;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+                var serialize = (SerializeDelegateSignature<T>) typeof(T).GetMethod(
+#pragma warning restore CS0618 // Type or member is obsolete
+                        nameof(ISerializationGenerated<>.RobustWriteDelegate),
+                        BindingFlags.Static | BindingFlags.Public)!
+                    .Invoke(null, null)!;
+
+                Serialize = serialize;
             }
             else
             {
                 Populate = EmitPopulateDelegate(manager);
+                Serialize = EmitSerializeDelegate(manager);
             }
 
-            Serialize = EmitSerializeDelegate(manager);
             CopyTo = EmitCopyDelegate(manager);
         }
 
         private string[] Duplicates { get; }
-        private object?[] DefaultValues { get; }
+        internal ImmutableArray<object?> DefaultValues { get; }
+        internal ImmutableDictionary<string, object?> DefaultValuesDict { get; }
 
         private ImmutableArray<FieldInterfaceInfo> FieldInterfaceInfos { get; }
 

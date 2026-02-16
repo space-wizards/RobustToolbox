@@ -38,6 +38,7 @@ internal static class Types
             return null;
 
         string? name = null;
+        var readOnly = false;
         var priorityIndex = 0;
         var include = false;
         var isDataFieldAttribute = false;
@@ -48,6 +49,7 @@ internal static class Types
         if (data.AttributeClass.ToDisplayString().Contains(DataFieldAttributeName))
         {
             name = (string?) data.ConstructorArguments[0].Value;
+            readOnly = (bool) data.ConstructorArguments[1].Value!;
             priorityIndex = 2;
             isDataFieldAttribute = true;
             required = (bool) data.ConstructorArguments[3].Value!;
@@ -79,6 +81,7 @@ internal static class Types
         {
             var span = fieldName.AsSpan();
             name = $"{char.ToLowerInvariant(span[0])}{span.Slice(1).ToString()}";
+            readOnly = (bool) data.ConstructorArguments[0].Value!;
             priorityIndex = 1;
             include = true;
             serverOnly = (bool) data.ConstructorArguments[2].Value!;
@@ -93,7 +96,8 @@ internal static class Types
         return new DataFieldAttribute(
             data,
             name!,
-            (int)data.ConstructorArguments[priorityIndex].Value!,
+            readOnly,
+            (int) data.ConstructorArguments[priorityIndex].Value!,
             include,
             isDataFieldAttribute,
             required,

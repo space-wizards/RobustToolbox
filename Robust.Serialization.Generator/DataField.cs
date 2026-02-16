@@ -21,4 +21,5 @@ public enum CustomSerializerType
     MappingReader = 1 << 5,
     SequenceReader = 1 << 6,
     ValueReader = 1 << 7,
+    Writer = 1 << 8,
 }

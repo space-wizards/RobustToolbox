@@ -607,6 +607,35 @@ public class Generator : IIncrementalGenerator
                 {
                 """);
 
+            var method = $"Read<{fieldTypeName}>";
+            if (field.Type.TypeKind == TypeKind.Enum)
+            {
+                method = $"ReadEnum<{fieldTypeName}>";
+                nullableString = string.Empty;
+            }
+            else if (field.Type.IsValueType && IsDataDefinition(field.Type))
+            {
+                method = $"ReadStructDefinition<{fieldTypeName}>";
+                nullableString = string.Empty;
+            }
+            else if (field.Type.TypeKind == TypeKind.Array &&
+                     field.Type is IArrayTypeSymbol { Rank: 1 } arrayTypeSymbol)
+            {
+                var elementType = arrayTypeSymbol.ElementType;
+                method = $"ReadArray<{elementType}>";
+
+                if (elementType.NullableAnnotation != NullableAnnotation.Annotated &&
+                    !elementType.ToDisplayString().EndsWith("?") &&
+                    !elementType.IsValueType)
+                {
+                    nullableString = $", {(!nullable).ToString().ToLowerInvariant()}";
+                }
+                else
+                {
+                    nullableString = string.Empty;
+                }
+            }
+
             if (reader is { Type: var type } &&
                 (type & (MappingReader | SequenceReader | ValueReader)) != 0)
             {
@@ -651,7 +680,7 @@ public class Generator : IIncrementalGenerator
             }
             else
             {
-                builder.AppendLine($"{fieldName}Temp = serialization.Read<{fieldTypeName}>(node{i}, hookCtx, context, null{nullableString});");
+                builder.AppendLine($"{fieldName}Temp = serialization.{method}(node{i}, hookCtx, context, null{nullableString});");
             }
 
             builder.AppendLine("}");

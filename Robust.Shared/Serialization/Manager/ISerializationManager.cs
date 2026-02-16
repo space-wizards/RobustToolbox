@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Reflection;
@@ -118,6 +120,27 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null,
             InstantiationDelegate<T>? instanceProvider = null,
             [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
+
+        T[] ReadArray<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T[]>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
+
+        T ReadEnum<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : struct, Enum;
+
+        T ReadStructDefinition<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : struct, ISerializationGenerated<T>;
 
 
         /// <summary>

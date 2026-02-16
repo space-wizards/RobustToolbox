@@ -120,9 +120,10 @@ namespace Robust.Shared.Serialization.Manager
                     }
                 }
             }
-
-            //wrap our valuetype in nullable<T> if we are nullable so we can assign it to returnValue
-            // if (nullable && isValueType)
+            else
+            {
+                RegularRead();
+            }
 
             if (node.IsNull)
             {
@@ -141,7 +142,6 @@ namespace Robust.Shared.Serialization.Manager
 
             void RegularRead()
             {
-                var hasSerializer = false;
                 switch (node)
                 {
                     case MappingDataNode mapping:
@@ -170,29 +170,16 @@ namespace Robust.Shared.Serialization.Manager
                     }
                 }
 
-                if (!baseType.IsArray)
-                    return;
-
-                switch (node)
+                val = node switch
                 {
-                    case SequenceDataNode sequence:
-                    {
-                        val = ReadArraySequence<T>(sequence, hookCtx, context);
-                        break;
-                    }
-                    case ValueDataNode value:
-                    {
-                        val = ReadArrayValue<T>(value, hookCtx, context);
-                        break;
-                    }
-                    default:
-                        throw new ArgumentException($"Cannot read array from data node type {node.GetType()}");
-                }
+                    SequenceDataNode sequence => ReadArraySequence<T>(sequence, hookCtx, context),
+                    ValueDataNode value => ReadArrayValue<T>(value, hookCtx, context),
+                    _ => throw new ArgumentException($"Cannot read array from data node type {node.GetType()}")
+                };
             }
         }
 
-        public T ReadStruct<T>(
-            T val,
+        public T ReadStructDefinition<T>(
             DataNode node,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
@@ -231,7 +218,7 @@ namespace Robust.Shared.Serialization.Manager
             var baseType = typeof(T);
             var nullable = baseType.IsNullable();
 
-            val = default!;
+            T val = default!;
 
             if (instanceProvider != null)
                 val = instanceProvider.Invoke();
@@ -306,9 +293,10 @@ namespace Robust.Shared.Serialization.Manager
                     }
                 }
             }
-
-            //wrap our valuetype in nullable<T> if we are nullable so we can assign it to returnValue
-            // if (nullable && isValueType)
+            else
+            {
+                RegularRead();
+            }
 
             if (node.IsNull)
             {
@@ -437,7 +425,6 @@ namespace Robust.Shared.Serialization.Manager
         }
 
         public T ReadEnum<T>(
-            T val,
             DataNode node,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
@@ -476,7 +463,7 @@ namespace Robust.Shared.Serialization.Manager
             var baseType = typeof(T);
             var nullable = baseType.IsNullable();
 
-            val = default!;
+            T val = default!;
 
             if (instanceProvider != null)
                 val = instanceProvider.Invoke();
@@ -550,6 +537,10 @@ namespace Robust.Shared.Serialization.Manager
                         break;
                     }
                 }
+            }
+            else
+            {
+                RegularRead();
             }
 
             //wrap our valuetype in nullable<T> if we are nullable so we can assign it to returnValue

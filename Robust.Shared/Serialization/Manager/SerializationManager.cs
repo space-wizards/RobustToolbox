@@ -315,7 +315,7 @@ namespace Robust.Shared.Serialization.Manager
             _initialized = false;
         }
 
-        internal DataDefinition<T>? GetDefinition<T>()
+        internal DataDefinition<T>? GetDefinition<T>() where T : ISerializationGenerated<T>
         {
             return GetDefinition(typeof(T)) as DataDefinition<T>;
         }
@@ -327,7 +327,7 @@ namespace Robust.Shared.Serialization.Manager
                 : null;
         }
 
-        internal bool TryGetDefinition<T>([NotNullWhen(true)] out DataDefinition<T>? dataDefinition)
+        internal bool TryGetDefinition<T>([NotNullWhen(true)] out DataDefinition<T>? dataDefinition) where T : ISerializationGenerated<T>
         {
             dataDefinition = GetDefinition<T>();
             return dataDefinition != null;

@@ -240,7 +240,7 @@ public sealed partial class SerializationManager
         DataDefinition<T>? definition,
         bool alwaysWrite,
         ISerializationContext? context)
-        where T : notnull
+        where T : ISerializationGenerated<T>
     {
         //this check is in here on purpose. we cannot check this during expression tree generation due to the value maybe being handled by a custom typeserializer
         if(definition == null)

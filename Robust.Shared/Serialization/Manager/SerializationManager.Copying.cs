@@ -271,7 +271,7 @@ public sealed partial class SerializationManager
         ISerializationManager serializationManager,
         SerializationHookContext hookCtx,
         ISerializationContext? context)
-        where TCommon : notnull
+        where TCommon : ISerializationGenerated<TCommon>
     {
         if (context != null &&
             context.SerializerProvider.TryGetTypeSerializer<ITypeCopier<TCommon>, TCommon>(out var copier))
@@ -338,7 +338,7 @@ public sealed partial class SerializationManager
         return copy;
     }
 
-    private T CreateCopyInternal<T>(T source, SerializationHookContext hookCtx, ISerializationContext context, DataDefinition<T>? definition) where T : notnull
+    private T CreateCopyInternal<T>(T source, SerializationHookContext hookCtx, ISerializationContext context, DataDefinition<T>? definition) where T : notnull, ISerializationGenerated<T>
     {
         if (source is DataNode node)
             return (T)(object)node.Copy();

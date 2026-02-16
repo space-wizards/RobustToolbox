@@ -465,7 +465,7 @@ public sealed partial class SerializationManager
         }
     }
 
-    private static class SerializedType<T>
+    internal static class SerializedType<T>
     {
         // ReSharper disable once StaticMemberInGenericType
         internal static readonly TypeInformation Information;
@@ -479,7 +479,7 @@ public sealed partial class SerializationManager
         }
     }
 
-    private readonly struct TypeInformation
+    internal readonly struct TypeInformation
     {
         internal readonly int Id;
         internal readonly bool ReturnSource;

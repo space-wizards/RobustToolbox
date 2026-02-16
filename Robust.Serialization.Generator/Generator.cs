@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -404,6 +403,7 @@ public class Generator : IIncrementalGenerator
         else if (IsVirtualClass(definition.Type))
             modifiers = "virtual ";
 
+        var requiredFields = new StringBuilder();
         if (definition.Type.IsAbstract)
         {
             // TODO make abstract once data definitions are forced to be partial
@@ -418,7 +418,6 @@ public class Generator : IIncrementalGenerator
         }
         else
         {
-            var requiredFields = new StringBuilder();
             foreach (var member in GetRequiredFieldsProperties(definition.Type))
             {
                 requiredFields.AppendLine($"{member.Name} = default!,");
@@ -434,6 +433,11 @@ public class Generator : IIncrementalGenerator
                 /// <seealso cref="ISerializationManager.CreateCopy"/>
                 [Obsolete("Use ISerializationManager.CreateCopy instead")]
                 public {{modifiers}} {{definition.GenericTypeName}} Instantiate()
+                {
+                    return new {{definition.GenericTypeName}}(){{requiredFields}};
+                }
+
+                public static {{definition.GenericTypeName}} StaticInstantiate()
                 {
                     return new {{definition.GenericTypeName}}(){{requiredFields}};
                 }
@@ -534,11 +538,6 @@ public class Generator : IIncrementalGenerator
             {
                 {{builder}}
             }
-
-            public static ValidateAllFieldsDelegate RobustValidateDelegate()
-            {
-                return (nodes, node, serialization, context) => Validate(nodes, node, serialization, context);
-            }
             """;
     }
 
@@ -578,7 +577,7 @@ public class Generator : IIncrementalGenerator
                 """);
             }
 
-            var (fieldTypeName, nonNullableFieldTypeName) = GetCleanNameForGenericType(field.Type, out var isNullableValueType);
+            var (fieldTypeName, nonNullableFieldTypeName) = GetCleanNameForGenericType(field.Type, out _);
             var tagName = field.Attribute.Tag;
             var reader = field.CustomSerializer;
             var readerName = reader?.Serializer.ToDisplayString();
@@ -711,12 +710,6 @@ public class Generator : IIncrementalGenerator
                 ISerializationContext? context)
             {
                 {{builder}}
-            }
-
-            public static PopulateDelegateSignature<{{definition.GenericTypeName}}> RobustReadDelegate()
-            {
-                return (ref target, node, serialization, hookCtx, context) =>
-                    Read(ref target, node, serialization, hookCtx, context);
             }
             """;
     }
@@ -857,12 +850,6 @@ public class Generator : IIncrementalGenerator
                 ImmutableDictionary<string, object?> defaultValues)
             {
                 {{builder}}
-            }
-
-            public static SerializeDelegateSignature<{{definition.GenericTypeName}}> RobustWriteDelegate()
-            {
-                return (obj, mapping, serialization, context, alwaysWrite, defaultValues) =>
-                    Write(obj, mapping, serialization, context, alwaysWrite, defaultValues);
             }
             """;
     }

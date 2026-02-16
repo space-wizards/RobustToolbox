@@ -198,7 +198,7 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<T>? instanceProvider = null,
             bool notNullableOverride = false)
-            where T : struct
+            where T : struct, ISerializationGenerated<T>
         {
             if (node.Tag?.StartsWith("!type:") ?? false)
             {
@@ -829,7 +829,7 @@ namespace Robust.Shared.Serialization.Manager
                             case MappingDataNode mapping:
                             {
                                 instanceProvider ??= GetOrCreateInstantiator<T>(false);
-                                var definition = GetDefinition<T>();
+                                var definition = GetDefinition(typeof(T));
                                 if (definition == null)
                                 {
                                     throw new ArgumentException($"No data definition found for type {baseType} with node type {node.GetType()} when reading");
@@ -837,7 +837,9 @@ namespace Robust.Shared.Serialization.Manager
 
                                 val = instanceProvider();
 
-                                definition.Populate(ref val, mapping, this, hookCtx, context);
+                                var valObj = (object) val!;
+                                definition.PopulateObj(ref valObj, mapping, this, hookCtx, context);
+                                val = (T)valObj;
 
                                 RunAfterHook(val, hookCtx);
                                 break;
@@ -1287,7 +1289,7 @@ namespace Robust.Shared.Serialization.Manager
             SerializationHookContext hookCtx,
             ISerializationContext? context,
             ISerializationManager.InstantiationDelegate<TValue> instanceProvider)
-            where TValue : notnull
+            where TValue : ISerializationGenerated<TValue>
         {
             if (definition == null)
             {

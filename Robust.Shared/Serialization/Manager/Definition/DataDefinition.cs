@@ -4,11 +4,11 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Exceptions;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -24,11 +24,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
     {
         internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; init; }
         internal bool IsRecord { get; init; }
+        internal abstract PopulateDelegateSignature<object> PopulateObj { get; init; }
 
         public abstract bool TryGetDuplicates([NotNullWhen(true)] out string[] duplicates);
     }
 
-    internal sealed partial class DataDefinition<T> : DataDefinition
+    internal sealed partial class DataDefinition<T> : DataDefinition where T : ISerializationGenerated<T>
     {
         private readonly struct FieldInterfaceInfo
         {
@@ -52,6 +53,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
         internal readonly PopulateDelegateSignature<T> Populate;
         internal readonly SerializeDelegateSignature<T> Serialize;
         internal readonly CopyDelegateSignature CopyTo;
+
+        internal override PopulateDelegateSignature<object> PopulateObj { get; init; }
 
         [UsedImplicitly]
         internal DataDefinition(SerializationManager manager, bool isRecord)
@@ -99,152 +102,138 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     : f.CamelCasedName,
                 f => f.DefaultValue
             );
-            var fieldAssigners = new object[BaseFieldDefinitions.Length];
-            var fieldAccessors = new object[BaseFieldDefinitions.Length];
-            var fieldValidators = new ValidateFieldDelegate[BaseFieldDefinitions.Length];
-
-            var interfaceInfos = new FieldInterfaceInfo[BaseFieldDefinitions.Length];
-
-            for (var i = 0; i < BaseFieldDefinitions.Length; i++)
-            {
-                var fieldDefinition = BaseFieldDefinitions[i];
-                fieldAssigners[i] = InternalReflectionUtils.EmitFieldAssigner(typeof(T), fieldDefinition.BackingField);
-                fieldAccessors[i] = InternalReflectionUtils.EmitFieldAccessor(typeof(T), fieldDefinition);
-
-                if (fieldDefinition.Attribute.CustomTypeSerializer != null)
-                {
-                    //reader (value, sequence, mapping), writer, copier
-                    var reader = (false, false, false);
-                    var writer = false;
-                    var copier = false;
-                    var copyCreator = false;
-                    var validator = (false, false, false);
-                    foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
-                    {
-                        DebugTools.Assert(@interface.IsGenericType, $"Tried to use a custom type serializer for {GetType()} that isn't generic?");
-                        var genericTypedef = @interface.GetGenericTypeDefinition();
-                        if (genericTypedef == typeof(ITypeWriter<>))
-                        {
-                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
-                            {
-                                writer = true;
-                            }
-                        }
-                        else if (genericTypedef == typeof(ITypeCopier<>))
-                        {
-                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
-                            {
-                                copier = true;
-                            }
-                        }
-                        else if (genericTypedef == typeof(ITypeCopyCreator<>))
-                        {
-                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
-                            {
-                                copyCreator = true;
-                            }
-                        }
-                        else if (genericTypedef == typeof(ITypeReader<,>))
-                        {
-                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
-                            {
-                                if (@interface.GenericTypeArguments[1] == typeof(ValueDataNode))
-                                {
-                                    reader.Item1 = true;
-                                }
-                                else if (@interface.GenericTypeArguments[1] == typeof(SequenceDataNode))
-                                {
-                                    reader.Item2 = true;
-                                }
-                                else if (@interface.GenericTypeArguments[1] == typeof(MappingDataNode))
-                                {
-                                    reader.Item3 = true;
-                                }
-                            }
-                        }
-                        else if (genericTypedef == typeof(ITypeValidator<,>))
-                        {
-                            if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
-                            {
-                                if (@interface.GenericTypeArguments[1] == typeof(ValueDataNode))
-                                {
-                                    validator.Item1 = true;
-                                }
-                                else if (@interface.GenericTypeArguments[1] == typeof(SequenceDataNode))
-                                {
-                                    validator.Item2 = true;
-                                }
-                                else if (@interface.GenericTypeArguments[1] == typeof(MappingDataNode))
-                                {
-                                    validator.Item3 = true;
-                                }
-                            }
-                        }
-                    }
-
-                    if (!reader.Item1 && !reader.Item2 && !reader.Item3 && !writer && !copier && !validator.Item1 && !validator.Item2 && !validator.Item3)
-                    {
-                        throw new InvalidOperationException(
-                            $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition}({fieldDefinition.FieldType}) on type {typeof(T)} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
-                    }
-
-                    interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier, copyCreator, validator);
-                }
-            }
-
-            FieldInterfaceInfos = interfaceInfos.ToImmutableArray();
-            FieldAssigners = fieldAssigners.ToImmutableArray();
-            FieldAccessors = fieldAccessors.ToImmutableArray();
 
             //has to be done after fieldinterfaceinfos are done
             var generated = typeof(T).IsAssignableTo(typeof(ISerializationGenerated<T>));
             if (generated)
             {
-#pragma warning disable CS0618 // Type or member is obsolete
-                var method = (ValidateAllFieldsDelegate) typeof(T).GetMethod(
-#pragma warning restore CS0618 // Type or member is obsolete
-                        nameof(ISerializationGenerated<>.RobustValidateDelegate),
-                        BindingFlags.Static | BindingFlags.Public)!
-                    .Invoke(null, null)!;
+                Populate = T.Read;
+                PopulateObj = (ref target, node, serialization, ctx, context) =>
+                {
+                    var obj = (T) target;
+                    Populate(ref obj, node, serialization, ctx, context);
+                    target = obj;
+                };
 
-                FieldValidatorGenerated = method;
+                Serialize = T.Write;
+                CopyTo = default!;
+                FieldValidatorGenerated = T.Validate;
             }
             else
             {
+                var fieldAssigners = new object[BaseFieldDefinitions.Length];
+                var fieldAccessors = new object[BaseFieldDefinitions.Length];
+                var fieldValidators = new ValidateFieldDelegate[BaseFieldDefinitions.Length];
+
+                var interfaceInfos = new FieldInterfaceInfo[BaseFieldDefinitions.Length];
+
+                for (var i = 0; i < BaseFieldDefinitions.Length; i++)
+                {
+                    var fieldDefinition = BaseFieldDefinitions[i];
+                    fieldAssigners[i] = InternalReflectionUtils.EmitFieldAssigner(typeof(T), fieldDefinition.BackingField);
+                    fieldAccessors[i] = InternalReflectionUtils.EmitFieldAccessor(typeof(T), fieldDefinition);
+
+                    if (fieldDefinition.Attribute.CustomTypeSerializer != null)
+                    {
+                        //reader (value, sequence, mapping), writer, copier
+                        var reader = (false, false, false);
+                        var writer = false;
+                        var copier = false;
+                        var copyCreator = false;
+                        var validator = (false, false, false);
+                        foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
+                        {
+                            DebugTools.Assert(@interface.IsGenericType, $"Tried to use a custom type serializer for {GetType()} that isn't generic?");
+                            var genericTypedef = @interface.GetGenericTypeDefinition();
+                            if (genericTypedef == typeof(ITypeWriter<>))
+                            {
+                                if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
+                                {
+                                    writer = true;
+                                }
+                            }
+                            else if (genericTypedef == typeof(ITypeCopier<>))
+                            {
+                                if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
+                                {
+                                    copier = true;
+                                }
+                            }
+                            else if (genericTypedef == typeof(ITypeCopyCreator<>))
+                            {
+                                if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
+                                {
+                                    copyCreator = true;
+                                }
+                            }
+                            else if (genericTypedef == typeof(ITypeReader<,>))
+                            {
+                                if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
+                                {
+                                    if (@interface.GenericTypeArguments[1] == typeof(ValueDataNode))
+                                    {
+                                        reader.Item1 = true;
+                                    }
+                                    else if (@interface.GenericTypeArguments[1] == typeof(SequenceDataNode))
+                                    {
+                                        reader.Item2 = true;
+                                    }
+                                    else if (@interface.GenericTypeArguments[1] == typeof(MappingDataNode))
+                                    {
+                                        reader.Item3 = true;
+                                    }
+                                }
+                            }
+                            else if (genericTypedef == typeof(ITypeValidator<,>))
+                            {
+                                if (@interface.GenericTypeArguments[0].IsAssignableTo(fieldDefinition.FieldType))
+                                {
+                                    if (@interface.GenericTypeArguments[1] == typeof(ValueDataNode))
+                                    {
+                                        validator.Item1 = true;
+                                    }
+                                    else if (@interface.GenericTypeArguments[1] == typeof(SequenceDataNode))
+                                    {
+                                        validator.Item2 = true;
+                                    }
+                                    else if (@interface.GenericTypeArguments[1] == typeof(MappingDataNode))
+                                    {
+                                        validator.Item3 = true;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!reader.Item1 && !reader.Item2 && !reader.Item3 && !writer && !copier && !validator.Item1 && !validator.Item2 && !validator.Item3)
+                        {
+                            throw new InvalidOperationException(
+                                $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition}({fieldDefinition.FieldType}) on type {typeof(T)} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");
+                        }
+
+                        interfaceInfos[i] = new FieldInterfaceInfo(reader, writer, copier, copyCreator, validator);
+                    }
+                }
+
+                FieldInterfaceInfos = interfaceInfos.ToImmutableArray();
+                FieldAssigners = fieldAssigners.ToImmutableArray();
+                FieldAccessors = fieldAccessors.ToImmutableArray();
+
                 for (var i = 0; i < BaseFieldDefinitions.Length; i++)
                 {
                     fieldValidators[i] = EmitFieldValidationDelegate(manager, i);
                 }
-            }
 
-            FieldValidators = fieldValidators.ToImmutableArray();
-
-            if (generated)
-            {
-#pragma warning disable CS0618 // Type or member is obsolete
-                var populate = (PopulateDelegateSignature<T>) typeof(T).GetMethod(
-#pragma warning restore CS0618 // Type or member is obsolete
-                        nameof(ISerializationGenerated<>.RobustReadDelegate),
-                        BindingFlags.Static | BindingFlags.Public)!
-                    .Invoke(null, null)!;
-
-                Populate = populate;
-
-#pragma warning disable CS0618 // Type or member is obsolete
-                var serialize = (SerializeDelegateSignature<T>) typeof(T).GetMethod(
-#pragma warning restore CS0618 // Type or member is obsolete
-                        nameof(ISerializationGenerated<>.RobustWriteDelegate),
-                        BindingFlags.Static | BindingFlags.Public)!
-                    .Invoke(null, null)!;
-
-                Serialize = serialize;
-                CopyTo = default!;
-            }
-            else
-            {
                 Populate = EmitPopulateDelegate(manager);
+                PopulateObj = (ref target, node, serialization, ctx, context) =>
+                {
+                    var obj = (T) target;
+                    Populate(ref obj, node, serialization, ctx, context);
+                    target = obj;
+                };
+
                 Serialize = EmitSerializeDelegate(manager);
                 CopyTo = EmitCopyDelegate(manager);
+                FieldValidators = fieldValidators.ToImmutableArray();
             }
         }
 
@@ -464,7 +453,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         private List<FieldDefinition> GetFieldDefinitions(SerializationManager manager, bool isRecord)
         {
-            var dummyObject = manager.GetOrCreateInstantiator<T>(isRecord)();
+            var dummyObject = T.StaticInstantiate();
             var fieldDefinitions = new List<FieldDefinition>();
 
             foreach (var abstractFieldInfo in typeof(T).GetAllPropertiesAndFields())

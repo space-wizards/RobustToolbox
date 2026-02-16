@@ -33,18 +33,19 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
     [Obsolete("Use ISerializationManager.CreateCopy instead")]
     T Instantiate();
 
-    [Obsolete("Use ISerializationManager.ValidateNode instead")]
-    static virtual ValidationNode Validate(
-        List<ValidationNode> nodes,
-        MappingDataNode node,
-        ISerializationManager serialization,
-        ISerializationContext? context = null)
+    /// <seealso cref="ISerializationManager.CreateCopy"/>
+    [Obsolete("Use ISerializationManager.CreateCopy instead")]
+    static virtual T StaticInstantiate()
     {
         throw new NotImplementedException();
     }
 
     [Obsolete("Use ISerializationManager.ValidateNode instead")]
-    static virtual ValidateAllFieldsDelegate RobustValidateDelegate()
+    static virtual void Validate(
+        Dictionary<string, ValidationNode> nodes,
+        MappingDataNode node,
+        ISerializationManager serialization,
+        ISerializationContext? context = null)
     {
         throw new NotImplementedException();
     }
@@ -60,26 +61,14 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         throw new NotImplementedException();
     }
 
-    [Obsolete("Use ISerializationManager.Read instead")]
-    static virtual PopulateDelegateSignature<T> RobustReadDelegate()
-    {
-        throw new NotImplementedException();
-    }
-
     [Obsolete("Use ISerializationManager.Write instead")]
-    static virtual MappingDataNode Write(
+    static virtual void Write(
         T obj,
         MappingDataNode mapping,
         ISerializationManager serialization,
         ISerializationContext? context,
         bool alwaysWrite,
         ImmutableDictionary<string, object?> defaultValues)
-    {
-        throw new NotImplementedException();
-    }
-
-    [Obsolete("Use ISerializationManager.Write instead")]
-    static virtual SerializeDelegateSignature<T> RobustWriteDelegate()
     {
         throw new NotImplementedException();
     }

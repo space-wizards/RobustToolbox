@@ -56,7 +56,7 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
 
     protected PoolManager()
     {
-        MetricsMeter.CreateObservableGauge(
+        MetricsMeter.CreateObservableUpDownCounter(
             "pair_count",
             MeasurePairCount,
             null,

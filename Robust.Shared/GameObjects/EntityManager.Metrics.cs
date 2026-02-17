@@ -10,6 +10,6 @@ public abstract partial class EntityManager
     private void InitMetrics()
     {
         var meter = _meterFactory.Create("Robust.EntityManager");
-        meter.CreateObservableGauge("entity_count", () => Entities.Count);
+        meter.CreateObservableUpDownCounter("entity_count", () => Entities.Count);
     }
 }

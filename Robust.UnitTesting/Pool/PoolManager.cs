@@ -177,7 +177,7 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
             {
                 await testOut.WriteLineAsync(
                     $"{nameof(GetPair)}: Creating pair, because settings of pool settings");
-                pair = await CreateServerClientPair(settings, testOut);
+                pair = await CreateServerClientPair(settings, testOut, "MustBeNew", currentTestName);
             }
             else
             {
@@ -205,7 +205,7 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
                 else
                 {
                     await testOut.WriteLineAsync($"{nameof(GetPair)}: Creating a new pair, no suitable pair found in pool");
-                    pair = await CreateServerClientPair(settings, testOut);
+                    pair = await CreateServerClientPair(settings, testOut, "NoneInPool", currentTestName);
                 }
             }
         }
@@ -223,6 +223,11 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
         }
 
         await testOut.WriteLineAsync($"{nameof(GetPair)}: Retrieving pair {pair.Id} from pool took {watch.Elapsed.TotalMilliseconds} ms");
+
+        PoolManagerEvents.Log.PairRetrieved(
+            typeof(TPair).FullName!,
+            pair.Id,
+            currentTestName);
 
         pair.ValidateSettings(settings);
         pair.ClearModifiedCvars();
@@ -302,16 +307,22 @@ we are just going to end this here to save a lot of time. This is the exception 
         }
     }
 
-    private async Task<TPair> CreateServerClientPair(PairSettings settings, TextWriter testOut)
+    private async Task<TPair> CreateServerClientPair(
+        PairSettings settings,
+        TextWriter testOut,
+        string reason,
+        string testName)
     {
         try
         {
             var id = Interlocked.Increment(ref _nextPairId);
             var pair = new TPair();
+            PoolManagerEvents.Log.PairCreated(typeof(TPair).FullName!, id, reason, testName);
             await pair.Init(id, this, settings, testOut);
             pair.Use();
             await pair.RunTicksSync(5);
             await pair.SyncTicks(targetDelta: 1);
+            PoolManagerEvents.Log.PairFinishedInit(typeof(TPair).FullName!, id);
             return pair;
         }
         catch (Exception ex)

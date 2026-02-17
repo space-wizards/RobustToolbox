@@ -107,6 +107,8 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
 
     public void Kill()
     {
+        PoolManagerEvents.Log.PairDestroyed(GetType().FullName!, Id);
+
         State = PairState.Dead;
         ServerLogHandler.ShuttingDown = true;
         ClientLogHandler.ShuttingDown = true;

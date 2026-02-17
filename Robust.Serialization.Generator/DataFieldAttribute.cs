@@ -10,5 +10,7 @@ public sealed record DataFieldAttribute(
     bool Include,
     bool IsDataFieldAttribute,
     bool Required,
-    bool ServerOnly
+    bool ServerOnly,
+    string CamelCasedName,
+    int InheritanceBehavior = 0
 );

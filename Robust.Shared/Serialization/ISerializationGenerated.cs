@@ -40,6 +40,13 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         throw new NotImplementedException();
     }
 
+    /// <seealso cref="ISerializationManager.CreateCopy"/>
+    [Obsolete("Use ISerializationManager.CreateCopy instead")]
+    static virtual object StaticInstantiateObject()
+    {
+        throw new NotImplementedException();
+    }
+
     [Obsolete("Use ISerializationManager.ValidateNode instead")]
     static virtual void Validate(
         Dictionary<string, ValidationNode> nodes,
@@ -69,6 +76,12 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         ISerializationContext? context,
         bool alwaysWrite,
         ImmutableDictionary<string, object?> defaultValues)
+    {
+        throw new NotImplementedException();
+    }
+
+    [Obsolete("Used internally by serialization")]
+    static virtual void GetFieldDefinitions(T? instance, List<DataFieldDefinition> fields, string[]? fieldsParsed = null)
     {
         throw new NotImplementedException();
     }

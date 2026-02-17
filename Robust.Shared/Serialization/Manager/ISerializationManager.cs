@@ -128,6 +128,13 @@ namespace Robust.Shared.Serialization.Manager
             InstantiationDelegate<T[]>? instanceProvider = null,
             [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
 
+        T ReadDefinition<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : ISerializationGenerated<T>;
+
         T ReadEnum<T>(
             DataNode node,
             SerializationHookContext hookCtx,

@@ -145,6 +145,8 @@ public class Generator : IIncrementalGenerator
                 {{GetReaders(definition)}}
 
                 {{GetWriters(definition)}}
+
+                {{GetFieldDefinitions(definition)}}
             }
 
             {{containingTypesEnd}}
@@ -441,6 +443,11 @@ public class Generator : IIncrementalGenerator
                 {
                     return new {{definition.GenericTypeName}}(){{requiredFields}};
                 }
+
+                public static object StaticInstantiateObject()
+                {
+                    return (object) {{definition.GenericTypeName}}.StaticInstantiate();
+                }
                 """);
         }
 
@@ -619,7 +626,7 @@ public class Generator : IIncrementalGenerator
                 nullableString = string.Empty;
             }
             else if (field.Type.TypeKind == TypeKind.Array &&
-                     field.Type is IArrayTypeSymbol { Rank: 1 } arrayTypeSymbol)
+                     field.Type is IArrayTypeSymbol { Rank: 1 } arrayTypeSymbol) // [*,*] goes the regular way
             {
                 var elementType = arrayTypeSymbol.ElementType;
                 method = $"ReadArray<{elementType}>";
@@ -634,6 +641,10 @@ public class Generator : IIncrementalGenerator
                 {
                     nullableString = string.Empty;
                 }
+            }
+            else if (IsDataDefinition(field.Type))
+            {
+                method = $"ReadDefinition<{fieldTypeName}>";
             }
 
             if (reader is { Type: var type } &&
@@ -878,6 +889,58 @@ public class Generator : IIncrementalGenerator
                 bool alwaysWrite,
                 ImmutableDictionary<string, object?> defaultValues)
             {
+                {{builder}}
+            }
+            """;
+    }
+
+    private static string GetFieldDefinitions(DataDefinition definition)
+    {
+        var builder = new StringBuilder();
+        var nullConditional = definition.Type.IsValueType ? string.Empty : "?";
+        var fieldTags = new List<string>(definition.Fields.Count);
+        foreach (var field in definition.Fields)
+        {
+            var (fieldType, _) = GetCleanNameForGenericType(field.Type, out var isNullableValueType);
+            var nullable = field.Type.NullableAnnotation == NullableAnnotation.Annotated ||
+                           field.Type.ToDisplayString().EndsWith("?");
+            if (!isNullableValueType && fieldType.EndsWith("?"))
+                fieldType = fieldType.Substring(0, fieldType.Length - 1);
+
+            builder.AppendLine($$"""
+                if (fieldsParsed == null || !fieldsParsed.Contains("{{field.Attribute.Tag}}"))
+                {
+                    fields.Add(new DataFieldDefinition(
+                        "{{field.Attribute.Tag}}",
+                        {{field.Attribute.Priority}},
+                        {{field.Attribute.IsDataFieldAttribute.ToString().ToLowerInvariant()}},
+                        {{field.Attribute.Include.ToString().ToLowerInvariant()}},
+                        instance{{nullConditional}}.{{field.Symbol.Name}},
+                        (InheritanceBehavior) {{field.Attribute.InheritanceBehavior}},
+                        "{{field.Symbol.Name}}",
+                        typeof({{fieldType}}),
+                        {{nullable.ToString().ToLowerInvariant()}},
+                        "{{field.Attribute.CamelCasedName}}",
+                        {{(field.CustomSerializer == null ? "null" : $"typeof({field.CustomSerializer.Value.Serializer.ToDisplayString()})")}}
+                    ));
+                }
+                """);
+
+            fieldTags.Add($"\"{field.Attribute.Tag}\"");
+        }
+
+        var baseType = definition.Type.BaseType;
+        if (IsDataDefinition(baseType))
+            builder.AppendLine($"{baseType.ToDisplayString()}.GetFieldDefinitions(instance, fields, [{string.Join(", ", fieldTags)}]);");
+
+        var instance = definition.Type.IsAbstract
+            ? string.Empty
+            : $"instance = {definition.GenericTypeName}.StaticInstantiate();";
+
+        return $$"""
+            public static void GetFieldDefinitions({{definition.GenericTypeName}}{{nullConditional}} instance, List<DataFieldDefinition> fields, string[]? fieldsParsed = null)
+            {
+                {{instance}}
                 {{builder}}
             }
             """;

@@ -36,7 +36,7 @@ namespace Robust.Shared.Serialization.Manager
         // Always has a dummy value of 0 for any types that should be copied by ref
         private readonly ConcurrentDictionary<Type, byte> _copyByRefRegistrations = new();
 
-        [field: IoC.Dependency]
+        [field: Dependency]
         public IDependencyCollection DependencyCollection { get; } = default!;
 
         public bool IsServer { get; private set; }
@@ -53,13 +53,13 @@ namespace Robust.Shared.Serialization.Manager
             _initializing = true;
 
             _read = typeof(SerializationManager)
-                .GetMethods(BindingFlags.Instance | BindingFlags.Public)
-                .First(m => m.Name == nameof(Read) &&
+                .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                .First(m => m.Name == nameof(ReadObject) &&
                             m.GetGenericArguments().Length == 1 &&
                             GetParametersBase(m)
                                 .SequenceEqual([
                                     typeof(DataNode), typeof(SerializationHookContext), typeof(ISerializationContext),
-                                    typeof(ISerializationManager.InstantiationDelegate<>), typeof(bool)
+                                    typeof(bool)
                                 ]));
 
             var flagsTypes = new ConcurrentBag<Type>();
@@ -156,10 +156,7 @@ namespace Robust.Shared.Serialization.Manager
             foreach (var (type, definition) in _dataDefinitions)
             {
                 var invalidTypes = new List<string>();
-                foreach (var includedField in definition.BaseFieldDefinitions.Where(x => x.Attribute is IncludeDataFieldAttribute
-                         {
-                             CustomTypeSerializer: null
-                         }))
+                foreach (var includedField in definition.BaseFieldDefinitions.Where(x => x is { IsIncludeDataField: true, CustomTypeSerializer: null }))
                 {
                     if (!dataDefs.Contains(includedField.FieldType))
                     {
@@ -210,7 +207,7 @@ namespace Robust.Shared.Serialization.Manager
                     if (field.FieldType.ContainsGenericParameters)
                         continue; // This just isn't supported yet, can't validate it so just skip it.
 
-                    if (field.Attribute.CustomTypeSerializer != null)
+                    if (field.CustomTypeSerializer != null)
                         continue; // Assume that anything with a custom type serializer can be handled.
 
                     if (!ValidateIsSerializable(field.FieldType, forbidden))
@@ -346,17 +343,16 @@ namespace Robust.Shared.Serialization.Manager
                 variableType = null;
                 return false;
             }
-            var foundFieldDef = definition.BaseFieldDefinitions.FirstOrDefault(fieldDef => fieldDef?.Attribute is DataFieldAttribute attr && attr.Tag==variableName, null);
-            if(foundFieldDef != null)
+
+            var foundFieldDef = definition.BaseFieldDefinitions.FirstOrDefault(fieldDef => fieldDef.IsDataField && fieldDef.Tag == variableName, default);
+            if (foundFieldDef != default)
             {
-                variableType = foundFieldDef.BackingField.FieldType;
+                variableType = foundFieldDef.FieldType;
                 return true;
             }
-            else
-            {
-                variableType = null;
-                return false;
-            }
+
+            variableType = null;
+            return false;
         }
 
         private bool TryResolveConcreteType(Type baseType, string typeName, [NotNullWhen(true)] out Type? concreteType)

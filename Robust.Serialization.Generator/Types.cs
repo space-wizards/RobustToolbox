@@ -19,6 +19,8 @@ internal static class Types
     private const string ParentDataFieldAttributeName = "Robust.Shared.Prototypes.ParentDataFieldAttribute";
     private const string AbstractDataFieldAttributeName = "Robust.Shared.Prototypes.AbstractDataFieldAttribute";
     private const string IncludeDataFieldAttributeName = "Robust.Shared.Serialization.Manager.Attributes.IncludeDataFieldAttribute";
+    private const string AlwaysPushInheritanceAttributeName = "Robust.Shared.Serialization.Manager.Attributes.AlwaysPushInheritanceAttribute";
+    private const string NeverPushInheritanceAttributeName = "Robust.Shared.Serialization.Manager.Attributes.NeverPushInheritanceAttribute";
 
     internal static bool IsPartial(TypeDeclarationSyntax type)
     {
@@ -46,6 +48,7 @@ internal static class Types
         var isDataFieldAttribute = false;
         var required = false;
         var serverOnly = false;
+        var inheritanceBehavior = 0;
 
         // (string? tag = null, bool readOnly = false, int priority = 1, bool required = false, bool serverOnly = false, Type? customTypeSerializer = null)
         if (data.AttributeClass.ToDisplayString().Contains(DataFieldAttributeName))
@@ -89,11 +92,9 @@ internal static class Types
             serverOnly = (bool) data.ConstructorArguments[2].Value!;
         }
 
+        var camelCasedName = ToCamelCase(fieldName);
         if (string.IsNullOrWhiteSpace(name))
-        {
-            var span = fieldName.AsSpan();
-            name = $"{char.ToLowerInvariant(span[0])}{span.Slice(1).ToString()}";
-        }
+            name = ToCamelCase(camelCasedName);
 
         return new DataFieldAttribute(
             data,
@@ -103,7 +104,8 @@ internal static class Types
             include,
             isDataFieldAttribute,
             required,
-            serverOnly
+            serverOnly,
+            camelCasedName
         );
     }
 
@@ -112,32 +114,48 @@ internal static class Types
         // TODO data records and other attributes
         type = null!;
         attribute = null;
+        var inheritanceBehavior = 0;
         if (member is IFieldSymbol field)
         {
             foreach (var attr in field.GetAttributes())
             {
-                if (attr.AttributeClass != null &&
-                    Inherits(attr.AttributeClass, DataFieldBaseNamespace))
+                if (attr.AttributeClass is not { } attributeClass)
+                    continue;
+
+                if (Inherits(attributeClass, DataFieldBaseNamespace))
                 {
                     type = field.Type;
                     attribute = GetDataFieldAttribute(attr, field.Name);
-                    break;
                 }
+
+                if (attributeClass.ToDisplayString() == AlwaysPushInheritanceAttributeName)
+                    inheritanceBehavior = 1;
+                else if (attributeClass.ToDisplayString() == NeverPushInheritanceAttributeName)
+                    inheritanceBehavior = 2;
             }
         }
         else if (member is IPropertySymbol property)
         {
             foreach (var attr in property.GetAttributes())
             {
-                if (attr.AttributeClass != null &&
-                    Inherits(attr.AttributeClass, DataFieldBaseNamespace))
+                if (attr.AttributeClass is not { } attributeClass)
+                    continue;
+
+                if (Inherits(attributeClass, DataFieldBaseNamespace))
                 {
                     type = property.Type;
                     attribute = GetDataFieldAttribute(attr, property.Name);
-                    break;
                 }
+
+                if (attributeClass.ToDisplayString() == AlwaysPushInheritanceAttributeName)
+                    inheritanceBehavior = 1;
+                else if (attributeClass.ToDisplayString() == NeverPushInheritanceAttributeName)
+                    inheritanceBehavior = 2;
             }
         }
+
+        if (attribute != null)
+            attribute = attribute with { InheritanceBehavior = inheritanceBehavior };
 
         return attribute != null;
     }
@@ -497,5 +515,11 @@ internal static class Types
 
             yield return member;
         }
+    }
+
+    internal static string ToCamelCase(string name)
+    {
+        var span = name.AsSpan();
+        return $"{char.ToLowerInvariant(span[0])}{span.Slice(1).ToString()}";
     }
 }

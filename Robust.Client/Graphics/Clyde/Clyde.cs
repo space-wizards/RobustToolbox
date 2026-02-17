@@ -91,6 +91,8 @@ namespace Robust.Client.Graphics.Clyde
         private bool _earlyGLInit;
         private bool _threadWindowApi;
 
+        public bool IsInitialized { get; private set; }
+
         public Clyde()
         {
             _currentBoundRenderTarget = default!;
@@ -182,6 +184,8 @@ namespace Robust.Client.Graphics.Clyde
             InitGLContextManager();
             if (!InitMainWindowAndRenderer())
                 return false;
+
+            IsInitialized = true;
 
             return true;
         }

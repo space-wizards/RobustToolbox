@@ -1,11 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Analyzers;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
+using Robust.Shared.Physics.Components;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
@@ -39,6 +38,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
             [Dependency] public readonly ESystemDepA ESystemDepA = default!;
         }
 
+        internal sealed class ESystemDepAll : EntitySystem
+        {
+            [Dependency] public readonly ESystemDepA ESystemDepA = default!;
+            [Dependency] public readonly IConfigurationManager Config = default!;
+            [Dependency] public readonly EntityQuery<TransformComponent> TransformQuery = default!;
+            [Dependency] public readonly EntityQuery<PhysicsComponent> PhysicsQuery = default!;
+        }
+
         /*
          ESystemBase (Abstract)
            - ESystemA
@@ -58,6 +65,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             syssy.LoadExtraSystemType<ESystemC>();
             syssy.LoadExtraSystemType<ESystemDepA>();
             syssy.LoadExtraSystemType<ESystemDepB>();
+            syssy.LoadExtraSystemType<ESystemDepAll>();
             syssy.Initialize(false);
         }
 
@@ -103,5 +111,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(sysB.ESystemDepA, Is.EqualTo(sysA));
         }
 
+        [Test]
+        public void DependencyInjectionTest()
+        {
+            var esm = IoCManager.Resolve<IEntitySystemManager>();
+            var sys = esm.GetEntitySystem<ESystemDepAll>();
+
+            Assert.That(sys.ESystemDepA, Is.Not.Null);
+            Assert.That(sys.Config, Is.Not.Null);
+            Assert.That(sys.TransformQuery, Is.Not.Default);
+            Assert.That(sys.PhysicsQuery, Is.Not.Default);
+        }
     }
 }

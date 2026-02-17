@@ -133,6 +133,14 @@ public sealed class ProfManager
     public long WriteValue(string text, long int64) => WriteValue(text, ProfData.Int64(int64));
 
     /// <summary>
+    /// Make a guarded value for usage with using blocks.
+    /// </summary>
+    public ValueGuard Value(string text)
+    {
+        return new ValueGuard(this, text);
+    }
+
+    /// <summary>
     /// Write the start of a new log group.
     /// </summary>
     /// <returns>The absolute position of the written log entry.</returns>
@@ -248,6 +256,25 @@ public sealed class ProfManager
         public void Dispose()
         {
             _mgr.WriteGroupEnd(_startIndex, _groupName, _sampler);
+        }
+    }
+
+    public readonly struct ValueGuard : IDisposable
+    {
+        private readonly ProfManager _mgr;
+        private readonly string _text;
+        private readonly ProfSampler _sampler;
+
+        public ValueGuard(ProfManager mgr, string text)
+        {
+            _mgr = mgr;
+            _text = text;
+            _sampler = ProfSampler.StartNew();
+        }
+
+        public void Dispose()
+        {
+            _mgr.WriteValue(_text, _sampler);
         }
     }
 }

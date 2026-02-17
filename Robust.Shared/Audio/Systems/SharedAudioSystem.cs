@@ -75,6 +75,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
             return;
 
         var audioLength = GetAudioLength(entity.Comp.FileName);
+        position = CalculateAudioPosition(entity!, (float)audioLength.TotalSeconds, position);
 
         if (audioLength.TotalSeconds < position)
         {
@@ -83,12 +84,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
                 QueueDel(nullEntity.Value);
 
             entity.Comp.StopPlaying();
-            return;
-        }
-
-        if (position < 0f)
-        {
-            Log.Error($"Tried to set playback position for {ToPrettyString(entity.Owner)} / {entity.Comp.FileName} outside of bounds");
             return;
         }
 
@@ -315,6 +310,36 @@ public abstract partial class SharedAudioSystem : EntitySystem
         return GetAudioPath(resolved);
     }
 
+    /// <summary>
+    /// Calculates the current playback position of an audio entity
+    /// and clamps it to the range from 0 to (length - 0.01f).
+    /// </summary>
+    /// <param name="ent">The audio entity.</param>
+    /// <param name="length">
+    /// The total length of the audio file.
+    /// If null, the method retrieves the length using <see cref="GetAudioLength"/>.
+    /// </param>
+    /// <param name="position">
+    /// A precomputed playback position.
+    /// If provided, it will be added to the calculation.
+    /// </param>
+    /// <returns>The playback position as a float.</returns>
+    protected float CalculateAudioPosition(Entity<AudioComponent> ent, float? length = null, float? position = null)
+    {
+        position ??= (float) ((ent.Comp.PauseTime ?? Timing.CurTime) - ent.Comp.AudioStart).TotalSeconds;
+        length ??= (float) GetAudioLength(ent.Comp.FileName).TotalSeconds;
+
+        // Looped audio has no conceptual start or end.
+        if (ent.Comp.Params.Loop)
+            position %= length;
+
+        // TODO clamp the offset inside of AudioSource.SetPlaybackPosition() itself.
+        var maxOffset = Math.Max((float) length - 0.01f, 0f);
+        position = Math.Clamp(position.Value, 0f, maxOffset);
+
+        return position.Value;
+    }
+
     #region AudioParams
 
     [return: NotNullIfNotNull(nameof(specifier))]
@@ -455,7 +480,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         if (uid == null || !Resolve(uid.Value, ref component, false))
             return null;
 
-        if (_netManager.IsClient && !IsClientSide(uid.Value))
+        if (!Timing.IsFirstTimePredicted || (_netManager.IsClient && !IsClientSide(uid.Value)))
             return null;
 
         QueueDel(uid);

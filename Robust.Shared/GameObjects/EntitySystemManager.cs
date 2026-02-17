@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
@@ -192,6 +193,14 @@ namespace Robust.Shared.GameObjects
                 _systemTypes.Remove(baseType);
             }
 
+            var queryMethod = typeof(EntityManager).GetMethod(nameof(EntityManager.GetEntityQuery), 1, [])!;
+            SystemDependencyCollection.RegisterBaseGenericLazy(
+                typeof(EntityQuery<>),
+                (queryType, dep) => queryMethod
+                    .MakeGenericMethod(queryType.GetGenericArguments()[0])
+                    .Invoke(dep.Resolve<IEntityManager>(), null)!
+            );
+
             SystemDependencyCollection.BuildGraph();
 
             foreach (var systemType in _systemTypes)
@@ -314,9 +323,10 @@ namespace Robust.Shared.GameObjects
                 try
                 {
 #endif
-                    var sw = ProfSampler.StartNew();
-                    updReg.System.Update(frameTime);
-                    _profManager.WriteValue(updReg.System.GetType().Name, sw);
+                    using (_profManager.Value(updReg.System.GetType().Name))
+                    {
+                        updReg.System.Update(frameTime);
+                    }
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)
@@ -341,9 +351,10 @@ namespace Robust.Shared.GameObjects
                 try
                 {
 #endif
-                    var sw = ProfSampler.StartNew();
-                    system.FrameUpdate(frameTime);
-                    _profManager.WriteValue(system.GetType().Name, sw);
+                    using (_profManager.Value(system.GetType().Name))
+                    {
+                        system.FrameUpdate(frameTime);
+                    }
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)

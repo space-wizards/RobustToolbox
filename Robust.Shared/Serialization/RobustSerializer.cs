@@ -27,6 +27,8 @@ namespace Robust.Shared.Serialization
         private Serializer _serializer = default!;
 
         private HashSet<Type> _serializableTypes = default!;
+        private bool _initialized;
+        private SerializerFloatFlags _floatFlags;
 
         private static Type[] AlwaysNetSerializable => new[]
         {
@@ -56,8 +58,25 @@ namespace Robust.Shared.Serialization
 
         #endregion
 
+        public SerializerFloatFlags FloatFlags
+        {
+            get => _floatFlags;
+            set
+            {
+                if (_initialized)
+                    throw new InvalidOperationException("Already initialized!");
+
+                _floatFlags = value;
+            }
+        }
+
         public void Initialize()
         {
+            if (_initialized)
+                throw new InvalidOperationException("Already initialized!");
+
+            _initialized = true;
+
             var types = _reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>()
                 .OrderBy(x => x.FullName, StringComparer.InvariantCulture)
                 .ToList();
@@ -91,9 +110,21 @@ namespace Robust.Shared.Serialization
                     MappedStringSerializer.TypeSerializer,
                     new NetMathSerializer(),
                     new NetBitArraySerializer(),
-                    new NetFormattedStringSerializer()
+                    new NetFormattedStringSerializer(),
+                    new NetUnsafeFloatSerializer(),
                 }
             };
+
+            if ((_floatFlags & SerializerFloatFlags.RemoveReadNan) != 0)
+            {
+                settings.CustomTypeSerializers =
+                [
+                    ..settings.CustomTypeSerializers,
+                    // This replaces NetSerializer's default serializer.
+                    new NetSafeFloatSerializer()
+                ];
+            }
+
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
             LogSzr.Info($"Serializer Types Hash: {_serializer.GetSHA256()}");

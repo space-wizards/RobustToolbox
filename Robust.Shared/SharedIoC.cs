@@ -39,7 +39,7 @@ namespace Robust.Shared
             deps.Register<TaskManager, TaskManager>();
             deps.Register<ITimerManager, TimerManager>();
             deps.Register<ProfManager, ProfManager>();
-            deps.Register<IRobustRandom, RobustRandom>();
+            deps.RegisterInstance<IRobustRandom>(new RobustRandom());
             deps.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             deps.Register<ISandboxHelper, SandboxHelper>();
             deps.Register<IManifoldManager, CollisionManager>();

@@ -9,21 +9,44 @@ namespace Robust.Shared.Random;
 /// </summary>
 /// <example>
 /// <code>
-///     var myRng = new RobustRandom();
 ///     // Optionally, seed your RNG. By default, the RNG is seeded randomly.
-///     myRng.SetSeed(17);
+///     var myRng = new RobustRandom(17);
 ///     <br/>
 ///     var fairDiceRoll = myRng.Next(1, 6); // Will be 4 with this seed.
 /// </code>
 /// </example>
 public sealed class RobustRandom : IRobustRandom
 {
-    // This should not contain any logic, not directly related to calling specific methods of <see cref="Random"/>.
-    // To write additional logic, attached to random roll, please create interface-implemented methods on <see cref="IRobustRandom"/>
-    // or add it to <see cref="RandomExtensions"/>.
-    private System.Random _random = new();
+    // Yea this is just SmallRandom under the hood. This class exists for two reasons:
+    // - Back compat
+    // - Type safety as a global construct. You can't accidentally serialize RobustRandom
+    private System.Random _random;
 
-    public System.Random GetRandom() => _random;
+    /// <summary>
+    ///     Initialize the randomizer with a new, nondeterministic seed.
+    /// </summary>
+    public RobustRandom()
+    {
+        // Just init a new one with global seeding.
+        _random = new();
+    }
+
+    /// <summary>
+    ///     Initialize the randomizer with a specific integer seed.
+    /// </summary>
+    public RobustRandom(int seed)
+    {
+        _random = new(seed);
+    }
+
+    /// <summary>
+    ///     Initialize the randomizer by seeding it with another randomizer.
+    /// </summary>
+    /// <param name="other"></param>
+    public RobustRandom(IRobustRandom other)
+    {
+        _random = new(other.Next());
+    }
 
     public void SetSeed(int seed)
     {

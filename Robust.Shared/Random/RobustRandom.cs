@@ -17,9 +17,9 @@ namespace Robust.Shared.Random;
 /// </example>
 public sealed class RobustRandom : IRobustRandom
 {
-    // Yea this is just SmallRandom under the hood. This class exists for two reasons:
-    // - Back compat
-    // - Type safety as a global construct. You can't accidentally serialize RobustRandom
+    // This should not contain any logic, not directly related to calling specific methods of <see cref="Random"/>.
+    // To write additional logic, attached to random roll, please create interface-implemented methods on <see cref="IRobustRandom"/>
+    // or add it to <see cref="RandomExtensions"/>.
     private System.Random _random;
 
     /// <summary>

@@ -12,6 +12,7 @@ namespace Robust.Analyzers;
 public sealed class PreferOtherTypeAnalyzer : DiagnosticAnalyzer
 {
     private const string AttributeType = "Robust.Shared.Analyzers.PreferOtherTypeAttribute";
+    public static readonly string ReplacementType = "replacement";
 
     private static readonly DiagnosticDescriptor PreferOtherTypeDescriptor = new(
         Diagnostics.IdPreferOtherType,
@@ -30,27 +31,31 @@ public sealed class PreferOtherTypeAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics | GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(AnalyzeField, SyntaxKind.VariableDeclaration);
+        context.RegisterSyntaxNodeAction(AnalyzeGeneric, SyntaxKind.GenericName);
     }
 
-    private void AnalyzeField(SyntaxNodeAnalysisContext context)
+    private void AnalyzeGeneric(SyntaxNodeAnalysisContext context)
     {
-        if (context.Node is not VariableDeclarationSyntax node)
+        if (context.Node is not GenericNameSyntax genericName)
             return;
+        CheckType(genericName, context);
+    }
+
+    private void CheckType(TypeSyntax syntax, SyntaxNodeAnalysisContext context)
+    {
+        var preferOtherTypeAttribute = context.Compilation.GetTypeByMetadataName(AttributeType);
 
         // Get the type of the generic being used
-        if (node.Type is not GenericNameSyntax genericName)
+        if (syntax is not GenericNameSyntax genericName)
             return;
         var genericSyntax = genericName.TypeArgumentList.Arguments[0];
-        if (context.SemanticModel.GetSymbolInfo(genericSyntax).Symbol is not { } genericType)
+
+        if (context.SemanticModel.GetSymbolInfo(genericSyntax).Symbol is not { } symbol)
             return;
 
-        // Look for the PreferOtherTypeAttribute
-        var symbolInfo = context.SemanticModel.GetSymbolInfo(node.Type);
+        var symbolInfo = context.SemanticModel.GetSymbolInfo(syntax);
         if (symbolInfo.Symbol?.GetAttributes() is not { } attributes)
             return;
-
-        var preferOtherTypeAttribute = context.Compilation.GetTypeByMetadataName(AttributeType);
 
         foreach (var attribute in attributes)
         {
@@ -59,17 +64,21 @@ public sealed class PreferOtherTypeAnalyzer : DiagnosticAnalyzer
 
             // See if the generic type argument matches the type the attribute specifies
             if (attribute.ConstructorArguments[0].Value is not ITypeSymbol checkedType)
-                return;
-            if (!SymbolEqualityComparer.Default.Equals(checkedType, genericType))
                 continue;
-
+            if (!SymbolEqualityComparer.Default.Equals(checkedType, symbol))
+                continue;
             if (attribute.ConstructorArguments[1].Value is not ITypeSymbol replacementType)
                 continue;
+            var props = new Dictionary<string, string?>
+            {
+                { ReplacementType, replacementType.Name }
+            };
             context.ReportDiagnostic(Diagnostic.Create(PreferOtherTypeDescriptor,
-                context.Node.GetLocation(),
+                syntax.GetLocation(),
+                props.ToImmutableDictionary(),
                 replacementType.Name,
                 symbolInfo.Symbol.Name,
-                genericType.Name));
+                symbol.Name));
         }
     }
 }

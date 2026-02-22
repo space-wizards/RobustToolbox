@@ -118,16 +118,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
 
-        SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
-        SubscribeLocalEvent<AudioComponent, ComponentShutdown>(OnAudioShutdown);
-        SubscribeLocalEvent<AudioComponent, EntityPausedEvent>(OnAudioPaused);
-        SubscribeLocalEvent<AudioComponent, AfterAutoHandleStateEvent>(OnAudioState);
-
-        // Replay stuff
-        SubscribeNetworkEvent<PlayAudioGlobalMessage>(OnGlobalAudio);
-        SubscribeNetworkEvent<PlayAudioEntityMessage>(OnEntityAudio);
-        SubscribeNetworkEvent<PlayAudioPositionalMessage>(OnEntityCoordinates);
-
         Subs.CVar(CfgManager, CVars.AudioEndBuffer, OnAudioBuffer, true);
         Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
         Subs.CVar(CfgManager, CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
@@ -146,6 +136,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         _audioFrameTimeRemaining = MathF.Min(_audioFrameTimeRemaining, _audioFrameTime);
     }
 
+    [LocalEventSubscription]
     private void OnAudioState(Entity<AudioComponent> entity, ref AfterAutoHandleStateEvent args)
     {
         var component = entity.Comp;
@@ -211,6 +202,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         _audio.SetMasterGain(value);
     }
 
+    [LocalEventSubscription]
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)
     {
         component.Pause();
@@ -222,6 +214,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.StartPlaying();
     }
 
+    [LocalEventSubscription]
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
     {
         if (!Timing.ApplyingState && !Timing.IsFirstTimePredicted)
@@ -293,6 +286,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
     }
 
+    [LocalEventSubscription]
     private void OnAudioShutdown(EntityUid uid, AudioComponent component, ComponentShutdown args)
     {
         // Breaks with prediction?
@@ -775,16 +769,19 @@ public sealed partial class AudioSystem : SharedAudioSystem
         source.Looping = audioParams.Loop;
     }
 
+    [NetworkEventSubscription]
     private void OnEntityCoordinates(PlayAudioPositionalMessage ev)
     {
         PlayStatic(ev.Specifier, GetCoordinates(ev.Coordinates), ev.AudioParams, false);
     }
 
+    [NetworkEventSubscription]
     private void OnEntityAudio(PlayAudioEntityMessage ev)
     {
         PlayEntity(ev.Specifier, GetEntity(ev.NetEntity), ev.AudioParams, false);
     }
 
+    [NetworkEventSubscription]
     private void OnGlobalAudio(PlayAudioGlobalMessage ev)
     {
         PlayGlobal(ev.Specifier, ev.AudioParams, false);

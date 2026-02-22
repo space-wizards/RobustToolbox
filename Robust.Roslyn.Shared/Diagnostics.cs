@@ -48,6 +48,9 @@ public static class Diagnostics
     public const string IdPrototypeRedundantType = "RA0042";
     public const string IdPrototypeEndsWithPrototype = "RA0043";
     public const string IdValidateMember = "RA0044";
+    public const string IdInvalidAMethodSignatureForGeneratedSubscription = "RA0045";
+    public const string IdInvalidContainingTypeForGeneratedSubscription = "RA0046";
+    public const string IdNonPartialContainingTypeForGeneratedSubscription = "RA00467";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

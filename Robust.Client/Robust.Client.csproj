@@ -73,6 +73,7 @@
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />
 
   <ItemGroup Condition="'$(IsFreedesktop)' == 'True'">
     <PackageReference Include="SpaceWizards.Fontconfig.Interop" />

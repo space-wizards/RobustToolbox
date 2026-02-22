@@ -38,6 +38,7 @@
     <File Path="MSBuild/MacOSAppBundle.targets" />
     <File Path="MSBuild/Robust.Analyzers.targets" />
     <File Path="MSBuild/Robust.CompNetworkGenerator.targets" />
+    <File Path="MSBuild/Robust.EntitySystemSubscriptionsGenerator.targets" />
     <File Path="MSBuild/Robust.Configurations.props" />
     <File Path="MSBuild/Robust.DefineConstants.targets" />
     <File Path="MSBuild/Robust.Engine.props" />
@@ -83,6 +84,10 @@
       <BuildType Solution="Tools|*" Project="Release" />
     </Project>
     <Project Path="Robust.Shared.CompNetworkGenerator/Robust.Shared.CompNetworkGenerator.csproj">
+      <BuildType Solution="DebugOpt|*" Project="Debug" />
+      <BuildType Solution="Tools|*" Project="Release" />
+    </Project>
+    <Project Path="Robust.Shared.EntitySystemSubscriptionsGenerator/Robust.Shared.EntitySystemSubscriptionsGenerator.csproj">
       <BuildType Solution="DebugOpt|*" Project="Debug" />
       <BuildType Solution="Tools|*" Project="Release" />
     </Project>

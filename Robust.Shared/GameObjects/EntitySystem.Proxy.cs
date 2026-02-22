@@ -878,7 +878,7 @@ public partial class EntitySystem
     protected EntityUid SpawnAtPosition(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         => EntityManager.SpawnAtPosition(prototype, coordinates, overrides);
 
-    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,EntityUid,string,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TrySpawnInContainer(
         string? protoName,
@@ -889,6 +889,18 @@ public partial class EntitySystem
         ComponentRegistry? overrides = null)
     {
         return EntityManager.TrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,BaseContainer,out EntityUid?,ComponentRegistry?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.TrySpawnInContainer(protoName, container, out uid, overrides);
     }
 
     /// <inheritdoc cref="IEntityManager.TrySpawnNextTo" />
@@ -914,7 +926,7 @@ public partial class EntitySystem
         return EntityManager.SpawnNextToOrDrop(protoName, target, xform, overrides);
     }
 
-    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop(string?,EntityUid,string,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid SpawnInContainerOrDrop(
         string? protoName,
@@ -925,6 +937,18 @@ public partial class EntitySystem
         ComponentRegistry? overrides = null)
     {
         return EntityManager.SpawnInContainerOrDrop(protoName, containerUid, containerId, xform, container, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop(string?,BaseContainer,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer baseContainer,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? container = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.SpawnInContainerOrDrop(protoName, baseContainer, xform, container, overrides);
     }
 
     #endregion
@@ -946,7 +970,7 @@ public partial class EntitySystem
     protected EntityUid PredictedSpawnAtPosition(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         => EntityManager.PredictedSpawnAtPosition(prototype, coordinates, overrides);
 
-    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,EntityUid,string,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool PredictedTrySpawnInContainer(
         string? protoName,
@@ -957,6 +981,29 @@ public partial class EntitySystem
         ComponentRegistry? overrides = null)
     {
         return EntityManager.PredictedTrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,EntityUid,string,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool PredictedTrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedTrySpawnInContainer(protoName, container, out uid, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,EntityUid,string,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool PredictedTrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        EntityUid? mapUid,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedTrySpawnInContainer(protoName, container, out uid, mapUid, overrides);
     }
 
     /// <inheritdoc cref="IEntityManager.TrySpawnNextTo" />
@@ -993,6 +1040,18 @@ public partial class EntitySystem
         ComponentRegistry? overrides = null)
     {
         return EntityManager.PredictedSpawnInContainerOrDrop(protoName, containerUid, containerId, xform, container, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer baseContainer,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? container = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedSpawnInContainerOrDrop(protoName, baseContainer, xform, container, overrides);
     }
 
     #endregion

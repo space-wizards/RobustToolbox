@@ -8,6 +8,7 @@ using Robust.Client.Placement;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 
@@ -16,6 +17,9 @@ namespace Robust.Client.UserInterface.CustomControls
     [GenerateTypedNameReferences]
     public sealed partial class EntitySpawnWindow : DefaultWindow
     {
+        private static readonly LocId NoDescriptionMessage = "entity-spawn-window-no-description";
+
+        [Dependency] private readonly ILocalizationManager _loc = default!;
         [Dependency] private readonly IPlacementManager _placement = default!;
 
         public EntitySpawnButton? SelectedButton;
@@ -53,7 +57,8 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             button.EntityLabel.Text = entityLabelText;
-            button.ActualButton.ToolTip = $"{prototype.ID}\n{prototype.Description}";
+            var desc = string.IsNullOrEmpty(prototype.Description) ? _loc.GetString(NoDescriptionMessage) : prototype.Description;
+            button.ActualButton.ToolTip = $"{prototype.ID}\n{desc}";
 
             if (prototype == SelectedPrototype)
             {

@@ -429,7 +429,7 @@ namespace Robust.Client.UserInterface
                 return ElementType.IsInstanceOfType(control);
             }
 
-            return false;
+            return true;
         }
 
         public override StyleSpecificity CalculateSpecificity()

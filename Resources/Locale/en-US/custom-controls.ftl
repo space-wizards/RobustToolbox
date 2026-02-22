@@ -3,6 +3,7 @@
 entity-spawn-window-title = Entity Spawn Panel
 entity-spawn-window-replace-button-text = Replace
 entity-spawn-window-override-menu-tooltip = Override placement
+entity-spawn-window-no-description = No description
 
 ## TileSpawnWindow
 

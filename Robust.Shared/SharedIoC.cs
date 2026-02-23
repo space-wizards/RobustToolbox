@@ -1,13 +1,10 @@
 using Robust.Shared.Asynchronous;
-using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
@@ -50,6 +47,8 @@ namespace Robust.Shared
             deps.Register<HttpClientHolder>();
             deps.Register<RobustMemoryManager>();
             deps.Register<EntityConsoleHost>();
+            deps.Register<IHttpManager, HttpManager>();
+            deps.Register<IHttpManagerInternal, HttpManager>();
         }
     }
 }

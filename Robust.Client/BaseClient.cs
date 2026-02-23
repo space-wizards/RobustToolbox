@@ -31,6 +31,7 @@ namespace Robust.Client
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IClientGameStateManager _gameStates = default!;
         [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private readonly IHttpManagerInternal _http = default!;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
@@ -255,6 +256,7 @@ namespace Robust.Client
 
         private void GameStoppedReset()
         {
+            _http.Shutdown();
             _configManager.FlushMessages();
             _gameStates.Reset();
             _playMan.Shutdown();

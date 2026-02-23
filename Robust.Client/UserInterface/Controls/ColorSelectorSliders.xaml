@@ -1,0 +1,30 @@
+<Control xmlns="https://spacestation14.io">
+    <BoxContainer Name="RootBox" Orientation="Vertical">
+        <BoxContainer Name="HeaderBox"
+            Orientation="Horizontal"
+            SeparationOverride="5">
+            <OptionButton Name="TypeSelector" />
+            <Label Name="ColorDescriptionLabel" />
+        </BoxContainer>
+        <BoxContainer Name="BodyBox" Orientation="Vertical">
+            <ColorSliderChannel Name="TopChannel" />
+            <ColorSliderChannel Name="MiddleChannel" />
+            <ColorSliderChannel Name="BottomChannel" />
+            <AlphaSliderChannel Name="AlphaChannel" />
+        </BoxContainer>
+        <BoxContainer Name="HexBox"
+            Orientation="Horizontal"
+            HorizontalExpand="True">
+            <PanelContainer Name="ColorPreviewPanel"
+                Margin="2"
+                HorizontalExpand="True"
+                SizeFlagsStretchRatio="1" />
+            <Control HorizontalExpand="True"
+                SizeFlagsStretchRatio="3" />
+            <BoxContainer Name="HexEditBox" Orientation="Horizontal">
+                <Label Text="#" />
+                <!-- mono line edit added in c# -->
+            </BoxContainer>
+        </BoxContainer>
+    </BoxContainer>
+</Control>

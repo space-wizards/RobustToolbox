@@ -308,7 +308,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            var font = _getFont();
+            var font = GetFont();
             var style = _getStyleBox();
             return new Vector2(0, font.GetHeight(1.0f)) + style.MinimumSize;
         }
@@ -797,7 +797,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var clickPosX = horizontalPos * UIScale;
 
-            var font = _getFont();
+            var font = GetFont();
             var index = 0;
             var chrPosX = contentBox.Left - _drawOffset;
             var lastChrPostX = contentBox.Left - _drawOffset;
@@ -852,7 +852,7 @@ namespace Robust.Client.UserInterface.Controls
             var style = _getStyleBox();
             var contentBox = style.GetContentBox(PixelSizeBox, UIScale);
 
-            var font = _getFont();
+            var font = GetFont();
             var i = 0;
             var chrPosX = contentBox.Left - _drawOffset;
             foreach (var rune in _text.EnumerateRunes())
@@ -902,7 +902,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [Pure]
-        private Font _getFont()
+        protected Font GetFont()
         {
             if (TryGetStyleProperty<Font>("font", out var font))
             {
@@ -1003,7 +1003,7 @@ namespace Robust.Client.UserInterface.Controls
                 base.Draw(handle);
 
                 var contentBox = PixelSizeBox;
-                var font = _master._getFont();
+                var font = _master.GetFont();
                 var renderedTextColor = _master._getFontColor();
 
                 var uiScale = UIScale;

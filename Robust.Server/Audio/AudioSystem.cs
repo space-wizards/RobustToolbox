@@ -78,6 +78,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
             if (session.AttachedEntity is {} ent)
                 component.IncludedEntities.Add(ent);
         }
+
+        var audioFilterComp = AddComp<AudioPlayerFilterComponent>(uid);
+        audioFilterComp.IncludedEntities = component.IncludedEntities;
+        audioFilterComp.FilterExpression = filter.FilterExpression;
     }
 
     /// <inheritdoc />

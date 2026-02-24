@@ -593,6 +593,28 @@ public partial class EntityManager
         return netEntities;
     }
 
+    public NetEntity[] GetNetEntityArray(IReadOnlyCollection<EntityUid> entities)
+    {
+        var netEntities = new NetEntity[entities.Count];
+        var i = 0;
+        foreach (var ent in entities)
+        {
+            netEntities[i++] = GetNetEntity(ent);
+        }
+        return netEntities;
+    }
+
+    public NetEntity?[] GetNetEntityArray(IReadOnlyCollection<EntityUid?> entities)
+    {
+        var netEntities = new NetEntity?[entities.Count];
+        var i = 0;
+        foreach (var ent in entities)
+        {
+            netEntities[i++] = GetNetEntity(ent);
+        }
+        return netEntities;
+    }
+
     /// <inheritdoc />
     public Dictionary<NetEntity, T> GetNetEntityDictionary<T>(Dictionary<EntityUid, T> entities)
     {

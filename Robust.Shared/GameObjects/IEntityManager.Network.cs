@@ -157,6 +157,16 @@ public partial interface IEntityManager
     NetEntity?[] GetNetEntityArray(EntityUid?[] entities);
 
     /// <summary>
+    /// Array version of <see cref="GetNetEntity"/>
+    /// </summary>
+    NetEntity[] GetNetEntityArray(IReadOnlyCollection<EntityUid> entities);
+
+    /// <summary>
+    /// Array version of <see cref="GetNetEntity"/>
+    /// </summary>
+    NetEntity?[] GetNetEntityArray(IReadOnlyCollection<EntityUid?> entities);
+
+    /// <summary>
     /// Dictionary version of <see cref="GetNetEntity"/>
     /// </summary>
     Dictionary<NetEntity, T> GetNetEntityDictionary<T>(Dictionary<EntityUid, T> entities);

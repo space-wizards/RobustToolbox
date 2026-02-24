@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
+using Robust.Client.Replays;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
@@ -380,6 +382,22 @@ public sealed partial class AudioSystem : SharedAudioSystem
             component.StartPlaying();
         }
 
+        // Check that the local player wasn't excluded at playback start.
+        // This check is intended to make it so replays work properly,
+        // and to match regular client behavior, only checking "at playback start" is best.
+        //
+        // Note that in some cases this causes some *undesirable* behavior in replays.
+        // A current example from SS14 is that if you start inspecting somebody with a Geiger counter,
+        // and they get rads, then the sound does not go away if you stop spectating them.
+        // This is actually reproducible without replays too: open two clients, get one listening to the geiger effect,
+        // then use the second client to take control and kick the first out to a ghost.
+        component.IsLocalExcluded ??= CheckIsLocalExcluded(entity);
+        if (component.IsLocalExcluded is true)
+        {
+            component.Gain = 0f;
+            return;
+        }
+
         // If it's global but on another map (that isn't nullspace) then stop playing it.
         if (component.Global)
         {
@@ -457,6 +475,32 @@ public sealed partial class AudioSystem : SharedAudioSystem
             var velocity = _physics.GetMapLinearVelocity(parentUid, physicsComp);
             component.Velocity = velocity;
         }
+    }
+
+    private bool CheckIsLocalExcluded(EntityUid entity)
+    {
+        if (!TryComp(entity, out AudioPlayerFilterComponent? filter))
+            return false;
+
+        if (_playerManager.LocalEntity is not { } localEntity)
+            return true;
+
+        if (filter.IncludedEntities.Contains(localEntity))
+            return false;
+
+        // If this entity wasn't an actor in the replay before spectating,
+        // then it's impossible for it to be in IncludedEntities.
+        // Therefore, we should evaluate ourselves by checking against the filter expression.
+        if (TryComp(localEntity, out ReplayCameraComponent? camera) && !camera.IsActorInReplay)
+        {
+            if (_playerManager.LocalSession is { } localSession && filter.FilterExpression is { } filterExpr)
+            {
+                if (filterExpr.Matches(localSession))
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>

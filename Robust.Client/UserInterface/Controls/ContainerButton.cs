@@ -5,11 +5,13 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    /// <summary>
+    /// Unstyled button that can contain child elements
+    /// </summary>
     [Virtual]
     public class ContainerButton : BaseButton
     {
         public const string StylePropertyStyleBox = "stylebox";
-        public const string StyleClassButton = "button";
         public const string StylePseudoClassNormal = "normal";
         public const string StylePseudoClassPressed = "pressed";
         public const string StylePseudoClassHover = "hover";

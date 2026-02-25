@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.ComponentModel;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.CustomControls;
@@ -84,6 +84,11 @@ namespace Robust.Client.UserInterface.Controls
         /// Can be cancelled.
         /// </summary>
         public event Action<CancelEventArgs>? Closing;
+
+        /// <summary>
+        /// Raised when the user clicks the close button on the window. Can be canceled!
+        /// </summary>
+        public event Action<CancelEventArgs>? RequestClosed;
 
         /// <summary>
         /// Raised when the window has been closed.
@@ -185,6 +190,11 @@ namespace Robust.Client.UserInterface.Controls
 
         private void OnWindowRequestClosed(WindowRequestClosedEventArgs eventArgs)
         {
+            var cancelEventArgs = new CancelEventArgs();
+            RequestClosed?.Invoke(cancelEventArgs);
+            if (cancelEventArgs.Cancel)
+                return;
+
             Close();
         }
 

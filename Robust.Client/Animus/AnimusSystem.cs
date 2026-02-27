@@ -146,29 +146,49 @@ internal sealed class AnimusSystem : EntitySystem
 
         foreach (var state in proto.States)
         {
-            // TODO: Add more info to error message.
-            if (state.Conditions.Length == 0)
-                _sawmill.Error("Every AnimusState must have at least one condition. (Except DefaultState)");
-
-            var stateCopy = _serializationManager.CreateCopy(state, null, false, false);
-            stateCopy.Initialize(entity.Owner, EntityManager, animusInstance);
-
-            foreach (var cond in stateCopy.Conditions)
-            {
-                cond.Initialize(EntityManager);
-            }
-
-            foreach (var trigger in stateCopy.Triggers)
-            {
-                trigger.InitializeInternal(EntityManager, entity, stateCopy);
-            }
-
-            states.Add(stateCopy);
+            states.Add(CopyInitializeState(entity, state, animusInstance));
         }
 
         animusInstance.States = states.ToArray();
+        animusInstance.DefaultState = CopyInitializeState(entity, proto.DefaultState, animusInstance);
 
         entity.Comp.ActiveStateMachines.Add(animusInstance);
+    }
+
+    private void RegisterTriggerSubscriptions()
+    {
+        // Find all AnimusTriggerEventSubscription used in animus prototypes.
+        var prototypes = _prototypeManager.GetInstances<AnimusPrototype>();
+        foreach (var proto in prototypes)
+        {
+
+        }
+
+        // Read ComponentName and EventName for each
+
+        // Subscribe using reflection
+    }
+
+    private AnimusStateBase CopyInitializeState(Entity<AnimusComponent> entity, AnimusStateBase state, AnimusInstance animusInstance)
+    {
+        // TODO: Add more info to error message.
+        if (state.Conditions.Length == 0)
+            _sawmill.Error("Every AnimusState must have at least one condition. (Except DefaultState)");
+
+        var stateCopy = _serializationManager.CreateCopy(state, null, false, false);
+        stateCopy.Initialize(entity.Owner, EntityManager, animusInstance);
+
+        foreach (var cond in stateCopy.Conditions)
+        {
+            cond.Initialize(EntityManager);
+        }
+
+        foreach (var trigger in stateCopy.Triggers)
+        {
+            trigger.InitializeInternal(EntityManager, entity, stateCopy);
+        }
+
+        return stateCopy;
     }
 
     private void UpdateStateMachine(Entity<AnimusComponent> entity, AnimusInstance animusInstance)

@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects;
 /// <summary>
 /// Network identifier for entities; used by client and server to refer to the same entity where their local <see cref="EntityUid"/> may differ.
 /// </summary>
-[Serializable, NetSerializable, CopyByRef]
+[Serializable, NetSerializable, CopyByRef, NotYamlSerializable]
 public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFormattable
 {
     public readonly int Id;

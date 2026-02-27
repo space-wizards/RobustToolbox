@@ -182,6 +182,17 @@ internal sealed partial class UserInterfaceManager
         public void QueueStyleUpdate(Control control)
         {
             _styleUpdateQueue.Enqueue(control);
+
+            /// Request children to be restyled, which will recursively enqueue style updates
+            /// for all descendent child Controls. This is to propogate changed styles to any
+            /// controls which use a MutableSelectorChild rule based on the input control.
+            if (control.RestyleChildElements)
+            {
+                foreach (var child in control.Children)
+                {
+                    child.Restyle();
+                }
+            }
         }
 
         /// <summary>

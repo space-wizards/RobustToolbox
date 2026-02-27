@@ -17,7 +17,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.EntityExists(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.EntityExists))]
     protected bool Exists(EntityUid uid)
     {
         return EntityManager.EntityExists(uid);
@@ -25,7 +24,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.EntityExists(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.EntityExists))]
     protected bool Exists([NotNullWhen(true)] EntityUid? uid)
     {
         return EntityManager.EntityExists(uid);
@@ -126,7 +124,6 @@ public partial class EntitySystem
     #region Entity Metadata
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected bool IsPaused(EntityUid? uid, MetaDataComponent? metadata = null)
     {
         return EntityManager.IsPaused(uid, metadata);
@@ -139,7 +136,6 @@ public partial class EntitySystem
     /// Calling Dirty on a component will call this directly.
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void DirtyEntity(EntityUid uid, MetaDataComponent? meta = null)
     {
         EntityManager.DirtyEntity(uid, meta);
@@ -147,14 +143,12 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(uid, component, meta);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void DirtyField(EntityUid uid, IComponentDelta delta, string fieldName, MetaDataComponent? meta = null)
     {
         EntityManager.DirtyField(uid, delta, fieldName, meta);
@@ -171,7 +165,6 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void DirtyField<T>(EntityUid uid, T component, [ValidateMember]string fieldName, MetaDataComponent? meta = null)
         where T : IComponentDelta
     {
@@ -179,7 +172,6 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params string[] fields)
         where T : IComponentDelta
     {
@@ -200,7 +192,6 @@ public partial class EntitySystem
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent?
     {
         var comp = ent.Comp;
@@ -212,7 +203,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void Dirty<T1, T2>(Entity<T1, T2> ent, MetaDataComponent? meta = null)
         where T1 : IComponent
         where T2 : IComponent
@@ -222,7 +212,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void Dirty<T1, T2, T3>(Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
         where T1 : IComponent
         where T2 : IComponent
@@ -233,7 +222,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void Dirty<T1, T2, T3, T4>(Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
         where T1 : IComponent
         where T2 : IComponent
@@ -421,7 +409,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     [return: NotNullIfNotNull("uid")]
     protected EntityStringRepresentation? ToPrettyString(EntityUid? uid, MetaDataComponent? metadata = null)
     {
@@ -430,7 +417,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     [return: NotNullIfNotNull("netEntity")]
     protected EntityStringRepresentation? ToPrettyString(NetEntity? netEntity)
     {
@@ -439,19 +425,16 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata)
         => EntityManager.ToPrettyString((uid, metadata));
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityStringRepresentation ToPrettyString(Entity<MetaDataComponent?> entity)
         => EntityManager.ToPrettyString(entity);
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityStringRepresentation ToPrettyString(NetEntity netEntity)
         => EntityManager.ToPrettyString(netEntity);
 
@@ -461,7 +444,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.GetComponent&lt;T&gt;"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.GetComponent))]
     protected T Comp<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.GetComponent<T>(uid);
@@ -488,7 +470,6 @@ public partial class EntitySystem
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [PreferNonGenericVariantFor(typeof(TransformComponent), typeof(MetaDataComponent))]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
     protected bool TryComp<T>(EntityUid uid, [NotNullWhen(true)] out T? comp) where T : IComponent
     {
         return EntityManager.TryGetComponent(uid, out comp);
@@ -510,7 +491,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
     protected bool TryComp<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? comp) where T : IComponent
     {
         if (!uid.HasValue)
@@ -548,7 +528,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.GetComponents"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.GetComponents))]
     protected IEnumerable<IComponent> AllComps(EntityUid uid)
     {
         return EntityManager.GetComponents(uid);
@@ -556,7 +535,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.GetComponents&lt;T&gt;"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.GetComponents))]
     protected IEnumerable<T> AllComps<T>(EntityUid uid)
     {
         return EntityManager.GetComponents<T>(uid);
@@ -583,14 +561,12 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
-    protected (EntityUid, MetaDataComponent) GetEntityData(NetEntity nuid)
+    protected (EntityUid, MetaDataComponent)  GetEntityData(NetEntity nuid)
     {
         return EntityManager.GetEntityData(nuid);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected bool TryGetEntityData(NetEntity nuid, [NotNullWhen(true)] out EntityUid? uid,
         [NotNullWhen(true)] out MetaDataComponent? meta)
     {
@@ -602,7 +578,6 @@ public partial class EntitySystem
     #region Component Copy
 
     /// <inheritdoc cref="IEntityManager.TryCopyComponent"/>
-    [ProxyFor(typeof(EntityManager))]
     protected bool TryCopyComponent<T>(
         EntityUid source,
         EntityUid target,
@@ -614,7 +589,6 @@ public partial class EntitySystem
     }
 
     /// <inheritdoc cref="IEntityManager.TryCopyComponents"/>
-    [ProxyFor(typeof(EntityManager))]
     protected bool TryCopyComponents(
         EntityUid source,
         EntityUid target,
@@ -626,7 +600,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.CopyComponent"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.CopyComponent))]
     protected IComponent CopyComp(EntityUid source, EntityUid target, IComponent sourceComponent, MetaDataComponent? meta = null)
     {
         return EntityManager.CopyComponent(source, target, sourceComponent, meta);
@@ -634,7 +607,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.CopyComponent{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.CopyComponent))]
     protected T CopyComp<T>(EntityUid source, EntityUid target, T sourceComponent, MetaDataComponent? meta = null) where T : IComponent
     {
         return EntityManager.CopyComponent(source, target, sourceComponent, meta);
@@ -642,7 +614,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.CopyComponents"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.CopyComponents))]
     protected void CopyComps(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents)
     {
         EntityManager.CopyComponents(source, target, meta, sourceComponents);
@@ -656,7 +627,6 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.HasComponent))]
     protected bool HasComp<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.HasComponent<T>(uid);
@@ -666,7 +636,6 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.HasComponent))]
     protected bool HasComp(EntityUid uid, Type type)
     {
         return EntityManager.HasComponent(uid, type);
@@ -676,7 +645,6 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.HasComponent))]
     protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent
     {
         return EntityManager.HasComponent<T>(uid);
@@ -686,7 +654,6 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.HasComponent))]
     protected bool HasComp([NotNullWhen(true)] EntityUid? uid, Type type)
     {
         return EntityManager.HasComponent(uid, type);
@@ -698,15 +665,13 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.AddComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.AddComponent))]
-    protected T AddComp<T>(EntityUid uid) where T : IComponent, new()
+    protected T AddComp<T>(EntityUid uid) where T :  IComponent, new()
     {
         return EntityManager.AddComponent<T>(uid);
     }
 
     /// <inheritdoc cref="IEntityManager.AddComponent&lt;T&gt;(EntityUid, T, bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.AddComponent))]
     protected void AddComp<T>(EntityUid uid, T component, bool overwrite = false) where T : IComponent
     {
         EntityManager.AddComponent(uid, component, overwrite);
@@ -714,7 +679,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.EnsureComponent))]
     protected T EnsureComp<T>(EntityUid uid) where T : IComponent, new()
     {
         return EntityManager.EnsureComponent<T>(uid);
@@ -722,7 +686,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.EnsureComponent))]
     protected bool EnsureComp<T>(EntityUid uid, out T comp) where T : IComponent, new()
     {
         return EntityManager.EnsureComponent(uid, out comp);
@@ -730,7 +693,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(ref Entity&lt;T&gt;)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.EnsureComponent))]
     protected bool EnsureComp<T>(ref Entity<T?> entity) where T : IComponent, new()
     {
         return EntityManager.EnsureComponent(ref entity);
@@ -742,7 +704,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.RemoveComponentDeferred))]
     protected bool RemCompDeferred<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.RemoveComponentDeferred<T>(uid);
@@ -750,7 +711,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, Type)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.RemoveComponentDeferred))]
     protected bool RemCompDeferred(EntityUid uid, Type type)
     {
         return EntityManager.RemoveComponentDeferred(uid, type);
@@ -758,7 +718,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, IComponent)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.RemoveComponentDeferred))]
     protected void RemCompDeferred(EntityUid uid, IComponent component)
     {
         EntityManager.RemoveComponentDeferred(uid, component);
@@ -769,7 +728,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.Count" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected int Count<T>() where T : IComponent
     {
         return EntityManager.Count<T>();
@@ -777,7 +735,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.Count" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected int Count(Type type)
     {
         return EntityManager.Count(type);
@@ -789,7 +746,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.RemoveComponent))]
     protected bool RemComp<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.RemoveComponent<T>(uid);
@@ -797,7 +753,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, Type)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.RemoveComponent))]
     protected bool RemComp(EntityUid uid, Type type)
     {
         return EntityManager.RemoveComponent(uid, type);
@@ -805,7 +760,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, IComponent)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.RemoveComponent))]
     protected void RemComp(EntityUid uid, IComponent component)
     {
         EntityManager.RemoveComponent(uid, component);
@@ -816,7 +770,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.DeleteEntity))]
     protected void Del(EntityUid? uid)
     {
         EntityManager.DeleteEntity(uid);
@@ -824,7 +777,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.QueueDeleteEntity))]
     protected void QueueDel(EntityUid? uid)
     {
         EntityManager.QueueDeleteEntity(uid);
@@ -832,7 +784,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedDeleteEntity))]
     protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?> ent)
     {
         EntityManager.PredictedDeleteEntity(ent);
@@ -840,7 +791,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedDeleteEntity))]
     protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
     {
         EntityManager.PredictedDeleteEntity(ent);
@@ -848,7 +798,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
     protected void PredictedQueueDel(Entity<MetaDataComponent?> ent)
     {
         EntityManager.PredictedQueueDeleteEntity(ent);
@@ -856,7 +805,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
     protected void PredictedQueueDel(Entity<MetaDataComponent?>? ent)
     {
         EntityManager.PredictedQueueDeleteEntity(ent);
@@ -864,7 +812,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
     protected void PredictedQueueDel(EntityUid uid)
     {
         EntityManager.PredictedQueueDeleteEntity(uid);
@@ -872,7 +819,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
     protected void PredictedQueueDel(EntityUid? uid)
     {
         EntityManager.PredictedQueueDeleteEntity(uid);
@@ -896,7 +842,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TryQueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryQueueDeleteEntity))]
     protected bool TryQueueDel(EntityUid? uid)
     {
         return EntityManager.TryQueueDeleteEntity(uid);
@@ -908,7 +853,6 @@ public partial class EntitySystem
 
     // This method will be obsoleted soon(TM).
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.SpawnEntity))]
     protected EntityUid Spawn(string? prototype, EntityCoordinates coordinates)
     {
         return ((IEntityManager)EntityManager).SpawnEntity(prototype, coordinates);
@@ -916,31 +860,26 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.Spawn(string?, MapCoordinates, ComponentRegistry?, Angle)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid Spawn(string? prototype, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
         => EntityManager.Spawn(prototype, coordinates, overrides, rotation);
 
     /// <inheritdoc cref="IEntityManager.Spawn(string?, ComponentRegistry?, bool)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid Spawn(string? prototype = null, ComponentRegistry? overrides = null, bool doMapInit = true)
         => EntityManager.Spawn(prototype, overrides, doMapInit);
 
     /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
         => EntityManager.SpawnAttachedTo(prototype, coordinates, overrides, rotation);
 
     /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid SpawnAtPosition(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         => EntityManager.SpawnAtPosition(prototype, coordinates, overrides);
 
     /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected bool TrySpawnInContainer(
         string? protoName,
         EntityUid containerUid,
@@ -954,7 +893,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TrySpawnNextTo" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected bool TrySpawnNextTo(
         string? protoName,
         EntityUid target,
@@ -967,7 +905,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.SpawnNextToOrDrop" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid SpawnNextToOrDrop(
         string? protoName,
         EntityUid target,
@@ -979,7 +916,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid SpawnInContainerOrDrop(
         string? protoName,
         EntityUid containerUid,
@@ -995,7 +931,6 @@ public partial class EntitySystem
 
     #region PredictedSpawning
 
-    [ProxyFor(typeof(EntityManager))]
     protected void FlagPredicted(Entity<MetaDataComponent?> ent)
     {
         EntityManager.FlagPredicted(ent);
@@ -1003,19 +938,16 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid PredictedSpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
         => EntityManager.PredictedSpawnAttachedTo(prototype, coordinates, overrides, rotation);
 
     /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid PredictedSpawnAtPosition(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         => EntityManager.PredictedSpawnAtPosition(prototype, coordinates, overrides);
 
     /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected bool PredictedTrySpawnInContainer(
         string? protoName,
         EntityUid containerUid,
@@ -1029,7 +961,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TrySpawnNextTo" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected bool PredictedTrySpawnNextTo(
         string? protoName,
         EntityUid target,
@@ -1042,7 +973,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.SpawnNextToOrDrop" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid PredictedSpawnNextToOrDrop(
         string? protoName,
         EntityUid target,
@@ -1054,7 +984,6 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid PredictedSpawnInContainerOrDrop(
         string? protoName,
         EntityUid containerUid,
@@ -1081,14 +1010,12 @@ public partial class EntitySystem
     #region All Entity Query
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.AllEntityQueryEnumerator))]
     protected AllEntityQueryEnumerator<TComp1> AllEntityQuery<TComp1>() where TComp1 : IComponent
     {
         return EntityManager.AllEntityQueryEnumerator<TComp1>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.AllEntityQueryEnumerator))]
     protected AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQuery<TComp1, TComp2>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1097,7 +1024,6 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.AllEntityQueryEnumerator))]
     protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQuery<TComp1, TComp2, TComp3>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1107,7 +1033,6 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.AllEntityQueryEnumerator))]
     protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQuery<TComp1, TComp2, TComp3, TComp4>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1122,14 +1047,12 @@ public partial class EntitySystem
     #region Get Entity Query
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>() where TComp1 : IComponent
     {
         return EntityManager.EntityQueryEnumerator<TComp1>();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1138,7 +1061,6 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1148,7 +1070,6 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1166,7 +1087,6 @@ public partial class EntitySystem
     /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1}"/>
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     [Pure]
     protected EntityQuery<T> GetEntityQuery<T>() where T : IComponent
     {
@@ -1177,7 +1097,6 @@ public partial class EntitySystem
     /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1}"/>
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected IEnumerable<TComp1> EntityQuery<TComp1>(bool includePaused = false) where TComp1 : IComponent
     {
         return EntityManager.EntityQuery<TComp1>(includePaused);
@@ -1187,7 +1106,6 @@ public partial class EntitySystem
     /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2}"/>
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1199,7 +1117,6 @@ public partial class EntitySystem
     /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2, TComp3}"/>
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1212,7 +1129,6 @@ public partial class EntitySystem
     /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2, TComp3, TComp4}"/>
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1230,7 +1146,6 @@ public partial class EntitySystem
     ///     Sends a networked message to the server, while also repeatedly raising it locally for every time this tick gets re-predicted.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void RaisePredictiveEvent<T>(T msg) where T : EntityEventArgs
     {
         EntityManager.RaisePredictiveEvent(msg);
@@ -1241,7 +1156,6 @@ public partial class EntitySystem
     #region NetEntities
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected bool IsClientSide(EntityUid entity, MetaDataComponent? meta = null)
     {
         return EntityManager.IsClientSide(entity, meta);
@@ -1254,28 +1168,24 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected bool TryGetEntity(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity)
     {
         return EntityManager.TryGetEntity(nEntity, out entity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
     {
         return EntityManager.TryGetEntity(nEntity, out entity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     public bool TryGetNetEntity(EntityUid uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
     {
         return EntityManager.TryGetNetEntity(uid, out netEntity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
     {
         return EntityManager.TryGetNetEntity(uid, out netEntity);
@@ -1285,7 +1195,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> of an entity. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected NetEntity GetNetEntity(EntityUid uid, MetaDataComponent? metadata = null)
     {
         return EntityManager.GetNetEntity(uid, metadata);
@@ -1295,7 +1204,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> of an entity.  Logs an error if the entity does not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected NetEntity? GetNetEntity(EntityUid? uid, MetaDataComponent? metadata = null)
     {
         return EntityManager.GetNetEntity(uid, metadata);
@@ -1305,7 +1213,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> of an entity or creates a new entity if none exists.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid EnsureEntity<T>(NetEntity netEntity, EntityUid callerEntity)
     {
         return EntityManager.EnsureEntity<T>(netEntity, callerEntity);
@@ -1315,7 +1222,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> of an entity or creates a new one if not null.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid? EnsureEntity<T>(NetEntity? netEntity, EntityUid callerEntity)
     {
         return EntityManager.EnsureEntity<T>(netEntity, callerEntity);
@@ -1325,7 +1231,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetCoordinates"/> of an entity or creates a new entity if none exists.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityCoordinates EnsureCoordinates<T>(NetCoordinates netCoordinates, EntityUid callerEntity)
     {
         return EntityManager.EnsureCoordinates<T>(netCoordinates, callerEntity);
@@ -1335,77 +1240,66 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetCoordinates"/> of an entity or creates a new one if not null.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityCoordinates? EnsureCoordinates<T>(NetCoordinates? netCoordinates, EntityUid callerEntity)
     {
         return EntityManager.EnsureCoordinates<T>(netCoordinates, callerEntity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
     {
         return EntityManager.EnsureEntitySet<T>(netEntities, callerEntity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity, HashSet<EntityUid> entities)
     {
         EntityManager.EnsureEntitySet<T>(netEntities, callerEntity, entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
     {
         return EntityManager.EnsureEntityList<T>(netEntities, callerEntity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities)
     {
         EntityManager.EnsureEntityList<T>(netEntities, callerEntity, entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity, Dictionary<EntityUid, TValue> entities)
     {
         EntityManager.EnsureEntityDictionary<TComp, TValue>(netEntities, callerEntity, entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void EnsureEntityDictionaryNullableValue<TComp, TValue>(Dictionary<NetEntity, TValue?> netEntities, EntityUid callerEntity, Dictionary<EntityUid, TValue?> entities)
     {
         EntityManager.EnsureEntityDictionaryNullableValue<TComp, TValue>(netEntities, callerEntity, entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity> netEntities, EntityUid callerEntity, Dictionary<TKey, EntityUid> entities) where TKey : notnull
     {
         EntityManager.EnsureEntityDictionary<TComp, TKey>(netEntities, callerEntity, entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity, Dictionary<TKey, EntityUid?> entities) where TKey : notnull
     {
         EntityManager.EnsureEntityDictionary<TComp, TKey>(netEntities, callerEntity, entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity> netEntities, EntityUid callerEntity, Dictionary<EntityUid, EntityUid> entities)
     {
         EntityManager.EnsureEntityDictionary<TComp>(netEntities, callerEntity, entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity?> netEntities, EntityUid callerEntity, Dictionary<EntityUid, EntityUid?> entities)
     {
         EntityManager.EnsureEntityDictionary<TComp>(netEntities, callerEntity, entities);
@@ -1415,7 +1309,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid GetEntity(NetEntity netEntity)
     {
         return EntityManager.GetEntity(netEntity);
@@ -1425,7 +1318,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid? GetEntity(NetEntity? netEntity)
     {
         return EntityManager.GetEntity(netEntity);
@@ -1435,7 +1327,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected HashSet<NetEntity> GetNetEntitySet(HashSet<EntityUid> uids)
     {
         return EntityManager.GetNetEntitySet(uids);
@@ -1445,7 +1336,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected HashSet<EntityUid> GetEntitySet(HashSet<NetEntity> netEntities)
     {
         return EntityManager.GetEntitySet(netEntities);
@@ -1455,7 +1345,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<NetEntity> GetNetEntityList(ICollection<EntityUid> uids)
     {
         return EntityManager.GetNetEntityList(uids);
@@ -1465,7 +1354,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<NetEntity> GetNetEntityList(IReadOnlyList<EntityUid> uids)
     {
         return EntityManager.GetNetEntityList(uids);
@@ -1475,7 +1363,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<EntityUid> GetEntityList(ICollection<NetEntity> netEntities)
     {
         return EntityManager.GetEntityList(netEntities);
@@ -1485,7 +1372,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<NetEntity> GetNetEntityList(List<EntityUid> uids)
     {
         return EntityManager.GetNetEntityList(uids);
@@ -1495,7 +1381,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<EntityUid> GetEntityList(List<NetEntity> netEntities)
     {
         return EntityManager.GetEntityList(netEntities);
@@ -1505,7 +1390,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<NetEntity?> GetNetEntityList(List<EntityUid?> uids)
     {
         return EntityManager.GetNetEntityList(uids);
@@ -1515,7 +1399,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<EntityUid?> GetEntityList(List<NetEntity?> netEntities)
     {
         return EntityManager.GetEntityList(netEntities);
@@ -1525,7 +1408,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected NetEntity[] GetNetEntityArray(EntityUid[] uids)
     {
         return EntityManager.GetNetEntityArray(uids);
@@ -1535,7 +1417,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid[] GetEntityArray(NetEntity[] netEntities)
     {
         return EntityManager.GetEntityArray(netEntities);
@@ -1545,7 +1426,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected NetEntity?[] GetNetEntityArray(EntityUid?[] uids)
     {
         return EntityManager.GetNetEntityArray(uids);
@@ -1555,7 +1435,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityUid?[] GetEntityArray(NetEntity?[] netEntities)
     {
         return EntityManager.GetEntityArray(netEntities);
@@ -1565,7 +1444,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected Dictionary<NetEntity, T> GetNetEntityDictionary<T>(Dictionary<EntityUid, T> uids)
     {
         return EntityManager.GetNetEntityDictionary(uids);
@@ -1575,7 +1453,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected Dictionary<T, NetEntity> GetNetEntityDictionary<T>(Dictionary<T, EntityUid> uids) where T : notnull
     {
         return EntityManager.GetNetEntityDictionary(uids);
@@ -1585,7 +1462,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityUid?> uids) where T : notnull
     {
         return EntityManager.GetNetEntityDictionary(uids);
@@ -1595,7 +1471,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected Dictionary<NetEntity, NetEntity> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid> uids)
     {
         return EntityManager.GetNetEntityDictionary(uids);
@@ -1605,7 +1480,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected Dictionary<NetEntity, NetEntity?> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid?> uids)
     {
         return EntityManager.GetNetEntityDictionary(uids);
@@ -1615,7 +1489,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected Dictionary<EntityUid, T> GetEntityDictionary<T>(Dictionary<NetEntity, T> uids)
     {
         return EntityManager.GetEntityDictionary(uids);
@@ -1625,7 +1498,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected Dictionary<T, EntityUid> GetEntityDictionary<T>(Dictionary<T, NetEntity> uids) where T : notnull
     {
         return EntityManager.GetEntityDictionary(uids);
@@ -1635,7 +1507,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected Dictionary<T, EntityUid?> GetEntityDictionary<T>(Dictionary<T, NetEntity?> uids) where T : notnull
     {
         return EntityManager.GetEntityDictionary(uids);
@@ -1645,7 +1516,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected Dictionary<EntityUid, EntityUid> GetEntityDictionary(Dictionary<NetEntity, NetEntity> uids)
     {
         return EntityManager.GetEntityDictionary(uids);
@@ -1655,14 +1525,12 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected Dictionary<EntityUid, EntityUid?> GetEntityDictionary(Dictionary<NetEntity, NetEntity?> uids)
     {
         return EntityManager.GetEntityDictionary(uids);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected NetCoordinates GetNetCoordinates(EntityCoordinates coordinates, MetaDataComponent? metadata = null)
     {
         return EntityManager.GetNetCoordinates(coordinates, metadata);
@@ -1672,7 +1540,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> of an entity. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected NetCoordinates? GetNetCoordinates(EntityCoordinates? coordinates, MetaDataComponent? metadata = null)
     {
         return EntityManager.GetNetCoordinates(coordinates, metadata);
@@ -1682,7 +1549,6 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityCoordinates GetCoordinates(NetCoordinates netEntity)
     {
         return EntityManager.GetCoordinates(netEntity);
@@ -1692,91 +1558,78 @@ public partial class EntitySystem
     ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityCoordinates? GetCoordinates(NetCoordinates? netEntity)
     {
         return EntityManager.GetCoordinates(netEntity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected HashSet<EntityCoordinates> GetEntitySet(HashSet<NetCoordinates> netEntities)
     {
         return EntityManager.GetEntitySet(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<EntityCoordinates> GetEntityList(List<NetCoordinates> netEntities)
     {
         return EntityManager.GetEntityList(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<EntityCoordinates> GetEntityList(ICollection<NetCoordinates> netEntities)
     {
         return EntityManager.GetEntityList(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<EntityCoordinates?> GetEntityList(List<NetCoordinates?> netEntities)
     {
         return EntityManager.GetEntityList(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityCoordinates[] GetEntityArray(NetCoordinates[] netEntities)
     {
         return EntityManager.GetEntityArray(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected EntityCoordinates?[] GetEntityArray(NetCoordinates?[] netEntities)
     {
         return EntityManager.GetEntityArray(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected HashSet<NetCoordinates> GetNetCoordinatesSet(HashSet<EntityCoordinates> entities)
     {
         return EntityManager.GetNetCoordinatesSet(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<NetCoordinates> GetNetCoordinatesList(List<EntityCoordinates> entities)
     {
         return EntityManager.GetNetCoordinatesList(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<NetCoordinates> GetNetCoordinatesList(ICollection<EntityCoordinates> entities)
     {
         return EntityManager.GetNetCoordinatesList(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected List<NetCoordinates?> GetNetCoordinatesList(List<EntityCoordinates?> entities)
     {
         return EntityManager.GetNetCoordinatesList(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected NetCoordinates[] GetNetCoordinatesArray(EntityCoordinates[] entities)
     {
         return EntityManager.GetNetCoordinatesArray(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
     protected NetCoordinates?[] GetNetCoordinatesArray(EntityCoordinates?[] entities)
     {
         return EntityManager.GetNetCoordinatesArray(entities);

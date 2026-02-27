@@ -65,9 +65,28 @@ public sealed partial class SpriteSystem
 
         sprite.Comp.Layers.RemoveAt(index);
 
-        foreach (var otherLayer in sprite.Comp.Layers[index..])
+        foreach (var otherLayer in sprite.Comp.Layers)
         {
-            otherLayer.Index--;
+            if (index < otherLayer.Index)
+                otherLayer.Index--;
+
+            // Reverse for loop to allow element removal
+            for (var i = otherLayer.ChildLayers.Count - 1; i >= 0; i--)
+            {
+                if (index == otherLayer.ChildLayers[i])
+                {
+                    otherLayer.ChildLayers.RemoveAt(i);
+                    continue;
+                }
+
+                if (index < otherLayer.ChildLayers[i])
+                    otherLayer.ChildLayers[i]--;
+            }
+
+            if (index == otherLayer.ParentLayer)
+                otherLayer.ParentLayer = null;
+            else if (index < otherLayer.ParentLayer)
+                otherLayer.ParentLayer--;
         }
 
         // TODO SPRITE track inverse-mapping?
@@ -103,7 +122,7 @@ public sealed partial class SpriteSystem
     /// Add the given sprite layer. If an index is specified, this will insert the layer with the given index, resulting
     /// in all other layers being reshuffled.
     /// </summary>
-    public int AddLayer(Entity<SpriteComponent?> sprite, Layer layer, int? index = null)
+    public int AddLayer(Entity<SpriteComponent?> sprite, Layer layer, int? index = null, int? parentLayer = null)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
         {
@@ -116,9 +135,20 @@ public sealed partial class SpriteSystem
 
         if (index is { } i && i != sprite.Comp.Layers.Count)
         {
-            foreach (var otherLayer in sprite.Comp.Layers[i..])
+            foreach (var otherLayer in sprite.Comp.Layers)
             {
-                otherLayer.Index++;
+                if (i <= otherLayer.Index)
+                    otherLayer.Index++;
+
+                for (var j = 0; j < otherLayer.ChildLayers.Count; j++)
+                {
+                    var childIndex = otherLayer.ChildLayers[j];
+                    if (i <= childIndex)
+                        otherLayer.ChildLayers[j]++;
+                }
+
+                if (i <= otherLayer.ParentLayer)
+                    otherLayer.ParentLayer++;
             }
 
             // TODO SPRITE track inverse-mapping?
@@ -130,11 +160,27 @@ public sealed partial class SpriteSystem
                 if (value >= i)
                     sprite.Comp.LayerMap[key]++;
             }
+
+            if (parentLayer != null && i <= parentLayer)
+                parentLayer++;
         }
         else
         {
             layer.Index = sprite.Comp.Layers.Count;
             sprite.Comp.Layers.Add(layer);
+        }
+
+        if (parentLayer != null)
+        {
+            if (parentLayer >= sprite.Comp.Layers.Count || parentLayer < 0)
+            {
+                Log.Error($"Attempted to set a parent layer index '{index}' on entity {ToPrettyString(sprite)} that is out of bounds! Trace:\n{Environment.StackTrace}");
+            }
+            else
+            {
+                layer.ParentLayer = parentLayer;
+                sprite.Comp.Layers[parentLayer.Value].ChildLayers.Add(layer.Index);
+            }
         }
 
 #if DEBUG
@@ -161,13 +207,14 @@ public sealed partial class SpriteSystem
     /// <param name="stateId">The RSI state</param>
     /// <param name="rsi">The RSI to use. If not specified, it will default to using <see cref="SpriteComponent.BaseRSI"/></param>
     /// <param name="index">The layer index to use for the new sprite.</param>
+    /// <param name="parentLayer">The layer index that this layer should be a child of.</param>
     /// <returns></returns>
-    public int AddRsiLayer(Entity<SpriteComponent?> sprite, RSI.StateId stateId, RSI? rsi = null, int? index = null)
+    public int AddRsiLayer(Entity<SpriteComponent?> sprite, RSI.StateId stateId, RSI? rsi = null, int? index = null, int? parentLayer = null)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
 
-        var layer = AddBlankLayer(sprite!, index);
+        var layer = AddBlankLayer(sprite!, index, parentLayer);
 
         if (rsi != null)
             LayerSetRsi(layer, rsi, stateId);
@@ -184,8 +231,9 @@ public sealed partial class SpriteSystem
     /// <param name="state">The RSI state</param>
     /// <param name="path">The path to the RSI.</param>
     /// <param name="index">The layer index to use for the new sprite.</param>
+    /// <param name="parentLayer">The layer index that this layer should be a child of.</param>
     /// <returns></returns>
-    public int AddRsiLayer(Entity<SpriteComponent?> sprite, RSI.StateId state, ResPath path, int? index = null)
+    public int AddRsiLayer(Entity<SpriteComponent?> sprite, RSI.StateId state, ResPath path, int? index = null, int? parentLayer = null)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
@@ -196,36 +244,36 @@ public sealed partial class SpriteSystem
         if (path.Extension != "rsi")
             Log.Error($"Expected rsi path but got '{path}'?");
 
-        return AddRsiLayer(sprite, state, res?.RSI, index);
+        return AddRsiLayer(sprite, state, res?.RSI, index, parentLayer);
     }
 
-    public int AddTextureLayer(Entity<SpriteComponent?> sprite, ResPath path, int? index = null)
+    public int AddTextureLayer(Entity<SpriteComponent?> sprite, ResPath path, int? index = null, int? parentLayer = null)
     {
         if (_resourceCache.TryGetResource<TextureResource>(TextureRoot / path, out var texture))
-            return AddTextureLayer(sprite, texture?.Texture, index);
+            return AddTextureLayer(sprite, texture?.Texture, index, parentLayer);
 
         if (path.Extension == "rsi")
             Log.Error($"Expected texture but got rsi '{path}', did you mean 'sprite:' instead of 'texture:'?");
 
         Log.Error($"Unable to load texture '{path}'. Trace:\n{Environment.StackTrace}");
-        return AddTextureLayer(sprite, texture?.Texture, index);
+        return AddTextureLayer(sprite, texture?.Texture, index, parentLayer);
     }
 
-    public int AddTextureLayer(Entity<SpriteComponent?> sprite, Texture? texture, int? index = null)
+    public int AddTextureLayer(Entity<SpriteComponent?> sprite, Texture? texture, int? index = null, int? parentLayer = null)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
 
         var layer = new Layer {Texture = texture};
-        return AddLayer(sprite, layer, index);
+        return AddLayer(sprite, layer, index, parentLayer);
     }
 
-    public int AddLayer(Entity<SpriteComponent?> sprite, SpriteSpecifier specifier, int? newIndex = null)
+    public int AddLayer(Entity<SpriteComponent?> sprite, SpriteSpecifier specifier, int? newIndex = null, int? parentLayer = null)
     {
         return specifier switch
         {
-            SpriteSpecifier.Texture tex => AddTextureLayer(sprite, tex.TexturePath, newIndex),
-            SpriteSpecifier.Rsi rsi => AddRsiLayer(sprite, rsi.RsiState, rsi.RsiPath, newIndex),
+            SpriteSpecifier.Texture tex => AddTextureLayer(sprite, tex.TexturePath, newIndex, parentLayer),
+            SpriteSpecifier.Rsi rsi => AddRsiLayer(sprite, rsi.RsiState, rsi.RsiPath, newIndex, parentLayer),
             _ => throw new NotImplementedException()
         };
     }
@@ -233,12 +281,12 @@ public sealed partial class SpriteSystem
     /// <summary>
     /// Add a new sprite layer and populate it using the provided layer data.
     /// </summary>
-    public int AddLayer(Entity<SpriteComponent?> sprite, PrototypeLayerData layerDatum, int? index)
+    public int AddLayer(Entity<SpriteComponent?> sprite, PrototypeLayerData layerDatum, int? index, int? parentLayer = null)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
 
-        var layer = AddBlankLayer(sprite!, index);
+        var layer = AddBlankLayer(sprite!, index, parentLayer);
         LayerSetData(layer, layerDatum);
         return layer.Index;
     }
@@ -246,12 +294,34 @@ public sealed partial class SpriteSystem
     /// <summary>
     /// Add a blank sprite layer.
     /// </summary>
-    public Layer AddBlankLayer(Entity<SpriteComponent> sprite, int? index = null)
+    public Layer AddBlankLayer(Entity<SpriteComponent> sprite, int? index = null, int? parentLayer = null)
     {
         var layer = new Layer();
-        AddLayer(sprite!, layer, index);
+        AddLayer(sprite!, layer, index, parentLayer);
         return layer;
     }
 
     #endregion
+
+    /// <summary>
+    /// Sets a layer as the parent of another layer.
+    /// If the child already had a parent, that old parent becomes the new parent of the provided layer,
+    /// effectively inserting the provided layer in between the render order.
+    /// </summary>
+    public void SetAsParent(Entity<SpriteComponent> sprite, int layerIndex, int childLayerIndex)
+    {
+        if (layerIndex == childLayerIndex || !TryGetLayer(sprite.AsNullable(), layerIndex, out var layer, true) || !TryGetLayer(sprite.AsNullable(), childLayerIndex, out var childLayer, true))
+            return;
+
+        if (childLayer.ParentLayer != null)
+        {
+            var parentLayer = sprite.Comp.Layers[childLayer.ParentLayer.Value];
+            var pos = parentLayer.ChildLayers.FindIndex(i => i == childLayerIndex);
+            parentLayer.ChildLayers[pos] = layerIndex;
+            layer.ParentLayer = childLayer.ParentLayer;
+        }
+
+        childLayer.ParentLayer = layerIndex;
+        layer.ChildLayers.Add(childLayerIndex);
+    }
 }

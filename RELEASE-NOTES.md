@@ -10,11 +10,14 @@ Don't change the format without looking at the script!
 
 ### Breaking changes
 
-*None yet*
+- `RandomExtensions.Pick()` for `ICollection<T>` and `IReadOnlyCollection<T>` got renamed to `PickSlow`. This is due to
+  some unfortunate API conflicts that came up during removing System.Random-based APIs.
+- All `System.Random` helpers and extension methods were removed. Content should stop using it.
 
 ### New features
 
-*None yet*
+- `RobustRandom` now has a direct seed constructor, and a constructor to seed it from an existing RNG.
+- Some functions that only existed for `System.Random` were ported to `RobustRandom`.
 
 ### Bugfixes
 

@@ -47,18 +47,7 @@ namespace Robust.Shared.Map
             return GetVariantTile(tileDef, random);
         }
 
-        public Tile GetVariantTile(string name, System.Random random)
-        {
-            var tileDef = this[name];
-            return GetVariantTile(tileDef, random);
-        }
-
         public Tile GetVariantTile(ITileDefinition tileDef, IRobustRandom random)
-        {
-            return new Tile(tileDef.TileId, variant: random.NextByte(tileDef.Variants));
-        }
-
-        public Tile GetVariantTile(ITileDefinition tileDef, System.Random random)
         {
             return new Tile(tileDef.TileId, variant: random.NextByte(tileDef.Variants));
         }

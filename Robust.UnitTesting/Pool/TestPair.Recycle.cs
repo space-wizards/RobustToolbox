@@ -88,6 +88,8 @@ public partial class TestPair<TServer, TClient>
         if (State != PairState.InUse)
             throw new Exception($"{nameof(CleanReturnAsync)}: Unexpected state. Pair: {Id}. State: {State}.");
 
+        PoolManagerEvents.Log.PairCleanReturned(GetType().FullName!, Id);
+
         await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: Return of pair {Id} started");
         State = PairState.CleanDisposed;
         await OnCleanDispose();
@@ -104,6 +106,8 @@ public partial class TestPair<TServer, TClient>
             case PairState.Ready:
                 break;
             case PairState.InUse:
+                PoolManagerEvents.Log.PairDirtyReturned(GetType().FullName!, Id);
+
                 await TestOut.WriteLineAsync($"{nameof(DisposeAsync)}: Dirty return of pair {Id} started");
                 await OnDirtyDispose();
                 Manager.Return(this);

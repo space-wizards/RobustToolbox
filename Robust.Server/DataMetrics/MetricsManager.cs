@@ -10,6 +10,7 @@ using Prometheus.DotNetRuntime.Metrics.Producers;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
+using Robust.Shared.DataMetrics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -44,9 +45,8 @@ public interface IMetricsManager
     event Action UpdateMetrics;
 }
 
-internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposable
+internal sealed partial class MetricsManager : MeterFactory, IMetricsManagerInternal
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
     [Dependency] private readonly ITaskManager _taskManager = default!;
@@ -57,8 +57,10 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
     private IDisposable? _runtimeCollector;
     private ISawmill _sawmill = default!;
 
-    public void Initialize()
+    public override void Initialize()
     {
+        base.Initialize();
+
         _sawmill = _logManager.GetSawmill("metrics");
 
         _initialized = true;
@@ -82,7 +84,7 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
 
         void ValueChanged<T>(CVarDef<T> cVar) where T : notnull
         {
-            _cfg.OnValueChanged(cVar, _ => Reload());
+            Cfg.OnValueChanged(cVar, _ => Reload());
         }
 
         InitializeUpdateMetrics();
@@ -102,9 +104,9 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
         _runtimeCollector = null;
     }
 
-    async void IDisposable.Dispose()
+    protected override async void Dispose()
     {
-        DisposeMeters();
+        base.Dispose();
 
         await Stop();
 
@@ -120,7 +122,7 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
 
         await Stop();
 
-        var enabled = _cfg.GetCVar(CVars.MetricsEnabled);
+        var enabled = Cfg.GetCVar(CVars.MetricsEnabled);
         _entitySystemManager.MetricsEnabled = enabled;
 
         if (!enabled)
@@ -128,8 +130,8 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
             return;
         }
 
-        var host = _cfg.GetCVar(CVars.MetricsHost);
-        var port = _cfg.GetCVar(CVars.MetricsPort);
+        var host = Cfg.GetCVar(CVars.MetricsHost);
+        var port = Cfg.GetCVar(CVars.MetricsPort);
 
         _sawmill.Info("Prometheus metrics enabled, host: {1} port: {0}", port, host);
         var sawmill = Logger.GetSawmill("metrics.server");
@@ -141,7 +143,7 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
             beforeCollect: BeforeCollectCallback);
         _metricServer.Start();
 
-        if (_cfg.GetCVar(CVars.MetricsRuntime))
+        if (Cfg.GetCVar(CVars.MetricsRuntime))
         {
             _sawmill.Debug("Enabling runtime metrics");
             _runtimeCollector = BuildRuntimeStats().StartCollecting();
@@ -160,7 +162,7 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
 
         if (CapLevel(CVars.MetricsRuntimeContention) is { } contention)
         {
-            var rate = _cfg.GetCVar(CVars.MetricsRuntimeContentionSampleRate);
+            var rate = Cfg.GetCVar(CVars.MetricsRuntimeContentionSampleRate);
             builder.WithContentionStats(contention, (SampleEvery)rate);
         }
 
@@ -174,7 +176,7 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
 
         if (CapLevel(CVars.MetricsRuntimeJit) is { } jit)
         {
-            var rate = _cfg.GetCVar(CVars.MetricsRuntimeJitSampleRate);
+            var rate = Cfg.GetCVar(CVars.MetricsRuntimeJitSampleRate);
             builder.WithJitStats(jit, (SampleEvery) rate);
         }
 
@@ -190,7 +192,7 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
 
         CaptureLevel? CapLevel(CVarDef<string> cvar)
         {
-            var val = _cfg.GetCVar(cvar);
+            var val = Cfg.GetCVar(cvar);
             if (val != "")
                 return Enum.Parse<CaptureLevel>(val);
 
@@ -200,7 +202,7 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
         // 🪣
         double[] Buckets(CVarDef<string> cvar, double divide=1)
         {
-            return _cfg.GetCVar(cvar)
+            return Cfg.GetCVar(cvar)
                 .Split(',')
                 .Select(x => double.Parse(x, CultureInfo.InvariantCulture) / divide)
                 .ToArray();

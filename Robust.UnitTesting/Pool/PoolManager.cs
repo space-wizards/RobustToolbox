@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -15,6 +16,8 @@ namespace Robust.UnitTesting.Pool;
 
 public abstract class BasePoolManager
 {
+    internal static readonly Meter MetricsMeter = new("Robust.UnitTesting.PoolManager");
+
     internal abstract void Return(ITestPair pair);
     public abstract Assembly[] ClientAssemblies { get; }
     public abstract Assembly[] ServerAssemblies { get; }
@@ -50,6 +53,16 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
 
     public override Assembly[] ClientAssemblies => _clientAssemblies;
     public override Assembly[] ServerAssemblies => _serverAssemblies;
+
+    protected PoolManager()
+    {
+        MetricsMeter.CreateObservableUpDownCounter(
+            "pair_count",
+            MeasurePairCount,
+            null,
+            null,
+            tags: [new KeyValuePair<string, object?>("type", typeof(TPair).FullName)]);
+    }
 
     /// <summary>
     /// Initialize the pool manager. Override this to configure what assemblies should get loaded.
@@ -164,7 +177,7 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
             {
                 await testOut.WriteLineAsync(
                     $"{nameof(GetPair)}: Creating pair, because settings of pool settings");
-                pair = await CreateServerClientPair(settings, testOut);
+                pair = await CreateServerClientPair(settings, testOut, "MustBeNew", currentTestName);
             }
             else
             {
@@ -192,7 +205,7 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
                 else
                 {
                     await testOut.WriteLineAsync($"{nameof(GetPair)}: Creating a new pair, no suitable pair found in pool");
-                    pair = await CreateServerClientPair(settings, testOut);
+                    pair = await CreateServerClientPair(settings, testOut, "NoneInPool", currentTestName);
                 }
             }
         }
@@ -210,6 +223,11 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
         }
 
         await testOut.WriteLineAsync($"{nameof(GetPair)}: Retrieving pair {pair.Id} from pool took {watch.Elapsed.TotalMilliseconds} ms");
+
+        PoolManagerEvents.Log.PairRetrieved(
+            typeof(TPair).FullName!,
+            pair.Id,
+            currentTestName);
 
         pair.ValidateSettings(settings);
         pair.ClearModifiedCvars();
@@ -289,16 +307,22 @@ we are just going to end this here to save a lot of time. This is the exception 
         }
     }
 
-    private async Task<TPair> CreateServerClientPair(PairSettings settings, TextWriter testOut)
+    private async Task<TPair> CreateServerClientPair(
+        PairSettings settings,
+        TextWriter testOut,
+        string reason,
+        string testName)
     {
         try
         {
             var id = Interlocked.Increment(ref _nextPairId);
             var pair = new TPair();
+            PoolManagerEvents.Log.PairCreated(typeof(TPair).FullName!, id, reason, testName);
             await pair.Init(id, this, settings, testOut);
             pair.Use();
             await pair.RunTicksSync(5);
             await pair.SyncTicks(targetDelta: 1);
+            PoolManagerEvents.Log.PairFinishedInit(typeof(TPair).FullName!, id);
             return pair;
         }
         catch (Exception ex)
@@ -329,5 +353,24 @@ we are just going to end this here to save a lot of time. This is the exception 
                 TestPrototypes.Add(str);
             }
         }
+    }
+
+    private IEnumerable<Measurement<int>> MeasurePairCount()
+    {
+        var inUse = 0;
+        var notInUse = 0;
+        lock (_pairLock)
+        {
+            foreach (var useBool in Pairs.Values)
+            {
+                if (useBool)
+                    inUse += 1;
+                else
+                    notInUse += 1;
+            }
+        }
+
+        yield return new Measurement<int>(inUse, new KeyValuePair<string, object?>("in_use", "true"));
+        yield return new Measurement<int>(notInUse, new KeyValuePair<string, object?>("in_use", "false"));
     }
 }

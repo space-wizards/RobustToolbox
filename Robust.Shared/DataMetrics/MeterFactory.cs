@@ -2,14 +2,34 @@
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Linq;
+using System.Threading;
+using Robust.Shared.Configuration;
+using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
-namespace Robust.Server.DataMetrics;
+namespace Robust.Shared.DataMetrics;
 
-internal sealed partial class MetricsManager : IMeterFactory
+internal interface IMeterFactoryInternal : IMeterFactory
 {
+    void Initialize();
+}
+
+[Virtual]
+internal class MeterFactory : IMeterFactoryInternal
+{
+    [Dependency] protected readonly IConfigurationManager Cfg = null!;
+
     private readonly Dictionary<string, List<CachedMeter>> _meterCache = new();
-    private readonly object _meterCacheLock = new();
+    private readonly Lock _meterCacheLock = new();
+
+    private string? _instanceName;
+
+    public virtual void Initialize()
+    {
+        _instanceName = Cfg.GetCVar(CVars.MetricsInstanceName);
+        if (string.IsNullOrEmpty(_instanceName))
+            _instanceName = null;
+    }
 
     Meter IMeterFactory.Create(MeterOptions options)
     {
@@ -21,9 +41,21 @@ internal sealed partial class MetricsManager : IMeterFactory
             if (LockedFindCachedMeter(options) is { } cached)
                 return cached.Meter;
 
-            var meter = new Meter(options.Name, options.Version, options.Tags, this);
+            var tags = options.Tags;
+            if (_instanceName != null)
+            {
+                tags =
+                [
+                    ..options.Tags ?? [],
+                    new KeyValuePair<string, object?>("instance", _instanceName)
+                ];
+            }
+
+            // ReSharper disable once PossibleMultipleEnumeration
+            var meter = new Meter(options.Name, options.Version, tags, this);
             var meterList = _meterCache.GetOrNew(options.Name);
-            meterList.Add(new CachedMeter(options.Version, TagsToDict(options.Tags), meter));
+            // ReSharper disable once PossibleMultipleEnumeration
+            meterList.Add(new CachedMeter(options.Version, TagsToDict(tags), meter));
             return meter;
         }
     }
@@ -66,7 +98,12 @@ internal sealed partial class MetricsManager : IMeterFactory
         return tags?.ToDictionary() ?? [];
     }
 
-    private void DisposeMeters()
+    void IDisposable.Dispose()
+    {
+        Dispose();
+    }
+
+    protected virtual void Dispose()
     {
         lock (_meterCacheLock)
         {

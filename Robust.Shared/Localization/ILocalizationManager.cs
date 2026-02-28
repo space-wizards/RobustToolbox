@@ -155,10 +155,53 @@ namespace Robust.Shared.Localization
         void Initialize()
         {
         }
+
+        /// <summary>
+        ///     Formats a list of strings according to the default culture
+        /// </summary>
+        string FormatList(List<string> strings, ListType type = ListType.And, ListWidth width = ListWidth.Wide);
     }
 
     internal interface ILocalizationManagerInternal : ILocalizationManager
     {
         void AddLoadedToStringSerializer(IRobustMappedStringSerializer serializer);
+    }
+
+    /// <summary>
+    /// Specifies which pattern a list should be formatted in
+    /// </summary>
+    public enum ListType
+    {
+        /// <summary>
+        /// An "and" list for arbitrary placeholders (e.g. January, February, and March)
+        /// </summary>
+        And,
+        /// <summary>
+        /// An "or" list for arbitrary placeholders (e.g. January, February, or March)
+        /// </summary>
+        Or,
+        /// <summary>
+        /// An list suitable for displaying units (e.g. 3 feet, 7 inches)
+        /// </summary>
+        Unit,
+    }
+
+    /// <summary>
+    /// Specifies the width of a list pattern
+    /// </summary>
+    public enum ListWidth
+    {
+        /// <summary>
+        /// A typical list (e.g. January, February, and March)
+        /// </summary>
+        Wide,
+        /// <summary>
+        /// A shorter list, suitable for short/abbreviated placeholder values (e.g. Jan., Feb., and Mar.)
+        /// </summary>
+        Short,
+        /// <summary>
+        /// An even shorter list (if possible, e.g. Jan., Feb., Mar.)
+        /// </summary>
+        Narrow,
     }
 }

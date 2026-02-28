@@ -44,6 +44,9 @@ zzzz-reflexive-pronoun = { GENDER($ent) ->
    *[neuter] ele mesmo
    }
 
+# Used internally by the RECIPROCAL() function.
+zzzz-reciprocal-pronoun = { REFLEXIVE($ent) }
+
 # Used internally by the CONJUGATE-BE() function.
 zzzz-conjugate-be = { GENDER($ent) ->
     [epicene] é

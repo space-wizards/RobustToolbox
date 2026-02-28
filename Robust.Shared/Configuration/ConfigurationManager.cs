@@ -117,7 +117,8 @@ namespace Robust.Shared.Configuration
                 var oldValue = GetConfigVarValue(cfgVar);
 
                 var convertedValue = value;
-                if (cfgVar.Type != value.GetType())
+                // If the ConfigVar isn't registered yet, cfgVar.Type isn't fully initialized.
+                if (cfgVar.Registered && cfgVar.Type != value.GetType())
                 {
                     try
                     {

@@ -641,6 +641,7 @@ Types:
   System.Net.Sockets:
     AddressFamily: { }
   System.Numerics:
+    BigInteger: { All: True }
     BitOperations: { All: True }
     Complex: { All: True }
     Matrix3x2: { All: True }
@@ -650,6 +651,39 @@ Types:
     Vector2: { All: True }
     Vector3: { All: True }
     Vector4: { All: True }
+    TotalOrderIeee754Comparer`1: { All: True }
+    IAdditionOperators`3: { All: True }
+    IAdditiveIdentity`2: { All: True }
+    IBinaryFloatingPointIeee754`1: { All: True }
+    IBinaryInteger`1: { All: True }
+    IBinaryNumber`1: { All: True }
+    IBitwiseOperators`3: { All: True }
+    IComparisonOperators`3: { All: True }
+    IDecrementOperators`1: { All: True }
+    IDivisionOperators`3: { All: True }
+    IEqualityOperators`3: { All: True }
+    IExponentialFunctions`1: { All: True }
+    IFloatingPoint`1: { All: True }
+    IFloatingPointConstants`1: { All: True }
+    IFloatingPointIeee754`1: { All: True }
+    IHyperbolicFunctions`1: { All: True }
+    IIncrementOperators`1: { All: True }
+    ILogarithmicFunctions`1: { All: True }
+    IMinMaxValue`1: { All: True }
+    IModulusOperators`3: { All: True }
+    IMultiplicativeIdentity`2: { All: True }
+    IMultiplyOperators`3: { All: True }
+    INumber`1: { All: True }
+    INumberBase`1: { All: True }
+    IPowerFunctions`1: { All: True }
+    IRootFunctions`1: { All: True }
+    IShiftOperators`3: { All: True }
+    ISignedNumber`1: { All: True }
+    ISubtractionOperators`3: { All: True }
+    ITrigonometricFunctions`1: { All: True }
+    IUnaryNegationOperators`2: { All: True }
+    IUnaryPlusOperators`2: { All: True }
+    IUnsignedNumber`1: { All: True }
   System.Reflection:
     Assembly:
       Methods:

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
@@ -31,7 +32,7 @@ public sealed class CustomBaseTypeSerializer<TBase> :
     where TBase : notnull
 {
     // CustomType|Base -> CustomType
-    private static readonly string  BaseNameWithoutBase = typeof(TBase).Name.Replace("Base", string.Empty);
+    private static readonly string BaseNameWithoutBase = ReplaceLast(typeof(TBase).Name, "Base", string.Empty);
 
     private static bool EndsWithBase()
     {
@@ -41,7 +42,7 @@ public sealed class CustomBaseTypeSerializer<TBase> :
     private static string ExpandName(string name)
     {
         // !ConcreteThing -> !type:CustomTypeConcreteThing
-        return name.StartsWith("!type:")
+        return name.Contains(':')
             ? name
             : name.Replace("!", $"!type:{BaseNameWithoutBase}");
     }
@@ -62,6 +63,12 @@ public sealed class CustomBaseTypeSerializer<TBase> :
 
         throw new InvalidMappingException(
             $"{node.Start}: Node does not have a tag (value starting with '!').");
+    }
+
+    private static string ReplaceLast(string currentString, string stringToReplace, string replacement)
+    {
+        var lastStart = currentString.LastIndexOf(stringToReplace, StringComparison.Ordinal);
+        return currentString.Remove(lastStart, stringToReplace.Length) + replacement;
     }
 
     private static TBase ReadDataNode(
@@ -110,7 +117,7 @@ public sealed class CustomBaseTypeSerializer<TBase> :
         DebugTools.Assert(EndsWithBase());
         var node = serializationManager.WriteValue(value.GetType(), value, alwaysWrite, context);
         DebugTools.Assert(node.Tag == null);
-        node.Tag = '!' + value.GetType().Name.Replace(BaseNameWithoutBase, string.Empty);
+        node.Tag = '!' + ReplaceLast(value.GetType().Name, BaseNameWithoutBase, string.Empty);
         return node;
     }
 

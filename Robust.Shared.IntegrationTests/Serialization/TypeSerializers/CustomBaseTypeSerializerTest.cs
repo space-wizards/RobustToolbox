@@ -14,12 +14,22 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers;
 [TestOf(typeof(CustomBaseTypeSerializer<>))]
 internal sealed class CustomBaseTypeSerializerTest : OurSerializationTest
 {
+    private CustomBaseTypeSerializerTestComponent ReadYaml(string str)
+    {
+        var yamlStream = new YamlStream();
+        yamlStream.Load(new StringReader(str));
+
+        var mapping = yamlStream.Documents[0].RootNode.ToDataNodeCast<MappingDataNode>();
+        return Serialization.Read<CustomBaseTypeSerializerTestComponent>(mapping, notNullableOverride: true);
+    }
+
     [Test]
     public void SerializationTest()
     {
         var component = new CustomBaseTypeSerializerTestComponent
         {
-            SingleTestType = new TestTypeConcreteA(),
+            FirstTestType = new TestTypeConcreteA(),
+            SecondTestType = new AnotherBaseTestTypeConcreteA(),
             TestTypeArray =
             [
                 new TestTypeConcreteA() { SomeInt = 42 },
@@ -31,7 +41,8 @@ internal sealed class CustomBaseTypeSerializerTest : OurSerializationTest
         var node = Serialization.WriteValueAs<MappingDataNode>(component);
         var arrayNode = node["testTypeArray"] as SequenceDataNode;
 
-        Assert.That(node["singleTestType"].Tag, Is.EqualTo("!ConcreteA"));
+        Assert.That(node["firstTestType"].Tag, Is.EqualTo("!ConcreteA"));
+        Assert.That(node["secondTestType"].Tag, Is.EqualTo("!ConcreteA"));
         Assert.That(arrayNode, Is.InstanceOf<SequenceDataNode>());
         Assert.That(arrayNode, Has.Count.EqualTo(3));
         Assert.That(arrayNode[0].Tag, Is.EqualTo("!ConcreteA"));
@@ -44,24 +55,22 @@ internal sealed class CustomBaseTypeSerializerTest : OurSerializationTest
     public void DeserializationTest()
     {
         var str = @"
-type: CustomBaseTypeSerializerTest
-singleTestType: !ConcreteA
-testTypeArray:
-    - !ConcreteA
-      someInt: 42
-    - !type:TestTypeConcreteB
-    - !ConcreteB
-      someBool: true
-";
-        var yamlStream = new YamlStream();
-        yamlStream.Load(new StringReader(str));
+            type: CustomBaseTypeSerializerTest
+            firstTestType: !ConcreteA
+            secondTestType: !ConcreteA
+            testTypeArray:
+                - !ConcreteA
+                  someInt: 42
+                - !type:TestTypeConcreteB
+                - !ConcreteB
+                  someBool: true
+            ";
 
-        var mapping = yamlStream.Documents[0].RootNode.ToDataNodeCast<MappingDataNode>();
-        var testComp =
-            Serialization.Read<CustomBaseTypeSerializerTestComponent>(mapping, notNullableOverride: true);
+        var testComp = ReadYaml(str);
 
         Assert.That(testComp, Is.InstanceOf<CustomBaseTypeSerializerTestComponent>());
-        Assert.That(testComp.SingleTestType, Is.InstanceOf<TestTypeConcreteA>());
+        Assert.That(testComp.FirstTestType, Is.InstanceOf<TestTypeConcreteA>());
+        Assert.That(testComp.SecondTestType, Is.InstanceOf<AnotherBaseTestTypeConcreteA>());
         Assert.That(testComp.TestTypeArray, Has.Length.EqualTo(3));
         Assert.That(testComp.TestTypeArray[0], Is.InstanceOf<TestTypeConcreteA>());
         Assert.That(testComp.TestTypeArray[1], Is.InstanceOf<TestTypeConcreteB>());
@@ -73,6 +82,84 @@ testTypeArray:
         Assert.That(b1.SomeBool, Is.EqualTo(false));
         Assert.That(b2.SomeBool, Is.EqualTo(true));
     }
+
+    [Test]
+    public void BaseTypeDuplicatesNameWithChildEndingConcreteDeserializationTest()
+    {
+        var str = @"
+            type: CustomBaseTypeSerializerTest
+            thirdTestType: !Concrete
+            ";
+        var testComp = ReadYaml(str);
+
+        Assert.That(testComp, Is.InstanceOf<CustomBaseTypeSerializerTestComponent>());
+        Assert.That(testComp.ThirdTestType, Is.InstanceOf<TestBaseTestConcrete>());
+    }
+
+    [Test]
+    public void BaseTypeDuplicatesNameWithChildEndingBaseDeserializationTest()
+    {
+        var str = @"
+            type: CustomBaseTypeSerializerTest
+            thirdTestType: !ConcreteBase
+            ";
+        var testComp = ReadYaml(str);
+
+        Assert.That(testComp, Is.InstanceOf<CustomBaseTypeSerializerTestComponent>());
+        Assert.That(testComp.ThirdTestType, Is.InstanceOf<TestBaseTestConcreteBase>());
+    }
+
+    [Test]
+    public void BaseTypeDuplicatesNameWithChildUsingBaseNameDeserializationTest()
+    {
+        var str = @"
+            type: CustomBaseTypeSerializerTest
+            thirdTestType: !TestBase
+            ";
+        var testComp = ReadYaml(str);
+
+        Assert.That(testComp, Is.InstanceOf<CustomBaseTypeSerializerTestComponent>());
+        Assert.That(testComp.ThirdTestType, Is.InstanceOf<TestBaseTestTestBase>());
+    }
+
+    [Test]
+    public void BaseTypeDuplicatesNameWithChildEndingConcreteSerializationTest()
+    {
+        var component = new CustomBaseTypeSerializerTestComponent
+        {
+            ThirdTestType = new TestBaseTestConcrete()
+        };
+
+        var node = Serialization.WriteValueAs<MappingDataNode>(component);
+
+        Assert.That(node["thirdTestType"].Tag, Is.EqualTo("!Concrete"));
+    }
+
+    [Test]
+    public void BaseTypeDuplicatesNameWithChildEndingBaseSerializationTest()
+    {
+        var component = new CustomBaseTypeSerializerTestComponent
+        {
+            ThirdTestType = new TestBaseTestConcreteBase()
+        };
+
+        var node = Serialization.WriteValueAs<MappingDataNode>(component);
+
+        Assert.That(node["thirdTestType"].Tag, Is.EqualTo("!ConcreteBase"));
+    }
+
+    [Test]
+    public void BaseTypeDuplicatesNameWithChildUsingBaseNameSerializationTest()
+    {
+        var component = new CustomBaseTypeSerializerTestComponent
+        {
+            ThirdTestType = new TestBaseTestTestBase()
+        };
+
+        var node = Serialization.WriteValueAs<MappingDataNode>(component);
+
+        Assert.That(node["thirdTestType"].Tag, Is.EqualTo("!TestBase"));
+    }
 }
 
 #region TestTypes
@@ -80,10 +167,16 @@ testTypeArray:
 internal sealed partial class CustomBaseTypeSerializerTestComponent : Component
 {
     [DataField(customTypeSerializer: typeof(CustomBaseTypeSerializer<TestTypeBase>))]
-    public TestTypeBase SingleTestType;
+    public TestTypeBase[] TestTypeArray;
 
     [DataField(customTypeSerializer: typeof(CustomBaseTypeSerializer<TestTypeBase>))]
-    public TestTypeBase[] TestTypeArray;
+    public TestTypeBase FirstTestType;
+
+    [DataField(customTypeSerializer: typeof(CustomBaseTypeSerializer<AnotherBaseTestTypeBase>))]
+    public AnotherBaseTestTypeBase SecondTestType;
+
+    [DataField(customTypeSerializer: typeof(CustomBaseTypeSerializer<TestBaseTestBase>))]
+    public TestBaseTestBase ThirdTestType;
 }
 
 [ImplicitDataDefinitionForInheritors]
@@ -99,4 +192,15 @@ internal sealed partial class TestTypeConcreteB : TestTypeBase
     [DataField]
     public bool SomeBool;
 }
+
+[ImplicitDataDefinitionForInheritors]
+internal abstract partial class AnotherBaseTestTypeBase;
+internal sealed partial class AnotherBaseTestTypeConcreteA : AnotherBaseTestTypeBase;
+
+[ImplicitDataDefinitionForInheritors]
+internal abstract partial class TestBaseTestBase;
+internal sealed partial class TestBaseTestConcrete : TestBaseTestBase;
+internal sealed partial class TestBaseTestConcreteBase : TestBaseTestBase;
+internal sealed partial class TestBaseTestTestBase : TestBaseTestBase;
+
 #endregion

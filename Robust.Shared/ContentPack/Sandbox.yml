@@ -8,6 +8,15 @@ AllowedVerifierErrors:
 - InitOnly
 # ILVerify has problems with Default Interface Methods so...
 - InterfaceMethodNotImplemented
+# As of the runtime supporting `static abstract`, this stopped being erroneous.
+# The VM now throws upon reaching an invalid situation here, instead of potentially undefined behavior.
+# I consulted https://github.com/dotnet/runtime/blob/main/docs/design/specs/Ecma-335-Augments.md#static-interface-methods
+# for the precise semantics, which is that these are no longer valid for *interface* methods.
+# This is not true of class methods, but the CLR we use is guaranteed to throw in those circumstances.
+# and will not "misinterpret" the CIL in any useful way if you violate those constraints.
+- CallAbstract
+# See above.
+- Constrained
 
 # EVERYTHING in these namespaces is allowed.
 # Note that, due to a historical bug in the sandbox, any namespace _prefixed_ with one of these

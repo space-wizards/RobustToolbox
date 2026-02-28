@@ -79,6 +79,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             deps.Register<IGameTiming, GameTiming>();
             deps.RegisterInstance<INetManager>(new Mock<INetManager>().Object);
             deps.Register<IConfigurationManager, ServerNetConfigurationManager>();
+            deps.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
             deps.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<ProfManager, ProfManager>();
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();

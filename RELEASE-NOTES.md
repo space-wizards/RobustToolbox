@@ -316,6 +316,7 @@ END TEMPLATE-->
   * At the moment only available on Windows.
   * See `ISystemFontManager` for API.
 * The client now display a loading screen during startup.
+* Added `TransformSystem.SnapToGrid()` entity coordinate helper method.
 
 ### Bugfixes
 

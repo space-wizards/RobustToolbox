@@ -20,7 +20,7 @@ namespace Robust.Shared.Graphics
         public bool DrawFov { get; set; } = true;
 
         /// <inheritdoc />
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool DrawLight { get; set; } = true;
 
         /// <inheritdoc />

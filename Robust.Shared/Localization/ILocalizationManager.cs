@@ -129,7 +129,13 @@ namespace Robust.Shared.Localization
         /// <summary>
         ///     Sets culture to be used in the absence of the main one.
         /// </summary>
+        [Obsolete("Use SetFallbackCulture instead")]
         void SetFallbackCluture(params CultureInfo[] culture);
+
+        /// <summary>
+        ///     Sets culture to be used in the absence of the main one.
+        /// </summary>
+        void SetFallbackCulture(params CultureInfo[] culture);
 
         /// <summary>
         ///     Immediately reload ALL localizations from resources.

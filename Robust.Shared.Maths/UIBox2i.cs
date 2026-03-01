@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -23,7 +23,7 @@ namespace Robust.Shared.Maths
         public readonly int Width => Math.Abs(Right - Left);
         public readonly int Height => Math.Abs(Top - Bottom);
         public readonly Vector2i Size => new(Width, Height);
-        public readonly Vector2 Center => TopRight - BottomLeft / 2;
+        public readonly Vector2 Center => (TopRight + BottomLeft) / 2f;
 
         public UIBox2i(Vector2i topLeft, Vector2i bottomRight)
         {

@@ -7,6 +7,9 @@ namespace Robust.Server.ViewVariables.Traits
 {
     internal sealed class ViewVariablesTraitEnumerable : ViewVariablesTrait
     {
+
+        private const int MaxCacheSize = 5_000;
+
         private readonly List<object?> _cache = new();
         private IEnumerator? _enumerator;
         private readonly IEnumerable _enumerable;
@@ -72,9 +75,15 @@ namespace Robust.Server.ViewVariables.Traits
                 return;
             }
 
+            if (index >= MaxCacheSize)
+                return;
+
             DebugTools.AssertNotNull(_enumerator);
             while (_cache.Count <= index)
             {
+                if (_cache.Count >= MaxCacheSize)
+                    break;
+
                 if (!_enumerator!.MoveNext())
                 {
                     _enumerator = null;

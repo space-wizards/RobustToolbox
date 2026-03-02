@@ -30,7 +30,10 @@ internal sealed partial class PvsSystem
             return;
 
         sessionData.LastReceivedAck = ackedTick;
-        PendingAcks.Add(session);
+        lock (PendingAcks)
+        {
+            PendingAcks.Add(session);
+        }
     }
 
     /// <summary>
@@ -39,18 +42,21 @@ internal sealed partial class PvsSystem
     /// <param name="histogram"></param>
     private WaitHandle? ProcessQueuedAcks()
     {
-        if (PendingAcks.Count == 0)
-            return null;
-
-        _toAck.Clear();
-
-        foreach (var session in PendingAcks)
+        lock (PendingAcks)
         {
-            if (session.Status != SessionStatus.Disconnected)
-                _toAck.Add(GetOrNewPvsSession(session));
-        }
+            if (PendingAcks.Count == 0)
+                return null;
 
-        PendingAcks.Clear();
+            _toAck.Clear();
+
+            foreach (var session in PendingAcks)
+            {
+                if (session.Status != SessionStatus.Disconnected)
+                    _toAck.Add(GetOrNewPvsSession(session));
+            }
+
+            PendingAcks.Clear();
+        }
 
         if (!_async)
         {

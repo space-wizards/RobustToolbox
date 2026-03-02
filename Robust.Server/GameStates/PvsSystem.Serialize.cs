@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Prometheus;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -9,6 +7,9 @@ using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Robust.Server.GameStates;
 
@@ -59,18 +60,43 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void SerializeSessionState(PvsSession data)
     {
-        ComputeSessionState(data);
-        InterlockedHelper.Min(ref _oldestAck, data.FromTick.Value);
-        DebugTools.AssertEqual(data.StateStream, null);
-
-        // PVS benchmarks use dummy sessions.
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (data.Session.Channel is not DummyChannel)
+        try
         {
-            data.StateStream = RobustMemoryManager.GetMemoryStream();
-            _serializer.SerializeDirect(data.StateStream, data.State);
-        }
+            if (!TryComputeSessionState(data))
+                return;
+            InterlockedHelper.Min(ref _oldestAck, data.FromTick.Value);
+            DebugTools.AssertEqual(data.StateStream, null);
 
-        data.ClearState();
+            // PVS benchmarks use dummy sessions.
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (data.Session.Channel is not DummyChannel)
+            {
+                data.StateStream = RobustMemoryManager.GetMemoryStream();
+                _serializer.SerializeDirect(data.StateStream, data.State);
+            }
+        }
+        finally
+        {
+            ReleasePooledStateData(data);
+            data.ClearState();
+        }
+    }
+
+    private void ReleasePooledStateData(PvsSession data)
+    {
+        var states = data.States;
+        for (var i = 0; i < states.Count; i++)
+        {
+            var state = states[i];
+            var changes = state.ComponentChanges.Value;
+            if (changes is List<ComponentChange> list)
+                _componentChangeListPool.Return(list);
+
+            if (state.NetComponents != null)
+            {
+                _netComponentSetPool.Return(state.NetComponents);
+                state.NetComponents = null;
+            }
+        }
     }
 }

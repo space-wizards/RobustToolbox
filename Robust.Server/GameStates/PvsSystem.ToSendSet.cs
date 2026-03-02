@@ -83,6 +83,9 @@ internal sealed partial class PvsSystem
             return;
         }
 
+        if (!Exists(ent.Uid))
+            return;
+
         var (entered,budgetExceeded) = IsEnteringPvsRange(ref data, fromTick, ref session.Budget);
 
         if (budgetExceeded)
@@ -157,6 +160,9 @@ internal sealed partial class PvsSystem
             Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {queued}. Trace:\n{Environment.StackTrace}");
             return false;
         }
+
+        if (!Exists(uid))
+            return false;
 
         data.LastSeen = _gameTiming.CurTick;
         session.ToSend!.Add(entity.Comp.PvsData);

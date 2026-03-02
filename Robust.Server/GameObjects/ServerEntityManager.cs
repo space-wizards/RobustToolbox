@@ -33,6 +33,10 @@ namespace Robust.Server.GameObjects
             "robust_entities_count",
             "Amount of alive entities.");
 
+        private static readonly Gauge EntityMsgQueueSize = Metrics.CreateGauge(
+            "robust_entity_msg_queue_size",
+            "Number of queued MsgEntity messages on the server.");
+
         [Dependency] private readonly IReplayRecordingManager _replay = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -145,6 +149,8 @@ namespace Robust.Server.GameObjects
             new();
 
         private bool _logLateMsgs;
+        private int _entityMsgQueueLimit;
+        private int _entityMsgMaxFutureTicks;
 
         /// <inheritdoc />
         public void SetupNetworking()
@@ -154,6 +160,8 @@ namespace Robust.Server.GameObjects
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
 
             _configurationManager.OnValueChanged(CVars.NetLogLateMsg, b => _logLateMsgs = b, true);
+            _configurationManager.OnValueChanged(CVars.NetEntityMsgQueueLimit, v => _entityMsgQueueLimit = Math.Max(0, v), true);
+            _configurationManager.OnValueChanged(CVars.NetEntityMsgMaxFutureTicks, v => _entityMsgMaxFutureTicks = Math.Max(0, v), true);
         }
 
         /// <inheritdoc />
@@ -170,6 +178,7 @@ namespace Robust.Server.GameObjects
             base.TickUpdate(frameTime, noPredictions, histogram);
 
             EntitiesCount.Set(Entities.Count);
+            EntityMsgQueueSize.Set(_queue.Count);
         }
 
         public uint GetLastMessageSequence(ICommonSession? session)
@@ -204,6 +213,33 @@ namespace Robust.Server.GameObjects
 
         private void HandleEntityNetworkMessage(MsgEntity message)
         {
+            if (_entityMsgQueueLimit > 0 && _queue.Count >= _entityMsgQueueLimit)
+            {
+                _netEntSawmill.Warning(
+                    "Dropping MsgEntity from {0} for exceeding MsgEntity queue limit ({1}).",
+                    message.MsgChannel,
+                    _entityMsgQueueLimit);
+                return;
+            }
+
+            if (_entityMsgMaxFutureTicks > 0)
+            {
+                var curTick = _gameTiming.CurTick.Value;
+                var msgTick = message.SourceTick.Value;
+                var maxAllowed = curTick + (uint) _entityMsgMaxFutureTicks;
+
+                if (msgTick > maxAllowed)
+                {
+                    _netEntSawmill.Warning(
+                        "Dropping MsgEntity from {0} for future tick. cur={1} msg={2} limit={3}",
+                        message.MsgChannel,
+                        curTick,
+                        msgTick,
+                        _entityMsgMaxFutureTicks);
+                    return;
+                }
+            }
+
             if (_logLateMsgs)
             {
                 var msgT = message.SourceTick;

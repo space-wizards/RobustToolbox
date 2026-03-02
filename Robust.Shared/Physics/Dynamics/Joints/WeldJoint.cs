@@ -24,6 +24,13 @@ internal sealed class WeldJointState : JointState
 
 public sealed partial class WeldJoint : Joint, IEquatable<WeldJoint>
 {
+    private static float WrapAnglePi(float angle) // Lua patch
+    {
+        angle = (angle + MathHelper.Pi) % MathHelper.TwoPi;
+        if (angle < 0f) angle += MathHelper.TwoPi;
+        return angle - MathHelper.Pi;
+    }
+
     // Shared
     private float _gamma;
     private Vector3 _impulse;
@@ -162,7 +169,7 @@ public sealed partial class WeldJoint : Joint, IEquatable<WeldJoint>
 
             float invM = iA + iB;
 
-            float C = aB - aA - ReferenceAngle;
+            float C = WrapAnglePi(aB - aA - ReferenceAngle); // Lua patch
 
             // Damping coefficient
             float d = Damping;
@@ -328,7 +335,7 @@ public sealed partial class WeldJoint : Joint, IEquatable<WeldJoint>
         else
         {
             var C1 =  cB + rB - cA - rA;
-            float C2 = aB - aA - ReferenceAngle;
+            float C2 = WrapAnglePi(aB - aA - ReferenceAngle); // Lua patch
 
             positionError = C1.Length();
             angularError = Math.Abs(C2);

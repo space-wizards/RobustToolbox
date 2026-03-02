@@ -45,41 +45,46 @@ internal sealed partial class PvsSystem
     {
         DebugTools.AssertEqual(data.State, null);
 
-        // PVS benchmarks use dummy sessions.
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (data.Session.Channel is not DummyChannel)
+        try
         {
-            DebugTools.AssertNotEqual(data.StateStream, null);
-            var msg = new MsgState
+            if (data.Session.Channel is { } channel && channel is not DummyChannel)
             {
-                StateStream = data.StateStream,
-                ForceSendReliably = data.ForceSendReliably,
-                CompressionContext = ctx
-            };
+                if (!channel.IsConnected)
+                    return;
 
-            _netMan.ServerSendMessage(msg, data.Session.Channel);
-            if (msg.ShouldSendReliably())
+                DebugTools.AssertNotEqual(data.StateStream, null);
+                var msg = new MsgState
+                {
+                    StateStream = data.StateStream,
+                    ForceSendReliably = data.ForceSendReliably,
+                    CompressionContext = ctx
+                };
+
+                _netMan.ServerSendMessage(msg, channel);
+                if (msg.ShouldSendReliably())
+                {
+                    data.RequestedFull = false;
+                    data.LastReceivedAck = _gameTiming.CurTick;
+                    lock (PendingAcks)
+                    {
+                        PendingAcks.Add(data.Session);
+                    }
+                }
+            }
+            else
             {
-                data.RequestedFull = false;
                 data.LastReceivedAck = _gameTiming.CurTick;
+                data.RequestedFull = false;
                 lock (PendingAcks)
                 {
                     PendingAcks.Add(data.Session);
                 }
             }
         }
-        else
+        finally
         {
-            // Always "ack" dummy sessions.
-            data.LastReceivedAck = _gameTiming.CurTick;
-            data.RequestedFull = false;
-            lock (PendingAcks)
-            {
-                PendingAcks.Add(data.Session);
-            }
+            data.StateStream?.Dispose();
+            data.StateStream = null;
         }
-
-        data.StateStream?.Dispose();
-        data.StateStream = null;
     }
 }

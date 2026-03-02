@@ -22,50 +22,64 @@ internal sealed partial class PvsSystem
     /// <returns>New entity State for the given entity.</returns>
     private EntityState GetEntityState(ICommonSession? player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
     {
-        var changed = new List<ComponentChange>();
+        var changed = _componentChangeListPool.Get();
+        changed.Clear();
 
         bool sendCompList = meta.LastComponentRemoved > fromTick;
-        HashSet<ushort>? netComps = sendCompList ? new() : null;
-        var stateEv = new ComponentGetState(player, fromTick);
-
-        foreach (var (netId, component) in meta.NetComponents)
+        HashSet<ushort>? netComps = null;
+        if (sendCompList)
         {
-            DebugTools.Assert(component.NetSyncEnabled);
-
-            if (component.Deleted || !component.Initialized)
-            {
-                Log.Error($"Entity manager returned deleted or uninitialized component of type {component.GetType()} on entity {ToPrettyString(entityUid)} while generating entity state data for {player?.Name ?? "replay"}");
-                continue;
-            }
-
-            if (component.SendOnlyToOwner && player != null && player.AttachedEntity != entityUid)
-                continue;
-
-            if (component.LastModifiedTick <= fromTick)
-            {
-                if (sendCompList && (!component.SessionSpecific || player == null || EntityManager.CanGetComponentState(component, player)))
-                    netComps!.Add(netId);
-                continue;
-            }
-
-            if (component.SessionSpecific && player != null && !EntityManager.CanGetComponentState(component, player))
-                continue;
-
-            var state = ComponentState(entityUid, component, netId, ref stateEv);
-            changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
-
-            if (state != null)
-                DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState);
-
-            if (sendCompList)
-                netComps!.Add(netId);
+            netComps = _netComponentSetPool.Get();
+            netComps.Clear();
         }
+        try
+        {
+            var stateEv = new ComponentGetState(player, fromTick);
 
-        DebugTools.Assert(meta.EntityLastModifiedTick >= meta.LastComponentRemoved);
-        DebugTools.Assert(GetEntity(meta.NetEntity) == entityUid);
-        var entState = new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
+            foreach (var (netId, component) in meta.NetComponents)
+            {
+                DebugTools.Assert(component.NetSyncEnabled);
 
-        return entState;
+                if (component.Deleted || !component.Initialized)
+                {
+                    Log.Error($"Entity manager returned deleted or uninitialized component of type {component.GetType()} on entity {ToPrettyString(entityUid)} while generating entity state data for {player?.Name ?? "replay"}");
+                    continue;
+                }
+
+                if (component.SendOnlyToOwner && player != null && player.AttachedEntity != entityUid)
+                    continue;
+
+                if (component.LastModifiedTick <= fromTick)
+                {
+                    if (sendCompList && (!component.SessionSpecific || player == null || EntityManager.CanGetComponentState(component, player)))
+                        netComps!.Add(netId);
+                    continue;
+                }
+
+                if (component.SessionSpecific && player != null && !EntityManager.CanGetComponentState(component, player))
+                    continue;
+
+                var state = ComponentState(entityUid, component, netId, ref stateEv);
+                changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
+
+                if (state != null)
+                    DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState);
+
+                if (sendCompList)
+                    netComps!.Add(netId);
+            }
+
+            DebugTools.Assert(meta.EntityLastModifiedTick >= meta.LastComponentRemoved);
+            DebugTools.Assert(GetEntity(meta.NetEntity) == entityUid);
+            return new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
+        }
+        catch
+        {
+            _componentChangeListPool.Return(changed);
+            if (netComps != null)
+                _netComponentSetPool.Return(netComps);
+            throw;
+        }
     }
 
     private IComponentState? ComponentState(EntityUid uid, IComponent comp, ushort netId, ref ComponentGetState stateEv)
@@ -83,30 +97,39 @@ internal sealed partial class PvsSystem
     private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta)
     {
         var bus = EntityManager.EventBusInternal;
-        var changed = new List<ComponentChange>();
+        var changed = _componentChangeListPool.Get();
+        changed.Clear();
         var stateEv = new ComponentGetState(player, GameTick.Zero);
 
-        HashSet<ushort> netComps = new();
+        var netComps = _netComponentSetPool.Get();
+        netComps.Clear();
 
-        foreach (var (netId, component) in meta.NetComponents)
+        try
         {
-            DebugTools.Assert(component.NetSyncEnabled);
+            foreach (var (netId, component) in meta.NetComponents)
+            {
+                DebugTools.Assert(component.NetSyncEnabled);
 
-            if (component.SendOnlyToOwner && player.AttachedEntity != entityUid)
-                continue;
+                if (component.SendOnlyToOwner && player.AttachedEntity != entityUid)
+                    continue;
 
-            if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
-                continue;
+                if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
+                    continue;
 
-            var state = ComponentState(entityUid, component, netId, ref stateEv);
-            DebugTools.Assert(state is not IComponentDeltaState);
-            changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
-            netComps.Add(netId);
+                var state = ComponentState(entityUid, component, netId, ref stateEv);
+                DebugTools.Assert(state is not IComponentDeltaState);
+                changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
+                netComps.Add(netId);
+            }
+
+            return new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
         }
-
-        var entState = new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
-
-        return entState;
+        catch
+        {
+            _componentChangeListPool.Return(changed);
+            _netComponentSetPool.Return(netComps);
+            throw;
+        }
     }
 
     /// <summary>

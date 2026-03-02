@@ -267,6 +267,9 @@ namespace Robust.Shared
         public static readonly CVarDef<int> NetPVSEntityEnterBudget =
             CVarDef.Create("net.pvs_enter_budget", 200, CVar.ARCHIVE | CVar.REPLICATED | CVar.CLIENT);
 
+        public static readonly CVarDef<int> NetPvsMaxEntityStates =
+            CVarDef.Create("net.pvs_max_entity_states", 50000, CVar.SERVERONLY);
+
         /// <summary>
         /// The amount of pvs-exiting entities that a client will process in a single tick.
         /// </summary>
@@ -284,6 +287,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> NetLogLateMsg =
             CVarDef.Create("net.log_late_msg", true);
+
+
+        public static readonly CVarDef<int> NetEntityMsgQueueLimit =
+            CVarDef.Create("net.entity_msg_queue_limit", 8192, CVar.SERVERONLY);
+        public static readonly CVarDef<int> NetEntityMsgMaxFutureTicks =
+            CVarDef.Create("net.entity_msg_max_future_ticks", 10, CVar.SERVERONLY);
 
         /// <summary>
         /// Ticks per second on the server.

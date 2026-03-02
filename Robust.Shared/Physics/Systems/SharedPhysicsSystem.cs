@@ -18,6 +18,30 @@ namespace Robust.Shared.Physics.Systems
 {
     public abstract partial class SharedPhysicsSystem : EntitySystem
     {
+        private static readonly Gauge PhysicsSubstepsGauge = Metrics.CreateGauge(
+            "robust_physics_substeps",
+            "Number of physics substeps per tick.");
+
+        private static readonly Gauge PhysicsAwakeBodiesGauge = Metrics.CreateGauge(
+            "robust_physics_awake_bodies",
+            "Number of awake physics bodies.");
+
+        private static readonly Gauge PhysicsAwakeDynamicBodiesGauge = Metrics.CreateGauge(
+            "robust_physics_awake_dynamic_bodies",
+            "Number of awake dynamic physics bodies.");
+
+        private static readonly Gauge PhysicsContactCountGauge = Metrics.CreateGauge(
+            "robust_physics_contact_count",
+            "Number of active physics contacts.");
+
+        private static readonly Gauge PhysicsMoveBufferCountGauge = Metrics.CreateGauge(
+            "robust_physics_move_buffer_count",
+            "Number of moved fixture proxies recorded this tick (used for new contact finding).");
+
+        private static readonly Gauge PhysicsMovedGridsGauge = Metrics.CreateGauge(
+            "robust_physics_moved_grids",
+            "Number of grids moved this tick.");
+
         /*
          * TODO:
 
@@ -262,6 +286,24 @@ namespace Robust.Shared.Physics.Systems
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
+            if (MetricsEnabled)
+            {
+                PhysicsSubstepsGauge.Set(_substeps);
+                PhysicsAwakeBodiesGauge.Set(AwakeBodies.Count);
+
+                var awakeDynamic = 0;
+                foreach (var ent in AwakeBodies)
+                {
+                    if (ent.Comp1.BodyType == BodyType.Dynamic)
+                        awakeDynamic++;
+                }
+
+                PhysicsAwakeDynamicBodiesGauge.Set(awakeDynamic);
+                PhysicsContactCountGauge.Set(ContactCount);
+                PhysicsMoveBufferCountGauge.Set(MoveBuffer.Count);
+                PhysicsMovedGridsGauge.Set(MovedGrids.Count);
+            }
+
             var frameTime = deltaTime / _substeps;
 
             EffectiveCurTime = _gameTiming.CurTime;

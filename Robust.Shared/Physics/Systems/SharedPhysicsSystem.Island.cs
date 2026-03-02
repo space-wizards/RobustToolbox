@@ -177,6 +177,8 @@ public abstract partial class SharedPhysicsSystem
     private readonly HashSet<Entity<PhysicsComponent, TransformComponent>> _islandSet = new(64);
     private readonly Stack<Entity<PhysicsComponent, TransformComponent>> _bodyStack = new(64);
     private readonly List<Entity<PhysicsComponent, TransformComponent>> _awakeBodyList = new(256);
+    private readonly List<IslandData> _islandsBuffer = new();
+    private readonly List<(Joint Original, Joint Joint)> _islandJointsBuffer = new();
 
     // Config
     private bool _warmStarting;
@@ -319,8 +321,8 @@ public abstract partial class SharedPhysicsSystem
             _islandJointPool.Get(),
             new List<(Joint Joint, float Error)>());
 
-        var islands = new List<IslandData>();
-        var islandJoints = new List<(Joint Original, Joint Joint)>();
+        _islandsBuffer.Clear();
+        _islandJointsBuffer.Clear();
 
         // Build the relevant islands / graphs for all bodies.
         foreach (var ent in _awakeBodyList)
@@ -441,7 +443,7 @@ public abstract partial class SharedPhysicsSystem
                             }
 
                             var copy = joint.Clone(uidA, uidB);
-                            islandJoints.Add((joint, copy));
+                            _islandJointsBuffer.Add((joint, copy));
                             joint.IslandFlag = true;
                         }
                     }
@@ -471,12 +473,12 @@ public abstract partial class SharedPhysicsSystem
                         }
 
                         var copy = joint.Clone(uidA, uidB);
-                        islandJoints.Add((joint, copy));
+                        _islandJointsBuffer.Add((joint, copy));
                         joint.IslandFlag = true;
                     }
                 }
 
-                foreach (var (original, joint) in islandJoints)
+                foreach (var (original, joint) in _islandJointsBuffer)
                 {
                     // TODO: Same here store physicscomp + transform on the joint, the savings are worth it.
                     var bodyA = PhysicsQuery.GetComponent(joint.BodyAUid);
@@ -500,7 +502,7 @@ public abstract partial class SharedPhysicsSystem
                     }
                 }
 
-                islandJoints.Clear();
+                _islandJointsBuffer.Clear();
             }
 
             int idx;
@@ -519,7 +521,7 @@ public abstract partial class SharedPhysicsSystem
                 {
                     MapUid = mapUid.Value
                 };
-                islands.Add(data);
+                _islandsBuffer.Add(data);
                 idx = data.Index;
             }
 
@@ -541,20 +543,21 @@ public abstract partial class SharedPhysicsSystem
         // If we didn't use lone island just return it.
         if (loneIsland.Bodies.Count > 0)
         {
-            islands.Add(loneIsland);
+            _islandsBuffer.Add(loneIsland);
         }
         else
         {
             ReturnIsland(loneIsland);
         }
 
-        SolveIslands(islands, frameTime, dtRatio, invDt, prediction);
+        SolveIslands(_islandsBuffer, frameTime, dtRatio, invDt, prediction);
 
-        foreach (var island in islands)
+        foreach (var island in _islandsBuffer)
         {
             ReturnIsland(island);
         }
 
+        _islandsBuffer.Clear();
         Cleanup(frameTime);
     }
 
@@ -602,7 +605,6 @@ public abstract partial class SharedPhysicsSystem
             // So Box2D would update broadphase here buutttt we'll just wait until MoveEvent queue is used.
         }
 
-        _islandSet.Clear();
         _islandSet.Clear();
         _awakeBodyList.Clear();
     }
@@ -916,7 +918,7 @@ public abstract partial class SharedPhysicsSystem
                 float[] solvedAngles)
             {
                 const int FinaliseBodies = 32;
-                var batches = (int)MathF.Ceiling((float) bodyCount / FinaliseBodies);
+                var batches = (int)MathF.Ceiling((float)bodyCount / FinaliseBodies);
 
                 Parallel.For(0, batches, options, i =>
                 {
@@ -1045,7 +1047,7 @@ public abstract partial class SharedPhysicsSystem
                 continue;
 
             var (_, parentRot, parentInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(transform);
-            var worldRot = (float) (parentRot + xform._localRotation);
+            var worldRot = (float)(parentRot + xform._localRotation);
 
             var angle = angles[i];
 

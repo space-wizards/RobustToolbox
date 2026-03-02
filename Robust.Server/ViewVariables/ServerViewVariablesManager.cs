@@ -57,11 +57,9 @@ namespace Robust.Server.ViewVariables
 
             if (!_users.TryGetValue(e.Session.UserId, out var vvSessions))
                 return;
-
-            foreach (var id in vvSessions)
-            {
-                _closeSession(id, false);
-            }
+                
+            while (vvSessions.Count > 0)
+                _closeSession(vvSessions[^1], false);
         }
 
         private void _msgCloseSession(MsgViewVariablesCloseSession message)
@@ -272,6 +270,14 @@ namespace Robust.Server.ViewVariables
             }
 
             _sessions.Remove(sessionId);
+
+            if (_users.TryGetValue(session.PlayerUser, out var userSessions))
+            {
+                userSessions.Remove(sessionId);
+                if (userSessions.Count == 0)
+                    _users.Remove(session.PlayerUser);
+            }
+
             if (!sendMsg || !_playerManager.TryGetSessionById(session.PlayerUser, out var player) ||
                 player.Status == SessionStatus.Disconnected)
             {

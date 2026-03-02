@@ -23,8 +23,7 @@ namespace Robust.Shared.Maths
         public readonly int Width => Math.Abs(Right - Left);
         public readonly int Height => Math.Abs(Top - Bottom);
         public readonly Vector2i Size => new(Width, Height);
-        public readonly Vector2 Center => (TopRight + BottomLeft) / 2f;
-
+        public readonly Vector2 Center => new Vector2(Left + Right, Top + Bottom) / 2f;
         public UIBox2i(Vector2i topLeft, Vector2i bottomRight)
         {
             Unsafe.SkipInit(out this);

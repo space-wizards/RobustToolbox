@@ -16,11 +16,11 @@ namespace Robust.Shared.Graphics
         private MapCoordinates _coords;
 
         /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
+        [ViewVariables]
         public bool DrawFov { get; set; } = true;
 
         /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
+        [ViewVariables]
         public bool DrawLight { get; set; } = true;
 
         /// <inheritdoc />

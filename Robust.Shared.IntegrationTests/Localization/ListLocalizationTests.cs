@@ -178,7 +178,6 @@ internal sealed class ListLocalizationTests : RobustUnitTest
 
     [Test]
     [TestCaseSource(nameof(TestLocalizationData))]
-    [Ignore("Linguini improperly handles functions & causes matching to fail on COUNT()", Until = "2025-10-21")]
     public void TestListLocalization(string locale, string[] people, string expectedColor, string expectedReciprocal)
     {
         var entMan = IoCManager.Resolve<IEntityManager>();

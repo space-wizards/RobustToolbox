@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using TerraFX.Interop.Windows;
@@ -9,6 +11,9 @@ namespace Robust.Shared.Utility;
 
 internal static class FileHelper
 {
+    // Scanning modules is expensive and profilers don't magically appear mid execution
+    private static bool? _isUnderProfiler;
+
     /// <summary>
     /// Try to open a file for reading. If the file does not exist, the operation fails without exception.
     /// </summary>
@@ -39,6 +44,21 @@ internal static class FileHelper
     private static unsafe bool TryGetFileWindows(string path, [NotNullWhen(true)] out FileStream? stream)
     {
         if (path.EndsWith("\\"))
+        {
+            stream = null;
+            return false;
+        }
+
+        // When using external profilers like dotTrace in line-by-line mode, this shit breaks
+        // So we have to do the slow File.Exists() check in those cases because what else can we do?
+        _isUnderProfiler ??= Process.GetCurrentProcess()
+            .Modules
+            .Cast<ProcessModule>()
+            .Any(m => m.ModuleName.Contains("JetBrains") ||
+                      m.ModuleName.Contains("dotTrace") ||
+                      m.ModuleName.Contains("profiler", StringComparison.OrdinalIgnoreCase));
+
+        if (_isUnderProfiler.Value && !File.Exists(path))
         {
             stream = null;
             return false;

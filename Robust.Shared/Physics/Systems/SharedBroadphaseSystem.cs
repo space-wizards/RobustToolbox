@@ -458,12 +458,6 @@ namespace Robust.Shared.Physics.Systems
             }, aabb, true);
         }
 
-        [Obsolete("Use Entity<T> variant")]
-        public void RegenerateContacts(EntityUid uid, PhysicsComponent body, FixturesComponent? fixtures = null, TransformComponent? xform = null)
-        {
-            RegenerateContacts((uid, body, fixtures, xform));
-        }
-
         public void RegenerateContacts(Entity<PhysicsComponent?, FixturesComponent?, TransformComponent?> entity)
         {
             if (!Resolve(entity.Owner, ref entity.Comp1))

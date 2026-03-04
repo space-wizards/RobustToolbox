@@ -1228,6 +1228,11 @@ Types:
       - "bool Equals(!0)"
     IFormatProvider: { All: True }
     IFormattable: { All: True }
+    ISpanFormattable: { All: True }
+    IUtf8SpanFormattable: { All: True }
+    IParsable`1: { All: True }
+    ISpanParsable`1: { All: True }
+    IUtf8SpanParsable`1: { All: True }
     Index: { All: True }
     IndexOutOfRangeException: { All: True }
     Int16: { All: True }

@@ -1202,7 +1202,7 @@ namespace Robust.Shared.GameObjects
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp>()];
             DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp).Name}");
-            return new EntityQuery<TCompShared>(comps, _resolveSawmill);
+            return new EntityQuery<TCompShared>(this, comps);
         }
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)

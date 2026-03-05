@@ -32,25 +32,32 @@ public sealed partial class LightMaskPrototype : IPrototype
 /// This Data is used by <see cref="LightLevelSystem"/>
 /// </summary>
 [Serializable, NetSerializable, DataRecord]
-public readonly struct LightConeData
+public sealed partial record LightConeData
 {
     /// <summary>
     ///     The angle offset of the cone in degrees, relative to the light it belongs to.
     ///     0 is forward, 90 is to the right, etc.
     /// </summary>
     [DataField(required: true)]
-    public readonly Angle Direction;
+    public Angle Direction;
 
     /// <summary>
     ///     Angle limit of the cone to be within the full brightness of the light.
     /// </summary>
     [DataField(required: true)]
-    public readonly Angle InnerWidth;
+    public Angle InnerWidth;
 
     /// <summary>
     ///     Angle limit of the cone to be within the reduced light. Beyond this angle, you are considered out of the light.
     /// </summary>
     [DataField(required: true)]
-    public readonly Angle OuterWidth;
+    public Angle OuterWidth;
+
+    public LightConeData(Angle direction, Angle innerWidth, Angle outerWidth)
+    {
+        Direction = direction;
+        InnerWidth = innerWidth;
+        OuterWidth = outerWidth;
+    }
 
 }

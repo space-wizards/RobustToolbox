@@ -122,7 +122,6 @@ namespace Robust.Client
                     deps.Register<IAudioManager, HeadlessAudioManager>();
                     deps.Register<IAudioInternal, HeadlessAudioManager>();
                     deps.Register<IInputManager, InputManager>();
-                    deps.Register<IFileDialogManager, DummyFileDialogManager>();
                     deps.Register<IUriOpener, UriOpenerDummy>();
                     deps.Register<ISystemFontManager, SystemFontManagerFallback>();
                     deps.Register<ISystemFontManagerInternal, SystemFontManagerFallback>();
@@ -134,7 +133,6 @@ namespace Robust.Client
                     deps.Register<IAudioManager, AudioManager>();
                     deps.Register<IAudioInternal, AudioManager>();
                     deps.Register<IInputManager, ClydeInputManager>();
-                    deps.Register<IFileDialogManager, FileDialogManager>();
                     deps.Register<IUriOpener, UriOpener>();
                     deps.Register<ISystemFontManager, SystemFontManager>();
                     deps.Register<ISystemFontManagerInternal, SystemFontManager>();
@@ -163,6 +161,7 @@ namespace Robust.Client
             deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
             deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
+            deps.Register<IFileDialogManager, FileDialogManager>();
 
 #if TOOLS
             deps.Register<IXamlProxyManager, XamlProxyManager>();

@@ -8,6 +8,7 @@
 [assembly: InternalsVisibleTo("Robust.Server")]
 [assembly: InternalsVisibleTo("Robust.Client")]
 [assembly: InternalsVisibleTo("Robust.UnitTesting")]
+[assembly: InternalsVisibleTo("Robust.Shared.Maths.Tests")]
 
 #if DEVELOPMENT
 [assembly: InternalsVisibleTo("Robust.Benchmarks")]

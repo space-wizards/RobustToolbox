@@ -5,10 +5,10 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
-    /// <remarks>
-    ///     Base component for the ECS system.
-    ///     Instances are dynamically instantiated by a <c>ComponentFactory</c>, and will have their IoC Dependencies resolved.
-    /// </remarks>
+    /// <summary>
+    ///     The base interface for an ECS component. You probably want <see cref="Component"/>.<br/>
+    /// </summary>
+    /// <include file='../Serialization/Manager/Attributes/Docs.xml' path='entries/entry[@name="ImpliesDataDefinition"]/*'/>
     [ImplicitDataDefinitionForInheritors]
     public partial interface IComponent
     {
@@ -50,18 +50,21 @@ namespace Robust.Shared.GameObjects
         EntityUid Owner { get; set; }
 
         /// <summary>
-        /// Component has been (or is currently being) initialized.
+        ///     Whether the component has been or is being initialized.
         /// </summary>
+        /// <seealso cref="ComponentInit"/>
         bool Initialized { get; }
 
         /// <summary>
         ///     This is true when the component is active.
         /// </summary>
+        /// <seealso cref="ComponentStartup"/>
         bool Running { get; }
 
         /// <summary>
         ///     True if the component has been removed from its owner, AKA deleted.
         /// </summary>
+        /// <seealso cref="ComponentRemove"/>
         bool Deleted { get; }
 
         /// <summary>

@@ -22,7 +22,6 @@ internal abstract partial class ViewVariablesManager : IViewVariablesManager, IP
     [Dependency] private readonly IReflectionManager _reflectionMan = default!;
     [Dependency] private readonly INetManager _netMan = default!;
     [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly IDependencyCollection _deps = default!;
 
     private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
 

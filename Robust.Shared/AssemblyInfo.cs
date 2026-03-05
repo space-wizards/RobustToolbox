@@ -12,6 +12,12 @@
 [assembly: InternalsVisibleTo("Robust.Benchmarks")]
 [assembly: InternalsVisibleTo("Robust.Client.WebView")]
 [assembly: InternalsVisibleTo("Robust.Packaging")]
+[assembly: InternalsVisibleTo("Robust.Shared.Tests")]
+[assembly: InternalsVisibleTo("Robust.Server.IntegrationTests")]
+[assembly: InternalsVisibleTo("Robust.Server.Testing")]
+[assembly: InternalsVisibleTo("Robust.Shared.Testing")]
+[assembly: InternalsVisibleTo("Robust.Client.IntegrationTests")]
+[assembly: InternalsVisibleTo("Robust.Shared.IntegrationTests")]
 
 #if NET5_0_OR_GREATER
 [module: SkipLocalsInit]

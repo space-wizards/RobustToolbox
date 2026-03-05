@@ -9,6 +9,24 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
 {
+    /// <summary>
+    ///     Serializes or deserializes <see cref="FlagsAttribute"/> marked enums, allowing you to specify a list of
+    ///     flags instead of writing magic numbers.
+    /// </summary>
+    /// <example>
+    ///     <code>
+    ///         [Flags]
+    ///         public enum TestFlags {
+    ///             Foo = 1,
+    ///             Bar = 2,
+    ///             Baz = 4,
+    ///         }
+    ///     </code>
+    ///     which, using this serializer, can be deserialized from
+    ///     <code>
+    ///         [Foo, Baz]
+    ///     </code>
+    /// </example>
     public sealed class FlagSerializer<TTag> : ITypeSerializer<int, ValueDataNode>, ITypeReader<int, SequenceDataNode>, ITypeCopyCreator<int>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,

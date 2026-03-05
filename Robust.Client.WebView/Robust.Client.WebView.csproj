@@ -11,11 +11,14 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" />
     <PackageReference Include="Robust.Natives.Cef" />
+    <PackageReference Include="SixLabors.ImageSharp" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\cefglue\CefGlue\CefGlue.csproj" />
     <ProjectReference Include="..\Robust.Client\Robust.Client.csproj" />
+    <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
+    <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />

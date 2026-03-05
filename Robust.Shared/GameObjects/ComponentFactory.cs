@@ -582,6 +582,10 @@ namespace Robust.Shared.GameObjects
         }
     }
 
+    /// <summary>
+    ///     Exception fired whenever a component not recognized by the engine is encountered.
+    ///     This is usually caused by forgetting <see cref="RegisterComponentAttribute"/>.
+    /// </summary>
     [Serializable]
     public sealed class UnknownComponentException : Exception
     {
@@ -596,10 +600,17 @@ namespace Robust.Shared.GameObjects
         }
     }
 
+    /// <summary>
+    ///     Exception fired if you try to register a new component after all registrations have been locked.
+    ///     This is, typically, after network IDs have been assigned.
+    /// </summary>
     public sealed class ComponentRegistrationLockException : Exception
     {
     }
 
+    /// <summary>
+    ///     Exception fired when a component's name is entirely invalid. All component type names must end with Component.
+    /// </summary>
     public sealed class InvalidComponentNameException : Exception
     {
         public InvalidComponentNameException(string message) : base(message)

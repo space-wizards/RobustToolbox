@@ -31,6 +31,7 @@ namespace Robust.Shared.IoC
     /// </para>
     /// </remarks>
     /// <seealso cref="IReflectionManager"/>
+    [NotContentImplementable]
     public interface IDependencyCollection
     {
         IDependencyCollection FromParent(IDependencyCollection parentCollection);
@@ -130,6 +131,15 @@ namespace Robust.Shared.IoC
         ///     replace the current implementation instead.
         /// </param>
         void RegisterInstance(Type type, object implementation, bool overwrite = false);
+
+        /// <summary>
+        ///     Adds a callback to be called when attempting to resolve an unresolved type that matches the specified
+        ///     base generic type, making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
+        ///     This instance will only be created the first time that it is attempted to be resolved.
+        /// </summary>
+        /// <param name="genericType">The base generic type of the type that will be resolvable.</param>
+        /// <param name="factory">The callback to call to get an instance of the implementation for that generic type.</param>
+        void RegisterBaseGenericLazy(Type genericType, DependencyFactoryBaseGenericLazyDelegate<object> factory);
 
         /// <summary>
         /// Clear all services and types.

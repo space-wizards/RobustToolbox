@@ -7,6 +7,7 @@ using Robust.Shared.Timing;
 namespace Robust.Client.Graphics;
 
 [PublicAPI]
+[NotContentImplementable]
 public interface IOverlayManager
 {
     bool AddOverlay(Overlay overlay);

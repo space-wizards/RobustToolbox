@@ -9,6 +9,7 @@ namespace Robust.Client.Graphics
     /// <summary>
     ///     Represents something that can be rendered to.
     /// </summary>
+    [NotContentImplementable]
     public interface IRenderTarget : IDisposable
     {
         /// <summary>

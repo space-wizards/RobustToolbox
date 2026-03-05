@@ -6,6 +6,7 @@ namespace Robust.Shared.Network
     /// <summary>
     /// The server version of the INetManager.
     /// </summary>
+    [NotContentImplementable]
     public interface IServerNetManager : INetManager
     {
         public delegate Task<NetApproval> NetApprovalDelegate(NetApprovalEventArgs eventArgs);

@@ -13,6 +13,7 @@ namespace Robust.Shared.Random;
 public interface IRobustRandom
 {
     /// <summary> Get the underlying <see cref="Random"/>.</summary>
+    [Obsolete("Do not access the underlying implementation")]
     System.Random GetRandom();
 
     /// <summary> Set seed for underlying <see cref="Random"/>. </summary>
@@ -175,8 +176,10 @@ public interface IRobustRandom
     }
 }
 
+[Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
 public static class RandomHelpers
 {
+    [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static void Shuffle<T>(this System.Random random, IList<T> list)
     {
         var n = list.Count;
@@ -188,24 +191,28 @@ public static class RandomHelpers
         }
     }
 
+    [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static bool Prob(this System.Random random, double chance)
     {
         return random.NextDouble() < chance;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static byte NextByte(this System.Random random, byte maxValue)
     {
         return NextByte(random, 0, maxValue);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static byte NextByte(this System.Random random)
     {
         return NextByte(random, byte.MaxValue);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static byte NextByte(this System.Random random, byte minValue, byte maxValue)
     {
         return (byte)random.Next(minValue, maxValue);

@@ -217,6 +217,10 @@ namespace Robust.Server.Placement
             }
         }
 
+        /// <summary>
+        /// Deletes any existing entity.
+        /// </summary>
+        /// <param name="msg"></param>
         private void HandleEntRemoveReq(MsgPlacement msg)
         {
             //TODO: Some form of admin check
@@ -225,26 +229,61 @@ namespace Robust.Server.Placement
             if (!_entityManager.EntityExists(entity))
                 return;
 
-            var placementEraseEvent = new PlacementEntityEvent(entity, _entityManager.GetComponent<TransformComponent>(entity).Coordinates, PlacementEventAction.Erase, msg.MsgChannel.UserId);
+            var placementEraseEvent = new PlacementEntityEvent(entity,
+                _entityManager.GetComponent<TransformComponent>(entity).Coordinates,
+                PlacementEventAction.Erase,
+                msg.MsgChannel.UserId);
+
             _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
             _entityManager.DeleteEntity(entity);
         }
 
+        /// <summary>
+        /// Deletes almost any existing entity within a selection box.
+        /// </summary>
+        /// <param name="msg"></param>
         private void HandleRectRemoveReq(MsgPlacement msg)
         {
-            EntityCoordinates start = _entityManager.GetCoordinates(msg.NetCoordinates);
-            Vector2 rectSize = msg.RectSize;
-            foreach (var entity in _lookup.GetEntitiesIntersecting(_xformSystem.GetMapId(start),
-                new Box2(start.Position, start.Position + rectSize)))
+            var start = _entityManager.GetCoordinates(msg.NetCoordinates);
+            var rectSize = msg.RectSize;
+
+            foreach (var entity in _lookup.GetEntitiesIntersecting(_xformSystem.GetMapId(start), new Box2(start.Position, start.Position + rectSize)))
             {
-                if (_entityManager.Deleted(entity) ||
-                    _entityManager.HasComponent<MapGridComponent>(entity) ||
-                    _entityManager.HasComponent<ActorComponent>(entity))
-                {
+                if (_entityManager.Deleted(entity)
+                    || _entityManager.HasComponent<MapGridComponent>(entity)
+                    || _entityManager.HasComponent<ActorComponent>(entity))
                     continue;
+
+                var xform = _entityManager.GetComponent<TransformComponent>(entity);
+                var parent = xform.ParentUid;
+                var isChildOfActor = false;
+
+                while (parent.IsValid())
+                {
+                    if (_entityManager.HasComponent<ActorComponent>(parent))
+                    {
+                        isChildOfActor = true;
+                        break;
+                    }
+
+                    if (_entityManager.TryGetComponent<TransformComponent>(parent, out var parentXform))
+                    {
+                        parent = parentXform.ParentUid;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
 
-                var placementEraseEvent = new PlacementEntityEvent(entity, _entityManager.GetComponent<TransformComponent>(entity).Coordinates, PlacementEventAction.Erase, msg.MsgChannel.UserId);
+                if (isChildOfActor)
+                    continue;
+
+                var placementEraseEvent = new PlacementEntityEvent(entity,
+                    _entityManager.GetComponent<TransformComponent>(entity).Coordinates,
+                    PlacementEventAction.Erase,
+                    msg.MsgChannel.UserId);
+                
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
                 _entityManager.DeleteEntity(entity);
             }

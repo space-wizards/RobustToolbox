@@ -496,6 +496,11 @@ namespace Robust.UnitTesting
                     // Don't handle bye sending in here I guess.
                     Disconnect(reason);
                 }
+
+                public bool CanSendImmediately(NetDeliveryMethod method, int sequenceChannel)
+                {
+                    return true;
+                }
             }
 
             private sealed class ConnectMessage

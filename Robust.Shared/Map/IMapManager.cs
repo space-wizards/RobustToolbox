@@ -18,6 +18,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     This manages all the grids and maps in the world. Largely superseded by <see cref="SharedMapSystem"/>.
     /// </summary>
+    [NotContentImplementable]
     public interface IMapManager
     {
         public const bool Approximate = false;

@@ -41,7 +41,7 @@ namespace Robust.Client.WebView.Cef
             // commandLine.AppendSwitch("--single-process");
 
             //commandLine.AppendSwitch("--disable-gpu");
-            commandLine.AppendSwitch("--disable-gpu-compositing");
+            //commandLine.AppendSwitch("--disable-gpu-compositing");
             //commandLine.AppendSwitch("--in-process-gpu");
 
             commandLine.AppendSwitch("--off-screen-rendering-enabled");
@@ -54,6 +54,7 @@ namespace Robust.Client.WebView.Cef
 
         protected override void OnRegisterCustomSchemes(CefSchemeRegistrar registrar)
         {
+            // NOTE: KEEP IN SYNC WITH RUST CODE!
             registrar.AddCustomScheme("res", CefSchemeOptions.Secure | CefSchemeOptions.Standard);
             registrar.AddCustomScheme("usr", CefSchemeOptions.Secure | CefSchemeOptions.Standard);
         }

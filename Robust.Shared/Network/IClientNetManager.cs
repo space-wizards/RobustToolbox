@@ -5,6 +5,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     The Client version of the INetManager.
     /// </summary>
+    [NotContentImplementable]
     public interface IClientNetManager : INetManager
     {
         /// <summary>

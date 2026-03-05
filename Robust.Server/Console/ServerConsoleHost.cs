@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
+using Robust.Shared.Profiling;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Utility;
 
@@ -22,6 +23,7 @@ namespace Robust.Server.Console
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
         [Dependency] private readonly ToolshedManager _toolshed = default!;
+        [Dependency] private readonly ProfManager _prof = default!;
 
         public ServerConsoleHost() : base(isServer: true) {}
 
@@ -108,7 +110,8 @@ namespace Robust.Server.Console
                 if (args.Count == 0)
                     return;
 
-                string? cmdName = args[0];
+                var cmdName = args[0];
+                using var _ = _prof.Group(cmdName);
 
                 if (RegisteredCommands.TryGetValue(cmdName, out var conCmd)) // command registered
                 {

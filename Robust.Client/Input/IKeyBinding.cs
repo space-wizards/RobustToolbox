@@ -2,6 +2,7 @@ using Robust.Shared.Input;
 
 namespace Robust.Client.Input
 {
+    [NotContentImplementable]
     public interface IKeyBinding
     {
         BoundKeyState State { get; }

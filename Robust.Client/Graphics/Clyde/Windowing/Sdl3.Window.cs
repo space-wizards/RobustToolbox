@@ -21,6 +21,7 @@ internal partial class Clyde
     private sealed partial class Sdl3WindowingImpl
     {
         private int _nextWindowId = 1;
+        private bool _progressUnavailable;
 
         public (WindowReg?, string? error) WindowCreate(
             GLContextSpec? spec,
@@ -438,7 +439,8 @@ internal partial class Clyde
 
         private static void WinThreadWinSetSize(CmdWinSetSize cmd)
         {
-            SDL.SDL_SetWindowSize(cmd.Window, cmd.W, cmd.H);
+            var density = SDL.SDL_GetWindowPixelDensity(cmd.Window);
+            SDL.SDL_SetWindowSize(cmd.Window, (int)(cmd.W / density), (int)(cmd.H / density));
         }
 
         private static void WinThreadWinSetVisible(CmdWinSetVisible cmd)
@@ -459,6 +461,42 @@ internal partial class Clyde
             var res = SDL.SDL_FlashWindow(cmd.Window, SDL.SDL_FlashOperation.SDL_FLASH_UNTIL_FOCUSED);
             if (!res)
                 _sawmill.Error("Failed to flash window: {error}", SDL.SDL_GetError());
+        }
+
+        public void WindowSetProgress(WindowReg window, WindowProgressState state, float value)
+        {
+            SendCmd(new CmdWinSetProgress
+            {
+                Window = WinPtr(window),
+                State = (SDL.SDL_ProgressState)state,
+                Value = value
+            });
+        }
+
+        private void WinThreadWinSetProgress(CmdWinSetProgress cmd)
+        {
+            if (_progressUnavailable)
+                return;
+
+            try
+            {
+                var res = SDL.SDL_SetWindowProgressState(cmd.Window, cmd.State);
+                if (!res)
+                {
+                    _sawmill.Error("Failed to set window progress state: {error}", SDL.SDL_GetError());
+                    return;
+                }
+
+                res = SDL.SDL_SetWindowProgressValue(cmd.Window, cmd.Value);
+                if (!res)
+                    _sawmill.Error("Failed to set window progress value: {error}", SDL.SDL_GetError());
+            }
+            catch (EntryPointNotFoundException)
+            {
+                // Allowing it to fail means I don't have to update the launcher immediately :)
+                _progressUnavailable = true;
+                _sawmill.Debug("SDL3 progress APIs unavailable");
+            }
         }
 
         public unsafe void WindowSwapBuffers(WindowReg window)
@@ -606,7 +644,7 @@ internal partial class Clyde
         private void WinThreadSetClipboard(CmdSetClipboard cmd)
         {
             var res = SDL.SDL_SetClipboardText(cmd.Text);
-            if (res)
+            if (!res)
                 _sawmill.Error("Failed to set clipboard text: {error}", SDL.SDL_GetError());
         }
 

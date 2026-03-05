@@ -219,7 +219,7 @@ namespace Robust.Shared.Timing
                         if (_timing.Paused)
                             continue;
 
-                        _timing.TickRemainder = accumulator;
+                        _timing.TickRemainder = accumulator / _timing.TimeScale;
                         countTicksRan += 1;
 
                         // update the simulation
@@ -282,7 +282,7 @@ namespace Robust.Shared.Timing
 
                 // if not paused, save how close to the next tick we are so interpolation works
                 if (!_timing.Paused)
-                    _timing.TickRemainder = accumulator;
+                    _timing.TickRemainder = accumulator / _timing.TimeScale;
 
                 _timing.InSimulation = false;
 

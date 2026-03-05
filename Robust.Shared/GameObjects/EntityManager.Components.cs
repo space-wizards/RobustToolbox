@@ -621,6 +621,12 @@ namespace Robust.Shared.GameObjects
 #endif
         }
 
+        private void ThrowPreAddRemovalException(EntityUid target, IComponent component)
+        {
+            throw new InvalidOperationException(
+                $"Removing a component, {component.GetType()} before it has been added is probably not what you wanted to do. Target entity was {ToPrettyString(target)}.");
+        }
+
         private void RemoveComponentImmediate(
             EntityUid uid,
             IComponent component,
@@ -629,6 +635,12 @@ namespace Robust.Shared.GameObjects
             MetaDataComponent? meta)
         {
             ThreadCheck();
+            DebugTools.AssertOwner(uid, component);
+
+            if (component.LifeStage == ComponentLifeStage.PreAdd)
+            {
+                ThrowPreAddRemovalException(uid, component);
+            }
 
             if (component.Deleted)
             {
@@ -838,18 +850,16 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool EnsureComponent<T>(ref Entity<T?> entity) where T : IComponent, new()
         {
-            if (entity.Comp != null)
-            {
-                // Check for deferred component removal.
-                if (entity.Comp.LifeStage <= ComponentLifeStage.Running)
-                {
-                    DebugTools.AssertOwner(entity, entity.Comp);
-                    return true;
-                }
+            if (entity.Comp == null)
+                return EnsureComponent<T>(entity.Owner, out entity.Comp);
 
-                RemoveComponent(entity, entity.Comp);
-            }
+            DebugTools.AssertOwner(entity, entity.Comp);
 
+            // Check for deferred component removal.
+            if (entity.Comp.LifeStage <= ComponentLifeStage.Running)
+                return true;
+
+            RemoveComponent(entity, entity.Comp);
             entity.Comp = AddComponent<T>(entity);
             return false;
         }

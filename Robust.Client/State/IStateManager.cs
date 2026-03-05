@@ -3,6 +3,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.State
 {
+    [NotContentImplementable]
     public interface IStateManager
     {
         event Action<StateChangedEventArgs> OnStateChanged;

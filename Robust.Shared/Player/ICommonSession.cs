@@ -11,6 +11,7 @@ namespace Robust.Shared.Player;
 ///     Common info between client and server sessions.
 /// </summary>
 /// <seealso cref="ISharedPlayerManager"/>
+[NotContentImplementable]
 public interface ICommonSession
 {
     /// <summary>

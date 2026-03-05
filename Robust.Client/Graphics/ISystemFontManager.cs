@@ -13,6 +13,7 @@ namespace Robust.Client.Graphics;
 /// </para>
 /// </remarks>
 /// <seealso cref="ISystemFontFace"/>
+[NotContentImplementable]
 public interface ISystemFontManager
 {
     /// <summary>
@@ -30,6 +31,7 @@ public interface ISystemFontManager
 /// A single font face, provided by the user's operating system.
 /// </summary>
 /// <seealso cref="ISystemFontManager"/>
+[NotContentImplementable]
 public interface ISystemFontFace
 {
     /// <summary>

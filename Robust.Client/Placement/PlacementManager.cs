@@ -743,7 +743,18 @@ namespace Robust.Client.Placement
             CurrentPrototype = prototype;
             IsActive = true;
 
-            CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(templateName, MapCoordinates.Nullspace);
+            //does prototype uses a specific placement overlay sprite?
+            if (prototype.TryGetComponent<SpriteComponent>(out var prototypeSprite, IoCManager.Resolve<IComponentFactory>())
+                && prototypeSprite.placementOverlaySprite != null)
+            {
+                CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
+                SetPlacementOverlaySprite(prototypeSprite, Sprite.RsiStateLike(prototypeSprite.placementOverlaySprite));
+            }
+            else
+            {
+                CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(templateName, MapCoordinates.Nullspace);
+            }
+
             EntityManager.RunMapInit(
                 CurrentPlacementOverlayEntity.Value,
                 EntityManager.GetComponent<MetaDataComponent>(CurrentPlacementOverlayEntity.Value));
@@ -858,6 +869,25 @@ namespace Robust.Client.Placement
             message.DirRcv = Direction;
 
             _networkManager.ClientSendMessage(message);
+        }
+
+        private void SetPlacementOverlaySprite(SpriteComponent prototypeSprite, IRsiStateLike overlayTexture)
+        {
+            if (CurrentPlacementOverlayEntity == null)
+                return;
+
+            if (overlayTexture is not RSI.State overlayRSI)
+            {
+                //Fallback
+                Sprite.AddTextureLayer(CurrentPlacementOverlayEntity.Value, overlayTexture.Default);
+                return;
+            }
+
+            EntityManager.EnsureComponent<SpriteComponent>(CurrentPlacementOverlayEntity.Value, out var overlaySprite);
+            Sprite.AddRsiLayer(CurrentPlacementOverlayEntity.Value, overlayRSI.StateId, overlayRSI.RSI);
+
+            overlaySprite.NoRotation = prototypeSprite.NoRotation;
+            Sprite.SetScale(CurrentPlacementOverlayEntity.Value, prototypeSprite.Scale);
         }
 
         public enum PlacementTypes : byte

@@ -167,7 +167,7 @@ namespace Robust.Client.GameObjects
         }
 
         [DataField("sprite", readOnly: true)] private string? rsi;
-        [DataField("placementOverlaySprite", readOnly: true)] public SpriteSpecifier? placementOverlaySprite;
+        [DataField(readOnly: true)] public SpriteSpecifier? placementOverlaySprite;
         [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
 
         [DataField(readOnly: true)] private string? state;

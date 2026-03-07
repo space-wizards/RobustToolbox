@@ -20,6 +20,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.Log;
+using Robust.Shared.Placement;
 using Direction = Robust.Shared.Maths.Direction;
 using Robust.Shared.Map.Components;
 using System.Linq;
@@ -743,12 +744,10 @@ namespace Robust.Client.Placement
             CurrentPrototype = prototype;
             IsActive = true;
 
-            //does prototype uses a specific placement overlay sprite?
-            if (prototype.TryGetComponent<SpriteComponent>(out var prototypeSprite, IoCManager.Resolve<IComponentFactory>())
-                && prototypeSprite.placementOverlaySprite != null)
+            if (prototype.TryGetComponent<PlacementOverlayComponent>(out var placementOverlay, IoCManager.Resolve<IComponentFactory>()))
             {
                 CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
-                SetPlacementOverlaySprite(prototypeSprite, Sprite.RsiStateLike(prototypeSprite.placementOverlaySprite));
+                SetPlacementOverlaySprite(prototype, Sprite.RsiStateLike(placementOverlay.sprite));
             }
             else
             {
@@ -871,7 +870,7 @@ namespace Robust.Client.Placement
             _networkManager.ClientSendMessage(message);
         }
 
-        private void SetPlacementOverlaySprite(SpriteComponent prototypeSprite, IRsiStateLike overlayTexture)
+        private void SetPlacementOverlaySprite(EntityPrototype prototype, IRsiStateLike overlayTexture)
         {
             if (CurrentPlacementOverlayEntity == null)
                 return;
@@ -886,8 +885,11 @@ namespace Robust.Client.Placement
             EntityManager.EnsureComponent<SpriteComponent>(CurrentPlacementOverlayEntity.Value, out var overlaySprite);
             Sprite.AddRsiLayer(CurrentPlacementOverlayEntity.Value, overlayRSI.StateId, overlayRSI.RSI);
 
-            overlaySprite.NoRotation = prototypeSprite.NoRotation;
-            Sprite.SetScale(CurrentPlacementOverlayEntity.Value, prototypeSprite.Scale);
+            if(prototype.TryGetComponent<SpriteComponent>(out var prototypeSprite, IoCManager.Resolve<IComponentFactory>()))
+            {
+                overlaySprite.NoRotation = prototypeSprite.NoRotation;
+                Sprite.SetScale(CurrentPlacementOverlayEntity.Value, prototypeSprite.Scale);
+            }
         }
 
         public enum PlacementTypes : byte

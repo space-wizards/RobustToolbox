@@ -747,7 +747,7 @@ namespace Robust.Client.Placement
             if (prototype.TryGetComponent<PlacementOverlayComponent>(out var placementOverlay, IoCManager.Resolve<IComponentFactory>()))
             {
                 CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
-                SetPlacementOverlaySprite(prototype, Sprite.RsiStateLike(placementOverlay.sprite));
+                SetPlacementOverlaySprite(prototype, Sprite.RsiStateLike(placementOverlay.Sprite));
             }
             else
             {

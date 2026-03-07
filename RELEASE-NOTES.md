@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 273.0.0
+
+### Breaking changes
+
 * `RemoveJoint(uid, id)` now accepts an optional recursive argument, which is true by default. This recursive argument controls whether or not relayed joints attached to the uid are also removed. Code that relies on relayed joints not being deleted should set the recursive argument to false.
 
 ### New features
@@ -63,10 +86,6 @@ END TEMPLATE-->
 ### Other
 
 * Public APIs involving `System.Random` have been obsoleted. Use `IRobustRandom`/`RobustRandom` and such instead.
-
-### Internal
-
-*None yet*
 
 
 ## 272.0.0

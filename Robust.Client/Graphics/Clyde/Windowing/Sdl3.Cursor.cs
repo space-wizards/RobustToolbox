@@ -38,7 +38,7 @@ internal partial class Clyde
 
             fixed (Rgba32* pixPtr = img.GetPixelSpan())
             {
-                var surface = SDL.SDL_CreateSurfaceFrom(
+                var surface = (nint) SDL.SDL_CreateSurfaceFrom(
                     img.Width,
                     img.Height,
                     SDL.SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888,

@@ -12,5 +12,6 @@ namespace Robust.Server.ViewVariables
         object Object { get; }
         uint SessionId { get; }
         Type ObjectType { get; }
+        Action<object>? ObjectChangeDelegate { get; }
     }
 }

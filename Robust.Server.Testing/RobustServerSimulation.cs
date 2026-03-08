@@ -9,11 +9,13 @@ using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Localization;
+using Robust.Server.Network.Transfer;
 using Robust.Server.Physics;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
 using Robust.Server.Replays;
+using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
@@ -28,6 +30,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
@@ -198,6 +201,9 @@ namespace Robust.UnitTesting.Server
             container.Register<HttpClientHolder>();
             container.Register<IHttpClientHolder, HttpClientHolder>();
             container.Register<IHWId, DummyHWId>();
+            container.Register<IServerNetManager, NetManager>();
+            container.Register<IStatusHost, StatusHost>();
+            container.Register<ITransferManager, ServerTransferManager>();
 
             var realReflection = new ServerReflectionManager();
             realReflection.LoadAssemblies(new List<Assembly>(2)
@@ -262,7 +268,6 @@ namespace Robust.UnitTesting.Server
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();
-            container.Register<IServerNetManager, NetManager>();
             // god help you if you actually need to test pvs functions
             container.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);
             container.RegisterInstance<ISharedPlayerManager>(new Mock<ISharedPlayerManager>().Object);

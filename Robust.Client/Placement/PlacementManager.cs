@@ -29,21 +29,22 @@ namespace Robust.Client.Placement
 {
     public sealed partial class PlacementManager : IPlacementManager, IDisposable, IEntityEventSubscriber
     {
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] internal readonly IPlayerManager PlayerManager = default!;
-        [Dependency] internal readonly IResourceCache ResourceCache = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IGameTiming _time = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] internal readonly IInputManager InputManager = default!;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IBaseClient _baseClient = default!;
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] internal readonly IClyde Clyde = default!;
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IGameTiming _time = default!;
+        [Dependency] internal readonly IInputManager InputManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] internal readonly IPlayerManager PlayerManager = default!;
+        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] internal readonly IResourceCache ResourceCache = default!;
 
         private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
 
@@ -744,7 +745,7 @@ namespace Robust.Client.Placement
             CurrentPrototype = prototype;
             IsActive = true;
 
-            if (prototype.TryGetComponent<PlacementOverlayComponent>(out var placementOverlay, IoCManager.Resolve<IComponentFactory>()))
+            if (prototype.TryGetComponent<PlacementOverlayComponent>(out var placementOverlay, _componentFactory))
             {
                 CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
                 SetPlacementOverlaySprite(prototype, Sprite.RsiStateLike(placementOverlay.Sprite));
@@ -885,7 +886,7 @@ namespace Robust.Client.Placement
             EntityManager.EnsureComponent<SpriteComponent>(CurrentPlacementOverlayEntity.Value, out var overlaySprite);
             Sprite.AddRsiLayer(CurrentPlacementOverlayEntity.Value, overlayRSI.StateId, overlayRSI.RSI);
 
-            if(prototype.TryGetComponent<SpriteComponent>(out var prototypeSprite, IoCManager.Resolve<IComponentFactory>()))
+            if(prototype.TryGetComponent<SpriteComponent>(out var prototypeSprite, _componentFactory))
             {
                 overlaySprite.NoRotation = prototypeSprite.NoRotation;
                 Sprite.SetScale(CurrentPlacementOverlayEntity.Value, prototypeSprite.Scale);

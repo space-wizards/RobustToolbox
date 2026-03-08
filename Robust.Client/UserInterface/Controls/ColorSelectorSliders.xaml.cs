@@ -463,11 +463,30 @@ public sealed partial class ColorSelectorSliders : Control
 
 internal interface ISliderChannel
 {
+    /// <summary>
+    ///     Sent when the value of this slider channel is changed via user input.
+    /// </summary>
     event Action<Range>? OnSliderValueChanged;
+
+    /// <summary>
+    ///     Sent when the spinbox value of this slider channel is changed via user input.
+    /// </summary>
     event Action<ValueChangedEventArgs>? OnSpinValueChanged;
 
+    /// <summary>
+    ///     A function for checking the validity of text entered in the channel's input box.
+    /// </summary>
     Func<int, bool>? IsInputValid { set; }
+
+    /// <summary>
+    ///     The value of this channel, ranging from 0.0 to 1.0.
+    /// </summary>
     float Value { get; set; }
 
+    /// <summary>
+    ///     Sets the value of this channel without generating an event.
+    /// </summary>
+    /// <param name="value">The input value of the channel.</param>
+    /// <param name="divisor">The maximum input value of the channel - used as a divisor to generate a value between 0.0 and 1.0.</param>
     void OverrideValue(float value, float divisor);
 }

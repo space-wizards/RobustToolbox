@@ -7,7 +7,7 @@ namespace Robust.Client.UserInterface.Controls;
 
 [GenerateTypedNameReferences]
 [Access(typeof(ColorSelectorSliders))]
-public sealed partial class ColorSliderChannel : BoxContainer, ISliderChannel
+internal sealed partial class ColorSliderChannel : BoxContainer, ISliderChannel
 {
     public event Action<Range>? OnSliderValueChanged;
     public event Action<ValueChangedEventArgs>? OnSpinValueChanged;

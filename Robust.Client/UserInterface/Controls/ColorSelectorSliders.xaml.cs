@@ -461,7 +461,7 @@ public sealed partial class ColorSelectorSliders : Control
     }
 }
 
-public interface ISliderChannel
+internal interface ISliderChannel
 {
     event Action<Range>? OnSliderValueChanged;
     event Action<ValueChangedEventArgs>? OnSpinValueChanged;

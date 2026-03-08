@@ -55,6 +55,7 @@ internal sealed partial class TileDef : ITileDefinition
     public string ID { get; private set; } = default!;
     public ResPath? Sprite => null;
     public Dictionary<Direction, ResPath> EdgeSprites => new();
+    public Dictionary<Direction, ResPath> EdgeSpaceSprites => new();
     public int EdgeSpritePriority => 0;
     public float Friction => 0;
     public byte Variants => 0;

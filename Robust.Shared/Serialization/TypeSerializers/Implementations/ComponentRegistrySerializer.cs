@@ -12,7 +12,6 @@ using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
-using Robust.Shared.Utility;
 using static Robust.Shared.Prototypes.EntityPrototype;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
@@ -20,7 +19,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     [TypeSerializer]
     public sealed class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>, ITypeInheritanceHandler<ComponentRegistry, SequenceDataNode>, ITypeCopier<ComponentRegistry>
     {
-        public ComponentRegistry Read(ISerializationManager serializationManager,
+        public ComponentRegistry Read(
+            ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
@@ -52,7 +52,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 }
 
                 // Has this type already been added?
-                if (components.ContainsKey(compType))
+                if (components.ContainsComponentByName(compType))
                 {
                     dependencies
                         .Resolve<ILogManager>()
@@ -61,20 +61,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                     continue;
                 }
 
-                var copy = componentMapping.Copy()!;
+                var copy = componentMapping.Copy();
                 copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
                 var read = (IComponent)serializationManager.Read(type, copy, hookCtx, context)!;
 
-                components[compType] = new ComponentRegistryEntry(read, copy);
+                components.AddEntry(compType, new ComponentRegistryEntry(read, copy));
             }
 
             var referenceTypes = new List<CompIdx>();
             // Assert that there are no conflicting component references.
-            foreach (var componentName in components.Keys)
+            foreach (var component in components.Components())
             {
-                var registration = factory.GetRegistration(componentName);
+                var registration = factory.GetRegistration(component);
                 var compType = registration.Idx;
 
                 if (referenceTypes.Contains(compType))
@@ -89,7 +89,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return components;
         }
 
-        public ValidationNode Validate(ISerializationManager serializationManager,
+        public ValidationNode Validate(
+            ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
             ISerializationContext? context = null)
@@ -122,13 +123,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 }
 
                 // Has this type already been added?
-                if (components.ContainsKey(compType))
+                if (components.ContainsComponentByName(compType))
                 {
                     list.Add(new ErrorNode(componentMapping, "Duplicate Component."));
                     continue;
                 }
 
-                var copy = componentMapping.Copy()!;
+                var copy = componentMapping.Copy();
                 copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
@@ -139,9 +140,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             var referenceTypes = new List<CompIdx>();
 
             // Assert that there are no conflicting component references.
-            foreach (var componentName in components.Keys)
+            foreach (var component in components.Components())
             {
-                var registration = factory.GetRegistration(componentName);
+                var registration = factory.GetRegistration(component);
                 var compType = registration.Idx;
 
                 if (referenceTypes.Contains(compType))
@@ -155,17 +156,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return new ValidatedSequenceNode(list);
         }
 
-        public DataNode Write(ISerializationManager serializationManager, ComponentRegistry value,
+        public DataNode Write(
+            ISerializationManager serializationManager,
+            ComponentRegistry value,
             IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var compSequence = new SequenceDataNode();
-            foreach (var (type, component) in value)
+
+            foreach (var (type, component) in value.ComponentsAndNames())
             {
                 var node = serializationManager.WriteValue(
-                    component.Component.GetType(),
-                    component.Component,
+                    component.GetType(),
+                    component,
                     alwaysWrite,
                     context);
 
@@ -178,21 +182,30 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return compSequence;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, ComponentRegistry source, ref ComponentRegistry target,
-            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
+        public void CopyTo(
+            ISerializationManager serializationManager,
+            ComponentRegistry source,
+            ref ComponentRegistry target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);
 
-            foreach (var (id, component) in source)
+            // We have legitimate use here for the obsolete member.
+            foreach (var (id, component) in source.ComponentsAndNames())
             {
-                target.Add(id, serializationManager.CreateCopy(component, context, notNullableOverride: true));
+                target.AddComponentManual(id, serializationManager.CreateCopy(component, context, notNullableOverride: true));
             }
         }
 
-        public SequenceDataNode PushInheritance(ISerializationManager serializationManager, SequenceDataNode child,
+        public SequenceDataNode PushInheritance(
+            ISerializationManager serializationManager,
+            SequenceDataNode child,
             SequenceDataNode parent,
-            IDependencyCollection dependencies, ISerializationContext? context)
+            IDependencyCollection dependencies,
+            ISerializationContext? context)
         {
             var componentFactory = dependencies.Resolve<IComponentFactory>();
             var newCompReg = child.Copy();

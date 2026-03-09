@@ -158,9 +158,9 @@ namespace Robust.Shared.Prototypes
         public EntityPrototype()
         {
             // Everybody gets a transform component!
-            Components.Add("Transform", new ComponentRegistryEntry(new TransformComponent(), new MappingDataNode()));
+            Components.AddComponentManual("Transform", new TransformComponent());
             // And a metadata component too!
-            Components.Add("MetaData", new ComponentRegistryEntry(new MetaDataComponent(), new MappingDataNode()));
+            Components.AddComponentManual("MetaData", new MetaDataComponent());
         }
 
         void ISerializationHooks.AfterDeserialization()
@@ -286,7 +286,14 @@ namespace Robust.Shared.Prototypes
         }
 
         [DataRecord]
-        public partial record ComponentRegistryEntry(IComponent Component, MappingDataNode Mapping);
+        public partial record ComponentRegistryEntry(
+            IComponent Component,
+            MappingDataNode? Mapping)
+        {
+            public ComponentRegistryEntry(IComponent component) : this(component, null)
+            {
+            }
+        }
 
         [DataDefinition]
         public sealed partial class EntityPlacementProperties
@@ -401,54 +408,5 @@ namespace Robust.Shared.Prototypes
                 return prototype.DataCache.TryGetValue(field, out value);
             }
         }*/
-    }
-
-    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext
-    {
-        public ComponentRegistry()
-        {
-        }
-
-        public ComponentRegistry(Dictionary<string, EntityPrototype.ComponentRegistryEntry> components) : base(components)
-        {
-        }
-
-        /// <inheritdoc />
-        public bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
-        {
-            var success = TryGetValue(componentName, out var comp);
-            component = comp?.Component;
-
-            return success;
-        }
-
-        /// <inheritdoc />
-        public bool TryGetComponent<TComponent>(
-            IComponentFactory componentFactory,
-            [NotNullWhen(true)] out TComponent? component
-        ) where TComponent : class, IComponent, new()
-        {
-            component = null;
-            var componentName = componentFactory.GetComponentName<TComponent>();
-            if (TryGetComponent(componentName, out var foundComponent))
-            {
-                component = (TComponent)foundComponent;
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<string> GetExtraComponentTypes()
-        {
-            return Keys;
-        }
-
-        /// <inheritdoc />
-        public bool ShouldSkipComponent(string compName)
-        {
-            return false; //Registries cannot represent the "remove this component" state.
-        }
     }
 }

@@ -132,7 +132,7 @@ public abstract partial class PrototypeManager : IPrototypeManagerInternal
         }
 
         // Get automated categories inferred from components
-        foreach (var comp in protoInstance.Components.Keys)
+        foreach (var comp in protoInstance.Components.Names())
         {
             if (autoCategories.TryGetValue(comp, out var autoCats))
                 set.UnionWith(autoCats);

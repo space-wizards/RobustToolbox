@@ -405,12 +405,10 @@ namespace Robust.Client.Graphics.Clyde
         private void DeleteChunk(MapChunkData data)
         {
             DeleteVertexArray(data.VAO);
-            CheckGlError();
             data.VBO.Delete();
             data.EBO.Delete();
 
             DeleteVertexArray(data.EdgeVAO);
-            CheckGlError();
             data.EdgeVBO.Delete();
             data.EdgeEBO.Delete();
         }

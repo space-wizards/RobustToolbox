@@ -10,9 +10,6 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class EntityManager
 {
-    // REMARK: No API that allows you to use these queries without them throwing over non-uniqueness should be added.
-    //         It's a pretty simple, natural error condition and the game *should* yell about it.
-
     public Entity<TComp1> Single<TComp1>()
         where TComp1: IComponent
     {

@@ -7,6 +7,9 @@ namespace Robust.Shared.GameObjects;
 
 public partial interface IEntityManager
 {
+    // REMARK: No API that allows you to use these queries without them throwing over non-uniqueness should be added.
+    //         It's a pretty simple, natural error condition and the game *should* yell about it.
+
     /// <summary>
     ///     Gets the sole entity with the given component.
     /// </summary>

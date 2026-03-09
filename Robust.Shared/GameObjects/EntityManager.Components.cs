@@ -231,9 +231,9 @@ namespace Robust.Shared.GameObjects
 
             var metadata = MetaQuery.GetComponent(target);
 
-            foreach (var entry in registry.Values)
+            foreach (var entry in registry.Components())
             {
-                RemoveComponent(target, entry.Component.GetType(), metadata);
+                RemoveComponent(target, entry.GetType(), metadata);
             }
         }
 

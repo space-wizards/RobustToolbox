@@ -58,7 +58,7 @@ public partial interface IEntityManager
     /// <typeparam name="TComp1">The first component to look for as a tag.</typeparam>
     /// <typeparam name="TComp2">The second component to look for as a tag.</typeparam>
     /// <typeparam name="TComp3">The third component to look for as a tag.</typeparam>
-    /// <typeparam name="TComp4">The third component to look for as a tag.</typeparam>
+    /// <typeparam name="TComp4">The fourth component to look for as a tag.</typeparam>
     /// <returns>The singleton entity.</returns>
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request.</exception>

@@ -1783,4 +1783,164 @@ public partial class EntitySystem
     }
 
     #endregion
+
+    #region Singletons
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.Single``1"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1> Single<TComp1>()
+        where TComp1: IComponent
+    {
+        return EntityManager.Single<TComp1>();
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.Single``2"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2> Single<TComp1, TComp2>()
+        where TComp1: IComponent
+        where TComp2: IComponent
+    {
+        return EntityManager.Single<TComp1, TComp2>();
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.Single``3"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2, TComp3> Single<TComp1, TComp2, TComp3>()
+        where TComp1: IComponent
+        where TComp2: IComponent
+        where TComp3: IComponent
+    {
+        return EntityManager.Single<TComp1, TComp2, TComp3>();
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.Single``4"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2, TComp3, TComp4> Single<TComp1, TComp2, TComp3, TComp4>()
+        where TComp1: IComponent
+        where TComp2: IComponent
+        where TComp3: IComponent
+        where TComp4: IComponent
+    {
+        return EntityManager.Single<TComp1, TComp2, TComp3, TComp4>();
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.TrySingle``1(System.Nullable{Robust.Shared.GameObjects.Entity{``0}}@)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool TrySingle<TComp1>([NotNullWhen(true)] out Entity<TComp1>? entity)
+        where TComp1 : IComponent
+    {
+        return EntityManager.TrySingle(out entity);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.TrySingle``2(System.Nullable{Robust.Shared.GameObjects.Entity{``0,``1}}@)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool TrySingle<TComp1, TComp2>([NotNullWhen(true)] out Entity<TComp1, TComp2>? entity)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+    {
+        return EntityManager.TrySingle(out entity);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.TrySingle``3(System.Nullable{Robust.Shared.GameObjects.Entity{``0,``1,``2}}@)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool TrySingle<TComp1, TComp2, TComp3>([NotNullWhen(true)] out Entity<TComp1, TComp2, TComp3>? entity)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+    {
+        return EntityManager.TrySingle(out entity);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.TrySingle``4(System.Nullable{Robust.Shared.GameObjects.Entity{``0,``1,``2,``3}}@)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool TrySingle<TComp1, TComp2, TComp3, TComp4>(
+        [NotNullWhen(true)] out Entity<TComp1, TComp2, TComp3, TComp4>? entity)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+        where TComp4 : IComponent
+    {
+        return EntityManager.TrySingle(out entity);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SingleOrSpawn``1(Robust.Shared.Prototypes.EntProtoId,Robust.Shared.Map.MapCoordinates)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1> SingleOrSpawn<TComp1>(EntProtoId fallback, MapCoordinates location)
+        where TComp1 : IComponent
+    {
+        return EntityManager.SingleOrSpawn<TComp1>(fallback, location);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SingleOrSpawn``2(Robust.Shared.Prototypes.EntProtoId,Robust.Shared.Map.MapCoordinates)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2> SingleOrSpawn<TComp1, TComp2>(EntProtoId fallback, MapCoordinates location)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+    {
+        return EntityManager.SingleOrSpawn<TComp1, TComp2>(fallback, location);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SingleOrSpawn``3(Robust.Shared.Prototypes.EntProtoId,Robust.Shared.Map.MapCoordinates)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2, TComp3> SingleOrSpawn<TComp1, TComp2, TComp3>(
+        EntProtoId fallback,
+        MapCoordinates location)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+    {
+        return EntityManager.SingleOrSpawn<TComp1, TComp2, TComp3>(fallback, location);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SingleOrSpawn``4(Robust.Shared.Prototypes.EntProtoId,Robust.Shared.Map.MapCoordinates)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2, TComp3, TComp4> SingleOrSpawn<TComp1, TComp2, TComp3, TComp4>(
+        EntProtoId fallback,
+        MapCoordinates location)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+        where TComp4 : IComponent
+    {
+        return EntityManager.SingleOrSpawn<TComp1, TComp2, TComp3, TComp4>(fallback, location);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SingleOrInit``1(System.Action)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1> SingleOrInit<TComp1>(Action fallback)
+        where TComp1 : IComponent
+    {
+        return EntityManager.SingleOrInit<TComp1>(fallback);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SingleOrInit``2(System.Action)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2> SingleOrInit<TComp1, TComp2>(Action fallback)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+    {
+        return EntityManager.SingleOrInit<TComp1, TComp2>(fallback);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SingleOrInit``3(System.Action)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2, TComp3> SingleOrInit<TComp1, TComp2, TComp3>(Action fallback)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+    {
+        return EntityManager.SingleOrInit<TComp1, TComp2, TComp3>(fallback);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SingleOrInit``4(System.Action)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2, TComp3, TComp4> SingleOrInit<TComp1, TComp2, TComp3, TComp4>(Action fallback)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+        where TComp4 : IComponent
+    {
+        return EntityManager.SingleOrInit<TComp1, TComp2, TComp3, TComp4>(fallback);
+    }
+    #endregion
 }

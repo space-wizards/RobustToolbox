@@ -13,7 +13,16 @@ public partial interface IEntityManager
     /// <param name="filter">The filter to use.</param>
     /// <param name="matchPaused">Whether this query should match paused entities.</param>
     /// <returns>True if match, false if not.</returns>
-    public bool MatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = false);
+    public bool MatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = true);
+
+    /// <summary>
+    ///     Tests whether any component on an entity is within the filter.
+    /// </summary>
+    /// <param name="ent">The entity to test against.</param>
+    /// <param name="filter">The filter to use.</param>
+    /// <param name="matchPaused">Whether this query should match paused entities.</param>
+    /// <returns>True if match, false if not.</returns>
+    public bool AnyMatchingComponent(EntityUid ent, ComponentFilter filter, bool matchPaused = true);
 
     /// <summary>
     ///     Tests whether an entity matches a filter exactly, i.e. its components are identical to the filter's.

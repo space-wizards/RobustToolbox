@@ -1,10 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes;
 
@@ -58,6 +60,8 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
             x => factory.GetRegistration(x.GetType()).Name,
             x => new EntityPrototype.ComponentRegistryEntry(x)
         );
+
+        ValidateContents();
     }
 
     /// <summary>
@@ -113,6 +117,7 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
     internal void AddComponentManual(string componentName, IComponent component)
     {
         _inner[componentName] = new EntityPrototype.ComponentRegistryEntry(component);
+        ValidateContents();
     }
 
     /// <summary>
@@ -362,5 +367,15 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
     internal void AddEntry(string name, EntityPrototype.ComponentRegistryEntry entry)
     {
         _inner[name] = entry;
+        ValidateContents();
+    }
+
+    [Conditional("DEBUG")]
+    private void ValidateContents()
+    {
+        foreach (var (key, comp) in _inner)
+        {
+            DebugTools.Assert(comp.Component.IsUnattached(), $"Components that have been part of sim should never be in a registry. Culprit was {key}.");
+        }
     }
 }

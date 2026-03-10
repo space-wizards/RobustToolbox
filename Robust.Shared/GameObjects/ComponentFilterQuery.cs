@@ -13,13 +13,17 @@ namespace Robust.Shared.GameObjects;
 /// </remarks>
 public readonly struct ComponentFilterQuery : IEnumerable<EntityUid>
 {
+    private readonly Dictionary<EntityUid, IComponent> _metaData;
     private readonly Dictionary<EntityUid, IComponent> _lead;
     private readonly Dictionary<EntityUid, IComponent>[] _tails;
+    private readonly bool _matchPaused;
 
-    internal ComponentFilterQuery(Dictionary<EntityUid, IComponent> lead, Dictionary<EntityUid, IComponent>[] tails)
+    internal ComponentFilterQuery(Dictionary<EntityUid, IComponent> metaData, Dictionary<EntityUid, IComponent> lead, Dictionary<EntityUid, IComponent>[] tails, bool matchPaused)
     {
+        _metaData = metaData;
         _lead = lead;
         _tails = tails;
+        _matchPaused = matchPaused;
     }
 
     /// <summary>
@@ -30,6 +34,9 @@ public readonly struct ComponentFilterQuery : IEnumerable<EntityUid>
     public bool Matches(EntityUid ent)
     {
         if (!_lead.TryGetValue(ent, out var c1) || c1.Deleted)
+            return false;
+
+        if (!_matchPaused && ((MetaDataComponent)_metaData[ent]).EntityPaused)
             return false;
 
         foreach (var tail in _tails)
@@ -82,6 +89,9 @@ public readonly struct ComponentFilterQuery : IEnumerable<EntityUid>
 
                 var (workingEnt, c1) = _leadEnumerator.Current;
                 if (c1.Deleted)
+                    continue;
+
+                if (!_query._matchPaused && ((MetaDataComponent)_query._metaData[workingEnt]).EntityPaused)
                     continue;
 
                 foreach (var tail in _query._tails)

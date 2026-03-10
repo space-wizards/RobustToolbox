@@ -44,6 +44,7 @@ namespace Robust.Shared.GameObjects;
 /// </remarks>
 /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.GetEntityQuery``1">EntitySystem.GetEntityQuery()</seealso>
 /// <seealso cref="M:Robust.Shared.GameObjects.EntityManager.GetEntityQuery``1">EntityManager.GetEntityQuery()</seealso>
+[PublicAPI]
 public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     where TComp1 : IComponent
 {
@@ -55,8 +56,11 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
 
     /// <summary>
     ///     Returns an entity query that will include paused entities when enumerated.
-    ///     You shouldn't cache this, please.
     /// </summary>
+    /// <remarks>
+    ///     You shouldn't cache this, please, there is no way to turn it back into a normal query and it's a shorthand
+    ///     only meant for <c>foreach</c>.
+    /// </remarks>
     /// <example>
     /// <code>
     ///     public sealed class MySystem : EntitySystem
@@ -86,7 +90,7 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     /// <summary>
     ///     Internal constructor used for <see cref="All"/>.
     /// </summary>
-    internal EntityQuery(EntityQuery<TComp1> derived, bool enumeratePaused)
+    private EntityQuery(EntityQuery<TComp1> derived, bool enumeratePaused)
     {
         _entMan = derived._entMan;
         _traitDict = derived._traitDict;

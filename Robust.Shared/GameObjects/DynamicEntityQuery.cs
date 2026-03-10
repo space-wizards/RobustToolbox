@@ -15,17 +15,11 @@ public readonly struct DynamicEntityQuery
     /// <summary>
     ///     Information on a query item, describing how to handle it.
     /// </summary>
-    internal readonly struct QueryEntry
+    internal readonly struct QueryEntry(Dictionary<EntityUid, IComponent> dict, QueryFlags flags)
     {
-        public readonly Dictionary<EntityUid, IComponent> Dict;
+        public readonly Dictionary<EntityUid, IComponent> Dict = dict;
 
-        public readonly QueryFlags Flags;
-
-        public QueryEntry(Dictionary<EntityUid, IComponent> dict, QueryFlags flags)
-        {
-            Dict = dict;
-            Flags = flags;
-        }
+        public readonly QueryFlags Flags = flags;
     }
 
     [Flags]
@@ -46,7 +40,7 @@ public readonly struct DynamicEntityQuery
     }
 
     private readonly QueryEntry[] _entries;
-    private readonly Dictionary<EntityUid, MetaDataComponent> _metaData;
+    private readonly Dictionary<EntityUid, IComponent> _metaData;
 
     /// <summary>
     ///     The number of components this query is set up to emit.
@@ -56,7 +50,7 @@ public readonly struct DynamicEntityQuery
     /// </remarks>
     public int OutputCount => _entries.Length;
 
-    internal DynamicEntityQuery(QueryEntry[] entries, Dictionary<EntityUid, MetaDataComponent> metaData)
+    internal DynamicEntityQuery(QueryEntry[] entries, Dictionary<EntityUid, IComponent> metaData)
     {
         _entries = entries;
         _metaData = metaData;
@@ -96,6 +90,64 @@ public readonly struct DynamicEntityQuery
                 && (entryRef.Flags & QueryFlags.Optional) == 0)
                 return false;
 
+            if (i >= entriesLength - 1)
+                break; // Don't create out of bounds refs, I like having a face.
+
+            // Increment our index..
+            // ReSharper disable once RedundantTypeArgumentsOfMethod
+            spanEntry = ref Unsafe.Add<IComponent?>(ref spanEntry, 1);
+
+            // and increment our index into the tails array, too.
+            entryRef = ref Unsafe.Add(ref entryRef, 1);
+        }
+
+        return true; // We iterated all our tails
+    }
+
+    /// <summary>
+    ///     Tries to query an entity for this query's components, skipping already-filled entries.
+    /// </summary>
+    /// <param name="ent">The entity to look up components for.</param>
+    /// <param name="output">The span to output components into.</param>
+    /// <returns>True when all components were found, false otherwise.</returns>
+    public bool TryResolve(EntityUid ent, in Span<IComponent?> output)
+    {
+        // SAFETY: This ensures that the span is exactly as long as we need.
+        //         Any less and we'd write out of bounds, which is Very Bad.
+        if (output.Length != OutputCount)
+            ThrowBadLength(OutputCount, output.Length);
+
+        ref var spanEntry = ref MemoryMarshal.GetReference(output);
+
+        var entriesLength = _entries.Length;
+
+        if (entriesLength == 0)
+            return true; // Okay we got everything. And by everything, I mean nothing whatsoever.
+
+        ref var entryRef = ref MemoryMarshal.GetReference(_entries);
+
+        // REMARK: All this work in here is to avoid a handful of bounds checks.
+        //         Frankly, this isn't that critical given we're also.. indexing a dict.
+        //         and as such bounds checks probably disappear into overhead.
+        //         but I figure every little bit helps in a critical path like this.
+        for (var i = 0; i < entriesLength; i++)
+        {
+            // If the entry is null and we're marked Without, continue.
+            // and vice versa, if it's not null and we're marked Without, don't continue.
+            // ..and if it's not null and we're not marked without, continue.
+            // Resolve behavior here is a little silly, I think. Oh well.
+            if (spanEntry is not null ^ ((entryRef.Flags & QueryFlags.Without) != 0))
+                continue;
+
+            var exists = !entryRef.Dict.TryGetValue(ent, out spanEntry) || spanEntry.Deleted;
+            // If it exists (or doesn't exist when without is set) and optional is not set, bail.
+            if ((exists ^ ((entryRef.Flags & QueryFlags.Without) != 0))
+                && (entryRef.Flags & QueryFlags.Optional) == 0)
+                return false;
+
+            if (i >= entriesLength - 1)
+                break; // Don't create out of bounds refs, I like having a face.
+
             // Increment our index..
             // ReSharper disable once RedundantTypeArgumentsOfMethod
             spanEntry = ref Unsafe.Add<IComponent?>(ref spanEntry, 1);
@@ -133,6 +185,9 @@ public readonly struct DynamicEntityQuery
             if ((exists ^ ((entryRef.Flags & QueryFlags.Without) != 0))
                 && (entryRef.Flags & QueryFlags.Optional) == 0)
                 return false;
+
+            if (i >= entriesLength - 1)
+                break; // Don't create out of bounds refs, I like having a face.
 
             // and increment our index into the tails array, too.
             entryRef = ref Unsafe.Add(ref entryRef, 1);
@@ -174,6 +229,9 @@ public readonly struct DynamicEntityQuery
                 && (entryRef.Flags & QueryFlags.Optional) == 0)
                 return false;
 
+            if (i >= entriesLength - 1)
+                break; // Don't create out of bounds refs, I like having a face.
+
             // Increment our index..
             // ReSharper disable once RedundantTypeArgumentsOfMethod
             spanEntry = ref Unsafe.Add<IComponent?>(ref spanEntry, 1);
@@ -183,6 +241,11 @@ public readonly struct DynamicEntityQuery
         }
 
         return true; // We iterated all our tails
+    }
+
+    public Enumerator GetEnumerator(bool checkPaused)
+    {
+        return new Enumerator(this, checkPaused);
     }
 
     /// <summary>
@@ -248,11 +311,14 @@ public readonly struct DynamicEntityQuery
                 ent = _lead.Current.Key;
                 spanEntry = _lead.Current.Value;
 
-                if (_checkPaused && meta[ent].EntityPaused)
+                if (_checkPaused && ((MetaDataComponent)meta[ent]).EntityPaused)
                     continue; // Oops, paused.
 
                 if (spanEntry.Deleted)
                     continue; // Nevermind, move along.
+
+                if (output.Length == 1)
+                    return true; // Already done. Do NOT create out of bounds refs!
 
                 // Increment our index.
                 // ReSharper disable once RedundantTypeArgumentsOfMethod

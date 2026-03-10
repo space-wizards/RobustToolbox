@@ -405,13 +405,6 @@ namespace Robust.Shared.GameObjects
         void CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents);
 
         /// <summary>
-        /// Returns a cached struct enumerator with the specified component.
-        /// </summary>
-        EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent;
-
-        EntityQuery<IComponent> GetEntityQuery(Type type);
-
-        /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance
         ///     can have multiple component types.
         /// </summary>
@@ -503,18 +496,18 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : IComponent;
 
-        /// <summary>
-        /// <see cref="ComponentQueryEnumerator"/>
-        /// </summary>
+        [Obsolete($"Use {nameof(GameObjects.EntityQuery<>)}.All and non-generic {nameof(IEntityManager.GetEntityQuery)}. This API is questionable.")]
         public ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry);
 
         /// <summary>
-        /// <see cref="CompRegistryQueryEnumerator"/>
+        /// <see cref="GameObjects.CompRegistryQueryEnumerator"/>
         /// </summary>
         public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
 
+        [Obsolete($"Use {nameof(GameObjects.EntityQuery<>)}.All and non-generic {nameof(IEntityManager.GetEntityQuery)}")]
         AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
 
+        [Obsolete($"Use {nameof(GameObjects.EntityQuery<>)}.All and generic {nameof(IEntityManager.GetEntityQuery)}")]
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent;
 
@@ -533,6 +526,7 @@ namespace Robust.Shared.GameObjects
             where TComp3 : IComponent
             where TComp4 : IComponent;
 
+        [Obsolete($"Use {nameof(GameObjects.EntityQuery<>)} and generic {nameof(IEntityManager.GetEntityQuery)}")]
         EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent;
 
@@ -565,7 +559,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp1">First required component.</typeparam>
         /// <typeparam name="TComp2">Second required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the two required components.</returns>
-        [Obsolete($"Prefer {nameof(GameObjects.EntityQueryEnumerator<>)}")]
+        [Obsolete($"Prefer {nameof(GameObjects.EntityQuery<>)}")]
         IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent;
@@ -577,7 +571,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp2">Second required component.</typeparam>
         /// <typeparam name="TComp3">Third required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the three required components.</returns>
-        [Obsolete($"Prefer {nameof(GameObjects.EntityQueryEnumerator<>)}")]
+        [Obsolete($"Prefer {nameof(GameObjects.EntityQuery<>)}")]
         IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent
@@ -591,7 +585,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp3">Third required component.</typeparam>
         /// <typeparam name="TComp4">Fourth required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the four required components.</returns>
-        [Obsolete($"Prefer {nameof(GameObjects.EntityQueryEnumerator<>)}")]
+        [Obsolete($"Prefer {nameof(GameObjects.EntityQuery<>)}")]
         IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent

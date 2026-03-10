@@ -112,6 +112,41 @@ internal sealed class EntityManagerFilterTests : OurRobustUnitTest
             _entMan.DeleteEntity(target);
         }
     }
+
+    [Test]
+    public void EnumerateFilterHits(
+        [Values(null, typeof(Marker1Component))]
+        Type? m1,
+        [Values(null, typeof(Marker2Component))]
+        Type? m2,
+        [Values(null, typeof(Marker3Component))]
+        Type? m3,
+        [Values(null, typeof(Marker4Component))]
+        Type? m4
+    )
+    {
+        var target = _entMan.Spawn(TestEnt1);
+        var target2 = _entMan.Spawn();
+        try
+        {
+            var filter = new ComponentFilter(new [] {m1, m2, m3, m4}.Where(x => x is not null).Cast<Type>());
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(_entMan.EnumerateFilterHits(target, filter), NUnit.Framework.Is.EquivalentTo(filter));
+                Assert.That(_entMan.EnumerateFilterMisses(target, filter), NUnit.Framework.Is.Empty);
+                Assert.That(_entMan.EnumerateFilterMisses(target2, filter), NUnit.Framework.Is.EquivalentTo(filter));
+                Assert.That(_entMan.EnumerateEntityMisses(target2, filter),
+                    NUnit.Framework.Is.EquivalentTo([typeof(MetaDataComponent), typeof(TransformComponent)]));
+            }
+        }
+        finally
+        {
+            _entMan.DeleteEntity(target);
+            _entMan.DeleteEntity(target2);
+        }
+    }
+
 }
 
 internal sealed partial class Marker1Component : Component

@@ -62,7 +62,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public const int ControlUpdateLimit = 25_000;
 
-        private bool _obeyUpdateLimits;
+        private bool _obeyUpdateLimits = true;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
         [ViewVariables]
@@ -110,7 +110,9 @@ namespace Robust.Client.UserInterface
         {
             _dependencies = new DependencyCollection(_rootDependencies);
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
+#if DEBUG
             _configurationManager.OnValueChanged(CVars.UIObeyUpdateLimits, _uiObeyUpdateLimitsChanged, true);
+#endif
             ThemeDefaults = new InterfaceThemeDummy();
             _initScaling();
             SetupControllers();

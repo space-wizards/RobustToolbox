@@ -35,7 +35,7 @@ public abstract partial class EntityManager
         where TComp1: IComponent
         where TComp2: IComponent
     {
-        var query = EntityQueryEnumerator<TComp1, TComp2>();
+        var query = AllEntityQueryEnumerator<TComp1, TComp2>();
 
         if (!query.MoveNext(out var ent, out var comp1, out var comp2))
             throw new MatchNotFoundException(typeof(TComp1), typeof(TComp2));
@@ -60,7 +60,7 @@ public abstract partial class EntityManager
         where TComp2: IComponent
         where TComp3: IComponent
     {
-        var query = EntityQueryEnumerator<TComp1, TComp2, TComp3>();
+        var query = AllEntityQueryEnumerator<TComp1, TComp2, TComp3>();
 
         if (!query.MoveNext(out var ent, out var comp1, out var comp2, out var comp3))
             throw new MatchNotFoundException(typeof(TComp1), typeof(TComp2), typeof(TComp3));
@@ -86,7 +86,7 @@ public abstract partial class EntityManager
         where TComp3: IComponent
         where TComp4: IComponent
     {
-        var query = EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
+        var query = AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
 
         if (!query.MoveNext(out var ent, out var comp1, out var comp2, out var comp3, out var comp4))
             throw new MatchNotFoundException(typeof(TComp1), typeof(TComp2), typeof(TComp3), typeof(TComp4));
@@ -133,7 +133,7 @@ public abstract partial class EntityManager
         where TComp1: IComponent
         where TComp2: IComponent
     {
-        var query = EntityQueryEnumerator<TComp1, TComp2>();
+        var query = AllEntityQueryEnumerator<TComp1, TComp2>();
 
         if (!query.MoveNext(out var ent, out var comp1, out var comp2))
         {
@@ -162,7 +162,7 @@ public abstract partial class EntityManager
         where TComp2: IComponent
         where TComp3: IComponent
     {
-        var query = EntityQueryEnumerator<TComp1, TComp2, TComp3>();
+        var query = AllEntityQueryEnumerator<TComp1, TComp2, TComp3>();
 
         if (!query.MoveNext(out var ent, out var comp1, out var comp2, out var comp3))
         {
@@ -192,7 +192,7 @@ public abstract partial class EntityManager
         where TComp3: IComponent
         where TComp4: IComponent
     {
-        var query = EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
+        var query = AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>();
 
         if (!query.MoveNext(out var ent, out var comp1, out var comp2, out var comp3, out var comp4))
         {

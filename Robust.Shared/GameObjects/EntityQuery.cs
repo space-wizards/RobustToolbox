@@ -446,4 +446,15 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
             _traitDictEnumerator.Dispose();
         }
     }
+
+    // I expect this one in particular to get used a lot so.. optimize it :)
+    /// <inheritdoc cref="M:System.Linq.Enumerable.ToList``1(System.Collections.Generic.IEnumerable{``0})"/>
+    public List<Entity<TComp1>> ToList()
+    {
+        // Estimate the number of entries first.
+        var list = new List<Entity<TComp1>>(_traitDict.Count);
+        // Then add to it. Saving some allocs.
+        list.AddRange(this);
+        return list;
+    }
 }

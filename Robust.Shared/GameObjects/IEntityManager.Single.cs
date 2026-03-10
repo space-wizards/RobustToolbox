@@ -17,6 +17,7 @@ public partial interface IEntityManager
     /// <returns>The singleton entity.</returns>
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request.</exception>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1> Single<TComp1>()
         where TComp1 : IComponent;
 
@@ -29,8 +30,9 @@ public partial interface IEntityManager
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request.</exception>
     /// <remarks>
-    ///     The least common component should be put in <typeparamref name="TComp1"/> for query performance.
+    /// <para>The least common component should be put in <typeparamref name="TComp1"/> for query performance.</para>
     /// </remarks>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1, TComp2> Single<TComp1, TComp2>()
         where TComp1 : IComponent
         where TComp2 : IComponent;
@@ -45,8 +47,9 @@ public partial interface IEntityManager
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request.</exception>
     /// <remarks>
-    ///     The least common component should be put in <typeparamref name="TComp1"/> for query performance.
+    /// <para>The least common component should be put in <typeparamref name="TComp1"/> for query performance.</para>
     /// </remarks>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1, TComp2, TComp3> Single<TComp1, TComp2, TComp3>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -63,8 +66,9 @@ public partial interface IEntityManager
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request.</exception>
     /// <remarks>
-    ///     The least common component should be put in <typeparamref name="TComp1"/> for query performance.
+    /// <para>The least common component should be put in <typeparamref name="TComp1"/> for query performance.</para>
     /// </remarks>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1, TComp2, TComp3, TComp4> Single<TComp1, TComp2, TComp3, TComp4>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -78,6 +82,7 @@ public partial interface IEntityManager
     /// <typeparam name="TComp1">The component to look for as a tag.</typeparam>
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <returns>Success.</returns>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public bool TrySingle<TComp1>([NotNullWhen(true)] out Entity<TComp1>? entity)
         where TComp1 : IComponent;
 
@@ -92,6 +97,7 @@ public partial interface IEntityManager
     /// <remarks>
     ///     The least common component should be put in <typeparamref name="TComp1"/> for query performance.
     /// </remarks>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public bool TrySingle<TComp1, TComp2>([NotNullWhen(true)] out Entity<TComp1, TComp2>? entity)
         where TComp1 : IComponent
         where TComp2 : IComponent;
@@ -108,6 +114,7 @@ public partial interface IEntityManager
     /// <remarks>
     ///     The least common component should be put in <typeparamref name="TComp1"/> for query performance.
     /// </remarks>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public bool TrySingle<TComp1, TComp2, TComp3>([NotNullWhen(true)] out Entity<TComp1, TComp2, TComp3>? entity)
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -126,6 +133,7 @@ public partial interface IEntityManager
     /// <remarks>
     ///     The least common component should be put in <typeparamref name="TComp1"/> for query performance.
     /// </remarks>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public bool TrySingle<TComp1, TComp2, TComp3, TComp4>(
         [NotNullWhen(true)] out Entity<TComp1, TComp2, TComp3, TComp4>? entity)
         where TComp1 : IComponent
@@ -142,13 +150,8 @@ public partial interface IEntityManager
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request after spawning the fallback.</exception>
     /// <returns>The singleton entity.</returns>
-    /// <remarks>
-    ///     This does not return the entity it spawns, it tries to look it up, so if spawning that entity violates
-    ///     singleton status (or it lacks the necessary component) this will throw immediately after instead of later
-    ///     on next call.
-    ///
-    ///     This will also still throw <see cref="MatchNotFoundException"/> if the spawned entity doesn't match at all.
-    /// </remarks>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingleOrSpawnRemark"]/*'/>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1> SingleOrSpawn<TComp1>(EntProtoId fallback, MapCoordinates location)
         where TComp1 : IComponent;
 
@@ -162,13 +165,8 @@ public partial interface IEntityManager
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request after spawning the fallback.</exception>
     /// <returns>The singleton entity.</returns>
-    /// <remarks>
-    ///     This does not return the entity it spawns, it tries to look it up, so if spawning that entity violates
-    ///     singleton status (or it lacks the necessary component) this will throw immediately after instead of later
-    ///     on next call.
-    ///
-    ///     This will also still throw <see cref="MatchNotFoundException"/> if the spawned entity doesn't match at all.
-    /// </remarks>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingleOrSpawnRemark"]/*'/>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1, TComp2> SingleOrSpawn<TComp1, TComp2>(EntProtoId fallback, MapCoordinates location)
         where TComp1 : IComponent
         where TComp2 : IComponent;
@@ -184,13 +182,8 @@ public partial interface IEntityManager
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request after spawning the fallback.</exception>
     /// <returns>The singleton entity.</returns>
-    /// <remarks>
-    ///     This does not return the entity it spawns, it tries to look it up, so if spawning that entity violates
-    ///     singleton status (or it lacks the necessary component) this will throw immediately after instead of later
-    ///     on next call.
-    ///
-    ///     This will also still throw <see cref="MatchNotFoundException"/> if the spawned entity doesn't match at all.
-    /// </remarks>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingleOrSpawnRemark"]/*'/>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1, TComp2, TComp3> SingleOrSpawn<TComp1, TComp2, TComp3>(
         EntProtoId fallback,
         MapCoordinates location)
@@ -210,13 +203,8 @@ public partial interface IEntityManager
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request after spawning the fallback.</exception>
     /// <returns>The singleton entity.</returns>
-    /// <remarks>
-    ///     This does not return the entity it spawns, it tries to look it up, so if spawning that entity violates
-    ///     singleton status (or it lacks the necessary component) this will throw immediately after instead of later
-    ///     on next call.
-    ///
-    ///     This will also still throw <see cref="MatchNotFoundException"/> if the spawned entity doesn't match at all.
-    /// </remarks>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingleOrSpawnRemark"]/*'/>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1, TComp2, TComp3, TComp4> SingleOrSpawn<TComp1, TComp2, TComp3, TComp4>(
         EntProtoId fallback,
         MapCoordinates location)
@@ -233,6 +221,7 @@ public partial interface IEntityManager
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request after calling fallback.</exception>
     /// <returns>The singleton entity.</returns>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1> SingleOrInit<TComp1>(Action fallback)
         where TComp1 : IComponent;
 
@@ -245,6 +234,7 @@ public partial interface IEntityManager
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request after calling fallback.</exception>
     /// <returns>The singleton entity.</returns>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1, TComp2> SingleOrInit<TComp1, TComp2>(Action fallback)
         where TComp1 : IComponent
         where TComp2 : IComponent;
@@ -259,6 +249,7 @@ public partial interface IEntityManager
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request after calling fallback.</exception>
     /// <returns>The singleton entity.</returns>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1, TComp2, TComp3> SingleOrInit<TComp1, TComp2, TComp3>(Action fallback)
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -275,6 +266,7 @@ public partial interface IEntityManager
     /// <exception cref="NonUniqueSingletonException">Thrown when multiple entities match the request.</exception>
     /// <exception cref="MatchNotFoundException">Thrown when no entities match the request after calling fallback.</exception>
     /// <returns>The singleton entity.</returns>
+    /// <include file='Docs.xml' path='entries/entry[@name="SingletonPauseRemark"]/*'/>
     public Entity<TComp1, TComp2, TComp3, TComp4> SingleOrInit<TComp1, TComp2, TComp3, TComp4>(Action fallback)
         where TComp1 : IComponent
         where TComp2 : IComponent

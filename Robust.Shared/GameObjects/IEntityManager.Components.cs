@@ -556,6 +556,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
         /// <returns>All components that have the specified type.</returns>
+        [Obsolete($"Prefer {nameof(GameObjects.EntityQuery<>)}")]
         IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T: IComponent;
 
         /// <summary>
@@ -564,6 +565,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp1">First required component.</typeparam>
         /// <typeparam name="TComp2">Second required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the two required components.</returns>
+        [Obsolete($"Prefer {nameof(GameObjects.EntityQueryEnumerator<>)}")]
         IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent;
@@ -575,6 +577,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp2">Second required component.</typeparam>
         /// <typeparam name="TComp3">Third required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the three required components.</returns>
+        [Obsolete($"Prefer {nameof(GameObjects.EntityQueryEnumerator<>)}")]
         IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent
@@ -588,6 +591,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp3">Third required component.</typeparam>
         /// <typeparam name="TComp4">Fourth required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the four required components.</returns>
+        [Obsolete($"Prefer {nameof(GameObjects.EntityQueryEnumerator<>)}")]
         IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent

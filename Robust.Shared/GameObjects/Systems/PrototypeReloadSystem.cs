@@ -55,7 +55,7 @@ internal sealed class PrototypeReloadSystem : EntitySystem
         // Find components to be removed, and remove them
         foreach (var (name, type) in oldPrototypeComponents.Except(newPrototypeComponents))
         {
-            if (newPrototype.Components.ContainsComponentByName(name))
+            if (newPrototype.Components.ContainsComponentByName(_componentFactory, name))
             {
                 ignoredComponents.Add(name);
                 continue;

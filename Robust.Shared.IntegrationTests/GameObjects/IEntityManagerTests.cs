@@ -65,6 +65,100 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Test]
+        public void DynamicQueryTest_OptionalWithout()
+        {
+            var sim = SimulationFactory();
+            _ = sim.CreateMap();
+            _ = sim.CreateMap();
+            _ = sim.SpawnEntity(null, MapCoordinates.Nullspace);
+            _ = sim.SpawnEntity(null, MapCoordinates.Nullspace);
+
+            var entMan = sim.Resolve<IEntityManager>();
+
+            var queryAll = entMan.GetDynamicQuery(
+                (typeof(TransformComponent), DynamicEntityQuery.QueryFlags.None),
+                (typeof(MetaDataComponent), DynamicEntityQuery.QueryFlags.None)
+                );
+
+            var queryAllAndMaps = entMan.GetDynamicQuery(
+                (typeof(TransformComponent), DynamicEntityQuery.QueryFlags.None),
+                (typeof(MetaDataComponent), DynamicEntityQuery.QueryFlags.None),
+                (typeof(MapComponent), DynamicEntityQuery.QueryFlags.Optional)
+            );
+
+            var queryNotMaps = entMan.GetDynamicQuery(
+                (typeof(TransformComponent), DynamicEntityQuery.QueryFlags.None),
+                (typeof(MetaDataComponent), DynamicEntityQuery.QueryFlags.None),
+                (typeof(MapComponent), DynamicEntityQuery.QueryFlags.Without)
+            );
+
+            var buffer = new IComponent?[4].AsSpan();
+
+            var queryAllEnum = queryAll.GetEnumerator(false);
+            var queryAllCount = 0;
+
+            while (queryAllEnum.MoveNext(out _, buffer[0..2]))
+            {
+                queryAllCount += 1;
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(buffer[0], NUnit.Framework.Is.TypeOf<TransformComponent>());
+                    Assert.That(buffer[1], NUnit.Framework.Is.TypeOf<MetaDataComponent>());
+                }
+            }
+
+            Assert.That(queryAllCount, NUnit.Framework.Is.EqualTo(4));
+
+            var queryAllAndMapsEnum = queryAllAndMaps.GetEnumerator(false);
+            var queryAllAndMapsCount = 0;
+            var mapCount = 0;
+
+            while (queryAllAndMapsEnum.MoveNext(out _, buffer[0..3]))
+            {
+                queryAllAndMapsCount += 1;
+                using (Assert.EnterMultipleScope())
+                {
+                    using (Assert.EnterMultipleScope())
+                    {
+                        Assert.That(buffer[0], NUnit.Framework.Is.TypeOf<TransformComponent>());
+                        Assert.That(buffer[1], NUnit.Framework.Is.TypeOf<MetaDataComponent>());
+                        Assert.That(buffer[2], NUnit.Framework.Is.TypeOf<MapComponent>().Or.Null);
+                    }
+
+                    if (buffer[2] is not null)
+                        mapCount += 1;
+                }
+            }
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(queryAllAndMapsCount, NUnit.Framework.Is.EqualTo(4));
+                Assert.That(mapCount, NUnit.Framework.Is.EqualTo(2));
+            }
+
+            var queryNotMapsEnum = queryNotMaps.GetEnumerator(false);
+            var queryNotMapsCount = 0;
+
+            while (queryNotMapsEnum.MoveNext(out var ent, buffer[0..3]))
+            {
+                queryNotMapsCount += 1;
+                using (Assert.EnterMultipleScope())
+                {
+                    using (Assert.EnterMultipleScope())
+                    {
+                        Assert.That(buffer[0], NUnit.Framework.Is.TypeOf<TransformComponent>());
+                        Assert.That(buffer[1], NUnit.Framework.Is.TypeOf<MetaDataComponent>());
+                        Assert.That(buffer[2], NUnit.Framework.Is.Null);
+                        Assert.That(entMan.HasComponent<MapComponent>(ent), NUnit.Framework.Is.False);
+                    }
+                }
+            }
+
+
+            Assert.That(queryNotMapsCount, NUnit.Framework.Is.EqualTo(2));
+        }
+
+        [Test]
         public void ComponentCount_Works()
         {
             var sim = RobustServerSimulation.NewSimulation().InitializeInstance();

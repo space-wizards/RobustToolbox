@@ -11,25 +11,22 @@ public partial interface IEntityManager
     /// </summary>
     /// <param name="ent">The entity to test against.</param>
     /// <param name="filter">The filter to use.</param>
-    /// <param name="matchPaused">Whether this query should match paused entities.</param>
     /// <returns>True if match, false if not.</returns>
-    public bool MatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = true);
+    public bool MatchesFilter(EntityUid ent, ComponentFilter filter);
 
     /// <summary>
     ///     Tests whether any component on an entity is within the filter.
     /// </summary>
     /// <param name="ent">The entity to test against.</param>
     /// <param name="filter">The filter to use.</param>
-    /// <param name="matchPaused">Whether this query should match paused entities.</param>
     /// <returns>True if match, false if not.</returns>
-    public bool AnyMatchingComponent(EntityUid ent, ComponentFilter filter, bool matchPaused = true);
+    public bool AnyMatchingComponent(EntityUid ent, ComponentFilter filter);
 
     /// <summary>
     ///     Tests whether an entity matches a filter exactly, i.e. its components are identical to the filter's.
     /// </summary>
     /// <param name="ent">The entity to test against.</param>
     /// <param name="filter">The filter to use.</param>
-    /// <param name="matchPaused">Whether this query should match paused entities.</param>
     /// <returns>True if match, false if not.</returns>
     /// <remarks>
     /// <para>
@@ -37,7 +34,7 @@ public partial interface IEntityManager
     ///     This also does NOT match for Transform or Metadata, as both are obligatory.
     /// </para>
     /// </remarks>
-    public bool ExactlyMatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = false);
+    public bool ExactlyMatchesFilter(EntityUid ent, ComponentFilter filter);
 
     /// <summary>
     ///     Enumerates all the components the filter has, but the entity does not.

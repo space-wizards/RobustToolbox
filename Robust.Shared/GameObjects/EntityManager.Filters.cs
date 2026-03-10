@@ -131,4 +131,24 @@ public abstract partial class EntityManager
 
         return new ComponentFilterQuery(meta, lead!, tails, matchPaused);
     }
+
+    public bool RemoveComponents(EntityUid target, ComponentFilter filter)
+    {
+        var didWork = false;
+
+        foreach (var c in filter)
+        {
+            didWork |= RemoveComponent(target, c);
+        }
+
+        return didWork;
+    }
+
+    public bool RemoveComponentsExact(EntityUid target, ComponentFilter filter)
+    {
+        if (!MatchesFilter(target, filter))
+            return false; // Do nothing
+
+        return RemoveComponents(target, filter);
+    }
 }

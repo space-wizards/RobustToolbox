@@ -45,22 +45,51 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Adds the specified components from the <see cref="EntityPrototype"/>
         /// </summary>
+        [Obsolete("Use the ComponentRegistry variant instead. Merging prototypes at runtime like this is unsupported.")]
         void AddComponents(EntityUid target, EntityPrototype prototype, bool removeExisting = true);
 
         /// <summary>
-        /// Adds the specified registry components to the target entity.
+        ///     Adds the specified registry components to the target entity.
         /// </summary>
+        /// <param name="target">The target entity to add to.</param>
+        /// <param name="registry">The registry to copy components from.</param>
+        /// <param name="removeExisting">Whether to remove and replace any components the registry contains.</param>
+        /// <remarks>
+        ///     The provided registry must not contain MetaData or Transform components.
+        /// </remarks>
+        /// <seealso cref="FillMissesFromRegistry"/>
+        /// <seealso cref="FillMissesWithNewComponents"/>
         void AddComponents(EntityUid target, ComponentRegistry registry, bool removeExisting = true);
 
         /// <summary>
         /// Removes the specified entity prototype components from the target entity.
         /// </summary>
+        [Obsolete("Use the ComponentFilter variant instead. Using EntityPrototypes as a mask is wholly unsupported.")]
         void RemoveComponents(EntityUid target, EntityPrototype prototype);
 
         /// <summary>
         /// Removes the specified registry components from the target entity.
         /// </summary>
+        [Obsolete("Use the ComponentFilter variant instead, registries are not masks.")]
         void RemoveComponents(EntityUid target, ComponentRegistry registry);
+
+        /// <summary>
+        ///     Removes all components matching a given filter from the target entity.
+        ///     This will ignore components the entity doesn't have.
+        /// </summary>
+        /// <param name="target">The target entity to remove from.</param>
+        /// <param name="filter">A filter to use as a mask.</param>
+        /// <returns>True if any components are removed, false if nothing happened.</returns>
+        bool RemoveComponents(EntityUid target, ComponentFilter filter);
+
+        /// <summary>
+        ///     Removes all components matching a given filter from the target entity, if and only if
+        ///     the entity actually has every component.
+        /// </summary>
+        /// <param name="target">The target entity to remove from.</param>
+        /// <param name="filter">A filter to use as a mask.</param>
+        /// <returns>True if all components are removed, false if nothing happened.</returns>
+        bool RemoveComponentsExact(EntityUid target, ComponentFilter filter);
 
         /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will

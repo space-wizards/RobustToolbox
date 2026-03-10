@@ -6,7 +6,7 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class EntityManager
 {
-    public bool MatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = false)
+    public bool MatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = true)
     {
         if (!matchPaused && IsPaused(ent))
             return false;
@@ -20,7 +20,21 @@ public abstract partial class EntityManager
         return true;
     }
 
-    public bool ExactlyMatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = false)
+    public bool AnyMatchingComponent(EntityUid ent, ComponentFilter filter, bool matchPaused = true)
+    {
+        if (!matchPaused && IsPaused(ent))
+            return false;
+
+        foreach (var comp in filter)
+        {
+            if (HasComponent(ent, comp))
+                return true;
+        }
+
+        return false;
+    }
+
+    public bool ExactlyMatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = true)
     {
         if (!matchPaused && IsPaused(ent))
             return false;

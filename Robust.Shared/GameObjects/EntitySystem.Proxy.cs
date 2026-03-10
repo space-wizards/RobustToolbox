@@ -1787,14 +1787,22 @@ public partial class EntitySystem
     #region Filters
     /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.MatchesFilter(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Prototypes.ComponentFilter,System.Boolean)"/>
     [ProxyFor(typeof(EntityManager))]
-    public bool MatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = false)
+    public bool MatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = true)
     {
         return EntityManager.MatchesFilter(ent, filter, matchPaused);
     }
 
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.AnyMatchingComponent(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Prototypes.ComponentFilter,System.Boolean)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool AnyMatchingComponent(EntityUid ent, ComponentFilter filter, bool matchPaused = true)
+    {
+        return EntityManager.AnyMatchingComponent(ent, filter, matchPaused);
+    }
+
+
     /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ExactlyMatchesFilter(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Prototypes.ComponentFilter,System.Boolean)"/>
     [ProxyFor(typeof(EntityManager))]
-    public bool ExactlyMatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = false)
+    public bool ExactlyMatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = true)
     {
         return EntityManager.ExactlyMatchesFilter(ent, filter, matchPaused);
     }

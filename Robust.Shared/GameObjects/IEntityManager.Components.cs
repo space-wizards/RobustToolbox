@@ -511,15 +511,18 @@ namespace Robust.Shared.GameObjects
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent;
 
+        [Obsolete($"Use {nameof(GameObjects.EntityQuery<>)}.All and generic {nameof(IEntityManager.GetEntityQuery)}")]
         AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQueryEnumerator<TComp1, TComp2>()
             where TComp1 : IComponent
             where TComp2 : IComponent;
 
+        [Obsolete($"Use {nameof(GameObjects.EntityQuery<>)}.All and generic {nameof(IEntityManager.GetEntityQuery)}")]
         AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQueryEnumerator<TComp1, TComp2, TComp3>()
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent;
 
+        [Obsolete($"Use {nameof(GameObjects.EntityQuery<>)}.All and generic {nameof(IEntityManager.GetEntityQuery)}")]
         AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
             where TComp1 : IComponent
             where TComp2 : IComponent
@@ -530,15 +533,18 @@ namespace Robust.Shared.GameObjects
         EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent;
 
+        [Obsolete($"Use {nameof(GameObjects.EntityQuery<>)} and generic {nameof(IEntityManager.GetEntityQuery)}")]
         EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
             where TComp1 : IComponent
             where TComp2 : IComponent;
 
+        [Obsolete($"Use {nameof(GameObjects.EntityQuery<>)} and generic {nameof(IEntityManager.GetEntityQuery)}")]
         EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent;
 
+        [Obsolete($"Use {nameof(GameObjects.EntityQuery<>)} and generic {nameof(IEntityManager.GetEntityQuery)}")]
         EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
             where TComp1 : IComponent
             where TComp2 : IComponent

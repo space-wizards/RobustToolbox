@@ -12,8 +12,15 @@ namespace Robust.Shared.Prototypes;
 
 /// <summary>
 ///     A "filter" for entities, allowing you to describe a set of components they match and test for matches.
+///     This is intended for cases where you want to be able to see if an entity matches a given dynamically defined set
+///     of components, for example a YAML defined set.
 /// </summary>
+/// <remarks>
+///     This is adjacent to, but disjoint from <see cref="ComponentRegistry"/>. Registries contain a fully instantiated
+///     set of components, including their fields, and are intended for additive operations only.
+/// </remarks>
 /// <seealso cref="ComponentFilterQuery"/>
+/// <seealso cref="ComponentRegistry"/>
 [PublicAPI]
 public sealed class ComponentFilter : ISet<Type>
 {

@@ -6,7 +6,6 @@ using Robust.Shared.Serialization.Manager;
 
 namespace Robust.UnitTesting.Shared.GameObjects;
 
-[TestFixture]
 [TestOf(typeof(EntityManager))]
 [TestOf(typeof(ComponentFilter))]
 internal sealed class EntityManagerFilterTests : OurRobustUnitTest
@@ -46,6 +45,10 @@ internal sealed class EntityManagerFilterTests : OurRobustUnitTest
 
     [Test]
     [TestOf(typeof(ComponentFilterQuery))]
+    [Description("""
+    Tests that filters work against some test targets with various permutations of components.
+    Covers MatchesFilter, ExactlyMatchesFilter, and ComponentFilterQuery.
+    """)]
     public void FilterEntities(
         [Values(null, typeof(Marker1Component))]
         Type? m1,
@@ -67,6 +70,7 @@ internal sealed class EntityManagerFilterTests : OurRobustUnitTest
 
             Assert.That(_entMan.MatchesFilter(target.Value, filter));
 
+            // If there's four entries, then it should be an exact match.
             if (filter.Count == 4)
                 Assert.That(_entMan.ExactlyMatchesFilter(target.Value, filter));
             else
@@ -87,6 +91,7 @@ internal sealed class EntityManagerFilterTests : OurRobustUnitTest
     }
 
     [Test]
+    [Description("Asserts that using FillMissesWithNewComponents should make the entity match the filter afterward.")]
     public void FillMisses(
         [Values(null, typeof(Marker1Component))]
         Type? m1,
@@ -114,6 +119,10 @@ internal sealed class EntityManagerFilterTests : OurRobustUnitTest
     }
 
     [Test]
+    [Description("""
+    Tests the various component-set operations, on a full (all markers) and empty (no markers) entity.
+    Ensures an edge case in EnumerateEntityMisses (xform and metadata existing) is present.
+    """)]
     public void EnumerateFilterHits(
         [Values(null, typeof(Marker1Component))]
         Type? m1,
@@ -133,11 +142,18 @@ internal sealed class EntityManagerFilterTests : OurRobustUnitTest
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(_entMan.EnumerateFilterHits(target, filter), NUnit.Framework.Is.EquivalentTo(filter));
-                Assert.That(_entMan.EnumerateFilterMisses(target, filter), NUnit.Framework.Is.Empty);
-                Assert.That(_entMan.EnumerateFilterMisses(target2, filter), NUnit.Framework.Is.EquivalentTo(filter));
+                Assert.That(_entMan.EnumerateFilterHits(target, filter),
+                    NUnit.Framework.Is.EquivalentTo(filter),
+                    "Expected the test entity with all markers to match the filter and the resulting set intersection to match as well.");
+                Assert.That(_entMan.EnumerateFilterMisses(target, filter),
+                    NUnit.Framework.Is.Empty,
+                    "Expected there to be no misses on an entity with every marker that can be in the filter.");
+                Assert.That(_entMan.EnumerateFilterMisses(target2, filter),
+                    NUnit.Framework.Is.EquivalentTo(filter),
+                    "Expected every item in the filter to miss on an entity with no markers.");
                 Assert.That(_entMan.EnumerateEntityMisses(target2, filter),
-                    NUnit.Framework.Is.EquivalentTo([typeof(MetaDataComponent), typeof(TransformComponent)]));
+                    NUnit.Framework.Is.EquivalentTo([typeof(MetaDataComponent), typeof(TransformComponent)]),
+                    "Expected the entity to have two components the filter does not, transform and metadata.");
             }
         }
         finally

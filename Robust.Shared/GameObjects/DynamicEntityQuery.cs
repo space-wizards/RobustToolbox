@@ -195,12 +195,14 @@ public readonly struct DynamicEntityQuery
         private static readonly Dictionary<EntityUid, IComponent> EmptyDict = new();
 
         private readonly DynamicEntityQuery _owner;
+        private readonly bool _checkPaused;
         private Dictionary<EntityUid, IComponent>.Enumerator _lead;
 
-        internal Enumerator(DynamicEntityQuery owner)
+        internal Enumerator(DynamicEntityQuery owner, bool checkPaused)
         {
             QueryEntry.QueryFlags flags;
             _owner = owner;
+            _checkPaused = checkPaused;
 
             if (_owner._entries.Length == 0)
             {
@@ -231,7 +233,9 @@ public readonly struct DynamicEntityQuery
             if (output.Length != _owner.OutputCount)
                 ThrowBadLength( _owner.OutputCount, output.Length);
 
-            ref var spanEntry = ref MemoryMarshal.GetReference(output);
+            // We grab this here to pin it all function instead of constantly pinning in the loop.
+            ref var span = ref MemoryMarshal.GetReference(output);
+            var meta = _owner._metaData;
 
             ent = EntityUid.Invalid;
             while (true)
@@ -239,8 +243,13 @@ public readonly struct DynamicEntityQuery
                 if (!_lead.MoveNext())
                     return false;
 
+                ref var spanEntry = ref span;
+
                 ent = _lead.Current.Key;
                 spanEntry = _lead.Current.Value;
+
+                if (_checkPaused && meta[ent].EntityPaused)
+                    continue; // Oops, paused.
 
                 if (spanEntry.Deleted)
                     continue; // Nevermind, move along.

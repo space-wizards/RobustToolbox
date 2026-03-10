@@ -24,6 +24,9 @@ public abstract partial class EntityManager
             if (comp.Deleted)
                 continue;
 
+            if (comp is MetaDataComponent or TransformComponent)
+                continue;
+
             if (!filter.Contains(comp.GetType()))
                 return false;
         }
@@ -95,8 +98,14 @@ public abstract partial class EntityManager
         }
     }
 
-    public ComponentFilterQuery ConstructFilterQuery(ComponentFilter filter)
+    public ComponentFilterQuery ComponentFilterQuery(ComponentFilter filter)
     {
+        if (filter.Count == 0)
+        {
+            // Iterate everything, all entities match.
+            return new ComponentFilterQuery(_entTraitDict[typeof(MetaDataComponent)], []);
+        }
+
         var tailCount = filter.Count - 1;
         var tails = new Dictionary<EntityUid, IComponent>[tailCount];
 

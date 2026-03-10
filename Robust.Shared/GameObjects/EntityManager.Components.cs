@@ -35,6 +35,7 @@ namespace Robust.Shared.GameObjects
         private const int ComponentCollectionCapacity = 1024;
         private const int EntityCapacity = 1024;
         private const int NetComponentCapacity = 8;
+        private static readonly Dictionary<EntityUid, IComponent> EmptyTraitDict = new();
 
         private FrozenDictionary<Type, Dictionary<EntityUid, IComponent>> _entTraitDict
             = FrozenDictionary<Type, Dictionary<EntityUid, IComponent>>.Empty;

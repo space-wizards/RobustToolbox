@@ -1783,4 +1783,47 @@ public partial class EntitySystem
     }
 
     #endregion
+
+    #region Filters
+    public bool MatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = false)
+    {
+        return EntityManager.MatchesFilter(ent, filter, matchPaused);
+    }
+
+    public bool ExactlyMatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = false)
+    {
+        return EntityManager.ExactlyMatchesFilter(ent, filter, matchPaused);
+    }
+
+    public IEnumerable<Type> EnumerateFilterMisses(EntityUid ent, ComponentFilter filter)
+    {
+        return EntityManager.EnumerateFilterMisses(ent, filter);
+    }
+
+    public IEnumerable<Type> EnumerateEntityMisses(EntityUid ent, ComponentFilter filter)
+    {
+        return EntityManager.EnumerateEntityMisses(ent, filter);
+    }
+
+    public IEnumerable<Type> EnumerateFilterHits(EntityUid ent, ComponentFilter filter)
+    {
+        return EntityManager.EnumerateFilterHits(ent, filter);
+    }
+
+    public void FillMissesFromRegistry(EntityUid ent, ComponentFilter filter, ComponentRegistry registry)
+    {
+        EntityManager.FillMissesFromRegistry(ent, filter, registry);
+    }
+
+    public void FillMissesWithNewComponents(EntityUid ent, ComponentFilter filter)
+    {
+        EntityManager.FillMissesWithNewComponents(ent, filter);
+    }
+
+    public ComponentFilterQuery ComponentFilterQuery(ComponentFilter filter, bool matchPaused = false)
+    {
+        return EntityManager.ComponentFilterQuery(filter, matchPaused);
+    }
+
+    #endregion
 }

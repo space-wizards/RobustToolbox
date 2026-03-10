@@ -235,7 +235,7 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var name in context.GetExtraComponentTypes())
                 {
-                    if (prototype != null && prototype.Components.ContainsComponentByName(name))
+                    if (prototype != null && prototype.Components.ContainsComponentByName(factory, name))
                     {
                         // This component also exists in the prototype.
                         // This means that the previous step already caught both the prototype data AND map data.

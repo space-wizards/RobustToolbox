@@ -285,9 +285,10 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
     /// <summary>
     ///     Tests if the registry contains the given component by name. You should prefer to use types!
     /// </summary>
+    /// <param name="factory">The global component factory.</param>
     /// <param name="name">The name of the component to check for.</param>
     /// <returns>Whether the registry contains the given component.</returns>
-    public bool ContainsComponentByName(string name)
+    public bool ContainsComponentByName(IComponentFactory factory, string name)
     {
         return _inner.ContainsKey(name);
     }
@@ -319,12 +320,13 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
     /// <summary>
     ///     Retrieves an underlying component entry, if possible.
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="o"></param>
-    /// <returns></returns>
-    public bool TryGetEntry(string name, [NotNullWhen(true)] out EntityPrototype.ComponentRegistryEntry? o)
+    /// <param name="factory">The global component factory.</param>
+    /// <param name="name">The component name to look up.</param>
+    /// <param name="entry">The component entry, if any.</param>
+    /// <returns>True if entry was found, false otherwise.</returns>
+    public bool TryGetEntry(IComponentFactory factory, string name, [NotNullWhen(true)] out EntityPrototype.ComponentRegistryEntry? entry)
     {
-        return _inner.TryGetValue(name, out o);
+        return _inner.TryGetValue(name, out entry);
     }
 
     [Obsolete("Legacy dictionary API compatibility. Use AddComponent and TryGetComponent.")]

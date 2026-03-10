@@ -52,7 +52,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 }
 
                 // Has this type already been added?
-                if (components.ContainsComponentByName(compType))
+                if (components.ContainsComponentByName(factory, compType))
                 {
                     dependencies
                         .Resolve<ILogManager>()
@@ -123,7 +123,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 }
 
                 // Has this type already been added?
-                if (components.ContainsComponentByName(compType))
+                if (components.ContainsComponentByName(factory, compType))
                 {
                     list.Add(new ErrorNode(componentMapping, "Duplicate Component."));
                     continue;

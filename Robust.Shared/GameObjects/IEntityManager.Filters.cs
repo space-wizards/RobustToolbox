@@ -22,6 +22,7 @@ public partial interface IEntityManager
     /// <returns>True if match, false if not.</returns>
     /// <remarks>
     ///     For performance and technical reasons, this matches the exact type, not any shared component.
+    ///     This also does NOT match for Transform or Metadata.
     /// </remarks>
     public bool ExactlyMatchesFilter(EntityUid ent, ComponentFilter filter);
 
@@ -75,6 +76,6 @@ public partial interface IEntityManager
     ///     This optimizes the performance of <see cref="MatchesFilter"/> slightly and allows you to iterate matches.
     /// </summary>
     /// <param name="filter">The filter to construct a query from.</param>
-    /// <returns>A ComponentFilterQuery</returns>
-    public ComponentFilterQuery ConstructFilterQuery(ComponentFilter filter);
+    /// <returns>A ComponentFilterQuery.</returns>
+    public ComponentFilterQuery ComponentFilterQuery(ComponentFilter filter);
 }

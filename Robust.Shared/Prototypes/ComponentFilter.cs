@@ -47,7 +47,7 @@ public sealed class ComponentFilter : ISet<Type>
     /// <remarks>
     ///     Duplicates will be removed.
     /// </remarks>
-    public ComponentFilter(IReadOnlyCollection<Type> components)
+    public ComponentFilter(IEnumerable<Type> components)
     {
         _components = components.ToHashSet();
         ValidateContents();

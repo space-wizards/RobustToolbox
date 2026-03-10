@@ -69,4 +69,12 @@ public partial interface IEntityManager
     ///     Like all filter methods, this is <i>dynamic</i> and is slower than using EnsureComp if you know the types in advance.
     /// </remarks>
     public void FillMissesWithNewComponents(EntityUid ent, ComponentFilter filter);
+
+    /// <summary>
+    ///     Constructs a cacheable query for a given filter.
+    ///     This optimizes the performance of <see cref="MatchesFilter"/> slightly and allows you to iterate matches.
+    /// </summary>
+    /// <param name="filter">The filter to construct a query from.</param>
+    /// <returns>A ComponentFilterQuery</returns>
+    public ComponentFilterQuery ConstructFilterQuery(ComponentFilter filter);
 }

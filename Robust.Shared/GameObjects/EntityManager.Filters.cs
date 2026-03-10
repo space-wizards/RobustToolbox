@@ -72,8 +72,10 @@ public abstract partial class EntityManager
             if (!HasComponent(ent, comp))
             {
                 if (!registry.TryGetComponent(_componentFactory, comp, out var toClone))
+                {
                     throw new InvalidOperationException(
                         $"Tried to fill in a missing component, {comp}, from a registry, but couldn't find it.");
+                }
 
                 AddComponent(ent, new EntityPrototype.ComponentRegistryEntry(toClone), false, meta);
             }
@@ -91,5 +93,26 @@ public abstract partial class EntityManager
                 AddComponent(ent, _componentFactory.GetComponent(comp), false, meta);
             }
         }
+    }
+
+    public ComponentFilterQuery ConstructFilterQuery(ComponentFilter filter)
+    {
+        var tailCount = filter.Count - 1;
+        var tails = new Dictionary<EntityUid, IComponent>[tailCount];
+
+        Dictionary<EntityUid, IComponent>? lead = null;
+        var tailIdx = 0;
+
+        foreach (var entry in filter)
+        {
+            if (lead is null)
+                lead = _entTraitDict[entry];
+            else
+            {
+                tails[tailIdx++] = _entTraitDict[entry];
+            }
+        }
+
+        return new ComponentFilterQuery(lead!, tails);
     }
 }

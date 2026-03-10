@@ -12,9 +12,7 @@ namespace Robust.Shared.Prototypes;
 /// <summary>
 ///     A "filter" for entities, allowing you to describe a set of components they match and test for matches.
 /// </summary>
-/// <remarks>
-///     Cache your filters! Filter baking TBD.
-/// </remarks>
+/// <seealso cref="ComponentFilterQuery"/>
 public sealed class ComponentFilter : ISet<Type>
 {
     /// <summary>

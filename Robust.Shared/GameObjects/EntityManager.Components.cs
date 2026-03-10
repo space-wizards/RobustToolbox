@@ -2101,6 +2101,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Returns entities that match the ComponentRegistry.
     /// </summary>
+    [Obsolete($"Use {nameof(ComponentFilterQuery)} instead.")]
     public struct CompRegistryEntityEnumerator : IDisposable
     {
         private IEntityManager _entManager;

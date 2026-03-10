@@ -6,8 +6,11 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class EntityManager
 {
-    public bool MatchesFilter(EntityUid ent, ComponentFilter filter)
+    public bool MatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = false)
     {
+        if (!matchPaused && IsPaused(ent))
+            return false;
+
         foreach (var comp in filter)
         {
             if (!HasComponent(ent, comp))
@@ -17,8 +20,11 @@ public abstract partial class EntityManager
         return true;
     }
 
-    public bool ExactlyMatchesFilter(EntityUid ent, ComponentFilter filter)
+    public bool ExactlyMatchesFilter(EntityUid ent, ComponentFilter filter, bool matchPaused = false)
     {
+        if (!matchPaused && IsPaused(ent))
+            return false;
+
         foreach (var comp in _entCompIndex[ent])
         {
             if (comp.Deleted)
@@ -98,12 +104,13 @@ public abstract partial class EntityManager
         }
     }
 
-    public ComponentFilterQuery ComponentFilterQuery(ComponentFilter filter)
+    public ComponentFilterQuery ComponentFilterQuery(ComponentFilter filter, bool matchPaused = false)
     {
+        var meta = _entTraitDict[typeof(MetaDataComponent)];
         if (filter.Count == 0)
         {
             // Iterate everything, all entities match.
-            return new ComponentFilterQuery(_entTraitDict[typeof(MetaDataComponent)], []);
+            return new ComponentFilterQuery(meta, meta, [], matchPaused);
         }
 
         var tailCount = filter.Count - 1;
@@ -122,6 +129,6 @@ public abstract partial class EntityManager
             }
         }
 
-        return new ComponentFilterQuery(lead!, tails);
+        return new ComponentFilterQuery(meta, lead!, tails, matchPaused);
     }
 }

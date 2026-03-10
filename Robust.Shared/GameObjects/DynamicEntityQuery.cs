@@ -26,23 +26,23 @@ public readonly struct DynamicEntityQuery
             Dict = dict;
             Flags = flags;
         }
+    }
 
-        [Flags]
-        public enum QueryFlags
-        {
-            /// <summary>
-            ///     Indicates no special behavior, the component is required.
-            /// </summary>
-            None = 0,
-            /// <summary>
-            ///     Indicates this entry is optional.
-            /// </summary>
-            Optional = 1,
-            /// <summary>
-            ///     Indicates this entry is <b>excluded</b>, and the query fails if it's present.
-            /// </summary>
-            Without = 2,
-        }
+    [Flags]
+    public enum QueryFlags
+    {
+        /// <summary>
+        ///     Indicates no special behavior, the component is required.
+        /// </summary>
+        None = 0,
+        /// <summary>
+        ///     Indicates this entry is optional.
+        /// </summary>
+        Optional = 1,
+        /// <summary>
+        ///     Indicates this entry is <b>excluded</b>, and the query fails if it's present.
+        /// </summary>
+        Without = 2,
     }
 
     private readonly QueryEntry[] _entries;
@@ -92,8 +92,8 @@ public readonly struct DynamicEntityQuery
         {
             var exists = !entryRef.Dict.TryGetValue(ent, out spanEntry) || spanEntry.Deleted;
             // If it exists (or doesn't exist when without is set) and optional is not set, bail.
-            if ((exists ^ ((entryRef.Flags & QueryEntry.QueryFlags.Without) != 0))
-                && (entryRef.Flags & QueryEntry.QueryFlags.Optional) == 0)
+            if ((exists ^ ((entryRef.Flags & QueryFlags.Without) != 0))
+                && (entryRef.Flags & QueryFlags.Optional) == 0)
                 return false;
 
             // Increment our index..
@@ -130,8 +130,8 @@ public readonly struct DynamicEntityQuery
             var exists = !entryRef.Dict.TryGetValue(ent, out var entry) || entry.Deleted;
 
             // If it exists (or doesn't exist when without is set) and optional is not set, bail.
-            if ((exists ^ ((entryRef.Flags & QueryEntry.QueryFlags.Without) != 0))
-                && (entryRef.Flags & QueryEntry.QueryFlags.Optional) == 0)
+            if ((exists ^ ((entryRef.Flags & QueryFlags.Without) != 0))
+                && (entryRef.Flags & QueryFlags.Optional) == 0)
                 return false;
 
             // and increment our index into the tails array, too.
@@ -170,8 +170,8 @@ public readonly struct DynamicEntityQuery
         {
             var exists = !entryRef.Dict.TryGetValue(ent, out spanEntry) || spanEntry.Deleted;
             // If it exists (or doesn't exist when without is set) and optional is not set, bail.
-            if ((exists ^ ((entryRef.Flags & QueryEntry.QueryFlags.Without) != 0))
-                && (entryRef.Flags & QueryEntry.QueryFlags.Optional) == 0)
+            if ((exists ^ ((entryRef.Flags & QueryFlags.Without) != 0))
+                && (entryRef.Flags & QueryFlags.Optional) == 0)
                 return false;
 
             // Increment our index..
@@ -200,20 +200,20 @@ public readonly struct DynamicEntityQuery
 
         internal Enumerator(DynamicEntityQuery owner, bool checkPaused)
         {
-            QueryEntry.QueryFlags flags;
+            QueryFlags flags;
             _owner = owner;
             _checkPaused = checkPaused;
 
             if (_owner._entries.Length == 0)
             {
-                flags = QueryEntry.QueryFlags.None;
+                flags = QueryFlags.None;
             }
             else
             {
                 flags = _owner._entries[0].Flags;
             }
 
-            if (flags != QueryEntry.QueryFlags.None)
+            if (flags != QueryFlags.None)
             {
                 throw new NotSupportedException(
                     "Query enumerators do not support optional or excluded first components.");

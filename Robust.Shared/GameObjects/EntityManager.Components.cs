@@ -193,14 +193,14 @@ namespace Robust.Shared.GameObjects
 
             var metadata = MetaQuery.GetComponent(target);
 
-            foreach (var (name, entry) in registry)
+            foreach (var srcComp in registry.Components())
             {
-                var reg = _componentFactory.GetRegistration(name);
+                var reg = _componentFactory.GetRegistration(srcComp);
 
                 if (removeExisting)
                 {
                     var comp = _componentFactory.GetComponent(reg);
-                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    _serManager.CopyTo(srcComp, ref comp, notNullableOverride: true);
                     AddComponentInternal(target, comp, reg, overwrite: true, metadata: metadata);
                 }
                 else
@@ -211,7 +211,7 @@ namespace Robust.Shared.GameObjects
                     }
 
                     var comp = _componentFactory.GetComponent(reg);
-                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    _serManager.CopyTo(srcComp, ref comp, notNullableOverride: true);
                     AddComponentInternal(target, comp, reg, overwrite: false, metadata: metadata);
                 }
             }

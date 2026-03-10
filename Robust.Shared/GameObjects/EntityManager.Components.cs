@@ -1388,6 +1388,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete($"Use {nameof(ComponentFilterQuery)} instead.")]
         public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry)
         {
             if (registry.Count == 0)

@@ -1003,7 +1003,7 @@ public sealed class EntityDeserializer :
                 continue;
             }
 
-            if (prototype.Components.ContainsKey(compName))
+            if (prototype.Components.ContainsComponentByName(_factory, compName))
             {
                 // This component is modified by the map so we have to send state.
                 // Though it's still in the prototype itself so creation doesn't need to be sent.

@@ -6,7 +6,9 @@ using Robust.Shared.Serialization.Manager;
 
 namespace Robust.UnitTesting.Shared.GameObjects;
 
-[TestFixture, TestOf(typeof(EntityManager))]
+[TestFixture]
+[TestOf(typeof(EntityManager))]
+[TestOf(typeof(ComponentFilter))]
 internal sealed class EntityManagerFilterTests : OurRobustUnitTest
 {
     private const string TestEnt1 = "T_TestEnt1";
@@ -43,7 +45,8 @@ internal sealed class EntityManagerFilterTests : OurRobustUnitTest
     }
 
     [Test]
-    public void FilterEnt(
+    [TestOf(typeof(ComponentFilterQuery))]
+    public void FilterEntities(
         [Values(null, typeof(Marker1Component))]
         Type? m1,
         [Values(null, typeof(Marker2Component))]

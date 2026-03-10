@@ -14,6 +14,9 @@ namespace Robust.Shared.Prototypes;
 /// <remarks>
 ///     This is distinctly <b>not</b> a filter list, and contains fully constructed components.
 ///     To filter for components, use a ComponentFilterList instead.
+///
+///     Currently, working with names in a registry is most efficient. However when all obsolete API usage has been
+///     cleaned up, registry internals will be changed and functionality used in prototypes/yaml will be split off.
 /// </remarks>
 public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValuePair<string, EntityPrototype.ComponentRegistryEntry>>
 {
@@ -30,12 +33,16 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
     [Obsolete("Use Components, ComponentsAndNames, or ComponentTypes instead.")]
     public IReadOnlyCollection<EntityPrototype.ComponentRegistryEntry> Values => _inner.Values;
 
+    [Obsolete("Use Components, ComponentsAndNames, or ComponentTypes instead.")]
+    public IReadOnlyCollection<string> Keys => _inner.Keys;
+
+
     public ComponentRegistry()
     {
         _inner = new();
     }
 
-    public ComponentRegistry(Dictionary<string, EntityPrototype.ComponentRegistryEntry> components)
+    internal ComponentRegistry(Dictionary<string, EntityPrototype.ComponentRegistryEntry> components)
     {
         _inner = components;
     }
@@ -48,7 +55,7 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
     public ComponentRegistry(IComponentFactory factory, params IEnumerable<IComponent> component)
     {
         _inner = component.ToDictionary(
-            x => factory.GetRegistration((Type)x.GetType()).Name,
+            x => factory.GetRegistration(x.GetType()).Name,
             x => new EntityPrototype.ComponentRegistryEntry(x)
         );
     }
@@ -92,10 +99,18 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
     /// <summary>
     ///     Manually inserts a pre-constructed component into the registry by name.
     /// </summary>
+    public void AddComponentManual(IComponentFactory factory, string componentName, IComponent component)
+    {
+        AddComponentManual(componentName, component);
+    }
+
+    /// <summary>
+    ///     Manually inserts a pre-constructed component into the registry by name.
+    /// </summary>
     /// <remarks>
     ///     You almost never want this, this is for situations where you have no choice (i.e. cannot use IoC).
     /// </remarks>
-    public void AddComponentManual(string componentName, IComponent component)
+    internal void AddComponentManual(string componentName, IComponent component)
     {
         _inner[componentName] = new EntityPrototype.ComponentRegistryEntry(component);
     }
@@ -134,15 +149,17 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
     /// <summary>
     ///     Gets a component out of the registry by name.
     /// </summary>
+    /// <param name="factory">The global component factory</param>
     /// <param name="name">The component to retrieve.</param>
     /// <returns>The component.</returns>
     /// <exception cref="KeyNotFoundException">Thrown when the given component is not in the registry.</exception>
-    public IComponent GetComponentByName(string name)
+    public IComponent GetComponentByName(IComponentFactory factory, string name)
     {
         return _inner[name].Component;
     }
 
     /// <inheritdoc />
+    [Obsolete("The IComponentFactory receiving method must be used.")]
     public bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
     {
         var success = _inner.TryGetValue(componentName, out var comp);
@@ -152,14 +169,23 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
     }
 
     /// <inheritdoc />
+    public bool TryGetComponent(IComponentFactory factory, string componentName, [NotNullWhen(true)] out IComponent? component)
+    {
+        var success = _inner.TryGetValue(componentName, out var comp);
+        component = comp?.Component;
+
+        return success;
+    }
+
+    /// <inheritdoc />
     public bool TryGetComponent<TComponent>(
-        IComponentFactory componentFactory,
+        IComponentFactory factory,
         [NotNullWhen(true)] out TComponent? component
     ) where TComponent : class, IComponent, new()
     {
         component = null;
-        var componentName = componentFactory.GetComponentName<TComponent>();
-        if (TryGetComponent(componentName, out var foundComponent))
+        var componentName = factory.GetComponentName<TComponent>();
+        if (TryGetComponent(factory, componentName, out var foundComponent))
         {
             component = (TComponent)foundComponent;
             return true;
@@ -168,17 +194,12 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
         return false;
     }
 
-    /// <summary>Tries getting the data of the given component.</summary>
-    /// <param name="componentFactory">The global component factory.</param>
-    /// <param name="componentType">Type of component to find.</param>
-    /// <param name="component">Found component or null.</param>
-    /// <returns>True if the component was found, false otherwise.</returns>
-    /// <seealso cref="TryGetComponent{T}"/>
-    public bool TryGetComponent(IComponentFactory componentFactory, Type componentType, [NotNullWhen(true)] out IComponent? component)
+    /// <inheritdoc />
+    public bool TryGetComponent(IComponentFactory factory, Type componentType, [NotNullWhen(true)] out IComponent? component)
     {
         component = null;
-        var componentName = componentFactory.GetComponentName(componentType);
-        if (TryGetComponent(componentName, out component))
+        var componentName = factory.GetComponentName(componentType);
+        if (TryGetComponent(factory, componentName, out component))
         {
             return true;
         }
@@ -217,7 +238,7 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
     /// <summary>
     ///     Enumerate components in the registry by value, with their names.
     /// </summary>
-    public IEnumerable<(string, IComponent)> ComponentsAndNames()
+    public IEnumerable<(string, IComponent)> ComponentsAndNames(IComponentFactory factory)
     {
         return _inner.Select(x => (x.Key, x.Value.Component));
     }
@@ -225,8 +246,7 @@ public sealed class ComponentRegistry : IEntityLoadContext, IEnumerable<KeyValue
     /// <summary>
     ///     Enumerates the names of all components in the registry.
     /// </summary>
-    /// <returns></returns>
-    public IEnumerable<string> Names()
+    public IEnumerable<string> Names(IComponentFactory factory)
     {
         return _inner.Keys;
     }

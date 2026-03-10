@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -13,16 +14,34 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">Found component or null.</param>
         /// <returns>True if the component was found, false otherwise.</returns>
         /// <seealso cref="TryGetComponent{T}"/>
+        [Obsolete("The IComponentFactory receiving method must be used.")]
         bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>Tries getting the data of the given component.</summary>
+        /// <param name="factory">The global component factory.</param>
+        /// <param name="componentName">Name of component to find.</param>
+        /// <param name="component">Found component or null.</param>
+        /// <returns>True if the component was found, false otherwise.</returns>
+        /// <seealso cref="TryGetComponent{T}"/>
+        bool TryGetComponent(IComponentFactory factory, string componentName, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>Tries getting the data of the given component.</summary>
+        /// <param name="factory">The global component factory.</param>
+        /// <param name="componentType">Type of component to find.</param>
+        /// <param name="component">Found component or null.</param>
+        /// <returns>True if the component was found, false otherwise.</returns>
+        /// <seealso cref="TryGetComponent{T}"/>
+        bool TryGetComponent(IComponentFactory factory, Type componentType, [NotNullWhen(true)] out IComponent? component);
+
+
+        /// <summary>Tries getting the data of the given component.</summary>
         /// <typeparam name="TComponent">Type of component to be found.</typeparam>
-        /// <param name="componentFactory">Component factory required for the lookup.</param>
+        /// <param name="factory">Component factory required for the lookup.</param>
         /// <param name="component">Found component or null.</param>
         /// <returns>True if the component was found, false otherwise.</returns>
         /// <seealso cref="TryGetComponent"/>
         bool TryGetComponent<TComponent>(
-            IComponentFactory componentFactory,
+            IComponentFactory factory,
             [NotNullWhen(true)] out TComponent? component
         ) where TComponent : class, IComponent, new();
 

@@ -215,16 +215,18 @@ namespace Robust.Shared.Prototypes
 
             if (prototype != null)
             {
-                foreach (var (name, entry) in prototype.Components)
+                foreach (var comp in prototype.Components.Components())
                 {
-                    if (context != null && context.ShouldSkipComponent(name))
+                    var compReg = factory.GetRegistration(comp);
+
+                    if (context != null && context.ShouldSkipComponent(compReg.Name))
                         continue;
 
-                    var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
-                    var compReg = factory.GetRegistration(name);
-                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, ctx);
+                    var fullData = context != null && context.TryGetComponent(factory, comp.GetType(), out var data) ? data : comp;
 
-                    if (!entry.Component.NetSyncEnabled && compReg.NetID is {} netId)
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, compReg.Name, fullData, ctx);
+
+                    if (!fullData.NetSyncEnabled && compReg.NetID is {} netId)
                         meta.NetComponents.Remove(netId);
                 }
             }
@@ -233,7 +235,7 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var name in context.GetExtraComponentTypes())
                 {
-                    if (prototype != null && prototype.Components.ContainsKey(name))
+                    if (prototype != null && prototype.Components.ContainsComponentByName(name))
                     {
                         // This component also exists in the prototype.
                         // This means that the previous step already caught both the prototype data AND map data.
@@ -241,7 +243,7 @@ namespace Robust.Shared.Prototypes
                         continue;
                     }
 
-                    if (!context.TryGetComponent(name, out var data))
+                    if (!context.TryGetComponent(factory, name, out var data))
                     {
                         throw new InvalidOperationException(
                             $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");

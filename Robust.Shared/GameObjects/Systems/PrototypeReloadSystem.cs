@@ -40,12 +40,12 @@ internal sealed class PrototypeReloadSystem : EntitySystem
     {
         var oldPrototype = metaData.EntityPrototype;
 
-        var oldPrototypeComponents = oldPrototype?.Components.Names()
+        var oldPrototypeComponents = oldPrototype?.Components.Names(_componentFactory)
             .Where(n => n != "Transform" && n != "MetaData")
             .Select(name => (name, _componentFactory.GetRegistration(name).Type))
             .ToList() ?? new List<(string name, Type Type)>();
 
-        var newPrototypeComponents = newPrototype.Components.Names()
+        var newPrototypeComponents = newPrototype.Components.Names(_componentFactory)
             .Where(n => n != "Transform" && n != "MetaData")
             .Select(name => (name, _componentFactory.GetRegistration(name).Type))
             .ToList();
@@ -70,7 +70,7 @@ internal sealed class PrototypeReloadSystem : EntitySystem
         foreach (var (name, _) in newPrototypeComponents.Where(t => !ignoredComponents.Contains(t.name))
                      .Except(oldPrototypeComponents))
         {
-            var data = newPrototype.Components.GetComponentByName(name);
+            var data = newPrototype.Components.GetComponentByName(_componentFactory, name);
             var component = _componentFactory.GetComponent(name);
 
             if (!HasComp(entity, component.GetType()))

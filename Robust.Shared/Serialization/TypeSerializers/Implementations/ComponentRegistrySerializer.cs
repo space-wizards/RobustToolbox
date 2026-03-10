@@ -164,8 +164,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             var compSequence = new SequenceDataNode();
+            var factory = dependencies.Resolve<IComponentFactory>();
 
-            foreach (var (type, component) in value.ComponentsAndNames())
+            foreach (var (type, component) in value.ComponentsAndNames(factory))
             {
                 var node = serializationManager.WriteValue(
                     component.GetType(),
@@ -192,9 +193,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         {
             target.Clear();
             target.EnsureCapacity(source.Count);
+            var factory = dependencies.Resolve<IComponentFactory>();
 
             // We have legitimate use here for the obsolete member.
-            foreach (var (id, component) in source.ComponentsAndNames())
+            foreach (var (id, component) in source.ComponentsAndNames(factory))
             {
                 target.AddComponentManual(id, serializationManager.CreateCopy(component, context, notNullableOverride: true));
             }

@@ -511,6 +511,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// <see cref="CompRegistryQueryEnumerator"/>
         /// </summary>
+        [Obsolete($"Use {nameof(ComponentFilterQuery)} instead.")]
         public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
 
         AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);

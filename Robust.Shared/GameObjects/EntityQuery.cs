@@ -106,7 +106,6 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.Comp``1(Robust.Shared.GameObjects.EntityUid)">
     ///     EntitySystem.Comp&lt;T&gt;(EntityUid)
     /// </seealso>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     public TComp1 GetComponent(EntityUid uid)
     {
@@ -117,7 +116,7 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     }
 
     /// <inheritdoc cref="GetComponent"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    [Pure]
     public Entity<TComp1> Get(EntityUid uid)
     {
         if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
@@ -142,7 +141,6 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.TryComp``1(Robust.Shared.GameObjects.EntityUid,``0@)">
     ///     EntitySystem.TryComp&lt;T&gt;(EntityUid, out T?)
     /// </seealso>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
     {
@@ -156,7 +154,6 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     }
 
     /// <inheritdoc cref="TryGetComponent(Robust.Shared.GameObjects.EntityUid?,out TComp1?)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
     {
@@ -171,13 +168,11 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     }
 
     /// <inheritdoc cref="TryGetComponent(Robust.Shared.GameObjects.EntityUid?,out TComp1?)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     public bool TryComp(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
         => TryGetComponent(uid, out component);
 
     /// <inheritdoc cref="TryGetComponent(Robust.Shared.GameObjects.EntityUid?,out TComp1?)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     public bool TryComp([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
         => TryGetComponent(uid, out component);
@@ -194,17 +189,14 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.HasComp``1(Robust.Shared.GameObjects.EntityUid)">
     ///     EntitySystem.HasComp&lt;T&gt;(EntityUid)
     /// </seealso>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     public bool HasComp(EntityUid uid) => HasComponent(uid);
 
     /// <inheritdoc cref="HasComp(Robust.Shared.GameObjects.EntityUid)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     public bool HasComp([NotNullWhen(true)] EntityUid? uid) => HasComponent(uid);
 
     /// <inheritdoc cref="HasComp(Robust.Shared.GameObjects.EntityUid)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     public bool HasComponent(EntityUid uid)
     {
@@ -212,7 +204,6 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     }
 
     /// <inheritdoc cref="HasComp(Robust.Shared.GameObjects.EntityUid)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     public bool HasComponent([NotNullWhen(true)] EntityUid? uid)
     {
@@ -227,7 +218,6 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.Resolve``1(Robust.Shared.GameObjects.EntityUid,``0@,System.Boolean)">
     ///     EntitySystem.Resolve&lt;T&gt;(EntityUid, out T?)
     /// </seealso>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Resolve(EntityUid uid, [NotNullWhen(true)] ref TComp1? component, bool logMissing = true)
     {
         if (component != null)
@@ -255,7 +245,6 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     /// <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.Resolve``1(Robust.Shared.GameObjects.EntityUid,``0@,System.Boolean)">
     ///     EntitySystem.Resolve&lt;T&gt;(EntityUid, out T?)
     /// </seealso>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Resolve(ref Entity<TComp1?> entity, bool logMissing = true)
     {
         return Resolve(entity.Owner, ref entity.Comp, logMissing);
@@ -266,7 +255,6 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     /// </summary>
     /// <param name="uid">The entity to do the lookup on.</param>
     /// <returns>The component, if it exists.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     public TComp1? CompOrNull(EntityUid uid)
     {
@@ -277,7 +265,6 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     }
 
     /// <inheritdoc cref="GetComponent"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     public TComp1 Comp(EntityUid uid)
     {
@@ -396,11 +383,15 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
         return GetEnumerator();
     }
 
+    /// <summary>
+    ///     The concrete enumerator for an EntityQuery, to assist the C# compiler in optimization.
+    /// </summary>
     public struct Enumerator : IEnumerator<Entity<TComp1>>
     {
         private readonly EntityQuery<TComp1> _query;
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDictEnumerator;
 
+        /// <inheritdoc cref="P:Robust.Shared.GameObjects.EntityQuery`1.Enumerator.System#Collections#Generic#IEnumerator{Robust#Shared#GameObjects#Entity{TComp1}}#Current"/>
         public Entity<TComp1> Current { get; private set; }
 
         internal Enumerator(EntityQuery<TComp1> query)
@@ -422,6 +413,10 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
                 if (c.Deleted)
                     continue;
 
+                // REMARK: You might think this would be better as two separate Enumerator implementations,
+                //         but i'm not actually convinced. The memory overhead of one extra ref is small,
+                //         and the branch is guaranteed to be consistent so the CPU will just skip over
+                //         this check every time in the ignore-paused case.
                 if (!_query._enumeratePaused && ((MetaDataComponent)_query._metaData[workingEnt]).EntityPaused)
                     continue;
 
@@ -439,7 +434,7 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
 
         Entity<TComp1> IEnumerator<Entity<TComp1>>.Current => Current;
 
-        object? IEnumerator.Current => Current;
+        object IEnumerator.Current => Current;
 
         public void Dispose()
         {
@@ -447,7 +442,7 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
         }
     }
 
-    // I expect this one in particular to get used a lot so.. optimize it :)
+    // I expect this one in particular to get used a bit more than most so.. optimize it :)
     /// <inheritdoc cref="M:System.Linq.Enumerable.ToList``1(System.Collections.Generic.IEnumerable{``0})"/>
     public List<Entity<TComp1>> ToList()
     {

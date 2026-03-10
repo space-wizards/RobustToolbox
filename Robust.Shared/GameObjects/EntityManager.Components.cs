@@ -1185,25 +1185,6 @@ namespace Robust.Shared.GameObjects
             return component;
         }
 
-        public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent
-        {
-            DebugTools.Assert(_entTraitArray.Length > CompIdx.ArrayIndex<TComp1>(),
-                $"Unknown component: {typeof(TComp1).Name}");
-            var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            var meta = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
-
-            return new EntityQuery<TComp1>(this, comps, meta);
-        }
-
-        public EntityQuery<IComponent> GetEntityQuery(Type type)
-        {
-            DebugTools.Assert(_entTraitDict.ContainsKey(type), $"Unknown component: {type.Name}");
-            var comps = _entTraitDict[type];
-            var meta = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
-
-            return new EntityQuery<IComponent>(this, comps, meta);
-        }
-
         /// <inheritdoc />
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
@@ -1843,6 +1824,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Non-generic version of <see cref="AllEntityQueryEnumerator{TComp1}"/>
     /// </summary>
+    [Obsolete($"Use {nameof(EntityQuery<>)} and non-generic {nameof(IEntityManager.GetEntityQuery)}")]
     public struct ComponentQueryEnumerator : IDisposable
     {
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
@@ -1922,6 +1904,7 @@ namespace Robust.Shared.GameObjects
     /// <seealso cref="M:Robust.Shared.GameObjects.IEntityManager.EntityQueryEnumerator``1">
     ///     IEntityManager.EntityQueryEnumerator&lt;TComp1, ...&gt;()
     /// </seealso>
+    [Obsolete($"Use {nameof(EntityQuery<>)} and generic {nameof(IEntityManager.GetEntityQuery)}")]
     public struct EntityQueryEnumerator<TComp1> : IDisposable
         where TComp1 : IComponent
     {

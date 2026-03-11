@@ -35,11 +35,19 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+- ITestPair.Init() now requires a TextWriter be provided to write its gravestone to.
+  This gravestone is where TestPair test history is now written to.
+- ITestPair.AddToHistory() must be used to add tests to the test history.
+- Engine and content tests relying on TestPair using NUnit will now automatically
+  output gravestone files for test history. You should set the working directory for tests if you wish to
+  use these artifacts.
+- Using testpairs outside of a test environment without providing an `ITestContextLike` implementor will
+  now crash due to the lack of a running test.
+- Test logs no longer contain TestPair history.
 
 ### New features
 
-*None yet*
+- TestPairs now automatically log their test history to a gravestone file.
 
 ### Bugfixes
 

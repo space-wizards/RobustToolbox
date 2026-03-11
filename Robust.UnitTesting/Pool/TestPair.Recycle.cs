@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Client;
 using Robust.Shared;
@@ -83,6 +84,7 @@ public partial class TestPair<TServer, TClient>
         State = PairState.Ready;
     }
 
+    [HandlesResourceDisposal]
     public async ValueTask CleanReturnAsync()
     {
         if (State != PairState.InUse)
@@ -92,8 +94,8 @@ public partial class TestPair<TServer, TClient>
         State = PairState.CleanDisposed;
         await OnCleanDispose();
         DebugTools.Assert(State is PairState.Dead or PairState.Ready);
-        Manager.Return(this);
         ClearContext();
+        Manager.Return(this);
     }
 
     public async ValueTask DisposeAsync()
@@ -106,8 +108,8 @@ public partial class TestPair<TServer, TClient>
             case PairState.InUse:
                 await TestOut.WriteLineAsync($"{nameof(DisposeAsync)}: Dirty return of pair {Id} started");
                 await OnDirtyDispose();
-                Manager.Return(this);
                 ClearContext();
+                Manager.Return(this);
                 break;
             default:
                 throw new Exception($"{nameof(DisposeAsync)}: Unexpected state. Pair: {Id}. State: {State}.");

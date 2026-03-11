@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+- `Prototype<T>`, a precursor to `ProtoId<T>` used by toolshed, has been removed.
 
 ### New features
 
@@ -45,7 +45,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+- Toolshed commands trying to complete `EntProtoId` fields now actually return completion results.
 
 ### Other
 

@@ -39,7 +39,18 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+- `EntityQuery<TComp1>` now implements `IEnumerable<Entity<TComp1>>` and can be used with `foreach` performantly.
+- `EntityQuery<TComp1, TComp2>`, `EntityQuery<TComp1, TComp2, TComp3>`, and `EntityQuery<TComp1, TComp2, TComp3, TComp4>`
+  have been added and implement `IEnumerable`.
+  <br/><br/>
+  They're direct counterparts to `EntityQuery<TComp1>` with similar methods and constructors.
+  Additionally, like `EntityQuery<TComp1>`, all of these types can be resolved with a `[Dependency]` in systems.
+- `DynamicEntityQuery` has been added. It implements component queries for an unbounded set of components, with the
+  ability to mark the presence of specific components as optional (may be null) or excluded (query doesn't match
+  entities with that component).
+  <br/><br/>
+  It is currently primarily an implementation detail of `EntityQuery<>` but can be used directly and will lead to
+  expanded functionality in the future.
 
 ### Bugfixes
 
@@ -47,7 +58,12 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+- `EntityQueryEnumerator<TComp1>`, `EntityQueryEnumerator<TComp1, TComp2>`, `EntityQueryEnumerator<TComp1, TComp2, TComp3>`,
+  `EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>`, `AllEntityQueryEnumerator<TComp1>`, `AllEntityQueryEnumerator<TComp1, TComp2>`,
+  `AllEntityQueryEnumerator<TComp1, TComp2, TComp3>`, `AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>`,
+  and `ComponentQueryEnumerator` are now obsolete.
+- The EntityManager methods `EntityQuery<TComp1>`, `EntityQuery<TComp1, TComp2>`, `EntityQuery<TComp1, TComp2, TComp3>`,
+  and `EntityQuery<TComp1, TComp2, TComp3, TComp4>` are now obsolete.
 
 ### Internal
 

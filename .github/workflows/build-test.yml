@@ -28,7 +28,8 @@ jobs:
       - name: Build
         run: dotnet build --no-restore /p:WarningsAsErrors=nullable
       - name: Run tests
-        run: dotnet test --no-build -- NUnit.ConsoleOut=0 NUnit.TestOutputXml="/home/runner/work/test_results"
+        shell: pwsh
+        run: dotnet test --no-build -- NUnit.ConsoleOut=0 NUnit.TestOutputXml="$($env:GITHUB_WORKSPACE)/test_results"
       - name: Archive NUnit3 test results.
         if: failure()
         uses: actions/upload-artifact@v4

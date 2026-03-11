@@ -123,6 +123,10 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
 
     public void ActivateContext(TextWriter testOut)
     {
+        // This is the very, very first thing that happens in prepping a pair, so wait a sec
+        // for disposal to get to finish if we got returned right this instant.
+        // Not necessary after some of the disposal changes but defensive is good.
+        using var semaphore = _disposalLock.WaitGuard();
         TestOut = testOut;
         ServerLogHandler.ActivateContext(testOut);
         ClientLogHandler.ActivateContext(testOut);

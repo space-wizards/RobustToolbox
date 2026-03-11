@@ -43,7 +43,8 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+- UI styling and update limits are now disabled in testing through the `ui.obey_update_limits` cvar. This cvar is only
+  functional in debug builds of engine.
 
 ### Other
 

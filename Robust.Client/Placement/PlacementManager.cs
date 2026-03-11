@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -11,19 +8,22 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Placement;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using Robust.Shared.Log;
-using Robust.Shared.Placement;
-using Direction = Robust.Shared.Maths.Direction;
-using Robust.Shared.Map.Components;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+using Direction = Robust.Shared.Maths.Direction;
 
 namespace Robust.Client.Placement
 {
@@ -748,7 +748,7 @@ namespace Robust.Client.Placement
             if (prototype.TryGetComponent<PlacementOverlayComponent>(out var placementOverlay, _componentFactory))
             {
                 CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
-                SetPlacementOverlaySprite(prototype, Sprite.RsiStateLike(placementOverlay.Sprite));
+                SetPlacementOverlaySprite(placementOverlay);
             }
             else
             {
@@ -871,26 +871,23 @@ namespace Robust.Client.Placement
             _networkManager.ClientSendMessage(message);
         }
 
-        private void SetPlacementOverlaySprite(EntityPrototype prototype, IRsiStateLike overlayTexture)
+        private void SetPlacementOverlaySprite(PlacementOverlayComponent placementOverlay)
         {
             if (CurrentPlacementOverlayEntity == null)
                 return;
 
-            if (overlayTexture is not RSI.State overlayRSI)
+            if (Sprite.RsiStateLike(placementOverlay.Sprite) is not RSI.State overlayRSI)
             {
                 //Fallback
-                Sprite.AddTextureLayer(CurrentPlacementOverlayEntity.Value, overlayTexture.Default);
+                Sprite.AddTextureLayer(CurrentPlacementOverlayEntity.Value, Sprite.RsiStateLike(placementOverlay.Sprite).Default);
                 return;
             }
 
             EntityManager.EnsureComponent<SpriteComponent>(CurrentPlacementOverlayEntity.Value, out var overlaySprite);
             Sprite.AddRsiLayer(CurrentPlacementOverlayEntity.Value, overlayRSI.StateId, overlayRSI.RSI);
 
-            if(prototype.TryGetComponent<SpriteComponent>(out var prototypeSprite, _componentFactory))
-            {
-                overlaySprite.NoRotation = prototypeSprite.NoRotation;
-                Sprite.SetScale(CurrentPlacementOverlayEntity.Value, prototypeSprite.Scale);
-            }
+            overlaySprite.NoRotation = placementOverlay.NoRotation;
+            Sprite.SetScale(CurrentPlacementOverlayEntity.Value, placementOverlay.Scale);
         }
 
         public enum PlacementTypes : byte

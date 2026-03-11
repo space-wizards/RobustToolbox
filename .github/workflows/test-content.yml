@@ -35,8 +35,10 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build --configuration Tools --no-restore
+        run: dotnet build --configuration DebugOpt --no-restore /m
       - name: Content.Tests
-        run: dotnet test --no-build Content.Tests/Content.Tests.csproj -v n
+        run: dotnet test --no-build --configuration DebugOpt Content.Tests/Content.Tests.csproj -- NUnit.ConsoleOut=0
       - name: Content.IntegrationTests
-        run: COMPlus_gcServer=1 dotnet test --no-build Content.IntegrationTests/Content.IntegrationTests.csproj -v n
+        run: |
+          $env:DOTNET_gcServer=1
+          dotnet test --no-build --configuration DebugOpt Content.IntegrationTests/Content.IntegrationTests.csproj -- NUnit.ConsoleOut=0 NUnit.MapWarningTo=Failed

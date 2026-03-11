@@ -29,7 +29,7 @@ jobs:
         run: dotnet build --no-restore /p:WarningsAsErrors=nullable
       - name: Run tests
         shell: pwsh
-        run: dotnet test --no-build -- NUnit.ConsoleOut=0 NUnit.TestOutputXml="$(pwd)/test_results"
+        run: dotnet test --no-build -- NUnit.ConsoleOut=0 NUnit.TestOutputXml="logs" NUnit.WorkDirectory="$(pwd)/test_results"
       - name: Archive NUnit3 test results.
         if: always()
         uses: actions/upload-artifact@v4

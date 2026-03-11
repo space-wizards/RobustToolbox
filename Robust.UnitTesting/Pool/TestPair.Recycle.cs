@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NUnit.Framework;
@@ -84,9 +85,12 @@ public partial class TestPair<TServer, TClient>
         State = PairState.Ready;
     }
 
+    private SemaphoreSlim _disposalLock = new(1);
+
     [HandlesResourceDisposal]
     public async ValueTask CleanReturnAsync()
     {
+        using var semaphore = await _disposalLock.WaitGuardAsync();
         if (State != PairState.InUse)
             throw new Exception($"{nameof(CleanReturnAsync)}: Unexpected state. Pair: {Id}. State: {State}.");
 
@@ -100,6 +104,7 @@ public partial class TestPair<TServer, TClient>
 
     public async ValueTask DisposeAsync()
     {
+        using var semaphore = await _disposalLock.WaitGuardAsync();
         switch (State)
         {
             case PairState.Dead:

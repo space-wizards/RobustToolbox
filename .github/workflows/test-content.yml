@@ -50,3 +50,4 @@ jobs:
         with:
           name: nunit3-results
           path: test_results/*
+          retention-days: 7

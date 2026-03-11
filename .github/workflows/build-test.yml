@@ -36,3 +36,4 @@ jobs:
         with:
           name: nunit3-results-${{ matrix.os }}
           path: test_results/*
+          retention-days: 7

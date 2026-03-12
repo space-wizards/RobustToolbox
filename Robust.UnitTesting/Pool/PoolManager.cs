@@ -27,7 +27,8 @@ public abstract class BasePoolManager
         (CVars.ThreadParallelCount.Name, "1"),
         (CVars.ReplayClientRecordingEnabled.Name, "false"),
         (CVars.ReplayServerRecordingEnabled.Name, "false"),
-        (CVars.NetBufferSize.Name, "0")
+        (CVars.NetBufferSize.Name, "0"),
+        (CVars.UIObeyUpdateLimits.Name, "false")
     ];
 }
 

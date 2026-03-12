@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -292,6 +294,12 @@ public readonly struct DynamicEntityQuery
         private readonly DynamicEntityQuery _owner;
         private readonly bool _checkPaused;
         private Dictionary<EntityUid, IComponent>.Enumerator _lead;
+#if DEBUG
+        // Anti-misuse assertions, store enumerators for every entry and Reset() them constantly so that
+        // if you update the ECS while we're enumerating it blows up.
+        // This does mean DynamicEntityQuery allocates in debug.
+        private readonly Dictionary<EntityUid, IComponent>.Enumerator[] _mines;
+#endif
 
         internal Enumerator(DynamicEntityQuery owner, bool checkPaused)
         {
@@ -314,8 +322,22 @@ public readonly struct DynamicEntityQuery
                     "Query enumerators do not support optional or excluded first components.");
             }
 
+#if DEBUG
+            _mines = _owner._entries.Select(x => x.Dict.GetEnumerator()).ToArray();
+#endif
+
             Reset();
         }
+
+#if DEBUG
+        private void StepOnMines()
+        {
+            foreach (var mine in _mines)
+            {
+                ((IEnumerator)mine).Reset();
+            }
+        }
+#endif
 
         /// <summary>
         ///     Attempts to find the next entity in the query iterator.
@@ -327,6 +349,10 @@ public readonly struct DynamicEntityQuery
         {
             if (output.Length != _owner.OutputCount)
                 ThrowBadLength( _owner.OutputCount, output.Length);
+
+#if DEBUG
+            StepOnMines();
+#endif
 
             // We grab this here to pin it all function instead of constantly pinning in the loop.
             ref var span = ref MemoryMarshal.GetReference(output);
@@ -373,6 +399,10 @@ public readonly struct DynamicEntityQuery
             {
                 _lead = _owner._entries[0].Dict.GetEnumerator();
             }
+
+#if DEBUG
+            StepOnMines();
+#endif
         }
     }
 

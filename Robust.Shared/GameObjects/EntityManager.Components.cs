@@ -2250,6 +2250,7 @@ namespace Robust.Shared.GameObjects
     /// <seealso cref="M:Robust.Shared.GameObjects.IEntityManager.AllEntityQueryEnumerator``1">
     ///     IEntityManager.AllEntityQueryEnumerator&lt;TComp1, ...&gt;()
     /// </seealso>
+    [Obsolete($"Prefer {nameof(IEntityManager.GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property.")]
     public struct AllEntityQueryEnumerator<TComp1> : IDisposable
         where TComp1 : IComponent
     {
@@ -2299,6 +2300,7 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <inheritdoc cref="AllEntityQueryEnumerator{TComp1}"/>
+    [Obsolete($"Prefer {nameof(IEntityManager.GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property.")]
     public struct AllEntityQueryEnumerator<TComp1, TComp2> : IDisposable
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -2359,6 +2361,7 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <inheritdoc cref="AllEntityQueryEnumerator{TComp1}"/>
+    [Obsolete($"Prefer {nameof(IEntityManager.GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property.")]
     public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3> : IDisposable
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -2433,6 +2436,7 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <inheritdoc cref="AllEntityQueryEnumerator{TComp1}"/>
+    [Obsolete($"Prefer {nameof(IEntityManager.GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property.")]
     public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> : IDisposable
         where TComp1 : IComponent
         where TComp2 : IComponent

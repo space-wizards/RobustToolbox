@@ -7,9 +7,44 @@ using System.Runtime.InteropServices;
 namespace Robust.Shared.GameObjects;
 
 /// <summary>
-///     An internal, typeless version of entity queries.
-///     This isn't enumerable, but works for an arbitrary set of components.
+/// <para>
+///     A typeless version of entity queries optimized for more complex query behaviors.
+///     This isn't enumerable for allocation reasons, but works for an arbitrary set of components.
+/// </para>
+/// <para>
+///     DynamicEntityQuery supports <i>query constraints</i>, as described by <see cref="QueryFlags"/>,
+///     that control how the query should treat the presence of a given component (is it optional, is it required).
+/// </para>
 /// </summary>
+/// <remarks>
+///     The component-returning methods on this type all take in spans to output into, it is recommended to
+///     allocate an array once (within a method) and reuse it regularly.
+/// </remarks>
+/// <example>
+/// <code>
+///     var query = GetDynamicQuery(
+///                     // Query every map,
+///                     (typeof(MapComponent), DynamicEntityQuery.QueryFlags.None),
+///                     // that may also be a grid,
+///                     (typeof(MapGridComponent), DynamicEntityQuery.QueryFlags.Optional),
+///                     // that is absolutely not funny.
+///                     (typeof(FunnyComponent), DynamicEntityQuery.QueryFlags.Without)
+///                 );
+///     <br/>
+///     var components = new IComponent?[3]; // Must match the number of queried components.
+///     var enumerator = query.GetEnumerator();
+///     <br/>
+///     while (enumerator.MoveNext(out var ent, components))
+///     {
+///         // all the components we wanted from this ent are in components.
+///         var mapComp = (MapComponent)components[0]!;
+///         var mapGridComp = (MapGridComponent?)components[1];
+///         // components[2] is where FunnyComponent would be, but these entities are never funny so it's always null.
+///         Obliterate((ent, mapComp, mapGridComp));
+///     }
+/// </code>
+/// </example>
+/// <seealso cref="IEntityManager.GetDynamicQuery"/>
 public readonly struct DynamicEntityQuery
 {
     /// <summary>
@@ -254,9 +289,6 @@ public readonly struct DynamicEntityQuery
     /// </summary>
     public struct Enumerator
     {
-        // ReSharper disable once CollectionNeverUpdated.Local
-        private static readonly Dictionary<EntityUid, IComponent> EmptyDict = new();
-
         private readonly DynamicEntityQuery _owner;
         private readonly bool _checkPaused;
         private Dictionary<EntityUid, IComponent>.Enumerator _lead;
@@ -335,7 +367,7 @@ public readonly struct DynamicEntityQuery
         {
             if (_owner._entries.Length == 0)
             {
-                _lead = EmptyDict.GetEnumerator();
+                _lead = _owner._metaData.GetEnumerator();
             }
             else
             {

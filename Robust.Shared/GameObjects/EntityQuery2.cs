@@ -175,7 +175,7 @@ public readonly struct EntityQuery<TComp1, TComp2> : IEnumerable<Entity<TComp1, 
 
     /// <summary>
     ///     Inline storage for the components we're enumerating.
-    ///     Basically just working around the fact you can't stackalloc the span.
+    ///     Basically just working around the fact you can't stackalloc the span, error CS0208.
     /// </summary>
     [InlineArray(2)]
     private struct ComponentArray

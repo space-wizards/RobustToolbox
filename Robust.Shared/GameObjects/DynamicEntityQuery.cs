@@ -324,7 +324,10 @@ public readonly struct DynamicEntityQuery
             }
 
 #if DEBUG
-            _mines = _owner._entries.Select(x => x.Dict.GetEnumerator()).ToArray();
+            if (_owner._entries.Length > 0)
+                _mines = _owner._entries.Select(x => x.Dict.GetEnumerator()).ToArray();
+            else
+                _mines = [_owner._metaData.GetEnumerator()];
 #endif
 
             Reset();
@@ -333,9 +336,18 @@ public readonly struct DynamicEntityQuery
 #if DEBUG
         private void StepOnMines()
         {
-            foreach (var mine in _mines)
+            try
             {
-                ((IEnumerator)mine).Reset();
+                foreach (var mine in _mines)
+                {
+                    ((IEnumerator)mine).Reset();
+                }
+            }
+            catch (InvalidOperationException versionError)
+            {
+                throw new InvalidOperationException(
+                    "Tried to use an Enumerator that was invalidated by changes to the ECS. You cannot add or remove the components you're querying for, nor add or remove entities with them.",
+                    versionError);
             }
         }
 #endif

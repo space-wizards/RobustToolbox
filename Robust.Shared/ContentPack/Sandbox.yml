@@ -641,6 +641,88 @@ Types:
     Vector2: { All: True }
     Vector3: { All: True }
     Vector4: { All: True }
+  System.Numerics.Tensors:
+    TensorPrimitives: { All: True }
+    NIndex: { All: True }
+    NRange: { All: True }
+    TensorSpan`1:
+      Methods:
+        - "void .ctor(!0[])"
+        - "void .ctor(!0[], System.ReadOnlySpan`1<nativeint>)"
+        - "void .ctor(!0[], System.ReadOnlySpan`1<nativeint>, System.ReadOnlySpan`1<nativeint>)"
+        - "void .ctor(!0[], int, System.ReadOnlySpan`1<nativeint>, System.ReadOnlySpan`1<nativeint>)"
+        - "void .ctor(System.Span`1<!0>)"
+        - "void set_Item(System.ReadOnlySpan`1<System.Numerics.Tensors.NRange>, System.Numerics.Tensors.TensorSpan`1<!0>)"
+        - "System.Numerics.Tensors.TensorSpan`1<!0> Slice(System.ReadOnlySpan`1<nativeint>)"
+        - "System.Numerics.Tensors.TensorSpan`1<!0> Slice(System.ReadOnlySpan`1<System.Numerics.Tensors.NIndex>)"
+        - "System.Numerics.Tensors.TensorSpan`1<!0> Slice(System.ReadOnlySpan`1<System.Numerics.Tensors.NRange>)"
+        - "nativeint get_FlattenedLength()"
+        - "bool get_HasAnyDenseDimensions()"
+        - "bool get_IsDense()"
+        - "bool get_IsEmpty()"
+        - "bool get_IsPinned()"
+        - "System.ReadOnlySpan`1<nativeint> get_Lengths()"
+        - "int get_Rank()"
+        - "System.ReadOnlySpan`1<nativeint> get_Strides()"
+        - "System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0> AsReadOnlyTensorSpan()"
+        - "System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0> AsReadOnlyTensorSpan(System.ReadOnlySpan`1<nativeint>)"
+        - "System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0> AsReadOnlyTensorSpan(System.ReadOnlySpan`1<System.Numerics.Tensors.NIndex>)"
+        - "System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0> AsReadOnlyTensorSpan(System.ReadOnlySpan`1<System.Numerics.Tensors.NRange>)"
+        - "System.Span`1<!0> GetSpan(System.ReadOnlySpan`1<nativeint>, int)"
+        - "System.Span`1<!0> GetSpan(System.ReadOnlySpan`1<System.Numerics.Tensors.NIndex>, int)"
+        - "bool TryGetSpan(System.ReadOnlySpan`1<nativeint>, int, ref System.Span`1<!0>)"
+        - "bool TryGetSpan(System.ReadOnlySpan`1<System.Numerics.Tensors.NIndex>, int, ref System.Span`1<!0>)"
+        - "void Clear()"
+        - "void Fill(!0)"
+        - "void CopyTo(System.Numerics.Tensors.TensorSpan`1<!0>)"
+        - "bool TryCopyTo(System.Numerics.Tensors.TensorSpan`1<!0>)"
+        - "void FlattenTo(System.Span`1<!0>)"
+        - "bool TryFlattenTo(System.Span`1<!0>)"
+        - "System.Numerics.Tensors.TensorDimensionSpan`1<!0> GetDimensionSpan(int)"
+        - "string ToString()"
+        - "string ToString(System.ReadOnlySpan`1<nativeint>)"
+        - "bool op_Equality(System.Numerics.Tensors.TensorSpan`1<!0>, System.Numerics.Tensors.TensorSpan`1<!0>)"
+        - "bool op_Inequality(System.Numerics.Tensors.TensorSpan`1<!0>, System.Numerics.Tensors.TensorSpan`1<!0>)"
+        - "System.Numerics.Tensors.TensorSpan`1<!0> op_Implicit(!0[])"
+        - "System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0> op_Implicit(System.Numerics.Tensors.TensorSpan`1<!0>)"
+      NestedTypes:
+        Enumerator: { All: True }
+    ReadOnlyTensorSpan`1:
+      Methods:
+        - "void .ctor(!0[])"
+        - "void .ctor(!0[], System.ReadOnlySpan`1<nativeint>)"
+        - "void .ctor(!0[], System.ReadOnlySpan`1<nativeint>, System.ReadOnlySpan`1<nativeint>)"
+        - "void .ctor(!0[], int, System.ReadOnlySpan`1<nativeint>, System.ReadOnlySpan`1<nativeint>)"
+        - "void .ctor(System.ReadOnlySpan`1<!0>)"
+        - "void .ctor(System.ReadOnlySpan`1<!0>, System.ReadOnlySpan`1<nativeint>)"
+        - "void .ctor(System.ReadOnlySpan`1<!0>, System.ReadOnlySpan`1<nativeint>, System.ReadOnlySpan`1<nativeint>)"
+        - "System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0> Slice(System.ReadOnlySpan`1<nativeint>)"
+        - "System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0> Slice(System.ReadOnlySpan`1<System.Numerics.Tensors.NIndex>)"
+        - "System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0> Slice(System.ReadOnlySpan`1<System.Numerics.Tensors.NRange>)"
+        - "nativeint get_FlattenedLength()"
+        - "bool get_HasAnyDenseDimensions()"
+        - "bool get_IsDense()"
+        - "bool get_IsEmpty()"
+        - "bool get_IsPinned()"
+        - "System.ReadOnlySpan`1<nativeint> get_Lengths()"
+        - "int get_Rank()"
+        - "System.ReadOnlySpan`1<nativeint> get_Strides()"
+        - "System.ReadOnlySpan`1<!0> GetSpan(System.ReadOnlySpan`1<nativeint>, int)"
+        - "System.ReadOnlySpan`1<!0> GetSpan(System.ReadOnlySpan`1<System.Numerics.Tensors.NIndex>, int)"
+        - "bool TryGetSpan(System.ReadOnlySpan`1<nativeint>, int, ref System.ReadOnlySpan`1<!0>)"
+        - "bool TryGetSpan(System.ReadOnlySpan`1<System.Numerics.Tensors.NIndex>, int, ref System.ReadOnlySpan`1<!0>)"
+        - "void FlattenTo(System.Span`1<!0>)"
+        - "bool TryFlattenTo(System.Span`1<!0>)"
+        - "System.Numerics.Tensors.TensorDimensionSpan`1<!0> GetDimensionSpan(int)"
+        - "string ToString()"
+        - "string ToString(System.ReadOnlySpan`1<nativeint>)"
+        - "bool op_Equality(System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0>, System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0>)"
+        - "bool op_Inequality(System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0>, System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0>)"
+        - "System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0> op_Implicit(!0[])"
+        - "System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0> op_Implicit(System.ReadOnlySpan`1<!0>)"
+        - "System.Numerics.Tensors.ReadOnlyTensorSpan`1<!0> op_Implicit(System.Numerics.Tensors.TensorSpan`1<!0>)"
+      NestedTypes:
+        Enumerator: { All: True }
   System.Reflection:
     Assembly:
       Methods:

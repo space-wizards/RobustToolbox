@@ -22,6 +22,8 @@
     <PackageReference Include="BenchmarkDotNet" PrivateAssets="none" />
 
     <PackageReference Include="JetBrains.Annotations" />
+
+    <PackageReference Include="System.Numerics.Tensors" />
     <PackageReference Include="YamlDotNet" />
     <PackageReference Include="prometheus-net" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">

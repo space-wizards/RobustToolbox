@@ -6,7 +6,7 @@ using Robust.Shared.Serialization.Manager;
 
 namespace Robust.UnitTesting.Shared.GameObjects;
 
-[TestFixture, TestOf(typeof(EntityManager))]
+[TestOf(typeof(EntityManager))]
 internal sealed class EntityManagerSingletonTests : OurRobustUnitTest
 {
     private const string TestSingleton1 = "T_TestSingleton1";
@@ -43,6 +43,11 @@ internal sealed class EntityManagerSingletonTests : OurRobustUnitTest
     }
 
     [Test]
+    [Description("""
+    Creates an entity with marker components 1-4, and ensures increasingly constrained Single<>() queries match it.
+    Then creates a second entity, and ensures queries fail.
+    Then deletes both, and ensures Single fails while TrySingle is fine.
+    """)]
     public void SingleEntity()
     {
         var mySingle = _entMan.Spawn(TestSingleton1);
@@ -52,10 +57,13 @@ internal sealed class EntityManagerSingletonTests : OurRobustUnitTest
         var single3 = _entMan.Single<Marker1Component, Marker2Component, Marker3Component>();
         var single4 = _entMan.Single<Marker1Component, Marker2Component, Marker3Component, Marker4Component>();
 
-        Assert.That(mySingle, NUnit.Framework.Is.EqualTo(single1.Owner));
-        Assert.That(mySingle, NUnit.Framework.Is.EqualTo(single2.Owner));
-        Assert.That(mySingle, NUnit.Framework.Is.EqualTo(single3.Owner));
-        Assert.That(mySingle, NUnit.Framework.Is.EqualTo(single4.Owner));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(mySingle, NUnit.Framework.Is.EqualTo(single1.Owner));
+            Assert.That(mySingle, NUnit.Framework.Is.EqualTo(single2.Owner));
+            Assert.That(mySingle, NUnit.Framework.Is.EqualTo(single3.Owner));
+            Assert.That(mySingle, NUnit.Framework.Is.EqualTo(single4.Owner));
+        }
 
         var bonusSingle = _entMan.Spawn(TestSingleton1);
 

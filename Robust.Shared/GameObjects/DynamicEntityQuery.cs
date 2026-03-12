@@ -297,7 +297,8 @@ public readonly struct DynamicEntityQuery
 #if DEBUG
         // Anti-misuse assertions, store enumerators for every entry and Reset() them constantly so that
         // if you update the ECS while we're enumerating it blows up.
-        // This does mean DynamicEntityQuery allocates in debug.
+        // This does mean DynamicEntityQuery allocates in debug, but it also means I won't have to sort through
+        // all the ways content code breaks basic assumptions down the line because it'll explode in tests.
         private readonly Dictionary<EntityUid, IComponent>.Enumerator[] _mines;
 #endif
 

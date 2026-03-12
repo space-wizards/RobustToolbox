@@ -27,7 +27,9 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
     protected TextWriter TestOut = default!;
     protected TextWriter? Gravestone = default!;
     public Stopwatch Watch { get; } = new();
-    public List<string> TestHistory { get; } = new();
+
+    private List<TestHistoryEntry> _testHistory = new();
+    public IReadOnlyList<TestHistoryEntry> ExtendedTestHistory => _testHistory;
     public PairSettings Settings { get; set; } = default!;
 
     public readonly PoolTestLogHandler ServerLogHandler = new("SERVER");
@@ -153,10 +155,12 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
 
     public async Task AddToHistory(string testName)
     {
-        TestHistory.Add(testName);
+        var memUse = GC.GetTotalMemory(false);
+        var entry = new TestHistoryEntry(testName, memUse);
+        _testHistory.Add(entry);
         if (Gravestone is not null)
         {
-            await Gravestone.WriteLineAsync($"#{TestHistory.Count}: {testName}");
+            await Gravestone.WriteLineAsync($"#{_testHistory.Count}: {entry}");
             await Gravestone.FlushAsync();
         }
     }

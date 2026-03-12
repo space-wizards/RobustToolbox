@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Pool;
 
+[NotContentImplementable]
 public interface ITestPair
 {
     int Id { get; }
@@ -12,7 +15,10 @@ public interface ITestPair
     public PairState State { get; }
     public bool Initialized { get; }
     void Kill();
-    List<string> TestHistory { get; }
+
+    [Obsolete("Constructed on the spot when needed, use ExtendedTestHistory instead.")]
+    List<string> TestHistory => ExtendedTestHistory.Select(x => x.TestName).ToList();
+    IReadOnlyList<TestHistoryEntry> ExtendedTestHistory { get; }
     PairSettings Settings { get; set; }
 
     int ServerSeed { get; }

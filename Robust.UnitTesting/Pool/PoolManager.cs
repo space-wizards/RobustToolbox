@@ -128,10 +128,10 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
             foreach (var pair in pairs)
             {
                 var borrowed = Pairs[pair];
-                builder.AppendLine($"Pair {pair.Id}, Tests Run: {pair.TestHistory.Count}, Borrowed: {borrowed}");
-                for (var i = 0; i < pair.TestHistory.Count; i++)
+                builder.AppendLine($"Pair {pair.Id}, Tests Run: {pair.ExtendedTestHistory.Count}, Borrowed: {borrowed}");
+                for (var i = 0; i < pair.ExtendedTestHistory.Count; i++)
                 {
-                    builder.AppendLine($"#{i}: {pair.TestHistory[i]}");
+                    builder.AppendLine($"#{i}: {pair.ExtendedTestHistory[i]}");
                 }
             }
 

@@ -5,7 +5,8 @@ namespace Robust.Shared.GameObjects;
 
 public partial class EntityManager
 {
-    public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent
+    public EntityQuery<TComp1> GetEntityQuery<TComp1>()
+        where TComp1 : IComponent
     {
         DebugTools.Assert(_entTraitArray.Length > CompIdx.ArrayIndex<TComp1>(),
             $"Unknown component: {typeof(TComp1).Name}");
@@ -30,13 +31,17 @@ public partial class EntityManager
 
         for (var i = 0; i < userEntries.Length; i++)
         {
-            entries[i] = new(_entTraitDict[userEntries[i].Item1], userEntries[i].Item2);
+            var entry = userEntries[i];
+            DebugTools.Assert(_entTraitDict.ContainsKey(entry.Item1), $"Unknown component: {entry.Item1.Name}");
+            entries[i] = new(_entTraitDict[entry.Item1], entry.Item2);
         }
 
         return new DynamicEntityQuery(entries, _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()]);
     }
 
-    public EntityQuery<TComp1, TComp2> GetEntityQuery<TComp1, TComp2>() where TComp1 : IComponent where TComp2 : IComponent
+    public EntityQuery<TComp1, TComp2> GetEntityQuery<TComp1, TComp2>()
+        where TComp1 : IComponent
+        where TComp2 : IComponent
     {
         var dyQuery = GetDynamicQuery((typeof(TComp1), DynamicEntityQuery.QueryFlags.None),
             (typeof(TComp2), DynamicEntityQuery.QueryFlags.None));
@@ -44,7 +49,10 @@ public partial class EntityManager
         return new(dyQuery, this);
     }
 
-    public EntityQuery<TComp1, TComp2, TComp3> GetEntityQuery<TComp1, TComp2, TComp3>() where TComp1 : IComponent where TComp2 : IComponent where TComp3 : IComponent
+    public EntityQuery<TComp1, TComp2, TComp3> GetEntityQuery<TComp1, TComp2, TComp3>()
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
     {
         var dyQuery = GetDynamicQuery((typeof(TComp1), DynamicEntityQuery.QueryFlags.None),
             (typeof(TComp2), DynamicEntityQuery.QueryFlags.None),
@@ -53,7 +61,11 @@ public partial class EntityManager
         return new(dyQuery, this);
     }
 
-    public EntityQuery<TComp1, TComp2, TComp3, TComp4> GetEntityQuery<TComp1, TComp2, TComp3, TComp4>() where TComp1 : IComponent where TComp2 : IComponent where TComp3 : IComponent where TComp4 : IComponent
+    public EntityQuery<TComp1, TComp2, TComp3, TComp4> GetEntityQuery<TComp1, TComp2, TComp3, TComp4>()
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+        where TComp4 : IComponent
     {
         var dyQuery = GetDynamicQuery((typeof(TComp1), DynamicEntityQuery.QueryFlags.None),
             (typeof(TComp2), DynamicEntityQuery.QueryFlags.None),

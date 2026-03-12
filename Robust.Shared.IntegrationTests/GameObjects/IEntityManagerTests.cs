@@ -32,10 +32,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(newEnt, Is.Not.EqualTo(EntityUid.Invalid));
         }
 
-        /// <summary>
-        /// The entity prototype can define field on the TransformComponent, just like any other component.
-        /// </summary>
         [Test]
+        [Description("""
+        Tests that a three-component EntityQuery behaves as expected.
+        This covers the backend for EntityQuery`2 and EntityQuery`4 as well due to shared code.
+        """)]
         public void EntityQuery3_Works()
         {
             var sim = SimulationFactory();
@@ -65,6 +66,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Test]
+        [Description("""
+        Tests DynamicEntityQuery behavior with Without and Optional, ensuring they behave as expected.
+        Uses a few maps and blank entities as test subjects.
+        """)]
         public void DynamicQueryTest_OptionalWithout()
         {
             var sim = SimulationFactory();
@@ -75,17 +80,20 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var entMan = sim.Resolve<IEntityManager>();
 
+            // Should contain all spawned entities.
             var queryAll = entMan.GetDynamicQuery(
                 (typeof(TransformComponent), DynamicEntityQuery.QueryFlags.None),
                 (typeof(MetaDataComponent), DynamicEntityQuery.QueryFlags.None)
                 );
 
+            // Should contain all spawned entities.
             var queryAllAndMaps = entMan.GetDynamicQuery(
                 (typeof(TransformComponent), DynamicEntityQuery.QueryFlags.None),
                 (typeof(MetaDataComponent), DynamicEntityQuery.QueryFlags.None),
                 (typeof(MapComponent), DynamicEntityQuery.QueryFlags.Optional)
             );
 
+            // Should only contain the non-map entities.
             var queryNotMaps = entMan.GetDynamicQuery(
                 (typeof(TransformComponent), DynamicEntityQuery.QueryFlags.None),
                 (typeof(MetaDataComponent), DynamicEntityQuery.QueryFlags.None),
@@ -100,6 +108,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             while (queryAllEnum.MoveNext(out _, buffer[0..2]))
             {
                 queryAllCount += 1;
+                // Ensure components get filled out as we expect, only meta and transform.
                 using (Assert.EnterMultipleScope())
                 {
                     Assert.That(buffer[0], NUnit.Framework.Is.TypeOf<TransformComponent>());
@@ -107,7 +116,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 }
             }
 
-            Assert.That(queryAllCount, NUnit.Framework.Is.EqualTo(4));
+            Assert.That(queryAllCount, NUnit.Framework.Is.EqualTo(4), "Expected to iterate all entities");
 
             var queryAllAndMapsEnum = queryAllAndMaps.GetEnumerator(false);
             var queryAllAndMapsCount = 0;
@@ -132,8 +141,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(queryAllAndMapsCount, NUnit.Framework.Is.EqualTo(4));
-                Assert.That(mapCount, NUnit.Framework.Is.EqualTo(2));
+                Assert.That(queryAllAndMapsCount, NUnit.Framework.Is.EqualTo(4), "Expected to iterate all entities.");
+                Assert.That(mapCount, NUnit.Framework.Is.EqualTo(2), "Expected to pick up both maps in the query.");
             }
 
             var queryNotMapsEnum = queryNotMaps.GetEnumerator(false);
@@ -148,14 +157,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     {
                         Assert.That(buffer[0], NUnit.Framework.Is.TypeOf<TransformComponent>());
                         Assert.That(buffer[1], NUnit.Framework.Is.TypeOf<MetaDataComponent>());
-                        Assert.That(buffer[2], NUnit.Framework.Is.Null);
-                        Assert.That(entMan.HasComponent<MapComponent>(ent), NUnit.Framework.Is.False);
+                        Assert.That(buffer[2], NUnit.Framework.Is.Null, "Without constraints should never fill their slot.");
+                        Assert.That(entMan.HasComponent<MapComponent>(ent), NUnit.Framework.Is.False, "Without constraints shouldn't return entities that match it.");
                     }
                 }
             }
 
 
-            Assert.That(queryNotMapsCount, NUnit.Framework.Is.EqualTo(2));
+            Assert.That(queryNotMapsCount, NUnit.Framework.Is.EqualTo(2), "Expected to only iterate non-maps.");
         }
 
         [Test]

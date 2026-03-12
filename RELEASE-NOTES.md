@@ -63,7 +63,9 @@ END TEMPLATE-->
   `AllEntityQueryEnumerator<TComp1, TComp2, TComp3>`, `AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>`,
   and `ComponentQueryEnumerator` are now obsolete.
 - The EntityManager methods `EntityQuery<TComp1>`, `EntityQuery<TComp1, TComp2>`, `EntityQuery<TComp1, TComp2, TComp3>`,
-  and `EntityQuery<TComp1, TComp2, TComp3, TComp4>` are now obsolete.
+  and `EntityQuery<TComp1, TComp2, TComp3, TComp4>`, `EntityQueryEnumerator`, `AllEntityQueryEnumerator`,
+  `ComponentQueryEnumerator`, `AllComponentsList`, `AllEntityUids`, `AllEntityUids`, `AllEntities`, and `AllComponents`
+  are now obsolete.
 
 ### Internal
 

@@ -120,7 +120,17 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        // If true the side Vscroll bar will not appear
+        /// <summary>
+        /// Controls the visibility of the vertical scroll bar, overriding the default visibility behavior.
+        /// When <see langword="true"/>, the vertical scroll bar will never be shown, even if the content
+        /// overflows vertically. When <see langword="false"/>, the scroll bar is always shown if vertical
+        /// scrolling is enabled. When <see langword="null"/>, visibility falls back to the style property
+        /// <c>VScrollBarHidden</c>, or defaults to automatic behavior based on content size.
+        /// </summary>
+        /// <remarks>
+        /// This does not disable vertical scrolling — see <see cref="VScrollEnabled"/> for that.
+        /// Changing this value will trigger a layout re-arrange via <see cref="Control.InvalidateArrange"/>.
+        /// </remarks>
         public bool? VScrollBarHidden
         {
             get => _vScrollBarHidden;
@@ -131,7 +141,17 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        // If true the bottom Hscroll bar will not appear
+        /// <summary>
+        /// Controls the visibility of the horizontal scroll bar, overriding the default visibility behavior.
+        /// When <see langword="true"/>, the horizontal scroll bar will never be shown, even if the content
+        /// overflows horizontally. When <see langword="false"/>, the scroll bar is always shown if horizontal
+        /// scrolling is enabled. When <see langword="null"/>, visibility falls back to the style property
+        /// <c>HScrollBarHidden</c>, or defaults to automatic behavior based on content size.
+        /// </summary>
+        /// <remarks>
+        /// This does not disable horizontal scrolling — see <see cref="HScrollEnabled"/> for that.
+        /// Changing this value will trigger a layout re-arrange via <see cref="Control.InvalidateArrange"/>.
+        /// </remarks>
         public bool? HScrollBarHidden
         {
             get => _hScrollBarHidden;

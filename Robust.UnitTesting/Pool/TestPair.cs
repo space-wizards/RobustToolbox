@@ -141,12 +141,12 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
         if (Settings.ServerSeed is { } severSeed)
         {
             ServerSeed = severSeed;
-            sRand.SetSeed(ServerSeed);
+            sRand.DebugSetSeed(ServerSeed);
         }
         else
         {
             ServerSeed = _nextServerSeed;
-            sRand.SetSeed(ServerSeed);
+            sRand.DebugSetSeed(ServerSeed);
             _nextServerSeed = sRand.Next();
         }
 
@@ -154,12 +154,12 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
         if (Settings.ClientSeed is { } clientSeed)
         {
             ClientSeed = clientSeed;
-            cRand.SetSeed(ClientSeed);
+            cRand.DebugSetSeed(ClientSeed);
         }
         else
         {
             ClientSeed = _nextClientSeed;
-            cRand.SetSeed(ClientSeed);
+            cRand.DebugSetSeed(ClientSeed);
             _nextClientSeed = cRand.Next();
         }
     }

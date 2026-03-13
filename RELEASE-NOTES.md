@@ -36,10 +36,32 @@ END TEMPLATE-->
 ### Breaking changes
 
 - `Prototype<T>`, a precursor to `ProtoId<T>` used by toolshed, has been removed.
+- On IRobustRandom, the following have been removed from the interface and are now extension methods on
+  `RandomExtensions`:
+  - `float NextFloat(float minValue, float maxValue)`
+  - `float NextFloat(float maxValue)`
+  - `byte NextByte()`
+  - `byte NextByte(byte maxValue)`
+  - `byte NextByte(byte minValue, byte maxValue)`
+  - `Next(double maxValue)`
+  - `NextDouble(double minValue, double maxValue)`
+  - `Angle NextAngle()`
+  - `Angle NextAngle(Angle maxValue)`
+  - `Angle NextAngle(Angle minValue, Angle maxValue)`
+  - `Vector2 NextVector2(float maxMagnitude = 1)`
+  - `Vector2 NextVector2(float minMagnitude, float maxMagnitude)`
+  - `Vector2 NextVector2Box(float minX, float minY, float maxX, float maxY)`
+  - `Vector2 NextVector2Box(float maxAbsX = 1, float maxAbsY = 1)`
+  - `void Shuffle<T>(IList<T> list)`
+  - `void Shuffle<T>(Span<T> list)`
+  - `void Shuffle<T>(ValueList<T> list)`
 
 ### New features
 
-*None yet*
+- `TItem PickCollection<TItem>(ICollection<TItem> collection)` and `TItem PickAndTakeCollection<TItem>(ICollection<TItem> set)`
+  were added as extensions for `IRobustRandom` to ensure parity with the deprecated `System.Random` APIs.
+- `RobustRandom` now has two additional constructors that take a seed and existing randomizer to seed from, respectively.
+- `IRobustRandom.DebugSetSeed()` was added for debugging/testing scenarios where the ability to set the global seed is required.
 
 ### Bugfixes
 
@@ -49,7 +71,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+- `IRobustRandom.SetSeed()` is now deprecated. If you need a seeded randomizer, please construct a new `RobustRandom`.
 
 ### Internal
 

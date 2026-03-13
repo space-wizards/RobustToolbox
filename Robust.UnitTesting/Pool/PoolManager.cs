@@ -16,6 +16,14 @@ namespace Robust.UnitTesting.Pool;
 
 public abstract class BasePoolManager
 {
+    /// <summary>
+    ///     Stores a global count for pair IDs, so they're unique across the entire run regardless of how many pools we
+    ///     create and use.
+    ///
+    ///     This ensures things like gravestone files are truly unique.
+    /// </summary>
+    internal static int PairIdCounter = 0;
+
     internal abstract void Return(ITestPair pair);
     public abstract Assembly[] ClientAssemblies { get; }
     public abstract Assembly[] ServerAssemblies { get; }
@@ -35,7 +43,6 @@ public abstract class BasePoolManager
 [Virtual]
 public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair, new()
 {
-    private int _nextPairId;
     private readonly Lock _pairLock = new();
     private bool _initialized;
 
@@ -279,9 +286,8 @@ we are just going to end this here to save a lot of time. This is the exception 
     {
         try
         {
-            var id = Interlocked.Increment(ref _nextPairId);
+            var id = Interlocked.Increment(ref PairIdCounter);
             var pair = new TPair();
-
 
             TextWriter? gravestone = null;
             if (context is NUnitTestContextWrap)

@@ -124,10 +124,16 @@ public partial class TestPair<TServer, TClient>
 
         await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: Return of pair {Id} started");
         State = PairState.CleanDisposed;
-        await OnCleanDispose();
-        DebugTools.Assert(State is PairState.Dead or PairState.Ready);
-        ClearContext();
-        Manager.Return(this);
+        try
+        {
+            await OnCleanDispose();
+        }
+        finally
+        {
+            DebugTools.Assert(State is PairState.Dead or PairState.Ready);
+            ClearContext();
+            Manager.Return(this);
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -139,9 +145,15 @@ public partial class TestPair<TServer, TClient>
                 break;
             case PairState.InUse:
                 await TestOut.WriteLineAsync($"{nameof(DisposeAsync)}: Dirty return of pair {Id} started");
-                await OnDirtyDispose();
-                ClearContext();
-                Manager.Return(this);
+                try
+                {
+                    await OnDirtyDispose();
+                }
+                finally
+                {
+                    ClearContext();
+                    Manager.Return(this);
+                }
                 break;
             default:
                 throw new Exception($"{nameof(DisposeAsync)}: Unexpected state. Pair: {Id}. State: {State}.");

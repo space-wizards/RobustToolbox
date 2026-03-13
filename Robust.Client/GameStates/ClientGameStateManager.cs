@@ -942,7 +942,7 @@ namespace Robust.Client.GameStates
                 }
                 catch (Exception e)
                 {
-                    _sawmill.Error($"Caught exception while updating entity broadphases");
+                    _sawmill.Error($"Caught exception while updating entity broadphases: {e}");
                     _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)}");
                 }
             }
@@ -956,7 +956,7 @@ namespace Robust.Client.GameStates
                 }
                 catch (Exception e)
                 {
-                    _sawmill.Error($"Caught exception while deleting entities");
+                    _sawmill.Error($"Caught exception while deleting entities: {e}");
                     _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)}");
 #if !EXCEPTION_TOLERANCE
                     throw;

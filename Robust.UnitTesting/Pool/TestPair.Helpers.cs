@@ -211,7 +211,8 @@ public partial class TestPair<TServer, TClient>
     {
         if (Client.Session is null)
         {
-            // Already synced. Run a tick on server.
+            // Already synced, because the client isn't connected so we have nothing *to* sync.
+            // Run a tick on server.
             await Server.WaitRunTicks(1);
             return;
         }

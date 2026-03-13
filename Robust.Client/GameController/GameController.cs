@@ -30,6 +30,7 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.DataMetrics;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -102,6 +103,7 @@ namespace Robust.Client
         [Dependency] private readonly LoadingScreenManager _loadscr = default!;
         [Dependency] private readonly ITransferManager _transfer = default!;
         [Dependency] private readonly ClientTransferTestManager _transferTest = default!;
+        [Dependency] private readonly IMeterFactoryInternal _meterFactory = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -425,6 +427,8 @@ namespace Robust.Client
             {
                 _configurationManager.OverrideConVars(_commandLineArgs.CVars);
             }
+
+            _meterFactory.Initialize();
 
             ProfileOptSetup.Setup(_configurationManager);
 

@@ -91,14 +91,25 @@ public partial class TestPair<TServer, TClient>
             return;
         }
 
-        var sRuntimeLog = Server.Resolve<IRuntimeLog>();
-        if (sRuntimeLog.ExceptionCount > 0)
-            throw new Exception($"{nameof(CleanReturnAsync)}: Server logged exceptions");
-        var cRuntimeLog = Client.Resolve<IRuntimeLog>();
-        if (cRuntimeLog.ExceptionCount > 0)
-            throw new Exception($"{nameof(CleanReturnAsync)}: Client logged exceptions");
+        try
+        {
+            var sRuntimeLog = Server.Resolve<IRuntimeLog>();
+            if (sRuntimeLog.ExceptionCount > 0)
+                throw new Exception($"{nameof(CleanReturnAsync)}: Server logged exceptions");
+            var cRuntimeLog = Client.Resolve<IRuntimeLog>();
+            if (cRuntimeLog.ExceptionCount > 0)
+                throw new Exception($"{nameof(CleanReturnAsync)}: Client logged exceptions");
 
-        ReportErrorLogs();
+            ReportErrorLogs();
+        }
+        catch (Exception)
+        {
+            Kill();
+            await ReallyBeIdle();
+            await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: Dirty disposed in {Watch.Elapsed.TotalMilliseconds} ms");
+            Assert.Warn("Test was dirty-disposed.");
+            throw;
+        }
 
         var returnTime = Watch.Elapsed;
         await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: PoolManager took {returnTime.TotalMilliseconds} ms to put pair {Id} back into the pool");

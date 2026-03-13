@@ -11,4 +11,41 @@
         This is also preferable if you may have already looked up the component, saving on lookup time.
     </remarks>
   </entry>
+  <entry name="EntityQueryT">
+    <summary>
+        An index of all entities with a given component, avoiding looking up the component's storage every time.
+        Using these saves on dictionary lookups, making your code slightly more efficient, and ties in nicely with
+        <see cref="Entity{T}"/>.
+    </summary>
+    <example>
+        <code>
+            public sealed class MySystem : EntitySystem
+            {
+                [Dependency] private EntityQuery&lt;TransformComponent&gt; _transforms = default!;
+                <br/>
+                public void Update(float ft)
+                {
+                    foreach (var ent in _transforms)
+                    {
+                        // iterate matching entities, excluding paused ones.
+                    }
+                }
+                <br/>
+                public void DoThings(EntityUid myEnt)
+                {
+                    var ent = _transforms.Get(myEnt);
+                    // ...
+                }
+            }
+        </code>
+    </example>
+    <remarks>
+        Queries hold references to <see cref="IEntityManager"/> internals, and are always up to date with the world.
+        They can not however perform mutation, if you need to add or remove components you must use
+        <see cref="EntitySystem"/> or <see cref="IEntityManager"/> methods.
+    </remarks>
+    <seealso cref="M:Robust.Shared.GameObjects.EntitySystem.GetEntityQuery``1">EntitySystem.GetEntityQuery()</seealso>
+    <seealso cref="M:Robust.Shared.GameObjects.EntityManager.GetEntityQuery``1">EntityManager.GetEntityQuery()</seealso>
+
+  </entry>
 </entries>

@@ -32,7 +32,7 @@ public sealed class PoolTestLogHandler : ILogHandler
 
     public IReadOnlyList<string> FailingLogs => _failingLogs;
 
-    private List<string> _failingLogs = new();
+    private readonly List<string> _failingLogs = new();
 
     public PoolTestLogHandler(string? prefix)
     {
@@ -72,6 +72,7 @@ public sealed class PoolTestLogHandler : ILogHandler
     public void ClearContext()
     {
         ActiveContext = null;
+        _failingLogs.Clear();
     }
 
     public void ActivateContext(TextWriter context)

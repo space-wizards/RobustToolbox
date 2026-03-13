@@ -41,6 +41,12 @@ public sealed class PoolTestLogHandler : ILogHandler
 
     public bool ShuttingDown;
 
+    /// <summary>
+    ///     Event handler that allows you to override a potential failing log.
+    ///     Use this if you want to allow certain error logs to be considered passing.
+    /// </summary>
+    public event Func<string, LogEvent, bool>? JudgeLog;
+
     public void Log(string sawmillName, LogEvent message)
     {
         var level = message.Level.ToRobust();
@@ -62,7 +68,7 @@ public sealed class PoolTestLogHandler : ILogHandler
 
         testContext.WriteLine(line);
 
-        if (FailureLevel == null || level < FailureLevel)
+        if (FailureLevel == null || level < FailureLevel || (JudgeLog?.Invoke(sawmillName, message) ?? false))
             return;
 
         testContext.Flush();

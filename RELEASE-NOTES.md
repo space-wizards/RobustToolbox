@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+- `Prototype<T>`, a precursor to `ProtoId<T>` used by toolshed, has been removed.
 
 ### New features
 
@@ -43,6 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+- Toolshed commands trying to complete `EntProtoId` fields now actually return completion results.
 - UI styling and update limits are now disabled in testing through the `ui.obey_update_limits` cvar. This cvar is only
   functional in debug builds of engine.
 

@@ -70,8 +70,17 @@ public partial class TestPair<TServer, TClient>
         bool ignoreTestPrototypes = true)
         where T : IComponent, new()
     {
-        if (!Server.Resolve<IComponentFactory>().TryGetRegistration<T>(out var reg)
-            && !Client.Resolve<IComponentFactory>().TryGetRegistration<T>(out reg))
+        IComponentFactory? factory = null;
+        if (Server.Resolve<IComponentFactory>().TryGetRegistration<T>(out var reg))
+        {
+            factory = Server.Resolve<IComponentFactory>();
+        }
+        else if (Client.Resolve<IComponentFactory>().TryGetRegistration<T>(out reg))
+        {
+            factory = Client.Resolve<IComponentFactory>();
+        }
+
+        if (factory is null || reg is null)
         {
             Assert.Fail($"Unknown component: {typeof(T).Name}");
             return new();
@@ -90,7 +99,7 @@ public partial class TestPair<TServer, TClient>
             if (ignoreTestPrototypes && IsTestPrototype(proto))
                 continue;
 
-            if (proto.Components.TryGetComponent(id, out var cmp))
+            if (proto.Components.TryGetComponent(factory, id, out var cmp))
                 list.Add((proto, (T)cmp));
         }
 

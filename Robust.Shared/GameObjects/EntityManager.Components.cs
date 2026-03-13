@@ -35,6 +35,7 @@ namespace Robust.Shared.GameObjects
         private const int ComponentCollectionCapacity = 1024;
         private const int EntityCapacity = 1024;
         private const int NetComponentCapacity = 8;
+        private static readonly Dictionary<EntityUid, IComponent> EmptyTraitDict = new();
 
         private FrozenDictionary<Type, Dictionary<EntityUid, IComponent>> _entTraitDict
             = FrozenDictionary<Type, Dictionary<EntityUid, IComponent>>.Empty;
@@ -192,14 +193,14 @@ namespace Robust.Shared.GameObjects
 
             var metadata = MetaQuery.GetComponent(target);
 
-            foreach (var (name, entry) in registry)
+            foreach (var srcComp in registry.Components())
             {
-                var reg = _componentFactory.GetRegistration(name);
+                var reg = _componentFactory.GetRegistration(srcComp);
 
                 if (removeExisting)
                 {
                     var comp = _componentFactory.GetComponent(reg);
-                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    _serManager.CopyTo(srcComp, ref comp, notNullableOverride: true);
                     AddComponentInternal(target, comp, reg, overwrite: true, metadata: metadata);
                 }
                 else
@@ -210,7 +211,7 @@ namespace Robust.Shared.GameObjects
                     }
 
                     var comp = _componentFactory.GetComponent(reg);
-                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    _serManager.CopyTo(srcComp, ref comp, notNullableOverride: true);
                     AddComponentInternal(target, comp, reg, overwrite: false, metadata: metadata);
                 }
             }
@@ -231,9 +232,9 @@ namespace Robust.Shared.GameObjects
 
             var metadata = MetaQuery.GetComponent(target);
 
-            foreach (var entry in registry.Values)
+            foreach (var entry in registry.Components())
             {
-                RemoveComponent(target, entry.Component.GetType(), metadata);
+                RemoveComponent(target, entry.GetType(), metadata);
             }
         }
 
@@ -1387,6 +1388,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete($"Use {nameof(ComponentFilterQuery)} instead.")]
         public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry)
         {
             if (registry.Count == 0)
@@ -2101,6 +2103,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Returns entities that match the ComponentRegistry.
     /// </summary>
+    [Obsolete($"Use {nameof(ComponentFilterQuery)} instead.")]
     public struct CompRegistryEntityEnumerator : IDisposable
     {
         private IEntityManager _entManager;

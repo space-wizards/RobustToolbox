@@ -209,6 +209,13 @@ public partial class TestPair<TServer, TClient>
     /// </summary>
     public async Task RunUntilSynced()
     {
+        if (Client.Session is null)
+        {
+            // Already synced. Run a tick on server.
+            await Server.WaitRunTicks(1);
+            return;
+        }
+
         var sGameTiming = Server.Timing;
         var cGameTiming = (IClientGameTiming)Client.Timing;
         var startTime = sGameTiming.CurTick;

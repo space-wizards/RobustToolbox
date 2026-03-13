@@ -36,11 +36,11 @@ using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
-using Robust.Shared.Toolshed;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using Serilog.Debugging;
@@ -111,6 +111,7 @@ namespace Robust.Server
         [Dependency] private readonly IReflectionManager _refMan = default!;
         [Dependency] private readonly ITransferManager _transfer = default!;
         [Dependency] private readonly ServerTransferTestManager _transferTest = default!;
+        [Dependency] private readonly IHttpManagerInternal _http = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -676,6 +677,7 @@ namespace Robust.Server
         // called right before main loop returns, do all saving/cleanup in here
         public void Cleanup()
         {
+            _http.Shutdown();
             _replay.Shutdown();
 
             _modLoader.Shutdown();

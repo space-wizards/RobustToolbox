@@ -50,14 +50,14 @@ public sealed class RobustRandom : IRobustRandom
 
     void IRobustRandom.SetSeed(int seed)
     {
-#if DEBUG || BENCHMARK
+#if DEBUG || ALLOW_BAD_PRACTICES
         _random = new(seed);
 #endif
     }
 
     public void DebugSetSeed(int seed)
     {
-#if DEBUG || BENCHMARK
+#if DEBUG || ALLOW_BAD_PRACTICES
         _random = new System.Random(seed);
 #endif
     }

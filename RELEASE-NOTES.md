@@ -55,6 +55,8 @@ END TEMPLATE-->
   - `void Shuffle<T>(IList<T> list)`
   - `void Shuffle<T>(Span<T> list)`
   - `void Shuffle<T>(ValueList<T> list)`
+- `IRobustRandom.SetSeed` now behaves identically to `IRobustRandom.DebugSetSeed`, i.e. does nothing in release.
+  For benchmarking and other uses that *really* need global seed set, define `ALLOW_BAD_PRACTICES` in your build.
 
 ### New features
 

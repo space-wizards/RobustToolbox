@@ -121,16 +121,16 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
-        /// Controls the visibility of the vertical scroll bar, overriding the default visibility behavior.
-        /// When <see langword="true"/>, the vertical scroll bar will never be shown, even if the content
-        /// overflows vertically. When <see langword="false"/>, the scroll bar is always shown if vertical
-        /// scrolling is enabled. When <see langword="null"/>, visibility falls back to the style property
-        /// <c>VScrollBarHidden</c>, or defaults to automatic behavior based on content size.
+        /// <para>
+        ///     Prevents the vertical scrollbar from being visible when <see langword="true"/>, and allows it to be visible when <see langword="false"/>.
+        ///     When <see langword="null"/>, falls back to the value of the style property instead.
+        /// </para>
+        /// <para>
+        ///    This is an override for the <see langword="bool"/> style property of the same name. Said style property mirrors the behavior of this property, and defaults to <see langword="false"/>.
+        /// </para>
         /// </summary>
-        /// <remarks>
-        /// This does not disable vertical scrolling — see <see cref="VScrollEnabled"/> for that.
-        /// Changing this value will trigger a layout re-arrange via <see cref="Control.InvalidateArrange"/>.
-        /// </remarks>
+        /// <seealso cref="VScrollEnabled"/>
+        /// <seealso cref="HScrollBarHidden"/>
         public bool? VScrollBarHidden
         {
             get => _vScrollBarHidden;
@@ -142,16 +142,16 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
-        /// Controls the visibility of the horizontal scroll bar, overriding the default visibility behavior.
-        /// When <see langword="true"/>, the horizontal scroll bar will never be shown, even if the content
-        /// overflows horizontally. When <see langword="false"/>, the scroll bar is always shown if horizontal
-        /// scrolling is enabled. When <see langword="null"/>, visibility falls back to the style property
-        /// <c>HScrollBarHidden</c>, or defaults to automatic behavior based on content size.
+        /// <para>
+        ///     Prevents the horizontal scrollbar from being visible when <see langword="true"/>, and allows it to be visible when <see langword="false"/>.
+        ///     When <see langword="null"/>, falls back to the value of the style property instead.
+        /// </para>
+        /// <para>
+        ///    This is an override for the <see langword="bool"/> style property of the same name. Said style property mirrors the behavior of this property, and defaults to <see langword="false"/>.
+        /// </para>
         /// </summary>
-        /// <remarks>
-        /// This does not disable horizontal scrolling — see <see cref="HScrollEnabled"/> for that.
-        /// Changing this value will trigger a layout re-arrange via <see cref="Control.InvalidateArrange"/>.
-        /// </remarks>
+        /// <seealso cref="HScrollEnabled"/>
+        /// <seealso cref="VScrollBarHidden"/>
         public bool? HScrollBarHidden
         {
             get => _hScrollBarHidden;

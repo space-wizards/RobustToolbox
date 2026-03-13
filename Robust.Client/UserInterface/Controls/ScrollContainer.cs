@@ -120,6 +120,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        // If true the side Vscroll bar will not appear
         public bool? VScrollBarHidden
         {
             get => _vScrollBarHidden;
@@ -130,6 +131,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        // If true the bottom Hscroll bar will not appear
         public bool? HScrollBarHidden
         {
             get => _hScrollBarHidden;

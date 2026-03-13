@@ -106,22 +106,7 @@ internal sealed class EntityManagerSingletonTests : OurRobustUnitTest
     }
 }
 
-internal sealed partial class Marker1Component : Component
-{
-
-}
-
-internal sealed partial class Marker2Component : Component
-{
-
-}
-
-internal sealed partial class Marker3Component : Component
-{
-
-}
-
-internal sealed partial class Marker4Component : Component
-{
-
-}
+internal sealed partial class Marker1Component : Component;
+internal sealed partial class Marker2Component : Component;
+internal sealed partial class Marker3Component : Component;
+internal sealed partial class Marker4Component : Component;

@@ -39,21 +39,55 @@ END TEMPLATE-->
 
 ### New features
 
-* If a sandbox error is caused by a compiler-generated method, the engine will now attempt to point out which using code is responsible.
-* Added `OrderedDictionary<TKey, TValue>` and `System.StringComparer` to the sandbox whitelist.
-* Added more overloads to `MapLoaderSystem` taking `TextReader`/`TextWriter` where appropriate.
+*None yet*
 
 ### Bugfixes
 
 - Toolshed commands trying to complete `EntProtoId` fields now actually return completion results.
+- UI styling and update limits are now disabled in testing through the `ui.obey_update_limits` cvar. This cvar is only
+  functional in debug builds of engine.
 
 ### Other
 
-* Public APIs involving `System.Random` have been obsoleted. Use `IRobustRandom`/`RobustRandom` and such instead.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 273.0.0
+
+### Breaking changes
+
+* `RemoveJoint(uid, id)` now accepts an optional recursive argument, which is true by default. This recursive argument controls whether or not relayed joints attached to the uid are also removed. Code that relies on relayed joints not being deleted should set the recursive argument to false.
+
+### New features
+
+* If a sandbox error is caused by a compiler-generated method, the engine will now attempt to point out which using code is responsible.
+* Added `OrderedDictionary<TKey, TValue>` and `System.StringComparer` to the sandbox whitelist.
+* Added more overloads to `MapLoaderSystem` taking `TextReader`/`TextWriter` where appropriate.
+* The tooltip when hovering an entry in the entity spawn panel now contains the entity's protoid as well as its description.
+* Added more info to the exception thrown when failing to validate a static `ProtoId` field in a generic class.
+* `EntityQuery`s can now be injected as dependencies using the `[Dependency]` attribute.
+* BUIs can now inject systems (and `EntityQuery`s) as dependencies.
+* Added `[Animatable]` to `SharedPointlightComponent.Offset`.
+* Added `[AlwaysPushInheritance]` to `UserInterfaceComponent.Interfaces`.
+* Added an analyzer to raise a warning for instances where a proxy method available within a class is not used (for example, calling `EntityManager.TryGetComponent` within an `EntitySystem` instead of using `TryComp`). A code fixer is also provided that can automatically correct such instances.
+* Added a new attribute `[ProxyFor]` which is used to mark a method as a proxy to a method in another class. The attribute has been applied to the methods in `EntitySystem.Proxy`.
+* `RemoveComponentImmediate` now throws an `InvalidOperationException` when attempting to remove a component that is in the PreAdd stage.
+
+### Bugfixes
+
+* Rectangle delete no longer deletes child entities of Actors.
+* Fixed `OSWindow` size on MacOS.
+* Fixed a potential exception when calling `EnsureComp(ref Entity<T>)` with only an `EntityUid` when the component is present on the entity.
+* Shader compilation is now wrapped in a try-catch block to prevent client crashes while developing shaders.
+* Fixed incorrect `UIBox2i.Center` calculation.
+
+### Other
+
+* Public APIs involving `System.Random` have been obsoleted. Use `IRobustRandom`/`RobustRandom` and such instead.
 
 
 ## 272.0.0

@@ -252,7 +252,7 @@ namespace Robust.UnitTesting.Server
             container.Register<INetworkedMapManager, NetworkedMapManager>();
             container.Register<IMapManagerInternal, NetworkedMapManager>();
             container.Register<ISerializationManager, SerializationManager>();
-            container.Register<IRobustRandom, RobustRandom>();
+            container.RegisterInstance<IRobustRandom>(new RobustRandom());
             container.Register<IPrototypeManager, ServerPrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();

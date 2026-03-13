@@ -12,6 +12,9 @@ namespace Robust.Client.UserInterface.Controls
         private bool _vScrollEnabled = true;
         private bool _hScrollEnabled = true;
 
+        private bool _vScrollBarHidden = false;
+        private bool _hScrollBarHidden = false;
+
         private bool _vScrollVisible;
         private bool _hScrollVisible;
 
@@ -117,6 +120,26 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public bool VScrollBarHidden
+        {
+            get => _vScrollBarHidden;
+            set
+            {
+                _vScrollBarHidden = value;
+                InvalidateArrange();
+            }
+        }
+
+        public bool HScrollBarHidden
+        {
+            get => _hScrollBarHidden;
+            set
+            {
+                _hScrollBarHidden = value;
+                InvalidateArrange();
+            }
+        }
+
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             if (_vScrollEnabled)
@@ -199,7 +222,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (sWidth < cWidth && _hScrollEnabled && !MathHelper.CloseTo(sWidth, cWidth, 1e-3))
                 {
-                    _hScrollBar.Visible = _hScrollVisible = true;
+                    _hScrollBar.Visible = _hScrollVisible = !_hScrollBarHidden;
                     _hScrollBar.Page = sWidth;
                     _hScrollBar.MaxValue = cWidth;
                 }
@@ -210,7 +233,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (sHeight < cHeight && _vScrollEnabled && !MathHelper.CloseTo(sHeight, cHeight, 1e-3))
                 {
-                    _vScrollBar.Visible = _vScrollVisible = true;
+                    _vScrollBar.Visible = _vScrollVisible = !_vScrollBarHidden;
                     _vScrollBar.Page = sHeight;
                     _vScrollBar.MaxValue = cHeight;
                 }
@@ -313,12 +336,12 @@ namespace Robust.Client.UserInterface.Controls
 
             var h = _hScrollBar.Value;
             var v = _vScrollBar.Value;
-            if (!_hScrollVisible)
+            if (!_hScrollEnabled)
             {
                 h = 0;
             }
 
-            if (!_vScrollVisible)
+            if (!_vScrollEnabled)
             {
                 v = 0;
             }

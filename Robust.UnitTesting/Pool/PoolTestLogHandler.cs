@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.Log;
@@ -28,6 +29,10 @@ public sealed class PoolTestLogHandler : ILogHandler
     public TextWriter? ActiveContext { get; private set; }
 
     public LogLevel? FailureLevel { get; set; }
+
+    public IReadOnlyList<string> FailingLogs => _failingLogs;
+
+    private List<string> _failingLogs = new();
 
     public PoolTestLogHandler(string? prefix)
     {
@@ -61,7 +66,7 @@ public sealed class PoolTestLogHandler : ILogHandler
             return;
 
         testContext.Flush();
-        Assert.Fail($"{line} Exception: {message.Exception}");
+        _failingLogs.Add($"{line} Exception: {message.Exception}");
     }
 
     public void ClearContext()

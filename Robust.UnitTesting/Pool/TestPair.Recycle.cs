@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using Robust.Client;
 using Robust.Shared;
 using Robust.Shared.Exceptions;
@@ -17,6 +18,22 @@ namespace Robust.UnitTesting.Pool;
 // This partial file contains logic related to recycling & disposing test pairs.
 public partial class TestPair<TServer, TClient>
 {
+    private void ReportErrorLogs()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            if (ServerLogHandler.FailingLogs.Count == 1)
+                Assert.Fail(ServerLogHandler.FailingLogs[0]);
+            else if (ServerLogHandler.FailingLogs.Count > 1)
+                Assert.Fail("Server had multiple failing logs reported, consult the game log.");
+
+            if (ClientLogHandler.FailingLogs.Count == 1)
+                Assert.Fail(ClientLogHandler.FailingLogs[0]);
+            else if (ClientLogHandler.FailingLogs.Count > 1)
+                Assert.Fail("Client had multiple failing logs reported, consult the game log.");
+        }
+    }
+
     private async Task OnDirtyDispose()
     {
         var usageTime = Watch.Elapsed;
@@ -25,6 +42,7 @@ public partial class TestPair<TServer, TClient>
         Kill();
         var disposeTime = Watch.Elapsed;
         await TestOut.WriteLineAsync($"{nameof(DisposeAsync)}: Disposed pair {Id} in {disposeTime.TotalMilliseconds} ms");
+        ReportErrorLogs();
         // Test pairs should only dirty dispose if they are failing. If they are not failing, this probably happened
         // because someone forgot to clean-return the pair.
         Assert.Warn("Test was dirty-disposed.");
@@ -79,6 +97,8 @@ public partial class TestPair<TServer, TClient>
         var cRuntimeLog = Client.Resolve<IRuntimeLog>();
         if (cRuntimeLog.ExceptionCount > 0)
             throw new Exception($"{nameof(CleanReturnAsync)}: Client logged exceptions");
+
+        ReportErrorLogs();
 
         var returnTime = Watch.Elapsed;
         await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: PoolManager took {returnTime.TotalMilliseconds} ms to put pair {Id} back into the pool");

@@ -49,6 +49,7 @@ END TEMPLATE-->
   is obtaining a pair.
 - ITestPair is now `[NotContentImplementable]` and future additions to the interface will not be considered breaking.
 - Erroneous logs in tests are now allowed to occur more than once, and assert a failure at the end of the test while doing pair cleanup instead of during it.
+- `Prototype<T>`, a precursor to `ProtoId<T>` used by toolshed, has been removed.
 
 ### New features
 
@@ -56,7 +57,9 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+- Toolshed commands trying to complete `EntProtoId` fields now actually return completion results.
+- UI styling and update limits are now disabled in testing through the `ui.obey_update_limits` cvar. This cvar is only
+  functional in debug builds of engine.
 
 ### Other
 

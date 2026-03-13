@@ -13,8 +13,7 @@ namespace Robust.UnitTesting.Pool;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This class logs to two places: an NUnit <see cref="TestContext"/>  (so it nicely gets attributed to a test in your IDE),
-/// and an in-memory ring buffer for diagnostic purposes. If test pooling breaks, the ring buffer can be used to see what the broken instance has gone through.
+/// This class logs to one place: an NUnit <see cref="TestContext"/> (so it nicely gets attributed to a test in your IDE)
 /// </para>
 /// <para>
 /// The active test context can be swapped out so pooled instances can correctly have their logs attributed.

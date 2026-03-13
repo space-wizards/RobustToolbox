@@ -12,8 +12,8 @@ namespace Robust.Client.UserInterface.Controls
         private bool _vScrollEnabled = true;
         private bool _hScrollEnabled = true;
 
-        private bool _vScrollBarHidden = false;
-        private bool _hScrollBarHidden = false;
+        private bool? _vScrollBarHidden = null;
+        private bool? _hScrollBarHidden = null;
 
         private bool _vScrollVisible;
         private bool _hScrollVisible;
@@ -120,7 +120,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public bool VScrollBarHidden
+        public bool? VScrollBarHidden
         {
             get => _vScrollBarHidden;
             set
@@ -130,7 +130,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public bool HScrollBarHidden
+        public bool? HScrollBarHidden
         {
             get => _hScrollBarHidden;
             set
@@ -139,6 +139,12 @@ namespace Robust.Client.UserInterface.Controls
                 InvalidateArrange();
             }
         }
+
+        private bool StyleVScrollBarHidden =>
+            _vScrollBarHidden ?? TryGetStyleProperty<bool>(nameof(VScrollBarHidden), out var v) && v;
+
+        private bool StyleHScrollBarHidden =>
+            _hScrollBarHidden ?? TryGetStyleProperty<bool>(nameof(HScrollBarHidden), out var v) && v;
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
@@ -222,7 +228,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (sWidth < cWidth && _hScrollEnabled && !MathHelper.CloseTo(sWidth, cWidth, 1e-3))
                 {
-                    _hScrollBar.Visible = _hScrollVisible = !_hScrollBarHidden;
+                    _hScrollBar.Visible = _hScrollVisible = !StyleHScrollBarHidden;
                     _hScrollBar.Page = sWidth;
                     _hScrollBar.MaxValue = cWidth;
                 }
@@ -233,7 +239,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (sHeight < cHeight && _vScrollEnabled && !MathHelper.CloseTo(sHeight, cHeight, 1e-3))
                 {
-                    _vScrollBar.Visible = _vScrollVisible = !_vScrollBarHidden;
+                    _vScrollBar.Visible = _vScrollVisible = !StyleVScrollBarHidden;
                     _vScrollBar.Page = sHeight;
                     _vScrollBar.MaxValue = cHeight;
                 }

@@ -48,6 +48,7 @@ END TEMPLATE-->
 - Test history now includes the GC total memory usage at time of AddToHistory() call. This is typically while the test
   is obtaining a pair.
 - ITestPair is now `[NotContentImplementable]` and future additions to the interface will not be considered breaking.
+- Erroneous logs in tests are now allowed to occur more than once, and assert a failure at the end of the test while doing pair cleanup instead of during it.
 
 ### New features
 

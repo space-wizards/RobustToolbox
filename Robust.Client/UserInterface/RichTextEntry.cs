@@ -128,7 +128,7 @@ namespace Robust.Client.UserInterface
             // Bear with me here.
             // I am so deeply sorry for the person adding stuff to this in the future.
 
-            Height = defaultFont.GetHeight(uiScale);
+            Height = 0;
             LineBreaks.Clear();
 
             int? breakLine;
@@ -136,6 +136,9 @@ namespace Robust.Client.UserInterface
             var context = new MarkupDrawingContext();
             context.Font.Push(defaultFont);
             context.Color.Push(_defaultColor);
+            
+            // Track maximum height for current line to handle non-standard font sizes
+            var maxCurrentLineHeight = defaultFont.GetHeight(uiScale);
 
             // Go over every node.
             // Nodes can change the markup drawing context and return additional text.
@@ -148,6 +151,11 @@ namespace Robust.Client.UserInterface
 
                 if (!context.Font.TryPeek(out var font))
                     font = defaultFont;
+
+                // Track the maximum height for the current line
+                var currentLineHeight = GetLineHeight(font, uiScale, lineHeightScale);
+                if (currentLineHeight > maxCurrentLineHeight)
+                    maxCurrentLineHeight = currentLineHeight;
 
                 // And go over every character.
                 foreach (var rune in text.EnumerateRunes())
@@ -181,6 +189,9 @@ namespace Robust.Client.UserInterface
 
             Width = wordWrap.FinalizeText(out breakLine);
             CheckLineBreak(ref this, breakLine);
+            
+            // Add the height of the final line (current line)
+            Height += maxCurrentLineHeight;
 
             return this;
 
@@ -205,11 +216,13 @@ namespace Robust.Client.UserInterface
             {
                 if (line is { } l)
                 {
+                    // Before adding a line break, add the current line's maximum height
+                    src.Height += maxCurrentLineHeight;
                     src.LineBreaks.Add(l);
-                    if (!context.Font.TryPeek(out var font))
-                        font = defaultFont;
-
-                    src.Height += GetLineHeight(font, uiScale, lineHeightScale);
+                    
+                    // Reset max height tracker for the next line to default font height
+                    // It will be updated as we process nodes in the next line
+                    maxCurrentLineHeight = defaultFont.GetHeight(uiScale);
                 }
             }
         }

@@ -14,6 +14,7 @@
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\MustCallBaseAttribute.cs" LogicalName="Robust.Shared.IoC.MustCallBaseAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\PreferNonGenericVariantForAttribute.cs" LogicalName="Robust.Shared.Analyzers.PreferNonGenericVariantForAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\PreferOtherTypeAttribute.cs" LogicalName="Robust.Shared.Analyzers.PreferOtherTypeAttribute.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Analyzers\ProxyForAttribute.cs" LogicalName="Robust.Shared.Analyzers.ProxyForAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\ForbidLiteralAttribute.cs" LogicalName="Robust.Shared.Analyzers.ForbidLiteralAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\ObsoleteInheritanceAttribute.cs" LogicalName="Robust.Shared.Analyzers.ObsoleteInheritanceAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\ValidateMemberAttribute.cs" LogicalName="Robust.Shared.Analyzers.ValidateMemberAttribute.cs" LinkBase="Implementations" />

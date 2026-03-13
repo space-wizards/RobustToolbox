@@ -39,7 +39,9 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+- `IEntityManager` has a new family of 1-4 component methods for working with *singleton entities*, entities which only
+  one instance of exists at a time for state management. Consult `IEntityManager.Single.cs` and the documentation for
+  details.
 
 ### Bugfixes
 

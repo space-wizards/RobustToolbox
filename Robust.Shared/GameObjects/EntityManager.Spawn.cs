@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects;
 
@@ -190,17 +189,20 @@ public partial class EntityManager
         ComponentRegistry? overrides = null)
     {
         uid = CreateEntityUninitialized(protoName, overrides);
+        var meta = MetaQuery.GetComponent(uid.Value);
+        InitializeAndStartEntity((uid.Value, meta), doMapInit: false);
 
-        if (_containers.Insert(uid.Value, container))
+        if (!_containers.Insert(uid.Value, container))
         {
-            var doMapInit = _mapSystem.IsInitialized(mapUid);
-            InitializeAndStartEntity(uid.Value, doMapInit);
-            return true;
+            DeleteEntity(uid);
+            uid = null;
+            return false;
         }
 
-        DeleteEntity(uid);
-        uid = null;
-        return false;
+        if (_mapSystem.IsInitialized(mapUid))
+            RunMapInit(uid.Value, meta);
+
+        return true;
     }
 
     public EntityUid SpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
@@ -209,10 +211,14 @@ public partial class EntityManager
         if (!xform.ParentUid.IsValid())
             return Spawn(protoName);
 
-        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
         var uid = CreateEntityUninitialized(protoName, overrides);
+        var meta = MetaQuery.GetComponent(uid);
+        InitializeAndStartEntity((uid, meta), doMapInit: false);
         _xforms.DropNextTo(uid, target);
-        InitializeAndStartEntity(uid, doMapInit);
+
+        if (_mapSystem.IsInitialized(xform.MapUid))
+            RunMapInit(uid, meta);
+
         return uid;
     }
 
@@ -238,8 +244,9 @@ public partial class EntityManager
     {
         inserted = true;
         xform ??= TransformQuery.GetComponent(containerUid);
-        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
         var uid = CreateEntityUninitialized(protoName, overrides);
+        var meta = MetaQuery.GetComponent(uid);
+        InitializeAndStartEntity((uid, meta), doMapInit: false);
 
         if ((containerComp == null && !TryGetComponent(containerUid, out containerComp))
              || !containerComp.Containers.TryGetValue(containerId, out var container)
@@ -250,7 +257,9 @@ public partial class EntityManager
                 _xforms.DropNextTo(uid, (containerUid, xform));
         }
 
-        InitializeAndStartEntity(uid, doMapInit);
+        if (_mapSystem.IsInitialized(xform.MapUid))
+            RunMapInit(uid, meta);
+
         return uid;
     }
 
@@ -274,8 +283,9 @@ public partial class EntityManager
     {
         inserted = true;
         xform ??= TransformQuery.GetComponent(container.Owner);
-        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
-        var uid = Spawn(protoName, overrides, doMapInit);
+        var uid = CreateEntityUninitialized(protoName, overrides);
+        var meta = MetaQuery.GetComponent(uid);
+        InitializeAndStartEntity((uid, meta), doMapInit: false);
 
         if (!_containers.Insert(uid, container))
         {
@@ -283,6 +293,9 @@ public partial class EntityManager
             if (xform.ParentUid.IsValid())
                 _xforms.DropNextTo(uid, (container.Owner, xform));
         }
+
+        if (_mapSystem.IsInitialized(xform.MapUid))
+            RunMapInit(uid, meta);
 
         return uid;
     }

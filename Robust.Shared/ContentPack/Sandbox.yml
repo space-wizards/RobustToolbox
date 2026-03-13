@@ -651,8 +651,6 @@ Types:
     Tensor`1:
       Methods: []
     TensorPrimitives: { All: True }
-    NIndex: { All: True }
-    NRange: { All: True }
   System.Reflection:
     Assembly:
       Methods:

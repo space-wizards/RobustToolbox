@@ -198,7 +198,10 @@ public sealed partial class ColorSelectorSliders : Control
 
     private void UpdateColorDescription()
     {
-        ColorDescriptionLabel.Text = ColorNaming.Describe(Color, _localization);
+        var name = ColorNaming.Describe(Color, _localization);
+
+        if (ColorDescriptionLabel.Text != name) // prevent redundant style updates
+            ColorDescriptionLabel.Text = name;
     }
 
     private void UpdateSliderVisuals()

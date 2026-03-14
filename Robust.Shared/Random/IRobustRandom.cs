@@ -20,7 +20,8 @@ namespace Robust.Shared.Random;
 /// </summary>
 /// <example>
 /// <code>
-///     // Optionally, seed your RNG. By default, the RNG is seeded randomly.
+///     // Use one of the constructors on IRobustRandom to create your randomizer.
+///     // This is the one for creating a randomizer with a given seed.
 ///     var myRng = new IRobustRandom.CreateSeeded(17);
 ///     <br/>
 ///     var fairDiceRoll = myRng.Next(1, 6); // Will be 4 with this seed.
@@ -29,13 +30,13 @@ namespace Robust.Shared.Random;
 public partial interface IRobustRandom
 {
     /// <summary> Get the underlying <see cref="Random"/>.</summary>
-    [Obsolete("Do not access the underlying implementation")]
+    [Obsolete("Do not access the underlying implementation, it will be changed and this will be removed.")]
     System.Random GetRandom();
 
     /// <summary>
     ///     Set seed for underlying <see cref="Random"/>.
     /// </summary>
-    [Obsolete($"Construct a new IRobustRandom instead of setting the seed. API was removed because people kept setting the global rng seed...")]
+    [Obsolete("Construct a new IRobustRandom instead of setting the seed. API was removed because people kept setting the global rng seed...")]
     void SetSeed(int seed);
 
     /// <summary>

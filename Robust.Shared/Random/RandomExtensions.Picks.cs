@@ -57,6 +57,45 @@ public static partial class RandomExtensions
         ///     Picks a random element from a collection.
         /// </summary>
         /// <remarks>
+        ///     This is O(1).
+        /// </remarks>
+        /// <param name="list">The collection to pick from.</param>
+        /// <typeparam name="TItem">The type of item in the collection.</typeparam>
+        /// <returns>The picked item.</returns>
+        [MustUseReturnValue]
+        public TItem Pick<TItem>(ReadOnlySpan<TItem> list)
+        {
+            var index = random.Next(list.Length);
+            return list[index];
+        }
+
+        /// <summary>
+        ///     Tries to pick a random element from a collection, failing if it is empty.
+        /// </summary>
+        /// <remarks>
+        ///     This is O(1).
+        /// </remarks>
+        /// <param name="list">The collection to pick from.</param>
+        /// <param name="item">The removed item if any.</param>
+        /// <typeparam name="TItem">The type of item in the collection.</typeparam>
+        /// <returns>Whether an item was successfully removed.</returns>
+        public bool TryPick<TItem>(ReadOnlySpan<TItem> list, [NotNullWhen(true)] out TItem? item)
+            where TItem : notnull
+        {
+            if (list.Length == 0)
+            {
+                item = default;
+                return false;
+            }
+
+            item = random.Pick(list);
+            return true;
+        }
+
+        /// <summary>
+        ///     Picks a random element from a collection.
+        /// </summary>
+        /// <remarks>
         ///     This is O(1). This has no Try variant due to returning a ref.
         /// </remarks>
         /// <param name="list">The collection to pick from.</param>

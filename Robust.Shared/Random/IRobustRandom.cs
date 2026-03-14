@@ -43,41 +43,57 @@ public partial interface IRobustRandom
     /// </summary>
     void DebugSetSeed(int seed);
 
-    /// <summary> Get random <see cref="float"/> value between 0 (included) and 1 (excluded). </summary>
+    /// <summary>
+    ///     Get a random float between 0.0 (inclusive) and 1.0 (exclusive).
+    /// </summary>
     [MustUseReturnValue]
     float NextFloat();
 
-    /// <summary> Get random <see cref="int"/> value. </summary>
+    /// <summary>
+    ///     Get a random int between 0 (inclusive) and <see cref="int.MaxValue"/> (exclusive).
+    /// </summary>
     [MustUseReturnValue]
     int Next();
 
-    /// <summary> Get random <see cref="int"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary>
+    ///     Get a random int between 0 (inclusive) and <paramref name="maxValue"/> (exclusive).
+    /// </summary>
+    /// <param name="maxValue">Exclusive upper bound on the random value.</param>
     [MustUseReturnValue]
     int Next(int maxValue);
 
-    /// <summary> Get random <see cref="int"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="minValue">Random value should be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary>
+    ///     Get a random int between <paramref name="minValue"/> (inclusive) and <paramref name="maxValue"/> (exclusive).
+    /// </summary>
+    /// <param name="minValue">Inclusive lower bound on the random value.</param>
+    /// <param name="maxValue">Exclusive upper bound on the random value.</param>
     [MustUseReturnValue]
     int Next(int minValue, int maxValue);
 
-    /// <summary> Get random <see cref="double"/> value between 0 (included) and 1 (excluded). </summary>
+    /// <summary>
+    ///     Get a random double between 0.0 (inclusive) and 1.0 (exclusive).
+    /// </summary>
     [MustUseReturnValue]
     double NextDouble();
 
-    /// <summary> Get random <see cref="TimeSpan"/> value in range of <see cref="TimeSpan.Zero"/> (included) and <paramref name="maxTime"/> (excluded). </summary>
-    /// <param name="maxTime">Random value should be less then this value.</param>
+    /// <summary>
+    ///     Get a random <see cref="TimeSpan"/> between 0 (inclusive) and <paramref name="maxTime"/> (exclusive).
+    /// </summary>
+    /// <param name="maxTime">Exclusive upper bound on the random value.</param>
     [MustUseReturnValue]
     TimeSpan Next(TimeSpan maxTime);
 
-    /// <summary> Get random <see cref="TimeSpan"/> value in range of <paramref name="minTime"/> (included) and <paramref name="maxTime"/> (excluded). </summary>
-    /// <param name="minTime">Random value should be greater or equal to this value.</param>
-    /// <param name="maxTime">Random value should be less then this value.</param>
+    /// <summary>
+    ///     Get a random <see cref="TimeSpan"/> between <paramref name="minTime"/> (inclusive) and <paramref name="maxTime"/> (exclusive).
+    /// </summary>
+    /// <param name="minTime">Inclusive lower bound on the random value.</param>
+    /// <param name="maxTime">Exclusive upper bound on the random value.</param>
     [MustUseReturnValue]
     TimeSpan Next(TimeSpan minTime, TimeSpan maxTime);
 
-    /// <summary> Fill buffer with random bytes (values). </summary>
+    /// <summary>
+    ///     Fills a given buffer with random bytes.
+    /// </summary>
     void NextBytes(Span<byte> buffer);
 }
 

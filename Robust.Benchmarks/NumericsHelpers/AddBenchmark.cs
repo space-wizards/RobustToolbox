@@ -18,20 +18,12 @@ public class AddBenchmark
     private float[] _inputB = default!;
     private float[] _output = default!;
 
-    private Tensor<float> _tensorA = default!;
-    private Tensor<float> _tensorB = default!;
-    private Tensor<float> _tensorOutput = default!;
-
     [GlobalSetup]
     public void Setup()
     {
         _inputA = new float[N];
         _inputB = new float[N];
         _output = new float[N];
-
-        _tensorA = Tensor.Create(_inputA);
-        _tensorB = Tensor.Create(_inputB);
-        _tensorOutput = Tensor.Create(_output);
     }
 
     [Benchmark]

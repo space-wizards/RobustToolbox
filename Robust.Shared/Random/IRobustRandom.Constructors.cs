@@ -42,6 +42,12 @@ public partial interface IRobustRandom
         return (CreateSeeded(seed), seed);
     }
 
+    /// <summary>
+    ///     Seeds a randomizer using a span of hashable data. This can be any unmanaged type including structs.
+    /// </summary>
+    /// <param name="inputs">The span to hash for a seed.</param>
+    /// <typeparam name="T">The type to hash.</typeparam>
+    /// <returns>A constructed randomizer and its seed.</returns>
     public static (IDedicatedRandom random, int seed) CreateSeededFromHashable<T>(Span<T> inputs)
         where T : unmanaged
     {
@@ -57,6 +63,12 @@ public partial interface IRobustRandom
         return (CreateSeeded(seed), seed);
     }
 
+    /// <summary>
+    ///     Seeds a randomizer using a hashable value. This can be any unmanaged type including structs.
+    /// </summary>
+    /// <param name="input">The value to hash for a seed.</param>
+    /// <typeparam name="T">The type to hash.</typeparam>
+    /// <returns>A constructed randomizer and its seed.</returns>
     public static (IDedicatedRandom, int seed) CreateSeededFromHashable<T>(T input)
         where T : unmanaged
     {

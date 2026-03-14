@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using Robust.Shared.Collections;
-using Robust.Shared.Maths;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.Random;
 
@@ -46,34 +44,41 @@ public partial interface IRobustRandom
     void DebugSetSeed(int seed);
 
     /// <summary> Get random <see cref="float"/> value between 0 (included) and 1 (excluded). </summary>
+    [MustUseReturnValue]
     float NextFloat();
 
     /// <summary> Get random <see cref="int"/> value. </summary>
+    [MustUseReturnValue]
     int Next();
 
     /// <summary> Get random <see cref="int"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
     /// <param name="maxValue">Random value should be less then this value.</param>
+    [MustUseReturnValue]
     int Next(int maxValue);
 
     /// <summary> Get random <see cref="int"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
     /// <param name="minValue">Random value should be greater or equal to this value.</param>
     /// <param name="maxValue">Random value should be less then this value.</param>
+    [MustUseReturnValue]
     int Next(int minValue, int maxValue);
 
     /// <summary> Get random <see cref="double"/> value between 0 (included) and 1 (excluded). </summary>
+    [MustUseReturnValue]
     double NextDouble();
 
     /// <summary> Get random <see cref="TimeSpan"/> value in range of <see cref="TimeSpan.Zero"/> (included) and <paramref name="maxTime"/> (excluded). </summary>
     /// <param name="maxTime">Random value should be less then this value.</param>
+    [MustUseReturnValue]
     TimeSpan Next(TimeSpan maxTime);
 
     /// <summary> Get random <see cref="TimeSpan"/> value in range of <paramref name="minTime"/> (included) and <paramref name="maxTime"/> (excluded). </summary>
     /// <param name="minTime">Random value should be greater or equal to this value.</param>
     /// <param name="maxTime">Random value should be less then this value.</param>
+    [MustUseReturnValue]
     TimeSpan Next(TimeSpan minTime, TimeSpan maxTime);
 
     /// <summary> Fill buffer with random bytes (values). </summary>
-    void NextBytes(byte[] buffer);
+    void NextBytes(Span<byte> buffer);
 }
 
 [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]

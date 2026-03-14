@@ -67,7 +67,7 @@ internal sealed class GlobalRandom : IRobustRandom
         return _inner.Next(minTime, maxTime);
     }
 
-    public void NextBytes(byte[] buffer)
+    public void NextBytes(Span<byte> buffer)
     {
         _inner.NextBytes(buffer);
     }

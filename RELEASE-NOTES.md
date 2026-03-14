@@ -58,6 +58,7 @@ END TEMPLATE-->
 - `IRobustRandom.SetSeed` now behaves identically to `IRobustRandom.DebugSetSeed`, i.e. does nothing in release.
   For benchmarking and other uses that *really* need global seed set, define `ALLOW_BAD_PRACTICES` in your build.
 - `RobustRandom` usage outside of engine is now deprecated, use the newly provided constructors on `IRobustRandom`.
+- `IRobustRandom.NextBytes` now outputs to a `Span<byte>` instead of an array.
 
 ### New features
 
@@ -69,6 +70,8 @@ END TEMPLATE-->
 - A new marker interface, `IDedicatedRandom`, was added. If you need to assert that the randomizer you are provided
   cannot be the global randomizer, use this interface. An example of when you would use this is for code that is
   explicitly seeded. You cannot IoC inject this interface.
+- All `Pick` and `PickAndTake` methods were given `Try*` variants.
+- `PickWeighted`, `TryPickWeighted`, `PickAndTakeWeighted`, and `TryPickAndTakeWeighted` were added for weighted picks from bags.
 
 ### Bugfixes
 
@@ -79,6 +82,7 @@ END TEMPLATE-->
 ### Other
 
 - `IRobustRandom.SetSeed()` is now deprecated. If you need a seeded randomizer, please construct a new `RobustRandom`.
+- The majority of `IRobustRandom` APIs and extensions are now annotated with `[MustUseReturnValue]` to avoid mistakes.
 
 ### Internal
 

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using JetBrains.Annotations;
 using SpaceWizards.Sodium;
 
 namespace Robust.Shared.Random;
@@ -11,6 +12,7 @@ public partial interface IRobustRandom
     ///     In other words, this returns a differently seeded randomizer every time.
     /// </summary>
     /// <returns>The newly constructed randomizer.</returns>
+    [MustUseReturnValue]
     public static IDedicatedRandom CreateRandom()
     {
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -23,6 +25,7 @@ public partial interface IRobustRandom
     /// </summary>
     /// <param name="seed">The integer seed to use.</param>
     /// <returns>The newly constructed randomizer.</returns>
+    [MustUseReturnValue]
     public static IDedicatedRandom CreateSeeded(int seed)
     {
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -35,6 +38,7 @@ public partial interface IRobustRandom
     /// </summary>
     /// <param name="source">The randomizer to obtain a new seed from (by calling <see cref="IRobustRandom.Next()"/>)</param>
     /// <returns>The newly constructed randomizer, and its seed.</returns>
+    [MustUseReturnValue]
     public static (IDedicatedRandom random, int seed) CreateSeededWith(IRobustRandom source)
     {
         var seed = source.Next();
@@ -48,6 +52,7 @@ public partial interface IRobustRandom
     /// <param name="inputs">The span to hash for a seed.</param>
     /// <typeparam name="T">The type to hash.</typeparam>
     /// <returns>A constructed randomizer and its seed.</returns>
+    [MustUseReturnValue]
     public static (IDedicatedRandom random, int seed) CreateSeededFromHashable<T>(Span<T> inputs)
         where T : unmanaged
     {
@@ -69,6 +74,7 @@ public partial interface IRobustRandom
     /// <param name="input">The value to hash for a seed.</param>
     /// <typeparam name="T">The type to hash.</typeparam>
     /// <returns>A constructed randomizer and its seed.</returns>
+    [MustUseReturnValue]
     public static (IDedicatedRandom, int seed) CreateSeededFromHashable<T>(T input)
         where T : unmanaged
     {

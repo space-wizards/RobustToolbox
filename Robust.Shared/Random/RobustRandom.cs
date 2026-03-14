@@ -109,7 +109,7 @@ public sealed class RobustRandom : IDedicatedRandom
         return _random.NextDouble();
     }
 
-    public void NextBytes(byte[] buffer)
+    public void NextBytes(Span<byte> buffer)
     {
         _random.NextBytes(buffer);
     }

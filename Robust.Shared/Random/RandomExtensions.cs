@@ -4,12 +4,14 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
+using JetBrains.Annotations;
 using Robust.Shared.Collections;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Random;
 
+[PublicAPI]
 public static class RandomExtensions
 {
     extension<T>(T random)
@@ -21,6 +23,7 @@ public static class RandomExtensions
         /// </summary>
         /// <param name="minValue">Inclusive lower bound on the random value.</param>
         /// <param name="maxValue">Exclusive upper bound on the random value.</param>
+        [MustUseReturnValue]
         public float NextFloat(float minValue, float maxValue)
             => random.NextFloat() * (maxValue - minValue) + minValue;
 
@@ -28,11 +31,13 @@ public static class RandomExtensions
         ///     Get a random float between 0 (inclusive) and <paramref name="maxValue"/> (exclusive).
         /// </summary>
         /// <param name="maxValue">Exclusive upper bound on the random value.</param>
+        [MustUseReturnValue]
         public float NextFloat(float maxValue) => random.NextFloat() * maxValue;
 
         /// <summary>
         ///     Get a random byte between 0 (inclusive) and <see cref="byte.MaxValue"/> (exclusive).
         /// </summary>
+        [MustUseReturnValue]
         public byte NextByte()
             => random.NextByte(byte.MaxValue);
 
@@ -40,6 +45,7 @@ public static class RandomExtensions
         ///     Get a random byte between 0 (inclusive) and <paramref name="maxValue"/> (exclusive).
         /// </summary>
         /// <param name="maxValue">Exclusive upper bound on the random value.</param>
+        [MustUseReturnValue]
         public byte NextByte(byte maxValue)
             => (byte)random.Next(maxValue);
 
@@ -48,6 +54,7 @@ public static class RandomExtensions
         /// </summary>
         /// <param name="minValue">Inclusive lower bound on the random value.</param>
         /// <param name="maxValue">Exclusive upper bound on the random value.</param>
+        [MustUseReturnValue]
         public byte NextByte(byte minValue, byte maxValue)
             => (byte)random.Next(minValue, maxValue);
 
@@ -63,7 +70,7 @@ public static class RandomExtensions
         ///     Get a random double between 0 (inclusive) and <paramref name="maxValue"/> (exclusive).
         /// </summary>
         /// <param name="maxValue">Exclusive upper bound on the random value.</param>
-        [Obsolete("Use NextDouble instead.")]
+        [MustUseReturnValue]
         public double NextDouble(double maxValue)
             => random.NextDouble() * maxValue;
 
@@ -72,12 +79,14 @@ public static class RandomExtensions
         /// </summary>
         /// <param name="minValue">Inclusive lower bound on the random value.</param>
         /// <param name="maxValue">Exclusive upper bound on the random value.</param>
+        [MustUseReturnValue]
         public double NextDouble(double minValue, double maxValue)
             => random.NextDouble() * (maxValue - minValue) + minValue;
 
         /// <summary>
         ///     Get a random byte between 0 (inclusive) and <see cref="MathF.Tau"/> (exclusive).
         /// </summary>
+        [MustUseReturnValue]
         public Angle NextAngle()
             => random.NextFloat() * MathF.Tau;
 
@@ -85,6 +94,7 @@ public static class RandomExtensions
         ///     Get a random angle between 0 (inclusive) and <paramref name="maxValue"/> (exclusive).
         /// </summary>
         /// <param name="maxValue">Exclusive upper bound on the random value.</param>
+        [MustUseReturnValue]
         public Angle NextAngle(Angle maxValue)
             => random.NextFloat() * maxValue;
 
@@ -93,6 +103,7 @@ public static class RandomExtensions
         /// </summary>
         /// <param name="minValue">Inclusive lower bound on the random value.</param>
         /// <param name="maxValue">Exclusive upper bound on the random value.</param>
+        [MustUseReturnValue]
         public Angle NextAngle(Angle minValue, Angle maxValue)
             => random.NextFloat() * (maxValue - minValue) + minValue;
 
@@ -100,6 +111,7 @@ public static class RandomExtensions
         ///     Random vector, created from a uniform distribution of magnitudes and angles.
         /// </summary>
         /// <param name="maxMagnitude">Max value for randomized vector magnitude (exclusive).</param>
+        [MustUseReturnValue]
         public Vector2 NextVector2(float maxMagnitude = 1)
             => random.NextVector2(0, maxMagnitude);
 
@@ -112,12 +124,14 @@ public static class RandomExtensions
         ///     In general, NextVector2(1) will tend to result in vectors with smaller magnitudes than
         ///     NextVector2Box(1,1), even if you ignored any vectors with a magnitude larger than one.
         /// </remarks>
+        [MustUseReturnValue]
         public Vector2 NextVector2(float minMagnitude, float maxMagnitude)
             => random.NextAngle().RotateVec(new Vector2(random.NextFloat(minMagnitude, maxMagnitude), 0));
 
         /// <summary>
         ///     Random vector, created from a uniform distribution of x and y coordinates lying inside some box.
         /// </summary>
+        [MustUseReturnValue]
         public Vector2 NextVector2Box(float minX, float minY, float maxX, float maxY)
             => new (random.NextFloat(minX, maxX), random.NextFloat(minY, maxY));
 
@@ -126,6 +140,7 @@ public static class RandomExtensions
         ///     Box will have coordinates starting at [-<paramref name="maxAbsX"/> , -<paramref name="maxAbsY"/>]
         ///     and ending in [<paramref name="maxAbsX"/> , <paramref name="maxAbsY"/>]
         /// </summary>
+        [MustUseReturnValue]
         public Vector2 NextVector2Box(float maxAbsX = 1, float maxAbsY = 1)
             => random.NextVector2Box(-maxAbsX, -maxAbsY, maxAbsX, maxAbsY);
 
@@ -174,6 +189,7 @@ public static class RandomExtensions
         /// </summary>
         /// <param name="μ">The average or "center" of the normal distribution.</param>
         /// <param name="σ">The standard deviation of the normal distribution.</param>
+        [MustUseReturnValue]
         public double NextGaussian(double μ = 0, double σ = 1)
         {
             // https://stackoverflow.com/a/218600
@@ -196,6 +212,7 @@ public static class RandomExtensions
         /// <param name="list">The collection to pick from.</param>
         /// <typeparam name="TItem">The type of item in the collection.</typeparam>
         /// <returns>The picked item.</returns>
+        [MustUseReturnValue]
         public TItem Pick<TItem>(IReadOnlyList<TItem> list)
         {
             var index = random.Next(list.Count);
@@ -234,6 +251,7 @@ public static class RandomExtensions
         /// <param name="list">The collection to pick from.</param>
         /// <typeparam name="TItem">The type of item in the collection.</typeparam>
         /// <returns>The picked item.</returns>
+        [MustUseReturnValue]
         public ref TItem Pick<TItem>(ValueList<TItem> list)
         {
             var index = random.Next(list.Count);
@@ -249,6 +267,7 @@ public static class RandomExtensions
         /// <param name="collection">The collection to pick from.</param>
         /// <typeparam name="TItem">The type of item in the collection.</typeparam>
         /// <returns>The picked item.</returns>
+        [MustUseReturnValue]
         public TItem Pick<TItem>(IReadOnlyCollection<TItem> collection)
         {
             var index = random.Next(collection.Count);
@@ -296,6 +315,7 @@ public static class RandomExtensions
         /// <param name="list">The collection to pick from.</param>
         /// <typeparam name="TItem">The type of item in the collection.</typeparam>
         /// <returns>The picked item.</returns>
+        [MustUseReturnValue]
         public TItem PickAndTake<TItem>(IList<TItem> list)
         {
             var index = random.Next(list.Count);
@@ -325,6 +345,31 @@ public static class RandomExtensions
 
             item = random.PickAndTake(list);
             return true;
+        }
+
+        /// <summary>
+        ///     Picks a random element from a collection.
+        /// </summary>
+        /// <remarks>
+        ///     This is O(n) due to the input not being indexable.
+        /// </remarks>
+        /// <param name="collection">The collection to pick from.</param>
+        /// <typeparam name="TItem">The type of item in the collection.</typeparam>
+        /// <returns>The picked item.</returns>
+        [MustUseReturnValue]
+        public TItem PickCollection<TItem>(ICollection<TItem> collection)
+        {
+            var index = random.Next(collection.Count);
+            var i = 0;
+            foreach (var t in collection)
+            {
+                if (i++ == index)
+                {
+                    return t;
+                }
+            }
+
+            throw new UnreachableException("This should be unreachable!");
         }
 
         /// <summary>
@@ -359,6 +404,7 @@ public static class RandomExtensions
         /// <param name="collection">Collection to select from.</param>
         /// <typeparam name="TItem">The type of item within the collection.</typeparam>
         /// <returns>The picked item from the collection.</returns>
+        [MustUseReturnValue]
         public TItem PickAndTakeCollection<TItem>(ICollection<TItem> collection)
         {
             var tile = random.PickCollection(collection);
@@ -398,6 +444,7 @@ public static class RandomExtensions
         /// <typeparam name="TItem">The type of item we're picking.</typeparam>
         /// <typeparam name="TNumber">The numeric key used as a weight. This can be any floating point type.</typeparam>
         /// <returns>The item picked out of the collection.</returns>
+        [MustUseReturnValue]
         public TItem PickWeighted<TItem, TNumber>(IReadOnlyCollection<KeyValuePair<TItem, TNumber>> bag)
             where TNumber : IFloatingPoint<TNumber>
         {
@@ -492,6 +539,7 @@ public static class RandomExtensions
         /// <typeparam name="TItem">The type of item we're picking.</typeparam>
         /// <typeparam name="TNumber">The numeric key used as a weight. This can be any floating point type.</typeparam>
         /// <returns>The item picked out of the dictionary.</returns>
+        [MustUseReturnValue]
         public TItem PickAndTakeWeighted<TItem, TNumber>(Dictionary<TItem, TNumber> bag)
             where TItem: notnull
             where TNumber : IFloatingPoint<TNumber>
@@ -521,25 +569,6 @@ public static class RandomExtensions
             bag.Remove(item);
             return true;
         }
-
-        /// <summary>Picks a random element from a collection.</summary>
-        /// <remarks>
-        ///     This is O(n).
-        /// </remarks>
-        public TItem PickCollection<TItem>(ICollection<TItem> collection)
-        {
-            var index = random.Next(collection.Count);
-            var i = 0;
-            foreach (var t in collection)
-            {
-                if (i++ == index)
-                {
-                    return t;
-                }
-            }
-
-            throw new UnreachableException("This should be unreachable!");
-        }
         #endregion
 
         /// <summary>
@@ -547,6 +576,7 @@ public static class RandomExtensions
         /// </summary>
         /// <param name="random">The random instance to run on.</param>
         /// <param name="chance">The chance to pass, from 0 to 1.</param>
+        [MustUseReturnValue]
         public bool Prob(float chance)
         {
             DebugTools.Assert(chance is <= 1 and >= 0, $"Chance must be in the range 0-1. It was {chance}.");
@@ -564,6 +594,7 @@ public static class RandomExtensions
         /// <param name="source">Collection from which items should be picked.</param>
         /// <param name="count">Number of random items to be picked.</param>
         /// <param name="allowDuplicates">If true, items are allowed to be picked more than once.</param>
+        [MustUseReturnValue]
         public TItem[] GetItems<TItem>(IList<TItem> source, int count, bool allowDuplicates = true)
         {
             if (source.Count == 0 || count <= 0)
@@ -609,18 +640,21 @@ public static class RandomExtensions
         }
 
         /// <inheritdoc cref="GetItems{T}(System.Collections.Generic.IList{T},int,bool)"/>
+        [MustUseReturnValue]
         public TItem[] GetItems<TItem>(ValueList<TItem> source, int count, bool allowDuplicates = true)
         {
             return random.GetItems(source.Span, count, allowDuplicates);
         }
 
         /// <inheritdoc cref="GetItems{T}(System.Collections.Generic.IList{T},int,bool)"/>
+        [MustUseReturnValue]
         public TItem[] GetItems<TItem>(TItem[] source, int count, bool allowDuplicates = true)
         {
             return random.GetItems(source.AsSpan(), count, allowDuplicates);
         }
 
         /// <inheritdoc cref="GetItems{T}(System.Collections.Generic.IList{T},int,bool)"/>
+        [MustUseReturnValue]
         public TItem[] GetItems<TItem>(Span<TItem> source, int count, bool allowDuplicates = true)
         {
             if (source.Length == 0 || count <= 0)

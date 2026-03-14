@@ -642,6 +642,8 @@ Types:
     Vector2: { All: True }
     Vector3: { All: True }
     Vector4: { All: True }
+  System.Numerics.Tensors:
+    TensorPrimitives: { All: True }
   System.Reflection:
     Assembly:
       Methods:

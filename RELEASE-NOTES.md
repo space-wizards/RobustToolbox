@@ -36,7 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 - `Prototype<T>`, a precursor to `ProtoId<T>` used by toolshed, has been removed.
-- On IRobustRandom, the following have been removed from the interface and are now extension methods on
+- On `IRobustRandom`, the following have been removed from the interface and are now extension methods on
   `RandomExtensions`:
   - `float NextFloat(float minValue, float maxValue)`
   - `float NextFloat(float maxValue)`
@@ -57,13 +57,18 @@ END TEMPLATE-->
   - `void Shuffle<T>(ValueList<T> list)`
 - `IRobustRandom.SetSeed` now behaves identically to `IRobustRandom.DebugSetSeed`, i.e. does nothing in release.
   For benchmarking and other uses that *really* need global seed set, define `ALLOW_BAD_PRACTICES` in your build.
+- `RobustRandom` usage outside of engine is now deprecated, use the newly provided constructors on `IRobustRandom`.
 
 ### New features
 
 - `TItem PickCollection<TItem>(ICollection<TItem> collection)` and `TItem PickAndTakeCollection<TItem>(ICollection<TItem> set)`
   were added as extensions for `IRobustRandom` to ensure parity with the deprecated `System.Random` APIs.
-- `RobustRandom` now has two additional constructors that take a seed and existing randomizer to seed from, respectively.
-- `IRobustRandom.DebugSetSeed()` was added for debugging/testing scenarios where the ability to set the global seed is required.
+- `IRobustRandom.DebugSetSeed` was added for debugging/testing scenarios where the ability to set the global seed is required.
+- `IRobustRandom.CreateRandom`, `IRobustRandom.CreateSeeded`, and `IRobustRandom.CreateSeededWith` were added for
+  ease of constructing and configuring randomizers.
+- A new marker interface, `IDedicatedRandom`, was added. If you need to assert that the randomizer you are provided
+  cannot be the global randomizer, use this interface. An example of when you would use this is for code that is
+  explicitly seeded. You cannot IoC inject this interface.
 
 ### Bugfixes
 
@@ -77,8 +82,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
-
+- The implementation of the global `IRobustRandom` was changed from `RobustRandom` to `GlobalRandom`
 
 ## 273.0.0
 

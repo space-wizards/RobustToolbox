@@ -8,9 +8,25 @@ using Robust.Shared.Maths;
 namespace Robust.Shared.Random;
 
 /// <summary>
-/// Wrapper around random number generator helping methods.
+/// <para>
+///     Provides random numbers, and can be constructed using various static members that provide a <see cref="IDedicatedRandom"/>.
+///     Methods that take RNG as input should take an <see cref="IRobustRandom"/> or <see cref="IDedicatedRandom"/>, instead
+///     of their implementations.
+/// </para>
+/// <para>
+///     If you just want the global randomizer, you can depend on it with IoC using <see cref="IRobustRandom"/>. This
+///     will not however implement <see cref="IDedicatedRandom"/>.
+/// </para>
 /// </summary>
-public interface IRobustRandom
+/// <example>
+/// <code>
+///     // Optionally, seed your RNG. By default, the RNG is seeded randomly.
+///     var myRng = new IRobustRandom.CreateSeeded(17);
+///     <br/>
+///     var fairDiceRoll = myRng.Next(1, 6); // Will be 4 with this seed.
+/// </code>
+/// </example>
+public partial interface IRobustRandom
 {
     /// <summary> Get the underlying <see cref="Random"/>.</summary>
     [Obsolete("Do not access the underlying implementation")]

@@ -54,7 +54,16 @@ public static class RandomExtensions
         ///     Get a random double between 0 (inclusive) and <paramref name="maxValue"/> (exclusive).
         /// </summary>
         /// <param name="maxValue">Exclusive upper bound on the random value.</param>
+        [Obsolete("Use NextDouble instead, this method was named incorrectly.")]
         public double Next(double maxValue)
+            => random.NextDouble() * maxValue;
+
+        /// <summary>
+        ///     Get a random double between 0 (inclusive) and <paramref name="maxValue"/> (exclusive).
+        /// </summary>
+        /// <param name="maxValue">Exclusive upper bound on the random value.</param>
+        [Obsolete("Use NextDouble instead.")]
+        public double NextDouble(double maxValue)
             => random.NextDouble() * maxValue;
 
         /// <summary>

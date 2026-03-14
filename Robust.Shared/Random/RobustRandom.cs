@@ -4,18 +4,27 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Random;
 
 /// <summary>
-///     Provides random numbers, can be constructed in user code or used as a dependency in the form of
-///     <see cref="IRobustRandom"/>. Methods that take RNG as input should take an IRobustRandom, not a RobustRandom.
+/// <para>
+///     Provides random numbers, can be constructed in user code to provide <see cref="IDedicatedRandom"/>s.
+///     Methods that take RNG as input should take an <see cref="IRobustRandom"/> or <see cref="IDedicatedRandom"/>, not
+///     a RobustRandom.
+/// </para>
+/// <para>
+///     If you just want the global randomizer, you can depend on it through <see cref="IRobustRandom"/>, but be aware
+///     that is not a <see cref="RobustRandom"/> and the implementation is internal.
+/// </para>
 /// </summary>
 /// <example>
 /// <code>
 ///     // Optionally, seed your RNG. By default, the RNG is seeded randomly.
-///     var myRng = new RobustRandom(17);
+///     var myRng = new IRobustRandom.CreateSeeded(17);
 ///     <br/>
 ///     var fairDiceRoll = myRng.Next(1, 6); // Will be 4 with this seed.
 /// </code>
 /// </example>
-public sealed class RobustRandom : IRobustRandom
+// Implementor's note: We're just making this internal, not removing it.
+[Obsolete("Directly referring to RobustRandom is obsolete, it is an implementation detail and may be replaced.")]
+public sealed class RobustRandom : IDedicatedRandom
 {
     // This should not contain any logic, not directly related to calling specific methods of <see cref="Random"/>.
     // To write additional logic, attached to random roll, please create interface-implemented methods on <see cref="IRobustRandom"/>
@@ -25,6 +34,7 @@ public sealed class RobustRandom : IRobustRandom
     /// <summary>
     ///     Constructs a new RobustRandom with a globally provided seed.
     /// </summary>
+    [Obsolete($"The public constructor for RobustRandom is not meant for user consumption, use {nameof(IRobustRandom)}.{nameof(IRobustRandom.CreateRandom)}")]
     public RobustRandom()
     {
         _random = new();
@@ -33,17 +43,9 @@ public sealed class RobustRandom : IRobustRandom
     /// <summary>
     ///     Constructs a new RobustRandom with the given seed.
     /// </summary>
-    public RobustRandom(int seed)
+    internal RobustRandom(int seed)
     {
         _random = new System.Random(seed);
-    }
-
-    /// <summary>
-    ///     Constructs a new RobustRandom seeded from another IRobustRandom.
-    /// </summary>
-    public RobustRandom(IRobustRandom rng)
-    {
-        _random = new System.Random(rng.Next());
     }
 
     System.Random IRobustRandom.GetRandom() => _random;

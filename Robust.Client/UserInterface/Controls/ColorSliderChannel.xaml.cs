@@ -44,6 +44,9 @@ internal sealed partial class ColorSliderChannel : BoxContainer, ISliderChannel
     public void OverrideValue(float value, float divisor)
     {
         ColorSlider.SetValueWithoutEvent(value);
-        InputBox.OverrideValue((int)(value * divisor));
+
+        var channelValue = (int)(value * divisor);
+        if (InputBox.Value != channelValue) // reduce redundant style updates
+            InputBox.OverrideValue(channelValue);
     }
 }

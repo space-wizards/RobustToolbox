@@ -200,7 +200,7 @@ public sealed partial class ColorSelectorSliders : Control
     {
         var name = ColorNaming.Describe(Color, _localization);
 
-        if (ColorDescriptionLabel.Text != name) // prevent redundant style updates
+        if (ColorDescriptionLabel.Text != name) // reduce redundant style updates
             ColorDescriptionLabel.Text = name;
     }
 
@@ -487,7 +487,7 @@ internal interface ISliderChannel
     float Value { get; set; }
 
     /// <summary>
-    ///     Sets the value of this channel without generating an event.
+    ///     Sets the value of this channel without generating a "value changed" event.
     /// </summary>
     /// <param name="value">The input value of the channel.</param>
     /// <param name="divisor">The maximum input value of the channel - used as a divisor to generate a value between 0.0 and 1.0.</param>

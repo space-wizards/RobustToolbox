@@ -37,6 +37,7 @@ public sealed class SeedingTests
         var (rng2, seed2) = IRobustRandom.CreateSeededFromHashable([myContext]);
 
         Assert.That(seed1, Is.EqualTo(seed2));
+        Assert.That(seed1, Is.EqualTo(9377390), "Seed changed between runs. Something is off!");
 
         // Try for a bit, no flukes.
         for (var i = 0; i < 128; i++)

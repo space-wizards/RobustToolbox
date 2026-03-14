@@ -481,6 +481,10 @@ public sealed partial class ColorSelectorSliders : Control
     }
 }
 
+/// <summary>
+///     A control that represents a single channel of the slider.
+///     We expect this channel to have both a slider range control and a "spinbox" (text input control).
+/// </summary>
 internal interface ISliderChannel
 {
     /// <summary>

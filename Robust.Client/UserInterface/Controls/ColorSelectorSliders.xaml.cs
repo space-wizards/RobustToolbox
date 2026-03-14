@@ -328,8 +328,11 @@ public sealed partial class ColorSelectorSliders : Control
     /// <summary>
     ///     A LineEdit control that displays in a monospace font.
     ///     This control can be resized to fit a particular text string using <see cref="MeasureText"/>.
-    ///     Due to being monospace, this effectively allows the control to be sized to a certain # of characters.
     /// </summary>
+    /// <remarks>
+    ///     We are making the assumption that the font face is truly monospace. Thus, by getting the render size
+    ///     of a given text string, we attempt to resize the control to a given # of characters.
+    /// </remarks>
     private sealed class MonoLineEdit : LineEdit
     {
         public string? MeasureText { get; set; } = null;

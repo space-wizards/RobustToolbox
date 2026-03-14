@@ -12,12 +12,17 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls;
 
-// condensed version of the original ColorSlider set
+/// <summary>
+///     A control that represents a set of slider channels that can be used to edit a color value.
+/// </summary>
 [GenerateTypedNameReferences]
 public sealed partial class ColorSelectorSliders : Control
 {
     [Dependency] private readonly ILocalizationManager _localization = default!;
 
+    /// <summary>
+    ///     The current color value of this slider set.
+    /// </summary>
     public Color Color
     {
         get => _currentColor;
@@ -31,6 +36,9 @@ public sealed partial class ColorSelectorSliders : Control
         }
     }
 
+    /// <summary>
+    ///     The type of color slider this set is using.
+    /// </summary>
     public ColorSelectorType SelectorType
     {
         get => _currentType;
@@ -45,6 +53,9 @@ public sealed partial class ColorSelectorSliders : Control
         }
     }
 
+    /// <summary>
+    ///     Whether or not the "Alpha" channel of this slider set can be edited.
+    /// </summary>
     public bool IsAlphaVisible
     {
         get => _isAlphaVisible;
@@ -56,6 +67,9 @@ public sealed partial class ColorSelectorSliders : Control
         }
     }
 
+    /// <summary>
+    ///     This event is sent whenever the color slider changes via user input.
+    /// </summary>
     public Action<Color>? OnColorChanged;
 
     private readonly static HsvSliderStrategy _hsvStrategy = new();

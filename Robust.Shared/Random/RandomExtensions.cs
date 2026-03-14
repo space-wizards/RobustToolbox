@@ -35,10 +35,8 @@ public static partial class RandomExtensions
         /// <param name="sourceRunes">The source to use for random symbols.</param>
         /// <param name="length">The number of symbols to put into the destination buffer.</param>
         /// <returns>The number of chars written, which is distinct from the input length.</returns>
-        /// <exception cref="IndexOutOfRangeException">
-        ///     Thrown when the generated string does not fit into the destination.
-        ///     This is most likely to happen if your buffer is not large enough for length*2 symbols, and
-        ///     any of the symbols are two characters long.
+        /// <exception cref="ArgumentException">
+        ///     Thrown when the generated string may not fit into the destination.
         /// </exception>
         /// <remarks>
         ///     This function is <i>somewhat</i> Unicode aware. It correctly handles surrogate pairs, but does not
@@ -49,7 +47,8 @@ public static partial class RandomExtensions
         {
             // There was something fancier here, but then I realized that for internationalization reasons we probably
             // should require people just always create the larger minimum buffer size.
-            DebugTools.Assert(destination.Length >= length * 2, "Destination buffer is not large enough for all possible strings.");
+            if (destination.Length < length * 2)
+                throw new ArgumentException("Destination buffer is not large enough for all possible strings.");
 
             var index = 0;
 

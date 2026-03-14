@@ -76,15 +76,16 @@ public static partial class RandomExtensions
         /// <param name="sourceRunes">The source to use for random symbols.</param>
         /// <param name="length">The number of symbols to put into the destination buffer.</param>
         /// <returns>A string populated with randomly selected symbols.</returns>
-        /// <exception cref="IndexOutOfRangeException">
-        ///     Thrown when the generated string does not fit into the destination.
-        ///     This is most likely to happen if your buffer is not large enough for length*2 symbols, and
-        ///     any of the symbols are two characters long.
-        /// </exception>
         /// <remarks>
         ///     This function is <i>somewhat</i> Unicode aware. It correctly handles surrogate pairs, but does not
         ///     support Unicode characters composed of more than one Unicode codepoint.
         /// </remarks>
+        /// <example>
+        ///     static Runes = "!@#$%^&*".EnumerateRunes().ToArray();
+        ///     var string = rng.FillStringFromRunes(Runes, 4);
+        ///     <br/>
+        ///     Console.WriteLine(string); // %*#@
+        /// </example>
         /// <seealso cref="System.Random.GetString"/>
         public string FillStringFromRunes(ReadOnlySpan<Rune> sourceRunes, int length)
         {

@@ -8,6 +8,7 @@ using Prometheus;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -35,6 +36,7 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
+        [IoC.Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
         [IoC.Dependency] protected readonly ILogManager LogManager = default!;
         [IoC.Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
@@ -141,6 +143,8 @@ namespace Robust.Shared.GameObjects
         {
             if (Initialized)
                 throw new InvalidOperationException("Initialize() called multiple times");
+
+            CommandBufferPool = new(new CommandBufferPolicy(_dependencyCollection), 64);
 
             EventBusInternal = new EntityEventBus(this, _reflection);
 

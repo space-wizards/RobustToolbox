@@ -142,6 +142,8 @@ namespace Robust.Shared.GameObjects
             if (Initialized)
                 throw new InvalidOperationException("Initialize() called multiple times");
 
+            InitMetrics();
+
             EventBusInternal = new EntityEventBus(this, _reflection);
 
             InitializeComponents();

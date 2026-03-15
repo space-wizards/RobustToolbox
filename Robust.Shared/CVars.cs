@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.Metrics;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
@@ -539,6 +540,15 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<float> MetricsUpdateInterval =
             CVarDef.Create("metrics.update_interval", 0f, CVar.SERVERONLY);
+
+        /// <summary>
+        /// If set, an "<c>instance</c>" tag will be added to all metrics created via <see cref="IMeterFactory"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is set by integration tests to distinguish instances.
+        /// </remarks>
+        public static readonly CVarDef<string> MetricsInstanceName =
+            CVarDef.Create("metrics.instance_name", "");
 
         /// <summary>
         /// Enable detailed runtime metrics. Empty to disable.

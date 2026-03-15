@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
@@ -22,6 +23,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
+using Robust.Shared.DataMetrics;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -264,6 +266,7 @@ namespace Robust.UnitTesting.Server
             container.Register<IParallelManagerInternal, TestingParallelManager>();
             // Needed for grid fixture debugging.
             container.Register<IConGroupController, ConGroupController>();
+            container.Register<IMeterFactory, MeterFactory>();
             container.Register<EntityConsoleHost>();
 
             // I just wanted to load pvs system

@@ -6,6 +6,7 @@ public sealed class TestHistoryEntry
     ///     The name of the test.
     /// </summary>
     public readonly string TestName;
+
     /// <summary>
     ///     The amount of memory the GC claims to be using at the time of adding this entry.
     /// </summary>

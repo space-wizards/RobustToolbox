@@ -183,7 +183,7 @@ public partial class EntityManager
         if (uid == EntityUid.Invalid)
             return NetEntity.Invalid;
 
-        if (!MetaQuery.Resolve(uid, ref metadata))
+        if (!MetaQuery.Resolve(uid, ref metadata, false))
             return NetEntity.Invalid;
 
         return metadata.NetEntity;

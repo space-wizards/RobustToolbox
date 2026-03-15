@@ -20,7 +20,7 @@ namespace Robust.Shared.Random;
 /// <code>
 ///     // Use one of the constructors on IRobustRandom to create your randomizer.
 ///     // This is the one for creating a randomizer with a given seed.
-///     var myRng = new IRobustRandom.CreateSeeded(17);
+///     var myRng = IRobustRandom.CreateSeeded(17);
 ///     <br/>
 ///     var fairDiceRoll = myRng.Next(1, 6); // Will be 4 with this seed.
 /// </code>

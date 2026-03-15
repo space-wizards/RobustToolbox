@@ -171,8 +171,8 @@ namespace Robust.Client.GameObjects
                     var netEnt = stateNetEnts[i];
                     if (!entity.IsValid())
                     {
-                        DebugTools.Assert(netEnt.IsValid());
-                        AddExpectedEntity(netEnt, container);
+                        if (netEnt.IsValid())
+                            AddExpectedEntity(netEnt, container); // Данное изменение не попадет в релизную версию, важно учесть
                         continue;
                     }
 

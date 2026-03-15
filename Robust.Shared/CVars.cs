@@ -2017,5 +2017,27 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> LoadingShowDebug =
             CVarDef.Create("loading.show_debug", DefaultShowDebug, CVar.CLIENTONLY);
+
+        /*
+         * GAME SAVES
+         */
+
+        /// <summary>
+        /// Whether to allow saving and loading all entities (full game save/load).
+        /// </summary>
+        public static readonly CVarDef<bool> GameSavesEnabled =
+            CVarDef.Create("gamesaves.enabled", false, CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        /// ZSTD compression level to use when compressing game saves.
+        /// </summary>
+        public static readonly CVarDef<int> GameSavesCompressLevel =
+            CVarDef.Create("gamesaves.compress_level", 3, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Default save name for autoload (e.g. on server start).
+        /// </summary>
+        public static readonly CVarDef<string> GameSavesAutoloadName =
+            CVarDef.Create("gamesaves.autoload_name", "save", CVar.SERVERONLY);
     }
 }

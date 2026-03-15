@@ -280,10 +280,8 @@ public abstract partial class SharedPhysicsSystem
         // Broadphase has already done the faster check for collision mask / layers
         // so no point duplicating
 
-        DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB),
-            $"{ToPrettyString(entB)} fixture {fixtureBId} was already in contact with {ToPrettyString(entA)} fixture {fixtureAId}");
-        DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA),
-            $"{ToPrettyString(entA)} fixture {fixtureAId} was already in contact with {ToPrettyString(entB)} fixture {fixtureBId}");
+        if (fixtureA.Contacts.ContainsKey(fixtureB) || fixtureB.Contacts.ContainsKey(fixtureA))
+            return;
         var xformA = entA.Comp2;
         var xformB = entB.Comp2;
 

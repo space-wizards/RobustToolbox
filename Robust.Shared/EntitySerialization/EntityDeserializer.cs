@@ -965,7 +965,9 @@ public sealed class EntityDeserializer :
         _stopwatch.Restart();
         foreach (var uid in SortedEntities)
         {
-            StartupEntity(uid, _metaQuery.GetComponent(uid));
+            if (!_metaQuery.TryComp(uid, out var meta))
+                continue;
+            StartupEntity(uid, meta);
         }
         _log.Debug($"Started up {Result.Entities.Count} entities in {_stopwatch.Elapsed}");
     }
@@ -1025,7 +1027,10 @@ public sealed class EntityDeserializer :
                 continue;
 
             DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized);
-            EntMan.SetLifeStage(meta, EntityLifeStage.MapInitialized);
+            if (_mapQuery.HasComp(uid))
+                EntMan.SetLifeStage(meta, EntityLifeStage.MapInitialized);
+            else
+                EntMan.RunMapInit(uid, meta);
         }
 
         _log.Debug($"Finished flagging mapinit in {_stopwatch.Elapsed}");

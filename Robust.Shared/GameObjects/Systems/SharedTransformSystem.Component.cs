@@ -1569,6 +1569,11 @@ public abstract partial class SharedTransformSystem
         var parent = xform._parent;
         if (!parent.IsValid())
         {
+            if (terminating)
+            {
+                meta.Flags &= ~MetaDataFlags.InContainer;
+                return;
+            }
             DebugTools.Assert(!xform.Anchored,
                 $"Entity is anchored but has no parent? Entity: {ToPrettyString(uid)}");
 

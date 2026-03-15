@@ -1,4 +1,4 @@
-﻿### Localization for engine console commands
+### Localization for engine console commands
 
 cmd-hint-float = [float]
 
@@ -176,6 +176,22 @@ cmd-hint-loadmap-rotation = [rotation]
 cmd-hint-loadmap-uids = [float]
 
 cmd-hint-savebp-id = <Grid EntityID>
+
+## Full game save/load
+cmd-savegame-desc = Saves the full game state (all entities) to a .rtsave file.
+cmd-savegame-help = Usage: {$command} <Path>
+cmd-savegame-disabled = Game saves are disabled (gamesaves.enabled = false).
+cmd-savegame-attempt = Attempting to save game to {$path}.
+cmd-savegame-success = Game saved successfully.
+cmd-savegame-error = Could not save game. See server log for details.
+
+cmd-loadgame-desc = Loads the full game state from a .rtsave file.
+cmd-loadgame-help = Usage: {$command} <Path> [flush]
+cmd-loadgame-disabled = Game saves are disabled (gamesaves.enabled = false).
+cmd-loadgame-attempt = Attempting to load game from {$path}.
+cmd-loadgame-success = Game loaded successfully.
+cmd-loadgame-error = Could not load game. See server log for details.
+cmd-hint-loadgame-flush = [flush: clear existing entities before load]
 
 ## 'flushcookies' command
 # Note: the flushcookies command is from Robust.Client.WebView, it's not in the main engine code.

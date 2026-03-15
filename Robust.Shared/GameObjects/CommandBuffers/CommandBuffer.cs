@@ -1,27 +1,34 @@
 using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using System.Diagnostics;
 using Robust.Shared.Collections;
 using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects.CommandBuffers;
 
 /// <summary>
+/// <para>
 ///     A command buffer, which is a queue of operations to apply to the ECS. They allow you to queue entity
 ///     mutating operations like spawning, deletion, and component add & remove.
+/// </para>
+/// <para>
+///     Actions added to the command buffer are executed in order of addition when <see cref="IEntityManager.ApplyCommandBuffer"/>
+///     is called, which then also clears and returns the CommandBuffer.
+/// </para>
 /// </summary>
 /// <seealso cref="IEntityManager"/>
-public sealed class CommandBuffer : IDisposable
+public sealed partial class CommandBuffer : IDisposable
 {
-    /// <summary>
-    ///     The maximum capacity a command buffer is allowed to have when returned.
-    /// </summary>
-    private const int MaximumReturnCapacity = 128;
-
     private readonly IEntityManager _entMan;
+    private readonly IPrototypeManager _protoMan;
 
+    /// <summary>
+    ///     The underlying list of entries in the buffer.
+    /// </summary>
     private ValueList<CommandBufferEntry> _entries = [];
+    /// <summary>
+    ///     The capacity of the underlying entry collection, for object pooling usage.
+    /// </summary>
     internal int Capacity => _entries.Capacity;
 
     /// <summary>
@@ -31,6 +38,7 @@ public sealed class CommandBuffer : IDisposable
     internal CommandBuffer(IDependencyCollection collection)
     {
         _entMan = collection.Resolve<IEntityManager>();
+        _protoMan = collection.Resolve<IPrototypeManager>();
     }
 
     private ref CommandBufferEntry NextEntry()
@@ -41,36 +49,26 @@ public sealed class CommandBuffer : IDisposable
     }
 
     /// <summary>
-    ///     Adds an Action&lt;T&gt; invocation to the buffer.
+    ///     Creates a new CommandBuffer that will execute at precisely this point.
+    ///     This buffer is independent of its parent and can be safely given to another thread.
     /// </summary>
-    /// <remarks>
-    ///     It is recommended to use static lambdas and static methods with this.
-    /// </remarks>
-    /// <param name="action">The action to invoke.</param>
-    /// <param name="context">The context object to invoke it with.</param>
-    /// <typeparam name="T">The type of the context object.</typeparam>
-    public void InvokeAction<T>(Action<T> action, T context)
-        where T : class
+    /// <returns>The created sub-buffer.</returns>
+    public CommandBuffer CreateSubBuffer()
     {
-        ref var entry = ref NextEntry();
-        CommandBufferEntry.QueuedActionT(action, context, out entry);
+        var subBuffer = _entMan.GetCommandBuffer();
+
+        CommandBufferEntry.SubBuffer(subBuffer, out NextEntry());
+
+        return subBuffer;
     }
 
     /// <summary>
-    ///     Adds an Action&lt;T, EntityUid&gt; invocation to the buffer.
+    ///     Adds an entity deletion to the buffer.
     /// </summary>
-    /// <remarks>
-    ///     It is recommended to use static lambdas and static methods with this.
-    /// </remarks>
-    /// <param name="action">The action to invoke.</param>
-    /// <param name="context">The context object to invoke it with.</param>
-    /// <param name="target">The entity to use as a target.</param>
-    /// <typeparam name="T">The type of the context object.</typeparam>
-    public void InvokeAction<T>(Action<T, EntityUid> action, T context, EntityUid target)
-        where T : class
+    /// <param name="target">The entity to delete immediately.</param>
+    public void DeleteEntity(EntityUid target)
     {
-        ref var entry = ref NextEntry();
-        CommandBufferEntry.QueuedActionTEnt(action, context, target, out entry);
+        CommandBufferEntry.DeleteEntity(target, out NextEntry());
     }
 
     /// <summary>

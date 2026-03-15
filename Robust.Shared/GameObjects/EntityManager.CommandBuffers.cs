@@ -27,6 +27,8 @@ public abstract partial class EntityManager
             obj.Clear();
             return true;
         }
+
+
     }
 
     public CommandBuffer GetCommandBuffer()

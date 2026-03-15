@@ -19,4 +19,3 @@ public interface IRemoteEntityManager
     /// <returns>A completely unallocated, now reserved entity id.</returns>
     internal EntityUid GetUnusedEntityUid();
 }
-

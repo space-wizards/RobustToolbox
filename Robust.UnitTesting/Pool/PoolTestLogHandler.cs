@@ -41,8 +41,14 @@ public sealed class PoolTestLogHandler : ILogHandler
     public bool ShuttingDown;
 
     /// <summary>
+    /// <para>
     ///     Event handler that allows you to override a potential failing log.
     ///     Use this if you want to allow certain error logs to be considered passing.
+    /// </para>
+    /// <para>
+    ///     Has the sawmill name and <see cref="LogEvent"/> passed in, and should return a boolean
+    ///     <see langword="true"/> when the log message should not be logged as a failure.
+    /// </para>
     /// </summary>
     public event Func<string, LogEvent, bool>? JudgeLog;
 

@@ -142,7 +142,7 @@ public sealed partial class EntityBuilder
 
         _serMan.CopyTo(component, ref comp, context, notNullableOverride: true);
 
-        EntityComponents.Add(component.GetType(), comp);
+        EntityComponents.TryAdd(component.GetType(), comp);
 
 #pragma warning disable CS0618 // Type or member is obsolete
         comp.Owner = ReservedEntity;

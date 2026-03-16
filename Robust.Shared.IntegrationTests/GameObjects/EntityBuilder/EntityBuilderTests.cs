@@ -20,6 +20,9 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
         - type: entity
           id: {TestEnt1}
           components:
+          - type: MetaData # Test of new spawn logic..
+          - type: Transform
+            noRot: true
           - type: Marker1
           - type: Marker2
           - type: Marker3

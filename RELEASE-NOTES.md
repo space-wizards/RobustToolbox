@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 274.0.0
+
+### Breaking changes
+
 - ITestPair.Init() now requires a TextWriter be provided to write its gravestone to.
   This gravestone is where TestPair test history is now written to.
 - ITestPair.AddToHistory() must be used to add tests to the test history.
@@ -63,14 +86,6 @@ END TEMPLATE-->
 - Toolshed commands trying to complete `EntProtoId` fields now actually return completion results.
 - UI styling and update limits are now disabled in testing through the `ui.obey_update_limits` cvar. This cvar is only
   functional in debug builds of engine.
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
 
 
 ## 273.0.0

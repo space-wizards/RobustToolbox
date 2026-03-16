@@ -108,5 +108,7 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
         Assert.That(_entMan.HasComponent<Marker2Component>(builder.ReservedEntity));
         Assert.That(_entMan.HasComponent<Marker3Component>(builder.ReservedEntity));
         Assert.That(_entMan.HasComponent<Marker4Component>(builder.ReservedEntity));
+        Assert.That(_entMan.GetComponent<TransformComponent>(builder.ReservedEntity)._noLocalRotation,
+            "Expected fields from the prototype to be reflected.");
     }
 }

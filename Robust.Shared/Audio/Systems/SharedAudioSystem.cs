@@ -58,6 +58,9 @@ public abstract partial class SharedAudioSystem : EntitySystem
         ZOffset = CfgManager.GetCVar(CVars.AudioZOffset);
         Subs.CVar(CfgManager, CVars.AudioZOffset, SetZOffset);
         SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
+        SubscribeLocalEvent<AudioPlayerFilterComponent, ComponentGetStateAttemptEvent>(OnAudioPlayerFilterGetStateAttempt);
+        SubscribeLocalEvent<AudioPlayerFilterComponent, ComponentGetState>(OnAudioPlayerFilterGetState);
+        SubscribeLocalEvent<AudioPlayerFilterComponent, ComponentHandleState>(OnAudioPlayerFilterHandleState);
         SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
     }
 
@@ -263,6 +266,36 @@ public abstract partial class SharedAudioSystem : EntitySystem
         {
             args.Cancelled = true;
         }
+    }
+
+    private static void OnAudioPlayerFilterGetStateAttempt(
+        EntityUid uid,
+        AudioPlayerFilterComponent component,
+        ref ComponentGetStateAttemptEvent args)
+    {
+        // Only allow replay recording to capture this component.
+        // (or anybody if state attempts can be bypassed if PVS is disabled)
+        args.Cancelled |= args.Player == null;
+    }
+
+    private void OnAudioPlayerFilterGetState(Entity<AudioPlayerFilterComponent> ent, ref ComponentGetState args)
+    {
+        var netEntities = GetNetEntityArray(ent.Comp.IncludedEntities);
+        args.State = new AudioPlayerFilterComponent.ComponentState(netEntities, ent.Comp.FilterExpression);
+    }
+
+    private void OnAudioPlayerFilterHandleState(Entity<AudioPlayerFilterComponent> ent, ref ComponentHandleState args)
+    {
+        if (args.Current is not AudioPlayerFilterComponent.ComponentState state)
+            return;
+
+        ent.Comp.IncludedEntities = GetEntityArray(state.Entities);
+        ent.Comp.FilterExpression = state.FilterExpression;
+
+        // Reset this in case the component state gets re-applied later due to netentities coming in later.
+        // Unlikely to matter in any scenario, but better safe than sorry.
+        if (TryComp(ent, out AudioComponent? audio))
+            audio.IsLocalExcluded = null;
     }
 
     /// <summary>

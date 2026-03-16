@@ -138,7 +138,7 @@ internal partial struct CommandBufferEntry
         ///     Handles spawning a map with a builder.
         /// <code>
         ///     MapId ReservedMapId;
-        ///     MapEntityBuilder EntityBuilder;
+        ///     EntityBuilder EntityBuilder;
         ///     unused Field3;
         /// </code>
         /// </summary>
@@ -177,7 +177,5 @@ internal partial struct CommandBufferEntry
         /// </code>
         /// </summary>
         RemoveComponents,
-
-
     }
 }

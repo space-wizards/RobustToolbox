@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Prometheus;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
@@ -1118,13 +1119,13 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         internal EntityUid GenerateEntityUid()
         {
-            return new EntityUid(NextEntityUid++);
+            return new EntityUid(Interlocked.Increment(ref NextEntityUid));
         }
 
         /// <summary>
         /// Generates a unique network id and increments <see cref="NextNetworkId"/>
         /// </summary>
-        protected virtual NetEntity GenerateNetEntity() => new(NextNetworkId++);
+        protected virtual NetEntity GenerateNetEntity() => new(Interlocked.Increment(ref NextNetworkId));
 
         [Conditional("DEBUG")]
         protected void ThreadCheck()

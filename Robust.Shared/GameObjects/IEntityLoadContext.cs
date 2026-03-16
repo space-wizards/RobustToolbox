@@ -54,6 +54,7 @@ namespace Robust.Shared.GameObjects
         /// Checks whether a given component should be added to an entity.
         /// Used to prevent certain prototype components from being added while spawning an entity.
         /// </summary>
+        [Obsolete("Not properly implemented, functional API for at request.")]
         bool ShouldSkipComponent(string compName);
     }
 }

@@ -1,4 +1,5 @@
 using Robust.Shared.GameObjects.CommandBuffers;
+using Robust.Shared.GameObjects.EntityBuilders;
 
 namespace Robust.Shared.GameObjects;
 
@@ -14,8 +15,15 @@ public interface IRemoteEntityManager
     public CommandBuffer GetCommandBuffer();
 
     /// <summary>
+    ///     Creates a new, blank entity builder.
+    /// </summary>
+    public EntityBuilder BlankEntityBuilder();
+
+    /// <summary>
     ///     Retrieves an unused entity slot, which command buffer application can fill in when spawning entities.
     /// </summary>
     /// <returns>A completely unallocated, now reserved entity id.</returns>
     internal EntityUid GetUnusedEntityUid();
+
+
 }

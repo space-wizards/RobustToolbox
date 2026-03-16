@@ -66,10 +66,7 @@ public sealed class RobustRandom : IDedicatedRandom
 
     public float NextFloat()
     {
-        // This is pretty much the CoreFX implementation.
-        // So credits to that.
-        // Except using float instead of double.
-        return Next() * 4.6566128752458E-10f;
+        return _random.NextSingle();
     }
 
     public float NextFloat(float minValue, float maxValue)

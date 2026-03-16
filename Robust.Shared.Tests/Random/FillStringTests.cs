@@ -12,7 +12,14 @@ public sealed class FillStringTests
             .ToArray();
 
     [Test]
+    [TestOf(typeof(RandomExtensions))]
     [TestCaseSource(nameof(_seeds))]
+    [Description("""
+        Asserts that:
+        - Undersized buffers given to FillStringFromRunes throw correctly.
+        - FillStringFromRunes outputs a valid string without any broken symbols (i.e. cutting the 𛲜 in half)
+        - FillStringFromRunes outputs exactly the set of runes it was given to use, nothing else.
+    """)]
     public void FillStringBuffer(int seed)
     {
         var rng = IRobustRandom.CreateSeeded(seed);

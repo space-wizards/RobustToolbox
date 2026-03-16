@@ -4,6 +4,7 @@ using Robust.Shared.Random;
 
 namespace Robust.Shared.Tests.Random;
 
+[TestOf(typeof(IRobustRandom))]
 public sealed class SeedingTests
 {
     private struct MyContext(NetEntity ent1, int count)
@@ -13,12 +14,20 @@ public sealed class SeedingTests
     }
 
     [Test]
+    [Description("Ensures two randomizers made with CreateSeeded output the same values at the same time, i.e. seeding is deterministic.")]
     public void SeedSimple()
     {
         const int seed = 17;
 
         var rng1 = IRobustRandom.CreateSeeded(seed);
         var rng2 = IRobustRandom.CreateSeeded(seed);
+        using (Assert.EnterMultipleScope())
+        {
+            // We know what this seed outputs. It should always, always do the same thing.
+            // If we change the underlying implementation, update this test.
+            Assert.That(rng1.Next(1, 6), Is.EqualTo(4));
+            Assert.That(rng2.Next(1, 6), Is.EqualTo(4));
+        }
 
         // Try for a bit, no flukes.
         for (var i = 0; i < 128; i++)
@@ -28,6 +37,7 @@ public sealed class SeedingTests
     }
 
     [Test]
+    [Description("Ensures that creating seeds from a context is deterministic, testing two randomizers and asserting they output the same sequence.")]
     public void SeedWithContext()
     {
         var myContext = new MyContext(NetEntity.First, 42);
@@ -47,6 +57,7 @@ public sealed class SeedingTests
     }
 
     [Test]
+    [Description("Ensures that creating seeds from another randomizer is deterministic, testing two randomizers and asserting they output the same sequence.")]
     public void SeededWith()
     {
         var origin = IRobustRandom.CreateSeeded(17);

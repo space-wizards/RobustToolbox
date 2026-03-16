@@ -74,6 +74,15 @@ public partial interface IRobustRandom
     /// <param name="input">The value to hash for a seed.</param>
     /// <typeparam name="T">The type to hash.</typeparam>
     /// <returns>A constructed randomizer and its seed.</returns>
+    /// <example>
+    ///     Can be used for deterministically seeded randomization. Uses for this include consistent procedural generation
+    ///     and predicted random events.
+    /// <code>
+    ///     public readonly record struct MyContext(NetEntity Entity, GameTick Tick);
+    ///
+    ///     var rng = IRobustRandom.CreateSeededFromHashable(new MyContext(ent, _gameTiming.CurTick));
+    /// </code>
+    /// </example>
     [MustUseReturnValue]
     public static (IDedicatedRandom, int seed) CreateSeededFromHashable<T>(T input)
         where T : unmanaged

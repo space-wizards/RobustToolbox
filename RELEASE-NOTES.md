@@ -75,9 +75,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-- Toolshed commands trying to complete `EntProtoId` fields now actually return completion results.
-- UI styling and update limits are now disabled in testing through the `ui.obey_update_limits` cvar. This cvar is only
-  functional in debug builds of engine.
+*None yet*
 
 ### Other
 
@@ -87,6 +85,40 @@ END TEMPLATE-->
 ### Internal
 
 - The implementation of the global `IRobustRandom` was changed from `RobustRandom` to `GlobalRandom`
+
+## 274.0.0
+
+### Breaking changes
+
+- ITestPair.Init() now requires a TextWriter be provided to write its gravestone to.
+  This gravestone is where TestPair test history is now written to.
+- ITestPair.AddToHistory() must be used to add tests to the test history.
+- Test history is now stored in ITestPair.ExtendedTestHistory.
+- Engine and content tests relying on TestPair using NUnit will now automatically
+  output gravestone files for test history. You should set the working directory for tests if you wish to
+  use these artifacts.
+- Using test pairs outside of a test environment without providing an `ITestContextLike` implementor will
+  now crash due to the lack of a running NUnit test. Use an `ExternalTestContext` for this use case.
+- Test logs no longer contain TestPair history.
+- Test history now includes the GC total memory usage at time of AddToHistory() call. This is typically while the test
+  is obtaining a pair.
+- ITestPair is now `[NotContentImplementable]` and future additions to the interface will not be considered breaking.
+- Erroneous logs in tests are now allowed to occur more than once, and assert a failure at the end of the test while doing pair cleanup instead of during it.
+- `Prototype<T>`, a precursor to `ProtoId<T>` used by toolshed, has been removed.
+
+### New features
+
+- TestPairs now automatically log their test history to a gravestone file.
+- The visibility of `ScrollContainer` scrollbars can now controlled by the `VScrollBarHidden` and `HScrollBarHidden` properties.
+- Improved error message when failing to create a cursor.
+- Improved error logging for exceptions raised while applying entity states in `ClientGameStateManager`.
+
+### Bugfixes
+
+- Toolshed commands trying to complete `EntProtoId` fields now actually return completion results.
+- UI styling and update limits are now disabled in testing through the `ui.obey_update_limits` cvar. This cvar is only
+  functional in debug builds of engine.
+
 
 ## 273.0.0
 

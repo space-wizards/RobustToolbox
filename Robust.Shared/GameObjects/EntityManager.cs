@@ -8,6 +8,7 @@ using System.Threading;
 using Prometheus;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
+using Robust.Shared.GameObjects.EntityBuilders;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -953,6 +954,36 @@ namespace Robust.Shared.GameObjects
             AddComponentInternal(uid, xformComp, false, true, metadata);
 
             return uid;
+        }
+
+        private void AllocBuilderEntity(EntityBuilder builder)
+        {
+            ThreadCheck();
+
+            var uid = builder.ReservedEntity;
+
+#if DEBUG
+            if (EntityExists(uid))
+            {
+                throw new InvalidOperationException($"Entity builder entity already taken: {uid}, did something unusual happen?");
+            }
+#endif
+
+            // Mark ourselves as having been modified for the first time Right Now.
+            builder.MetaData.EntityLastModifiedTick = _gameTiming.CurTick;
+
+            var netEntity = GenerateNetEntity();
+            SetNetEntity(uid, netEntity, builder.MetaData);
+
+
+            EntityAdded?.Invoke((uid, builder.MetaData));
+            EventBusInternal.OnEntityAdded(uid);
+
+            Entities.Add(uid);
+
+            // Add our initial mandatory components.
+            AddComponentInternal(uid, builder.MetaData, _metaReg, false, true, builder.MetaData);
+            AddComponentInternal(uid, builder.Transform, false, true, builder.MetaData);
         }
 
         /// <summary>

@@ -19,7 +19,10 @@ public abstract partial class EntityManager
 
     public EntityUid ApplyEntityBuilder(EntityBuilder builder)
     {
-        throw new NotImplementedException();
+        var ent = builder.ReservedEntity;
+        // Doesn't allocate :)
+        BulkApplyEntityBuilders([builder]);
+        return ent;
     }
 
     public void BulkApplyEntityBuilders(ReadOnlySpan<EntityBuilder> builders)

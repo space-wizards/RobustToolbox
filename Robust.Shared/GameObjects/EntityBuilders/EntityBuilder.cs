@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
+using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects.EntityBuilders;
 
@@ -18,33 +23,36 @@ public sealed partial class EntityBuilder
     private readonly IComponentFactory _factory;
     private readonly IPrototypeManager _protoMan;
     private readonly ISerializationManager _serMan;
-
-    private void Foo(IRemoteEntityManager entMan)
-    {
-        var builder = entMan.BlankEntityBuilder()
-            .AddComp<MapComponent>()
-            .AddComp(new MapGridComponent
-            {
-                CanSplit = false
-            });
-    }
+    private readonly ILocalizationManager _locMan;
 
     /// <summary>
-    ///     The EntityUid we have reserved.
+    ///     The EntityUid we have reserved. No entity exists here yet unless the builder has been
+    ///     applied and consumed.
     /// </summary>
-    private readonly EntityUid _reservedId;
+    public readonly EntityUid ReservedEntity;
 
     /// <summary>
     ///     The components we'll be adding to the entity we construct.
     /// </summary>
     private readonly Dictionary<Type, IComponent> _entityComponents;
 
-    internal EntityBuilder(IDependencyCollection collection, EntityUid reservedId)
+    /// <summary>
+    ///     The coordinates to spawn the entity at, if any.
+    ///     Due to how map coordinates work, these have to be resolved at spawn time just before initializing
+    ///     the entities.
+    /// </summary>
+    private MapCoordinates? _mapCoordinates;
+
+    internal MetaDataComponent MetaData = default!;
+    internal TransformComponent Transform = default!;
+
+    internal EntityBuilder(IDependencyCollection collection, EntityUid reservedEntity)
     {
         _factory = collection.Resolve<IComponentFactory>();
         _protoMan = collection.Resolve<IPrototypeManager>();
         _serMan = collection.Resolve<ISerializationManager>();
-        _reservedId = reservedId;
+        _locMan = collection.Resolve<ILocalizationManager>();
+        ReservedEntity = reservedEntity;
         _entityComponents = new();
     }
 
@@ -60,69 +68,7 @@ public sealed partial class EntityBuilder
         return self;
     }
 
-    /// <summary>
-    ///     Creates the bare minimal spawnable entity with metadata and a transform.
-    /// </summary>
-    /// <param name="context">The load context to use, if any.</param>
-    private void InitializeMinimalEntity(IEntityLoadContext? context = null)
-    {
-        if (context?.TryGetComponent(_factory, out MetaDataComponent? meta) ?? false)
-        {
-            CopyComp(meta, context as ISerializationContext);
-        }
-        else
-        {
-            AddComp<MetaDataComponent>();
-        }
-
-        if (context?.TryGetComponent(_factory, out TransformComponent? xform) ?? false)
-        {
-            CopyComp(xform, context as ISerializationContext);
-        }
-        else
-        {
-            AddComp<TransformComponent>();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a command buffer from a prototype, doing most of entity setup aside from actually
-    ///     constructing an entity to apply the components.
-    /// </summary>
-    /// <param name="entityProtoId">The prototype to construct from.</param>
-    /// <param name="context">The load context to use.</param>
-    private void InitializeFromPrototype(EntProtoId entityProtoId, IEntityLoadContext? context)
-    {
-        var entityProto = _protoMan.Index(entityProtoId);
-
-        var meta = new MetaDataComponent();
-
-        if (context?.TryGetComponent(_factory, out MetaDataComponent? overrideMeta) ?? false)
-        {
-            _serMan.CopyTo<MetaDataComponent>(overrideMeta,
-                ref meta,
-                context as ISerializationContext,
-                notNullableOverride: true);
-        }
-
-        // Ensure we set up our metadata correctly, i.e. set the prototype so no explosions.
-        meta._entityPrototype = entityProto;
-        AddComp(meta);
-
-        if (context?.TryGetComponent(_factory, out TransformComponent? xform) ?? false)
-        {
-            CopyComp(xform, context as ISerializationContext);
-        }
-        else
-        {
-            AddComp<TransformComponent>();
-        }
-
-        foreach (var component in entityProto.Components.Components())
-        {
-        }
-    }
-
+    // wishing we had rust alloc-free lambdas rn.
     /// <summary>
     ///     Mutates a given component in place using the provided, ideally static, action.
     /// </summary>
@@ -130,11 +76,113 @@ public sealed partial class EntityBuilder
     /// <param name="context">The context object for the action.</param>
     /// <typeparam name="TContext"></typeparam>
     /// <typeparam name="TComp">The concrete type of the component.</typeparam>
-    public void MutateComp<TContext, TComp>(Action<TContext, TComp> action, TContext context)
+    /// <returns>The builder, for chaining.</returns>
+    /// <remarks>
+    ///     If you need this often you may be better off making an extension method.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    ///     // Allocation-free usage of MutateComp.
+    ///     public sealed class MySystem : EntitySystem
+    ///     {
+    ///         public EntityUid TestMethod()
+    ///         {
+    ///             var builder = EntityManager.BlankEntityBuilder()
+    ///                 .AddComp&lt;MapGridComponent&gt;()
+    ///                 .MutateComp&lt;MySystem, MetaDataComponent&gt;(
+    ///                     static (ctx, meta) => ctx.DoThing(meta),
+    ///                     this);
+    ///
+    ///         }
+    ///
+    ///         public void DoThing(MetaDataComponent meta)
+    ///         {
+    ///             // ...
+    ///         }
+    ///     }
+    /// </code>
+    /// </example>
+    public EntityBuilder MutateComp<TContext, TComp>(Action<TContext, TComp> action, TContext context)
         where TComp: IComponent, new()
     {
         var comp = _entityComponents[typeof(TComp)];
 
         action(context, (TComp)comp);
+
+        return this;
+    }
+
+    /// <summary>
+    ///     Retrieves the given concretely typed component from the builder.
+    /// </summary>
+    /// <param name="comp">The retrieved component.</param>
+    /// <typeparam name="TComp">The type of component to retrieve.</typeparam>
+    /// <returns>The builder, for chaining.</returns>
+    public EntityBuilder GetComp<TComp>(out TComp comp)
+    {
+        comp = (TComp) _entityComponents[typeof(TComp)];
+        return this;
+    }
+
+    /// <summary>
+    ///     Ensures the entity is spawned as a transform child of the given parent.
+    /// </summary>
+    /// <param name="parent">The parent to attach to.</param>
+    /// <param name="relativePos">The parent-relative position to use for coordinates.</param>
+    /// <param name="rotation">The parent-relative angle to use.</param>
+    /// <include file='Docs.xml' path='entries/entry[@name="ParentingRaceConditionRemark"]/*'/>
+    /// <returns>The builder, for chaining.</returns>
+    public EntityBuilder ChildOf(EntityUid parent, Vector2 relativePos = default, Angle? rotation = null)
+    {
+        if (_mapCoordinates is not null)
+            _mapCoordinates = null; // One or the other.
+
+        Transform._parent = parent;
+        Transform._localPosition = relativePos;
+
+        if (rotation is not null)
+            Transform._localRotation = rotation.Value;
+
+        return this;
+    }
+
+    /// <summary>
+    ///     Ensures the entity is spawned at the given map coordinate, automatically finding a parent.
+    /// </summary>
+    /// <param name="mapCoordinates">The coordinates to spawn at</param>
+    /// <include file='Docs.xml' path='entries/entry[@name="ParentingRaceConditionRemark"]/*'/>
+    /// <returns>The builder, for chaining.</returns>
+    public EntityBuilder SpawnAt(MapCoordinates mapCoordinates)
+    {
+        _mapCoordinates = mapCoordinates;
+
+        if (Transform._parent != EntityUid.Invalid)
+        {
+            Transform._parent = EntityUid.Invalid;
+            Transform._localPosition = default;
+        }
+
+        return this;
+    }
+
+    private sealed class TestSystem : EntitySystem
+    {
+        public void Foo()
+        {
+            var parent = EntityManager.BlankEntityBuilder()
+                .NamedLoc("my-key-amogus")
+                .AddComp<MapComponent>();
+
+            var child = EntityManager.BlankEntityBuilder()
+                .Named("child")
+                .ChildOf(parent.ReservedEntity)
+                .AddComp(new MapGridComponent
+                {
+                    CanSplit = false,
+                });
+
+            // spawn 'em all like a map. Orderless, it'll figure it out.
+            EntityManager.BulkApplyEntityBuilders(new [] { parent, child });
+        }
     }
 }

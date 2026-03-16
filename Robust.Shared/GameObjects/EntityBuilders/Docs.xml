@@ -1,0 +1,9 @@
+<entries>
+  <entry name="ParentingRaceConditionRemark">
+    <remarks>
+      If the provided parent of the entity to be built is deleted in the meantime, entity construction will likely
+      fail with exceptions. If you need to check later for the parent existing, you should consider spawning the entity
+      in nullspace or checking right before applying the builders.
+    </remarks>
+  </entry>
+</entries>

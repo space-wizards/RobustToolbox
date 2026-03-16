@@ -16,11 +16,17 @@ public sealed partial class EntityBuilder
     public EntityBuilder AddComp<T>()
         where T : IComponent, new()
     {
-        if (!_entityComponents.TryAdd(typeof(T), _factory.GetComponent(CompIdx.Index<T>())))
+        var component = _factory.GetComponent(CompIdx.Index<T>());
+
+        if (!_entityComponents.TryAdd(typeof(T), component))
         {
             throw new ArgumentException(
                 $"The component {_factory.GetComponentName<T>()} already existed in the builder.");
         }
+
+#pragma warning disable CS0618 // Type or member is obsolete
+        component.Owner = ReservedEntity;
+#pragma warning restore CS0618 // Type or member is obsolete
 
         return this;
     }
@@ -33,11 +39,17 @@ public sealed partial class EntityBuilder
     /// <returns>The builder, for chaining.</returns>
     public EntityBuilder AddComp(Type t)
     {
-        if (!_entityComponents.TryAdd(t, _factory.GetComponent(t)))
+        var component = _factory.GetComponent(t);
+
+        if (!_entityComponents.TryAdd(t, component))
         {
             throw new ArgumentException(
                 $"The component {_factory.GetComponentName(t)} already existed in the builder.");
         }
+
+#pragma warning disable CS0618 // Type or member is obsolete
+        component.Owner = ReservedEntity;
+#pragma warning restore CS0618 // Type or member is obsolete
 
         return this;
     }
@@ -71,6 +83,10 @@ public sealed partial class EntityBuilder
                 $"The component {_factory.GetComponentName(component.GetType())} already existed in the builder.");
         }
 
+#pragma warning disable CS0618 // Type or member is obsolete
+        component.Owner = ReservedEntity;
+#pragma warning restore CS0618 // Type or member is obsolete
+
         return this;
     }
 
@@ -98,6 +114,10 @@ public sealed partial class EntityBuilder
             throw new ArgumentException(
                 $"The component {_factory.GetComponentName(component.GetType())} already existed in the builder.");
         }
+
+#pragma warning disable CS0618 // Type or member is obsolete
+        newComp.Owner = ReservedEntity;
+#pragma warning restore CS0618 // Type or member is obsolete
 
         return this;
     }

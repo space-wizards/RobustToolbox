@@ -109,7 +109,7 @@ public sealed partial class EntityBuilder
 
         _serMan.CopyTo(component, ref newComp, context, notNullableOverride: true);
 
-        if (!EntityComponents.TryAdd(typeof(T), newComp))
+        if (!EntityComponents.TryAdd(component.GetType(), newComp))
         {
             throw new ArgumentException(
                 $"The component {_factory.GetComponentName(component.GetType())} already existed in the builder.");
@@ -121,6 +121,36 @@ public sealed partial class EntityBuilder
 
         return this;
     }
+
+    /// <summary>
+    ///     Copies a component to the entity being built, or writes over an existing one.
+    /// </summary>
+    /// <remarks>
+    ///     Works with IComponent, but the concrete type of <paramref name="component"/> must be a constructable,
+    ///     registered component.
+    /// </remarks>
+    /// <param name="component">The component to copy.</param>
+    /// <param name="context">The optional serialization context to use when copying.</param>
+    /// <typeparam name="T">The type of component to add.</typeparam>
+    /// <exception cref="ArgumentException">Thrown if the component already exists on the in progress entity.</exception>
+    /// <returns>The builder, for chaining.</returns>
+    public EntityBuilder EnsureCopyComp<T>(T component, ISerializationContext? context = null)
+        where T : IComponent
+    {
+        if (!EntityComponents.TryGetValue(component.GetType(), out var comp))
+            comp = _factory.GetComponent(component.GetType());
+
+        _serMan.CopyTo(component, ref comp, context, notNullableOverride: true);
+
+        EntityComponents.Add(component.GetType(), comp);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+        comp.Owner = ReservedEntity;
+#pragma warning restore CS0618 // Type or member is obsolete
+
+        return this;
+    }
+
 
     /// <summary>
     ///     Directly adds the given set of components to the entity being built.

@@ -59,11 +59,24 @@ public sealed partial class EntityBuilder
     internal static EntityBuilder BlankEntity(
         IDependencyCollection collection,
         EntityUid reservedId,
-        IEntityLoadContext? loadContext)
+        ISerializationContext? context)
     {
         var self = new EntityBuilder(collection, reservedId);
 
-        self.InitializeMinimalEntity(loadContext);
+        self.InitializeMinimalEntity(context);
+
+        return self;
+    }
+
+    internal static EntityBuilder PrototypedEntity(
+        IDependencyCollection collection,
+        EntityUid reservedId,
+        EntProtoId proto,
+        ISerializationContext? context)
+    {
+        var self = new EntityBuilder(collection, reservedId);
+
+        self.InitializeFromPrototype(proto, context);
 
         return self;
     }
@@ -163,26 +176,5 @@ public sealed partial class EntityBuilder
         }
 
         return this;
-    }
-
-    private sealed class TestSystem : EntitySystem
-    {
-        public void Foo()
-        {
-            var parent = EntityManager.BlankEntityBuilder()
-                .NamedLoc("my-key-amogus")
-                .AddComp<MapComponent>();
-
-            var child = EntityManager.BlankEntityBuilder()
-                .Named("child")
-                .ChildOf(parent.ReservedEntity)
-                .AddComp(new MapGridComponent
-                {
-                    CanSplit = false,
-                });
-
-            // spawn 'em all like a map. Orderless, it'll figure it out.
-            EntityManager.BulkApplyEntityBuilders(new [] { parent, child });
-        }
     }
 }

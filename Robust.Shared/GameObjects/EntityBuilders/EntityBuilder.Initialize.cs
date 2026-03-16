@@ -9,40 +9,21 @@ public sealed partial class EntityBuilder
     ///     Creates the bare minimal spawnable entity with metadata and a transform.
     /// </summary>
     /// <param name="context">The load context to use, if any.</param>
-    private void InitializeMinimalEntity(IEntityLoadContext? context = null)
+    private void InitializeMinimalEntity(ISerializationContext? context = null)
     {
         MetaData = new MetaDataComponent();
-
-        if (context?.TryGetComponent(_factory, out MetaDataComponent? overrideMeta) ?? false)
-        {
-            _serMan.CopyTo(overrideMeta,
-                ref MetaData,
-                context as ISerializationContext,
-                notNullableOverride: true);
-        }
-
         AddComp(MetaData);
 
         Transform = new TransformComponent();
-
-        if (context?.TryGetComponent(_factory, out TransformComponent? overrideXform) ?? false)
-        {
-            _serMan.CopyTo(overrideXform,
-                ref Transform,
-                context as ISerializationContext,
-                notNullableOverride: true);
-        }
-
         AddComp(Transform);
     }
 
     /// <summary>
-    ///     Initializes a command buffer from a prototype, doing most of entity setup aside from actually
-    ///     constructing an entity to apply the components.
+    ///     Initializes a command buffer from a prototype, cloning all the components onto the new entity.
     /// </summary>
     /// <param name="entityProtoId">The prototype to construct from.</param>
     /// <param name="context">The load context to use.</param>
-    private void InitializeFromPrototype(EntProtoId entityProtoId, IEntityLoadContext? context)
+    private void InitializeFromPrototype(EntProtoId entityProtoId, ISerializationContext? context = null)
     {
         var entityProto = _protoMan.Index(entityProtoId);
 
@@ -50,6 +31,7 @@ public sealed partial class EntityBuilder
 
         foreach (var component in entityProto.Components.Components())
         {
+            EnsureCopyComp(component, context);
         }
     }
 }

@@ -45,9 +45,10 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
     }
 
     [Test]
+    [Description("Creates a few entities with blank EntityBuilders, ensuring component adds work.")]
     public void CreateEntity()
     {
-        var builder = _entMan.BlankEntityBuilder()
+        var builder = _entMan.EntityBuilder()
             .Named("Test entity")
             .AddComp<Marker1Component>()
             .AddComp<Marker2Component>();
@@ -59,20 +60,21 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
     }
 
     [Test]
+    [Description("Creates a hierarchy of entities, a map and some grids, using blank entity builders.")]
     public void CreateHierarchy()
     {
-        var root = _entMan.BlankEntityBuilder()
+        var root = _entMan.EntityBuilder()
             .Named("Test entity")
             .AddComp<MapComponent>()
             .AddComp<Marker1Component>();
 
-        var child1 = _entMan.BlankEntityBuilder()
+        var child1 = _entMan.EntityBuilder()
             .Named("Test child 1")
             .ChildOf(root.ReservedEntity, new Vector2(-4, -4))
             .AddComp<MapGridComponent>()
             .AddComp<Marker1Component>();
 
-        var child2 = _entMan.BlankEntityBuilder()
+        var child2 = _entMan.EntityBuilder()
             .Named("Test child 2")
             .ChildOf(root.ReservedEntity, new Vector2(4, 4))
             .AddComp<MapGridComponent>()
@@ -88,5 +90,20 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
         Assert.That(_entMan.GetComponent<TransformComponent>(root.ReservedEntity)._children,
             NUnit.Framework.Is.EquivalentTo([child1.ReservedEntity, child2.ReservedEntity]),
             "Expected the hierarchy we set up to be respected.");
+    }
+
+    [Test]
+    public void CreateFromPrototype()
+    {
+        var builder = _entMan.EntityBuilder(TestEnt1);
+
+        _entMan.ApplyEntityBuilder(builder);
+
+        Assert.That(_entMan.HasComponent<MetaDataComponent>(builder.ReservedEntity));
+        Assert.That(_entMan.HasComponent<TransformComponent>(builder.ReservedEntity));
+        Assert.That(_entMan.HasComponent<Marker1Component>(builder.ReservedEntity));
+        Assert.That(_entMan.HasComponent<Marker2Component>(builder.ReservedEntity));
+        Assert.That(_entMan.HasComponent<Marker3Component>(builder.ReservedEntity));
+        Assert.That(_entMan.HasComponent<Marker4Component>(builder.ReservedEntity));
     }
 }

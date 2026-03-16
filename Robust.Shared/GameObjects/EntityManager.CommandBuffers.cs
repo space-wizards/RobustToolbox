@@ -3,6 +3,8 @@ using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects.CommandBuffers;
 using Robust.Shared.GameObjects.EntityBuilders;
 using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Shared.GameObjects;
 
@@ -22,9 +24,12 @@ public abstract partial class EntityManager
         return CommandBufferPool.Get();
     }
 
-    public EntityBuilder BlankEntityBuilder()
+    public EntityBuilder EntityBuilder(EntProtoId? protoId = null, ISerializationContext? context = null)
     {
-        return EntityBuilder.BlankEntity(_dependencyCollection, GenerateEntityUid(), null);
+        if (protoId is null)
+            return EntityBuilders.EntityBuilder.BlankEntity(_dependencyCollection, GenerateEntityUid(), context);
+
+        return EntityBuilders.EntityBuilder.PrototypedEntity(_dependencyCollection, GenerateEntityUid(), protoId.Value, context);
     }
 
     EntityUid IRemoteEntityManager.GetUnusedEntityUid()

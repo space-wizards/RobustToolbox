@@ -68,6 +68,14 @@ public partial interface IRobustRandom
         return (CreateSeeded(seed), seed);
     }
 
+    /// <inheritdoc cref="M:Robust.Shared.Random.IRobustRandom.CreateSeededFromHashable``1(System.Span{``0})"/>
+    [MustUseReturnValue]
+    public static (IDedicatedRandom random, int seed) CreateSeededFromHashable<T>(params T[] inputs)
+        where T : unmanaged
+    {
+        return CreateSeededFromHashable(inputs.AsSpan());
+    }
+
     /// <summary>
     ///     Seeds a randomizer using a hashable value. This can be any unmanaged type including structs.
     /// </summary>

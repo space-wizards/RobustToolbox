@@ -25,11 +25,12 @@ public sealed partial class CommandBuffer : IDisposable
     /// <summary>
     ///     The underlying list of entries in the buffer.
     /// </summary>
-    private ValueList<CommandBufferEntry> _entries = [];
+    internal ValueList<CommandBufferEntry> Entries = [];
+
     /// <summary>
     ///     The capacity of the underlying entry collection, for object pooling usage.
     /// </summary>
-    internal int Capacity => _entries.Capacity;
+    internal int Capacity => Entries.Capacity;
 
     /// <summary>
     ///     Construct a new command buffer. As these are meant to be pooled by entity manager, the constructor is
@@ -43,9 +44,9 @@ public sealed partial class CommandBuffer : IDisposable
 
     private ref CommandBufferEntry NextEntry()
     {
-        _entries.Add(default);
+        Entries.Add(default);
 
-        return ref _entries[^1];
+        return ref Entries[^1];
     }
 
     /// <summary>
@@ -84,6 +85,6 @@ public sealed partial class CommandBuffer : IDisposable
     /// </summary>
     internal void Clear()
     {
-        _entries.Clear();
+        Entries.Clear();
     }
 }

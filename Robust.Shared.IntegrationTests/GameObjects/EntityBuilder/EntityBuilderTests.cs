@@ -84,7 +84,7 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
             .AddComp<Marker2Component>();
 
         // Spawn the map and its children.
-        // Note: Currently order does matter.
+        // Note: Currently order does matter. I'd like to lift that requirement sometime, but it does.
         _entMan.BulkApplyEntityBuilders([root, child1, child2]);
 
         Assert.That(_entMan.GetComponent<MapComponent>(root.ReservedEntity).MapId,
@@ -96,19 +96,24 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
     }
 
     [Test]
+    [Description("Ensure EntityBuilder successfully creates entities from prototypes.")]
     public void CreateFromPrototype()
     {
         var builder = _entMan.EntityBuilder(TestEnt1);
 
         _entMan.ApplyEntityBuilder(builder);
 
-        Assert.That(_entMan.HasComponent<MetaDataComponent>(builder.ReservedEntity));
-        Assert.That(_entMan.HasComponent<TransformComponent>(builder.ReservedEntity));
-        Assert.That(_entMan.HasComponent<Marker1Component>(builder.ReservedEntity));
-        Assert.That(_entMan.HasComponent<Marker2Component>(builder.ReservedEntity));
-        Assert.That(_entMan.HasComponent<Marker3Component>(builder.ReservedEntity));
-        Assert.That(_entMan.HasComponent<Marker4Component>(builder.ReservedEntity));
-        Assert.That(_entMan.GetComponent<TransformComponent>(builder.ReservedEntity)._noLocalRotation,
-            "Expected fields from the prototype to be reflected.");
+        using (Assert.EnterMultipleScope())
+        {
+            // Assert we have the expected components.
+            Assert.That(_entMan.HasComponent<MetaDataComponent>(builder.ReservedEntity));
+            Assert.That(_entMan.HasComponent<TransformComponent>(builder.ReservedEntity));
+            Assert.That(_entMan.HasComponent<Marker1Component>(builder.ReservedEntity));
+            Assert.That(_entMan.HasComponent<Marker2Component>(builder.ReservedEntity));
+            Assert.That(_entMan.HasComponent<Marker3Component>(builder.ReservedEntity));
+            Assert.That(_entMan.HasComponent<Marker4Component>(builder.ReservedEntity));
+            Assert.That(_entMan.GetComponent<TransformComponent>(builder.ReservedEntity)._noLocalRotation,
+                "Expected fields from the prototype to be reflected.");
+        }
     }
 }

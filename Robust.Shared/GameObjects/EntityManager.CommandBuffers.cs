@@ -14,11 +14,6 @@ public abstract partial class EntityManager
 
     DefaultObjectPool<CommandBuffer> IEntityManager.CommandBufferPool => CommandBufferPool;
 
-    public void ApplyCommandBuffer(CommandBuffer buffer)
-    {
-        throw new System.NotImplementedException();
-    }
-
     public CommandBuffer GetCommandBuffer()
     {
         return CommandBufferPool.Get();

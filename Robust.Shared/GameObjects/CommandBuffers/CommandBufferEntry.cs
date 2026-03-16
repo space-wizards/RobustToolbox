@@ -1,7 +1,7 @@
 using System;
-using System.Reflection;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Robust.Shared.Utility;
+using Robust.Shared.GameObjects.EntityBuilders;
 
 namespace Robust.Shared.GameObjects.CommandBuffers;
 
@@ -46,6 +46,7 @@ internal partial struct CommandBufferEntry
     /// </remarks>
     public EntityUid TargetEnt => new (unchecked((int)Field1));
 
+
     static unsafe CommandBufferEntry()
     {
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
@@ -81,6 +82,32 @@ internal partial struct CommandBufferEntry
         entry.Command = (long)CmdKind.SubBuffer;
         entry.Field1 = 0;
         entry.Field2 = subBuffer;
+        entry.Field3 = null;
+    }
+
+    /// <summary>
+    ///     Creates a new command buffer entry to spawn an entity with a builder.
+    /// </summary>
+    /// <param name="builder">The builder to apply.</param>
+    /// <param name="entry">The location to place the new entry within.</param>
+    public static void SpawnEntity(EntityBuilder builder, out CommandBufferEntry entry)
+    {
+        entry.Command = (long)CmdKind.SpawnEntity;
+        entry.Field1 = 0;
+        entry.Field2 = builder;
+        entry.Field3 = null;
+    }
+
+    /// <summary>
+    ///     Creates a new command buffer entry to spawn entities with a builder.
+    /// </summary>
+    /// <param name="builder">The builders to apply.</param>
+    /// <param name="entry">The location to place the new entry within.</param>
+    public static void SpawnEntities(EntityBuilder[] builder, out CommandBufferEntry entry)
+    {
+        entry.Command = (long)CmdKind.SpawnEntity;
+        entry.Field1 = 0;
+        entry.Field2 = builder;
         entry.Field3 = null;
     }
 
@@ -135,20 +162,11 @@ internal partial struct CommandBufferEntry
         DeleteEntity,
 
         /// <summary>
-        ///     Handles spawning a map with a builder.
-        /// <code>
-        ///     MapId ReservedMapId;
-        ///     EntityBuilder EntityBuilder;
-        ///     unused Field3;
-        /// </code>
-        /// </summary>
-        SpawnMap,
-
-        /// <summary>
         ///     Handles spawning an entity with a builder.
+        ///     Either an entity builder, or a list of entity builders.
         /// <code>
         ///     unused Field1;
-        ///     EntityBuilder EntityBuilder;
+        ///     EntityBuilder | EntityBuilder[] EntityBuilder;
         ///     unused Field3;
         /// </code>
         /// </summary>
@@ -156,24 +174,33 @@ internal partial struct CommandBufferEntry
 
         /// <summary>
         ///     Handles adding components to an entity.
-        ///     The fields for this are a bit funny, it can either contain a List of components, or up
-        ///     to two direct references to components.
+        ///     Either a component, or a list of components.
         /// <code>
         ///     EntityUid Target;
-        ///     IComponent | List&lt;IComponent&gt; Components;
-        ///     IComponent? ExtraComponent;
+        ///     IComponent | IComponent[] Components;
+        ///     unused Field3;
         /// </code>
         /// </summary>
         AddComponents,
 
         /// <summary>
-        ///     Handles removing components from an entity.
-        ///     Similar to AddComponents, this either contains a List of Type, or up to two direct references to
-        ///     Type.
+        ///     Handles ensuring components on an entity.
+        ///     Similar to AddComponents, this is either a Type, or a list of Types.
         /// <code>
         ///     EntityUid Target;
-        ///     Type | List&lt;Type&gt; Components;
-        ///     Type? ExtraComponent;
+        ///     Type | Type[] Components;
+        ///     unused Field3;
+        /// </code>
+        /// </summary>
+        EnsureComponents,
+
+        /// <summary>
+        ///     Handles removing components from an entity.
+        ///     Similar to AddComponents, this is either a Type, or a list of Types.
+        /// <code>
+        ///     EntityUid Target;
+        ///     Type | Type[] Components;
+        ///     unused Field3;
         /// </code>
         /// </summary>
         RemoveComponents,

@@ -31,6 +31,8 @@ public partial interface IEntityManager
     /// </summary>
     /// <remarks>
     ///     If you want to create your own map loading logic, this is pretty much how.
+    ///     Entities given to this should be ordered such that transform parents initialize before their children do,
+    ///     this limitation may be lifted in the future.
     /// </remarks>
     /// <param name="builders">The entity builders to allocate for.</param>
     /// <param name="mapInit">Whether map init should be run for the built entities.</param>

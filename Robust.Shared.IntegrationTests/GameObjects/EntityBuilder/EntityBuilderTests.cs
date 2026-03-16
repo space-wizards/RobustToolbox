@@ -78,6 +78,8 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
             .AddComp<MapGridComponent>()
             .AddComp<Marker2Component>();
 
+        // Spawn the map and its children.
+        // Note: Currently order does matter.
         _entMan.BulkApplyEntityBuilders([root, child1, child2]);
 
         Assert.That(_entMan.GetComponent<MapComponent>(root.ReservedEntity).MapId,

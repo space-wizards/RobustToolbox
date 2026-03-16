@@ -54,6 +54,9 @@ END TEMPLATE-->
 ### New features
 
 - TestPairs now automatically log their test history to a gravestone file.
+- The visibility of `ScrollContainer` scrollbars can now controlled by the `VScrollBarHidden` and `HScrollBarHidden` properties.
+- Improved error message when failing to create a cursor.
+- Improved error logging for exceptions raised while applying entity states in `ClientGameStateManager`.
 
 ### Bugfixes
 

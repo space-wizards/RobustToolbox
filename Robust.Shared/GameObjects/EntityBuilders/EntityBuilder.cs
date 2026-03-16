@@ -34,7 +34,7 @@ public sealed partial class EntityBuilder
     /// <summary>
     ///     The components we'll be adding to the entity we construct.
     /// </summary>
-    private readonly Dictionary<Type, IComponent> _entityComponents;
+    internal readonly Dictionary<Type, IComponent> EntityComponents;
 
     /// <summary>
     ///     The coordinates to spawn the entity at, if any.
@@ -53,7 +53,7 @@ public sealed partial class EntityBuilder
         _serMan = collection.Resolve<ISerializationManager>();
         _locMan = collection.Resolve<ILocalizationManager>();
         ReservedEntity = reservedEntity;
-        _entityComponents = new();
+        EntityComponents = new();
     }
 
     internal static EntityBuilder BlankEntity(
@@ -105,7 +105,7 @@ public sealed partial class EntityBuilder
     public EntityBuilder MutateComp<TContext, TComp>(Action<TContext, TComp> action, TContext context)
         where TComp: IComponent, new()
     {
-        var comp = _entityComponents[typeof(TComp)];
+        var comp = EntityComponents[typeof(TComp)];
 
         action(context, (TComp)comp);
 
@@ -120,7 +120,7 @@ public sealed partial class EntityBuilder
     /// <returns>The builder, for chaining.</returns>
     public EntityBuilder GetComp<TComp>(out TComp comp)
     {
-        comp = (TComp) _entityComponents[typeof(TComp)];
+        comp = (TComp) EntityComponents[typeof(TComp)];
         return this;
     }
 

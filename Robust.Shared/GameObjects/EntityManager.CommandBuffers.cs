@@ -17,19 +17,6 @@ public abstract partial class EntityManager
         throw new System.NotImplementedException();
     }
 
-    public EntityUid ApplyEntityBuilder(EntityBuilder builder)
-    {
-        var ent = builder.ReservedEntity;
-        // Doesn't allocate :)
-        BulkApplyEntityBuilders([builder]);
-        return ent;
-    }
-
-    public void BulkApplyEntityBuilders(ReadOnlySpan<EntityBuilder> builders)
-    {
-        throw new NotImplementedException();
-    }
-
     public CommandBuffer GetCommandBuffer()
     {
         return CommandBufferPool.Get();

@@ -22,8 +22,9 @@ public partial interface IEntityManager
     ///     Applies an entity builder to the simulation, constructing the entity within in full.
     /// </summary>
     /// <param name="builder">The builder to apply.</param>
+    /// <param name="mapInit">Whether map init should be run for the built entities.</param>
     /// <returns>The constructed entity.</returns>
-    public EntityUid ApplyEntityBuilder(EntityBuilder builder);
+    public EntityUid ApplyEntityBuilder(EntityBuilder builder, bool mapInit = true);
 
     /// <summary>
     ///     Runs through entity builders in phases, ala loading a map.
@@ -32,5 +33,6 @@ public partial interface IEntityManager
     ///     If you want to create your own map loading logic, this is pretty much how.
     /// </remarks>
     /// <param name="builders">The entity builders to allocate for.</param>
-    public void BulkApplyEntityBuilders(ReadOnlySpan<EntityBuilder> builders);
+    /// <param name="mapInit">Whether map init should be run for the built entities.</param>
+    public void BulkApplyEntityBuilders(ReadOnlySpan<EntityBuilder> builders, bool mapInit = true);
 }

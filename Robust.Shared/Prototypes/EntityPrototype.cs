@@ -224,7 +224,7 @@ namespace Robust.Shared.Prototypes
 
                     var fullData = context != null && context.TryGetComponent(factory, comp.GetType(), out var data) ? data : comp;
 
-                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, compReg.Name, fullData, ctx);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, fullData, ctx);
 
                     if (!fullData.NetSyncEnabled && compReg.NetID is {} netId)
                         meta.NetComponents.Remove(netId);
@@ -250,7 +250,7 @@ namespace Robust.Shared.Prototypes
                     }
 
                     var compReg = factory.GetRegistration(name);
-                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, ctx);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, data, ctx);
                 }
             }
         }
@@ -260,13 +260,12 @@ namespace Robust.Shared.Prototypes
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
-            string compName,
             IComponent data,
             ISerializationContext? context)
         {
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                var newComponent = factory.GetComponent(compName);
+                var newComponent = factory.GetComponent(compReg);
                 entityManager.AddComponent(entity, newComponent);
                 component = newComponent;
             }
@@ -277,7 +276,7 @@ namespace Robust.Shared.Prototypes
                 return;
             }
 
-            map.CurrentComponent = compName;
+            map.CurrentComponent = compReg.Name;
             serManager.CopyTo(data, ref component, context, notNullableOverride: true);
             map.CurrentComponent = null;
         }

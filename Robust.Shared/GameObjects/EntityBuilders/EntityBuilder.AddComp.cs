@@ -18,7 +18,7 @@ public sealed partial class EntityBuilder
     {
         var component = _factory.GetComponent(CompIdx.Index<T>());
 
-        if (!_entityComponents.TryAdd(typeof(T), component))
+        if (!EntityComponents.TryAdd(typeof(T), component))
         {
             throw new ArgumentException(
                 $"The component {_factory.GetComponentName<T>()} already existed in the builder.");
@@ -41,7 +41,7 @@ public sealed partial class EntityBuilder
     {
         var component = _factory.GetComponent(t);
 
-        if (!_entityComponents.TryAdd(t, component))
+        if (!EntityComponents.TryAdd(t, component))
         {
             throw new ArgumentException(
                 $"The component {_factory.GetComponentName(t)} already existed in the builder.");
@@ -77,7 +77,7 @@ public sealed partial class EntityBuilder
         DebugTools.AssertEqual(component.LifeStage, ComponentLifeStage.PreAdd);
         DebugTools.Assert(_factory.TryGetRegistration(component.GetType(), out _));
 
-        if (!_entityComponents.TryAdd(component.GetType(), component))
+        if (!EntityComponents.TryAdd(component.GetType(), component))
         {
             throw new ArgumentException(
                 $"The component {_factory.GetComponentName(component.GetType())} already existed in the builder.");
@@ -109,7 +109,7 @@ public sealed partial class EntityBuilder
 
         _serMan.CopyTo(component, ref newComp, context, notNullableOverride: true);
 
-        if (!_entityComponents.TryAdd(typeof(T), newComp))
+        if (!EntityComponents.TryAdd(typeof(T), newComp))
         {
             throw new ArgumentException(
                 $"The component {_factory.GetComponentName(component.GetType())} already existed in the builder.");

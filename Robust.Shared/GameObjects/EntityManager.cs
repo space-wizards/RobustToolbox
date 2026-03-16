@@ -981,9 +981,20 @@ namespace Robust.Shared.GameObjects
 
             Entities.Add(uid);
 
-            // Add our initial mandatory components.
+            // TODO: Clean up xform and metadata logic enough we don't need to special case their addition anymore.
+            //       as builders always have both anyway.
+            // Add our initial components, starting with the most important two.
             AddComponentInternal(uid, builder.MetaData, _metaReg, false, true, builder.MetaData);
             AddComponentInternal(uid, builder.Transform, false, true, builder.MetaData);
+
+            // Add the rest of our components.
+            foreach (var (_, component) in builder.EntityComponents)
+            {
+                if (component is MetaDataComponent or TransformComponent)
+                    continue; // Don't add them twice.
+
+                AddComponentInternal(uid, component, false, true, builder.MetaData);
+            }
         }
 
         /// <summary>

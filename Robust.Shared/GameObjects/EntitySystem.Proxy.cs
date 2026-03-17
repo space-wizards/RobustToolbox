@@ -1080,15 +1080,15 @@ public partial class EntitySystem
 
     #region All Entity Query
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager), nameof(EntityManager.AllEntityQueryEnumerator))]
+    [Obsolete($"Prefer {nameof(IEntityManager.GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property.")]
     protected AllEntityQueryEnumerator<TComp1> AllEntityQuery<TComp1>() where TComp1 : IComponent
     {
         return EntityManager.AllEntityQueryEnumerator<TComp1>();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager), nameof(EntityManager.AllEntityQueryEnumerator))]
+    [Obsolete($"Prefer {nameof(IEntityManager.GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property.")]
     protected AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQuery<TComp1, TComp2>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1096,8 +1096,8 @@ public partial class EntitySystem
         return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2>();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager), nameof(EntityManager.AllEntityQueryEnumerator))]
+    [Obsolete($"Prefer {nameof(IEntityManager.GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property.")]
     protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQuery<TComp1, TComp2, TComp3>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1106,8 +1106,8 @@ public partial class EntitySystem
         return EntityManager.AllEntityQueryEnumerator<TComp1, TComp2, TComp3>();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager), nameof(EntityManager.AllEntityQueryEnumerator))]
+    [Obsolete($"Prefer {nameof(IEntityManager.GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property.")]
     protected AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQuery<TComp1, TComp2, TComp3, TComp4>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1121,15 +1121,15 @@ public partial class EntitySystem
 
     #region Get Entity Query
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
+    [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
     protected EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>() where TComp1 : IComponent
     {
         return EntityManager.EntityQueryEnumerator<TComp1>();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
+    [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
     protected EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1137,8 +1137,8 @@ public partial class EntitySystem
         return EntityManager.EntityQueryEnumerator<TComp1, TComp2>();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
+    [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
     protected EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1147,8 +1147,8 @@ public partial class EntitySystem
         return EntityManager.EntityQueryEnumerator<TComp1, TComp2, TComp3>();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
+    [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
     protected EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1161,23 +1161,11 @@ public partial class EntitySystem
     #endregion
 
     #region Entity Query
-
     /// <remarks>
     /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1}"/>
     /// </remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
-    [Pure]
-    protected EntityQuery<T> GetEntityQuery<T>() where T : IComponent
-    {
-        return EntityManager.GetEntityQuery<T>();
-    }
-
-    /// <remarks>
-    /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1}"/>
-    /// </remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager))]
+    [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
     protected IEnumerable<TComp1> EntityQuery<TComp1>(bool includePaused = false) where TComp1 : IComponent
     {
         return EntityManager.EntityQuery<TComp1>(includePaused);
@@ -1186,8 +1174,8 @@ public partial class EntitySystem
     /// <remarks>
     /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2}"/>
     /// </remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
+    [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
     protected IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1198,8 +1186,8 @@ public partial class EntitySystem
     /// <remarks>
     /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2, TComp3}"/>
     /// </remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
+    [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
     protected IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
         where TComp1 : IComponent
         where TComp2 : IComponent
@@ -1211,8 +1199,8 @@ public partial class EntitySystem
     /// <remarks>
     /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2, TComp3, TComp4}"/>
     /// </remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
+    [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
     protected IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
         where TComp1 : IComponent
         where TComp2 : IComponent

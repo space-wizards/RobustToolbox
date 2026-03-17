@@ -34,7 +34,7 @@ public sealed partial class EntityBuilder
     /// <summary>
     ///     Adds a component to the entity being built.
     /// </summary>
-    /// <typeparam name="T">The type of component to add.</typeparam>
+    /// <param name="t">The type of component to add.</param>
     /// <exception cref="ArgumentException">Thrown if the component already exists on the in progress entity.</exception>
     /// <returns>The builder, for chaining.</returns>
     public EntityBuilder AddComp(Type t)
@@ -77,15 +77,15 @@ public sealed partial class EntityBuilder
         DebugTools.AssertEqual(component.LifeStage, ComponentLifeStage.PreAdd);
         DebugTools.Assert(_factory.TryGetRegistration(component.GetType(), out _));
 
+#pragma warning disable CS0618 // Type or member is obsolete
+        component.Owner = ReservedEntity;
+#pragma warning restore CS0618 // Type or member is obsolete
+
         if (!EntityComponents.TryAdd(component.GetType(), component))
         {
             throw new ArgumentException(
                 $"The component {_factory.GetComponentName(component.GetType())} already existed in the builder.");
         }
-
-#pragma warning disable CS0618 // Type or member is obsolete
-        component.Owner = ReservedEntity;
-#pragma warning restore CS0618 // Type or member is obsolete
 
         return this;
     }
@@ -140,13 +140,13 @@ public sealed partial class EntityBuilder
         if (!EntityComponents.TryGetValue(component.GetType(), out var comp))
             comp = _factory.GetComponent(component.GetType());
 
-        _serMan.CopyTo(component, ref comp, context, notNullableOverride: true);
-
-        EntityComponents.TryAdd(component.GetType(), comp);
-
 #pragma warning disable CS0618 // Type or member is obsolete
         comp.Owner = ReservedEntity;
 #pragma warning restore CS0618 // Type or member is obsolete
+
+        _serMan.CopyTo(component, ref comp, context, notNullableOverride: true);
+
+        EntityComponents.TryAdd(component.GetType(), comp);
 
         return this;
     }

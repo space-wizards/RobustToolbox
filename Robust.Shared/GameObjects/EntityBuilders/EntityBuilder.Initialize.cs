@@ -11,10 +11,13 @@ public sealed partial class EntityBuilder
     /// <param name="context">The load context to use, if any.</param>
     private void InitializeMinimalEntity(ISerializationContext? context = null)
     {
-        MetaData = new MetaDataComponent();
+#pragma warning disable CS0618 // Type or member is obsolete
+        MetaData = new MetaDataComponent() { Owner = ReservedEntity };
+#pragma warning restore CS0618 // Type or member is obsolete
         AddComp(MetaData);
 
-        Transform = new TransformComponent();
+        // This thing is so legacy it has a [Dependency] in it.
+        Transform = _factory.GetComponent<TransformComponent>();
         AddComp(Transform);
     }
 

@@ -56,7 +56,7 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
             .AddComp<Marker1Component>()
             .AddComp<Marker2Component>();
 
-        var ent = _entMan.ApplyEntityBuilder(builder);
+        var ent = _entMan.Spawn(builder);
 
         Assert.That(_entMan.HasComponent<Marker1Component>(ent), "Expected builder added components on the new entity");
         Assert.That(_entMan.HasComponent<Marker1Component>(ent), "Expected builder added components on the new entity");
@@ -85,7 +85,7 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
 
         // Spawn the map and its children.
         // Note: Currently order does matter. I'd like to lift that requirement sometime, but it does.
-        _entMan.BulkApplyEntityBuilders([root, child1, child2]);
+        _entMan.SpawnBulk([root, child1, child2]);
 
         Assert.That(_entMan.GetComponent<MapComponent>(root.ReservedEntity).MapId,
             NUnit.Framework.Is.Not.EqualTo(MapId.Nullspace));
@@ -101,7 +101,7 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
     {
         var builder = _entMan.EntityBuilder(TestEnt1);
 
-        _entMan.ApplyEntityBuilder(builder);
+        _entMan.Spawn(builder);
 
         using (Assert.EnterMultipleScope())
         {

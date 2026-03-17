@@ -43,12 +43,12 @@ public abstract partial class EntityManager
                     {
                         case EntityBuilder b:
                         {
-                            ApplyEntityBuilder(b);
+                            Spawn(b);
                             break;
                         }
                         case EntityBuilder[] b:
                         {
-                            BulkApplyEntityBuilders(b);
+                            SpawnBulk(b);
                             break;
                         }
                     }

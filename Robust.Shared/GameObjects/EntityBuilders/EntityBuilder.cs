@@ -165,7 +165,7 @@ public sealed partial class EntityBuilder
     /// <param name="mapCoordinates">The coordinates to spawn at</param>
     /// <include file='Docs.xml' path='entries/entry[@name="ParentingRaceConditionRemark"]/*'/>
     /// <returns>The builder, for chaining.</returns>
-    public EntityBuilder SpawnAt(MapCoordinates mapCoordinates)
+    public EntityBuilder LocatedAt(MapCoordinates mapCoordinates)
     {
         _mapCoordinates = mapCoordinates;
 

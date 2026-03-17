@@ -503,10 +503,11 @@ internal sealed partial class PvsSystem : EntitySystem
             return;
         }
 
-        if (_oldestAck == _lastOldestAck.Value)
+        var cullTick = new GameTick(Math.Max(_oldestAck, _gameTiming.CurTick.Value > (uint)ForceAckThreshold ? _gameTiming.CurTick.Value - (uint)ForceAckThreshold : 0));
+        if (cullTick == _lastOldestAck)
             return;
 
-        _lastOldestAck = new(_oldestAck);
+        _lastOldestAck = cullTick;
         CullDeletionHistory(_lastOldestAck);
     }
 }

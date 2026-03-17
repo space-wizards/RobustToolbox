@@ -87,9 +87,9 @@ namespace Robust.Shared.GameObjects
 
         internal EntityEventBus EventBusInternal = null!;
 
-        protected int NextEntityUid = (int) EntityUid.FirstUid;
+        protected int NextEntityUid = (int) EntityUid.Invalid;
 
-        protected int NextNetworkId = (int) NetEntity.First;
+        protected int NextNetworkId = (int) NetEntity.Invalid;
 
         /// <inheritdoc />
         public IEventBus EventBus => EventBusInternal;

@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects;
 
 public sealed partial class SpriteSystem
 {
+    [Dependency] private readonly ISerializationManager _serMan = default!;
+
     /// <summary>
     /// Resets the sprite's animated layers to align with a given time (in seconds).
     /// </summary>
@@ -56,10 +60,12 @@ public sealed partial class SpriteSystem
 
         // Some code in content decided it'd be cool to copy from uninitialized SpriteComponents.
         // Because this no longer works, we copy some extra data to ensure it does anyway.
-        target.Comp.rsi = source.Comp.rsi;
-        target.Comp.layerDatums = source.Comp.layerDatums;
-        target.Comp.state = source.Comp.state;
-        target.Comp.texture = source.Comp.texture;
+        if (source.Comp.LifeStage == ComponentLifeStage.PreAdd)
+        {
+            Log.Info($"Hit a bodge case in CopySprite, please change your usage to use ISerializationManager.CopyTo instead: {Environment.StackTrace}");
+            _serMan.CopyTo<SpriteComponent>(source.Comp, ref target.Comp, notNullableOverride: true);
+            return;
+        }
 
         target.Comp._baseRsi = source.Comp._baseRsi;
         target.Comp._bounds = source.Comp._bounds;

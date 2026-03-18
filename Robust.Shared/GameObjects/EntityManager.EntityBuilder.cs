@@ -7,7 +7,7 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class EntityManager
 {
-    public EntityUid Spawn(EntityBuilder builder, bool mapInit = true)
+    public EntityUid Spawn(EntityBuilder builder, bool? mapInit = null)
     {
         var ent = builder.ReservedEntity;
         // Doesn't allocate. Not that it matters, we're about to allocate a lot.
@@ -15,7 +15,7 @@ public abstract partial class EntityManager
         return ent;
     }
 
-    public void SpawnBulk(ReadOnlySpan<EntityBuilder> builders, bool mapInit = true)
+    public void SpawnBulk(ReadOnlySpan<EntityBuilder> builders, bool? mapInit = null)
     {
         // Create entities + ComponentAdd
         foreach (var builder in builders)
@@ -35,14 +35,15 @@ public abstract partial class EntityManager
             StartEntity(builder.ReservedEntity);
         }
 
-        // MapInit
-        if (mapInit)
+        foreach (var builder in builders)
         {
-            foreach (var builder in builders)
-            {
+            var doMapInit = mapInit;
+            doMapInit ??= _mapSystem.IsInitialized(TransformQuery.GetComponent(builder.ReservedEntity).MapID);
+
+            if (doMapInit.Value)
                 RunMapInit(builder.ReservedEntity, builder.MetaData);
-            }
         }
+
 
 #if DEBUG
         // Prevent people from relying on entity builder command buffer order.
@@ -61,7 +62,7 @@ public abstract partial class EntityManager
         }
     }
 
-    public void SpawnBulkUnordered(Span<EntityBuilder> builders, bool mapInit = true)
+    public void SpawnBulkUnordered(Span<EntityBuilder> builders, bool? mapInit = null)
     {
         // Create an index of entity uids to builders,
         var index = new Dictionary<EntityUid, EntityBuilder>();

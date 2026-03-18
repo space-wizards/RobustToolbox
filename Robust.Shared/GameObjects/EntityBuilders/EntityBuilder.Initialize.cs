@@ -8,7 +8,7 @@ public sealed partial class EntityBuilder
     /// <summary>
     ///     Creates the bare minimal spawnable entity with metadata and a transform.
     /// </summary>
-    /// <param name="context">The load context to use, if any.</param>
+    /// <param name="context">The serialization context to use, if any.</param>
     private void InitializeMinimalEntity(ISerializationContext? context = null)
     {
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -25,7 +25,7 @@ public sealed partial class EntityBuilder
     ///     Initializes a command buffer from a prototype, cloning all the components onto the new entity.
     /// </summary>
     /// <param name="entityProtoId">The prototype to construct from.</param>
-    /// <param name="context">The load context to use.</param>
+    /// <param name="context">The serialization context to use, if any.</param>
     private void InitializeFromPrototype(EntProtoId entityProtoId, ISerializationContext? context = null)
     {
         var entityProto = _protoMan.Index(entityProtoId);
@@ -36,5 +36,21 @@ public sealed partial class EntityBuilder
         {
             EnsureCopyComp(component, context);
         }
+    }
+
+    /// <summary>
+    ///     Applies the given component registry to the builder, copying over all components it contains.
+    /// </summary>
+    /// <param name="registry">The registry to apply.</param>
+    /// <param name="context">The serialization context to use, if any.</param>
+    /// <returns></returns>
+    public EntityBuilder ApplyRegistry(ComponentRegistry registry, ISerializationContext? context = null)
+    {
+        foreach (var component in registry.Components())
+        {
+            EnsureCopyComp(component, context);
+        }
+
+        return this;
     }
 }

@@ -266,6 +266,27 @@ public sealed partial class EntityBuilder
     }
 
     /// <summary>
+    ///     Ensures the entity is spawned as a transform child of the given parent.
+    /// </summary>
+    /// <param name="coordinates">The relative coordinates to give this entity.</param>
+    /// <param name="rotation">The parent-relative angle to use.</param>
+    /// <include file='Docs.xml' path='entries/entry[@name="ParentingRaceConditionRemark"]/*'/>
+    /// <returns>The builder, for chaining.</returns>
+    public EntityBuilder ChildOf(EntityCoordinates coordinates, Angle? rotation = null)
+    {
+        if (_mapCoordinates is not null)
+            _mapCoordinates = null; // One or the other.
+
+        Transform._parent = coordinates.EntityId;
+        Transform._localPosition = coordinates.Position;
+
+        if (rotation is not null)
+            Transform._localRotation = rotation.Value;
+
+        return this;
+    }
+
+    /// <summary>
     ///     Ensures the entity is spawned at the given map coordinate, automatically finding a parent.
     /// </summary>
     /// <param name="mapCoordinates">The coordinates to spawn at</param>

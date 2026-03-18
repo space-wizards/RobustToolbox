@@ -22,9 +22,9 @@ public partial interface IEntityManager
     ///     Applies an entity builder to the simulation, spawning the entity it describes.
     /// </summary>
     /// <param name="builder">The entity builder to spawn into the world.</param>
-    /// <param name="mapInit">Whether map init should be run for the built entities.</param>
+    /// <param name="mapInit">Whether map init should be run for the built entities, or automatically inferred if null.</param>
     /// <returns>The constructed entity.</returns>
-    public EntityUid Spawn(EntityBuilder builder, bool mapInit = true);
+    public EntityUid Spawn(EntityBuilder builder, bool? mapInit = null);
 
     /// <summary>
     ///     Spawns the provided set of entity builders, in a manner much like loading a map does (with initialization
@@ -36,9 +36,9 @@ public partial interface IEntityManager
     ///     this limitation may be lifted in the future.
     /// </remarks>
     /// <param name="builders">The entity builders to spawn into the world.</param>
-    /// <param name="mapInit">Whether map init should be run for the built entities.</param>
+    /// <param name="mapInit">Whether map init should be run for the built entities, or automatically inferred if null.</param>
     /// <seealso cref="SpawnBulkUnordered"/>
-    public void SpawnBulk(ReadOnlySpan<EntityBuilder> builders, bool mapInit = true);
+    public void SpawnBulk(ReadOnlySpan<EntityBuilder> builders, bool? mapInit = null);
 
     /// <summary>
     ///     Spawns the provided set of entity builders, in a manner much like loading a map does (with initialization
@@ -64,5 +64,5 @@ public partial interface IEntityManager
     /// <param name="builders">The entity builders to spawn into the world.</param>
     /// <param name="mapInit">Whether map init should be run for the built entities.</param>
     /// <seealso cref="SpawnBulk"/>
-    public void SpawnBulkUnordered(Span<EntityBuilder> builders, bool mapInit = true);
+    public void SpawnBulkUnordered(Span<EntityBuilder> builders, bool? mapInit = null);
 }

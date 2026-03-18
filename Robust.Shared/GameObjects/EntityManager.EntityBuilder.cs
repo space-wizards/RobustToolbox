@@ -37,11 +37,20 @@ public abstract partial class EntityManager
 
         foreach (var builder in builders)
         {
+            var xform = TransformQuery.GetComponent(builder.ReservedEntity);
             var doMapInit = mapInit;
-            doMapInit ??= _mapSystem.IsInitialized(TransformQuery.GetComponent(builder.ReservedEntity).MapID);
+            doMapInit ??= _mapSystem.IsInitialized(xform.MapID);
 
             if (doMapInit.Value)
                 RunMapInit(builder.ReservedEntity, builder.MetaData);
+
+            // Pause inheritance REALLY should not be here, but the old system handled it explicitly too to my understanding.
+            // Transform recursively inherits paused status...
+            // TODO: This should really be handled by TransformSystem itself!
+            if (xform.ParentUid.IsValid() && MetaQuery.Comp(xform.ParentUid).EntityPaused)
+            {
+                EntitySysManager.GetEntitySystem<MetaDataSystem>().SetEntityPaused(builder.ReservedEntity, true, builder.MetaData);
+            }
         }
 
 

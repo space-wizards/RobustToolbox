@@ -96,6 +96,45 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
     }
 
     [Test]
+    [Description("Creates an unordered hierarchy of entities, a map and some grids, using blank entity builders. Ensures SpawnBulkUnordered works as expected.")]
+    public void CreateUnorderedHierarchy()
+    {
+        var root = _entMan.EntityBuilder()
+            .Named("Test entity")
+            .AddComp<MapComponent>()
+            .AddComp<Marker1Component>();
+
+        var child1 = _entMan.EntityBuilder()
+            .Named("Test child 1")
+            .ChildOf(root.ReservedEntity, new Vector2(-4, -4))
+            .AddComp<MapGridComponent>()
+            .AddComp<Marker1Component>();
+
+        var child2 = _entMan.EntityBuilder()
+            .Named("Test child 2")
+            .ChildOf(child1.ReservedEntity, new Vector2(4, 4))
+            .AddComp<Marker2Component>();
+
+        // Spawn the map and its children.
+        // They're in the wrong order, so they do need fixed up.
+        _entMan.SpawnBulkUnordered([child2, root, child1]);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(_entMan.GetComponent<MapComponent>(root.ReservedEntity).MapId,
+                    NUnit.Framework.Is.Not.EqualTo(MapId.Nullspace));
+
+            Assert.That(_entMan.GetComponent<TransformComponent>(root.ReservedEntity)._children,
+                NUnit.Framework.Is.EquivalentTo([child1.ReservedEntity]),
+                "Expected the hierarchy we set up to be respected.");
+
+            Assert.That(_entMan.GetComponent<TransformComponent>(child1.ReservedEntity)._children,
+                NUnit.Framework.Is.EquivalentTo([child2.ReservedEntity]),
+                "Expected the hierarchy we set up to be respected.");
+        }
+    }
+
+    [Test]
     [Description("Ensure EntityBuilder successfully creates entities from prototypes.")]
     public void CreateFromPrototype()
     {

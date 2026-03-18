@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Robust.Shared.GameObjects.EntityBuilders;
 
@@ -42,5 +43,46 @@ public abstract partial class EntityManager
                 RunMapInit(builder.ReservedEntity, builder.MetaData);
             }
         }
+    }
+
+    public void SpawnBulkUnordered(Span<EntityBuilder> builders, bool mapInit = true)
+    {
+        // Create an index of entity uids to builders,
+        var index = new Dictionary<EntityUid, EntityBuilder>();
+
+        foreach (var builder in builders)
+        {
+            index.Add(builder.ReservedEntity, builder);
+        }
+
+        var keys = new int[builders.Length];
+
+        // Go through and figure out how "deep" any given entity is in the hierarchy,
+        // i.e. how many parents it has.
+        //
+        // We can then order the builders by depth ascending to get creation order.
+        for (var i = 0; i < builders.Length; i++)
+        {
+            var builder = builders[i];
+            var depth = 0;
+            var curr = builder;
+
+            while (curr.Transform._parent != EntityUid.Invalid)
+            {
+                depth += 1;
+                // If we're also spawning their parent, keep going.
+                if (index.TryGetValue(curr.Transform._parent, out var parent))
+                    curr = parent;
+                else // Otherwise, the entity already exists or is otherwise outside our purview, so move on.
+                    break;
+            }
+
+            keys[i] = depth;
+        }
+
+        // Sort ascending.
+        keys.Sort(builders);
+
+        SpawnBulk(builders);
     }
 }

@@ -43,6 +43,22 @@ public abstract partial class EntityManager
                 RunMapInit(builder.ReservedEntity, builder.MetaData);
             }
         }
+
+#if DEBUG
+        // Prevent people from relying on entity builder command buffer order.
+        // If you need this reliably, make a single CommandBuffer to run after calling SpawnBulk, or even call SpawnBulk
+        // with that CommandBuffer to begin with.
+        var buildersShuffled = builders.ToArray();
+        _random.Shuffle(buildersShuffled);
+#else
+        var buildersShuffled = builders;
+#endif
+
+        foreach (var builder in buildersShuffled)
+        {
+            if (builder.PostInitCommands is {} commands)
+                ApplyCommandBuffer(commands);
+        }
     }
 
     public void SpawnBulkUnordered(Span<EntityBuilder> builders, bool mapInit = true)

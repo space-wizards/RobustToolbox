@@ -53,23 +53,25 @@ public sealed partial class CommandBuffer : IDisposable
     ///     Creates a new CommandBuffer that will execute at precisely this point.
     ///     This buffer is independent of its parent and can be safely given to another thread.
     /// </summary>
-    /// <returns>The created sub-buffer.</returns>
-    public CommandBuffer CreateSubBuffer()
+    /// <returns>The command buffer, for chaining.</returns>
+    public CommandBuffer CreateSubBuffer(out CommandBuffer subBuffer)
     {
-        var subBuffer = _entMan.GetCommandBuffer();
+        subBuffer = _entMan.GetCommandBuffer();
 
         CommandBufferEntry.SubBuffer(subBuffer, out NextEntry());
 
-        return subBuffer;
+        return this;
     }
 
     /// <summary>
     ///     Adds an entity deletion to the buffer.
     /// </summary>
     /// <param name="target">The entity to delete immediately.</param>
-    public void DeleteEntity(EntityUid target)
+    /// <returns>The command buffer, for chaining.</returns>
+    public CommandBuffer DeleteEntity(EntityUid target)
     {
         CommandBufferEntry.DeleteEntity(target, out NextEntry());
+        return this;
     }
 
     /// <summary>

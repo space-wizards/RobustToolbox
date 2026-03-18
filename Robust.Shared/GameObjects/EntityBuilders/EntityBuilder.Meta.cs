@@ -9,8 +9,7 @@ public sealed partial class EntityBuilder
     /// </summary>
     public EntityBuilder Named(string newName)
     {
-        GetComp(out MetaDataComponent meta);
-        meta._entityName = newName;
+        MetaData._entityName = newName;
         return this;
     }
 
@@ -19,8 +18,7 @@ public sealed partial class EntityBuilder
     /// </summary>
     public EntityBuilder NamedLoc(LocId newName)
     {
-        GetComp(out MetaDataComponent meta);
-        meta._entityName = _locMan.GetString(newName);
+        MetaData._entityName = _locMan.GetString(newName);
         return this;
     }
 
@@ -29,8 +27,7 @@ public sealed partial class EntityBuilder
     /// </summary>
     public EntityBuilder Described(string newDesc)
     {
-        GetComp(out MetaDataComponent meta);
-        meta._entityDescription = newDesc;
+        MetaData._entityDescription = newDesc;
         return this;
     }
 
@@ -39,8 +36,7 @@ public sealed partial class EntityBuilder
     /// </summary>
     public EntityBuilder DescribedLoc(LocId newDesc)
     {
-        GetComp(out MetaDataComponent meta);
-        meta._entityDescription = _locMan.GetString(newDesc);
+        MetaData._entityDescription = _locMan.GetString(newDesc);
         return this;
     }
 }

@@ -80,7 +80,6 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
         var child2 = _entMan.EntityBuilder()
             .Named("Test child 2")
             .ChildOf(root.ReservedEntity, new Vector2(4, 4))
-            .AddComp<MapGridComponent>()
             .AddComp<Marker2Component>();
 
         // Spawn the map and its children.

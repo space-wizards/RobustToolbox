@@ -20,6 +20,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -39,6 +40,7 @@ namespace Robust.Shared.GameObjects
         #region Dependencies
 
         [IoC.Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [IoC.Dependency] private readonly IRobustRandom _random = default!;
         [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
         [IoC.Dependency] protected readonly ILogManager LogManager = default!;
         [IoC.Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;

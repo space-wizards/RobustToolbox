@@ -107,7 +107,6 @@ internal sealed class EntityBuilderTests : OurRobustUnitTest
         var child1 = _entMan.EntityBuilder()
             .Named("Test child 1")
             .ChildOf(root.ReservedEntity, new Vector2(-4, -4))
-            .AddComp<MapGridComponent>()
             .AddComp<Marker1Component>();
 
         var child2 = _entMan.EntityBuilder()

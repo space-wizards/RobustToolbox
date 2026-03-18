@@ -37,8 +37,10 @@ public abstract partial class EntityManager
 
         foreach (var builder in builders)
         {
+            // MapInit is inherited, if we're on an initialized map we should also map init unless otherwise told.
             var xform = TransformQuery.GetComponent(builder.ReservedEntity);
             var doMapInit = mapInit;
+            // Replicate whatever map we're on if mapInit is null.
             doMapInit ??= _mapSystem.IsInitialized(xform.MapID);
 
             if (doMapInit.Value)

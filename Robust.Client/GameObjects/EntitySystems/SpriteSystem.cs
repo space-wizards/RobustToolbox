@@ -61,11 +61,66 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(SpriteTreeSystem));
 
             SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
+            SubscribeLocalEvent<SpriteComponent, ComponentAdd>(OnAdd);
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
             _sawmill = _logManager.GetSawmill("sprite");
             _query = GetEntityQuery<SpriteComponent>();
+        }
+
+        private void OnAdd(Entity<SpriteComponent> ent, ref ComponentAdd args)
+        {
+            // This is a direct, dirty port of the old ISerializationHook from spritecomponent.
+            // This is just to make EntityBuilders work.
+            // This does not answer prayers, but it does fix some of my problems.
+
+            var c = ent.Comp;
+            IoCManager.InjectDependencies(c);
+
+            if (!string.IsNullOrWhiteSpace(c.rsi))
+            {
+                var rsiPath = TextureRoot / c.rsi;
+                if (_resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
+                    c._baseRsi = resource.RSI;
+                else
+                    Log.Error("Unable to load RSI '{0}'.", rsiPath);
+            }
+
+            if (c.layerDatums.Count == 0)
+            {
+                if (c.state != null || c.texture != null)
+                {
+                    c.layerDatums.Insert(0, new PrototypeLayerData
+                    {
+                        TexturePath = string.IsNullOrWhiteSpace(c.texture) ? null : c.texture,
+                        State = string.IsNullOrWhiteSpace(c.state) ? null : c.state,
+                        Color = Color.White,
+                        Scale = Vector2.One,
+                        Visible = true,
+                        RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy,
+                        Cycle = false,
+                    });
+                    c.state = null;
+                    c.texture = null;
+                }
+            }
+
+            if (c.layerDatums.Count != 0)
+            {
+                c.LayerMap.Clear();
+                c.Layers.Clear();
+                foreach (var datum in c.layerDatums)
+                {
+                    var layer = new Layer(ent, c.Layers.Count);
+                    c.Layers.Add(layer);
+                    c.LayerSetData(layer, datum);
+                }
+
+            }
+
+            c.BoundsDirty = true;
+            c.LocalMatrix = Matrix3Helpers.CreateTransform(in c.offset, in c.rotation, in c.scale);
         }
 
         public bool IsVisible(Layer layer)

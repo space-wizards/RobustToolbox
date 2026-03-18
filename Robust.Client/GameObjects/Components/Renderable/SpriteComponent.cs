@@ -35,7 +35,7 @@ using Direction = Robust.Shared.Maths.Direction;
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
-    public sealed partial class SpriteComponent : Component, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
+    public sealed partial class SpriteComponent : Component, IComponentDebug, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
         public const string LogCategory = "go.comp.sprite";
 
@@ -166,11 +166,11 @@ namespace Robust.Client.GameObjects
             set => Sys.SetBaseRsi((Owner, this), value);
         }
 
-        [DataField("sprite", readOnly: true)] private string? rsi;
-        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
+        [DataField("sprite", readOnly: true)] internal string? rsi;
+        [DataField("layers", readOnly: true)] internal List<PrototypeLayerData> layerDatums = new();
 
-        [DataField(readOnly: true)] private string? state;
-        [DataField(readOnly: true)] private string? texture;
+        [DataField(readOnly: true)] internal string? state;
+        [DataField(readOnly: true)] internal string? texture;
 
         /// <summary>
         ///     Should this entity show up in containers regardless of whether the container can show contents?
@@ -242,58 +242,6 @@ namespace Robust.Client.GameObjects
         public ISpriteLayer this[Index layer] => Layers[layer];
         public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
-
-        void ISerializationHooks.AfterDeserialization(IDependencyCollection collection)
-        {
-            // Please somebody burn this to the ground. There is so much spaghetti.
-            // Why has no one answered my prayers.
-
-            collection.InjectDependencies(this);
-
-            if (!string.IsNullOrWhiteSpace(rsi))
-            {
-                var rsiPath = TextureRoot / rsi;
-                if (resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
-                    _baseRsi = resource.RSI;
-                else
-                    Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
-            }
-
-            if (layerDatums.Count == 0)
-            {
-                if (state != null || texture != null)
-                {
-                    layerDatums.Insert(0, new PrototypeLayerData
-                    {
-                        TexturePath = string.IsNullOrWhiteSpace(texture) ? null : texture,
-                        State = string.IsNullOrWhiteSpace(state) ? null : state,
-                        Color = Color.White,
-                        Scale = Vector2.One,
-                        Visible = true,
-                        RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy,
-                        Cycle = false,
-                    });
-                    state = null;
-                    texture = null;
-                }
-            }
-
-            if (layerDatums.Count != 0)
-            {
-                LayerMap.Clear();
-                Layers.Clear();
-                foreach (var datum in layerDatums)
-                {
-                    var layer = new Layer((Owner, this), Layers.Count);
-                    Layers.Add(layer);
-                    LayerSetData(layer, datum);
-                }
-
-            }
-
-            BoundsDirty = true;
-            LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
-        }
 
         /// <summary>
         /// If false, this will prevent any of this sprite's animated layers from looping their animation.

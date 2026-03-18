@@ -32,6 +32,8 @@ public sealed partial class EntityBuilder
 
         InitializeMinimalEntity(context);
 
+        MetaData._entityPrototype = entityProto;
+
         foreach (var component in entityProto.Components.Components())
         {
             EnsureCopyComp(component, context);

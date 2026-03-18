@@ -163,9 +163,9 @@ namespace Robust.Shared.Prototypes
             Components.AddComponentManual("MetaData", new MetaDataComponent());
         }
 
-        void ISerializationHooks.AfterDeserialization()
+        void ISerializationHooks.AfterDeserialization(IDependencyCollection collection)
         {
-            _loc = IoCManager.Resolve<ILocalizationManager>();
+            _loc = collection.Resolve<ILocalizationManager>();
         }
 
         [Obsolete("Pass in IComponentFactory")]

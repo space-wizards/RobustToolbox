@@ -1,5 +1,7 @@
 using System.Numerics;
 using NUnit.Framework;
+using NUnit.Framework.Internal.Execution;
+using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;

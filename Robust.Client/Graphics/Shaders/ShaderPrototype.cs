@@ -107,8 +107,9 @@ namespace Robust.Client.Graphics
         [DataField("blend_mode")]
         private string? _rawBlendMode;
 
-        void ISerializationHooks.AfterDeserialization()
+        void ISerializationHooks.AfterDeserialization(IDependencyCollection collection)
         {
+            // TODO: This isn't threadsafe and can't be! WGPU when.
             switch (_rawKind)
             {
                 case "source":
@@ -118,7 +119,7 @@ namespace Robust.Client.Graphics
                     if (_path == null)
                         throw new InvalidOperationException("Source shaders must specify a source file.");
 
-                    _source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>(_path.Value);
+                    _source = collection.Resolve<IResourceCache>().GetResource<ShaderSourceResource>(_path.Value);
 
                     if (_paramMapping != null)
                     {
@@ -140,7 +141,7 @@ namespace Robust.Client.Graphics
 
                 case "canvas":
                     Kind = ShaderKind.Canvas;
-                    _source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl");
+                    _source = collection.Resolve<IResourceCache>().GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl");
                     break;
 
                 default:

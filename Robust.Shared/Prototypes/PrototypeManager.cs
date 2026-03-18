@@ -29,6 +29,7 @@ namespace Robust.Shared.Prototypes
     public abstract partial class PrototypeManager : IPrototypeManagerInternal
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [Dependency] protected readonly IResourceManager Resources = default!;
         [Dependency] protected readonly ITaskManager TaskManager = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
@@ -554,6 +555,8 @@ namespace Robust.Shared.Prototypes
 
             // On the game thread: process AfterDeserialization hooks from the channel.
             var channelReader = hooksChannel.Reader;
+            // TODO: Currently we always run these hooks on the main thread, and the only prototype left requiring this
+            //       is ShaderPrototype. ShaderPrototype needs updated such that we don't have to rely on that behavior!
 #pragma warning disable RA0004
             while (channelReader.WaitToReadAsync().AsTask().Result)
 #pragma warning restore RA0004
@@ -561,6 +564,7 @@ namespace Robust.Shared.Prototypes
                 while (channelReader.TryRead(out var hooks))
                 {
                     hooks.AfterDeserialization();
+                    hooks.AfterDeserialization(_dependencyCollection);
                 }
             }
 

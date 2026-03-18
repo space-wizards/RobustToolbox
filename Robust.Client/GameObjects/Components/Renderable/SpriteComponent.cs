@@ -243,12 +243,13 @@ namespace Robust.Client.GameObjects
         public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
 
-        void ISerializationHooks.AfterDeserialization()
+        void ISerializationHooks.AfterDeserialization(IDependencyCollection collection)
         {
             // Please somebody burn this to the ground. There is so much spaghetti.
             // Why has no one answered my prayers.
 
-            IoCManager.InjectDependencies(this);
+            collection.InjectDependencies(this);
+
             if (!string.IsNullOrWhiteSpace(rsi))
             {
                 var rsiPath = TextureRoot / rsi;

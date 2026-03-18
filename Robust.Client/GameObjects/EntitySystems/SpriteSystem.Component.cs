@@ -54,6 +54,13 @@ public sealed partial class SpriteSystem
         if (!Resolve(target.Owner, ref target.Comp))
             return;
 
+        // Some code in content decided it'd be cool to copy from uninitialized SpriteComponents.
+        // Because this no longer works, we copy some extra data to ensure it does anyway.
+        target.Comp.rsi = source.Comp.rsi;
+        target.Comp.layerDatums = source.Comp.layerDatums;
+        target.Comp.state = source.Comp.state;
+        target.Comp.texture = source.Comp.texture;
+
         target.Comp._baseRsi = source.Comp._baseRsi;
         target.Comp._bounds = source.Comp._bounds;
         target.Comp._visible = source.Comp._visible;

@@ -114,9 +114,8 @@ namespace Robust.Client.GameObjects
                 {
                     var layer = new Layer(ent, c.Layers.Count);
                     c.Layers.Add(layer);
-                    c.LayerSetData(layer, datum);
+                    LayerSetData(layer, datum);
                 }
-
             }
 
             c.BoundsDirty = true;

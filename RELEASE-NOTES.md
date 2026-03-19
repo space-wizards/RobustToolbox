@@ -35,11 +35,43 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+- `Prototype<T>`, a precursor to `ProtoId<T>` used by toolshed, has been removed.
+- On `IRobustRandom`, the following have been removed from the interface and are now extension methods on
+  `RandomExtensions`:
+  - `float NextFloat(float minValue, float maxValue)`
+  - `float NextFloat(float maxValue)`
+  - `byte NextByte()`
+  - `byte NextByte(byte maxValue)`
+  - `byte NextByte(byte minValue, byte maxValue)`
+  - `Next(double maxValue)`
+  - `NextDouble(double minValue, double maxValue)`
+  - `Angle NextAngle()`
+  - `Angle NextAngle(Angle maxValue)`
+  - `Angle NextAngle(Angle minValue, Angle maxValue)`
+  - `Vector2 NextVector2(float maxMagnitude = 1)`
+  - `Vector2 NextVector2(float minMagnitude, float maxMagnitude)`
+  - `Vector2 NextVector2Box(float minX, float minY, float maxX, float maxY)`
+  - `Vector2 NextVector2Box(float maxAbsX = 1, float maxAbsY = 1)`
+  - `void Shuffle<T>(IList<T> list)`
+  - `void Shuffle<T>(Span<T> list)`
+  - `void Shuffle<T>(ValueList<T> list)`
+- `IRobustRandom.SetSeed` now behaves identically to `IRobustRandom.DebugSetSeed`, i.e. does nothing in release.
+  For benchmarking and other uses that *really* need global seed set, define `ALLOW_BAD_PRACTICES` in your build.
+- `RobustRandom` usage outside of engine is now deprecated, use the newly provided constructors on `IRobustRandom`.
+- `IRobustRandom.NextBytes` now outputs to a `Span<byte>` instead of an array.
 
 ### New features
 
-*None yet*
+- `TItem PickCollection<TItem>(ICollection<TItem> collection)` and `TItem PickAndTakeCollection<TItem>(ICollection<TItem> set)`
+  were added as extensions for `IRobustRandom` to ensure parity with the deprecated `System.Random` APIs.
+- `IRobustRandom.DebugSetSeed` was added for debugging/testing scenarios where the ability to set the global seed is required.
+- `IRobustRandom.CreateRandom`, `IRobustRandom.CreateSeeded`, and `IRobustRandom.CreateSeededWith` were added for
+  ease of constructing and configuring randomizers.
+- A new marker interface, `IDedicatedRandom`, was added. If you need to assert that the randomizer you are provided
+  cannot be the global randomizer, use this interface. An example of when you would use this is for code that is
+  explicitly seeded. You cannot IoC inject this interface.
+- All `Pick` and `PickAndTake` methods were given `Try*` variants.
+- `PickWeighted`, `TryPickWeighted`, `PickAndTakeWeighted`, and `TryPickAndTakeWeighted` were added for weighted picks from bags.
 
 ### Bugfixes
 
@@ -47,12 +79,12 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+- `IRobustRandom.SetSeed()` is now deprecated. If you need a seeded randomizer, please construct a new `RobustRandom`.
+- The majority of `IRobustRandom` APIs and extensions are now annotated with `[MustUseReturnValue]` to avoid mistakes.
 
 ### Internal
 
-*None yet*
-
+- The implementation of the global `IRobustRandom` was changed from `RobustRandom` to `GlobalRandom`
 
 ## 274.0.0
 

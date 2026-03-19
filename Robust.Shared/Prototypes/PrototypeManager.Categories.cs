@@ -3,6 +3,8 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -13,6 +15,8 @@ namespace Robust.Shared.Prototypes;
 // This partial class handles entity prototype categories
 public abstract partial class PrototypeManager : IPrototypeManagerInternal
 {
+    [Dependency] private readonly IComponentFactory _componentFactory = default!;
+
     /// <summary>
     /// Cached array of components with the <see cref="EntityCategoryAttribute"/>
     /// </summary>
@@ -132,7 +136,7 @@ public abstract partial class PrototypeManager : IPrototypeManagerInternal
         }
 
         // Get automated categories inferred from components
-        foreach (var comp in protoInstance.Components.Keys)
+        foreach (var comp in protoInstance.Components.Names(_componentFactory))
         {
             if (autoCategories.TryGetValue(comp, out var autoCats))
                 set.UnionWith(autoCats);

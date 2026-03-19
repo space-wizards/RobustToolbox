@@ -364,12 +364,12 @@ namespace Robust.Client.UserInterface.Controls
 
             var h = _hScrollBar.Value;
             var v = _vScrollBar.Value;
-            if (!_hScrollEnabled && _hScrollBarHidden is not null or false)
+            if (!_hScrollEnabled && _hScrollBarHidden == false)
             {
                 h = 0;
             }
 
-            if (!_vScrollEnabled && _vScrollBarHidden is not null or false)
+            if (!_vScrollEnabled && _vScrollBarHidden == false)
             {
                 v = 0;
             }

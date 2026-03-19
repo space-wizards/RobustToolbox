@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Transfer;
@@ -38,6 +39,7 @@ public abstract class SharedNetworkResourceManager : IDisposable, IPostInjectIni
     [Dependency] protected readonly IResourceManager ResourceManager = default!;
     [Dependency] protected readonly ITransferManager TransferManager = default!;
     [Dependency] protected readonly ILogManager LogManager = default!;
+    [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
     [Dependency] private readonly ITaskManager _taskManager = default!;
 
     protected ISawmill Sawmill = default!;
@@ -112,15 +114,27 @@ public abstract class SharedNetworkResourceManager : IDisposable, IPostInjectIni
     protected async Task<List<(ResPath Relative, byte[] Data)>> IngestFileStream(Stream stream)
     {
         var list = new List<(ResPath Relative, byte[] Data)>();
+        var anyLoc = false;
 
         await foreach (var (relative, data) in ReadTransferStream(stream).ConfigureAwait(false))
         {
+            if (relative.Extension == "ftl")
+                anyLoc = true;
+
             Sawmill.Verbose($"Storing uploaded file: {relative} ({ByteHelpers.FormatBytes(data.Length)})");
             _taskManager.RunOnMainThread(() =>
             {
                 StoreFile(relative, data);
             });
             list.Add((relative, data));
+        }
+
+        if (anyLoc)
+        {
+            _taskManager.RunOnMainThread(() =>
+            {
+                LocalizationManager.ReloadLocalizations();
+            });
         }
 
         return list;

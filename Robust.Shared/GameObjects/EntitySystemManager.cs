@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Prometheus;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
@@ -28,6 +29,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly ProfManager _profManager = default!;
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly IConfigurationManagerInternal _config = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -206,6 +208,7 @@ namespace Robust.Shared.GameObjects
             foreach (var systemType in _systemTypes)
             {
                 var system = (IEntitySystem)SystemDependencyCollection.ResolveType(systemType);
+                _config.RegisterCVarAttributes(system);
                 system.Initialize();
                 SystemLoaded?.Invoke(this, new SystemChangedArgs(system));
             }

@@ -21,6 +21,9 @@ namespace Robust.Client.UserInterface.Controls
         private float _lineHeightScale = 1;
         private bool _lineHeightOverride;
 
+        [ViewVariables]
+        public Label.AlignMode Align { get; set; } = Label.AlignMode.Left;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public float LineHeightScale
         {
@@ -105,7 +108,7 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale);
+            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale, Align);
         }
 
         [Pure]

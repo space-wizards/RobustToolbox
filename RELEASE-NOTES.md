@@ -35,11 +35,31 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+- Engine has a new `ComponentFilter` type, which name conflicts with the one currently in content.
+  Content maintainers should apply [this patch](https://github.com/space-wizards/space-station-14/pull/43168).
+- `ComponentRegistry` no longer inherits directly from Dictionary, and only provides a subset of the dictionary API
+  that was necessary to get the Space Station 14 Wizard's Den content package compiling. All Dictionary methods are
+  additionally obsolete, and you should consult `ComponentRegistry`'s documentation and method list for replacements.
+- `IEntityLoadContext` has new required methods that take an `IComponentFactory`.
 
 ### New features
 
-*None yet*
+- Introduces `ComponentFilter`, a set of components that can be used with various filter methods on `IEntityManager`.
+  Please consult the documentation for the type, alongside `IEntityManager.Filters.cs`, for the full set of new features.
+- `ComponentRegistry` now provides an improved API that does not require users manually insert components into the
+  dictionary. Consult the documentation for the type for the full feature list.
+- `EntityQuery<TComp1>` now implements `IEnumerable<Entity<TComp1>>` and can be used with `foreach` performantly.
+- `EntityQuery<TComp1, TComp2>`, `EntityQuery<TComp1, TComp2, TComp3>`, and `EntityQuery<TComp1, TComp2, TComp3, TComp4>`
+  have been added and implement `IEnumerable`.
+  <br/><br/>
+  They're direct counterparts to `EntityQuery<TComp1>` with similar methods and constructors.
+  Additionally, like `EntityQuery<TComp1>`, all of these types can be resolved with a `[Dependency]` in systems.
+- `DynamicEntityQuery` has been added. It implements component queries for an unbounded set of components, with the
+  ability to mark the presence of specific components as optional (may be null) or excluded (query doesn't match
+  entities with that component).
+  <br/><br/>
+  It is currently primarily an implementation detail of `EntityQuery<>` but can be used directly and will lead to
+  expanded functionality in the future.
 
 ### Bugfixes
 
@@ -47,11 +67,25 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+- `void AddComponents(EntityUid target, EntityPrototype prototype, bool removeExisting = true)` and
+  `void RemoveComponents(EntityUid target, EntityPrototype prototype)` were marked obsolete and will be removed without
+  replacement. Using EntityPrototype as a filter and registry is not supported. Additionally,
+  the former API has never functioned correctly with `removeExisting: true` and that functionality is not supported.
+- `void RemoveComponents(EntityUid target, ComponentRegistry registry)` is now obsolete and a ComponentFilter solution
+  should be used instead.
+- `CompRegistryEntityEnumerator` is now obsolete in favor of `ComponentFilterQuery`.
+- `EntityQueryEnumerator<TComp1>`, `EntityQueryEnumerator<TComp1, TComp2>`, `EntityQueryEnumerator<TComp1, TComp2, TComp3>`,
+  `EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>`, `AllEntityQueryEnumerator<TComp1>`, `AllEntityQueryEnumerator<TComp1, TComp2>`,
+  `AllEntityQueryEnumerator<TComp1, TComp2, TComp3>`, `AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>`,
+  and `ComponentQueryEnumerator` are now obsolete.
+- The EntityManager methods `EntityQuery<TComp1>`, `EntityQuery<TComp1, TComp2>`, `EntityQuery<TComp1, TComp2, TComp3>`,
+  and `EntityQuery<TComp1, TComp2, TComp3, TComp4>`, `EntityQueryEnumerator`, `AllEntityQueryEnumerator`,
+  `ComponentQueryEnumerator`, `AllComponentsList`, `AllEntityUids`, `AllEntityUids`, `AllEntities`, and `AllComponents`
+  are now obsolete.
 
 ### Internal
 
-*None yet*
+- `ComponentRegistry`-dependant surfaces in the engine have been rewritten to use the new methods wherever possible.
 
 
 ## 274.0.0

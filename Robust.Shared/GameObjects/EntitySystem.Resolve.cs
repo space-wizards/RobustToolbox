@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Utility;
@@ -21,6 +20,9 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
         {
             DebugTools.AssertOwner(uid, component);
+
+            if (component?.LifeStage == ComponentLifeStage.PreAdd)
+                Log.Info($"Tried to resolve for {uid} using a component of type {typeof(TComp)}, which was not initialized to begin with. Do not pass uninitialized components to resolve, and do not bundle uninitialized components with entities. This will be a warning in the future.");
 
             if (component != null && !component.Deleted)
                 return true;

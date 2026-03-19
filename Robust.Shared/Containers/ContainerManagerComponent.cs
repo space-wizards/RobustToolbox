@@ -27,10 +27,7 @@ namespace Robust.Shared.Containers
         // Requires a custom serializer + copier to get rid of. Good luck
         void ISerializationHooks.AfterDeserialization()
         {
-            foreach (var (id, container) in Containers)
-            {
-                container.Init(default!, id, (Owner, this));
-            }
+
         }
 
         [Obsolete]

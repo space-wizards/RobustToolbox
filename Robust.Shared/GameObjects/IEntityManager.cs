@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects
     ///     Holds a collection of entities and the components attached to them.
     /// </summary>
     [PublicAPI]
-    public partial interface IEntityManager
+    public partial interface IEntityManager : IRemoteEntityManager
     {
         /// <summary>
         ///     The current simulation tick being processed.

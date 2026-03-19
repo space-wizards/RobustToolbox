@@ -103,9 +103,16 @@ public partial class EntityManager
         if (!coordinates.IsValid(this))
             throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
-        var entity = CreateEntityUninitialized(protoName, coordinates, overrides, rotation);
-        InitializeAndStartEntity(entity, _xforms.GetMapId(coordinates));
-        return entity;
+        // Start building the entity as described..
+        var builder = EntityBuilder(protoName)
+            .ChildOf(coordinates, rotation);
+
+        // If we got overrides, apply them here.
+        if (overrides is not null)
+            builder.ApplyRegistry(overrides);
+
+        // Spawn it into the simulation and return the id.
+        return Spawn(builder);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

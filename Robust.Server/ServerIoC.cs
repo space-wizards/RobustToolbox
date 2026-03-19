@@ -60,6 +60,7 @@ namespace Robust.Server
             deps.Register<IMapManagerInternal, NetworkedMapManager>();
             deps.Register<INetworkedMapManager, NetworkedMapManager>();
             deps.Register<IEntityManager, ServerEntityManager>();
+            deps.Register<IRemoteEntityManager, ServerEntityManager>();
             deps.Register<IEntityNetworkManager, ServerEntityManager>();
             deps.Register<IServerEntityNetworkManager, ServerEntityManager>();
             deps.Register<IPlacementManager, PlacementManager>();

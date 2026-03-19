@@ -20,6 +20,7 @@ namespace Robust.Shared.Serialization.Manager
     public sealed partial class SerializationManager : ISerializationManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
 
         public IReflectionManager ReflectionManager => _reflectionManager;
 
@@ -355,13 +356,13 @@ namespace Robust.Shared.Serialization.Manager
         }
 
 #pragma warning disable CS0618
-        private static void RunAfterHook<TValue>(TValue instance, SerializationHookContext ctx)
+        private void RunAfterHook<TValue>(TValue instance, SerializationHookContext ctx)
         {
             if (instance is ISerializationHooks hooks)
                 RunAfterHookGenerated(hooks, ctx);
         }
 
-        private static void RunAfterHookGenerated<TValue>(TValue instance, SerializationHookContext ctx) where TValue : ISerializationHooks
+        private void RunAfterHookGenerated<TValue>(TValue instance, SerializationHookContext ctx) where TValue : ISerializationHooks
         {
             if (ctx.SkipHooks)
                 return;
@@ -371,7 +372,10 @@ namespace Robust.Shared.Serialization.Manager
             if (ctx.DeferQueue != null)
                 ctx.DeferQueue.TryWrite(instance);
             else
+            {
                 instance.AfterDeserialization();
+                instance.AfterDeserialization(_dependencyCollection);
+            }
         }
 #pragma warning restore CS0618
     }

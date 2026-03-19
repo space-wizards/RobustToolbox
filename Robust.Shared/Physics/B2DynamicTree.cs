@@ -2024,6 +2024,36 @@ namespace Robust.Shared.Physics
             }
         }
 
+        public void Query<TState>(ref TState state, QueryCallback<TState> callback, Vector2 point)
+        {
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            stack.Push(_root);
+
+            ref var baseRef = ref _nodes[0];
+            while (stack.GetCount() != 0)
+            {
+                var nodeId = stack.Pop();
+                if (nodeId == Proxy.Free)
+                    continue;
+
+                // Skip bounds check with Unsafe.Add().
+                ref var node = ref Unsafe.Add(ref baseRef, nodeId);
+                if (!node.Aabb.Contains(point))
+                    continue;
+
+                if (node.IsLeaf)
+                {
+                    if (!callback(ref state, nodeId))
+                        return;
+                }
+                else
+                {
+                    stack.Push(node.Child1);
+                    stack.Push(node.Child2);
+                }
+            }
+        }
+
         public delegate void FastQueryCallback(ref T userData);
 
         public void FastQuery(ref Box2 aabb, FastQueryCallback callback)

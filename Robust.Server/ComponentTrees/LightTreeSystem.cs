@@ -1,8 +1,8 @@
-using Robust.Client.GameObjects;
+using Robust.Server.GameObjects;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
 
-namespace Robust.Client.ComponentTrees;
+namespace Robust.Server.ComponentTrees;
 
 public sealed class LightTreeSystem : SharedLightTreeSystem
 {

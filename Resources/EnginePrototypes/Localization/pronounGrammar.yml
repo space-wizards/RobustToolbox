@@ -1,0 +1,104 @@
+# basic
+- type: pronounGrammar
+  id: Subject
+  ftlFunction: SUBJECT
+  ftlReturn: zzzz-subject-pronoun
+  name: pronouns-subject
+  description: pronouns-subject-desc
+
+- type: pronounGrammar
+  id: Object
+  ftlFunction: OBJECT
+  ftlReturn: zzzz-object-pronoun
+  name: pronouns-object
+  description: pronouns-object-desc
+
+- type: pronounGrammar
+  id: Dative
+  ftlFunction: DAT-OBJ
+  ftlReturn: zzzz-dat-obj
+  name: pronouns-dative
+  description: pronouns-dative-desc
+
+- type: pronounGrammar
+  id: Genitive
+  ftlFunction: GENITIVE
+  ftlReturn: zzzz-genitive
+  name: pronouns-genitive
+  description: pronouns-genitive-desc
+
+- type: pronounGrammar
+  id: PossessiveAdjective
+  ftlFunction: POSS-ADJ
+  ftlReturn: zzzz-possessive-adjective
+  name: pronouns-possessive-adj
+  description: pronouns-possessive-adj-desc
+
+- type: pronounGrammar
+  id: PossessivePronoun
+  ftlFunction: POSS-PRONOUN
+  ftlReturn: zzzz-possessive-pronoun
+  name: pronouns-possessive-pronoun
+  description: pronouns-possessive-pronoun-desc
+
+- type: pronounGrammar
+  id: Reflexive
+  ftlFunction: REFLEXIVE
+  ftlReturn: zzzz-reflexive-pronoun
+  name: pronouns-reflexive
+  description: pronouns-reflexive-desc
+
+- type: pronounGrammar
+  id: Counter
+  ftlFunction: COUNTER
+  ftlReturn: zzzz-counter
+  name: pronouns-counter
+  description: pronouns-counter-desc
+
+# catchall plurality (epicene for "are/have", other for "is/has")
+- type: pronounGrammar
+  id: Plurality
+  name: pronouns-plurality
+  description: pronouns-plurality-desc
+
+# conjugation - primarily used in non-english languages
+- type: pronounGrammar
+  id: ConjugateBe
+  ftlFunction: CONJUGATE-BE
+  ftlReturn: zzzz-conjugate-be
+  name: pronouns-conjugate-be
+  description: pronouns-conjugate-be-desc
+
+- type: pronounGrammar
+  id: ConjugateHave
+  ftlFunction: CONJUGATE-HAVE
+  ftlReturn: zzzz-conjugate-have
+  name: pronouns-conjugate-have
+  description: pronouns-conjugate-have-desc
+
+- type: pronounGrammar
+  id: ConjugateBasic
+  name: pronouns-conjugate-basic
+  description: pronouns-conjugate-basic-desc
+
+# noun affixes
+- type: pronounGrammar
+  id: NounPrefix
+  ftlFunction: NOUN-PREFIX
+  ftlReturn: zzzz-noun-prefix
+  name: pronouns-noun-prefix
+  description: pronouns-noun-prefix-desc
+
+- type: pronounGrammar
+  id: NounSuffix
+  ftlFunction: NOUN-SUFFIX
+  ftlReturn: zzzz-noun-suffix
+  name: pronouns-noun-suffix
+  description: pronouns-noun-suffix-desc
+
+- type: pronounGrammar
+  id: NounAffixes
+  ftlFunction: NOUN-AFFIXES
+  ftlReturn: zzzz-noun-affixes
+  name: pronouns-noun-affixes
+  description: pronouns-noun-affixes-desc

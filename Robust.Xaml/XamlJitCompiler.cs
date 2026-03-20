@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading;
 using XamlX.IL;
 using XamlX.Parsers;
+using XamlX.TypeSystem;
 
 namespace Robust.Xaml;
 
@@ -87,6 +90,114 @@ internal sealed class XamlJitCompiler
         }
     }
 
+    // Taken from https://github.com/AvaloniaUI/Avalonia/blob/01a8042094d741a8ddfcd441b4eabcb04092e988/src/Markup/Avalonia.Markup.Xaml.Loader/AvaloniaXamlIlRuntimeCompiler.cs#L185
+    static Type EmitIgnoresAccessCheckAttributeDefinition(ModuleBuilder builder)
+    {
+        var tb = builder.DefineType("System.Runtime.CompilerServices.IgnoresAccessChecksToAttribute",
+            TypeAttributes.Class | TypeAttributes.Public, typeof(Attribute));
+        var field = tb.DefineField("_name", typeof(string), FieldAttributes.Private);
+        var propGet = tb.DefineMethod("get_AssemblyName", MethodAttributes.Public, typeof(string),
+            Array.Empty<Type>());
+        var propGetIl = propGet.GetILGenerator();
+        propGetIl.Emit(OpCodes.Ldarg_0);
+        propGetIl.Emit(OpCodes.Ldfld, field);
+        propGetIl.Emit(OpCodes.Ret);
+        var prop = tb.DefineProperty("AssemblyName", PropertyAttributes.None, typeof(string), Array.Empty<Type>());
+        prop.SetGetMethod(propGet);
+
+
+        var ctor = tb.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard,
+            new[] { typeof(string) });
+        var ctorIl = ctor.GetILGenerator();
+        ctorIl.Emit(OpCodes.Ldarg_0);
+        ctorIl.Emit(OpCodes.Ldarg_1);
+        ctorIl.Emit(OpCodes.Stfld, field);
+        ctorIl.Emit(OpCodes.Ldarg_0);
+        ctorIl.Emit(OpCodes.Call, typeof(Attribute)
+            .GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            .First(x => x.GetParameters().Length == 0));
+
+        ctorIl.Emit(OpCodes.Ret);
+
+        tb.SetCustomAttribute(new CustomAttributeBuilder(
+            typeof(AttributeUsageAttribute).GetConstructor(new[] { typeof(AttributeTargets) })!,
+            new object[] { AttributeTargets.Assembly },
+            new[] { typeof(AttributeUsageAttribute).GetProperty(nameof(AttributeUsageAttribute.AllowMultiple))! },
+            new object[] { true }));
+
+        return tb.CreateTypeInfo()!;
+    }
+
+    // Taken from https://github.com/AvaloniaUI/Avalonia/blob/01a8042094d741a8ddfcd441b4eabcb04092e988/src/Markup/Avalonia.Markup.Xaml.Loader/AvaloniaXamlIlRuntimeCompiler.cs#L185
+    static HashSet<Assembly> FindAssembliesGrantingInternalAccess(Assembly assembly)
+    {
+        var result = new HashSet<Assembly>();
+        if (assembly == null)
+            return result;
+
+        var assemblyName = assembly.GetName();
+        var publicKey = assemblyName.GetPublicKey();
+
+        // Search through all loaded assemblies to find those that grant InternalsVisibleTo to our assembly
+        foreach (var loadedAssembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            try
+            {
+                var ivtAttributes = loadedAssembly.GetCustomAttributes(
+                    typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute), false);
+
+                foreach (System.Runtime.CompilerServices.InternalsVisibleToAttribute ivt in ivtAttributes)
+                {
+                    var ivtName = ivt.AssemblyName;
+                    if (string.IsNullOrWhiteSpace(ivtName))
+                        continue;
+
+                    // Parse the InternalsVisibleTo assembly name
+                    var ivtAssemblyName = new AssemblyName(ivtName);
+
+                    // Check if it matches our assembly name
+                    if (string.Equals(ivtAssemblyName.Name, assemblyName.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // If public key is specified in IVT, verify it matches
+                        var ivtPublicKey = ivtAssemblyName.GetPublicKey();
+                        if (ivtPublicKey != null && ivtPublicKey.Length > 0)
+                        {
+                            if (publicKey != null && publicKey.SequenceEqual(ivtPublicKey))
+                            {
+                                result.Add(loadedAssembly);
+                            }
+                        }
+                        else
+                        {
+                            // No public key specified in IVT, just match by name
+                            result.Add(loadedAssembly);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore assemblies that throw exceptions when accessing attributes
+            }
+        }
+
+        return result;
+    }
+
+    // Taken from https://github.com/AvaloniaUI/Avalonia/blob/01a8042094d741a8ddfcd441b4eabcb04092e988/src/Markup/Avalonia.Markup.Xaml.Loader/AvaloniaXamlIlRuntimeCompiler.cs#L185
+    static void EmitIgnoresAccessCheckToAttribute(AssemblyName assemblyName, Type ignoresAccessChecksFromAttribute, AssemblyBuilder builder)
+    {
+        var name = assemblyName.Name;
+        if (string.IsNullOrWhiteSpace(name))
+            return;
+        var key = assemblyName.GetPublicKey();
+        if (key != null && key.Length != 0)
+            name += ", PublicKey=" + BitConverter.ToString(key).Replace("-", "").ToUpperInvariant();
+        builder.SetCustomAttribute(new CustomAttributeBuilder(
+            ignoresAccessChecksFromAttribute!.GetConstructors()[0],
+            new object[] { name }));
+    }
+
     private MethodInfo CompileOrCrash(
         Type t,
         Uri uri,
@@ -95,7 +206,7 @@ internal sealed class XamlJitCompiler
     )
     {
 
-        var xaml = new XamlCustomizations(_typeSystem, _typeSystem.FindAssembly(t.Assembly.FullName));
+        var xaml = new XamlCustomizations(_typeSystem, _typeSystem.FindAssembly(t.Assembly.FullName!)!);
 
         // attempt to parse the code
         var document = XDocumentXamlParser.Parse(contents);
@@ -108,12 +219,21 @@ internal sealed class XamlJitCompiler
             AssemblyBuilderAccess.RunAndCollect
         );
         var moduleBuilder = assemblyBuilder.DefineDynamicModule(assemblyNameString);
+        var declaration = EmitIgnoresAccessCheckAttributeDefinition(moduleBuilder);
+
+        EmitIgnoresAccessCheckToAttribute(t.Assembly.GetName(), declaration, assemblyBuilder);
+        foreach (var assembly in FindAssembliesGrantingInternalAccess(t.Assembly))
+        {
+            EmitIgnoresAccessCheckToAttribute(assembly.GetName(), declaration, assemblyBuilder);
+        }
 
         var contextClassRawBuilder = moduleBuilder.DefineType("ContextClass");
         var populateClassRawBuilder = moduleBuilder.DefineType("PopulateClass");
+        var buildClassRawBuilder = moduleBuilder.DefineType("BuildClass");
 
         var contextClassBuilder = _typeSystem.CreateTypeBuilder(contextClassRawBuilder);
         var populateClassBuilder = _typeSystem.CreateTypeBuilder(populateClassRawBuilder);
+        var buildClassBuilder = _typeSystem.CreateTypeBuilder(buildClassRawBuilder);
 
         var contextClass = XamlILContextDefinition.GenerateContextClass(
             contextClassBuilder,
@@ -122,23 +242,29 @@ internal sealed class XamlJitCompiler
             xaml.EmitMappings
         );
         var populateName = "!Populate";
+        var buildName = "!Build";
 
         xaml.ILCompiler.Transform(document);
         xaml.ILCompiler.Compile(
-            document,
-            contextClass,
-            xaml.ILCompiler.DefinePopulateMethod(
+            doc: document,
+            contextType: contextClass,
+            populateMethod: xaml.ILCompiler.DefinePopulateMethod(
                 populateClassBuilder,
                 document,
                 populateName,
-                true
+                XamlVisibility.Public
             ),
-            null,
-            null,
-            (closureName, closureBaseType) =>
-                contextClassBuilder.DefineSubType(closureBaseType, closureName, false),
-            uri.ToString(),
-            xaml.CreateFileSource(filePath, Encoding.UTF8.GetBytes(contents))
+            populateDeclaringType: populateClassBuilder,
+            buildMethod: xaml.ILCompiler.DefineBuildMethod(
+                buildClassBuilder,
+                document,
+                buildName,
+                XamlVisibility.Public
+            ),
+            buildDeclaringType: buildClassBuilder,
+            namespaceInfoBuilder: null,
+            baseUri: uri.ToString(),
+            fileSource: xaml.CreateFileSource(filePath, Encoding.UTF8.GetBytes(contents))
         );
 
         contextClassBuilder.CreateType();

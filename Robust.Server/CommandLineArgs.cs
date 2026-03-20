@@ -9,7 +9,7 @@ namespace Robust.Server;
 internal sealed class CommandLineArgs
 {
     public MountOptions MountOptions { get; }
-    public string? ConfigFile { get; }
+    public List<string> ConfigFiles { get; } = new();
     public string? DataDir { get; }
     public IReadOnlyCollection<(string key, string value)> CVars { get; }
     public IReadOnlyCollection<(string key, string value)> LogLevels { get; }
@@ -20,7 +20,7 @@ internal sealed class CommandLineArgs
     public static bool TryParse(IReadOnlyList<string> args, [NotNullWhen(true)] out CommandLineArgs? parsed)
     {
         parsed = null;
-        string? configFile = null;
+        List<string> configFiles = new();
         string? dataDir = null;
         var cvars = new List<(string, string)>();
         var logLevels = new List<(string, string)>();
@@ -40,7 +40,7 @@ internal sealed class CommandLineArgs
                     return false;
                 }
 
-                configFile = enumerator.Current;
+                configFiles.Add(enumerator.Current);
             }
             else if (arg == "--data-dir")
             {
@@ -127,7 +127,7 @@ internal sealed class CommandLineArgs
             }
         }
 
-        parsed = new CommandLineArgs(configFile, dataDir, cvars, logLevels, mountOptions, execCommands);
+        parsed = new CommandLineArgs(configFiles, dataDir, cvars, logLevels, mountOptions, execCommands);
         return true;
     }
 
@@ -137,7 +137,7 @@ internal sealed class CommandLineArgs
 Usage: Robust.Server [options] [+command [+command]]
 
 Options:
-  --config-file     Path to the config file to read from.
+  --config-file     Path to the config file to read from. (repeatable)
   --data-dir        Path to the data directory to read/write from/to.
   --cvar            Specifies an additional cvar overriding the config file. Syntax is <key>=<value>
   --loglevel        Specifies an additional sawmill log level overriding the default values. Syntax is <key>=<value>
@@ -151,14 +151,14 @@ Options:
     }
 
     private CommandLineArgs(
-        string? configFile,
+        List<string> configFiles,
         string? dataDir,
         IReadOnlyCollection<(string, string)> cVars,
         IReadOnlyCollection<(string, string)> logLevels,
         MountOptions mountOptions,
         IReadOnlyList<string> execCommands)
     {
-        ConfigFile = configFile;
+        ConfigFiles = configFiles;
         DataDir = dataDir;
         CVars = cVars;
         LogLevels = logLevels;

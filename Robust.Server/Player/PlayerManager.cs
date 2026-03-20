@@ -51,6 +51,7 @@ namespace Robust.Server.Player
             _network.Connecting += OnConnecting;
             _network.Connected += NewSession;
             _network.Disconnect += EndSession;
+            PlayerStatusChanged += OnPlayerStatusChanged;
         }
 
         public override void Shutdown()
@@ -61,6 +62,7 @@ namespace Robust.Server.Player
             _network.Connecting -= OnConnecting;
             _network.Connected -= NewSession;
             _network.Disconnect -= EndSession;
+            PlayerStatusChanged -= OnPlayerStatusChanged;
         }
 
         private Task OnConnecting(NetConnectingArgs args)
@@ -126,7 +128,7 @@ namespace Robust.Server.Player
             if (!session.InitialResourcesDone)
                 return;
 
-            SendPlayerList(channel, session);
+            CompleteConnecting(session);
         }
 
         public void MarkPlayerResourcesSent(INetChannel channel)
@@ -137,19 +139,35 @@ namespace Robust.Server.Player
             if (!session.InitialPlayerListReqDone)
                 return;
 
-            SendPlayerList(channel, session);
+            CompleteConnecting(session);
         }
 
-        private void SendPlayerList(INetChannel channel, CommonSession session)
+        // transition the session to connected now,
+        // player list is deferred until the session reaches InGame
+        private void CompleteConnecting(CommonSession session)
+        {
+            session.ConnectedTime = DateTime.UtcNow;
+            SetStatus(session, SessionStatus.Connected);
+            session.InitialPlayerListPending = true;
+        }
+
+        private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
+        {
+            if (e.NewStatus != SessionStatus.InGame)
+                return;
+
+            var session = (CommonSession) e.Session;
+            if (!session.InitialPlayerListPending)
+                return;
+
+            session.InitialPlayerListPending = false;
+            SendPlayerList(session.Channel);
+        }
+
+        private void SendPlayerList(INetChannel channel)
         {
             var players = Sessions;
             var netMsg = new MsgPlayerList();
-
-            // client session is complete, set their status accordingly.
-            // This is done before the packet is built, so that the client
-            // can see themselves Connected.
-            session.ConnectedTime = DateTime.UtcNow;
-            SetStatus(session, SessionStatus.Connected);
 
             var list = new List<SessionState>();
             foreach (var client in players)

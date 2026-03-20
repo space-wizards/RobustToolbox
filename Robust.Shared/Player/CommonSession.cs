@@ -54,6 +54,8 @@ internal sealed class CommonSession : ICommonSessionInternal
     public bool InitialPlayerListReqDone;
     [ViewVariables]
     public bool InitialResourcesDone;
+    [ViewVariables]
+    public bool InitialPlayerListPending;
 
     public override string ToString() => Name;
 

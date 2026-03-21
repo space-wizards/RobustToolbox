@@ -64,6 +64,7 @@ internal sealed partial class MidiRenderer : IMidiRenderer
 
     private const int FluidPlayerTempoInternal = 0; // FLUID_PLAYER_TEMPO_INTERNAL
     private const int GenCoarseTune = 51;           // GEN_COARSETUNE — semitone pitch offset
+    private const int ReverbCc = 91;                // CC91 (Effects 1 Depth / Reverb Send)
 
     private double _tempoScale = 1.0;
 
@@ -611,6 +612,18 @@ internal sealed partial class MidiRenderer : IMidiRenderer
         lock (_playerStateLock)
         {
             fluid_synth_set_gen(_synth.Handle, channel, GenCoarseTune, (float)semitones);
+        }
+    }
+
+    public void SetChannelReverb(int channel, bool enabled)
+    {
+        if (Disposed)
+            return;
+
+        lock (_playerStateLock)
+        {
+            _rendererState.Controllers.AsSpan[channel].AsSpan[ReverbCc] = (byte) (enabled ? 127 : 0);
+            _synth.CC(channel, ReverbCc, enabled ? 127 : 0);
         }
     }
 

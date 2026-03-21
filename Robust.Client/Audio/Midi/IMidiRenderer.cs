@@ -216,4 +216,30 @@ public interface IMidiRenderer : IDisposable
     internal void InternalDispose();
 
     byte MinVolume { get; set; }
+
+    /// <summary>
+    ///     Directly sets the SF2 GEN_FILTERFC generator (low-pass cutoff) for a channel
+    ///     via fluid_synth_set_gen. A lower value muffles the channel.
+    ///     Valid range: ~1500 (fully closed) to 13500 (fully open / no filter).
+    /// </summary>
+    void SetChannelFilterCutoff(int channel, float cutoffCents);
+
+    /// <summary>
+    ///     Scales MIDI file playback speed via fluid_player_set_tempo
+    ///     1.0 = normal, 2.0 = double speed, 0.5 = half speed.
+    ///     Stored and re-applied when a new MIDI file is opened.
+    ///     Has no effect during MIDI input mode (no player).
+    /// </summary>
+    void SetTempoScale(double scale);
+
+    /// <summary>
+    ///     Per-channel pitch offset in semitones via SF2 GEN_COARSETUNE.
+    ///     Range typically -12 to +12 (one octave). 0 = no shift.
+    /// </summary>
+    void SetChannelPitch(int channel, int semitones);
+
+    /// <summary>
+    ///     Enables or disables per-channel reverb send (CC91).
+    /// </summary>
+    void SetChannelReverb(int channel, bool enabled);
 }

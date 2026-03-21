@@ -237,4 +237,11 @@ public interface IMidiRenderer : IDisposable
     ///     Range typically -12 to +12 (one octave). 0 = no shift.
     /// </summary>
     void SetChannelPitch(int channel, int semitones);
+    
+    /// <summary>
+    ///     Enables or disables per-channel reverb send (CC91).
+    /// </summary>
+    void SetChannelReverb(int channel, bool enabled);
+}
+
 }

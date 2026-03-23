@@ -604,7 +604,9 @@ Types:
       - "void .ctor(System.IO.Stream, System.Text.Encoding, int, bool)"
       - "void DiscardBufferedData()"
     TextReader: { All: True }
-    TextWriter: { All: True}
+    TextWriter: { All: True }
+    StringReader: { All: True }
+    StringWriter: { All: True }
   System.Linq.Expressions:
     # TODO: Review
     ConstantExpression: { }
@@ -1617,6 +1619,9 @@ Types:
   YamlDotNet.Core:
     Mark: { All: True }
     ScalarStyle: { } # Enum
+    IEmitter: { All: True }
+    Emitter: { All: True }
+    EmitterSettings: { All: True }
   YamlDotNet.RepresentationModel:
     IYamlVisitor: { All: True }
     YamlDocument: { All: True }

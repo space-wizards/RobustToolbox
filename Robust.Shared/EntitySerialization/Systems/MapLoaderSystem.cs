@@ -42,17 +42,29 @@ public sealed partial class MapLoaderSystem : EntitySystem
         _gridQuery = GetEntityQuery<MapGridComponent>();
     }
 
+    private void Write(TextWriter target, MappingDataNode data)
+    {
+        var document = new YamlDocument(data.ToYaml());
+        var stream = new YamlStream {document};
+        stream.Save(new YamlMappingFix(new Emitter(target)), false);
+    }
+
+    private StreamWriter GetWriterForPath(ResPath path)
+    {
+        Log.Info($"Saving serialized results to {path}");
+        path = path.ToRootedPath();
+        _resourceManager.UserData.CreateDir(path.Directory);
+        return _resourceManager.UserData.OpenWriteText(path);
+    }
+
     private void Write(ResPath path, MappingDataNode data)
     {
         Log.Info($"Saving serialized results to {path}");
         path = path.ToRootedPath();
-        var document = new YamlDocument(data.ToYaml());
         _resourceManager.UserData.CreateDir(path.Directory);
         using var writer = _resourceManager.UserData.OpenWriteText(path);
-        {
-            var stream = new YamlStream {document};
-            stream.Save(new YamlMappingFix(new Emitter(writer)), false);
-        }
+
+        Write(writer, data);
     }
 
     public bool TryReadFile(ResPath file, [NotNullWhen(true)] out MappingDataNode? data)

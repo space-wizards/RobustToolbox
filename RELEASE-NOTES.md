@@ -56,6 +56,14 @@ END TEMPLATE-->
 
 ## 274.0.1
 
+### Bugfixes
+
+- Fixed hiding the scrollbar preventing manual scrolling
+- Fixed wrong behavior in `HScrollBarHidden` getter
+
+### Other
+
+- Add documentation for analyzer attributes
 
 ## 274.0.0
 

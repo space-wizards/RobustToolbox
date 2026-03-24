@@ -500,14 +500,13 @@ namespace Robust.Shared.Localization
         {
             // Load data from .ftl files.
             // Data is loaded from /Locale/<language-code>/*
-            // and from /Uploaded/**/* where filename is <language-code>.ftl
+            // and from /Uploaded/**/Locale/<language-code>/*
 
             var root = LocaleDirPath / culture.Name;
-            var cultureFtl = culture.Name + ".ftl";
 
             var files = resourceManager.ContentFindFiles(root)
                 .Concat(resourceManager.ContentFindFiles(UploadedDirPath)
-                    .Where(c => c.Filename.Equals(cultureFtl, StringComparison.InvariantCultureIgnoreCase)))
+                    .Where(c => c.CanonPath.Contains($"/Locale/{culture.Name}/", StringComparison.InvariantCultureIgnoreCase)))
                 .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase))
                 .ToArray();
 

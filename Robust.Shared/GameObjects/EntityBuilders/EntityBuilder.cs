@@ -9,6 +9,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Shared.GameObjects.EntityBuilders;
@@ -19,6 +20,27 @@ namespace Robust.Shared.GameObjects.EntityBuilders;
 ///     Supports construction from a prototype, and from a fresh list of components.
 /// </para>
 /// </summary>
+/// <remarks>
+/// <para>
+///     EntityBuilder is complete, but <b>differs in behavior from the old systems</b>. Some engine refactors need done before it is fully functional.
+///     The following are behaviors that differ from old-style entity spawning:
+/// </para>
+/// <para>
+///     - EntityBuilder performs all deserialization before ComponentAdd, not after.<br/>
+///     - EntityBuilder applies additional <see cref="ComponentRegistry"/>s before ComponentAdd, not after.<br/>
+///     - EntityBuilder <b>does not inject dependencies into components</b>.
+/// </para>
+/// <para>
+///     With those limitations in mind, EntityBuilder currently doesn't work for spawning entities with
+///     <see cref="Robust.Client.GameObjects.SpriteComponent"/> on the client. This does not impact server-side spawning,
+///     and EntityBuilder is now the internal implementation of most spawning operations on the server for a performance
+///     uplift.
+/// </para>
+/// <para>
+///     As long as your content pack does not contain legacy code relying on main-thread-only <see cref="ISerializationHooks"/>
+///     or <see cref="DependencyAttribute"/> within components, EntityBuilder works for you immediately on client as well.
+/// </para>
+/// </remarks>
 [PublicAPI]
 public sealed partial class EntityBuilder
 {
@@ -44,7 +66,7 @@ public sealed partial class EntityBuilder
     ///     Due to how map coordinates work, these have to be resolved at spawn time just before initializing
     ///     the entities.
     /// </summary>
-    private MapCoordinates? _mapCoordinates;
+    internal MapCoordinates? MapCoordinates;
 
     public MetaDataComponent MetaData { get; private set; } = default!;
     public TransformComponent Transform { get; private set; } = default!;
@@ -253,8 +275,8 @@ public sealed partial class EntityBuilder
     /// <returns>The builder, for chaining.</returns>
     public EntityBuilder ChildOf(EntityUid parent, Vector2 relativePos = default, Angle? rotation = null)
     {
-        if (_mapCoordinates is not null)
-            _mapCoordinates = null; // One or the other.
+        if (MapCoordinates is not null)
+            MapCoordinates = null; // One or the other.
 
         Transform._parent = parent;
         Transform._localPosition = relativePos;
@@ -274,8 +296,8 @@ public sealed partial class EntityBuilder
     /// <returns>The builder, for chaining.</returns>
     public EntityBuilder ChildOf(EntityCoordinates coordinates, Angle? rotation = null)
     {
-        if (_mapCoordinates is not null)
-            _mapCoordinates = null; // One or the other.
+        if (MapCoordinates is not null)
+            MapCoordinates = null; // One or the other.
 
         Transform._parent = coordinates.EntityId;
         Transform._localPosition = coordinates.Position;
@@ -290,17 +312,21 @@ public sealed partial class EntityBuilder
     ///     Ensures the entity is spawned at the given map coordinate, automatically finding a parent.
     /// </summary>
     /// <param name="mapCoordinates">The coordinates to spawn at</param>
+    /// <param name="angle">The map-relative angle to spawn the entity at, if any.</param>
     /// <include file='Docs.xml' path='entries/entry[@name="ParentingRaceConditionRemark"]/*'/>
     /// <returns>The builder, for chaining.</returns>
-    public EntityBuilder LocatedAt(MapCoordinates mapCoordinates)
+    public EntityBuilder LocatedAt(MapCoordinates mapCoordinates, Angle? angle = null)
     {
-        _mapCoordinates = mapCoordinates;
+        MapCoordinates = mapCoordinates;
 
         if (Transform._parent != EntityUid.Invalid)
         {
             Transform._parent = EntityUid.Invalid;
             Transform._localPosition = default;
         }
+
+        if (angle is not null)
+            Transform._localRotation = angle.Value;
 
         return this;
     }

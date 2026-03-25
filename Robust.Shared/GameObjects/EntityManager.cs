@@ -357,11 +357,22 @@ namespace Robust.Shared.GameObjects
             var newEntity = CreateEntity(prototypeName, out _, overrides);
             var transform = TransformQuery.GetComponent(newEntity);
 
+            SetMapCoordinates(coordinates, rotation, newEntity, transform);
+
+            return newEntity;
+        }
+
+        protected internal void SetMapCoordinates(
+            MapCoordinates coordinates,
+            Angle rotation,
+            EntityUid newEntity,
+            TransformComponent transform)
+        {
             if (coordinates.MapId == MapId.Nullspace)
             {
                 transform._parent = EntityUid.Invalid;
                 transform.Anchored = false;
-                return newEntity;
+                return;
             }
 
             var mapEnt = _mapSystem.GetMap(coordinates.MapId);
@@ -382,8 +393,6 @@ namespace Robust.Shared.GameObjects
                 coords = new EntityCoordinates(mapEnt, coordinates.Position);
                 _xforms.SetCoordinates(newEntity, transform, coords, rotation, newParent: mapXform);
             }
-
-            return newEntity;
         }
 
         /// <inheritdoc />
@@ -997,6 +1006,9 @@ namespace Robust.Shared.GameObjects
 
                 AddComponentInternal(uid, component, false, true, builder.MetaData);
             }
+
+            if (builder.MapCoordinates is {} coords)
+                SetMapCoordinates(coords, builder.Transform._localRotation, uid, builder.Transform);
         }
 
         /// <summary>

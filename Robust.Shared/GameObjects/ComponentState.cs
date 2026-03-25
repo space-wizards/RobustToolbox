@@ -21,7 +21,6 @@ namespace Robust.Shared.GameObjects;
 /// </remarks>
 [RequiresSerializable]
 [Serializable, NetSerializable]
-[Virtual]
 public abstract class ComponentState : IComponentState;
 
 /// <summary>

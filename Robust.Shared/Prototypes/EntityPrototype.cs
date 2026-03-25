@@ -263,28 +263,22 @@ namespace Robust.Shared.Prototypes
             IComponent data,
             ISerializationContext? context)
         {
-            var add = false;
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                var newComponent = factory.GetComponent(compReg);
-                add = true;
+                var newComponent = factory.GetComponent(data.GetType());
+                entityManager.AddComponent(entity, newComponent);
                 component = newComponent;
             }
 
             if (context is not EntityDeserializer map)
             {
                 serManager.CopyTo(data, ref component, context, notNullableOverride: true);
-                if (add)
-                    entityManager.AddComponent(entity, component);
                 return;
             }
 
-            map.CurrentComponent = compReg.Name;
+            map.CurrentComponent = factory.GetComponentName(data.GetType());
             serManager.CopyTo(data, ref component, context, notNullableOverride: true);
             map.CurrentComponent = null;
-
-            if (add)
-                entityManager.AddComponent(entity, component);
         }
 
         public override string ToString()

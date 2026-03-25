@@ -16,6 +16,11 @@ public abstract class BaseResource : IDisposable
     public virtual ResPath? Fallback => null;
 
     /// <summary>
+    /// Whether this resource type can be deterministically removed from the cache.
+    /// </summary>
+    public virtual bool CanBeRemoved => false;
+
+    /// <summary>
     ///     Disposes this resource.
     /// </summary>
     public virtual void Dispose()

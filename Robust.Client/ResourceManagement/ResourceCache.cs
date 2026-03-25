@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using Robust.Client.Audio;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.ResourceManagement;
@@ -104,6 +103,29 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
     public bool TryGetResource(AudioStream stream, [NotNullWhen(true)] out AudioResource? resource)
     {
         resource = new AudioResource(stream);
+        return true;
+    }
+
+    public bool TryRemoveResource<T>(string path) where T : BaseResource, new()
+        => TryRemoveResource<T>(new ResPath(path));
+
+    public bool TryRemoveResource<T>(ResPath path) where T : BaseResource, new()
+    {
+        var cache = GetTypeData<T>();
+
+        if (!cache.Resources.TryGetValue(path, out var resource))
+            return false;
+
+        if (!resource.CanBeRemoved)
+            return false;
+
+        if (resource.Fallback == path || (_fallbacks.TryGetValue(typeof(T), out var fallbackRes) && ReferenceEquals(fallbackRes, resource)))
+            return false;
+
+        cache.Resources.Remove(path);
+        cache.NonExistent.Remove(path);
+        resource.Dispose();
+
         return true;
     }
 

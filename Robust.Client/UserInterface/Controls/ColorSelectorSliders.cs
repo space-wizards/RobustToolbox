@@ -165,7 +165,7 @@ public sealed class ColorSelectorSliders : Control
         _alphaInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Alpha); };
         _hexInputEdit.OnTextEntered += value => { OnHexInputValueChanged(value); };
         // The above triggers ONLY when the Enter key is pressed, which can be a bit unintuitive
-        // when making changes to multiple colors
+        // when making changes to multiple colors (e.g. editing markings)
         _hexInputEdit.OnFocusExit += value => { OnHexInputValueChanged(value); };
 
         _alphaSliderLabel.Text = Loc.GetString("color-selector-sliders-alpha");

@@ -23,20 +23,19 @@ public sealed partial class ContainerManagerComponent : Component, ISerializatio
     [DataField]
     public Dictionary<string, BaseContainer> Containers = new();
 
-        // Waiting on everything to use EntityBuilder, then it's gone.
-        void ISerializationHooks.AfterDeserialization()
-        {
+    // Waiting on everything to use EntityBuilder, then it's gone.
+    void ISerializationHooks.AfterDeserialization()
+    {
 #pragma warning disable CS0618 // Type or member is obsolete
-            if (Owner == EntityUid.Invalid)
-                return;
+        if (Owner == EntityUid.Invalid)
+            return;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-            foreach (var (id, container) in Containers)
-            {
+        foreach (var (id, container) in Containers)
+        {
 #pragma warning disable CS0618 // Type or member is obsolete
-                container.Init(null!, id, (Owner, this));
+            container.Init(null!, id, (Owner, this));
 #pragma warning restore CS0618 // Type or member is obsolete
-            }
         }
     }
 

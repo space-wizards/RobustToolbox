@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Robust.Shared.GameObjects.EntityBuilders;
 
 namespace Robust.Shared.GameObjects;
@@ -11,50 +10,119 @@ public abstract partial class EntityManager
     {
         var ent = builder.ReservedEntity;
         // Doesn't allocate. Not that it matters, we're about to allocate a lot.
-        SpawnBulk([builder]);
+        // Also, the remaining arguments to SpawnBulk don't matter here.
+        // Code comprehension exercise for the reader to determine why.
+        SpawnBulk([builder], mapInit);
         return ent;
     }
 
-    public void SpawnBulk(ReadOnlySpan<EntityBuilder> builders, bool? mapInit = null)
+    public void SpawnBulk(ReadOnlySpan<EntityBuilder> builders, bool? mapInit = null, bool abortOnAnyFailure = true, bool deleteNonFailingEntities = true)
     {
+        var anyFails = false;
+
         // Create entities + ComponentAdd
         foreach (var builder in builders)
         {
-            AllocBuilderEntity(builder);
+            try
+            {
+                AllocBuilderEntity(builder);
+            }
+            catch (Exception e)
+            {
+                DeleteEntity(builder.ReservedEntity, builder.MetaData, builder.Transform);
+                builder.CreationFailure = new(e, EntityCreationException2.CreationStep.AllocAdd, builder);
+                anyFails = true;
+                if (abortOnAnyFailure)
+                    goto handleFailure;
+            }
         }
 
         // ComponentInit
         foreach (var builder in builders)
         {
-            InitializeEntity(builder.ReservedEntity, builder.MetaData);
+            if (builder.CreationFailure is not null)
+                continue; // Don't go any further.
+
+            // Stuff happens, don't keep going if we don't exist.
+            if (Deleted(builder.ReservedEntity))
+                continue;
+
+            try
+            {
+                InitializeEntity(builder.ReservedEntity, builder.MetaData);
+            }
+            catch (Exception e)
+            {
+                DeleteEntity(builder.ReservedEntity, builder.MetaData, builder.Transform);
+                builder.CreationFailure = new(e, EntityCreationException2.CreationStep.Initialize, builder);;
+                anyFails = true;
+                if (abortOnAnyFailure)
+                    goto handleFailure;
+            }
         }
 
         // ComponentStartup
         foreach (var builder in builders)
         {
-            StartEntity(builder.ReservedEntity);
+            if (builder.CreationFailure is not null)
+                continue; // Don't go any further.
+
+            // Stuff happens, don't keep going if we don't exist.
+            if (Deleted(builder.ReservedEntity))
+                continue;
+
+            try
+            {
+                StartEntity(builder.ReservedEntity);
+            }
+            catch (Exception e)
+            {
+                DeleteEntity(builder.ReservedEntity, builder.MetaData, builder.Transform);
+                builder.CreationFailure = new(e, EntityCreationException2.CreationStep.Startup, builder);;
+                anyFails = true;
+                if (abortOnAnyFailure)
+                    goto handleFailure;
+            }
         }
 
         foreach (var builder in builders)
         {
-            // MapInit is inherited, if we're on an initialized map we should also map init unless otherwise told.
-            var xform = TransformQuery.GetComponent(builder.ReservedEntity);
-            var doMapInit = mapInit;
-            // Replicate whatever map we're on if mapInit is null.
-            doMapInit ??= _mapSystem.IsInitialized(xform.MapID);
+            if (builder.CreationFailure is not null)
+                continue; // Don't go any further.
 
-            if (doMapInit.Value)
-                RunMapInit(builder.ReservedEntity, builder.MetaData);
+            // Stuff happens, don't keep going if we don't exist.
+            if (Deleted(builder.ReservedEntity))
+                continue;
 
-            // Pause inheritance REALLY should not be here, but the old system handled it explicitly too to my understanding.
-            // Transform recursively inherits paused status...
-            // TODO: This should really be handled by TransformSystem itself!
-            if (xform.ParentUid.IsValid() && MetaQuery.Comp(xform.ParentUid).EntityPaused)
+            try
             {
-                EntitySysManager.GetEntitySystem<MetaDataSystem>().SetEntityPaused(builder.ReservedEntity, true, builder.MetaData);
+                // MapInit is inherited, if we're on an initialized map we should also map init unless otherwise told.
+                var xform = TransformQuery.GetComponent(builder.ReservedEntity);
+                var doMapInit = mapInit;
+                // Replicate whatever map we're on if mapInit is null.
+                doMapInit ??= _mapSystem.IsInitialized(xform.MapID);
+
+                if (doMapInit.Value)
+                    RunMapInit(builder.ReservedEntity, builder.MetaData);
+
+                // Pause inheritance REALLY should not be here, but the old system handled it explicitly too to my understanding.
+                // Transform recursively inherits paused status...
+                // TODO: This should really be handled by TransformSystem itself!
+                if (xform.ParentUid.IsValid() && MetaQuery.Comp(xform.ParentUid).EntityPaused)
+                {
+                    EntitySysManager.GetEntitySystem<MetaDataSystem>()
+                        .SetEntityPaused(builder.ReservedEntity, true, builder.MetaData);
+                }
+            }
+            catch (Exception e)
+            {
+                DeleteEntity(builder.ReservedEntity, builder.MetaData, builder.Transform);
+                builder.CreationFailure = new(e, EntityCreationException2.CreationStep.MapInit, builder);;
+                anyFails = true;
+                if (abortOnAnyFailure)
+                    goto handleFailure;
             }
         }
-
 
 #if DEBUG
         // Prevent people from relying on entity builder command buffer order.
@@ -68,9 +136,67 @@ public abstract partial class EntityManager
 
         foreach (var builder in buildersShuffled)
         {
-            if (builder.PostInitCommands is {} commands)
-                ApplyCommandBuffer(commands);
+            if (builder.CreationFailure is not null)
+                continue; // Don't go any further.
+
+            // Stuff happens, don't keep going if we don't exist.
+            if (Deleted(builder.ReservedEntity))
+                continue;
+
+            try
+            {
+                if (builder.PostInitCommands is { } commands)
+                    ApplyCommandBuffer(commands);
+            }
+            catch (Exception e)
+            {
+                DeleteEntity(builder.ReservedEntity, builder.MetaData, builder.Transform);
+                builder.CreationFailure = new(e, EntityCreationException2.CreationStep.PostInitCommandBuffer, builder);;
+                anyFails = true;
+                if (abortOnAnyFailure)
+                    goto handleFailure;
+            }
         }
+
+        if (!anyFails)
+            return; // We done!
+
+        handleFailure:
+
+        var fails = new List<EntityCreationException2>();
+
+        // We're not done. Gotta aggregate all our failures.
+        foreach (var builder in builders)
+        {
+            if (builder.CreationFailure is not { } exception)
+                continue;
+
+            fails.Add(exception);
+        }
+
+        if (deleteNonFailingEntities)
+        {
+            foreach (var builder in builders)
+            {
+                try
+                {
+                    if (builder.CreationFailure is not null)
+                        continue; // already dead.
+
+                    if (Deleted(builder.ReservedEntity))
+                        continue; // We killed it already.
+
+                    DeleteEntity(builder.ReservedEntity, builder.MetaData, builder.Transform);
+                }
+                catch (Exception e)
+                {
+                    // More?? Oh no.
+                    fails.Add(new (e, EntityCreationException2.CreationStep.FailureCleanup, builder));
+                }
+            }
+        }
+
+        throw new AggregateException("One or more entities failed to spawn.", fails);
     }
 
     public void SpawnBulkUnordered(Span<EntityBuilder> builders, bool? mapInit = null)

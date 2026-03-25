@@ -101,8 +101,6 @@ public abstract partial class SharedContainerSystem
         RaiseLocalEvent(container.Owner, new EntRemovedFromContainerMessage(toRemove, container), true);
         RaiseLocalEvent(toRemove, new EntGotRemovedFromContainerMessage(toRemove, container), false);
 
-        DebugTools.Assert(destination == null || xform.Coordinates.Equals(destination.Value), $"Failed to set coordinates of {ToPrettyString(toRemove, meta)} to be inside {ToPrettyString(container.Owner)} container '{container.ID}'");
-
         Dirty(container.Owner, container.Manager);
         return true;
     }

@@ -37,8 +37,10 @@ public partial interface IEntityManager
     /// </remarks>
     /// <param name="builders">The entity builders to spawn into the world.</param>
     /// <param name="mapInit">Whether map init should be run for the built entities, or automatically inferred if null.</param>
+    /// <param name="abortOnAnyFailure">Whether</param>
+    /// <param name="deleteNonFailingEntities">Whether to delete all spawned entities if any fail to spawn.</param>
     /// <seealso cref="SpawnBulkUnordered"/>
-    public void SpawnBulk(ReadOnlySpan<EntityBuilder> builders, bool? mapInit = null);
+    public void SpawnBulk(ReadOnlySpan<EntityBuilder> builders, bool? mapInit = null, bool abortOnAnyFailure = true, bool deleteNonFailingEntities = true);
 
     /// <summary>
     ///     Spawns the provided set of entity builders, in a manner much like loading a map does (with initialization

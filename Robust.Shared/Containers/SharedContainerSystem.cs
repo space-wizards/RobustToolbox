@@ -56,14 +56,13 @@ namespace Robust.Shared.Containers
             TransformQuery = GetEntityQuery<TransformComponent>();
         }
 
-        private void OnAdd(Entity<ContainerManagerComponent> ent, ref ComponentAdd args)
+        private void OnAdd(EntityUid ent, ContainerManagerComponent component, ref ComponentAdd args)
         {
-            foreach (var (id, container) in ent.Comp.Containers)
+            foreach (var (id, container) in component.Containers)
             {
-                container.Init(this, id, ent);
+                container.Init(this, id, (ent, component));
             }
         }
-
 
         private void OnContainerGetState(EntityUid uid, ContainerManagerComponent component, ref ComponentGetState args)
         {

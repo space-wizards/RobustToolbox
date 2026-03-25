@@ -24,10 +24,20 @@ namespace Robust.Shared.Containers
         [DataField("containers")]
         public Dictionary<string, BaseContainer> Containers = new();
 
-        // Requires a custom serializer + copier to get rid of. Good luck
+        // Waiting on everything to use EntityBuilder, then it's gone.
         void ISerializationHooks.AfterDeserialization()
         {
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (Owner == EntityUid.Invalid)
+                return;
+#pragma warning restore CS0618 // Type or member is obsolete
 
+            foreach (var (id, container) in Containers)
+            {
+#pragma warning disable CS0618 // Type or member is obsolete
+                container.Init(null!, id, (Owner, this));
+#pragma warning restore CS0618 // Type or member is obsolete
+            }
         }
 
         [Obsolete]

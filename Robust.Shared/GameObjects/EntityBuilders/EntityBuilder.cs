@@ -68,6 +68,11 @@ public sealed partial class EntityBuilder
     /// </summary>
     internal MapCoordinates? MapCoordinates;
 
+    /// <summary>
+    ///     Any exceptions thrown trying to create the entity, ensuring it doesn't continue.
+    /// </summary>
+    public EntityCreationException2? CreationFailure { get; internal set; }
+
     public MetaDataComponent MetaData { get; private set; } = default!;
     public TransformComponent Transform { get; private set; } = default!;
 

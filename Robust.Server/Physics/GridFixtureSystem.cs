@@ -265,7 +265,7 @@ namespace Robust.Server.Physics
                 var oldGridXform = _xformQuery.GetComponent(oldGridUid);
                 var (gridPos, gridRot) = _xformSystem.GetWorldPositionRotation(oldGridXform);
                 var mapBody = _bodyQuery.GetComponent(oldGridUid);
-                var oldGridComp = _gridQuery.GetComponent(oldGridUid);
+                var oldGridComp = grid;
                 var newGrids = new EntityUid[grids.Count - 1];
                 var mapId = oldGridXform.MapID;
 
@@ -611,9 +611,9 @@ namespace Robust.Server.Physics
         /// </summary>
         private HashSet<ChunkSplitNode> RemoveSplitNode(EntityUid gridEuid, MapChunk chunk)
         {
-            var dirtyNodes = new HashSet<ChunkSplitNode>();
-
             if (_isSplitting) return new HashSet<ChunkSplitNode>();
+
+            var dirtyNodes = new HashSet<ChunkSplitNode>();
 
             Cleanup(gridEuid, chunk, dirtyNodes);
             DebugTools.Assert(dirtyNodes.All(o => o.Group.Chunk != chunk));
@@ -741,7 +741,7 @@ namespace Robust.Server.Physics
                         neighbor = new Vector2i(_index.X + 1, _index.Y);
                         return true;
                     case 2:
-                        if (_index.Y == _chunk.ChunkSize + 1) break;
+                        if (_index.Y == _chunk.ChunkSize - 1) break;
                         neighbor = new Vector2i(_index.X, _index.Y + 1);
                         return true;
                     case 3:

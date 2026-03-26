@@ -26,6 +26,15 @@ public abstract partial class EntityManager
             try
             {
                 AllocBuilderEntity(builder);
+
+                // Pause inheritance REALLY should not be here, but the old system handled it explicitly too to my understanding.
+                // Transform recursively inherits paused status...
+                // TODO: This should really be handled by TransformSystem itself!
+                if (builder.Transform.ParentUid.IsValid() && MetaQuery.Comp(builder.Transform.ParentUid).EntityPaused)
+                {
+                    EntitySysManager.GetEntitySystem<MetaDataSystem>()
+                        .SetEntityPaused(builder.ReservedEntity, true, builder.MetaData);
+                }
             }
             catch (Exception e)
             {
@@ -97,22 +106,12 @@ public abstract partial class EntityManager
             try
             {
                 // MapInit is inherited, if we're on an initialized map we should also map init unless otherwise told.
-                var xform = TransformQuery.GetComponent(builder.ReservedEntity);
                 var doMapInit = mapInit;
                 // Replicate whatever map we're on if mapInit is null.
-                doMapInit ??= _mapSystem.IsInitialized(xform.MapID);
+                doMapInit ??= _mapSystem.IsInitialized(builder.Transform.MapID);
 
                 if (doMapInit.Value)
                     RunMapInit(builder.ReservedEntity, builder.MetaData);
-
-                // Pause inheritance REALLY should not be here, but the old system handled it explicitly too to my understanding.
-                // Transform recursively inherits paused status...
-                // TODO: This should really be handled by TransformSystem itself!
-                if (xform.ParentUid.IsValid() && MetaQuery.Comp(xform.ParentUid).EntityPaused)
-                {
-                    EntitySysManager.GetEntitySystem<MetaDataSystem>()
-                        .SetEntityPaused(builder.ReservedEntity, true, builder.MetaData);
-                }
             }
             catch (Exception e)
             {

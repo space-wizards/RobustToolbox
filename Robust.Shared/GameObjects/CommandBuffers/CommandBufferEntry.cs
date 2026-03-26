@@ -50,7 +50,8 @@ internal partial struct CommandBufferEntry
     static unsafe CommandBufferEntry()
     {
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
-        // Ensure we're the expected size, because perf sensitive.
+        // Ensure we're the expected size, because this is performance sensitive and we make assumptions about this.
+        // Yet another reason this engine is 32-bit incompatible right here.
         if (sizeof(CommandBufferEntry) != 32)
         {
             throw new Exception(
@@ -103,7 +104,7 @@ internal partial struct CommandBufferEntry
     /// </summary>
     /// <param name="builder">The builders to apply.</param>
     /// <param name="entry">The location to place the new entry within.</param>
-    public static void SpawnEntities(EntityBuilder[] builder, out CommandBufferEntry entry)
+    public static void SpawnEntities(List<EntityBuilder> builder, out CommandBufferEntry entry)
     {
         entry.Command = (long)CmdKind.SpawnEntity;
         entry.Field1 = 0;
@@ -166,7 +167,7 @@ internal partial struct CommandBufferEntry
         ///     Either an entity builder, or a list of entity builders.
         /// <code>
         ///     unused Field1;
-        ///     EntityBuilder | EntityBuilder[] EntityBuilder;
+        ///     EntityBuilder | List&lt;EntityBuilder&gt; EntityBuilder;
         ///     unused Field3;
         /// </code>
         /// </summary>

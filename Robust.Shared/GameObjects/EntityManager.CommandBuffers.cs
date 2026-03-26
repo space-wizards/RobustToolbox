@@ -41,8 +41,8 @@ public abstract partial class EntityManager
 
         public bool Return(CommandBuffer obj)
         {
-            if (obj.Capacity > 128)
-                return false; // Get rid of it, too chonky.
+            if (obj.Capacity > 1024)
+                return false; // Get rid of it, too big (32KiB or larger)
 
             obj.Clear();
             return true;

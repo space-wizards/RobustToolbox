@@ -147,7 +147,8 @@ namespace Robust.Shared.GameObjects
             if (Initialized)
                 throw new InvalidOperationException("Initialize() called multiple times");
 
-            CommandBufferPool = new(new CommandBufferPolicy(_dependencyCollection), 64);
+            // This can store at most 8MiB worth of command buffers.
+            CommandBufferPool = new(new CommandBufferPolicy(_dependencyCollection), 256);
 
             EventBusInternal = new EntityEventBus(this, _reflection);
 

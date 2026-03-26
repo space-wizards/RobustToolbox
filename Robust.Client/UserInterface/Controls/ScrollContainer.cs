@@ -364,15 +364,13 @@ namespace Robust.Client.UserInterface.Controls
 
             var h = _hScrollBar.Value;
             var v = _vScrollBar.Value;
-            if (!_hScrollVisible && _hScrollBarHidden == false)
-            {
+            // reset the values if everything fits, this is usually the case when the scrollbar is hidden
+            // when we intentionally hide the scrollbars this is not the case, so leave it as-is then
+            if (!_hScrollVisible && _hScrollBarHidden != true)
                 h = 0;
-            }
 
-            if (!_vScrollVisible && _vScrollBarHidden == false)
-            {
+            if (!_vScrollVisible && _vScrollBarHidden != true)
                 v = 0;
-            }
 
             return new Vector2(h, v);
         }

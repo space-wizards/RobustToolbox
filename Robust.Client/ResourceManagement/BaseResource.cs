@@ -8,18 +8,8 @@ namespace Robust.Client.ResourceManagement;
 /// <summary>
 ///     Base resource for the cache.
 /// </summary>
-public abstract class BaseResource : IDisposable
+public abstract class BaseResource : IBaseResource, IDisposable
 {
-    /// <summary>
-    ///     Fallback resource path if this one does not exist.
-    /// </summary>
-    public virtual ResPath? Fallback => null;
-
-    /// <summary>
-    /// Whether this resource type can be deterministically removed from the cache.
-    /// </summary>
-    public virtual bool CanBeRemoved => false;
-
     /// <summary>
     ///     Disposes this resource.
     /// </summary>

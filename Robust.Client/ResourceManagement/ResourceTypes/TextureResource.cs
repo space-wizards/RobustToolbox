@@ -14,13 +14,14 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.ResourceManagement
 {
-    public sealed class TextureResource : BaseResource
+    public sealed class TextureResource : BaseResource, IBaseResource
     {
         private OwnedTexture _texture = default!;
         private bool _disposed;
+        private readonly Lock _lock = new();
 
-        public override ResPath? Fallback => new("/Textures/noSprite.png");
-        public override bool CanBeRemoved => true;
+        static ResPath? IBaseResource.FallbackPath => new("/Textures/noSprite.png");
+        static bool IBaseResource.CanBeRemoved => true;
 
         public Texture Texture
         {
@@ -142,11 +143,13 @@ namespace Robust.Client.ResourceManagement
 
         public override void Dispose()
         {
-            if (_disposed)
-                return;
+            lock (_lock)
+            {
+                if (_disposed) return;
+                _disposed = true;
+                _texture?.Dispose();
+            }
 
-            _texture?.Dispose();
-            _disposed = true;
             base.Dispose();
         }
 

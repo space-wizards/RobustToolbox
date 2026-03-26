@@ -197,12 +197,10 @@ namespace Robust.Server.Physics
         /// <summary>
         /// Check for splits on the specified nodes.
         /// </summary>
-        private void CheckSplits(EntityUid uid, HashSet<ChunkSplitNode> dirtyNodes)
+        private void CheckSplits(EntityUid uid, HashSet<ChunkSplitNode> dirtyNodes, MapGridComponent? grid = null)
         {
-            // TODO: We already have mapgrid elsewhere
-            // trycomp is O(1) so not a big deal, and would require changing method signatures to pass mapgrid around everywhere so this isnt really worth it :shrug:
             if (_isSplitting || !SplitAllowed ||
-               !TryComp<MapGridComponent>(uid, out var grid) ||
+               !Resolve(uid, ref grid, false) ||
                !grid.CanSplit)
             {
                 return;
@@ -241,7 +239,7 @@ namespace Robust.Server.Physics
             }
 
             var grids = _splitGrids;
-            var oldGrid = Comp<MapGridComponent>(uid);
+            var oldGrid = grid;
             var oldGridUid = uid;
 
             // Split time
@@ -542,7 +540,7 @@ namespace Robust.Server.Physics
         /// <summary>
         /// Checks for grid split with 1 chunk updated.
         /// </summary>
-        internal override void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles)
+        internal override void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles, MapGridComponent? grid = null)
         {
             HashSet<ChunkSplitNode> nodes;
 
@@ -552,16 +550,16 @@ namespace Robust.Server.Physics
             }
             else
             {
-                nodes = GenerateSplitNode(gridEuid, chunk);
+                nodes = GenerateSplitNode(gridEuid, chunk, grid);
             }
 
-            CheckSplits(gridEuid, nodes);
+            CheckSplits(gridEuid, nodes, grid);
         }
 
         /// <summary>
         /// Checks for grid split with many chunks updated.
         /// </summary>
-        internal override void CheckSplit(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks, List<MapChunk> removedChunks)
+        internal override void CheckSplit(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks, List<MapChunk> removedChunks, MapGridComponent? grid = null)
         {
             var nodes = new HashSet<ChunkSplitNode>();
 
@@ -572,7 +570,7 @@ namespace Robust.Server.Physics
 
             foreach (var (chunk, _) in mapChunks)
             {
-                nodes.UnionWith(GenerateSplitNode(gridEuid, chunk));
+                nodes.UnionWith(GenerateSplitNode(gridEuid, chunk, grid));
             }
 
             var toRemove = new ValueList<ChunkSplitNode>();
@@ -591,7 +589,7 @@ namespace Robust.Server.Physics
                 nodes.Remove(node);
             }
 
-            CheckSplits(gridEuid, nodes);
+            CheckSplits(gridEuid, nodes, grid);
         }
 
         /// <summary>
@@ -611,7 +609,7 @@ namespace Robust.Server.Physics
         /// <summary>
         /// Re-adds this chunk to nodes and dirties its neighbours and itself.
         /// </summary>
-        private HashSet<ChunkSplitNode> GenerateSplitNode(EntityUid gridEuid, MapChunk chunk)
+        private HashSet<ChunkSplitNode> GenerateSplitNode(EntityUid gridEuid, MapChunk chunk, MapGridComponent? grid = null)
         {
             var dirtyNodes = RemoveSplitNode(gridEuid, chunk);
 
@@ -619,7 +617,7 @@ namespace Robust.Server.Physics
 
             DebugTools.Assert(chunk.FilledTiles > 0);
 
-            var grid = Comp<MapGridComponent>(gridEuid);
+            grid ??= Comp<MapGridComponent>(gridEuid);
             var group = CreateNodes(gridEuid, grid, chunk);
             _nodes[gridEuid][chunk.Indices] = group;
 

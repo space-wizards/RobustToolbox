@@ -44,7 +44,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnGridBoundsRegenerate(ref RegenerateGridBoundsEvent ev)
         {
-            RegenerateCollision(ev.Entity, ev.ChunkRectangles, ev.RemovedChunks);
+            RegenerateCollision(ev.Entity, ev.ChunkRectangles, ev.RemovedChunks, ev.Grid);
         }
 
         protected virtual void OnGridInit(GridInitializeEvent ev)
@@ -53,7 +53,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             // This will also check for grid splits if applicable.
-            var grid = Comp<MapGridComponent>(ev.EntityUid);
+            var grid = ev.Grid ?? Comp<MapGridComponent>(ev.EntityUid);
             _map.RegenerateCollision(ev.EntityUid, grid, _map.GetMapChunks(ev.EntityUid, grid).Values.ToHashSet());
         }
 
@@ -64,7 +64,8 @@ namespace Robust.Shared.GameObjects
         internal void RegenerateCollision(
             EntityUid uid,
             Dictionary<MapChunk, List<Box2i>> mapChunks,
-            List<MapChunk> removedChunks)
+            List<MapChunk> removedChunks,
+            MapGridComponent? grid = null)
         {
             if (!_enabled)
                 return;
@@ -102,13 +103,13 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.RaiseLocalEvent(uid,new GridFixtureChangeEvent {NewFixtures = fixtures}, true);
             _fixtures.FixtureUpdate(uid, manager: manager, body: body);
 
-            CheckSplit(uid, mapChunks, removedChunks);
+            CheckSplit(uid, mapChunks, removedChunks, grid);
         }
 
         internal virtual void CheckSplit(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks,
-            List<MapChunk> removedChunks) {}
+            List<MapChunk> removedChunks, MapGridComponent? grid = null) {}
 
-        internal virtual void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles) {}
+        internal virtual void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles, MapGridComponent? grid = null) {}
 
         private bool UpdateFixture(EntityUid uid, MapChunk chunk, List<Box2i> rectangles, PhysicsComponent body, FixturesComponent manager, TransformComponent xform)
         {

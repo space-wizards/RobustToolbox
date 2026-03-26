@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -329,25 +330,38 @@ namespace Robust.Server.Physics
 
                         // Update lookup ents
                         // Needs to be done before setting old tiles as they will be re-parented to the map.
-                        // TODO: Combine tiles into larger rectangles or something; this is gonna be the killer bit.
+                        // Build tile positions and union bounds so we can query once per node.
+                        var tilePositions = new HashSet<Vector2i>(node.Indices.Count);
+                        var nodeBounds = new Box2();
+                        var first = true;
+
                         foreach (var tile in node.Indices)
                         {
                             var tilePos = offset + tile;
-                            var bounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
+                            tilePositions.Add(tilePos);
+                            var tileBounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
+                            nodeBounds = first ? tileBounds : nodeBounds.Union(tileBounds);
+                            first = false;
+                        }
 
-                            _entSet.Clear();
-                            _lookup.GetLocalEntitiesIntersecting(oldGridUid, tilePos, _entSet, 0f, LookupFlags.All | ~LookupFlags.Uncontained | LookupFlags.Approximate);
+                        _entSet.Clear();
+                        _lookup.GetLocalEntitiesIntersecting(oldGridUid, nodeBounds, _entSet, LookupFlags.All | ~LookupFlags.Uncontained | LookupFlags.Approximate);
 
-                            foreach (var ent in _entSet)
-                            {
-                                // Consider centre of entity position maybe?
-                                var entXform = _xformQuery.GetComponent(ent);
+                        foreach (var ent in _entSet)
+                        {
+                            var entXform = _xformQuery.GetComponent(ent);
 
-                                if (entXform.ParentUid != oldGridUid ||
-                                    !bounds.Contains(entXform.LocalPosition)) continue;
+                            if (entXform.ParentUid != oldGridUid)
+                                continue;
 
-                                _xformSystem.SetParent(ent, entXform, newGridUid, _xformQuery, newGridXform);
-                            }
+                            var entTile = new Vector2i(
+                                (int) Math.Floor(entXform.LocalPosition.X / oldGrid.TileSize),
+                                (int) Math.Floor(entXform.LocalPosition.Y / oldGrid.TileSize));
+
+                            if (!tilePositions.Contains(entTile))
+                                continue;
+
+                            _xformSystem.SetParent(ent, entXform, newGridUid, _xformQuery, newGridXform);
                         }
 
                         _nodes[oldGridUid][node.Group.Chunk.Indices].Nodes.Remove(node);

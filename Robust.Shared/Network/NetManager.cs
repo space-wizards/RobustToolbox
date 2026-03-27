@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -141,9 +142,9 @@ namespace Robust.Shared.Network
         private ISawmill _logger = default!;
         private ISawmill _loggerPacket = default!;
         private ISawmill _authLogger = default!;
-        
-        private readonly Dictionary<IPAddress, int> _decryptFailCounts = new();
-        private const int DecryptFailBanThreshold = 10;
+
+        private readonly ConcurrentDictionary<IPAddress, (int TotalCount, DateTime LastSeen)> _decryptFailCounts = new();
+        private DateTime _lastDecryptFailCleanup = DateTime.UtcNow;
 
         private bool _clientSerializerComplete;
         private bool _clientTransferComplete;
@@ -493,8 +494,27 @@ namespace Robust.Shared.Network
             _initialized = false;
         }
 
+        private static IPAddress NormalizeIp(IPAddress ip)
+        {
+            if (ip.AddressFamily != AddressFamily.InterNetworkV6) return ip;
+            var bytes = ip.GetAddressBytes();
+            for (var i = 8; i < 16; i++) bytes[i] = 0;
+            return new IPAddress(bytes);
+        }
+
+        private void CleanupDecryptFailCounts()
+        {
+            var now = DateTime.UtcNow;
+            var intervalMinutes = _config.GetCVar(CVars.NetDecryptFailCleanupInterval);
+            if ((now - _lastDecryptFailCleanup).TotalMinutes < intervalMinutes) return;
+            _lastDecryptFailCleanup = now;
+            foreach (var (ip, (_, lastSeen)) in _decryptFailCounts)
+            { if ((now - lastSeen).TotalMinutes >= intervalMinutes) _decryptFailCounts.TryRemove(ip, out _); }
+        }
+
         public void ProcessPackets()
         {
+            CleanupDecryptFailCounts();
             var sentMessages = 0L;
             var recvMessages = 0L;
             var sentBytes = 0L;
@@ -946,14 +966,20 @@ namespace Robust.Shared.Network
             catch (Exception e)
             {
                 var remoteEndPoint = msg.SenderConnection.RemoteEndPoint;
-                var remoteIp = remoteEndPoint.Address;
-                _decryptFailCounts.TryGetValue(remoteIp, out var failCount);
-                failCount += 1;
-                _decryptFailCounts[remoteIp] = failCount;
-                _logger.Warning($"{remoteEndPoint}: Failed to decrypt message (fail #{failCount}), disconnecting. Exception: {e.Message}");
-                if (failCount >= DecryptFailBanThreshold)
-                { _authLogger.Warning($"[DECRYPTBAN] {remoteIp} reached {failCount} decryption failures. Consider banning this IP."); }
-                channel.Disconnect("Decryption failure");
+                var remoteIp = NormalizeIp(remoteEndPoint.Address);
+                var now = DateTime.UtcNow;
+                var banThreshold = _config.GetCVar(CVars.NetDecryptFailBanThreshold);
+                var maxTracked = _config.GetCVar(CVars.NetDecryptFailMaxTracked);
+                // Drop silently
+                if (_decryptFailCounts.Count >= maxTracked && !_decryptFailCounts.ContainsKey(remoteIp)) return true;
+                var (failCount, _) = _decryptFailCounts.AddOrUpdate(remoteIp, _ => (1, now), (_, old) => (old.TotalCount + 1, now));
+                // Log only on first failure
+                if (failCount == 1) _logger.Warning($"{remoteEndPoint}: Decryption failure. Exception: {e.Message}");
+                if (failCount >= banThreshold)
+                {
+                    _authLogger.Warning($"[DECRYPTBAN] {remoteIp} reached {failCount} decryption failures. Consider banning this IP.");
+                    if (_config.GetCVar(CVars.NetDecryptFailKick)) channel.Disconnect("Decryption failure");
+                }
                 return true;
             }
 

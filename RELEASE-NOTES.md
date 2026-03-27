@@ -35,15 +35,18 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Removed some obsolete code that has been marked as obsolete for over 2 years.
+  * Several methods were removed from `PvsOverrideSystem` and `ContainerManagerComponent`.
+  * `TimerComponent` has been completely removed.
 
 ### New features
 
-*None yet*
+* Added `StringReader` and `StringWriter` to the sandbox whitelist.
+* Added `IEmitter`, `Emitter`, and `EmitterSettings` from `YamlDotNet` to the sandbox whitelist.
 
 ### Bugfixes
 
-*None yet*
+* Fixed hiding scrollbars preventing manual scrolling, but better.
 
 ### Other
 

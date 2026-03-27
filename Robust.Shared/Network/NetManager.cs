@@ -962,9 +962,7 @@ namespace Robust.Shared.Network
                 return true;
             }
 
-            try
-            { channel.Encryption?.Decrypt(msg); }
-            catch (Exception e)
+            if (channel.Encryption != null && !channel.Encryption.Decrypt(msg))
             {
                 var remoteEndPoint = msg.SenderConnection.RemoteEndPoint;
                 var remoteIp = NormalizeIp(remoteEndPoint.Address);
@@ -975,7 +973,7 @@ namespace Robust.Shared.Network
                 if (_decryptFailCounts.Count >= maxTracked && !_decryptFailCounts.ContainsKey(remoteIp)) return true;
                 var (failCount, _) = _decryptFailCounts.AddOrUpdate(remoteIp, _ => (1, now), (_, old) => (old.TotalCount + 1, now));
                 // Log only on first failure
-                if (failCount == 1) _logger.Warning($"{remoteEndPoint}: Decryption failure. Exception: {e.Message}");
+                if (failCount == 1) _logger.Warning($"{remoteEndPoint}: Decryption failure.");
                 if (failCount >= banThreshold)
                 {
                     _authLogger.Warning($"[DECRYPTBAN] {remoteIp} reached {failCount} decryption failures. Consider banning this IP.");

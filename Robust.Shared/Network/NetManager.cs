@@ -504,6 +504,7 @@ namespace Robust.Shared.Network
 
         private void CleanupDecryptFailCounts()
         {
+            if (!IsServer) return;
             var now = DateTime.UtcNow;
             var intervalMinutes = _config.GetCVar(CVars.NetDecryptFailCleanupInterval);
             if ((now - _lastDecryptFailCleanup).TotalMinutes < intervalMinutes) return;

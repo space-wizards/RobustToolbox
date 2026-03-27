@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 275.0.0
+
+### Breaking changes
+
 * Removed some obsolete code that has been marked as obsolete for over 2 years.
   * Several methods were removed from `PvsOverrideSystem` and `ContainerManagerComponent`.
   * `TimerComponent` has been completely removed.
@@ -47,14 +70,6 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fixed hiding scrollbars preventing manual scrolling, but better.
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
 
 
 ## 274.0.1

@@ -71,16 +71,24 @@ public sealed class NetEncryptionDoSTest
         Assert.That(serverEnc.TryDecrypt(packet), Is.False);
     }
 
+    private static byte[][] _badMessages =
+    [
+        [1, 1, 1, 1, 1],
+        [1, 2],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,]
+    ];
+
     [Test]
     [Description("Attempt to decrypt a packet that is bogus, ensuring it doesn't throw.")]
-    public void BadMessageDoesNotThrow()
+    [TestCaseSource(nameof(_badMessages))]
+    public void BadMessageDoesNotThrow(byte[] badMessage)
     {
         var (_, serverEnc) = MakeEncryptionPair(disjointKey: true);
         var (client, server) = MakeConnectionPair();
 
         var message = client.CreateMessage();
 
-        message.WriteVariableUInt64(Magic);
+        message.Write(badMessage);
 
         // Don't encrypt at all.
 

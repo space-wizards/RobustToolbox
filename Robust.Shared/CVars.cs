@@ -354,7 +354,7 @@ namespace Robust.Shared
         /// Records are only removed if they have not been seen for this many minutes.
         /// </summary>
         public static readonly CVarDef<int> NetDecryptFailCleanupInterval =
-            CVarDef.Create("net.dos_fail_cleanup_interval", 2, CVar.SERVERONLY);
+            CVarDef.Create("net.dos_fail_cleanup_interval", 10, CVar.SERVERONLY);
 
         /// <summary>
         /// Maximum number of IPs tracked for decryption failures. Prevents memory exhaustion from botnet attacks.

@@ -71,6 +71,29 @@ public sealed class NetEncryptionDoSTest
         Assert.That(serverEnc.TryDecrypt(packet), Is.False);
     }
 
+    [Test]
+    [Description("Attempt to decrypt a packet that is bogus, ensuring it doesn't throw.")]
+    public void BadMessageDoesNotThrow()
+    {
+        var (_, serverEnc) = MakeEncryptionPair(disjointKey: true);
+        var (client, server) = MakeConnectionPair();
+
+        var message = client.CreateMessage();
+
+        message.WriteVariableUInt64(Magic);
+
+        // Don't encrypt at all.
+
+        client.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+
+        var packet = server.WaitMessage(1000);
+
+        Assert.That(packet, Is.Not.Null);
+
+        Assert.That(serverEnc.TryDecrypt(packet), Is.False);
+    }
+
+
     // TODO: Generalize all this for other low level network tests.
 
     private (NetClient client, NetServer server) MakeConnectionPair()

@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 275.1.0
+
+### Bugfixes
+
+* Fixed a DoS exploit related to decrypting network packets.
+
+
 ## 275.0.0
 
 ### Breaking changes

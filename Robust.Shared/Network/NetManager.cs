@@ -985,8 +985,9 @@ namespace Robust.Shared.Network
             }
 
             // Attempt to decrypt the message, only logging if we fail to decrypt and we actually have encryption.
-            if ((!channel.Encryption?.TryDecrypt(msg)) ?? true)
+            if (channel.Encryption != null && !channel.Encryption.TryDecrypt(msg))
             {
+                if (IsServer)
                 var remoteEndPoint = msg.SenderConnection.RemoteEndPoint;
                 var remoteIp = NormalizeIp(remoteEndPoint.Address);
                 var now = DateTime.UtcNow;

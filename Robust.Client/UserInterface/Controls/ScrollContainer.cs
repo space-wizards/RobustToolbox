@@ -215,6 +215,14 @@ namespace Robust.Client.UserInterface.Controls
                 return Vector2.Zero;
             }
 
+            // We need to measure our children again, to ensure they're aware of
+            // our real, final arrangement. It's a violation of invariants
+            // to measure a large space then try to draw them in something smaller.
+            //
+            // We only call our override, not Measure, to avoid infinite loops.
+            // We don't need to update ourselves after all.
+            MeasureOverride(finalSize);
+
             var maxChildMinSize = Vector2.Zero;
 
             foreach (var child in Children)

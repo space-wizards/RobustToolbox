@@ -1051,7 +1051,7 @@ namespace Robust.Shared.Physics
 			        RotateNodes(index);
 		        }
 
-		        index = indexNode.Parent;
+		        index = _nodes[index].Parent;
 	        }
         }
 

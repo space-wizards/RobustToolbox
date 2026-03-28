@@ -35,8 +35,38 @@ internal sealed partial class PvsSystem
 
         return pvsSession;
     }
-
     internal void ComputeSessionState(PvsSession session)
+    {
+        if (session.Session is null)
+        {
+            // Minimal session update for replay.
+            session.FromTick = session.RequestedFull ? GameTick.Zero : session.LastReceivedAck;
+            session.LastInput = 0;
+            session.LastMessage = 0;
+            session.VisMask = EyeComponent.DefaultVisibilityMask;
+
+            if (CullingEnabled && !session.DisableCulling)
+                GetEntityStates(session);
+            else
+                GetAllEntityStates(session);
+
+            DebugTools.AssertNull(session.State);
+            session.State = new GameState(
+                session.FromTick,
+                _gameTiming.CurTick,
+                0,
+                session.States,
+                session.PlayerStates,
+                _deletedEntities);
+
+            session.ForceSendReliably = false;
+            return;
+        }
+
+        TryComputeSessionState(session);
+    }
+
+    internal bool TryComputeSessionState(PvsSession session)
     {
         UpdateSession(session);
 
@@ -48,6 +78,17 @@ internal sealed partial class PvsSystem
         _playerManager.GetPlayerStates(session.FromTick, session.PlayerStates);
 
         // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
+
+        if (_maxEntityStates > 0 && session.States.Count > _maxEntityStates)
+        {
+            Log.Warning(
+                "Skipping PVS state for {0} due to exceeding net.pvs_max_entity_states. Count={1} Limit={2}",
+                session.Session,
+                session.States.Count,
+                _maxEntityStates);
+
+            return false;
+        }
 
         DebugTools.Assert(session.States.Select(x=> x.NetEntity).ToHashSet().Count == session.States.Count);
         DebugTools.AssertNull(session.State);
@@ -61,6 +102,7 @@ internal sealed partial class PvsSystem
 
         session.ForceSendReliably = session.RequestedFull
                                           || _gameTiming.CurTick > session.LastReceivedAck + (uint) ForceAckThreshold;
+        return true;
     }
 
     private void UpdateSession(PvsSession session)

@@ -190,10 +190,8 @@ public sealed class EntitySerializer : ISerializationContext,
         if (ent.Comp == null && !EntMan.TryGetComponent(ent.Owner, out ent.Comp))
             return false;
 
-        if (ent.Comp.EntityPrototype?.MapSavable == false)
-            return false;
 
-        bool serializable = true;
+        bool serializable = ent.Comp.EntityPrototype?.MapSavable != false;
         OnIsSerializeable?.Invoke(ent!, ref serializable);
         return serializable;
     }
@@ -1005,7 +1003,8 @@ public sealed class EntitySerializer : ISerializationContext,
         if (value == EntityUid.Invalid)
         {
             if (Options.MissingEntityBehaviour != MissingEntityBehaviour.Ignore)
-                _log.Error($"Encountered an invalid entityUid reference.");
+                _log.Error("Encountered an invalid entityUid reference while serializing {Entity}, component: {Component}.",
+                    CurrentEntity != null ? EntMan.ToPrettyString(CurrentEntity) : "?", CurrentComponent ?? "?");
 
             return InvalidNode;
         }
@@ -1020,8 +1019,9 @@ public sealed class EntitySerializer : ISerializationContext,
         {
             case MissingEntityBehaviour.Error:
                 _log.Error(EntMan.Deleted(value)
-                    ? $"Encountered a reference to a deleted entity {value} while serializing {EntMan.ToPrettyString(CurrentEntity)}."
-                    : $"Encountered a reference to a missing entity: {value} while serializing {EntMan.ToPrettyString(CurrentEntity)}.");
+                    ? "Encountered a reference to a deleted entity {Value} while serializing {Entity}, component: {Component}."
+                    : "Encountered a reference to a missing entity: {Value} while serializing {Entity}, component: {Component}.",
+                    value, CurrentEntity != null ? EntMan.ToPrettyString(CurrentEntity) : "?", CurrentComponent ?? "?");
                 return InvalidNode;
             case MissingEntityBehaviour.Ignore:
                 return InvalidNode;

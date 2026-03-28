@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Threading;
@@ -114,11 +114,13 @@ internal sealed class NetEncryption
             // key
             _key);
 
-        message.Position = 0;
-        message.LengthBytes = messageLength;
-
         ArrayPool<byte>.Shared.Return(buffer);
 
-        return result;
+        if (!result)
+            return false;
+
+        message.Position = 0;
+        message.LengthBytes = messageLength;
+        return true;
     }
 }

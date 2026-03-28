@@ -72,6 +72,7 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     private readonly List<PvsSession> _toAck = new();
     internal readonly HashSet<ICommonSession> PendingAcks = new();
+    private int _maxEntityStates;
 
     private PvsAckJob _ackJob;
     private PvsChunkJob _chunkJob;
@@ -115,6 +116,22 @@ internal sealed partial class PvsSystem : EntitySystem
             Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
         });
 
+    private static readonly Gauge PvsSessionsGauge = Metrics.CreateGauge(
+        "robust_pvs_sessions",
+        "Number of PVS sessions currently tracked.");
+
+    private static readonly Gauge PvsChunksGauge = Metrics.CreateGauge(
+        "robust_pvs_chunks",
+        "Number of PVS chunks currently cached.");
+
+    private static readonly Gauge PvsPendingAcksGauge = Metrics.CreateGauge(
+        "robust_pvs_pending_acks",
+        "Number of sessions pending PVS ack processing.");
+
+    private static readonly Gauge PvsMetadataCurrentSizeGauge = Metrics.CreateGauge(
+        "robust_pvs_metadata_current_size",
+        "Current allocated size of PVS metadata memory region.");
+
     public override void Initialize()
     {
         base.Initialize();
@@ -148,6 +165,7 @@ internal sealed partial class PvsSystem : EntitySystem
         Subs.CVar(_configManager, CVars.NetForceAckThreshold, OnForceAckChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsAsync, OnAsyncChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsCompressLevel, ResetParallelism, true);
+        Subs.CVar(_configManager, CVars.NetPvsMaxEntityStates, v => _maxEntityStates = Math.Max(0, v), true);
 
         _serverGameStateManager.ClientAck += OnClientAck;
         _serverGameStateManager.ClientRequestFull += OnClientRequestFull;
@@ -189,6 +207,14 @@ internal sealed partial class PvsSystem : EntitySystem
     internal void SendGameStates(ICommonSession[] players)
     {
         _getStateHandlers ??= EntityManager.EventBusInternal.GetNetCompEventHandlers<ComponentGetState>();
+
+        PvsSessionsGauge.Set(PlayerData.Count);
+        PvsChunksGauge.Set(_chunks.Count);
+        PvsMetadataCurrentSizeGauge.Set(_metadataMemory.CurrentSize);
+        lock (PendingAcks)
+        {
+            PvsPendingAcksGauge.Set(PendingAcks.Count);
+        }
 
         // Wait for pending jobs and process disconnected players
         ProcessDisconnections();
@@ -437,14 +463,22 @@ internal sealed partial class PvsSystem : EntitySystem
         _leaveTask?.WaitOne();
         _leaveTask = null;
 
-        foreach (var session in _disconnected)
+        lock (PendingAcks)
         {
-            if (PlayerData.Remove(session, out var pvsSession))
+            foreach (var session in _disconnected)
             {
-                ClearSendHistory(pvsSession);
-                FreeSessionDataMemory(pvsSession);
+                PendingAcks.Remove(session);
+                _seenAllEnts.Remove(session);
+
+                if (PlayerData.Remove(session, out var pvsSession))
+                {
+                    ClearSendHistory(pvsSession);
+                    FreeSessionDataMemory(pvsSession);
+                }
             }
         }
+
+        _disconnected.Clear();
     }
 
     internal void CacheSessionData(ICommonSession[] players)
@@ -469,10 +503,11 @@ internal sealed partial class PvsSystem : EntitySystem
             return;
         }
 
-        if (_oldestAck == _lastOldestAck.Value)
+        var cullTick = new GameTick(Math.Max(_oldestAck, _gameTiming.CurTick.Value > (uint)ForceAckThreshold ? _gameTiming.CurTick.Value - (uint)ForceAckThreshold : 0));
+        if (cullTick == _lastOldestAck)
             return;
 
-        _lastOldestAck = new(_oldestAck);
+        _lastOldestAck = cullTick;
         CullDeletionHistory(_lastOldestAck);
     }
 }

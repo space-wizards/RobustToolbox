@@ -267,6 +267,9 @@ namespace Robust.Shared
         public static readonly CVarDef<int> NetPVSEntityEnterBudget =
             CVarDef.Create("net.pvs_enter_budget", 200, CVar.ARCHIVE | CVar.REPLICATED | CVar.CLIENT);
 
+        public static readonly CVarDef<int> NetPvsMaxEntityStates =
+            CVarDef.Create("net.pvs_max_entity_states", 50000, CVar.SERVERONLY);
+
         /// <summary>
         /// The amount of pvs-exiting entities that a client will process in a single tick.
         /// </summary>
@@ -284,6 +287,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> NetLogLateMsg =
             CVarDef.Create("net.log_late_msg", true);
+
+
+        public static readonly CVarDef<int> NetEntityMsgQueueLimit =
+            CVarDef.Create("net.entity_msg_queue_limit", 8192, CVar.SERVERONLY);
+        public static readonly CVarDef<int> NetEntityMsgMaxFutureTicks =
+            CVarDef.Create("net.entity_msg_max_future_ticks", 10, CVar.SERVERONLY);
 
         /// <summary>
         /// Ticks per second on the server.
@@ -336,6 +345,31 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> NetLidgrenAppIdentifier =
             CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
+
+        /// <summary>
+        /// Whether to disconnect clients that exceed the decryption failure threshold.
+        /// </summary>
+        public static readonly CVarDef<bool> NetDecryptFailKick =
+            CVarDef.Create("net.dos_fail_kick", true, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Number of decryption failures from a single IP (or /64 subnet for IPv6) before logging a ban warning and optionally disconnecting.
+        /// </summary>
+        public static readonly CVarDef<int> NetDecryptFailBanThreshold =
+            CVarDef.Create("net.dos_fail_ban_threshold", 10, CVar.SERVERONLY);
+
+        /// <summary>
+        /// How often (in minutes) to clean up stale decryption failure records.
+        /// Records are only removed if they have not been seen for this many minutes.
+        /// </summary>
+        public static readonly CVarDef<int> NetDecryptFailCleanupInterval =
+            CVarDef.Create("net.dos_fail_cleanup_interval", 10, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Maximum number of IPs tracked for decryption failures. Prevents memory exhaustion from botnet attacks.
+        /// </summary>
+        public static readonly CVarDef<int> NetDecryptFailMaxTracked =
+            CVarDef.Create("net.dos_fail_max_tracked", 10000, CVar.SERVERONLY);
 
         /// <summary>
         /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
@@ -2015,5 +2049,27 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> LoadingShowDebug =
             CVarDef.Create("loading.show_debug", DefaultShowDebug, CVar.CLIENTONLY);
+
+        /*
+         * GAME SAVES
+         */
+
+        /// <summary>
+        /// Whether to allow saving and loading all entities (full game save/load).
+        /// </summary>
+        public static readonly CVarDef<bool> GameSavesEnabled =
+            CVarDef.Create("gamesaves.enabled", false, CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        /// ZSTD compression level to use when compressing game saves.
+        /// </summary>
+        public static readonly CVarDef<int> GameSavesCompressLevel =
+            CVarDef.Create("gamesaves.compress_level", 3, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Default save name for autoload (e.g. on server start).
+        /// </summary>
+        public static readonly CVarDef<string> GameSavesAutoloadName =
+            CVarDef.Create("gamesaves.autoload_name", "save", CVar.SERVERONLY);
     }
 }

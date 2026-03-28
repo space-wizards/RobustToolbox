@@ -167,8 +167,10 @@ public sealed class ComponentPauseGenerator : IIncrementalGenerator
                     }
 
                     private void OnEntityUnpaused(EntityUid uid, {{info.PartialTypeInfo.Name}} component, ref EntityUnpausedEvent args)
-                    {
                 """);
+            builder.AppendLine("                    {");
+            builder.AppendLine("                        try");
+            builder.AppendLine("                        {");
 
             var anyValidField = false;
             foreach (var field in info.Fields)
@@ -183,19 +185,20 @@ public sealed class ComponentPauseGenerator : IIncrementalGenerator
                 {
                     builder.AppendLine($"""
                                 if (component.{field.Name}.HasValue)
-                                    component.{field.Name} = component.{field.Name}.Value + args.PausedTime;
+                                    component.{field.Name} = AddTimeSpanClamped(component.{field.Name}.Value, args.PausedTime);
                         """);
                 }
                 else if (field.Dictionary)
                 {
-                    builder.AppendLine($"""
-                                foreach (var key in component.{field.Name}.Keys)
-                                    component.{field.Name}[key] += args.PausedTime;
-                        """);
+                    builder.AppendLine("                                foreach (var key in component." + field.Name + ".Keys)");
+                    builder.AppendLine("                                {");
+                    builder.AppendLine("                                    try { component." + field.Name + "[key] += args.PausedTime; }");
+                    builder.AppendLine("                                    catch (System.Exception) { component." + field.Name + "[key] = global::System.TimeSpan.MaxValue; }");
+                    builder.AppendLine("                                }");
                 }
                 else
                 {
-                    builder.AppendLine($"        component.{field.Name} += args.PausedTime;");
+                    builder.AppendLine($"        component.{field.Name} = AddTimeSpanClamped(component.{field.Name}, args.PausedTime);");
                 }
 
                 anyValidField = true;
@@ -207,10 +210,20 @@ public sealed class ComponentPauseGenerator : IIncrementalGenerator
             if (info.Dirty)
                 builder.AppendLine("        Dirty(uid, component);");
 
-            builder.AppendLine("""
-                    }
-                }
-                """);
+            builder.AppendLine("                        }");
+            builder.AppendLine("                        catch (System.Exception)");
+            builder.AppendLine("                        {");
+            builder.AppendLine("                            // Map was paused for very long (e.g. StarGate world freeze); clamp to avoid crash on unpause during delete.");
+            builder.AppendLine("                        }");
+            builder.AppendLine("                    }");
+            builder.AppendLine("");
+            builder.AppendLine("                    private static global::System.TimeSpan AddTimeSpanClamped(global::System.TimeSpan a, global::System.TimeSpan b)");
+            builder.AppendLine("                    {");
+            builder.AppendLine("                        try { return a + b; }");
+            builder.AppendLine("                        catch (System.Exception) { return b >= global::System.TimeSpan.Zero ? global::System.TimeSpan.MaxValue : global::System.TimeSpan.MinValue; }");
+            builder.AppendLine("                    }");
+            builder.AppendLine("                }");
+            builder.AppendLine("                ");
 
             builder.AppendLine("}");
 

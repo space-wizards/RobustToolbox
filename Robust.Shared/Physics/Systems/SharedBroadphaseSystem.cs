@@ -188,7 +188,10 @@ namespace Robust.Shared.Physics.Systems
 
             // EZ
             if (moveBuffer.Count == 0)
+            {
+                movedGrids.Clear();
                 return;
+            }
 
             _contactJob.MoveBuffer.Clear();
 

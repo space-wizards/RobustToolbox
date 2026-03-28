@@ -126,4 +126,10 @@ public abstract partial class SharedContainerSystem
         RaiseLocalEvent(toRemove, gettingRemovedAttemptEvent, true);
         return !gettingRemovedAttemptEvent.Cancelled;
     }
+
+    public void RemoveDeletedEntity(EntityUid staleUid, BaseContainer container)
+    {
+        container.InternalRemove(staleUid, EntityManager);
+        Dirty(container.Owner, container.Manager);
+    }
 }

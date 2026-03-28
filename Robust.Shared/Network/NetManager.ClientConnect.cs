@@ -233,7 +233,7 @@ namespace Robust.Shared.Network
             var msgSuc = new MsgLoginSuccess();
             msgSuc.ReadFromBuffer(response, _serializer);
 
-            var channel = new NetChannel(this, connection, msgSuc.UserData with { HWId = [..legacyHwid] }, msgSuc.Type);
+            var channel = new NetChannel(this, connection, msgSuc.UserData with { HWId = [.. legacyHwid] }, msgSuc.Type);
             _channels.Add(connection, channel);
             peer.AddChannel(channel);
 
@@ -447,7 +447,7 @@ namespace Robust.Shared.Network
                 if (ipAddress.AddressFamily == AddressFamily.InterNetwork
                     || ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
                 {
-                    return new[] {ipAddress};
+                    return new[] { ipAddress };
                 }
 
                 throw new ArgumentException("This method will not currently resolve other than IPv4 or IPv6 addresses");

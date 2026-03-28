@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
@@ -34,7 +34,7 @@ internal abstract class BaseTransferImpl(ISawmill sawmill, BaseTransferManager p
     protected readonly ISawmill Sawmill = sawmill;
 
     protected long OutgoingIdCounter;
-    public int MaxChannelCount = int.MaxValue;
+    public int MaxChannelCount = 10;
 
     private readonly Dictionary<long, ChannelWriter<ArraySegment<byte>>> _receivingChannels = [];
 
@@ -418,6 +418,8 @@ internal abstract class BaseTransferImpl(ISawmill sawmill, BaseTransferManager p
         {
             channel.Complete();
         }
+
+        _receivingChannels.Clear();
     }
 
     protected enum Opcode : byte

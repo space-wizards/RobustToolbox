@@ -96,6 +96,23 @@ public abstract partial class SharedPhysicsSystem
 
     private readonly LinkedList<Contact> _activeContacts = new();
 
+    private Contact[] _contactsScratch = Array.Empty<Contact>();
+    private ContactStatus[] _contactStatusScratch = Array.Empty<ContactStatus>();
+    private FixedArray4<Vector2>[] _contactWorldPointsScratch = Array.Empty<FixedArray4<Vector2>>();
+    private bool[] _contactWakeScratch = Array.Empty<bool>();
+
+    private static int GrowScratch(int current, int required)
+    {
+        if (current == 0)
+            return required;
+
+        var grown = current;
+        while (grown < required)
+            grown *= 2;
+
+        return grown;
+    }
+
     private sealed class ContactPoolPolicy : IPooledObjectPolicy<Contact>
     {
         private readonly SharedDebugPhysicsSystem _debugPhysicsSystem;
@@ -263,10 +280,8 @@ public abstract partial class SharedPhysicsSystem
         // Broadphase has already done the faster check for collision mask / layers
         // so no point duplicating
 
-        DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB),
-            $"{ToPrettyString(entB)} fixture {fixtureBId} was already in contact with {ToPrettyString(entA)} fixture {fixtureAId}");
-        DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA),
-            $"{ToPrettyString(entA)} fixture {fixtureAId} was already in contact with {ToPrettyString(entB)} fixture {fixtureBId}");
+        if (fixtureA.Contacts.ContainsKey(fixtureB) || fixtureB.Contacts.ContainsKey(fixtureA))
+            return;
         var xformA = entA.Comp2;
         var xformB = entB.Comp2;
 
@@ -398,7 +413,11 @@ public abstract partial class SharedPhysicsSystem
     {
         // Due to the fact some contacts may be removed (and we need to update this array as we iterate).
         // the length may not match the actual contact count, hence we track the index.
-        var contacts = ArrayPool<Contact>.Shared.Rent(ContactCount);
+        var contactCount = ContactCount;
+        if (_contactsScratch.Length < contactCount)
+            Array.Resize(ref _contactsScratch, GrowScratch(_contactsScratch.Length, contactCount));
+
+        var contacts = _contactsScratch;
         var index = 0;
 
         // Can be changed while enumerating
@@ -556,11 +575,21 @@ public abstract partial class SharedPhysicsSystem
             contacts[index++] = contact;
         }
 
-        var status = ArrayPool<ContactStatus>.Shared.Rent(index);
-        var worldPoints = ArrayPool<FixedArray4<Vector2>>.Shared.Rent(index);
+        if (_contactStatusScratch.Length < index)
+            Array.Resize(ref _contactStatusScratch, GrowScratch(_contactStatusScratch.Length, index));
+
+        if (_contactWorldPointsScratch.Length < index)
+            Array.Resize(ref _contactWorldPointsScratch, GrowScratch(_contactWorldPointsScratch.Length, index));
+
+        if (_contactWakeScratch.Length < index)
+            Array.Resize(ref _contactWakeScratch, GrowScratch(_contactWakeScratch.Length, index));
+
+        var status = _contactStatusScratch;
+        var worldPoints = _contactWorldPointsScratch;
+        var wake = _contactWakeScratch;
 
         // Update contacts all at once.
-        BuildManifolds(contacts, index, status, worldPoints);
+        BuildManifolds(contacts, index, status, worldPoints, wake);
 
         // Single-threaded so content doesn't need to worry about race conditions.
         for (var i = 0; i < index; i++)
@@ -581,10 +610,6 @@ public abstract partial class SharedPhysicsSystem
 
             RunContactEvents(status[i], contact, worldPoints[i]);
         }
-
-        ArrayPool<Contact>.Shared.Return(contacts);
-        ArrayPool<ContactStatus>.Shared.Return(status);
-        ArrayPool<FixedArray4<Vector2>>.Shared.Return(worldPoints);
     }
 
     internal void RunContactEvents(ContactStatus status, Contact contact, FixedArray4<Vector2> worldPoint)
@@ -592,48 +617,48 @@ public abstract partial class SharedPhysicsSystem
         switch (status)
         {
             case ContactStatus.StartTouching:
-            {
-                if (!contact.IsTouching) return;
+                {
+                    if (!contact.IsTouching) return;
 
-                var fixtureA = contact.FixtureA!;
-                var fixtureB = contact.FixtureB!;
-                var bodyA = contact.BodyA!;
-                var bodyB = contact.BodyB!;
-                var uidA = contact.EntityA;
-                var uidB = contact.EntityB;
-                var points = new FixedArray2<Vector2>(worldPoint._00, worldPoint._01);
-                var worldNormal = worldPoint._02;
+                    var fixtureA = contact.FixtureA!;
+                    var fixtureB = contact.FixtureB!;
+                    var bodyA = contact.BodyA!;
+                    var bodyB = contact.BodyB!;
+                    var uidA = contact.EntityA;
+                    var uidB = contact.EntityB;
+                    var points = new FixedArray2<Vector2>(worldPoint._00, worldPoint._01);
+                    var worldNormal = worldPoint._02;
 
-                var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, points, contact.Manifold.PointCount, worldNormal);
-                var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, points, contact.Manifold.PointCount, worldNormal);
+                    var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, points, contact.Manifold.PointCount, worldNormal);
+                    var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, points, contact.Manifold.PointCount, worldNormal);
 
-                RaiseLocalEvent(uidA, ref ev1, true);
-                RaiseLocalEvent(uidB, ref ev2, true);
-                break;
-            }
+                    RaiseLocalEvent(uidA, ref ev1, true);
+                    RaiseLocalEvent(uidB, ref ev2, true);
+                    break;
+                }
             case ContactStatus.Touching:
                 break;
             case ContactStatus.EndTouching:
-            {
-                var fixtureA = contact.FixtureA;
-                var fixtureB = contact.FixtureB;
+                {
+                    var fixtureA = contact.FixtureA;
+                    var fixtureB = contact.FixtureB;
 
-                // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
-                // then we'll just skip the EndCollide.
-                if (fixtureA == null || fixtureB == null) return;
+                    // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
+                    // then we'll just skip the EndCollide.
+                    if (fixtureA == null || fixtureB == null) return;
 
-                var bodyA = contact.BodyA!;
-                var bodyB = contact.BodyB!;
-                var uidA = contact.EntityA;
-                var uidB = contact.EntityB;
+                    var bodyA = contact.BodyA!;
+                    var bodyB = contact.BodyB!;
+                    var uidA = contact.EntityA;
+                    var uidB = contact.EntityB;
 
-                var ev1 = new EndCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
-                var ev2 = new EndCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
+                    var ev1 = new EndCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
+                    var ev2 = new EndCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
 
-                RaiseLocalEvent(uidA, ref ev1);
-                RaiseLocalEvent(uidB, ref ev2);
-                break;
-            }
+                    RaiseLocalEvent(uidA, ref ev1);
+                    RaiseLocalEvent(uidB, ref ev2);
+                    break;
+                }
             case ContactStatus.NoContact:
                 break;
             default:
@@ -641,12 +666,10 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, FixedArray4<Vector2>[] worldPoints)
+    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, FixedArray4<Vector2>[] worldPoints, bool[] wake)
     {
         if (count == 0)
             return;
-
-        var wake = ArrayPool<bool>.Shared.Rent(count);
 
         _parallel.ProcessNow(new ManifoldsJob()
         {
@@ -672,8 +695,6 @@ public abstract partial class SharedPhysicsSystem
             SetAwake((aUid, bodyA), true);
             SetAwake((bUid, bodyB), true);
         }
-
-        ArrayPool<bool>.Shared.Return(wake);
     }
 
     private record struct ManifoldsJob : IParallelRobustJob

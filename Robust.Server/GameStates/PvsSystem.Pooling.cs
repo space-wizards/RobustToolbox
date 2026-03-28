@@ -22,6 +22,12 @@ internal sealed partial class PvsSystem
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
 
+    private readonly ObjectPool<List<ComponentChange>> _componentChangeListPool
+        = new DefaultObjectPool<List<ComponentChange>>(new ListPolicy<ComponentChange>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<HashSet<ushort>> _netComponentSetPool
+        = new DefaultObjectPool<HashSet<ushort>>(new SetPolicy<ushort>(), MaxVisPoolSize);
+
     private readonly ObjectPool<PvsChunk> _chunkPool =
         new DefaultObjectPool<PvsChunk>(new PvsChunkPolicy(), 256);
 

@@ -221,7 +221,14 @@ namespace Robust.Client.UserInterface.Controls
             //
             // We only call our override, not Measure, to avoid infinite loops.
             // We don't need to update ourselves after all.
-            MeasureOverride(finalSize);
+            //
+            // Atop that, we shouldn't remeasure if we ReturnMeasure, because then
+            // we do actually use all of our space and no invariants are getting
+            // broken unless our parent is themselves violating invariants.
+            // So measuring again using the final size may result in us
+            // mysteriously completely rearranging when we're not expected to.
+            if (!ReturnMeasure)
+                MeasureOverride(finalSize);
 
             var maxChildMinSize = Vector2.Zero;
 

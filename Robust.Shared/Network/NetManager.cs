@@ -961,7 +961,7 @@ namespace Robust.Shared.Network
             }
 
             // Attempt to decrypt the message, only logging if we fail to decrypt and we actually have encryption.
-            if ((!channel.Encryption?.TryDecrypt(msg)) ?? true)
+            if ((!channel.Encryption?.TryDecrypt(msg)) ?? false)
             {
                 if (_logPacketIssues)
                     _logger.Debug($"{msg.SenderConnection.RemoteEndPoint}: Got a packet that fails to decrypt.");

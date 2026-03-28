@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed a DoS exploit related to decrypting network packets.
 
 ### Other
 

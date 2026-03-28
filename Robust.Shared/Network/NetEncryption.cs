@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Threading;
@@ -84,7 +84,12 @@ internal sealed class NetEncryption
             ArrayPool<byte>.Shared.Return(returnPool);
     }
 
-    public unsafe void Decrypt(NetIncomingMessage message)
+    /// <summary>
+    ///     Attempts to decrypt an incoming network message, falliably.
+    /// </summary>
+    /// <param name="message">The message to decrypt in-place. This will be mutated with the decrypted results.</param>
+    /// <returns>Whether the operation was successful. If this fails, you likely want to drop the connection.</returns>
+    public unsafe bool TryDecrypt(NetIncomingMessage message)
     {
         var nonce = message.ReadUInt64();
         var cipherText = message.Data.AsSpan(sizeof(ulong), message.LengthBytes - sizeof(ulong));
@@ -109,12 +114,13 @@ internal sealed class NetEncryption
             // key
             _key);
 
-        message.Position = 0;
-        message.LengthBytes = messageLength;
-
         ArrayPool<byte>.Shared.Return(buffer);
 
         if (!result)
-            throw new SodiumException("Decryption operation failed!");
+            return false;
+
+        message.Position = 0;
+        message.LengthBytes = messageLength;
+        return true;
     }
 }

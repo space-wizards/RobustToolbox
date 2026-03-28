@@ -347,6 +347,31 @@ namespace Robust.Shared
             CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
 
         /// <summary>
+        /// Whether to disconnect clients that exceed the decryption failure threshold.
+        /// </summary>
+        public static readonly CVarDef<bool> NetDecryptFailKick =
+            CVarDef.Create("net.dos_fail_kick", true, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Number of decryption failures from a single IP (or /64 subnet for IPv6) before logging a ban warning and optionally disconnecting.
+        /// </summary>
+        public static readonly CVarDef<int> NetDecryptFailBanThreshold =
+            CVarDef.Create("net.dos_fail_ban_threshold", 10, CVar.SERVERONLY);
+
+        /// <summary>
+        /// How often (in minutes) to clean up stale decryption failure records.
+        /// Records are only removed if they have not been seen for this many minutes.
+        /// </summary>
+        public static readonly CVarDef<int> NetDecryptFailCleanupInterval =
+            CVarDef.Create("net.dos_fail_cleanup_interval", 10, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Maximum number of IPs tracked for decryption failures. Prevents memory exhaustion from botnet attacks.
+        /// </summary>
+        public static readonly CVarDef<int> NetDecryptFailMaxTracked =
+            CVarDef.Create("net.dos_fail_max_tracked", 10000, CVar.SERVERONLY);
+
+        /// <summary>
         /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
         /// 0 = no packet loss, 1 = all packets dropped
         /// </summary>

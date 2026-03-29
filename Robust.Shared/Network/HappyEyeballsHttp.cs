@@ -236,6 +236,14 @@ internal static class HappyEyeballsHttp
         cancel.ThrowIfCancellationRequested();
         await successCts.CancelAsync().ConfigureAwait(false);
 
+        try
+        {
+            await Task.WhenAll(allTasks.Where(t => t != successTask)).ConfigureAwait(false);
+        }
+        catch
+        {
+        }
+
         if (successTask == null)
         {
             // We didn't get a single successful connection. Well heck.

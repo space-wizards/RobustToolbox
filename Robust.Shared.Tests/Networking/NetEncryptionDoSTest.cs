@@ -64,7 +64,7 @@ public sealed class NetEncryptionDoSTest
 
         client.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
 
-        var packet = server.WaitMessage(1000);
+        var packet = Receive(server);
 
         Assert.That(packet, Is.Not.Null);
 
@@ -75,7 +75,8 @@ public sealed class NetEncryptionDoSTest
     [
         [1, 1, 1, 1, 1],
         [1, 2],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,]
+        [1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,]
     ];
 
     [Test]
@@ -94,7 +95,7 @@ public sealed class NetEncryptionDoSTest
 
         client.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
 
-        var packet = server.WaitMessage(1000);
+        var packet = Receive(server);
 
         Assert.That(packet, Is.Not.Null);
 

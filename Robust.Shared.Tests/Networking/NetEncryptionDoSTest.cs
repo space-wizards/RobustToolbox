@@ -97,6 +97,8 @@ public sealed class NetEncryptionDoSTest
 
         var packet = Receive(server);
 
+        Assert.That(packet.LengthBytes, Is.EqualTo(badMessageLength));
+
         Assert.That(serverEnc.TryDecrypt(packet), Is.False);
 
         server.Shutdown(null);

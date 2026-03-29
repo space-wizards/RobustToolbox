@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed clients being unable to connect to dev servers.
 
 ### Other
 

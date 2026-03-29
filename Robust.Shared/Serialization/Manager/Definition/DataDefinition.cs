@@ -84,6 +84,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             //has to be done after fieldinterfaceinfos are done
 #pragma warning disable CS0618
+            // TODO source gen this one too!
             PopulateObj = (ref target, node, serialization, ctx, context) =>
             {
                 var obj = (T) target;
@@ -93,7 +94,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             Populate = T.Read;
             Serialize = T.Write;
-            CopyTo = null!;
+            CopyTo = (source, ref target, ctx, context) => source.Copy(ref target, manager, ctx, context); // TODO source gen this one too!
             FieldValidators = T.Validate;
             InstantiateObj = T.StaticInstantiateObject;
 #pragma warning restore CS0618

@@ -235,7 +235,7 @@ public sealed partial class SerializationManager
                             contextParam,
                             Expression.Constant(false)), type);
                     }
-                    else
+                    else if (typeof(T).IsAssignableTo(typeof(ISerializationGenerated<T>)))
                     {
                         call = Expression.Call(
                             instanceParam,
@@ -245,6 +245,16 @@ public sealed partial class SerializationManager
                             hookCtxParam,
                             contextParam,
                             Expression.Constant(manager.GetDefinition(type), typeof(DataDefinition<>).MakeGenericType(type)));
+                    }
+                    else
+                    {
+                        call = Expression.Call(
+                            instanceParam,
+                            nameof(CreateCopyInternalNotGenerated),
+                            new[] {type},
+                            sourceParamAccess,
+                            hookCtxParam,
+                            contextParam);
                     }
                 }
 
@@ -368,6 +378,26 @@ public sealed partial class SerializationManager
             }
             return target!;
         }
+    }
+
+    private T CreateCopyInternalNotGenerated<T>(T source, SerializationHookContext hookCtx, ISerializationContext context)
+    {
+        if (source is DataNode node)
+            return (T)(object)node.Copy();
+
+        ref readonly var information = ref SerializedType<T>.Information;
+        if (information.ReturnSource)
+        {
+            return source;
+        }
+
+        var target = GetOrCreateInstantiator<T>(false)();
+
+        if (!GetOrCreateCopyToGenericDelegate<T>(source)(source, ref target, hookCtx, context))
+        {
+            throw new CopyToFailedException<T>();
+        }
+        return target!;
     }
 
     private void NotNullOverrideCheck(bool notNullableOverride, Type? type = null)

@@ -1,8 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Robust.Roslyn.Shared.DataDefinitionHelper;
 using static Robust.Serialization.Generator.CustomSerializerType;
 using static Robust.Serialization.Generator.Types;
 
@@ -11,11 +13,21 @@ namespace Robust.Serialization.Generator;
 [Generator]
 public class Generator : IIncrementalGenerator
 {
-    private const string TypeCopierInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier";
-    private const string TypeCopyCreatorInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator";
-    private const string TypeValidatorInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator";
-    private const string TypeReaderInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader";
-    private const string TypeWriterInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter";
+    private const string TypeCopierInterfaceNamespace =
+        "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier";
+
+    private const string TypeCopyCreatorInterfaceNamespace =
+        "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator";
+
+    private const string TypeValidatorInterfaceNamespace =
+        "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeValidator";
+
+    private const string TypeReaderInterfaceNamespace =
+        "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader";
+
+    private const string TypeWriterInterfaceNamespace =
+        "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeWriter";
+
     private const string SerializationHooksNamespace = "Robust.Shared.Serialization.ISerializationHooks";
     private const string AutoStateAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
     private const string ComponentDeltaInterfaceName = "Robust.Shared.GameObjects.IComponentDelta";
@@ -33,10 +45,14 @@ public class Generator : IIncrementalGenerator
                 {
                     var type = (TypeDeclarationSyntax)context.Node;
                     var symbol = (ITypeSymbol)context.SemanticModel.GetDeclaredSymbol(type)!;
-                    if (!IsDataDefinition(symbol))
-                        return null;
 
-                    return GenerateForDataDefinition(type, symbol);
+                    if (symbol.TypeKind == TypeKind.Interface ||
+                        !IsDataDefinition(symbol, out var isDataRecord))
+                    {
+                        return null;
+                    }
+
+                    return GenerateForDataDefinition(type, symbol, isDataRecord);
                 }
             )
             .Where(static type => type != null);
@@ -62,7 +78,8 @@ public class Generator : IIncrementalGenerator
 
     private static (string, string)? GenerateForDataDefinition(
         TypeDeclarationSyntax declaration,
-        ITypeSymbol type)
+        ITypeSymbol type,
+        bool isDataRecord)
     {
         var builder = new StringBuilder();
         var containingTypes = new Stack<INamedTypeSymbol>();
@@ -101,7 +118,7 @@ public class Generator : IIncrementalGenerator
             containingTypesEnd.AppendLine("}");
         }
 
-        var definition = GetDataDefinition(type);
+        var definition = GetDataDefinition(type, isDataRecord);
         if (nonPartial || definition.InvalidFields)
             return null;
 
@@ -110,6 +127,7 @@ public class Generator : IIncrementalGenerator
             using System;
             using System.Collections.Generic;
             using System.Collections.Immutable;
+            using System.Diagnostics.CodeAnalysis;
             using Robust.Shared.Analyzers;
             using Robust.Shared.IoC;
             using Robust.Shared.GameObjects;
@@ -134,17 +152,17 @@ public class Generator : IIncrementalGenerator
 
             {{GetPartialTypeDefinitionLine(type)}} : ISerializationGenerated<{{definition.GenericTypeName}}>
             {
-                {{GetConstructor(definition)}}
-
-                {{GetCopyMethods(definition)}}
+                {{GetConstructors(definition)}}
 
                 {{GetInstantiators(definition)}}
 
-                {{GetValidators(definition)}}
+                {{GetCopiers(definition)}}
 
-                {{GetReaders(definition)}}
+                {{GetReader(definition)}}
 
-                {{GetWriters(definition)}}
+                {{GetWriter(definition)}}
+
+                {{GetValidator(definition)}}
 
                 {{GetFieldDefinitions(definition)}}
             }
@@ -155,85 +173,91 @@ public class Generator : IIncrementalGenerator
         return ($"{symbolName}.g.cs", builder.ToString());
     }
 
-    private static DataDefinition GetDataDefinition(ITypeSymbol definition)
+    private static void GetDataFields(
+        ITypeSymbol definition,
+        bool isDataRecord,
+        List<DataField> fields,
+        List<INamedTypeSymbol> symbols,
+        ref bool invalidFields)
+    {
+        foreach (var (field, fieldType, attribute) in GetAllDataFields(definition, isDataRecord))
+        {
+            if (!IsDataDefinition(field.ContainingType, out _))
+                invalidFields = true;
+
+            if (attribute.Data?.ConstructorArguments.FirstOrDefault(arg => arg.Kind == TypedConstantKind.Type).Value is
+                INamedTypeSymbol customSerializer)
+            {
+                var serializerType = None;
+                if (ImplementsInterface(customSerializer, TypeCopierInterfaceNamespace))
+                    serializerType |= Copier;
+                else if (ImplementsInterface(customSerializer, TypeCopyCreatorInterfaceNamespace))
+                    serializerType |= CopyCreator;
+
+                if (ImplementsInterface(customSerializer, TypeValidatorInterfaceNamespace, symbols))
+                {
+                    foreach (var symbol in symbols)
+                    {
+                        if (symbol.IsGenericType &&
+                            symbol.TypeArguments is { Length: >= 2 } arguments)
+                        {
+                            var nodeType = arguments[1];
+                            if (nodeType.ToDisplayString().Contains(MappingDataNodeName))
+                                serializerType |= MappingValidator;
+
+                            if (nodeType.ToDisplayString().Contains(SequenceDataNodeName))
+                                serializerType |= SequenceValidator;
+
+                            if (nodeType.ToDisplayString().Contains(ValueDataNodeName))
+                                serializerType |= ValueValidator;
+                        }
+                    }
+                }
+
+                if (ImplementsInterface(customSerializer, TypeReaderInterfaceNamespace, symbols))
+                {
+                    foreach (var symbol in symbols)
+                    {
+                        if (symbol.IsGenericType &&
+                            symbol.TypeArguments is { Length: >= 2 } arguments)
+                        {
+                            var nodeType = arguments[1];
+                            if (nodeType.ToDisplayString().Contains(MappingDataNodeName))
+                                serializerType |= MappingReader;
+
+                            if (nodeType.ToDisplayString().Contains(SequenceDataNodeName))
+                                serializerType |= SequenceReader;
+
+                            if (nodeType.ToDisplayString().Contains(ValueDataNodeName))
+                                serializerType |= ValueReader;
+                        }
+                    }
+                }
+
+                if (ImplementsInterface(customSerializer, TypeWriterInterfaceNamespace, symbols))
+                    serializerType |= Writer;
+
+                if (serializerType != None)
+                {
+                    fields.Add(new DataField(field, fieldType, attribute, (customSerializer, serializerType)));
+                    continue;
+                }
+            }
+
+            fields.Add(new DataField(field, fieldType, attribute, null));
+
+            if (IsReadOnlyMember(definition, fieldType))
+                invalidFields = true;
+        }
+    }
+
+    private static DataDefinition GetDataDefinition(ITypeSymbol definition, bool isDataRecord)
     {
         var fields = new List<DataField>();
         var symbols = new List<INamedTypeSymbol>();
         var invalidFields = false;
 
-        foreach (var member in definition.GetMembers())
-        {
-            if (member is not IFieldSymbol && member is not IPropertySymbol)
-                continue;
-
-            if (member.IsStatic)
-                continue;
-
-            if (IsDataField(member, out var type, out var attribute))
-            {
-                if (attribute.Data.ConstructorArguments.FirstOrDefault(arg => arg.Kind == TypedConstantKind.Type).Value is INamedTypeSymbol customSerializer)
-                {
-                    var serializerType = None;
-                    if (ImplementsInterface(customSerializer, TypeCopierInterfaceNamespace))
-                        serializerType |= Copier;
-                    else if (ImplementsInterface(customSerializer, TypeCopyCreatorInterfaceNamespace))
-                        serializerType |= CopyCreator;
-
-                    if (ImplementsInterface(customSerializer, TypeValidatorInterfaceNamespace, symbols))
-                    {
-                        foreach (var symbol in symbols)
-                        {
-                            if (symbol.IsGenericType &&
-                                symbol.TypeArguments is { Length: >= 2 } arguments)
-                            {
-                                var nodeType = arguments[1];
-                                if (nodeType.ToDisplayString().Contains(MappingDataNodeName))
-                                    serializerType |= MappingValidator;
-
-                                if (nodeType.ToDisplayString().Contains(SequenceDataNodeName))
-                                    serializerType |= SequenceValidator;
-
-                                if (nodeType.ToDisplayString().Contains(ValueDataNodeName))
-                                    serializerType |= ValueValidator;
-                            }
-                        }
-                    }
-
-                    if (ImplementsInterface(customSerializer, TypeReaderInterfaceNamespace, symbols))
-                    {
-                        foreach (var symbol in symbols)
-                        {
-                            if (symbol.IsGenericType &&
-                                symbol.TypeArguments is { Length: >= 2 } arguments)
-                            {
-                                var nodeType = arguments[1];
-                                if (nodeType.ToDisplayString().Contains(MappingDataNodeName))
-                                    serializerType |= MappingReader;
-
-                                if (nodeType.ToDisplayString().Contains(SequenceDataNodeName))
-                                    serializerType |= SequenceReader;
-
-                                if (nodeType.ToDisplayString().Contains(ValueDataNodeName))
-                                    serializerType |= ValueReader;
-                            }
-                        }
-                    }
-
-                    if (ImplementsInterface(customSerializer, TypeWriterInterfaceNamespace, symbols)) serializerType |= Writer;
-
-                    if (serializerType != None)
-                    {
-                        fields.Add(new DataField(member, type, attribute, (customSerializer, serializerType)));
-                        continue;
-                    }
-                }
-
-                fields.Add(new DataField(member, type, attribute, null));
-
-                if (IsReadOnlyMember(definition, type))
-                    invalidFields = true;
-            }
-        }
+        GetDataFields(definition, isDataRecord, fields, symbols, ref invalidFields);
 
         var typeName = GetGenericTypeName(definition);
         var hasHooks = ImplementsInterface(definition, SerializationHooksNamespace);
@@ -251,145 +275,257 @@ public class Generator : IIncrementalGenerator
         return new DataDefinition(definition, typeName, fields, hasHooks, invalidFields);
     }
 
-     private static string GetConstructor(DataDefinition definition)
-     {
-         if (definition.Type.TypeKind == TypeKind.Interface)
-             return string.Empty;
-
-         var builder = new StringBuilder();
-
-         if (NeedsEmptyConstructor(definition.Type, out var shortestMandatoryConstructor))
-         {
-             var thisCall = new StringBuilder();
-             if (shortestMandatoryConstructor != null)
-             {
-                 thisCall.Append(" : this(");
-                 foreach (var parameter in shortestMandatoryConstructor.Parameters)
-                 {
-                     thisCall.Append($"({parameter.Type.ToDisplayString()}) default!,");
-                 }
-
-                 if (thisCall[thisCall.Length - 1] == ',')
-                     thisCall = thisCall.Remove(thisCall.Length - 1, 1);
-
-                 thisCall.Append(')');
-             }
-
-             var requiredFields = new StringBuilder();
-             foreach (var member in GetRequiredFieldsProperties(definition.Type))
-             {
-                 requiredFields.AppendLine($"{member.Name} = default!;");
-             }
-
-             builder.AppendLine($$"""
-                 // Implicit constructor
-                 #pragma warning disable CS8618
-                 public {{definition.Type.Name}}(){{thisCall}}
-                 #pragma warning restore CS8618
-                 {
-                    {{requiredFields}}
-                 }
-                 """);
-         }
-
-         return builder.ToString();
-     }
-
-    private static string GetCopyMethods(DataDefinition definition)
+    private static string GetConstructors(DataDefinition definition)
     {
+        if (definition.Type.TypeKind == TypeKind.Interface)
+            return string.Empty;
+
         var builder = new StringBuilder();
-
-        var modifiers = IsVirtualClass(definition.Type) ? "virtual " : string.Empty;
-        var baseCall = string.Empty;
-        string baseCopy;
-        var baseType = definition.Type.BaseType;
-
-        if (baseType != null && IsDataDefinition(definition.Type.BaseType))
+        var thisCall = new StringBuilder();
+        var (needsEmpty, mustCall) = NeedsEmptyConstructor(definition.Type);
+        if (mustCall != null)
         {
-            var baseName = baseType.ToDisplayString();
-            baseCall = $"""
-                        var definitionCast = ({baseName}) target;
-                        base.InternalCopy(ref definitionCast, serialization, hookCtx, context);
-                        target = ({definition.GenericTypeName}) definitionCast;
-                        """;
+            thisCall.Append(" : this(");
+            foreach (var parameter in mustCall.Parameters)
+            {
+                thisCall.Append($"({parameter.Type.ToDisplayString()}) default!,");
+            }
 
-             baseCopy = $$"""
-                          /// <seealso cref="ISerializationManager.CopyTo"/>
-                          [Obsolete("Use ISerializationManager.CopyTo instead")]
-                          public override void Copy(ref {{baseName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
-                          {
-                              var cast = ({{definition.GenericTypeName}}) target;
-                              Copy(ref cast, serialization, hookCtx, context);
-                              target = cast!;
-                          }
+            if (thisCall[thisCall.Length - 1] == ',')
+                thisCall = thisCall.Remove(thisCall.Length - 1, 1);
 
-                          /// <seealso cref="ISerializationManager.CopyTo"/>
-                          [Obsolete("Use ISerializationManager.CopyTo instead")]
-                          public override void Copy(ref object target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
-                          {
-                              var cast = ({{definition.GenericTypeName}}) target;
-                              Copy(ref cast, serialization, hookCtx, context);
-                              target = cast!;
-                          }
-                          """;
-        }
-        else
-        {
-            baseCopy = $$"""
-                         /// <seealso cref="ISerializationManager.CopyTo"/>
-                         [Obsolete("Use ISerializationManager.CopyTo instead")]
-                         public {{modifiers}} void Copy(ref object target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
-                         {
-                             var cast = ({{definition.GenericTypeName}}) target;
-                             Copy(ref cast, serialization, hookCtx, context);
-                             target = cast!;
-                         }
-                         """;
+            thisCall.Append(')');
         }
 
-        builder.AppendLine($$"""
-                             /// <seealso cref="ISerializationManager.CopyTo"/>
-                             [Obsolete("Use ISerializationManager.CopyTo instead")]
-                             public {{modifiers}} void InternalCopy(ref {{definition.GenericTypeName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
-                             {
-                                {{baseCall}}
-                                {{CopyDataFields(definition)}}
-                             }
-
-                             /// <seealso cref="ISerializationManager.CopyTo"/>
-                             [Obsolete("Use ISerializationManager.CopyTo instead")]
-                             public {{modifiers}} void Copy(ref {{definition.GenericTypeName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
-                             {
-                                 InternalCopy(ref target, serialization, hookCtx, context);
-                             }
-
-                             {{baseCopy}}
-                             """);
-
-        foreach (var interfaceName in InternalGetImplicitDataDefinitionInterfaces(definition.Type, true))
+        var setsRequired = GetSetsRequiredAttributeOrEmpty(definition.Type);
+        if (needsEmpty)
         {
-            var interfaceModifiers = baseType != null &&
-                                     baseType.AllInterfaces.Any(i => i.ToDisplayString() == interfaceName)
-                ? "override "
-                : modifiers;
-
+            // There was one case in content of a content-defined constructor calling the source-generated
+            // empty constructor, which would then call it again.
+            // Instead of attempting to find loops like this, I changed content.
+            // Because that's fucking stupid.
             builder.AppendLine($$"""
-                /// <seealso cref="ISerializationManager.CopyTo"/>
-                [Obsolete("Use ISerializationManager.CopyTo instead")]
-                public {{interfaceModifiers}} void InternalCopy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                // Implicit constructor
+                #pragma warning disable CS8618
+                {{setsRequired}}
+                public {{definition.Type.Name}}(){{thisCall}}
+                #pragma warning restore CS8618
                 {
-                    var def = ({{definition.GenericTypeName}}) target;
-                    Copy(ref def, serialization, hookCtx, context);
-                    target = def;
-                }
-
-                /// <seealso cref="ISerializationManager.CopyTo"/>
-                [Obsolete("Use ISerializationManager.CopyTo instead")]
-                public {{interfaceModifiers}} void Copy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
-                {
-                    InternalCopy(ref target, serialization, hookCtx, context);
                 }
                 """);
+        }
+
+        var accessibility = definition.Type.IsValueType
+            ? "public"
+            : definition.Type.IsSealed
+                ? "private"
+                : "protected";
+
+        var copyBaseCall = IsDataDefinition(definition.Type.BaseType, out _)
+            ? "base(ISerializationGeneratedCopy, source, serialization, hookCtx, context)"
+            : "this()";
+
+        var readBaseCall = IsDataDefinition(definition.Type.BaseType, out _)
+            ? "base(ISerializationGeneratedRead, mappingDataNode, serialization, hookCtx, context)"
+            : "this()";
+
+        builder.AppendLine($$"""
+            [Obsolete("Used only in serialization source generation internally")]
+            #pragma warning disable CS8618
+            {{setsRequired}}
+            {{accessibility}} {{definition.Type.Name}}(
+                ISerializationGeneratedCopy ISerializationGeneratedCopy,
+                {{definition.GenericTypeName}} source,
+                ISerializationManager serialization,
+                SerializationHookContext hookCtx,
+                ISerializationContext? context
+            ) : {{copyBaseCall}}
+            #pragma warning restore CS8618
+            {
+                {{GetCopyBody(definition)}}
+            }
+
+            [Obsolete("Used only in serialization source generation internally")]
+            #pragma warning disable CS8618
+            {{setsRequired}}
+            {{accessibility}} {{definition.Type.Name}}(
+                ISerializationGeneratedRead ISerializationGeneratedRead,
+                MappingDataNode mappingDataNode,
+                ISerializationManager serialization,
+                SerializationHookContext hookCtx,
+                ISerializationContext? context
+            ) : {{readBaseCall}}
+            #pragma warning restore CS8618
+            {
+                {{GetReadBody(definition)}}
+            }
+            """);
+
+        return builder.ToString();
+    }
+
+    private static string GetReadBody(DataDefinition definition)
+    {
+        var builder = new StringBuilder();
+        for (var i = 0; i < definition.Fields.Count; i++)
+        {
+            var field = definition.Fields[i];
+            if (!definition.Type.Equals(field.Symbol.ContainingType, SymbolEqualityComparer.Default))
+                continue;
+
+            if (field.Attribute.ServerOnly)
+            {
+                builder.AppendLine("""
+                    if (serialization.IsServer)
+                    {
+                    """);
+            }
+
+            var fieldName = field.Symbol.Name;
+            if (field.Attribute.IsDataFieldAttribute)
+            {
+                builder.AppendLine($$"""
+                    if (mappingDataNode.TryGet("{{field.Attribute.Tag}}", out var node{{i}}))
+                    {
+                    """);
+            }
+            else
+            {
+                builder.AppendLine($$"""
+                    {
+                        var node{{i}} = mappingDataNode;
+                    """);
+            }
+
+            var (fieldTypeName, nonNullableFieldTypeName) = GetCleanNameForGenericType(field.Type, out _);
+            var tagName = field.Attribute.Tag;
+            var reader = field.CustomSerializer;
+            var readerName = reader?.Serializer.ToDisplayString();
+            var nullable = field.Type.NullableAnnotation == NullableAnnotation.Annotated ||
+                           field.Type.ToDisplayString().EndsWith("?");
+            var nullableString = string.Empty;
+            if (!field.Type.IsValueType)
+            {
+                nullableString = $", {(!nullable).ToString().ToLowerInvariant()}";
+                if (fieldTypeName.EndsWith("?"))
+                    fieldTypeName = fieldTypeName.Substring(0, fieldTypeName.Length - 1);
+            }
+
+            var nullExpression =
+                field.Type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString().Equals(EntityUidName)
+                    ? $"this.{fieldName} = EntityUid.Invalid;"
+                    : nullable
+                        ? $"this.{fieldName} = default!;"
+                        : "throw new NullNotAllowedException();";
+
+            builder.AppendLine($$"""
+                if (node{{i}}.IsNull)
+                {
+                    {{nullExpression}}
+                }
+                else
+                {
+                """);
+
+            var method = $"Read<{fieldTypeName}>";
+            if (field.Type.TypeKind == TypeKind.Enum)
+            {
+                method = $"ReadEnum<{fieldTypeName}>";
+                nullableString = string.Empty;
+            }
+            else if (field.Type.IsValueType && IsDataDefinition(field.Type, out _))
+            {
+                method = $"ReadStructDefinition<{fieldTypeName}>";
+                nullableString = string.Empty;
+            }
+            else if (field.Type.TypeKind == TypeKind.Array &&
+                     field.Type is IArrayTypeSymbol { Rank: 1 } arrayTypeSymbol) // [*,*] goes the regular way
+            {
+                var elementType = arrayTypeSymbol.ElementType;
+                method = $"ReadArray<{elementType}>";
+
+                if (elementType.NullableAnnotation != NullableAnnotation.Annotated &&
+                    !elementType.ToDisplayString().EndsWith("?") &&
+                    !elementType.IsValueType)
+                {
+                    nullableString = $", {(!nullable).ToString().ToLowerInvariant()}";
+                }
+                else
+                {
+                    nullableString = string.Empty;
+                }
+            }
+            else if (IsDataDefinition(field.Type, out _) && field.Type.TypeKind != TypeKind.Interface)
+            {
+                method = $"ReadDefinition<{fieldTypeName}>";
+            }
+
+            if (reader is { Type: var type } &&
+                (type & (MappingReader | SequenceReader | ValueReader)) != 0)
+            {
+                builder.AppendLine($$"""
+                    switch (node{{i}})
+                    {
+                    """);
+
+                if ((reader.Value.Type & MappingReader) != 0)
+                {
+                    builder.AppendLine($"""
+                        case MappingDataNode mapping:
+                            this.{fieldName} = serialization.Read<{nonNullableFieldTypeName}, MappingDataNode, {readerName}>(mapping, hookCtx, context, null{nullableString});
+                            break;
+                        """);
+                }
+
+                if ((reader.Value.Type & SequenceReader) != 0)
+                {
+                    builder.AppendLine($"""
+                        case SequenceDataNode sequence:
+                            this.{fieldName} = serialization.Read<{nonNullableFieldTypeName}, SequenceDataNode, {readerName}>(sequence, hookCtx, context, null{nullableString});
+                            break;
+                        """);
+                }
+
+                if ((reader.Value.Type & ValueReader) != 0)
+                {
+                    builder.AppendLine($"""
+                        case ValueDataNode value:
+                            this.{fieldName} = serialization.Read<{nonNullableFieldTypeName}, ValueDataNode, {readerName}>(value, hookCtx, context, null{nullableString});
+                            break;
+                        """);
+                }
+
+                builder.AppendLine($$"""
+                    default:
+                        throw new InvalidOperationException($"Unable to read node for {{field.Symbol.Name}}({{field.Attribute.Data?.AttributeClass?.Name}}) as valid.");
+                        break;
+                    }
+                    """);
+            }
+            else
+            {
+                builder.AppendLine(
+                    $"this.{fieldName} = serialization.{method}(node{i}, hookCtx, context, null{nullableString});");
+            }
+
+            builder.AppendLine("}");
+            builder.AppendLine("}");
+
+            if (field.Attribute is { IsDataFieldAttribute: true, Required: true })
+            {
+                if (field.Type.IsReferenceType && fieldTypeName.EndsWith("?"))
+                    fieldTypeName = fieldTypeName.Substring(0, fieldTypeName.Length - 1);
+
+                builder.AppendLine($$"""
+                    else
+                    {
+                        throw new RequiredFieldNotMappedException(typeof({{fieldTypeName}}), "{{tagName}}", typeof({{definition.Type.ToDisplayString()}}));
+                    }
+                    """);
+            }
+
+            if (field.Attribute.ServerOnly)
+                builder.AppendLine("}");
         }
 
         return builder.ToString();
@@ -400,37 +536,26 @@ public class Generator : IIncrementalGenerator
         var builder = new StringBuilder();
         var modifiers = string.Empty;
 
-        if (definition.Type.BaseType is { } baseType && IsDataDefinition(baseType))
+        if (GetFirstDataDefinitionBaseType(definition.Type) != null)
             modifiers = "override ";
         else if (IsVirtualClass(definition.Type))
             modifiers = "virtual ";
 
-        var requiredFields = new StringBuilder();
         if (definition.Type.IsAbstract)
         {
             // TODO make abstract once data definitions are forced to be partial
             builder.AppendLine($$"""
-                                 /// <seealso cref="ISerializationManager.CreateCopy"/>
-                                 [Obsolete("Use ISerializationManager.CreateCopy instead")]
-                                 public {{modifiers}} {{definition.GenericTypeName}} Instantiate()
-                                 {
-                                     throw new NotImplementedException();
-                                 }
-                                 """);
+                /// <seealso cref="ISerializationManager.CreateCopy"/>
+                [Obsolete("Use ISerializationManager.CreateCopy instead")]
+                public {{modifiers}} {{definition.GenericTypeName}} Instantiate()
+                {
+                    throw new NotImplementedException();
+                }
+                """);
         }
         else
         {
-            foreach (var member in GetRequiredFieldsProperties(definition.Type))
-            {
-                requiredFields.AppendLine($"{member.Name} = default!,");
-            }
-
-            if (requiredFields.Length > 0)
-            {
-                requiredFields.Insert(0, '{');
-                requiredFields.Append('}');
-            }
-
+            var requiredFields = GetRequiredFieldsPropertiesAssigners(definition.Type, string.Empty);
             builder.AppendLine($$"""
                 /// <seealso cref="ISerializationManager.CreateCopy"/>
                 [Obsolete("Use ISerializationManager.CreateCopy instead")]
@@ -441,7 +566,7 @@ public class Generator : IIncrementalGenerator
 
                 public static {{definition.GenericTypeName}} StaticInstantiate()
                 {
-                    return new {{definition.GenericTypeName}}(){{requiredFields}};
+                    return new {{definition.GenericTypeName}}();
                 }
 
                 public static object StaticInstantiateObject()
@@ -451,25 +576,10 @@ public class Generator : IIncrementalGenerator
                 """);
         }
 
-        foreach (var interfaceName in InternalGetImplicitDataDefinitionInterfaces(definition.Type, false))
-        {
-            builder.AppendLine($$"""
-                {{interfaceName}} {{interfaceName}}.Instantiate()
-                {
-                    return Instantiate();
-                }
-
-                {{interfaceName}} ISerializationGenerated<{{interfaceName}}>.Instantiate()
-                {
-                    return Instantiate();
-                }
-                """);
-        }
-
         return builder.ToString();
     }
 
-    private static string GetValidators(DataDefinition definition)
+    private static string GetValidator(DataDefinition definition)
     {
         var builder = new StringBuilder();
         var validateBuilder = new StringBuilder();
@@ -479,6 +589,9 @@ public class Generator : IIncrementalGenerator
             validateBuilder.Clear();
 
             var field = definition.Fields[i];
+            if (!definition.Type.Equals(field.Symbol.ContainingType, SymbolEqualityComparer.Default))
+                continue;
+
             var fieldTypeName = GetNonNullableNameForGenericParameter(field.Type);
             var tagName = field.Attribute.Tag;
             if (field.Attribute.Include)
@@ -536,8 +649,7 @@ public class Generator : IIncrementalGenerator
                 builder.AppendLine("}");
         }
 
-        var baseType = definition.Type.BaseType;
-        if (IsDataDefinition(baseType))
+        if (GetFirstDataDefinitionBaseType(definition.Type) is { } baseType)
             builder.AppendLine($"{baseType.ToDisplayString()}.Validate(nodes, node, serialization, context);");
 
         return $$"""
@@ -548,199 +660,96 @@ public class Generator : IIncrementalGenerator
             """;
     }
 
-    private static string GetReaders(DataDefinition definition)
+    private static string GetCopiers(DataDefinition definition)
     {
         var builder = new StringBuilder();
-        var structCopier = new StringBuilder();
-        for (var i = 0; i < definition.Fields.Count; i++)
+        var requiredFields = GetRequiredFieldsPropertiesAssigners(definition.Type, string.Empty);
+        var type = definition.Type;
+        var baseType = type.BaseType;
+        var baseDefinition = false;
+        while (baseType != null)
         {
-            var field = definition.Fields[i];
-            var tempTypeName = field.Type.ToDisplayString();
-            if (IsMultidimensionalArray(field.Type))
-                tempTypeName = tempTypeName.Replace("*", "");
+            if (!baseDefinition && IsDataDefinition(baseType, out _))
+                baseDefinition = true;
 
-            if (field.Attribute.ServerOnly)
-            {
-                builder.AppendLine("""
-                    if (serialization.IsServer)
-                    {
-                    """);
-            }
-
-            var fieldName = field.Symbol.Name;
-            builder.AppendLine($"{tempTypeName} {fieldName}Temp = target.{fieldName};");
-            if (field.Attribute.IsDataFieldAttribute)
-            {
-                builder.AppendLine($$"""
-                    if (mappingDataNode.TryGet("{{field.Attribute.Tag}}", out var node{{i}}))
-                    {
-                    """);
-            }
-            else
-            {
-                builder.AppendLine($$"""
-                {
-                    var node{{i}} = mappingDataNode;
-                """);
-            }
-
-            var (fieldTypeName, nonNullableFieldTypeName) = GetCleanNameForGenericType(field.Type, out _);
-            var tagName = field.Attribute.Tag;
-            var reader = field.CustomSerializer;
-            var readerName = reader?.Serializer.ToDisplayString();
-            var nullable = field.Type.NullableAnnotation == NullableAnnotation.Annotated ||
-                           field.Type.ToDisplayString().EndsWith("?");
-            var nullableString = string.Empty;
-            if (!field.Type.IsValueType)
-            {
-                nullableString = $", {(!nullable).ToString().ToLowerInvariant()}";
-                if (fieldTypeName.EndsWith("?"))
-                    fieldTypeName = fieldTypeName.Substring(0, fieldTypeName.Length - 1);
-            }
-
-            var nullExpression =
-                field.Type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString().Equals(EntityUidName)
-                    ? $"{fieldName}Temp = EntityUid.Invalid;"
-                    : nullable
-                        ? $"{fieldName}Temp = null;"
-                        : "throw new NullNotAllowedException();";
-
-            builder.AppendLine($$"""
-                if (node{{i}}.IsNull)
-                {
-                    {{nullExpression}}
-                }
-                else
-                {
-                """);
-
-            var method = $"Read<{fieldTypeName}>";
-            if (field.Type.TypeKind == TypeKind.Enum)
-            {
-                method = $"ReadEnum<{fieldTypeName}>";
-                nullableString = string.Empty;
-            }
-            else if (field.Type.IsValueType && IsDataDefinition(field.Type))
-            {
-                method = $"ReadStructDefinition<{fieldTypeName}>";
-                nullableString = string.Empty;
-            }
-            else if (field.Type.TypeKind == TypeKind.Array &&
-                     field.Type is IArrayTypeSymbol { Rank: 1 } arrayTypeSymbol) // [*,*] goes the regular way
-            {
-                var elementType = arrayTypeSymbol.ElementType;
-                method = $"ReadArray<{elementType}>";
-
-                if (elementType.NullableAnnotation != NullableAnnotation.Annotated &&
-                    !elementType.ToDisplayString().EndsWith("?") &&
-                    !elementType.IsValueType)
-                {
-                    nullableString = $", {(!nullable).ToString().ToLowerInvariant()}";
-                }
-                else
-                {
-                    nullableString = string.Empty;
-                }
-            }
-            else if (IsDataDefinition(field.Type))
-            {
-                method = $"ReadDefinition<{fieldTypeName}>";
-            }
-
-            if (reader is { Type: var type } &&
-                (type & (MappingReader | SequenceReader | ValueReader)) != 0)
-            {
-                builder.AppendLine($$"""
-                switch (node{{i}})
-                {
-                """);
-
-                if ((reader.Value.Type & MappingReader) != 0)
-                {
-                    builder.AppendLine($"""
-                        case MappingDataNode mapping:
-                            {fieldName}Temp = target.{field.Symbol.Name} = serialization.Read<{nonNullableFieldTypeName}, MappingDataNode, {readerName}>(mapping, hookCtx, context, null{nullableString});
-                            break;
-                        """);
-                }
-
-                if ((reader.Value.Type & SequenceReader) != 0)
-                {
-                    builder.AppendLine($"""
-                        case SequenceDataNode sequence:
-                            {fieldName}Temp = serialization.Read<{nonNullableFieldTypeName}, SequenceDataNode, {readerName}>(sequence, hookCtx, context, null{nullableString});
-                            break;
-                        """);
-                }
-
-                if ((reader.Value.Type & ValueReader) != 0)
-                {
-                    builder.AppendLine($"""
-                        case ValueDataNode value:
-                            {fieldName}Temp = serialization.Read<{nonNullableFieldTypeName}, ValueDataNode, {readerName}>(value, hookCtx, context, null{nullableString});
-                            break;
-                        """);
-                }
-
-                builder.AppendLine($$"""
-                    default:
-                        throw new InvalidOperationException($"Unable to read node for {{field.Symbol.Name}}({{field.Attribute.Data.AttributeClass?.Name}}) as valid.");
-                        break;
-                    }
-                    """);
-            }
-            else
-            {
-                builder.AppendLine($"{fieldName}Temp = serialization.{method}(node{i}, hookCtx, context, null{nullableString});");
-            }
-
-            builder.AppendLine("}");
-            if (definition.Type.IsValueType)
-                structCopier.AppendLine($"{fieldName} = {fieldName}Temp!,");
-            else
-                builder.AppendLine($"target.{fieldName} = {fieldName}Temp!;");
-
-            builder.AppendLine("}");
-            if (field.Attribute.IsDataFieldAttribute)
-            {
-                if (field.Attribute.Required)
-                {
-                    if (field.Type.IsReferenceType && fieldTypeName.EndsWith("?"))
-                        fieldTypeName = fieldTypeName.Substring(0, fieldTypeName.Length - 1);
-
-                    builder.AppendLine($$"""
-                        else
-                        {
-                            throw new RequiredFieldNotMappedException(typeof({{fieldTypeName}}), "{{tagName}}", typeof({{definition.Type.ToDisplayString()}}));
-                        }
-                        """);
-                }
-            }
-
-            if (field.Attribute.ServerOnly)
-                builder.AppendLine("}");
+            GetCopierMethod(definition, baseType, baseType.ToDisplayString(), true, builder, requiredFields);
+            baseType = baseType.BaseType;
         }
 
-        var baseType = definition.Type.BaseType;
-        if (IsDataDefinition(baseType))
+        GetCopierMethod(definition, definition.Type, "object", baseDefinition, builder, requiredFields);
+        GetCopierMethod(definition, definition.Type, GetGenericTypeName(type), false, builder, requiredFields);
+        return builder.ToString();
+    }
+
+    private static void GetCopierMethod(
+        DataDefinition definition,
+        ITypeSymbol type,
+        string targetType,
+        bool forceOverride,
+        StringBuilder builder,
+        string requiredFields)
+    {
+        if (!IsDataDefinition(type, out _))
+            return;
+
+        var sameType = definition.Type.Equals(type, SymbolEqualityComparer.Default);
+        var isSealedOrStruct = definition.Type.IsSealed || definition.Type.IsValueType;
+        var isAbstract = definition.Type.IsAbstract;
+        var isInterface = definition.Type.TypeKind == TypeKind.Interface;
+        var modifier = (sameType, isSealedOrStruct, isAbstract, isInterface) switch
         {
-            var baseTypeName = baseType.ToDisplayString();
-            builder.AppendLine($$"""
-                {{baseTypeName}} baseInstance = target;
-                {{baseTypeName}}.Read(ref baseInstance, mappingDataNode, serialization, hookCtx, context);
-                """);
+            (true, true, _, _) => string.Empty,
+            (true, false, false, _) => "virtual ",
+            (false, _, _, true) => string.Empty,
+            (false, _, false, false) => "override ",
+            (_, _, true, _) => "abstract ",
+        };
+
+        if (forceOverride && modifier is "" or "abstract " or "virtual ")
+        {
+            if (modifier is "" or "abstract ")
+                modifier += "override ";
+            else if (modifier == "virtual ")
+                modifier = "override ";
         }
 
-        if (definition.Type.IsValueType)
+        builder.AppendLine($"""
+            public {modifier}void Copy(
+                ref {targetType} target,
+                ISerializationManager serialization,
+                SerializationHookContext hookCtx,
+                ISerializationContext? context = null)
+            """);
+
+        if (isAbstract)
+        {
+            builder.Append(";");
+        }
+        else
         {
             builder.AppendLine($$"""
-                target = target with
                 {
-                    {{structCopier}}
-                };
+                    if (serialization.TryCustomCopy(this, ref target, hookCtx, {{definition.HasHooks.ToString().ToLower()}}, context))
+                        return;
+
+                    target = new {{definition.GenericTypeName}}(
+                        ISerializationGeneratedCopy.Default,
+                        this,
+                        serialization,
+                        hookCtx,
+                        context
+                    ){{requiredFields}};
+                }
                 """);
         }
+    }
 
+    private static string GetReader(DataDefinition definition)
+    {
+        if (definition.Type.IsAbstract)
+            return string.Empty;
+
+        var requiredFields = GetRequiredFieldsPropertiesAssigners(definition.Type, "target.");
         return $$"""
             public static void Read(
                 ref {{definition.GenericTypeName}} target,
@@ -749,17 +758,26 @@ public class Generator : IIncrementalGenerator
                 SerializationHookContext hookCtx,
                 ISerializationContext? context)
             {
-                {{builder}}
+                target = new {{definition.GenericTypeName}}(
+                    ISerializationGeneratedRead.Default,
+                    mappingDataNode,
+                    serialization,
+                    hookCtx,
+                    context
+                ){{requiredFields}};
             }
             """;
     }
 
-    private static string GetWriters(DataDefinition definition)
+    private static string GetWriter(DataDefinition definition)
     {
         var builder = new StringBuilder();
         for (var i = 0; i < definition.Fields.Count; i++)
         {
             var field = definition.Fields[i];
+            if (!definition.Type.Equals(field.Symbol.ContainingType, SymbolEqualityComparer.Default))
+                continue;
+
             if (field.Attribute.ReadOnly)
                 continue;
 
@@ -796,9 +814,9 @@ public class Generator : IIncrementalGenerator
             if (!field.Attribute.IsDataFieldAttribute || !field.Attribute.Required)
             {
                 builder.AppendLine($$"""
-                if (alwaysWrite || !EqualityComparer<{{fieldType}}>.Default.Equals(obj.{{field.Symbol.Name}}, ({{fieldType}}) defaultValues["{{field.Attribute.Tag}}"]!))
-                {
-                """);
+                    if (alwaysWrite || !EqualityComparer<{{fieldType}}>.Default.Equals(obj.{{field.Symbol.Name}}, ({{fieldType}}) defaultValues["{{field.Attribute.Tag}}"]!))
+                    {
+                    """);
             }
 
             builder.AppendLine($"""DataNode node{i};""");
@@ -806,9 +824,9 @@ public class Generator : IIncrementalGenerator
             if (field.Attribute.IsDataFieldAttribute)
             {
                 builder.AppendLine($$"""
-                if (!mapping.Has("{{field.Attribute.Tag}}"))
-                {
-                """);
+                    if (!mapping.Has("{{field.Attribute.Tag}}"))
+                    {
+                    """);
             }
 
             if (field.CustomSerializer is { } serializer &&
@@ -818,13 +836,13 @@ public class Generator : IIncrementalGenerator
                 if (nullableValueType)
                 {
                     builder.AppendLine($$"""
-                    if (obj.{{field.Symbol.Name}} == null)
-                    {
-                        node{{i}} = ValueDataNode.Null();
-                    }
-                    else
-                    {
-                    """);
+                        if (obj.{{field.Symbol.Name}} == null)
+                        {
+                            node{{i}} = ValueDataNode.Null();
+                        }
+                        else
+                        {
+                        """);
                 }
 
                 var nullableValueTypeString = nullableValueType ? ".Value" : string.Empty;
@@ -832,7 +850,7 @@ public class Generator : IIncrementalGenerator
                 builder.AppendLine($"""
                     #pragma warning disable RA0008 notNullableOverride
                     node{i} = serialization.WriteValue<{nonNullableFieldType}, {writerName}>(obj.{field.Symbol.Name}{nullableValueTypeString}!, alwaysWrite, context{nullableString});
-                    #pragma warning disable RA0008
+                    #pragma warning enable RA0008
                     """);
 
                 if (nullableValueType)
@@ -840,9 +858,8 @@ public class Generator : IIncrementalGenerator
             }
             else
             {
-                builder.AppendLine($"""
-                    node{i} = serialization.WriteValue<{fieldType}>(obj.{field.Symbol.Name}, alwaysWrite, context{nullableString});
-                    """);
+                builder.AppendLine(
+                    $"node{i} = serialization.WriteValue<{fieldType}>(obj.{field.Symbol.Name}, alwaysWrite, context{nullableString});");
             }
 
             if (field.Attribute.IsDataFieldAttribute)
@@ -872,11 +889,11 @@ public class Generator : IIncrementalGenerator
             if (field.Attribute.ServerOnly)
                 builder.AppendLine("}");
 
-            var baseType = definition.Type.BaseType;
-            if (IsDataDefinition(baseType))
+            if (GetFirstDataDefinitionBaseType(definition.Type) is { } baseType)
             {
                 var baseTypeName = baseType.ToDisplayString();
-                builder.AppendLine($"{baseTypeName}.Write(obj, mapping, serialization, context, alwaysWrite, defaultValues);");
+                builder.AppendLine(
+                    $"{baseTypeName}.Write(obj, mapping, serialization, context, alwaysWrite, defaultValues);");
             }
         }
 
@@ -901,9 +918,13 @@ public class Generator : IIncrementalGenerator
         var fieldTags = new List<string>(definition.Fields.Count);
         foreach (var field in definition.Fields)
         {
+            if (!definition.Type.Equals(field.Symbol.ContainingType, SymbolEqualityComparer.Default))
+                continue;
+
             var (fieldType, _) = GetCleanNameForGenericType(field.Type, out var isNullableValueType);
             var nullable = field.Type.NullableAnnotation == NullableAnnotation.Annotated ||
                            field.Type.ToDisplayString().EndsWith("?");
+
             if (!isNullableValueType && fieldType.EndsWith("?"))
                 fieldType = fieldType.Substring(0, fieldType.Length - 1);
 
@@ -929,9 +950,9 @@ public class Generator : IIncrementalGenerator
             fieldTags.Add($"\"{field.Attribute.Tag}\"");
         }
 
-        var baseType = definition.Type.BaseType;
-        if (IsDataDefinition(baseType))
-            builder.AppendLine($"{baseType.ToDisplayString()}.GetFieldDefinitions(instance, fields, [{string.Join(", ", fieldTags)}]);");
+        if (GetFirstDataDefinitionBaseType(definition.Type) is { } baseType)
+            builder.AppendLine(
+                $"{baseType.ToDisplayString()}.GetFieldDefinitions(instance, fields, [{string.Join(", ", fieldTags)}]);");
 
         var instance = definition.Type.IsAbstract
             ? string.Empty
@@ -946,54 +967,23 @@ public class Generator : IIncrementalGenerator
             """;
     }
 
-    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-    private static IEnumerable<string> InternalGetImplicitDataDefinitionInterfaces(
-        ITypeSymbol type,
-        bool all)
-    {
-        var symbols = GetImplicitDataDefinitionInterfaces(type, all);
-
-        // TODO SOURCE GEN
-        // fix this jank
-        // The comp-state source generator will add an "IComponentDelta" interface to classes with the auto state
-        // attribute, and this generator creates methods that those classes then have to implement because
-        // IComponentDelta a DataDefinition via the ImplicitDataDefinitionForInheritorsAttribute on IComponent.
-        if (!TryGetAttribute(type, AutoStateAttributeName, out var data))
-            return symbols;
-
-        // If it doesn't have field deltas then ignore
-        if (data.ConstructorArguments[1] is not { Value: bool fields and true })
-        {
-            return symbols;
-        }
-
-        if (symbols.Any(x => x == ComponentDeltaInterfaceName))
-            return symbols;
-
-        return symbols.Append(ComponentDeltaInterfaceName);
-    }
-
     // TODO serveronly? do we care? who knows!!
-    private static StringBuilder CopyDataFields(DataDefinition definition)
+    private static StringBuilder GetCopyBody(DataDefinition definition)
     {
         var builder = new StringBuilder();
-
-        builder.AppendLine($"""
-if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.ToString().ToLower()}, context))
-    return;
-""");
-
-        var structCopier = new StringBuilder();
         foreach (var field in definition.Fields)
         {
+            if (!definition.Type.Equals(field.Symbol.ContainingType, SymbolEqualityComparer.Default))
+                continue;
+
             var type = field.Type;
             var (typeName, nonNullableTypeName) = GetCleanNameForGenericType(type, out var isNullableValueType);
 
             var isClass = type.IsReferenceType || type.SpecialType == SpecialType.System_String;
-            var isNullable = type.NullableAnnotation == NullableAnnotation.Annotated;
+            var isNullable = type.NullableAnnotation == NullableAnnotation.Annotated ||
+                             field.Type.ToDisplayString().EndsWith("?");
             var nullableOverride = isClass && !isNullable ? ", true" : string.Empty;
             var name = field.Symbol.Name;
-            var tempVarName = $"{name}Temp";
             var nullableValue = isNullableValueType ? ".Value" : string.Empty;
             var nullNotAllowed = isClass && !isNullable;
 
@@ -1003,27 +993,23 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
                 if (nullNotAllowed)
                 {
                     builder.AppendLine($$"""
-                                         if ({{name}} == null)
-                                         {
-                                             throw new NullNotAllowedException();
-                                         }
-                                         """);
+                        if (source.{{name}} == null)
+                        {
+                            throw new NullNotAllowedException();
+                        }
+                        """);
                 }
-
-                builder.AppendLine($$"""
-                                     {{typeName}} {{tempVarName}} = default!;
-                                     """);
 
                 if (isNullable || isNullableValueType)
                 {
                     builder.AppendLine($$"""
-                                         if ({{name}} == null)
-                                         {
-                                             {{tempVarName}} = null!;
-                                         }
-                                         else
-                                         {
-                                         """);
+                        if (source.{{name}} == null)
+                        {
+                            {{name}} = null!;
+                        }
+                        else
+                        {
+                        """);
                 }
 
                 var serializerName = serializer.ToDisplayString();
@@ -1031,71 +1017,51 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
                 // TODO ROBUST should these both be created if both are present?
                 if ((serializerType & Copier) != 0)
                 {
-                    CopyToCustom(
-                        builder,
-                        nonNullableTypeName,
-                        serializerName,
-                        tempVarName,
-                        name,
-                        isNullable,
-                        isClass,
-                        isNullableValueType
-                    );
+                    builder.AppendLine($"""
+                        #pragma warning disable RA0008 notNullableOverride
+                        {nonNullableTypeName} {name}GeneratedTemp = default!;
+                        serialization.CopyTo<{nonNullableTypeName}, {serializerName}>(source.{name}{nullableValue}, ref {name}GeneratedTemp, hookCtx, context{nullableOverride});
+                        #pragma warning enable RA0008
+                        {name} = {name}GeneratedTemp;
+                        """);
                 }
                 else if ((serializerType & CopyCreator) != 0)
                 {
-                    CreateCopyCustom(
-                        builder,
-                        name,
-                        tempVarName,
-                        nonNullableTypeName,
-                        serializerName,
-                        nullableValue,
-                        nullableOverride
-                    );
+                    builder.AppendLine(
+                        $"{name} = serialization.CreateCopy<{nonNullableTypeName}, {serializerName}>(source.{name}{nullableValue}, hookCtx, context{nullableOverride});");
                 }
 
                 if (isNullable || isNullableValueType)
-                {
                     builder.AppendLine("}");
-                }
-
-                if (definition.Type.IsValueType)
-                {
-                    structCopier.AppendLine($"{name} = {tempVarName}!,");
-                }
-                else
-                {
-                    builder.AppendLine($"target.{name} = {tempVarName}!;");
-                }
             }
             else
             {
-                builder.AppendLine($$"""
-                                     {{typeName}} {{tempVarName}} = default!;
-                                     """);
-
                 if (nullNotAllowed)
                 {
                     builder.AppendLine($$"""
-                                         if ({{name}} == null)
-                                         {
-                                             throw new NullNotAllowedException();
-                                         }
-                                         """);
+                        if (source.{{name}} == null)
+                        {
+                            throw new NullNotAllowedException();
+                        }
+                        """);
                 }
 
                 var hasHooks = ImplementsInterface(type, SerializationHooksNamespace) || !type.IsSealed;
                 builder.AppendLine($$"""
-                                     if (!serialization.TryCustomCopy(this.{{name}}, ref {{tempVarName}}, hookCtx, {{hasHooks.ToString().ToLower()}}, context))
-                                     {
-                                     """);
+                    {{typeName}} {{name}}GeneratedTemp = default!;
+                    if (serialization.TryCustomCopy(source.{{name}}, ref {{name}}GeneratedTemp, hookCtx, {{hasHooks.ToString().ToLower()}}, context))
+                    {
+                        {{name}} = {{name}}GeneratedTemp;
+                    }
+                    else
+                    {
+                    """);
 
                 if (CanBeCopiedByValue(field.Symbol, field.Type))
                 {
-                    builder.AppendLine($"{tempVarName} = {name};");
+                    builder.AppendLine($"{name} = source.{name};");
                 }
-                else if (IsDataDefinition(type) && !type.IsAbstract &&
+                else if (IsDataDefinition(type, out _) && !type.IsAbstract &&
                          type is not INamedTypeSymbol { TypeKind: TypeKind.Interface })
                 {
                     var nullable = !type.IsValueType || IsNullableType(type);
@@ -1103,89 +1069,32 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
                     if (nullable)
                     {
                         builder.AppendLine($$"""
-                                           if ({{name}} == null)
-                                           {
-                                               {{tempVarName}} = null!;
-                                           }
-                                           else
-                                           {
-                                           """);
+                            if (source.{{name}} == null)
+                            {
+                                {{name}} = null!;
+                            }
+                            else
+                            {
+                            """);
                     }
 
-                    builder.AppendLine($$"""
-                                         serialization.CopyTo({{name}}, ref {{tempVarName}}, hookCtx, context{{nullableOverride}});
-                                         """);
+                    builder.AppendLine($"""
+                        serialization.CopyTo(source.{name}, ref {name}GeneratedTemp, hookCtx, context{nullableOverride});
+                        {name} = {name}GeneratedTemp;
+                        """);
 
                     if (nullable)
-                    {
                         builder.AppendLine("}");
-                    }
                 }
                 else
                 {
-                    builder.AppendLine($"{tempVarName} = serialization.CreateCopy({name}, hookCtx, context);");
+                    builder.AppendLine($"{name} = serialization.CreateCopy(source.{name}, hookCtx, context);");
                 }
 
                 builder.AppendLine("}");
-
-                if (definition.Type.IsValueType)
-                {
-                    structCopier.AppendLine($"{name} = {tempVarName}!,");
-                }
-                else
-                {
-                    builder.AppendLine($"target.{name} = {tempVarName}!;");
-                }
             }
         }
 
-        if (definition.Type.IsValueType)
-        {
-            builder.AppendLine($$"""
-                                target = target with
-                                {
-                                    {{structCopier}}
-                                };
-                                """);
-        }
-
         return builder;
-    }
-
-    private static void CopyToCustom(
-        StringBuilder builder,
-        string typeName,
-        string serializerName,
-        string tempVarName,
-        string varName,
-        bool isNullable,
-        bool isClass,
-        bool isNullableValueType)
-    {
-        var newTemp = isNullable && isClass ? $"{tempVarName} ??= new();" : string.Empty;
-        var nullableOverride = isClass ? ", true" : string.Empty;
-        var nullableValue = isNullableValueType ? ".Value" : string.Empty;
-        var nonNullableTypeName = typeName.EndsWith("?") ? typeName.Substring(0, typeName.Length - 1) : typeName;
-
-        builder.AppendLine($$"""
-                             {{nonNullableTypeName}} {{tempVarName}}CopyTo = default!;
-                             {{newTemp}}
-                             serialization.CopyTo<{{typeName}}, {{serializerName}}>(this.{{varName}}{{nullableValue}}, ref {{tempVarName}}CopyTo, hookCtx, context{{nullableOverride}});
-                             {{tempVarName}} = {{tempVarName}}CopyTo;
-                             """);
-    }
-
-    private static void CreateCopyCustom(
-        StringBuilder builder,
-        string varName,
-        string tempVarName,
-        string nonNullableTypeName,
-        string serializerName,
-        string nullableValue,
-        string nullableOverride)
-    {
-        builder.AppendLine($$"""
-                             {{tempVarName}} = serialization.CreateCopy<{{nonNullableTypeName}}, {{serializerName}}>(this.{{varName}}{{nullableValue}}, hookCtx, context{{nullableOverride}});
-                             """);
     }
 }

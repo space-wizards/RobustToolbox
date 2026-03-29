@@ -1,11 +1,13 @@
 ﻿#nullable enable
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Robust.Roslyn.Shared;
+using Robust.Roslyn.Shared.Helpers;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.ViewVariables;
 
@@ -41,16 +43,6 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Error,
         true,
         "Make sure to mark any type containing a nested data definition as partial."
-    );
-
-    public static readonly DiagnosticDescriptor DataFieldWritableRule = new(
-        Diagnostics.IdDataFieldWritable,
-        "Data field must not be readonly",
-        "Data field {0} in data definition {1} is readonly",
-        "Usage",
-        DiagnosticSeverity.Error,
-        true,
-        "Make sure to remove the readonly modifier."
     );
 
     public static readonly DiagnosticDescriptor DataFieldPropertyWritableRule = new(
@@ -93,9 +85,24 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         "Make sure to use a type that is YAML serializable."
     );
 
+    public static readonly DiagnosticDescriptor DataFieldOutsideDefinition = new(
+        Diagnostics.IdDataFieldOutsideDefinition,
+        "Data field defined in a type that is not marked as a data definition or data record",
+        "Data field {0} is defined in type {1} which is not a data definition or data record",
+        "Usage",
+        DiagnosticSeverity.Error,
+        true,
+        "Make sure to add a data definition or data record attribute, or inherit a type or add an attribute that implicitly makes its inheritors data definitions or data records."
+    );
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
-        DataDefinitionPartialRule, NestedDataDefinitionPartialRule, DataFieldWritableRule, DataFieldPropertyWritableRule,
-        DataFieldRedundantTagRule, DataFieldNoVVReadWriteRule, DataFieldYamlSerializableRule
+        DataDefinitionPartialRule,
+        NestedDataDefinitionPartialRule,
+        DataFieldPropertyWritableRule,
+        DataFieldRedundantTagRule,
+        DataFieldNoVVReadWriteRule,
+        DataFieldYamlSerializableRule,
+        DataFieldOutsideDefinition
     );
 
     public override void Initialize(AnalysisContext context)
@@ -108,6 +115,9 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             if (symbolContext.Symbol is not INamedTypeSymbol typeSymbol)
                 return;
 
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataField, SyntaxKind.FieldDeclaration);
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataFieldProperty, SyntaxKind.PropertyDeclaration);
+
             if (!IsDataDefinition(typeSymbol))
                 return;
 
@@ -116,9 +126,6 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordDeclaration);
             symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordStructDeclaration);
             symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.InterfaceDeclaration);
-
-            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataField, SyntaxKind.FieldDeclaration);
-            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataFieldProperty, SyntaxKind.PropertyDeclaration);
         }, SymbolKind.NamedType);
     }
 
@@ -156,6 +163,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (context.ContainingSymbol?.ContainingType is not INamedTypeSymbol type)
             return;
 
+        var isDataDefinition = DataDefinitionHelper.IsDataDefinition(type, out var isDataRecord);
         foreach (var variable in field.Declaration.Variables)
         {
             var fieldSymbol = context.SemanticModel.GetDeclaredSymbol(variable);
@@ -163,13 +171,13 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             if (fieldSymbol == null)
                 continue;
 
-            if (!IsDataField(fieldSymbol, out _, out var datafieldAttribute))
+            if (!DataDefinitionHelper.IsDataField(fieldSymbol, isDataRecord, out _, out var datafieldAttribute))
                 continue;
 
-            if (IsReadOnlyDataField(type, fieldSymbol))
+            if (!isDataDefinition)
             {
-                TryGetModifierLocation(field, SyntaxKind.ReadOnlyKeyword, out var location);
-                context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, location, fieldSymbol.Name, type.Name));
+                var location = type.DeclaringSyntaxReferences[0].GetSyntax().GetLocation();
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldOutsideDefinition, location, fieldSymbol.Name, type.Name));
             }
 
             if (HasRedundantTag(fieldSymbol, datafieldAttribute))
@@ -212,19 +220,17 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (propertySymbol.ContainingType is not INamedTypeSymbol type)
             return;
 
-        if (type.IsRecord || type.IsValueType)
-            return;
-
         if (propertySymbol == null)
             return;
 
-        if (!IsDataField(propertySymbol, out _, out var datafieldAttribute))
+        var isDataDefinition = DataDefinitionHelper.IsDataDefinition(type, out var isDataRecord);
+        if (!DataDefinitionHelper.IsDataField(propertySymbol, isDataRecord, out _, out var datafieldAttribute))
             return;
 
-        if (IsReadOnlyDataField(type, propertySymbol))
+        if (!isDataDefinition)
         {
-            var location = property.AccessorList != null ? property.AccessorList.GetLocation() : property.GetLocation();
-            context.ReportDiagnostic(Diagnostic.Create(DataFieldPropertyWritableRule, location, propertySymbol.Name, type.Name));
+            var location = type.DeclaringSyntaxReferences[0].GetSyntax().GetLocation();
+            context.ReportDiagnostic(Diagnostic.Create(DataFieldOutsideDefinition, location, propertySymbol.Name, type.Name));
         }
 
         if (HasRedundantTag(propertySymbol, datafieldAttribute))
@@ -255,11 +261,6 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static bool IsReadOnlyDataField(ITypeSymbol type, ISymbol field)
-    {
-        return IsReadOnlyMember(type, field);
-    }
-
     private static bool IsPartial(TypeDeclarationSyntax type)
     {
         return type.Modifiers.IndexOf(SyntaxKind.PartialKeyword) != -1;
@@ -273,39 +274,6 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         return HasAttribute(type, DataDefinitionNamespace) ||
                MeansDataDefinition(type) ||
                IsImplicitDataDefinition(type);
-    }
-
-    private static bool IsDataField(ISymbol member, out ITypeSymbol type, out AttributeData attribute)
-    {
-        // TODO data records and other attributes
-        if (member is IFieldSymbol field)
-        {
-            foreach (var attr in field.GetAttributes())
-            {
-                if (attr.AttributeClass != null && Inherits(attr.AttributeClass, DataFieldBaseNamespace))
-                {
-                    type = field.Type;
-                    attribute = attr;
-                    return true;
-                }
-            }
-        }
-        else if (member is IPropertySymbol property)
-        {
-            foreach (var attr in property.GetAttributes())
-            {
-                if (attr.AttributeClass != null && Inherits(attr.AttributeClass, DataFieldBaseNamespace))
-                {
-                    type = property.Type;
-                    attribute = attr;
-                    return true;
-                }
-            }
-        }
-
-        type = null!;
-        attribute = null!;
-        return false;
     }
 
     private static bool Inherits(ITypeSymbol type, string parent)
@@ -382,14 +350,14 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private static bool HasRedundantTag(ISymbol symbol, AttributeData datafieldAttribute)
+    private static bool HasRedundantTag(ISymbol symbol, DataFieldAttribute datafieldAttribute)
     {
         // No args, no problem
-        if (datafieldAttribute.ConstructorArguments.Length == 0)
+        if (datafieldAttribute.Data is not { ConstructorArguments.Length: > 0 })
             return false;
 
         // If a tag is explicitly specified, it will be the first argument...
-        var tagArgument = datafieldAttribute.ConstructorArguments[0];
+        var tagArgument = datafieldAttribute.Data.ConstructorArguments[0];
         // ...but the first arg could also something else, since tag is optional
         // so we make sure that it's a string
         if (tagArgument.Value is not string explicitName)
@@ -439,7 +407,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         }
         return false;
     }
-    
+
     private static bool IsNotYamlSerializable(ISymbol field, ITypeSymbol type)
     {
         return HasAttribute(type, NotYamlSerializableName);

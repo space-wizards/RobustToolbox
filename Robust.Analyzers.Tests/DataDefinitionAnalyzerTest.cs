@@ -95,29 +95,6 @@ public sealed class DataDefinitionAnalyzerTest
     }
 
     [Test]
-    public async Task ReadOnlyFieldTest()
-    {
-        const string code = """
-            using Robust.Shared.Serialization.Manager.Attributes;
-
-            [DataDefinition]
-            public sealed partial class Foo
-            {
-                [DataField]
-                public readonly int Bad;
-
-                [DataField]
-                public int Good;
-            }
-            """;
-
-        await Verifier(code,
-            // /0/Test0.cs(7,12): error RA0019: Data field Bad in data definition Foo is readonly
-            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldWritableRule).WithSpan(7, 12, 7, 20).WithArguments("Bad", "Foo")
-        );
-    }
-
-    [Test]
     public async Task PartialDataDefinitionTest()
     {
         const string code = """

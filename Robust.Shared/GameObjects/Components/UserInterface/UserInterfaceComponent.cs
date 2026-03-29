@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects
         public GameTick LastFieldUpdate { get; set; }
 
         /// <inheritdoc />
-        public GameTick[] LastModifiedFields { get; set; }
+        public GameTick[] LastModifiedFields { get; set; } = [];
 
         /// <summary>
         /// The currently open interfaces. Used clientside to store the UI.

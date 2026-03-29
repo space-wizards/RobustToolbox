@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Robust.Roslyn.Shared.Helpers;
 
 namespace Robust.Serialization.Generator;
 

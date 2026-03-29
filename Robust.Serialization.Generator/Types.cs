@@ -1,209 +1,21 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Robust.Roslyn.Shared.Helpers;
+using static Robust.Roslyn.Shared.DataDefinitionHelper;
 
 namespace Robust.Serialization.Generator;
 
 internal static class Types
 {
-    private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
-    private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
-    private const string MeansDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.MeansDataDefinitionAttribute";
-    private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string CopyByRefNamespace = "Robust.Shared.Serialization.Manager.Attributes.CopyByRefAttribute";
-    private const string DataFieldAttributeName = "Robust.Shared.Serialization.Manager.Attributes.DataFieldAttribute";
-    private const string IdDataFieldAttributeName = "Robust.Shared.Prototypes.IdDataFieldAttribute";
-    private const string ParentDataFieldAttributeName = "Robust.Shared.Prototypes.ParentDataFieldAttribute";
-    private const string AbstractDataFieldAttributeName = "Robust.Shared.Prototypes.AbstractDataFieldAttribute";
-    private const string IncludeDataFieldAttributeName = "Robust.Shared.Serialization.Manager.Attributes.IncludeDataFieldAttribute";
-    private const string AlwaysPushInheritanceAttributeName = "Robust.Shared.Serialization.Manager.Attributes.AlwaysPushInheritanceAttribute";
-    private const string NeverPushInheritanceAttributeName = "Robust.Shared.Serialization.Manager.Attributes.NeverPushInheritanceAttribute";
 
     internal static bool IsPartial(TypeDeclarationSyntax type)
     {
         return type.Modifiers.IndexOf(SyntaxKind.PartialKeyword) != -1;
-    }
-
-    internal static bool IsDataDefinition([NotNullWhen(true)] ITypeSymbol? type)
-    {
-        if (type == null)
-            return false;
-
-        return HasAttribute(type, DataDefinitionNamespace) ||
-               IsImplicitDataDefinition(type);
-    }
-
-    internal static DataFieldAttribute? GetDataFieldAttribute(AttributeData data, string fieldName)
-    {
-        if (data.AttributeClass == null)
-            return null;
-
-        string? name = null;
-        var readOnly = false;
-        var priorityIndex = 0;
-        var include = false;
-        var isDataFieldAttribute = false;
-        var required = false;
-        var serverOnly = false;
-        var inheritanceBehavior = 0;
-
-        // (string? tag = null, bool readOnly = false, int priority = 1, bool required = false, bool serverOnly = false, Type? customTypeSerializer = null)
-        if (data.AttributeClass.ToDisplayString().Contains(DataFieldAttributeName))
-        {
-            name = (string?) data.ConstructorArguments[0].Value;
-            readOnly = (bool) data.ConstructorArguments[1].Value!;
-            priorityIndex = 2;
-            isDataFieldAttribute = true;
-            required = (bool) data.ConstructorArguments[3].Value!;
-            serverOnly = (bool) data.ConstructorArguments[4].Value!;
-        }
-        // (int priority = 1, Type? customTypeSerializer = null)
-        else if (data.AttributeClass.ToDisplayString().Contains(IdDataFieldAttributeName))
-        {
-            name = "id";
-            priorityIndex = 0;
-            isDataFieldAttribute = true;
-        }
-        // (Type prototypeIdSerializer, int priority = 1)
-        else if (data.AttributeClass.ToDisplayString().Contains(ParentDataFieldAttributeName))
-        {
-            name = "parent";
-            priorityIndex = 1;
-            isDataFieldAttribute = true;
-        }
-        // (int priority = 1)
-        else if (data.AttributeClass.ToDisplayString().Contains(AbstractDataFieldAttributeName))
-        {
-            name = "abstract";
-            priorityIndex = 0;
-            isDataFieldAttribute = true;
-        }
-        // (bool readOnly = false, int priority = 1, bool serverOnly = false, Type? customTypeSerializer = null)
-        else if (data.AttributeClass.ToDisplayString().Contains(IncludeDataFieldAttributeName))
-        {
-            var span = fieldName.AsSpan();
-            name = $"{char.ToLowerInvariant(span[0])}{span.Slice(1).ToString()}";
-            readOnly = (bool) data.ConstructorArguments[0].Value!;
-            priorityIndex = 1;
-            include = true;
-            serverOnly = (bool) data.ConstructorArguments[2].Value!;
-        }
-
-        var camelCasedName = ToCamelCase(fieldName);
-        if (string.IsNullOrWhiteSpace(name))
-            name = ToCamelCase(camelCasedName);
-
-        return new DataFieldAttribute(
-            data,
-            name!,
-            readOnly,
-            (int) data.ConstructorArguments[priorityIndex].Value!,
-            include,
-            isDataFieldAttribute,
-            required,
-            serverOnly,
-            camelCasedName
-        );
-    }
-
-    internal static bool IsDataField(ISymbol member, out ITypeSymbol type, [NotNullWhen(true)] out DataFieldAttribute? attribute)
-    {
-        // TODO data records and other attributes
-        type = null!;
-        attribute = null;
-        var inheritanceBehavior = 0;
-        if (member is IFieldSymbol field)
-        {
-            foreach (var attr in field.GetAttributes())
-            {
-                if (attr.AttributeClass is not { } attributeClass)
-                    continue;
-
-                if (Inherits(attributeClass, DataFieldBaseNamespace))
-                {
-                    type = field.Type;
-                    attribute = GetDataFieldAttribute(attr, field.Name);
-                }
-
-                if (attributeClass.ToDisplayString() == AlwaysPushInheritanceAttributeName)
-                    inheritanceBehavior = 1;
-                else if (attributeClass.ToDisplayString() == NeverPushInheritanceAttributeName)
-                    inheritanceBehavior = 2;
-            }
-        }
-        else if (member is IPropertySymbol property)
-        {
-            foreach (var attr in property.GetAttributes())
-            {
-                if (attr.AttributeClass is not { } attributeClass)
-                    continue;
-
-                if (Inherits(attributeClass, DataFieldBaseNamespace))
-                {
-                    type = property.Type;
-                    attribute = GetDataFieldAttribute(attr, property.Name);
-                }
-
-                if (attributeClass.ToDisplayString() == AlwaysPushInheritanceAttributeName)
-                    inheritanceBehavior = 1;
-                else if (attributeClass.ToDisplayString() == NeverPushInheritanceAttributeName)
-                    inheritanceBehavior = 2;
-            }
-        }
-
-        if (attribute != null)
-            attribute = attribute with { InheritanceBehavior = inheritanceBehavior };
-
-        return attribute != null;
-    }
-
-    internal static bool IsImplicitDataDefinition(ITypeSymbol type)
-    {
-        foreach (var attribute in type.GetAttributes())
-        {
-            if (attribute.AttributeClass is not { } attributeClass)
-                continue;
-
-            if (attributeClass.ToDisplayString() == ImplicitDataDefinitionNamespace)
-                return true;
-
-            foreach (var subAttribute in attributeClass.GetAttributes())
-            {
-                if (subAttribute.AttributeClass?.ToDisplayString() == MeansDataDefinitionNamespace)
-                    return true;
-            }
-        }
-
-        foreach (var baseType in GetBaseTypes(type))
-        {
-            if (HasAttribute(baseType, ImplicitDataDefinitionNamespace))
-                return true;
-        }
-
-        foreach (var @interface in type.AllInterfaces)
-        {
-            if (IsImplicitDataDefinitionInterface(@interface))
-                return true;
-        }
-
-        return false;
-    }
-
-    internal static bool IsImplicitDataDefinitionInterface(ITypeSymbol @interface)
-    {
-        if (HasAttribute(@interface, ImplicitDataDefinitionNamespace))
-            return true;
-
-        foreach (var subInterface in @interface.AllInterfaces)
-        {
-            if (HasAttribute(subInterface, ImplicitDataDefinitionNamespace))
-                return true;
-        }
-
-        return false;
     }
 
     internal static IEnumerable<string> GetImplicitDataDefinitionInterfaces(ITypeSymbol type, bool all)
@@ -211,7 +23,7 @@ internal static class Types
         var interfaces = all ? type.AllInterfaces : type.Interfaces;
         foreach (var @interface in interfaces)
         {
-            if (IsImplicitDataDefinitionInterface(@interface))
+            if (IsImplicitDataDefinitionInterface(@interface) is { Definition: true })
                 yield return @interface.ToDisplayString();
         }
     }
@@ -335,17 +147,6 @@ internal static class Types
         return $"{access} {typeKeyword} {typeName}";
     }
 
-    internal static bool Inherits(ITypeSymbol type, string parent)
-    {
-        foreach (var baseType in GetBaseTypes(type))
-        {
-            if (baseType.ToDisplayString() == parent)
-                return true;
-        }
-
-        return false;
-    }
-
     internal static bool ImplementsInterface(ITypeSymbol type, string interfaceName, List<INamedTypeSymbol> symbols)
     {
         symbols.Clear();
@@ -389,48 +190,49 @@ internal static class Types
         return false;
     }
 
-    internal static bool NeedsEmptyConstructor(ITypeSymbol type, out IMethodSymbol? shortestMandatoryConstructor)
+    internal static (bool NeedsEmpty, IMethodSymbol? MustCall) NeedsEmptyConstructor(ITypeSymbol type)
     {
-        shortestMandatoryConstructor = null;
         if (type is not INamedTypeSymbol named)
-            return false;
+            return (false, null);
 
-        if (named.InstanceConstructors.Length == 0 || named.InstanceConstructors.All(c => c.IsImplicitlyDeclared))
-            return true;
-
-        var mandatoryThisCall = false;
-        foreach (var constructor in named.InstanceConstructors)
+        if (named.InstanceConstructors.Length == 0 ||
+            named.InstanceConstructors.All(c => c.IsImplicitlyDeclared))
         {
-            if (constructor.Parameters.Length == 0 &&
-                !constructor.IsImplicitlyDeclared)
-            {
-                return false;
-            }
-
-            // Record with no user-declared constructor
-            if (type.IsRecord &&
-                constructor.Parameters.Length == 1 &&
-                constructor.IsImplicitlyDeclared &&
-                named.InstanceConstructors.All(c => c.IsImplicitlyDeclared))
-            {
-                return false;
-            }
-
-            if (!constructor.IsImplicitlyDeclared &&
-                (shortestMandatoryConstructor == null ||
-                shortestMandatoryConstructor.Parameters.Length > constructor.Parameters.Length))
-            {
-                shortestMandatoryConstructor = constructor;
-            }
-
-            if (constructor is { IsImplicitlyDeclared: true, Parameters.Length: > 0 })
-                mandatoryThisCall = true;
+            return (true, null);
         }
 
-        if (!mandatoryThisCall)
-            shortestMandatoryConstructor = null;
+        var needsEmpty = true;
+        IMethodSymbol? mustCall = null;
+        foreach (var constructor in named.InstanceConstructors)
+        {
+            if (constructor.IsImplicitlyDeclared)
+                continue;
 
-        return true;
+            if (constructor.Parameters.Length == 0)
+                needsEmpty = false;
+
+            if (mustCall != null)
+                continue;
+
+            // Is there a better way to find a primary constructor? I don't know! The docs don't tell you!
+            // Neither does Google, because all the results are useless SEO-optimized AI garbage!
+            // I don't think you can even access the underlying symbol directly! Hooray!
+            // So we get the syntax's nodes and find out
+            foreach (var syntax in constructor.DeclaringSyntaxReferences)
+            {
+                var nodes = syntax.GetSyntax().DescendantNodesAndSelf().ToArray();
+                if (nodes.Length == 0 || nodes[0] is not TypeDeclarationSyntax)
+                    continue;
+
+                if (nodes.Any(n => n is ParameterListSyntax))
+                {
+                    mustCall = constructor;
+                    break;
+                }
+            }
+        }
+
+        return (needsEmpty, mustCall);
     }
 
     internal static bool IsVirtualClass(ITypeSymbol type)
@@ -517,9 +319,67 @@ internal static class Types
         }
     }
 
-    internal static string ToCamelCase(string name)
+    internal static string GetRequiredFieldsPropertiesAssigners(ITypeSymbol type, string accessor)
     {
-        var span = name.AsSpan();
-        return $"{char.ToLowerInvariant(span[0])}{span.Slice(1).ToString()}";
+        var requiredFields = new StringBuilder();
+        foreach (var member in GetRequiredFieldsProperties(type))
+        {
+            // Yes you can just set the field to itself to bypass the compiler's required check
+            // I don't know man
+            // Old dynamic method serialization did not change their values
+            // So we just do this
+            requiredFields.AppendLine($"{member.Name} = {accessor}{member.Name}!,");
+        }
+
+        if (requiredFields.Length > 0)
+        {
+            requiredFields.Insert(0, '{');
+            requiredFields.Append('}');
+        }
+
+        return requiredFields.ToString();
+    }
+
+    internal static string GetSetsRequiredAttributeOrEmpty(ITypeSymbol type)
+    {
+        var setsRequired = string.Empty;
+        if (GetRequiredFieldsProperties(type).Any())
+            setsRequired = "[SetsRequiredMembers]";
+
+        return setsRequired;
+    }
+
+    internal static ITypeSymbol? GetFirstDataDefinitionBaseType(ITypeSymbol type)
+    {
+        var parent = type;
+        while ((parent = parent.BaseType) != null)
+        {
+            if (IsDataDefinition(parent, out _))
+                return parent;
+        }
+
+        return null;
+    }
+
+    internal static IEnumerable<(ISymbol Field, ITypeSymbol Type, DataFieldAttribute Attribute)> GetAllDataFields(ITypeSymbol? definition, bool isDataRecord)
+    {
+        while (definition != null)
+        {
+            foreach (var member in definition.GetMembers())
+            {
+                if (member is not IFieldSymbol && member is not IPropertySymbol)
+                    continue;
+
+                if (member.IsStatic)
+                    continue;
+
+                if (!IsDataField(member, isDataRecord, out var type, out var attribute))
+                    continue;
+
+                yield return (member, type, attribute);
+            }
+
+            definition = definition.BaseType;
+        }
     }
 }

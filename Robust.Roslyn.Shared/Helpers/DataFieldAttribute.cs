@@ -1,9 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace Robust.Serialization.Generator;
+namespace Robust.Roslyn.Shared.Helpers;
 
 public sealed record DataFieldAttribute(
-    AttributeData Data,
+    AttributeData? Data,
     string Tag,
     bool ReadOnly,
     int Priority,

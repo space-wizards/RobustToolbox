@@ -236,13 +236,15 @@ internal static class HappyEyeballsHttp
         cancel.ThrowIfCancellationRequested();
         await successCts.CancelAsync().ConfigureAwait(false);
 
-        try
-        {
-            await Task.WhenAll(allTasks.Where(t => t != successTask)).ConfigureAwait(false);
-        }
-        catch
-        {
-        }
+        await Task.WhenAll(  
+            allTasks  
+                .Where(t => t != successTask)  
+                .Select(static t => t.ContinueWith(  
+                    static _ => { },  
+                    CancellationToken.None,  
+                    TaskContinuationOptions.ExecuteSynchronously,  
+                    TaskScheduler.Default)))  
+            .ConfigureAwait(false);
 
         if (successTask == null)
         {

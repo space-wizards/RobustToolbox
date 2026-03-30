@@ -25,12 +25,20 @@ public partial class TestPair<TServer, TClient>
             if (ServerLogHandler.FailingLogs.Count == 1)
                 Assert.Fail(ServerLogHandler.FailingLogs[0]);
             else if (ServerLogHandler.FailingLogs.Count > 1)
+            {
                 Assert.Fail("Server had multiple failing logs reported, consult the game log.");
+                foreach (var log in ServerLogHandler.FailingLogs)
+                    Assert.Fail(log);
+            }
 
             if (ClientLogHandler.FailingLogs.Count == 1)
                 Assert.Fail(ClientLogHandler.FailingLogs[0]);
             else if (ClientLogHandler.FailingLogs.Count > 1)
+            {
                 Assert.Fail("Client had multiple failing logs reported, consult the game log.");
+                foreach (var log in ClientLogHandler.FailingLogs)
+                    Assert.Fail(log);
+            }
         }
     }
 

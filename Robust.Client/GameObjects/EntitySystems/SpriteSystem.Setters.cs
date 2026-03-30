@@ -91,12 +91,17 @@ public sealed partial class SpriteSystem
         sprite.Comp.color = value;
     }
 
+    public void SetBaseRsi(Entity<SpriteComponent?> sprite, RSI? value)
+    {
+        SetBaseRsi(sprite, value, true);
+    }
+
     /// <summary>
     /// Modify a sprites base RSI. This is the RSI that is used by any RSI layers that do not specify their own.
     /// Note that changing the base RSI may result in existing layers having an invalid state. This will not log errors
     /// under the assumption that the states of each layers will be updated after the base RSI has changed.
     /// </summary>
-    public void SetBaseRsi(Entity<SpriteComponent?> sprite, RSI? value)
+    public void SetBaseRsi(Entity<SpriteComponent?> sprite, RSI? value, bool logMissing)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return;
@@ -123,7 +128,8 @@ public sealed partial class SpriteSystem
             }
             else
             {
-                Log.Error($"Layer {i} no longer has state '{layer.State}' due to base RSI change. Trace:\n{Environment.StackTrace}");
+                if (logMissing)
+                    Log.Error($"Layer {i} no longer has state '{layer.State}' due to base RSI change. Trace:\n{Environment.StackTrace}");
                 layer.Texture = null;
             }
         }

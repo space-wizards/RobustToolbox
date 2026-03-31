@@ -129,7 +129,12 @@ namespace Robust.Server.Console
                 else
                 {
                     // toolshed time
-                    _toolshed.InvokeCommand(shell, command, null, out var res, out var ctx);
+                    args.RemoveAt(0);
+                    var cmdArgs = args.ToArray();
+                    var success = _toolshed.InvokeCommand(shell, command, null, out var res, out var ctx);
+
+                    if (success)
+                        AnyCommandExecuted?.Invoke(shell, cmdName, command, cmdArgs);
 
                     bool anyErrors = false;
                     foreach (var err in ctx.GetErrors())

@@ -36,7 +36,7 @@ public partial class EntityManager
             entries[i] = new(_entTraitDict[entry.Item1], entry.Item2);
         }
 
-        return new DynamicEntityQuery(entries, _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()]);
+        return new DynamicEntityQuery(this, entries, _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()]);
     }
 
     public EntityQuery<TComp1, TComp2> GetEntityQuery<TComp1, TComp2>()

@@ -393,6 +393,7 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
     public struct Enumerator : IEnumerator<Entity<TComp1>>
     {
         private readonly EntityQuery<TComp1> _query;
+        private readonly long _version;
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDictEnumerator;
 
         /// <inheritdoc cref="P:Robust.Shared.GameObjects.EntityQuery`1.Enumerator.System#Collections#Generic#IEnumerator{Robust#Shared#GameObjects#Entity{TComp1}}#Current"/>
@@ -401,11 +402,15 @@ public readonly struct EntityQuery<TComp1> : IEnumerable<Entity<TComp1>>
         internal Enumerator(EntityQuery<TComp1> query)
         {
             _query = query;
+            _version = query._entMan.Version;
             Reset();
         }
 
         public bool MoveNext()
         {
+            if (_version != _query._entMan.Version)
+                ThrowHelpers.ThrowECSVersionMismatch();
+
             // Loop until we find something that matches, or run out of entities.
             while (true)
             {

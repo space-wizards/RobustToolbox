@@ -67,6 +67,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void ClearComponents()
         {
+            IncrementVersion();
             _entCompIndex.Clear();
             _deleteSet.Clear();
             foreach (var dict in _entTraitDict.Values)
@@ -348,6 +349,7 @@ namespace Robust.Shared.GameObjects
         private void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool overwrite, bool skipInit, MetaDataComponent metadata) where T : IComponent
         {
             ThreadCheck();
+            IncrementVersion();
 
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
@@ -634,6 +636,7 @@ namespace Robust.Shared.GameObjects
             MetaDataComponent? meta)
         {
             ThreadCheck();
+            IncrementVersion();
             DebugTools.AssertOwner(uid, component);
 
             if (component.LifeStage == ComponentLifeStage.PreAdd)
@@ -678,6 +681,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void CullRemovedComponents()
         {
+            IncrementVersion();
             foreach (var component in InSafeOrder(_deleteSet))
             {
                 if (component.Deleted)
@@ -724,6 +728,9 @@ namespace Robust.Shared.GameObjects
         {
             if (!MetaQuery.ResolveInternal(entityUid, ref metadata))
                 return;
+
+            ThreadCheck();
+            IncrementVersion();
 
             var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, entityUid), false, metadata, idx);
             ComponentRemoved?.Invoke(eventArgs);

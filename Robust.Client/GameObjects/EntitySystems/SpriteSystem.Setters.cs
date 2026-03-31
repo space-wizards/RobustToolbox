@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
@@ -132,6 +133,16 @@ public sealed partial class SpriteSystem
                     Log.Error($"Layer {i} no longer has state '{layer.State}' due to base RSI change. Trace:\n{Environment.StackTrace}");
                 layer.Texture = null;
             }
+        }
+    }
+
+    public void SetBaseRsiWithLayers(Entity<SpriteComponent?> sprite, RSI? path, ref Dictionary<Enum, string> layers)
+    {
+        SetBaseRsi(sprite, path, false);
+
+        foreach(var (layer, value) in layers)
+        {
+            LayerSetRsiState(sprite, layer, value);
         }
     }
 

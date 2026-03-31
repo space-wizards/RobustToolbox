@@ -1378,6 +1378,10 @@ namespace Robust.Shared.Physics
 
         public void Query(Box2 aabb, uint maskBits, TreeQueryCallback callback)
         {
+            if (!float.IsFinite(aabb.Left) || !float.IsFinite(aabb.Bottom) ||
+                !float.IsFinite(aabb.Right) || !float.IsFinite(aabb.Top))
+                return;
+
             var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
             stack.Push(_root);
             ref var baseRef = ref _nodes[0];
@@ -1991,6 +1995,10 @@ namespace Robust.Shared.Physics
 
         public void Query<TState>(ref TState state, QueryCallback<TState> callback, in Box2 aabb)
         {
+            if (!float.IsFinite(aabb.Left) || !float.IsFinite(aabb.Bottom) ||
+                !float.IsFinite(aabb.Right) || !float.IsFinite(aabb.Top))
+                return;
+
             var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
             stack.Push(_root);
 
@@ -2028,6 +2036,10 @@ namespace Robust.Shared.Physics
 
         public void FastQuery(ref Box2 aabb, FastQueryCallback callback)
         {
+            if (!float.IsFinite(aabb.Left) || !float.IsFinite(aabb.Bottom) ||
+                !float.IsFinite(aabb.Right) || !float.IsFinite(aabb.Top))
+                return;
+
             var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
             stack.Push(_root);
 

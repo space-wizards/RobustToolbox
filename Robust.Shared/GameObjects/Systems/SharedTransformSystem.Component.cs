@@ -1,8 +1,3 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
@@ -11,6 +6,12 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.GameObjects;
 
@@ -704,10 +705,23 @@ public abstract partial class SharedTransformSystem
         ent.Comp1.MapUid = newMap;
         ent.Comp1.MapID = newMapId;
 
+        List<EntityUid>? invalidChildren = null;
         foreach (var uid in ent.Comp1._children)
         {
-            var child = new Entity<TransformComponent, MetaDataComponent>(uid, Transform(uid), MetaData(uid));
+            if (!XformQuery.TryGetComponent(uid, out var childXform) || !_metaQuery.TryGetComponent(uid, out var childMeta))
+            {
+                Log.Error($"ChangeMapIdRecursive: child entity {uid} of {ent.Owner} is missing TransformComponent or MetaDataComponent. Removing from children.");
+                invalidChildren ??= new List<EntityUid>();
+                invalidChildren.Add(uid);
+                continue;
+            }
+            var child = new Entity<TransformComponent, MetaDataComponent>(uid, childXform, childMeta);
             ChangeMapIdRecursive(child, newMap, newMapId, paused);
+        }
+        if (invalidChildren != null)
+        {
+            foreach (var uid in invalidChildren)
+                ent.Comp1._children.Remove(uid);
         }
     }
 

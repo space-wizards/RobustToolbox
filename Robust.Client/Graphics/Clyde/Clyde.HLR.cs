@@ -163,7 +163,8 @@ namespace Robust.Client.Graphics.Clyde
             }
             catch (Exception e)
             {
-                _logManager.GetSawmill("clyde.overlay").Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+                _logManager.GetSawmill("clyde.overlay")
+                    .Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
             }
         }
 
@@ -227,7 +228,16 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (Exception e)
                 {
-                    _logManager.GetSawmill("clyde.overlay").Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+                    _logManager.GetSawmill("clyde.overlay")
+                        .Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+                }
+                finally
+                {
+                    // cleanup state so shaders/transforms dont leak into future overlays
+                    // many overlays already do cleanup manually, but ideally they don't have to at all
+                    // screen and world handles are backed by the same renderhandle, so we only need to do this for one
+                    handle.DrawingHandleScreen.SetTransform(Matrix3x2.Identity);
+                    handle.DrawingHandleScreen.UseShader(null);
                 }
             }
         }

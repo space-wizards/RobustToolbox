@@ -166,6 +166,13 @@ namespace Robust.Client.Graphics.Clyde
                 _logManager.GetSawmill("clyde.overlay")
                     .Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
             }
+            finally
+            {
+                // cleanup state so shaders/transforms dont leak into future overlays
+                // many overlays already do cleanup manually, but ideally they don't have to at all
+                _renderHandle.SetModelTransform(Matrix3x2.Identity);
+                _renderHandle.UseShader(null);
+            }
         }
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)

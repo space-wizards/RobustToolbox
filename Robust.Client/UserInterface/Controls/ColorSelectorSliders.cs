@@ -163,10 +163,10 @@ public sealed class ColorSelectorSliders : Control
         _middleInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Middle); };
         _bottomInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Bottom); };
         _alphaInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Alpha); };
-        _hexInputEdit.OnTextEntered += value => { OnHexInputValueChanged(value); };
+        _hexInputEdit.OnTextEntered += OnHexInputValueChanged;
         // The above triggers ONLY when the Enter key is pressed, which can be a bit unintuitive
         // when making changes to multiple colors (e.g. editing markings)
-        _hexInputEdit.OnFocusExit += value => { OnHexInputValueChanged(value); };
+        _hexInputEdit.OnFocusExit += OnHexInputValueChanged;
 
         _alphaSliderLabel.Text = Loc.GetString("color-selector-sliders-alpha");
         _hexInputLabel.Text = Loc.GetString("color-selector-input-hex");
@@ -359,7 +359,14 @@ public sealed class ColorSelectorSliders : Control
 
     private void OnHexInputValueChanged(LineEdit.LineEditEventArgs args)
     {
+        var currentAlpha = _currentColor.A;
         _currentColor = Color.FromHex(args.Text, _currentColor);
+        // If alpha is not meant to be edited, don't allow hex codes to change it
+        if (!IsAlphaVisible)
+        {
+            _currentColor.A = currentAlpha;
+        }
+
         _colorData = GetStrategy().ToColorData(_currentColor);
         OnColorChanged?.Invoke(_currentColor);
 

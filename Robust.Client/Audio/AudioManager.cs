@@ -67,7 +67,8 @@ internal sealed partial class AudioManager : IAudioInternal
                 attributeList =
                 [
                     (int) AlcSoftGetInteger.Hrtf, 1,
-                    // default to the first specifier,
+                    // default to the first specifier, im not even really sure in what contexts more than one of these
+                    // exists and i dont think its super valuable to expose another cvar for changing the index
                     (int) AlcSoftGetInteger.HrtfId, 0,
                     0
                 ];

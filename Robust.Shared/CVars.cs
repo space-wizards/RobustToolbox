@@ -1282,7 +1282,7 @@ namespace Robust.Shared
         /// Whether to enable HRTF (head-related transfer function) support for positional audio.
         /// </summary>
         /// <remarks>
-        /// This CVar being true isn't necessarily enough to actually use HRTF. Your engine ver must be using openal-soft,
+        /// This CVar being true isn't necessarily enough to actually use HRTF. Your platform must be using openal-soft,
         /// and your device needs to actually support it (although it almost certainly does).
         /// </remarks>
         public static readonly CVarDef<bool> AudioHrtf =

@@ -30,6 +30,9 @@ public sealed class ViewVariablesWriteCommand : ViewVariablesBaseCommand
             path = path[2..];
         }
 
+        if (shell.Player is { } player)
+            _vvm.SetWritePathCaller(player.UserId);
+
         _vvm.WritePath(path, value);
     }
 }

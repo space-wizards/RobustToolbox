@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Robust.Server.Console;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
@@ -34,6 +35,8 @@ namespace Robust.Server.ViewVariables
         private readonly Dictionary<NetUserId, List<uint>> _users = new();
 
         private uint _nextSessionId = 1;
+
+        public override event VVPropertyModifiedHandler? PropertyModified;
 
         public override void Initialize()
         {
@@ -95,11 +98,135 @@ namespace Robust.Server.ViewVariables
                     return;
                 }
 
+                var memberName = string.Empty;
+                object? oldValue = null;
+
+                if (PropertyModified != null)
+                    ResolveMemberContext(session, message.PropertyIndex, out memberName, out oldValue);
+
                 session.Modify(message.PropertyIndex, value);
+
+                if (!string.IsNullOrEmpty(memberName))
+                    PropertyModified?.Invoke(session.PlayerUser, session.Object, memberName, oldValue, value);
             }
             catch (ArgumentOutOfRangeException)
             {
             }
+        }
+
+        private static void ResolveMemberContext(
+            ViewVariablesSession session,
+            object[] propertyIndex,
+            out string memberName,
+            out object? oldValue)
+        {
+            memberName = string.Empty;
+            oldValue = null;
+
+            if (propertyIndex.Length == 0 || propertyIndex[0] is not ViewVariablesMemberSelector selector)
+                return;
+
+            var members = new List<MemberInfo>();
+            var objType = session.ObjectType;
+
+            foreach (var prop in objType.GetAllProperties())
+            {
+                if (!ViewVariablesUtility.TryGetViewVariablesAccess(prop, out _))
+                    continue;
+                if (!prop.IsBasePropertyDefinition())
+                    continue;
+                members.Add(prop);
+            }
+
+            foreach (var field in objType.GetAllFields())
+            {
+                if (!ViewVariablesUtility.TryGetViewVariablesAccess(field, out _))
+                    continue;
+                members.Add(field);
+            }
+
+            if (selector.Index >= members.Count)
+                return;
+
+            var member = members[selector.Index];
+            memberName = member.Name;
+
+            try
+            {
+                oldValue = member switch
+                {
+                    PropertyInfo prop => prop.GetValue(session.Object),
+                    FieldInfo field => field.GetValue(session.Object),
+                    _ => null
+                };
+            }
+            catch
+            {
+                //if we fail
+            }
+        }
+
+        private NetUserId? _lastWritePathCaller;
+
+        public override void SetWritePathCaller(NetUserId userId)
+        {
+            _lastWritePathCaller = userId;
+        }
+
+        public override void WritePath(string path, string value)
+        {
+            var resPath = ResolvePath(path);
+            if (resPath == null)
+                return;
+
+            object? oldValue = null;
+            try
+            {
+                oldValue = resPath.Get();
+            }
+            catch
+            {
+                //if we fail
+            }
+
+            var memberName = path;
+            var segments = path.Split('/');
+            if (segments.Length >= 2)
+                memberName = $"{segments[^2]}.{segments[^1]}";
+
+            object? parentObj = null;
+            if (segments.Length >= 3)
+            {
+                var parentPath = string.Join('/', segments[..^1]);
+                try
+                {
+                    var parent = ResolvePath(parentPath);
+                    parentObj = parent?.Get();
+                }
+                catch
+                {
+                    //if we fail
+                }
+            }
+
+            parentObj ??= resPath;
+
+            base.WritePath(path, value);
+
+            object? newValue = null;
+            try
+            {
+                newValue = resPath.Get();
+            }
+            catch
+            {
+                newValue = value;
+            }
+
+            var caller = _lastWritePathCaller ?? default;
+            _lastWritePathCaller = null;
+
+            PropertyModified?.Invoke(caller, parentObj, memberName, oldValue, newValue);
         }
 
         private void _msgReqData(MsgViewVariablesReqData message)

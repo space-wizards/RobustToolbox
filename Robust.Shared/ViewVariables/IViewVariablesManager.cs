@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Network;
 using Robust.Shared.Player;
 
 namespace Robust.Shared.ViewVariables;
@@ -63,4 +64,10 @@ public interface IViewVariablesManager
     Task WriteRemotePath(string path, string value, ICommonSession? session = null);
     Task<string?> InvokeRemotePath(string path, string arguments, ICommonSession? session = null);
     Task<IEnumerable<string>> ListRemotePath(string path, VVListPathOptions options, ICommonSession? session = null);
+
+    event VVPropertyModifiedHandler? PropertyModified;
+
+    void SetWritePathCaller(NetUserId userId);
 }
+
+public delegate void VVPropertyModifiedHandler(NetUserId userId, object target, string memberName, object? oldValue, object? newValue);

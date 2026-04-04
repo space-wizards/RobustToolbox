@@ -104,6 +104,7 @@ namespace Robust.Client
             deps.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
             deps.Register<ILightManager, LightManager>();
             deps.Register<IDiscordRichPresence, DiscordRichPresence>();
+            deps.Register<IPiShockManager, PiShockManager>();
             deps.Register<IMidiManager, MidiManager>();
             deps.Register<IAuthManager, AuthManager>();
             deps.Register<ProfViewManager>();

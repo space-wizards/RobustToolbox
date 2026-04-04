@@ -1497,6 +1497,33 @@ namespace Robust.Shared
             CVarDef.Create("discord.rich_second_icon_id", "logo", CVar.SERVER | CVar.REPLICATED);
 
         /*
+         * PISHOCK
+         */
+
+        /// <summary>
+        /// Enable FUN
+        /// </summary>
+        public static readonly CVarDef<bool> PiShockEnabled =
+            CVarDef.Create("pishock.enabled", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<string> PiShockUsername =
+            CVarDef.Create("pishock.username", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<string> PiShockApiKey =
+            CVarDef.Create("pishock.api_key", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE | CVar.CONFIDENTIAL);
+
+        public static readonly CVarDef<string> PiShockShareCode =
+            CVarDef.Create("pishock.share_code", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE | CVar.CONFIDENTIAL);
+
+        // Clamped onto every operation as a safety cap.
+        public static readonly CVarDef<int> PiShockMaxIntensity =
+            CVarDef.Create("pishock.max_intensity", 50, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        // Clamped onto every operation as a safety cap.
+        public static readonly CVarDef<int> PiShockMaxDuration =
+            CVarDef.Create("pishock.max_duration", 5, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /*
          * RES
          */
 

@@ -77,9 +77,12 @@ internal sealed class PiShockManager : IPiShockManager, IPostInjectInit
 
             using var content = new StringContent(payload, Encoding.UTF8, "application/json");
             var response = await _http.Client.PostAsync(ApiUrl, content);
+            var body = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
-                _sawmill.Warning($"piShock API returned {(int) response.StatusCode} {response.StatusCode}.");
+                _sawmill.Warning($"piShock API returned HTTP {(int) response.StatusCode}: {body}");
+            else if (body != "Operation Successful.")
+                _sawmill.Warning($"piShock API: {body}");
         }
         catch (Exception ex)
         {

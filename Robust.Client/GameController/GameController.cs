@@ -76,6 +76,7 @@ namespace Robust.Client
         [Dependency] private readonly ITaskManager _taskManager = default!;
         [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariablesManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
+        [Dependency] private readonly IPiShockManager _piShock = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IAudioInternal _audio = default!;
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
@@ -148,7 +149,7 @@ namespace Robust.Client
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
-            _loadscr.Initialize(42);
+            _loadscr.Initialize(43);
 
             _loadscr.BeginLoadingSection("Init graphics", dontRender: true);
             _clyde.InitializePostWindowing();
@@ -243,6 +244,7 @@ namespace Robust.Client
             _loadscr.LoadingStep(_scriptClient.Initialize, _scriptClient);
             _loadscr.LoadingStep(_client.Initialize, _client);
             _loadscr.LoadingStep(_discord.Initialize, _discord);
+            _loadscr.LoadingStep(_piShock.Initialize, _piShock);
             _loadscr.LoadingStep(_tagManager.Initialize, _tagManager);
             _loadscr.LoadingStep(_protoLoadMan.Initialize, _protoLoadMan);
             _loadscr.LoadingStep(_netResMan.Initialize, _netResMan);

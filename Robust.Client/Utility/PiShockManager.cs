@@ -11,7 +11,7 @@ using Robust.Shared.Network;
 
 namespace Robust.Client.Utility;
 
-internal sealed class PiShockManager : IPiShockManager, IPostInjectInit
+internal sealed class PiShockManager : IPiShockManager
 {
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly HttpClientHolder _http = default!;
@@ -29,7 +29,7 @@ internal sealed class PiShockManager : IPiShockManager, IPostInjectInit
     private const string ApiUrl = "https://do.pishock.com/api/apioperate";
     private const string AppName = "RobustToolbox";
 
-    public void PostInject()
+    public void Initialize()
     {
         _sawmill = _logManager.GetSawmill("pishock");
 

@@ -3,6 +3,8 @@ namespace Robust.Client.Utility;
 [NotContentImplementable]
 public interface IPiShockManager
 {
+    void Initialize();
+
     /// <summary>
     /// Send an operation to the configured piShock device.
     /// Does nothing if piShock is disabled or credentials are not set.

@@ -19,36 +19,43 @@ internal sealed class PiShockManager : IPiShockManager, IPostInjectInit
 
     private ISawmill _sawmill = default!;
 
+    private bool _enabled;
+    private string _username = string.Empty;
+    private string _apiKey = string.Empty;
+    private string _shareCode = string.Empty;
+    private int _maxIntensity;
+    private int _maxDuration;
+
     private const string ApiUrl = "https://do.pishock.com/api/apioperate";
     private const string AppName = "RobustToolbox";
 
     public void PostInject()
     {
         _sawmill = _logManager.GetSawmill("pishock");
+
+        _cfg.OnValueChanged(CVars.PiShockEnabled, v => _enabled = v, invokeImmediately: true);
+        _cfg.OnValueChanged(CVars.PiShockUsername, v => _username = v, invokeImmediately: true);
+        _cfg.OnValueChanged(CVars.PiShockApiKey, v => _apiKey = v, invokeImmediately: true);
+        _cfg.OnValueChanged(CVars.PiShockShareCode, v => _shareCode = v, invokeImmediately: true);
+        _cfg.OnValueChanged(CVars.PiShockMaxIntensity, v => _maxIntensity = Math.Clamp(v, 1, 100), invokeImmediately: true);
+        _cfg.OnValueChanged(CVars.PiShockMaxDuration, v => _maxDuration = Math.Clamp(v, 1, 15), invokeImmediately: true);
     }
 
     public void TryOperate(PiShockOp op, int intensity, int duration)
     {
-        if (!_cfg.GetCVar(CVars.PiShockEnabled))
+        if (!_enabled)
             return;
 
-        var username = _cfg.GetCVar(CVars.PiShockUsername);
-        var apiKey = _cfg.GetCVar(CVars.PiShockApiKey);
-        var shareCode = _cfg.GetCVar(CVars.PiShockShareCode);
-
-        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(shareCode))
+        if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_apiKey) || string.IsNullOrEmpty(_shareCode))
         {
             _sawmill.Warning("piShock is enabled but credentials are not fully configured.");
             return;
         }
 
-        var maxIntensity = Math.Clamp(_cfg.GetCVar(CVars.PiShockMaxIntensity), 1, 100);
-        var maxDuration = Math.Clamp(_cfg.GetCVar(CVars.PiShockMaxDuration), 1, 15);
+        intensity = Math.Clamp(intensity, 1, _maxIntensity);
+        duration = Math.Clamp(duration, 1, _maxDuration);
 
-        intensity = Math.Clamp(intensity, 1, maxIntensity);
-        duration = Math.Clamp(duration, 1, maxDuration);
-
-        _ = PostOperationAsync(username, apiKey, shareCode, op, intensity, duration);
+        _ = PostOperationAsync(_username, _apiKey, _shareCode, op, intensity, duration);
     }
 
     private async Task PostOperationAsync(

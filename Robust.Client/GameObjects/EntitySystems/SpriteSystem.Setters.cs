@@ -101,7 +101,7 @@ public sealed partial class SpriteSystem
     /// Modify a sprites base RSI. This is the RSI that is used by any RSI layers that do not specify their own.
     /// Note that changing the base RSI may result in existing layers having an invalid state.
     /// </summary>
-    public void SetBaseRsi(Entity<SpriteComponent?> sprite, RSI? value, bool logMissing)
+    private void SetBaseRsi(Entity<SpriteComponent?> sprite, RSI? value, bool logMissing)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return;

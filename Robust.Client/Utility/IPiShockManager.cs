@@ -1,3 +1,5 @@
+using System;
+
 namespace Robust.Client.Utility;
 
 [NotContentImplementable]
@@ -5,14 +7,10 @@ public interface IPiShockManager
 {
     void Initialize();
 
-    /// <summary>
-    /// Send an operation to the configured piShock device.
-    /// Does nothing if piShock is disabled or credentials are not set.
-    /// </summary>
     /// <remarks>
-    /// Intensity and duration are clamped to the configured safety caps.
+    /// op, intensity (1–100), duration (1–15 seconds).
     /// </remarks>
-    void TryOperate(PiShockOp op, int intensity, int duration);
+    Action<PiShockOp, int, int> Operate { get; }
 }
 
 public enum PiShockOp

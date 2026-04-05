@@ -8,6 +8,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Utility;
 
@@ -16,6 +17,7 @@ internal sealed class PiShockManager : IPiShockManager
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly HttpClientHolder _http = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
+    [Dependency] private readonly IGameTiming _timing = default!;
 
     private ISawmill _sawmill = default!;
 
@@ -25,9 +27,21 @@ internal sealed class PiShockManager : IPiShockManager
     private string _shareCode = string.Empty;
     private int _maxIntensity;
     private int _maxDuration;
+    private float _cooldown;
+
+    private TimeSpan _lastOperationTime = TimeSpan.MinValue;
+
+    private const float MinCooldown = 1.0f;
 
     private const string ApiUrl = "https://do.pishock.com/api/apioperate";
     private const string AppName = "RobustToolbox";
+
+    public Action<PiShockOp, int, int> Operate { get; }
+
+    public PiShockManager()
+    {
+        Operate = DoOperate;
+    }
 
     public void Initialize()
     {
@@ -39,9 +53,10 @@ internal sealed class PiShockManager : IPiShockManager
         _cfg.OnValueChanged(CVars.PiShockShareCode, v => _shareCode = v, invokeImmediately: true);
         _cfg.OnValueChanged(CVars.PiShockMaxIntensity, v => _maxIntensity = Math.Clamp(v, 1, 100), invokeImmediately: true);
         _cfg.OnValueChanged(CVars.PiShockMaxDuration, v => _maxDuration = Math.Clamp(v, 1, 15), invokeImmediately: true);
+        _cfg.OnValueChanged(CVars.PiShockCooldown, v => _cooldown = Math.Max(v, MinCooldown), invokeImmediately: true);
     }
 
-    public void TryOperate(PiShockOp op, int intensity, int duration)
+    private void DoOperate(PiShockOp op, int intensity, int duration)
     {
         if (!_enabled)
             return;
@@ -52,13 +67,19 @@ internal sealed class PiShockManager : IPiShockManager
             return;
         }
 
+        var now = _timing.RealTime;
+        if ((now - _lastOperationTime).TotalSeconds < _cooldown)
+            return;
+
+        _lastOperationTime = now;
+
         intensity = Math.Clamp(intensity, 1, _maxIntensity);
         duration = Math.Clamp(duration, 1, _maxDuration);
 
-        _ = PostOperationAsync(_username, _apiKey, _shareCode, op, intensity, duration);
+        _ = PostAsync(_username, _apiKey, _shareCode, op, intensity, duration);
     }
 
-    private async Task PostOperationAsync(
+    private async Task PostAsync(
         string username, string apiKey, string shareCode,
         PiShockOp op, int intensity, int duration)
     {

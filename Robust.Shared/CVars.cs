@@ -1523,6 +1523,10 @@ namespace Robust.Shared
         public static readonly CVarDef<int> PiShockMaxDuration =
             CVarDef.Create("pishock.max_duration", 5, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        // Minimum seconds between operations. Engine enforces a floor of 1s regardless of this value.
+        public static readonly CVarDef<float> PiShockCooldown =
+            CVarDef.Create("pishock.cooldown", 2.0f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         /*
          * RES
          */

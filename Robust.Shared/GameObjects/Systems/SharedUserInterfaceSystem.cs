@@ -536,7 +536,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // states. E.g., stripping UI used to throw NREs in some instances while fetching the identity of unknown
         // entities.
         var type = _reflection.LooseGetType(data.ClientType);
-        var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
+        var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key], inject: false);
         entity.Comp.ClientOpenInterfaces[key] = boundUserInterface;
 
         // This is just so we don't open while applying UI states.

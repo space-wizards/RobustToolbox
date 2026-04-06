@@ -61,7 +61,7 @@ public sealed partial class SpriteSystem
         var entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, sprite.Comp.NoRotation ? -eyeRotation : worldRotation - cardinal);
         var spriteMatrix = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
 
-        Dictionary<LayerRenderingStrategy, Matrix3x2> renderingStrategies = new() { { LayerRenderingStrategy.UseSpriteStrategy, spriteMatrix } };
+        LayerRenderingStrategyMatrices renderingStrategies = new() { UseSpriteStrategy = spriteMatrix };
 
         // Fast path for when all sprites use the same transform matrix
         if (!sprite.Comp.GranularLayersRendering)
@@ -73,24 +73,26 @@ public sealed partial class SpriteSystem
         //Default rendering (NoRotation = false)
         entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation);
         var transformDefault = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
-        renderingStrategies.Add(LayerRenderingStrategy.Default, transformDefault);
+        renderingStrategies.Default = transformDefault;
 
         //Snap to cardinals
         entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation - angle.RoundToCardinalAngle());
         var transformSnap = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
-        renderingStrategies.Add(LayerRenderingStrategy.SnapToCardinals, transformSnap);
+        renderingStrategies.SnapToCardinals = transformSnap;
 
         //No rotation
         entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, -eyeRotation);
         var transformNoRot = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
-        renderingStrategies.Add(LayerRenderingStrategy.NoRotation, transformNoRot);
+        renderingStrategies.NoRotation = transformNoRot;
+
+        RenderLayersWithOverride(sprite, drawingHandle, ref renderingStrategies, angle, overrideDirection);
     }
 
     /// <summary>
     /// Pre-step before rendering a sprite's layers, ensuring the order is overriden if <see cref="SpriteComponent.LayersOrderOverride"/> is set.
     /// Layers with parents are skipped here, as they are assumed to be rendered as child layers instead.
     /// </summary>
-    private void RenderLayersWithOverride(Entity<SpriteComponent> sprite, DrawingHandleWorld drawingHandle, ref Dictionary<LayerRenderingStrategy, Matrix3x2> matrices, Angle angle, Direction? overrideDirection)
+    private void RenderLayersWithOverride(Entity<SpriteComponent> sprite, DrawingHandleWorld drawingHandle, ref LayerRenderingStrategyMatrices matrices, Angle angle, Direction? overrideDirection)
     {
         if (sprite.Comp.LayersOrderOverride != null)
         {
@@ -141,24 +143,24 @@ public sealed partial class SpriteSystem
     /// <summary>
     /// Pre-step before rendering a sprite's layer, first rendering the given layer using the set rendering strategy and then recursively rendering any child layers after.
     /// </summary>
-    private void RenderLayerWithChildren(Entity<SpriteComponent> sprite, Layer layer, DrawingHandleWorld drawingHandle, ref Dictionary<LayerRenderingStrategy, Matrix3x2> matrices, Angle angle, Direction? overrideDirection)
+    private void RenderLayerWithChildren(Entity<SpriteComponent> sprite, Layer layer, DrawingHandleWorld drawingHandle, ref LayerRenderingStrategyMatrices matrices, Angle angle, Direction? overrideDirection)
     {
         if (sprite.Comp.GranularLayersRendering || layer.RenderingStrategy == LayerRenderingStrategy.UseSpriteStrategy)
         {
-            RenderLayer(layer, drawingHandle, matrices[LayerRenderingStrategy.UseSpriteStrategy], angle, overrideDirection);
+            RenderLayer(layer, drawingHandle, matrices.UseSpriteStrategy, angle, overrideDirection);
         }
         else
         {
             switch (layer.RenderingStrategy)
             {
                 case LayerRenderingStrategy.Default:
-                    RenderLayer(layer, drawingHandle, matrices[LayerRenderingStrategy.Default], angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, matrices.Default, angle, overrideDirection);
                     break;
                 case LayerRenderingStrategy.NoRotation:
-                    RenderLayer(layer, drawingHandle, matrices[LayerRenderingStrategy.NoRotation], angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, matrices.NoRotation, angle, overrideDirection);
                     break;
                 case LayerRenderingStrategy.SnapToCardinals:
-                    RenderLayer(layer, drawingHandle, matrices[LayerRenderingStrategy.SnapToCardinals], angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, matrices.SnapToCardinals, angle, overrideDirection);
                     break;
                 default:
                     Log.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
@@ -264,4 +266,15 @@ public sealed partial class SpriteSystem
         var uv = new Vector4(sr.Left, sr.Bottom, sr.Right, sr.Top);
         shader.SetParameter(paramUV, uv);
     }
+}
+
+/// <summary>
+/// Stores the rendering matrices used for a sprite's layers.
+/// </summary>
+public struct LayerRenderingStrategyMatrices
+{
+    public Matrix3x2 UseSpriteStrategy;
+    public Matrix3x2 Default;
+    public Matrix3x2 SnapToCardinals;
+    public Matrix3x2 NoRotation;
 }

@@ -236,7 +236,7 @@ namespace Robust.Client.GameObjects
         ///     Layers not included in the override will only be rendered if their index in the <see cref="Layers"/> List is positioned after the highest index in the override.
         /// </summary>
         [ViewVariables]
-        public LinkedList<int>? LayersOrderOverride;
+        public List<int>? LayersOrderOverride;
 
         [ViewVariables] internal Dictionary<object, int> LayerMap { get; set; } = new();
         [ViewVariables] internal List<Layer> Layers = new();

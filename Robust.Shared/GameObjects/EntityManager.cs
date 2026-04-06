@@ -30,7 +30,6 @@ namespace Robust.Shared.GameObjects
     public delegate void ComponentQueryCallback<T>(EntityUid uid, T component) where T : IComponent;
 
     /// <inheritdoc />
-    [Virtual]
     public abstract partial class EntityManager : IEntityManager
     {
         #region Dependencies
@@ -118,7 +117,7 @@ namespace Robust.Shared.GameObjects
         private SharedMapSystem _mapSystem = default!;
 
         private ISawmill _sawmill = default!;
-        private ISawmill _resolveSawmill = default!;
+        internal ISawmill ResolveSawmill = default!;
 
         public bool Started { get; protected set; }
 
@@ -149,7 +148,7 @@ namespace Robust.Shared.GameObjects
             _xformReg = _componentFactory.GetRegistration(typeof(TransformComponent));
             _xformName = _xformReg.Name;
             _sawmill = LogManager.GetSawmill("entity");
-            _resolveSawmill = LogManager.GetSawmill("resolve");
+            ResolveSawmill = LogManager.GetSawmill("resolve");
 
 #if DEBUG
             _mainThreadId = Environment.CurrentManagedThreadId;
@@ -212,8 +211,9 @@ namespace Robust.Shared.GameObjects
                     _sawmill.Error($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
 #if !EXCEPTION_TOLERANCE
                     throw;
-#endif
+#else
                     return false;
+#endif
                 }
 
                 if (compMapping.AnyExcept(protoMapping))
@@ -365,7 +365,8 @@ namespace Robust.Shared.GameObjects
                 && meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
                 coords = new EntityCoordinates(gridUid, _mapSystem.WorldToLocal(gridUid, grid, coordinates.Position));
-                _xforms.SetCoordinates(newEntity, transform, coords, rotation, unanchor: false);
+                var relativeRotation = rotation - _xforms.GetWorldRotation(gridUid);
+                _xforms.SetCoordinates(newEntity, transform, coords, relativeRotation, unanchor: false);
             }
             else
             {

@@ -1,0 +1,14 @@
+<entries>
+  <entry name="EntityQueryResolve">
+    <summary>
+        Attempts to look up <typeparamref name="TComp1"/> on the given entity, writing it into the given space
+        if it finds it and the space was not already empty.
+    </summary>
+    <remarks>
+        This is preferable to
+        <see cref="M:Robust.Shared.GameObjects.EntityQuery`1.TryComp(Robust.Shared.GameObjects.EntityUid,`0@)"/> if it
+        is erroneous for the component to not be present, but you don't want to crash the game.<br/>
+        This is also preferable if you may have already looked up the component, saving on lookup time.
+    </remarks>
+  </entry>
+</entries>

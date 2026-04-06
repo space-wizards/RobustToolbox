@@ -62,6 +62,8 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public const int ControlUpdateLimit = 25_000;
 
+        private bool _obeyUpdateLimits = true;
+
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
         [ViewVariables]
         public Stylesheet? Stylesheet
@@ -108,6 +110,9 @@ namespace Robust.Client.UserInterface
         {
             _dependencies = new DependencyCollection(_rootDependencies);
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
+#if DEBUG
+            _configurationManager.OnValueChanged(CVars.UIObeyUpdateLimits, _uiObeyUpdateLimitsChanged, true);
+#endif
             ThemeDefaults = new InterfaceThemeDummy();
             _initScaling();
             SetupControllers();
@@ -135,9 +140,15 @@ namespace Robust.Client.UserInterface
                     disabled: session => _rendering = true));
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
+            _inputManager.CheckUIIsFocused += OnIsUIFocused;
             _initThemes();
 
             _stylesheet = new DefaultStylesheet(_resourceCache, this).Stylesheet;
+        }
+
+        private void _uiObeyUpdateLimitsChanged(bool newValue, in CVarChangeInfo info)
+        {
+            _obeyUpdateLimits = newValue;
         }
 
         public void PostInitialize()
@@ -225,7 +236,7 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_styleUpdateQueue.Count != 0)
                 {
-                    if (total >= ControlUpdateLimit)
+                    if (total >= ControlUpdateLimit && _obeyUpdateLimits)
                     {
                         _sawmillUI.Warning($"Hit style update limit. Queued: {_styleUpdateQueue.Count}. Next in queue: {_styleUpdateQueue.Peek()}. Parent: {_styleUpdateQueue.Peek().Parent}");
                         break;
@@ -248,7 +259,7 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_measureUpdateQueue.Count != 0)
                 {
-                    if (total >= ControlUpdateLimit)
+                    if (total >= ControlUpdateLimit && _obeyUpdateLimits)
                     {
                         _sawmillUI.Warning($"Hit measure update limit. Queued: {_measureUpdateQueue.Count}. Next in queue: {_measureUpdateQueue.Peek()}. Parent: {_measureUpdateQueue.Peek().Parent}");
                         break;
@@ -262,6 +273,7 @@ namespace Robust.Client.UserInterface
                     RunMeasure(control);
                     if (!control.IsMeasureValid && control.IsInsideTree)
                         _sawmillUI.Warning($"Control's measure is invalid after measuring. Control: {control}. Parent: {control.Parent}.");
+                    control.InvalidateArrange();
                     total += 1;
                 }
 
@@ -273,7 +285,7 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_arrangeUpdateQueue.Count != 0)
                 {
-                    if (total >= ControlUpdateLimit)
+                    if (total >= ControlUpdateLimit && _obeyUpdateLimits)
                     {
                         _sawmillUI.Warning($"Hit arrange update limit. Queued: {_arrangeUpdateQueue.Count}. Next in queue: {_arrangeUpdateQueue.Peek()}. Parent: {_arrangeUpdateQueue.Peek().Parent}");
                         break;

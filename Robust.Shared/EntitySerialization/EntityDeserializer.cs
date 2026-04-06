@@ -1187,7 +1187,7 @@ public sealed class EntityDeserializer :
 
             msg = CurrentReadingEntity is not { } curr
                 ? $"Encountered invalid EntityUid reference"
-                : $"Encountered invalid EntityUid reference wile reading entity {curr.YamlId}, component: {CurrentComponent}";
+                : $"Encountered invalid EntityUid reference while reading entity {curr.YamlId}, component: {CurrentComponent}";
             _log.Error(msg);
             return EntityUid.Invalid;
         }
@@ -1197,7 +1197,7 @@ public sealed class EntityDeserializer :
 
         msg = CurrentReadingEntity is not { } ent
             ? "Encountered unknown entity yaml uid"
-            : $"Encountered unknown entity yaml uid wile reading entity {ent.YamlId}, component: {CurrentComponent}";
+            : $"Encountered unknown entity yaml uid while reading entity {ent.YamlId}, component: {CurrentComponent}";
         _log.Error(msg);
         return EntityUid.Invalid;
     }
@@ -1274,7 +1274,7 @@ public sealed class EntityDeserializer :
 
         var msg = CurrentReadingEntity is not { } ent
             ? "Encountered unknown yaml map id"
-            : $"Encountered unknown yaml map id wile reading entity {ent.YamlId}, component: {CurrentComponent}";
+            : $"Encountered unknown yaml map id while reading entity {ent.YamlId}, component: {CurrentComponent}";
         _log.Error(msg);
         return MapId.Nullspace;
     }

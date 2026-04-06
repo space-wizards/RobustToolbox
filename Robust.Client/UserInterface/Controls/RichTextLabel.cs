@@ -39,6 +39,20 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        /// <summary>
+        /// Gets or sets the markup string displayed by this control.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This method converts the given string with <see cref="FormattedMessage.FromMarkupPermissive(string)"/>.
+        /// The original markup string is not kept,
+        /// so setting and then getting the function may provide a different result.
+        /// </para>
+        /// <para>
+        /// Unlike <see cref="M:SetMessage(FormattedMessage,Color?)"/>,
+        /// no tag whitelist will be set on the rendered message. Do not pass untrusted user input to this!
+        /// </para>
+        /// </remarks>
         public string? Text
         {
             get => _entry?.Message.ToMarkup();
@@ -47,7 +61,7 @@ namespace Robust.Client.UserInterface.Controls
                 if (value == null)
                     Clear();
                 else
-                    SetMessage(FormattedMessage.FromMarkupPermissive(value));
+                    SetMessage(FormattedMessage.FromMarkupPermissive(value), tagsAllowed: null);
             }
         }
 
@@ -67,14 +81,45 @@ namespace Robust.Client.UserInterface.Controls
             VerticalAlignment = VAlignment.Center;
         }
 
-        public void SetMessage(FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        /// <summary>
+        /// Sets the formatted message displayed by this control.
+        /// </summary>
+        /// <param name="message">The message to display.</param>
+        /// <param name="defaultColor">If provided, the default color to use for this message rendering.</param>
+        /// <remarks>
+        /// This method sets the set of allowed tags to only include a small amount of safe formatting tags.
+        /// Use <see cref="M:SetMessage(FormattedMessage,Type[],Color?)"/> if this is not desired.
+        /// </remarks>
+        public void SetMessage(FormattedMessage message, Color? defaultColor = null)
+        {
+            SetMessage(message, RichTextEntry.DefaultTags, defaultColor);
+        }
+
+        /// <summary>
+        /// Sets the formatted message displayed by this control.
+        /// </summary>
+        /// <param name="message">The message to display.</param>
+        /// <param name="tagsAllowed">
+        /// The set of allowed markup tags that will be displayed.
+        /// If <c>null</c>, all tags are allowed.</param>
+        /// <param name="defaultColor">If provided, the default color to use for this message rendering.</param>
+        /// <remarks>
+        /// This method sets the set of allowed tags to only include a small amount of safe formatting tags.
+        /// Use <see cref="M:SetMessage(FormattedMessage,Type[],Color?)"/> if this is not desired.
+        /// </remarks>
+        public void SetMessage(FormattedMessage message, Type[]? tagsAllowed, Color? defaultColor = null)
         {
             _entry?.RemoveControls();
             _entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
             InvalidateMeasure();
         }
 
-        public void SetMessage(string message, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        public void SetMessage(string message, Color? defaultColor = null)
+        {
+            SetMessage(message, RichTextEntry.DefaultTags, defaultColor);
+        }
+
+        public void SetMessage(string message, Type[]? tagsAllowed, Color? defaultColor = null)
         {
             var msg = new FormattedMessage();
             msg.AddText(message);

@@ -9,38 +9,44 @@ namespace Robust.Shared.Configuration
     public enum CVar : short
     {
         /// <summary>
-        /// No special flags.
+        ///     No special flags.
         /// </summary>
         NONE = 0,
 
         /// <summary>
-        /// Debug vars that are considered 'cheating' to change.
+        ///     Debug vars that are considered 'cheating' to change.
         /// </summary>
         CHEAT = 1,
 
         /// <summary>
-        /// Only the server can change this variable.
+        ///     Only the server can change this variable.
         /// </summary>
         SERVER = 2,
 
         /// <summary>
-        /// This can only be changed when not connected to a server.
+        ///     This can only be changed when not connected to a server.
         /// </summary>
         NOT_CONNECTED = 4,
 
         /// <summary>
-        /// Changing this var syncs between clients and server.
+        ///     Changing this var syncs between clients and server.
         /// </summary>
+        /// <remarks>
+        ///     Should only ever be used on shared CVars.
+        /// </remarks>
         REPLICATED = 8,
 
         /// <summary>
-        /// Non-default values are saved to the configuration file.
+        ///     Non-default values are saved to the configuration file.
         /// </summary>
         ARCHIVE = 16,
 
         /// <summary>
-        /// Changing this var on the server notifies all clients, does nothing client-side.
+        ///     Changing this var on the server notifies all clients, does nothing client-side.
         /// </summary>
+        /// <remarks>
+        ///     Should only ever be used on shared CVars.
+        /// </remarks>
         NOTIFY = 32,
 
         /// <summary>
@@ -60,15 +66,15 @@ namespace Robust.Shared.Configuration
         CLIENTONLY = 128,
 
         /// <summary>
-        /// CVar contains sensitive data that should not be accidentally leaked.
+        ///     CVar contains sensitive data that should not be accidentally leaked.
         /// </summary>
         /// <remarks>
-        /// This currently hides the content of the cvar in the "cvar" command completions.
+        ///     This currently hides the content of the cvar in the "cvar" command completions.
         /// </remarks>
         CONFIDENTIAL = 256,
 
         /// <summary>
-        /// Only the client can change this variable.
+        ///     Only the client can change this variable.
         /// </summary>
         CLIENT = 512,
     }

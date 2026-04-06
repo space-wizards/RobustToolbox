@@ -22,12 +22,18 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4.1.0
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       - name: Install dependencies
         run: dotnet restore
       - name: Build
         run: dotnet build --no-restore /p:WarningsAsErrors=nullable
-      - name: Robust.UnitTesting
-        run: dotnet test --no-build Robust.UnitTesting/Robust.UnitTesting.csproj -- NUnit.ConsoleOut=0
-      - name: Robust.Analyzers.Tests
-        run: dotnet test --no-build Robust.Analyzers.Tests/Robust.Analyzers.Tests.csproj -- NUnit.ConsoleOut=0
+      - name: Run tests
+        shell: pwsh
+        run: dotnet test --no-build -- NUnit.ConsoleOut=0 NUnit.TestOutputXml="logs" NUnit.WorkDirectory="$(pwd)/test_results"
+      - name: Archive NUnit3 test results.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nunit3-results-${{ matrix.os }}
+          path: test_results/*
+          retention-days: 7

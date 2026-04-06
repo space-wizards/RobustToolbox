@@ -440,7 +440,7 @@ namespace Robust.Client.GameStates
 
             // If we are about to process an another tick in the same frame, lets not bother unnecessarily running prediction ticks
             // Really the main-loop ticking just needs to be more specialized for clients.
-            if (_timing.TickRemainder >= _timing.CalcAdjustedTickPeriod())
+            if (_timing.TickRemainderRealtime >= _timing.CalcAdjustedTickPeriod())
                 return;
 
             if (!processedAny)
@@ -467,7 +467,8 @@ namespace Robust.Client.GameStates
             DebugTools.Assert(_timing.InSimulation);
 
             var ping = (_network.ServerChannel?.Ping ?? 0) / 1000f + PredictLagBias; // seconds.
-            var predictionTarget = _timing.LastProcessedTick + (uint) (_processor.TargetBufferSize + Math.Ceiling(_timing.TickRate * ping) + PredictTickBias);
+            var lagTickCount = Math.Ceiling(_timing.TickRate * ping / _timing.TimeScale);
+            var predictionTarget = _timing.LastProcessedTick + (uint) (_processor.TargetBufferSize + lagTickCount + PredictTickBias);
 
             if (IsPredictionEnabled)
             {
@@ -941,8 +942,7 @@ namespace Robust.Client.GameStates
                 }
                 catch (Exception e)
                 {
-                    _sawmill.Error($"Caught exception while updating entity broadphases");
-                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)}");
+                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)} caught exception while updating broadphase!");
                 }
             }
 
@@ -955,8 +955,7 @@ namespace Robust.Client.GameStates
                 }
                 catch (Exception e)
                 {
-                    _sawmill.Error($"Caught exception while deleting entities");
-                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)}");
+                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)} caught exception while deleting entities!");
 #if !EXCEPTION_TOLERANCE
                     throw;
 #endif

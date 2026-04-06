@@ -4,7 +4,6 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Network;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 
@@ -14,7 +13,7 @@ public sealed class UploadFileCommand : IConsoleCommand
 {
     [Dependency] private readonly IConfigurationManager _cfgManager = default!;
     [Dependency] private readonly IFileDialogManager _dialog = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private readonly NetworkResourceManager _netRes = default!;
 
     public string Command => "uploadfile";
     public string Description => "Uploads a resource to the server.";
@@ -55,12 +54,6 @@ public sealed class UploadFileCommand : IConsoleCommand
 
         var data = file.CopyToArray();
 
-        var msg = new NetworkResourceUploadMessage
-        {
-            RelativePath = path,
-            Data = data
-        };
-
-        _netManager.ClientSendMessage(msg);
+        _netRes.UploadResources([(path, data)]);
     }
 }

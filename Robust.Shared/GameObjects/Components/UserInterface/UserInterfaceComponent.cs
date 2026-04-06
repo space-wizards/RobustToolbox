@@ -25,7 +25,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables, Access(Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadWriteExecute)]
         public readonly Dictionary<Enum, BoundUserInterface> ClientOpenInterfaces = new();
 
-        [DataField]
+        [DataField, AlwaysPushInheritance]
         internal Dictionary<Enum, InterfaceData> Interfaces = new();
 
         /// <summary>

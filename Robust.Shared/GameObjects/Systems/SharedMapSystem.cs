@@ -14,6 +14,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    /// <summary>
+    ///     Manages all the grids and maps in the ECS, providing methods to create and modify them.
+    /// </summary>
     public abstract partial class SharedMapSystem : EntitySystem
     {
         [Dependency] private readonly ITileDefinitionManager _tileMan = default!;

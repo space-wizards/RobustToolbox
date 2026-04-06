@@ -30,6 +30,7 @@ namespace Robust.Server.DataMetrics;
 /// IoC contains an implementation of <see cref="IMeterFactory"/> that can be used to instantiate meters.
 /// </para>
 /// </remarks>
+[NotContentImplementable]
 public interface IMetricsManager
 {
     /// <summary>

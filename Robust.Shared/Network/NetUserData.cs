@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Text;
 using Robust.Shared.ViewVariables;
@@ -17,6 +18,9 @@ namespace Robust.Shared.Network
 
         [ViewVariables]
         public string? PatronTier { get; init; }
+
+        [ViewVariables]
+        public DateTime? CreatedTime {  get; init; }
 
         public ImmutableArray<byte> HWId { get; init; }
 

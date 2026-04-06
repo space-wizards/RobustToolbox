@@ -17,8 +17,11 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
-    ///     Stores the position and orientation of the entity.
+    ///     Stores the relative and global position and orientation of the entity.<br/>
+    ///     This also tracks the overall transform hierarchy, which allows entities to be children of other entities
+    ///     and move when their parent moves cheaply.
     /// </summary>
+    /// <seealso cref="SharedTransformSystem"/>
     [RegisterComponent, NetworkedComponent]
     public sealed partial class TransformComponent : Component, IComponentDebug
     {

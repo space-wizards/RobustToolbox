@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using OpenTK.Audio.OpenAL;
+using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
@@ -16,7 +16,6 @@ using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -44,6 +43,26 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private readonly SharedMapSystem _maps = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+
+    /// <summary>
+    /// An optional method that, if provided, will override the behavior of <see cref="ProcessStream"/>.
+    /// Contains the same parameters in the same order as the method it overrides.
+    /// </summary>
+    /// <remarks>
+    /// This event only supports a single invocation target.
+    /// </remarks>
+    [PublicAPI]
+    public event Action<EntityUid, AudioComponent, TransformComponent, MapCoordinates>? ProcessStreamOverride;
+
+    /// <summary>
+    /// An optional method that, if provided, will override the behavior of <see cref="GetOcclusion"/>.
+    /// Contains the same parameters in the same order as the method it overrides.
+    /// </summary>
+    /// <remarks>
+    /// This event only supports a single invocation target.
+    /// </remarks>
+    [PublicAPI]
+    public event Func<MapCoordinates, Vector2, float, EntityUid?, float>? GetOcclusionOverride;
 
     /// <summary>
     /// Per-tick cache of relevant streams.
@@ -161,14 +180,16 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         // If playback position changed then update it.
-        var position = (float) ((entity.Comp.PauseTime ?? Timing.CurTime) - entity.Comp.AudioStart).TotalSeconds;
+        var totalLen = GetAudioLengthImpl(entity.Comp.FileName).TotalSeconds;
+        var position = CalculateAudioPosition(entity, (float) totalLen);
+
         var currentPosition = entity.Comp.Source.PlaybackPosition;
         var diff = Math.Abs(position - currentPosition);
 
         // Don't try to set the audio too far ahead.
         if (!string.IsNullOrEmpty(entity.Comp.FileName))
         {
-            if (position > GetAudioLengthImpl(entity.Comp.FileName).TotalSeconds - _audioEndBuffer)
+            if (position > totalLen - _audioEndBuffer)
             {
                 entity.Comp.StopPlaying();
                 return;
@@ -230,7 +251,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         length ??= GetAudioLength(component.FileName);
 
         // If audio came into range then start playback at the correct position.
-        var offset = ((entity.Comp.PauseTime ?? Timing.CurTime) - component.AudioStart).TotalSeconds;
+        var offset = CalculateAudioPosition(entity, (float) length.Value.TotalSeconds);
 
         if (TryAudioLimit(component.FileName))
         {
@@ -268,7 +289,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         if (offset > 0)
         {
-            component.PlaybackPosition = (float) offset;
+            component.PlaybackPosition = offset;
         }
     }
 
@@ -341,6 +362,15 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
     {
+        // If content wants to process the stream in their own special way, we simply let them handle that.
+        if (ProcessStreamOverride is not null)
+        {
+            // Assert that we are not processing audio multiple times.
+            DebugTools.Assert(ProcessStreamOverride.HasSingleTarget, $"Event {nameof(ProcessStreamOverride)} has multiple invocation targets. This is not permitted.");
+            ProcessStreamOverride.Invoke(entity, component, xform, listener);
+            return; // Exit and do not perform remaining function behavior
+        }
+
         // TODO:
         // I Originally tried to be fancier here but it caused audio issues so just trying
         // to replicate the old behaviour for now.
@@ -434,6 +464,14 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     public float GetOcclusion(MapCoordinates listener, Vector2 delta, float distance, EntityUid? ignoredEnt = null)
     {
+        // If content has defined a custom occlusion method, use that instead.
+        if (GetOcclusionOverride is not null)
+        {
+            // There can only be one occlusion override defined.
+            DebugTools.Assert(GetOcclusionOverride.HasSingleTarget, $"Event {nameof(GetOcclusionOverride)} has multiple invocation targets. This is not permitted.");
+            return GetOcclusionOverride.Invoke(listener, delta, distance, ignoredEnt);
+        }
+
         float occlusion = 0;
 
         if (distance > 0.1)
@@ -717,10 +755,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var comp = entity.Comp;
         var source = comp.Source;
 
-        // TODO clamp the offset inside of SetPlaybackPosition() itself.
-        var offset = audioP.PlayOffsetSeconds;
-        var maxOffset = Math.Max((float) stream.Length.TotalSeconds - 0.01f, 0f);
-        offset = Math.Clamp(offset, 0f, maxOffset);
+        var offset = CalculateAudioPosition(entity, (float)stream.Length.TotalSeconds, audioP.PlayOffsetSeconds);
         source.PlaybackPosition = offset;
 
         source.StartPlaying();

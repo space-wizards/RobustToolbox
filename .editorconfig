@@ -19,7 +19,7 @@ resharper_place_field_attribute_on_same_line = if_owner_is_single_line
 resharper_wrap_chained_binary_patterns = chop_if_long
 resharper_wrap_chained_method_calls = chop_if_long
 
-[*.{csproj,xml,yml,dll.config,targets,props}]
+[*.{csproj,xml,yml,dll.config,targets,props,slnx}]
 indent_size = 2
 
 [nuget.config]

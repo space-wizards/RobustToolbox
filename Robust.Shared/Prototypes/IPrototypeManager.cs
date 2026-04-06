@@ -16,13 +16,19 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Prototypes;
 
 /// <summary>
-/// Handle storage and loading of YAML prototypes.
+///     Handle storage and loading of YAML prototypes. These are defined in code using <see cref="PrototypeAttribute"/>
+///     and <see cref="PrototypeRecordAttribute"/> on classes that implement <see cref="IPrototype"/> or
+///     <see cref="IInheritingPrototype"/>.
 /// </summary>
 /// <remarks>
-/// Terminology:
-/// "Kinds" are the types of prototypes there are, like <see cref="EntityPrototype"/>.
-/// "Prototypes" are simply filled-in prototypes from YAML.
+///     Terminology:<br/>
+///     "Kinds" are the types of prototypes there are, like <see cref="EntityPrototype"/>.<br/>
+///     "Prototypes" are simply filled-in prototypes from YAML.<br/>
 /// </remarks>
+/// <seealso cref="IPrototype"/>
+/// <seealso cref="IInheritingPrototype"/>
+/// <seealso cref="PrototypeAttribute"/>
+[NotContentImplementable]
 public interface IPrototypeManager
 {
     void Initialize();

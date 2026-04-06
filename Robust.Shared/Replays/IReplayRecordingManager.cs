@@ -2,14 +2,19 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using YamlDotNet.Core;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Replays;
 
+[NotContentImplementable]
 public interface IReplayRecordingManager
 {
     /// <summary>
@@ -184,6 +189,7 @@ public record struct ReplayRecordingStats(TimeSpan Time, uint Ticks, long Size, 
 /// </summary>
 /// <seealso cref="ReplayRecordingStopped"/>
 /// <seealso cref="IReplayRecordingManager.RecordingStopped2"/>
+[NotContentImplementable]
 public interface IReplayFileWriter
 {
     /// <summary>
@@ -202,6 +208,25 @@ public interface IReplayFileWriter
         ResPath path,
         ReadOnlyMemory<byte> bytes,
         CompressionLevel compressionLevel = CompressionLevel.Optimal);
+
+    /// <summary>
+    /// Writes a yaml document into a file in the replay.
+    /// </summary>
+    /// <param name="path">The file path to write to.</param>
+    /// <param name="yaml">The yaml document to write to the file.</param>
+    /// <param name="compressionLevel">How much to compress the file.</param>
+    void WriteYaml(
+        ResPath path,
+        YamlDocument yaml,
+        CompressionLevel compressionLevel = CompressionLevel.Optimal)
+    {
+        var memStream = new MemoryStream();
+        using var writer = new StreamWriter(memStream);
+        var yamlStream = new YamlStream {yaml};
+        yamlStream.Save(new YamlMappingFix(new Emitter(writer)), false);
+        writer.Flush();
+        WriteBytes(path, memStream.AsMemory(), compressionLevel);
+    }
 }
 
 /// <summary>

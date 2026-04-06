@@ -11,10 +11,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    [NotContentImplementable]
     public interface IEventBus : IDirectedEventBus, IBroadcastEventBus
     {
     }
 
+    [NotContentImplementable]
     public interface IDirectedEventBus
     {
         void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
@@ -67,7 +69,8 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// This has a very specific purpose, and has massive potential to be abused.
         /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
-        /// is because of the component network source generator.
+        /// is because of the component network source generator.<br/>
+        /// This may be removed, modified, or pulled back internal at ANY TIME.
         /// </remarks>
         public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, TEvent args)
             where TEvent : notnull

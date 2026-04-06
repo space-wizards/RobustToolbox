@@ -53,7 +53,7 @@ internal sealed class PiShockManager : IPiShockManager
         _cfg.OnValueChanged(CVars.PiShockShareCode, v => _shareCode = v, invokeImmediately: true);
         _cfg.OnValueChanged(CVars.PiShockMaxIntensity, v => _maxIntensity = Math.Clamp(v, 1, 100), invokeImmediately: true);
         _cfg.OnValueChanged(CVars.PiShockMaxDuration, v => _maxDuration = Math.Clamp(v, 1, 15), invokeImmediately: true);
-        _cfg.OnValueChanged(CVars.PiShockCooldown, v => _cooldown = Math.Max(v, MinCooldown), invokeImmediately: true);
+        _cfg.OnValueChanged(CVars.PiShockCooldown, OnCooldownChanged, invokeImmediately: true);
     }
 
     private void DoOperate(PiShockOp op, int intensity, int duration)
@@ -69,7 +69,10 @@ internal sealed class PiShockManager : IPiShockManager
 
         var now = _timing.RealTime;
         if ((now - _lastOperationTime).TotalSeconds < _cooldown)
+        {
+            _sawmill.Verbose("Operation dropped due to cooldown.");
             return;
+        }
 
         _lastOperationTime = now;
 
@@ -77,6 +80,13 @@ internal sealed class PiShockManager : IPiShockManager
         duration = Math.Clamp(duration, 1, _maxDuration);
 
         _ = PostAsync(_username, _apiKey, _shareCode, op, intensity, duration);
+    }
+
+    private void OnCooldownChanged(float value)
+    {
+        if (value < MinCooldown)
+            _sawmill.Warning($"pishock.cooldown {value}s is below the minimum of {MinCooldown}s, clamping.");
+        _cooldown = Math.Max(value, MinCooldown);
     }
 
     private async Task PostAsync(

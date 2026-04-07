@@ -12,7 +12,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network;
 
-public sealed class HttpManager : IHttpManagerInternal
+internal sealed class HttpManager : IHttpManagerInternal
 {
     // From miniupnpc
     private static readonly (int ip, int mask)[] ReservedRangesIpv4 =

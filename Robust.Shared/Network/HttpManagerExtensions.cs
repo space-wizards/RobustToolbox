@@ -56,17 +56,5 @@ public static class HttpManagerExtensions
                 return default;
             }
         }
-
-        public async Task TryCopyToAsync(Uri uri, Stream stream, CancellationToken cancel)
-        {
-            try
-            {
-                await http.CopyToAsync(uri, stream, cancel);
-            }
-            catch
-            {
-                // ignored
-            }
-        }
     }
 }

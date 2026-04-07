@@ -31,6 +31,8 @@ public sealed class HttpManagerTest
     [TestCase("http://10.255.255.255")]
     [TestCase("http://172.16.0.0")]
     [TestCase("http://172.31.255.255")]
+    [TestCase("http://localhost")]
+    [TestCase("http://[::1]")]
     public void TestLocalIPError(string url)
     {
         var manager = new HttpManager();

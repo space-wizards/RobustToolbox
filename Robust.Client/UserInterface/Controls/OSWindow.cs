@@ -144,7 +144,7 @@ namespace Robust.Client.UserInterface.Controls
             SetPositionFirst();
 
             // Resize the window by our UIScale
-            ClydeWindow.Size = new((int)(ClydeWindow.Size.X * UIScale), (int)(ClydeWindow.Size.Y * UIScale));
+            ClydeWindow.Size = new((int)(parameters.Width * UIScale), (int)(parameters.Height * UIScale));
             return ClydeWindow;
         }
 

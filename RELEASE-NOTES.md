@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed `EntitySystem` dependencies throwing an exception when opening a BUI.
 
 ### Other
 

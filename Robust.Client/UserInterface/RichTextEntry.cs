@@ -26,7 +26,8 @@ namespace Robust.Client.UserInterface
             typeof(BulletTag),
             typeof(ColorTag),
             typeof(HeadingTag),
-            typeof(ItalicTag)
+            typeof(ItalicTag),
+            typeof(FontTag),
         ];
 
         private readonly Color _defaultColor;

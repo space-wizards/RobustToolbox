@@ -1,4 +1,5 @@
 using System;
+using System.Reflection.Metadata;
 using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 
@@ -13,6 +14,7 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public abstract class EntityEventArgs { }
 
+    [Obsolete]
     [Serializable, NetSerializable]
     public abstract class HandledEntityEventArgs : EntityEventArgs
     {
@@ -22,6 +24,7 @@ namespace Robust.Shared.GameObjects
         public bool Handled { get; set; }
     }
 
+    [Obsolete]
     [Serializable, NetSerializable]
     public abstract class CancellableEntityEventArgs : EntityEventArgs
     {
@@ -39,6 +42,52 @@ namespace Robust.Shared.GameObjects
         ///     Uncancels the event. Don't call this unless you know what you're doing.
         /// </summary>
         public void Uncancel() => Cancelled = false;
+    }
+
+    public interface IHandleableEvent
+    {
+        bool Handled { get; protected set; }
+
+        public void Handle()
+        {
+            Handled = true;
+        }
+
+        public void Unhandle()
+        {
+            Handled = false;
+        }
+    }
+
+    public interface ICancelableEvent
+    {
+        bool Cancelled { get; protected set; }
+
+        public void Cancel()
+        {
+            Cancelled = true;
+        }
+
+        public void Uncancel()
+        {
+            Cancelled = false;
+        }
+    }
+
+    /// <summary>
+    /// Extension methods for Events so that inheritors of these event interfaces don't need to redefine their public methods.
+    /// </summary>
+    public static class EventExtensions
+    {
+        extension(IHandleableEvent ev)
+        {
+            public void Handle() => ev.Handle();
+        }
+
+        extension(ICancelableEvent ev)
+        {
+            public void Cancel() => ev.Cancel();
+        }
     }
 
     public readonly struct EntitySessionEventArgs

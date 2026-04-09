@@ -94,7 +94,7 @@ namespace Robust.Shared.GameObjects
             public void Handle() => ev.Handle();
         }
 
-        extension<T>(T ev) where T : struct, IHandleableEvent
+        extension<T>(T ev) where T : struct, ICancelableEvent
         {
             public void Cancel() => ev.Cancel();
         }

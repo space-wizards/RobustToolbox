@@ -12,6 +12,7 @@ using Robust.Server.ServerStatus;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -39,6 +40,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             var container = new DependencyCollection();
             container.Register<ILogManager, LogManager>();
+            container.Register<IRuntimeLog, RuntimeLog>();
             container.Register<IConfigurationManager, ServerNetConfigurationManager>();
             container.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<INetManager, NetManager>();

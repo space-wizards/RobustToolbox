@@ -15,9 +15,20 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Map.Components;
 
 /// <summary>
-/// Component marking a grid entity, which are the "floor" in space other entities can be placed on.
-/// Grids can have their own physics and move around in space while players or other entities move on them.
-/// Examples for grids are the station, shuttles or asteroids.
+/// <para>
+///     Provides a tile grid as part of an entity, with APIs to manipulate it provided on <see cref="MapSystem"/>.
+///     Grids function as the optional second level in the physics hierarchy, and implicitly provide physics and the ability to collide with one-another.
+/// </para>
+/// <para>
+///     Map grids are an unbounded 2D grid composed of <see cref="Tile"/>s, 
+///     which have their properties defined by <see cref="ITileDefinition"/> inheriting prototypes.
+///     A tile with the id 0 is automatically assumed to be the "empty" tile and is the default state of any tile that has not been assigned to.
+/// </para>
+/// <para>
+///     Collision is automatically generated from set grid tiles (excluding tiles with id 0, i.e. empty).
+///     Map grids have an implied additional level of physics acceleration structures,
+///     functioning as an optimization for games that rely on moving grids regularly by avoiding the need to update the grids' children.
+/// </para>
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 public sealed partial class MapGridComponent : Component

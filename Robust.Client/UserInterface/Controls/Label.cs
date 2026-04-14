@@ -28,12 +28,12 @@ namespace Robust.Client.UserInterface.Controls
         private bool _clipText;
         private AlignMode _align;
         private Font? _fontOverride;
-        private int _selectionLower;
-        private int _selectionUpper;
+        private readonly LabelSelectionLayout _selectionLayout;
 
         public Label()
         {
             VerticalAlignment = VAlignment.Center;
+            _selectionLayout = new LabelSelectionLayout(this);
         }
 
         /// <summary>
@@ -97,7 +97,9 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        [ViewVariables] public AlignMode Align {
+        [ViewVariables]
+        public AlignMode Align
+        {
             get
             {
                 if (TryGetStyleProperty<AlignMode>(StylePropertyAlignMode, out var alignMode))
@@ -244,25 +246,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override ReadOnlySpan<char> GetTextSpan()
-        {
-            return _textMemory.Span;
-        }
-
-        protected override int GetIndexAtPosition(Vector2 relativePosition)
-        {
-            return GetIndexAtPositionInternal(relativePosition);
-        }
-
-        protected override void DrawSelectionRange(DrawingHandleScreen handle, int selectionLower, int selectionUpper)
-        {
-            if (selectionUpper <= selectionLower)
-                return;
-
-            _selectionLower = selectionLower;
-            _selectionUpper = selectionUpper;
-            DrawSelection(handle, ActualFont);
-        }
+        protected override ISelectableTextLayout SelectionLayout => _selectionLayout;
 
         public enum AlignMode : byte
         {
@@ -389,7 +373,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var yPx = relativePosition.Y * UIScale;
-            var line = (int) Math.Floor((yPx - vOffset) / lineHeight);
+            var line = (int)Math.Floor((yPx - vOffset) / lineHeight);
             line = MathHelper.Clamp(line, 0, lineCount - 1);
 
             var lineWidth = _cachedTextWidths[line];
@@ -523,11 +507,9 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     Draws selection rectangles for the active UTF-16 index range.
         /// </summary>
-        private void DrawSelection(DrawingHandleScreen handle, Font font)
+        private void DrawSelection(DrawingHandleScreen handle, Font font, int selectionLower, int selectionUpper, Color color)
         {
-            var lower = _selectionLower;
-            var upper = _selectionUpper;
-            if (upper <= lower)
+            if (selectionUpper <= selectionLower)
                 return;
 
             int vOffset;
@@ -547,8 +529,6 @@ namespace Robust.Client.UserInterface.Controls
                     throw new ArgumentOutOfRangeException();
             }
 
-            var color = StylePropertyDefault(StylePropertySelectionColor, Color.CornflowerBlue.WithAlpha(0.25f));
-
             var lineHeight = font.GetLineHeight(UIScale);
             var line = 0;
             var textIndex = 0;
@@ -558,7 +538,7 @@ namespace Robust.Client.UserInterface.Controls
             var lineTop = vOffset + lineHeight * line;
             var lineBottom = lineTop + lineHeight;
 
-            var tracker = new TextSelectionLineTracker(lower, upper);
+            var tracker = new TextSelectionLineTracker(selectionLower, selectionUpper);
             tracker.BeginLine(0, lineStartX, lineTop, lineBottom);
 
             var x = lineStartX;
@@ -605,6 +585,31 @@ namespace Robust.Client.UserInterface.Controls
                 AlignMode.Right => PixelSize.X - lineWidth,
                 _ => 0
             };
+        }
+
+        private sealed class LabelSelectionLayout : ISelectableTextLayout
+        {
+            private readonly Label _owner;
+
+            public LabelSelectionLayout(Label owner)
+            {
+                _owner = owner;
+            }
+
+            public ReadOnlySpan<char> GetTextSpan()
+            {
+                return _owner._textMemory.Span;
+            }
+
+            public int GetIndexAtPosition(Vector2 relativePosition)
+            {
+                return _owner.GetIndexAtPositionInternal(relativePosition);
+            }
+
+            public void DrawSelection(DrawingHandleScreen handle, int selectionLower, int selectionUpper, Color color)
+            {
+                _owner.DrawSelection(handle, _owner.ActualFont, selectionLower, selectionUpper, color);
+            }
         }
     }
 }

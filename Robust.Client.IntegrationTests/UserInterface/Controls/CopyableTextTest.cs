@@ -1,6 +1,5 @@
 using System.Numerics;
 using NUnit.Framework;
-using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
@@ -17,6 +16,13 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls;
 public sealed class CopyableTextTest : RobustUnitTest
 {
     public override UnitTestProject Project => UnitTestProject.Client;
+
+    [SetUp]
+    public void ClearClipboard()
+    {
+        // Headless clipboard is in-memory, so ensure tests don't leak state via clipboard contents.
+        IoCManager.Resolve<IClipboardManager>().SetText(string.Empty);
+    }
 
     /// <summary>
     ///     Initializes UI testing infrastructure for these tests.

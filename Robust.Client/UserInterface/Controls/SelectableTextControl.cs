@@ -58,19 +58,9 @@ namespace Robust.Client.UserInterface.Controls
         protected int SelectionUpper => _selection.SelectionUpper;
 
         /// <summary>
-        ///     Returns the plain text content used for selection and copy.
+        ///     Provides layout-specific selection and hit-testing for this control.
         /// </summary>
-        protected abstract ReadOnlySpan<char> GetTextSpan();
-
-        /// <summary>
-        ///     Maps a position in control-relative coordinates to a UTF-16 text index.
-        /// </summary>
-        protected abstract int GetIndexAtPosition(Vector2 relativePosition);
-
-        /// <summary>
-        ///     Draws a selection highlight for the given range.
-        /// </summary>
-        protected abstract void DrawSelectionRange(DrawingHandleScreen handle, int selectionLower, int selectionUpper);
+        protected abstract ISelectableTextLayout SelectionLayout { get; }
 
         /// <summary>
         ///     Clears selection state after content changes or focus loss.
@@ -88,7 +78,8 @@ namespace Robust.Client.UserInterface.Controls
             if (!Copyable || !_selection.HasSelection)
                 return;
 
-            DrawSelectionRange(handle, _selection.SelectionLower, _selection.SelectionUpper);
+            var color = StylePropertyDefault(StylePropertySelectionColor, Color.CornflowerBlue.WithAlpha(0.25f));
+            SelectionLayout.DrawSelection(handle, _selection.SelectionLower, _selection.SelectionUpper, color);
         }
 
         /// <summary>
@@ -118,7 +109,7 @@ namespace Robust.Client.UserInterface.Controls
                 if (!HasKeyboardFocus())
                     return;
 
-                var text = GetTextSpan();
+                var text = SelectionLayout.GetTextSpan();
                 if (text.Length == 0)
                     return;
 
@@ -135,7 +126,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
 
             var pos = ClampSelectionPosition(args.RelativePosition);
-            var index = GetIndexAtPosition(pos);
+            var index = SelectionLayout.GetIndexAtPosition(pos);
             _selection.BeginSelection(index, args.Function == EngineKeyFunctions.TextCursorSelect);
             args.Handle();
         }
@@ -159,7 +150,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
 
             var pos = ClampSelectionPosition(args.RelativePosition);
-            var index = GetIndexAtPosition(pos);
+            var index = SelectionLayout.GetIndexAtPosition(pos);
             _selection.UpdateSelection(index);
         }
 

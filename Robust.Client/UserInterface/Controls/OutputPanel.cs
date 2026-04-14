@@ -43,6 +43,8 @@ namespace Robust.Client.UserInterface.Controls
         private VScrollBar _scrollBar;
         private Button _scrollDownButton;
         private int? _selectedEntryIndex;
+        private readonly OutputPanelSelectionLayout _selectionLayout;
+        private string _copyCache = string.Empty;
 
         public bool ScrollFollowing { get; set; } = true;
 
@@ -79,6 +81,8 @@ namespace Robust.Client.UserInterface.Controls
                 _isAtBottom = _scrollBar.IsAtEnd;
                 _updateScrollButtonVisibility();
             };
+
+            _selectionLayout = new OutputPanelSelectionLayout(this);
         }
 
         public int EntryCount => _entries.Count;
@@ -271,44 +275,7 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar.ValueTarget -= _getScrollSpeed() * args.Delta.Y;
         }
 
-        protected override ReadOnlySpan<char> GetTextSpan()
-        {
-            if (_selectedEntryIndex is not { } entryIndex || entryIndex >= _entries.Count)
-                return ReadOnlySpan<char>.Empty;
-
-            return _entries[entryIndex].GetPlainText(_tagManager, _getFont()).AsSpan();
-        }
-
-        protected override int GetIndexAtPosition(Vector2 relativePosition)
-        {
-            if (_entries.Count == 0)
-                return 0;
-
-            if (IsSelecting && _selectedEntryIndex is { } lockedIndex && lockedIndex < _entries.Count)
-            {
-                var entryOffset = GetEntryOffset(lockedIndex);
-                return GetIndexAtEntry(lockedIndex, entryOffset, relativePosition);
-            }
-
-            if (!TryGetEntryAtPosition(relativePosition, out var entryIndex, out var entryOffsetPosition))
-                return 0;
-
-            _selectedEntryIndex = entryIndex;
-
-            return GetIndexAtEntry(entryIndex, entryOffsetPosition, relativePosition);
-        }
-
-        protected override void DrawSelectionRange(DrawingHandleScreen handle, int selectionLower, int selectionUpper)
-        {
-            if (_selectedEntryIndex is not { } entryIndex || entryIndex >= _entries.Count)
-                return;
-
-            var entry = _entries[entryIndex];
-            var entryOffset = GetEntryOffset(entryIndex);
-            var color = StylePropertyDefault(StylePropertySelectionColor, Color.CornflowerBlue.WithAlpha(0.25f));
-            entry.DrawSelection(_tagManager, handle, _getFont(), _getContentBox(), entryOffset, new MarkupDrawingContext(),
-                UIScale, 1, selectionLower, selectionUpper, color);
-        }
+        protected override ISelectableTextLayout SelectionLayout => _selectionLayout;
 
         protected override Vector2 ClampSelectionPosition(Vector2 relativePosition)
         {
@@ -528,6 +495,64 @@ namespace Robust.Client.UserInterface.Controls
         private void _updateScrollButtonVisibility()
         {
             _scrollDownButton.Visible = ShowScrollDownButton && !_isAtBottom;
+        }
+
+        private sealed class OutputPanelSelectionLayout(OutputPanel owner) : ISelectableTextLayout
+        {
+            private readonly OutputPanel _owner = owner;
+
+            public ReadOnlySpan<char> GetTextSpan()
+            {
+                if (_owner._entries.Count == 0)
+                    return [];
+
+                if (_owner._selectedEntryIndex is { } entryIndex && entryIndex < _owner._entries.Count)
+                    return _owner._entries[entryIndex].GetPlainText(_owner._tagManager, _owner._getFont()).AsSpan();
+
+                // If there's no active selection/entry picked, default to copying all visible output.
+                // This matches the behavior of other display-only copyable controls (e.g. Label).
+                var builder = new System.Text.StringBuilder();
+                for (var i = 0; i < _owner._entries.Count; i++)
+                {
+                    if (i != 0)
+                        builder.Append('\n');
+
+                    builder.Append(_owner._entries[i].GetPlainText(_owner._tagManager, _owner._getFont()));
+                }
+
+                _owner._copyCache = builder.ToString();
+                return _owner._copyCache.AsSpan();
+            }
+
+            public int GetIndexAtPosition(Vector2 relativePosition)
+            {
+                if (_owner._entries.Count == 0)
+                    return 0;
+
+                if (_owner.IsSelecting && _owner._selectedEntryIndex is { } lockedIndex && lockedIndex < _owner._entries.Count)
+                {
+                    var entryOffset = _owner.GetEntryOffset(lockedIndex);
+                    return _owner.GetIndexAtEntry(lockedIndex, entryOffset, relativePosition);
+                }
+
+                if (!_owner.TryGetEntryAtPosition(relativePosition, out var entryIndex, out var entryOffsetPosition))
+                    return 0;
+
+                _owner._selectedEntryIndex = entryIndex;
+
+                return _owner.GetIndexAtEntry(entryIndex, entryOffsetPosition, relativePosition);
+            }
+
+            public void DrawSelection(DrawingHandleScreen handle, int selectionLower, int selectionUpper, Color color)
+            {
+                if (_owner._selectedEntryIndex is not { } entryIndex || entryIndex >= _owner._entries.Count)
+                    return;
+
+                var entry = _owner._entries[entryIndex];
+                var entryOffset = _owner.GetEntryOffset(entryIndex);
+                entry.DrawSelection(_owner._tagManager, handle, _owner._getFont(), _owner._getContentBox(), entryOffset,
+                    new MarkupDrawingContext(), _owner.UIScale, 1, selectionLower, selectionUpper, color);
+            }
         }
     }
 }

@@ -6,35 +6,21 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Shared helper for emitting selection rectangles while iterating text layout line-by-line.
     /// </summary>
-    internal struct TextSelectionLineTracker
+    /// <remarks>
+    ///     Initializes a new tracker for the given selection range.
+    /// </remarks>
+    internal struct TextSelectionLineTracker(int selectionLower, int selectionUpper)
     {
-        private readonly int _selectionLower;
-        private readonly int _selectionUpper;
+        private readonly int _selectionLower = selectionLower;
+        private readonly int _selectionUpper = selectionUpper;
 
-        private int _lineStartIndex;
-        private float _lineStartX;
-        private float _lineTop;
-        private float _lineBottom;
+        private int _lineStartIndex = 0;
+        private float _lineStartX = 0;
+        private float _lineTop = 0;
+        private float _lineBottom = 0;
 
-        private float? _startX;
-        private float? _endX;
-
-        /// <summary>
-        ///     Initializes a new tracker for the given selection range.
-        /// </summary>
-        public TextSelectionLineTracker(int selectionLower, int selectionUpper)
-        {
-            _selectionLower = selectionLower;
-            _selectionUpper = selectionUpper;
-
-            _lineStartIndex = 0;
-            _lineStartX = 0;
-            _lineTop = 0;
-            _lineBottom = 0;
-
-            _startX = null;
-            _endX = null;
-        }
+        private float? _startX = null;
+        private float? _endX = null;
 
         /// <summary>
         ///     Starts tracking a new line segment.

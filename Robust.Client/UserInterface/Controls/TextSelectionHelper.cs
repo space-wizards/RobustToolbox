@@ -100,7 +100,7 @@ namespace Robust.Client.UserInterface.Controls
             if (upper <= lower)
                 return null;
 
-            return new string(text.Slice(lower, upper - lower));
+            return new string(text[lower..upper]);
         }
 
         /// <summary>

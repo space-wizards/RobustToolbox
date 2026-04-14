@@ -17,6 +17,7 @@ namespace Robust.Client.UserInterface.Controls
         ///     Style property used for selection highlight color.
         /// </summary>
         public const string StylePropertySelectionColor = TextEdit.StylePropertySelectionColor;
+        public static readonly Color DefaultSelectionColor = Color.CornflowerBlue.WithAlpha(0.25f);
 
         private readonly TextSelectionHelper _selection = new();
         private bool _copyable;
@@ -78,7 +79,7 @@ namespace Robust.Client.UserInterface.Controls
             if (!Copyable || !_selection.HasSelection)
                 return;
 
-            var color = StylePropertyDefault(StylePropertySelectionColor, Color.CornflowerBlue.WithAlpha(0.25f));
+            var color = StylePropertyDefault(StylePropertySelectionColor, DefaultSelectionColor);
             SelectionLayout.DrawSelection(handle, _selection.SelectionLower, _selection.SelectionUpper, color);
         }
 

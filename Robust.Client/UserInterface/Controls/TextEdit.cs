@@ -1250,14 +1250,10 @@ public sealed class TextEdit : Control
             baseLine.Y += startLineIndex * height;
             var selectionLowerIndex = _master.SelectionLower.Index;
             var selectionUpperIndex = _master.SelectionUpper.Index;
-            var selectionColor = _master.StylePropertyDefault(
-                StylePropertySelectionColor,
-                Color.CornflowerBlue.WithAlpha(0.25f));
-
-            var lineStartIndex = startIdx;
-            var tracker = new TextSelectionLineTracker(selectionLowerIndex, selectionUpperIndex);
-            tracker.BeginLine(
-                lineStartIndex,
+            var selectionColor = _master.StylePropertyDefault(StylePropertySelectionColor, SelectableTextControl.DefaultSelectionColor);
+            var selectionMap = new TextSelectionGeometry.SelectionMap();
+            selectionMap.BeginLine(
+                startIdx,
                 drawBox.Left,
                 baseLine.Y - height + descent,
                 baseLine.Y + descent);
@@ -1290,14 +1286,13 @@ public sealed class TextEdit : Control
                     && _master._lineBreaks[lineBreakIndex] == count)
                 {
                     // Line break
-                    // Check to handle
-                    tracker.FinishLine(handle, selectionColor, count, baseLine.X);
+                    selectionMap.EndLine(count, baseLine.X);
                     PostDrawLine();
 
                     baseLine = new Vector2(drawBox.Left, baseLine.Y + height);
                     lineBreakIndex += 1;
-                    lineStartIndex = count;
-                    tracker.BeginLine(
+                    int lineStartIndex = count;
+                    selectionMap.BeginLine(
                         lineStartIndex,
                         drawBox.Left,
                         baseLine.Y - height + descent,
@@ -1315,17 +1310,18 @@ public sealed class TextEdit : Control
 
                 CheckDrawCursors(LineBreakBias.Bottom);
 
-                tracker.UpdateForIndex(count, baseLine.X);
+                selectionMap.AddBoundary(count, baseLine.X);
                 baseLine.X += font.DrawChar(handle, rune, baseLine, scale, renderedTextColor);
 
                 count += rune.Utf16SequenceLength;
-                tracker.UpdateForIndex(count, baseLine.X);
+                selectionMap.AddBoundary(count, baseLine.X);
             }
 
             // Also draw cursor if it's at the very end.
             CheckDrawCursors(LineBreakBias.Bottom);
             CheckDrawCursors(LineBreakBias.Top);
-            tracker.FinishLine(handle, selectionColor, count, baseLine.X);
+            selectionMap.EndLine(count, baseLine.X);
+            selectionMap.DrawSelection(handle, selectionLowerIndex, selectionUpperIndex, selectionColor);
             PostDrawLine();
 
             // Draw cursor bias
@@ -1379,7 +1375,7 @@ public sealed class TextEdit : Control
                             baseLine.Y + descent);
                         var cursorOffset = baseLine.X - drawBox.Left;
 
-                        window.TextInputSetRect(box.Translated(GlobalPixelPosition), (int) cursorOffset);
+                        window.TextInputSetRect(box.Translated(GlobalPixelPosition), (int)cursorOffset);
                     }
                 }
 

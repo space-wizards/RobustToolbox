@@ -344,119 +344,8 @@ namespace Robust.Client.UserInterface
                 return 0;
 
             var context = new MarkupDrawingContext();
-            context.Clear();
-            context.Color.Push(_defaultColor);
-            context.Font.Push(defaultFont);
-
-            var globalBreakCounter = 0;
-            var lineBreakIndex = 0;
-            var baseLine = drawBox.TopLeft + new Vector2(0, defaultFont.GetAscent(uiScale) + verticalOffset);
-            var controlYAdvance = 0f;
-
-            var textIndex = 0;
-            var lineStartIndex = 0;
-
-            var currentFont = defaultFont;
-            var lineTop = baseLine.Y - currentFont.GetAscent(uiScale);
-            var lineBottom = lineTop + GetLineHeight(currentFont, uiScale, lineHeightScale);
-
-            if (position.Y <= lineTop)
-                return 0;
-
-            bool targetLine = position.Y <= lineBottom;
-            var x = baseLine.X;
-            var lastX = x;
-            var lastIndex = textIndex;
-
-            var spaceRune = new Rune(' ');
-
-            var nodeIndex = -1;
-            foreach (var node in Message)
-            {
-                nodeIndex++;
-                var text = ProcessNode(tagManager, node, context);
-                if (!context.Color.TryPeek(out _) || !context.Font.TryPeek(out currentFont))
-                    currentFont = defaultFont;
-
-                foreach (var rune in text.EnumerateRunes())
-                {
-                    bool skipSpaceBaseline = false;
-
-                    if (lineBreakIndex < LineBreaks.Count &&
-                        LineBreaks[lineBreakIndex] == globalBreakCounter)
-                    {
-                        if (targetLine)
-                            return textIndex;
-
-                        baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(currentFont, uiScale, lineHeightScale) + controlYAdvance);
-                        controlYAdvance = 0;
-                        lineBreakIndex += 1;
-
-                        if (rune == spaceRune)
-                            skipSpaceBaseline = true;
-
-                        lineStartIndex = textIndex;
-                        x = baseLine.X;
-                        lastX = x;
-                        lastIndex = textIndex;
-                        lineTop = baseLine.Y - currentFont.GetAscent(uiScale);
-                        lineBottom = lineTop + GetLineHeight(currentFont, uiScale, lineHeightScale);
-                        targetLine = position.Y <= lineBottom;
-                    }
-
-                    if (targetLine && position.X <= x)
-                        return lineStartIndex;
-
-                    if (!currentFont.TryGetCharMetrics(rune, uiScale, out var metrics))
-                    {
-                        textIndex += rune.Utf16SequenceLength;
-                        globalBreakCounter += 1;
-                        continue;
-                    }
-
-                    var nextX = x + metrics.Advance;
-                    var nextIndex = textIndex + rune.Utf16SequenceLength;
-
-                    if (targetLine && position.X < nextX)
-                    {
-                        var distanceRight = nextX - position.X;
-                        var distanceLeft = position.X - lastX;
-                        if (distanceRight > distanceLeft && lastIndex > lineStartIndex)
-                            return lastIndex;
-
-                        return nextIndex;
-                    }
-
-                    if (!skipSpaceBaseline)
-                        x = nextX;
-
-                    lastX = x;
-                    lastIndex = nextIndex;
-                    textIndex = nextIndex;
-                    globalBreakCounter += 1;
-                }
-
-                if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
-                    continue;
-
-                control.Measure(new Vector2(Width, Height));
-                var desiredSize = control.DesiredPixelSize;
-                var invertedScale = 1f / uiScale;
-                control.Arrange(UIBox2.FromDimensions(
-                    baseLine.X * invertedScale,
-                    (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale,
-                    control.DesiredSize.X,
-                    control.DesiredSize.Y
-                ));
-                var advanceX = control.DesiredPixelSize.X;
-                controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(currentFont, uiScale, lineHeightScale)) * invertedScale);
-                baseLine += new Vector2(advanceX, 0);
-                x = baseLine.X;
-                lastX = x;
-                lastIndex = textIndex;
-            }
-
-            return textIndex;
+            var map = BuildSelectionMap(tagManager, defaultFont, drawBox, verticalOffset, uiScale, lineHeightScale, context);
+            return map.GetIndexAtPosition(position);
         }
 
         /// <summary>
@@ -478,6 +367,26 @@ namespace Robust.Client.UserInterface
             if (selectionUpper <= selectionLower || Message.IsEmpty)
                 return;
 
+            if (handle is not DrawingHandleScreen screen)
+                return;
+
+            var map = BuildSelectionMap(tagManager, defaultFont, drawBox, verticalOffset, uiScale, lineHeightScale, context);
+            map.DrawSelection(screen, selectionLower, selectionUpper, color);
+        }
+
+        private readonly TextSelectionGeometry.SelectionMap BuildSelectionMap(
+            MarkupTagManager tagManager,
+            Font defaultFont,
+            UIBox2 drawBox,
+            float verticalOffset,
+            float uiScale,
+            float lineHeightScale,
+            MarkupDrawingContext context)
+        {
+            var map = new TextSelectionGeometry.SelectionMap();
+            if (Message.IsEmpty)
+                return map;
+
             context.Clear();
             context.Color.Push(_defaultColor);
             context.Font.Push(defaultFont);
@@ -488,14 +397,10 @@ namespace Robust.Client.UserInterface
             var controlYAdvance = 0f;
 
             var textIndex = 0;
-            var lineStartIndex = 0;
-
             var currentFont = defaultFont;
             var lineTop = baseLine.Y - currentFont.GetAscent(uiScale);
             var lineBottom = lineTop + GetLineHeight(currentFont, uiScale, lineHeightScale);
-            var lineStartX = drawBox.Left;
-            var tracker = new TextSelectionLineTracker(selectionLower, selectionUpper);
-            tracker.BeginLine(lineStartIndex, lineStartX, lineTop, lineBottom);
+            map.BeginLine(textIndex, drawBox.Left, lineTop, lineBottom);
 
             var spaceRune = new Rune(' ');
 
@@ -509,13 +414,12 @@ namespace Robust.Client.UserInterface
 
                 foreach (var rune in text.EnumerateRunes())
                 {
-                    bool skipSpaceBaseline = false;
+                    var skipSpaceBaseline = false;
 
                     if (lineBreakIndex < LineBreaks.Count &&
                         LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
-                        if (handle is DrawingHandleScreen screen)
-                            tracker.FinishLine(screen, color, textIndex, baseLine.X);
+                        map.EndLine(textIndex, baseLine.X);
 
                         baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(currentFont, uiScale, lineHeightScale) + controlYAdvance);
                         controlYAdvance = 0;
@@ -524,33 +428,24 @@ namespace Robust.Client.UserInterface
                         if (rune == spaceRune)
                             skipSpaceBaseline = true;
 
-                        lineStartIndex = textIndex;
-                        lineStartX = drawBox.Left;
                         lineTop = baseLine.Y - currentFont.GetAscent(uiScale);
                         lineBottom = lineTop + GetLineHeight(currentFont, uiScale, lineHeightScale);
-                        tracker.BeginLine(lineStartIndex, lineStartX, lineTop, lineBottom);
+                        map.BeginLine(textIndex, drawBox.Left, lineTop, lineBottom);
                     }
 
-                    tracker.UpdateForIndex(textIndex, baseLine.X);
-
-                    if (currentFont.TryGetCharMetrics(rune, uiScale, out var metrics))
-                    {
-                        var advance = metrics.Advance;
-                        if (!skipSpaceBaseline)
-                            baseLine += new Vector2(advance, 0);
-                    }
+                    map.AddBoundary(textIndex, baseLine.X);
+                    if (currentFont.TryGetCharMetrics(rune, uiScale, out var metrics) && !skipSpaceBaseline)
+                        baseLine += new Vector2(metrics.Advance, 0);
 
                     textIndex += rune.Utf16SequenceLength;
                     globalBreakCounter += 1;
-
-                    tracker.UpdateForIndex(textIndex, baseLine.X);
+                    map.AddBoundary(textIndex, baseLine.X);
                 }
 
                 if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
                     continue;
 
                 control.Measure(new Vector2(Width, Height));
-                var desiredSize = control.DesiredPixelSize;
                 var invertedScale = 1f / uiScale;
                 control.Arrange(UIBox2.FromDimensions(
                     baseLine.X * invertedScale,
@@ -561,10 +456,11 @@ namespace Robust.Client.UserInterface
                 var advanceX = control.DesiredPixelSize.X;
                 controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(currentFont, uiScale, lineHeightScale)) * invertedScale);
                 baseLine += new Vector2(advanceX, 0);
+                map.AddBoundary(textIndex, baseLine.X);
             }
 
-            if (handle is DrawingHandleScreen finalScreen)
-                tracker.FinishLine(finalScreen, color, textIndex, baseLine.X);
+            map.EndLine(textIndex, baseLine.X);
+            return map;
         }
 
         private readonly string ProcessNode(MarkupTagManager tagManager, MarkupNode node, MarkupDrawingContext context)

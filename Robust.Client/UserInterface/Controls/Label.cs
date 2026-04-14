@@ -345,142 +345,8 @@ namespace Robust.Client.UserInterface.Controls
             if (_textMemory.Length == 0)
                 return 0;
 
-            if (!_textDimensionCacheValid)
-            {
-                _calculateTextDimension();
-                DebugTools.Assert(_textDimensionCacheValid);
-            }
-
-            var font = ActualFont;
-            var lineCount = _cachedTextWidths.Count;
-            var lineHeight = font.GetLineHeight(UIScale);
-            var vOffset = VAlign switch
-            {
-                VAlignMode.Top => 0,
-                VAlignMode.Fill or VAlignMode.Center => (PixelSize.Y - _cachedTextHeight) / 2,
-                VAlignMode.Bottom => PixelSize.Y - _cachedTextHeight,
-                _ => throw new NotImplementedException()
-            };
-            var yPx = relativePosition.Y * UIScale;
-            var line = (int)Math.Floor((yPx - vOffset) / lineHeight);
-            line = MathHelper.Clamp(line, 0, lineCount - 1);
-
-            var lineWidth = _cachedTextWidths[line];
-            var hOffset = Align switch
-            {
-                AlignMode.Left => 0,
-                AlignMode.Center or AlignMode.Fill => (PixelSize.X - lineWidth) / 2,
-                AlignMode.Right => PixelSize.X - lineWidth,
-                _ => throw new NotImplementedException()
-            };
-            var xPx = relativePosition.X * UIScale;
-            var lineStartIndex = GetLineStartIndex(line);
-            var lineEndIndex = GetLineEndIndex(line);
-
-            if (xPx <= hOffset)
-                return lineStartIndex;
-
-            if (xPx >= hOffset + lineWidth)
-                return lineEndIndex;
-
-            var index = lineStartIndex;
-            var chrPosX = hOffset;
-            var lastChrPosX = hOffset;
-
-            var currentLine = 0;
-            foreach (var rune in _textMemory.Span.EnumerateRunes())
-            {
-                if (rune == new Rune('\n'))
-                {
-                    if (currentLine == line)
-                        break;
-
-                    currentLine++;
-                    continue;
-                }
-
-                if (currentLine != line)
-                {
-                    index += rune.Utf16SequenceLength;
-                    continue;
-                }
-
-                if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
-                {
-                    index += rune.Utf16SequenceLength;
-                    continue;
-                }
-
-                if (chrPosX > xPx)
-                    break;
-
-                lastChrPosX = chrPosX;
-                chrPosX += metrics.Advance;
-                index += rune.Utf16SequenceLength;
-
-                if (chrPosX > hOffset + lineWidth)
-                    break;
-            }
-
-            var distanceRight = chrPosX - xPx;
-            var distanceLeft = xPx - lastChrPosX;
-            if (index > lineStartIndex && distanceRight > distanceLeft)
-            {
-                index -= 1;
-                if (index > 0 && index < _textMemory.Length && char.IsLowSurrogate(_textMemory.Span[index]))
-                    index -= 1;
-            }
-
-            return index;
-        }
-
-        /// <summary>
-        ///     Returns the UTF-16 index of the first character on the given line.
-        /// </summary>
-        private int GetLineStartIndex(int targetLine)
-        {
-            var line = 0;
-            var index = 0;
-            foreach (var rune in _textMemory.Span.EnumerateRunes())
-            {
-                if (line == targetLine)
-                    break;
-
-                index += rune.Utf16SequenceLength;
-                if (rune == new Rune('\n'))
-                    line++;
-            }
-
-            return index;
-        }
-
-        /// <summary>
-        ///     Returns the UTF-16 index immediately after the last character on the given line.
-        /// </summary>
-        private int GetLineEndIndex(int targetLine)
-        {
-            var line = 0;
-            var index = 0;
-            foreach (var rune in _textMemory.Span.EnumerateRunes())
-            {
-                if (rune == new Rune('\n'))
-                {
-                    if (line == targetLine)
-                        break;
-
-                    line++;
-                }
-                else if (line == targetLine)
-                {
-                    index += rune.Utf16SequenceLength;
-                }
-                else
-                {
-                    index += rune.Utf16SequenceLength;
-                }
-            }
-
-            return index;
+            var map = BuildSelectionMap(ActualFont);
+            return map.GetIndexAtPosition(relativePosition * UIScale);
         }
 
         /// <summary>
@@ -490,54 +356,8 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (selectionUpper <= selectionLower)
                 return;
-            var vOffset = VAlign switch
-            {
-                VAlignMode.Top => 0,
-                VAlignMode.Fill or VAlignMode.Center => (PixelSize.Y - _cachedTextHeight) / 2,
-                VAlignMode.Bottom => PixelSize.Y - _cachedTextHeight,
-                _ => throw new NotImplementedException()
-            };
-            var lineHeight = font.GetLineHeight(UIScale);
-            var line = 0;
-            var textIndex = 0;
-
-            var lineWidth = _cachedTextWidths[line];
-            var lineStartX = GetLineStartX(lineWidth);
-            var lineTop = vOffset + lineHeight * line;
-            var lineBottom = lineTop + lineHeight;
-
-            var tracker = new TextSelectionLineTracker(selectionLower, selectionUpper);
-            tracker.BeginLine(0, lineStartX, lineTop, lineBottom);
-
-            var x = lineStartX;
-
-            foreach (var rune in _textMemory.Span.EnumerateRunes())
-            {
-                if (rune == new Rune('\n'))
-                {
-                    tracker.FinishLine(handle, color, textIndex, lineStartX + lineWidth);
-
-                    line++;
-                    lineWidth = _cachedTextWidths[Math.Min(line, _cachedTextWidths.Count - 1)];
-                    lineStartX = GetLineStartX(lineWidth);
-                    lineTop = vOffset + lineHeight * line;
-                    lineBottom = lineTop + lineHeight;
-                    textIndex += rune.Utf16SequenceLength;
-                    x = lineStartX;
-                    tracker.BeginLine(textIndex, lineStartX, lineTop, lineBottom);
-                    continue;
-                }
-
-                tracker.UpdateForIndex(textIndex, x);
-
-                if (font.TryGetCharMetrics(rune, UIScale, out var metrics))
-                    x += metrics.Advance;
-
-                textIndex += rune.Utf16SequenceLength;
-                tracker.UpdateForIndex(textIndex, x);
-            }
-
-            tracker.FinishLine(handle, color, textIndex, x);
+            var map = BuildSelectionMap(font);
+            map.DrawSelection(handle, selectionLower, selectionUpper, color);
         }
 
         /// <summary>
@@ -553,6 +373,66 @@ namespace Robust.Client.UserInterface.Controls
                 AlignMode.Right => PixelSize.X - lineWidth,
                 _ => 0
             };
+        }
+
+        private TextSelectionGeometry.SelectionMap BuildSelectionMap(Font font)
+        {
+            if (!_textDimensionCacheValid)
+            {
+                _calculateTextDimension();
+                DebugTools.Assert(_textDimensionCacheValid);
+            }
+
+            var map = new TextSelectionGeometry.SelectionMap();
+            if (_textMemory.Length == 0)
+                return map;
+
+            var vOffset = VAlign switch
+            {
+                VAlignMode.Top => 0,
+                VAlignMode.Fill or VAlignMode.Center => (PixelSize.Y - _cachedTextHeight) / 2,
+                VAlignMode.Bottom => PixelSize.Y - _cachedTextHeight,
+                _ => throw new NotImplementedException()
+            };
+
+            var lineHeight = font.GetLineHeight(UIScale);
+            var line = 0;
+            var textIndex = 0;
+            var lineWidth = _cachedTextWidths[line];
+            var lineStartX = GetLineStartX(lineWidth);
+            var lineTop = vOffset + lineHeight * line;
+            var lineBottom = lineTop + lineHeight;
+            var x = lineStartX;
+
+            map.BeginLine(0, lineStartX, lineTop, lineBottom);
+
+            foreach (var rune in _textMemory.Span.EnumerateRunes())
+            {
+                if (rune == new Rune('\n'))
+                {
+                    map.EndLine(textIndex, lineStartX + lineWidth);
+
+                    textIndex += rune.Utf16SequenceLength;
+                    line++;
+                    lineWidth = _cachedTextWidths[Math.Min(line, _cachedTextWidths.Count - 1)];
+                    lineStartX = GetLineStartX(lineWidth);
+                    lineTop = vOffset + lineHeight * line;
+                    lineBottom = lineTop + lineHeight;
+                    x = lineStartX;
+                    map.BeginLine(textIndex, lineStartX, lineTop, lineBottom);
+                    continue;
+                }
+
+                map.AddBoundary(textIndex, x);
+                if (font.TryGetCharMetrics(rune, UIScale, out var metrics))
+                    x += metrics.Advance;
+
+                textIndex += rune.Utf16SequenceLength;
+                map.AddBoundary(textIndex, x);
+            }
+
+            map.EndLine(textIndex, x);
+            return map;
         }
 
         private sealed class LabelSelectionLayout(Label owner) : ISelectableTextLayout

@@ -13,7 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.UserInterface.Controls
 {
     [Virtual]
-    public class RichTextLabel : Control
+    public class RichTextLabel : SelectableTextControl
     {
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
 
@@ -69,6 +69,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             _entry?.RemoveControls();
             _entry = null;
+            ClearSelection();
             InvalidateMeasure();
         }
 
@@ -111,6 +112,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             _entry?.RemoveControls();
             _entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
+            ClearSelection();
             InvalidateMeasure();
         }
 
@@ -150,7 +152,59 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale);
+            if (_entry == null)
+                return;
+
+            var entry = _entry.Value;
+            var font = _getFont();
+            var context = new MarkupDrawingContext();
+
+            DrawSelectionIfNeeded(handle);
+
+            entry.Draw(_tagManager, handle, font, SizeBox, 0, context, UIScale, LineHeightScale);
+        }
+
+        protected override ReadOnlySpan<char> GetTextSpan()
+        {
+            if (_entry == null)
+                return ReadOnlySpan<char>.Empty;
+
+            return _entry.Value.GetPlainText(_tagManager, _getFont()).AsSpan();
+        }
+
+        protected override int GetIndexAtPosition(Vector2 relativePosition)
+        {
+            EnsureEntryLayout();
+            if (_entry == null)
+                return 0;
+
+            return _entry.Value.GetIndexAtPosition(
+                _tagManager,
+                _getFont(),
+                SizeBox,
+                0,
+                relativePosition * UIScale,
+                UIScale,
+                LineHeightScale);
+        }
+
+        protected override void DrawSelectionRange(DrawingHandleScreen handle, int selectionLower, int selectionUpper)
+        {
+            EnsureEntryLayout();
+            if (_entry == null)
+                return;
+
+            var color = StylePropertyDefault(StylePropertySelectionColor, Color.CornflowerBlue.WithAlpha(0.25f));
+            _entry.Value.DrawSelection(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale,
+                LineHeightScale, selectionLower, selectionUpper, color);
+        }
+
+        private void EnsureEntryLayout()
+        {
+            if (_entry == null)
+                return;
+
+            _entry = _entry.Value.Update(_tagManager, _getFont(), SizeBox.Width * UIScale, UIScale, LineHeightScale);
         }
 
         [Pure]

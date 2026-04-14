@@ -15,7 +15,7 @@ namespace Robust.Client.UserInterface.Controls
     ///     A control to handle output of message-by-message output panels, like the debug console and chat panel.
     /// </summary>
     [Virtual]
-    public class OutputPanel : Control
+    public class OutputPanel : SelectableTextControl
     {
         public const string StyleClassOutputPanelScrollDownButton = "outputPanelScrollDownButton";
 
@@ -42,6 +42,7 @@ namespace Robust.Client.UserInterface.Controls
         private StyleBox? _styleBoxOverride;
         private VScrollBar _scrollBar;
         private Button _scrollDownButton;
+        private int? _selectedEntryIndex;
 
         public bool ScrollFollowing { get; set; } = true;
 
@@ -106,6 +107,7 @@ namespace Robust.Client.UserInterface.Controls
             _totalContentHeight = 0;
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             _scrollBar.Value = 0;
+            ClearSelectionState();
         }
 
         public FormattedMessage GetMessage(Index index)
@@ -127,6 +129,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+            ClearSelectionState();
         }
 
         public void AddText(string text)
@@ -180,6 +183,8 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             if (atBottom)
                 _scrollBar.Value = _scrollBar.MaxValue;
+
+            ClearSelectionState();
         }
 
         private void AddNewItemHeight(Font font, in RichTextEntry entry)
@@ -218,6 +223,9 @@ namespace Robust.Client.UserInterface.Controls
             // So when a new color tag gets hit this stack gets the previous color pushed on.
             var context = new MarkupDrawingContext(2);
 
+            DrawSelectionIfNeeded(handle);
+
+            var entryIndex = 0;
             foreach (ref var entry in _entries)
             {
                 if (entryOffset + entry.Height < 0)
@@ -230,6 +238,7 @@ namespace Robust.Client.UserInterface.Controls
                     // visibility
                     entry.HideControls();
                     entryOffset += entry.Height + lineSeparation;
+                    entryIndex++;
                     continue;
                 }
 
@@ -239,12 +248,14 @@ namespace Robust.Client.UserInterface.Controls
 
                     // We know that every subsequent entry will also fail the test, but we also need to
                     // hide all the controls, so we cannot simply break out of the loop
+                    entryIndex++;
                     continue;
                 }
 
                 entry.Draw(_tagManager, handle, font, contentBox, entryOffset, context, UIScale);
 
                 entryOffset += entry.Height + lineSeparation;
+                entryIndex++;
             }
         }
 
@@ -258,6 +269,75 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             _scrollBar.ValueTarget -= _getScrollSpeed() * args.Delta.Y;
+        }
+
+        protected override ReadOnlySpan<char> GetTextSpan()
+        {
+            if (_selectedEntryIndex is not { } entryIndex || entryIndex >= _entries.Count)
+                return ReadOnlySpan<char>.Empty;
+
+            return _entries[entryIndex].GetPlainText(_tagManager, _getFont()).AsSpan();
+        }
+
+        protected override int GetIndexAtPosition(Vector2 relativePosition)
+        {
+            if (_entries.Count == 0)
+                return 0;
+
+            if (IsSelecting && _selectedEntryIndex is { } lockedIndex && lockedIndex < _entries.Count)
+            {
+                var entryOffset = GetEntryOffset(lockedIndex);
+                return GetIndexAtEntry(lockedIndex, entryOffset, relativePosition);
+            }
+
+            if (!TryGetEntryAtPosition(relativePosition, out var entryIndex, out var entryOffsetPosition))
+                return 0;
+
+            _selectedEntryIndex = entryIndex;
+
+            return GetIndexAtEntry(entryIndex, entryOffsetPosition, relativePosition);
+        }
+
+        protected override void DrawSelectionRange(DrawingHandleScreen handle, int selectionLower, int selectionUpper)
+        {
+            if (_selectedEntryIndex is not { } entryIndex || entryIndex >= _entries.Count)
+                return;
+
+            var entry = _entries[entryIndex];
+            var entryOffset = GetEntryOffset(entryIndex);
+            var color = StylePropertyDefault(StylePropertySelectionColor, Color.CornflowerBlue.WithAlpha(0.25f));
+            entry.DrawSelection(_tagManager, handle, _getFont(), _getContentBox(), entryOffset, new MarkupDrawingContext(),
+                UIScale, 1, selectionLower, selectionUpper, color);
+        }
+
+        protected override Vector2 ClampSelectionPosition(Vector2 relativePosition)
+        {
+            if (IsSelecting && _selectedEntryIndex is { } entryIndex && entryIndex < _entries.Count)
+            {
+                var entryOffset = GetEntryOffset(entryIndex);
+                var contentBox = _getContentBox();
+                var topPx = contentBox.Top + entryOffset;
+                var bottomPx = topPx + _entries[entryIndex].Height;
+                var leftPx = contentBox.Left;
+                var rightPx = contentBox.Right;
+
+                var posPx = relativePosition * UIScale;
+                if (posPx.Y < topPx)
+                    posPx = new Vector2(leftPx, topPx);
+                else if (posPx.Y > bottomPx)
+                    posPx = new Vector2(rightPx, bottomPx);
+
+                posPx.X = MathHelper.Clamp(posPx.X, leftPx, rightPx);
+                return posPx / UIScale;
+            }
+
+            return base.ClampSelectionPosition(relativePosition);
+        }
+
+        protected internal override void KeyboardFocusExited()
+        {
+            base.KeyboardFocusExited();
+            ClearSelectionState();
         }
 
         protected override void Resized()
@@ -331,6 +411,74 @@ namespace Robust.Client.UserInterface.Controls
             var box = style?.GetContentBox(PixelSizeBox, UIScale) ?? PixelSizeBox;
             box.Right = Math.Max(box.Left, box.Right - _scrollBar.DesiredPixelSize.X);
             return box;
+        }
+
+        private bool TryGetEntryAtPosition(Vector2 relativePosition, out int entryIndex, out float entryOffset)
+        {
+            entryIndex = -1;
+            entryOffset = 0;
+
+            if (_entries.Count == 0)
+                return false;
+
+            var font = _getFont();
+            var lineSeparation = font.GetLineSeparation(UIScale);
+            var contentBox = _getContentBox();
+            var yPx = relativePosition.Y * UIScale;
+
+            var offset = -_scrollBar.Value;
+            for (var i = 0; i < _entries.Count; i++)
+            {
+                var localEntry = _entries[i];
+                var top = contentBox.Top + offset;
+                var bottom = top + localEntry.Height;
+                if (yPx >= top && yPx <= bottom)
+                {
+                    entryIndex = i;
+                    entryOffset = offset;
+                    return true;
+                }
+
+                offset += localEntry.Height + lineSeparation;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        ///     Calculates the vertical offset for an entry using current scroll position.
+        /// </summary>
+        private float GetEntryOffset(int entryIndex)
+        {
+            var font = _getFont();
+            var lineSeparation = font.GetLineSeparation(UIScale);
+            var offset = -_scrollBar.Value;
+
+            for (var i = 0; i < entryIndex && i < _entries.Count; i++)
+            {
+                offset += _entries[i].Height + lineSeparation;
+            }
+
+            return offset;
+        }
+
+        private int GetIndexAtEntry(int entryIndex, float entryOffset, Vector2 relativePosition)
+        {
+            var entry = _entries[entryIndex];
+            return entry.GetIndexAtPosition(
+                _tagManager,
+                _getFont(),
+                _getContentBox(),
+                entryOffset,
+                relativePosition * UIScale,
+                UIScale,
+                1);
+        }
+
+        private void ClearSelectionState()
+        {
+            _selectedEntryIndex = null;
+            ClearSelection();
         }
 
         protected internal override void UIScaleChanged()

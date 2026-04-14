@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface.Controls
     ///     A label is a GUI control that displays simple text.
     /// </summary>
     [Virtual]
-    public class Label : Control
+    public class Label : SelectableTextControl
     {
         public const string StylePropertyFontColor = "font-color";
         public const string StylePropertyFont = "font";
@@ -28,6 +28,8 @@ namespace Robust.Client.UserInterface.Controls
         private bool _clipText;
         private AlignMode _align;
         private Font? _fontOverride;
+        private int _selectionLower;
+        private int _selectionUpper;
 
         public Label()
         {
@@ -53,6 +55,7 @@ namespace Robust.Client.UserInterface.Controls
                 _text = value;
                 _textMemory = value.AsMemory();
                 _textDimensionCacheValid = false;
+                ClearSelection();
                 InvalidateMeasure();
             }
         }
@@ -77,6 +80,7 @@ namespace Robust.Client.UserInterface.Controls
                 _text = null;
                 _textMemory = value;
                 _textDimensionCacheValid = false;
+                ClearSelection();
                 InvalidateMeasure();
             }
         }
@@ -225,6 +229,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var baseLine = CalcBaseline();
+            DrawSelectionIfNeeded(handle);
 
             foreach (var rune in _textMemory.Span.EnumerateRunes())
             {
@@ -237,6 +242,26 @@ namespace Robust.Client.UserInterface.Controls
                 var advance = font.DrawChar(handle, rune, baseLine, UIScale, actualFontColor);
                 baseLine += new Vector2(advance, 0);
             }
+        }
+
+        protected override ReadOnlySpan<char> GetTextSpan()
+        {
+            return _textMemory.Span;
+        }
+
+        protected override int GetIndexAtPosition(Vector2 relativePosition)
+        {
+            return GetIndexAtPositionInternal(relativePosition);
+        }
+
+        protected override void DrawSelectionRange(DrawingHandleScreen handle, int selectionLower, int selectionUpper)
+        {
+            if (selectionUpper <= selectionLower)
+                return;
+
+            _selectionLower = selectionLower;
+            _selectionUpper = selectionUpper;
+            DrawSelection(handle, ActualFont);
         }
 
         public enum AlignMode : byte
@@ -326,6 +351,260 @@ namespace Robust.Client.UserInterface.Controls
             _textDimensionCacheValid = false;
 
             base.StylePropertiesChanged();
+        }
+
+        /// <summary>
+        ///     Maps a control-relative position to a UTF-16 index within the label text.
+        /// </summary>
+        private int GetIndexAtPositionInternal(Vector2 relativePosition)
+        {
+            if (_textMemory.Length == 0)
+                return 0;
+
+            if (!_textDimensionCacheValid)
+            {
+                _calculateTextDimension();
+                DebugTools.Assert(_textDimensionCacheValid);
+            }
+
+            var font = ActualFont;
+            var lineCount = _cachedTextWidths.Count;
+            var lineHeight = font.GetLineHeight(UIScale);
+
+            int vOffset;
+            switch (VAlign)
+            {
+                case VAlignMode.Top:
+                    vOffset = 0;
+                    break;
+                case VAlignMode.Fill:
+                case VAlignMode.Center:
+                    vOffset = (PixelSize.Y - _cachedTextHeight) / 2;
+                    break;
+                case VAlignMode.Bottom:
+                    vOffset = PixelSize.Y - _cachedTextHeight;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var yPx = relativePosition.Y * UIScale;
+            var line = (int) Math.Floor((yPx - vOffset) / lineHeight);
+            line = MathHelper.Clamp(line, 0, lineCount - 1);
+
+            var lineWidth = _cachedTextWidths[line];
+            int hOffset;
+            switch (Align)
+            {
+                case AlignMode.Left:
+                    hOffset = 0;
+                    break;
+                case AlignMode.Center:
+                case AlignMode.Fill:
+                    hOffset = (PixelSize.X - lineWidth) / 2;
+                    break;
+                case AlignMode.Right:
+                    hOffset = PixelSize.X - lineWidth;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var xPx = relativePosition.X * UIScale;
+            var lineStartIndex = GetLineStartIndex(line);
+            var lineEndIndex = GetLineEndIndex(line);
+
+            if (xPx <= hOffset)
+                return lineStartIndex;
+
+            if (xPx >= hOffset + lineWidth)
+                return lineEndIndex;
+
+            var index = lineStartIndex;
+            var chrPosX = hOffset;
+            var lastChrPosX = hOffset;
+
+            var currentLine = 0;
+            foreach (var rune in _textMemory.Span.EnumerateRunes())
+            {
+                if (rune == new Rune('\n'))
+                {
+                    if (currentLine == line)
+                        break;
+
+                    currentLine++;
+                    continue;
+                }
+
+                if (currentLine != line)
+                {
+                    index += rune.Utf16SequenceLength;
+                    continue;
+                }
+
+                if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
+                {
+                    index += rune.Utf16SequenceLength;
+                    continue;
+                }
+
+                if (chrPosX > xPx)
+                    break;
+
+                lastChrPosX = chrPosX;
+                chrPosX += metrics.Advance;
+                index += rune.Utf16SequenceLength;
+
+                if (chrPosX > hOffset + lineWidth)
+                    break;
+            }
+
+            var distanceRight = chrPosX - xPx;
+            var distanceLeft = xPx - lastChrPosX;
+            if (index > lineStartIndex && distanceRight > distanceLeft)
+            {
+                index -= 1;
+                if (index > 0 && index < _textMemory.Length && char.IsLowSurrogate(_textMemory.Span[index]))
+                    index -= 1;
+            }
+
+            return index;
+        }
+
+        /// <summary>
+        ///     Returns the UTF-16 index of the first character on the given line.
+        /// </summary>
+        private int GetLineStartIndex(int targetLine)
+        {
+            var line = 0;
+            var index = 0;
+            foreach (var rune in _textMemory.Span.EnumerateRunes())
+            {
+                if (line == targetLine)
+                    break;
+
+                index += rune.Utf16SequenceLength;
+                if (rune == new Rune('\n'))
+                    line++;
+            }
+
+            return index;
+        }
+
+        /// <summary>
+        ///     Returns the UTF-16 index immediately after the last character on the given line.
+        /// </summary>
+        private int GetLineEndIndex(int targetLine)
+        {
+            var line = 0;
+            var index = 0;
+            foreach (var rune in _textMemory.Span.EnumerateRunes())
+            {
+                if (rune == new Rune('\n'))
+                {
+                    if (line == targetLine)
+                        break;
+
+                    line++;
+                }
+                else if (line == targetLine)
+                {
+                    index += rune.Utf16SequenceLength;
+                }
+                else
+                {
+                    index += rune.Utf16SequenceLength;
+                }
+            }
+
+            return index;
+        }
+
+        /// <summary>
+        ///     Draws selection rectangles for the active UTF-16 index range.
+        /// </summary>
+        private void DrawSelection(DrawingHandleScreen handle, Font font)
+        {
+            var lower = _selectionLower;
+            var upper = _selectionUpper;
+            if (upper <= lower)
+                return;
+
+            int vOffset;
+            switch (VAlign)
+            {
+                case VAlignMode.Top:
+                    vOffset = 0;
+                    break;
+                case VAlignMode.Fill:
+                case VAlignMode.Center:
+                    vOffset = (PixelSize.Y - _cachedTextHeight) / 2;
+                    break;
+                case VAlignMode.Bottom:
+                    vOffset = PixelSize.Y - _cachedTextHeight;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var color = StylePropertyDefault(StylePropertySelectionColor, Color.CornflowerBlue.WithAlpha(0.25f));
+
+            var lineHeight = font.GetLineHeight(UIScale);
+            var line = 0;
+            var textIndex = 0;
+
+            var lineWidth = _cachedTextWidths[line];
+            var lineStartX = GetLineStartX(line, lineWidth);
+            var lineTop = vOffset + lineHeight * line;
+            var lineBottom = lineTop + lineHeight;
+
+            var tracker = new TextSelectionLineTracker(lower, upper);
+            tracker.BeginLine(0, lineStartX, lineTop, lineBottom);
+
+            var x = lineStartX;
+
+            foreach (var rune in _textMemory.Span.EnumerateRunes())
+            {
+                if (rune == new Rune('\n'))
+                {
+                    tracker.FinishLine(handle, color, textIndex, lineStartX + lineWidth);
+
+                    line++;
+                    lineWidth = _cachedTextWidths[Math.Min(line, _cachedTextWidths.Count - 1)];
+                    lineStartX = GetLineStartX(line, lineWidth);
+                    lineTop = vOffset + lineHeight * line;
+                    lineBottom = lineTop + lineHeight;
+                    textIndex += rune.Utf16SequenceLength;
+                    x = lineStartX;
+                    tracker.BeginLine(textIndex, lineStartX, lineTop, lineBottom);
+                    continue;
+                }
+
+                tracker.UpdateForIndex(textIndex, x);
+
+                if (font.TryGetCharMetrics(rune, UIScale, out var metrics))
+                    x += metrics.Advance;
+
+                textIndex += rune.Utf16SequenceLength;
+                tracker.UpdateForIndex(textIndex, x);
+            }
+
+            tracker.FinishLine(handle, color, textIndex, x);
+        }
+
+        /// <summary>
+        ///     Computes the starting X offset for the given line based on alignment.
+        /// </summary>
+        private float GetLineStartX(int line, int lineWidth)
+        {
+            return Align switch
+            {
+                AlignMode.Left => 0,
+                AlignMode.Center => (PixelSize.X - lineWidth) / 2f,
+                AlignMode.Fill => (PixelSize.X - lineWidth) / 2f,
+                AlignMode.Right => PixelSize.X - lineWidth,
+                _ => 0
+            };
         }
     }
 }

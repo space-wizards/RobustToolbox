@@ -125,7 +125,7 @@ public partial class EntityManager
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid SpawnAtPosition(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        => Spawn(protoName, _xforms.ToMapCoordinates(coordinates), overrides, rotation: _xforms.GetWorldRotation(coordinates.EntityId));
+        => SpawnAtPosition(protoName, coordinates, _xforms.GetWorldRotation(coordinates.EntityId), overrides);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid SpawnAtPosition(string? protoName, EntityCoordinates coordinates, Angle rotation, ComponentRegistry? overrides = null)

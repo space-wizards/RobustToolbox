@@ -38,7 +38,6 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     CanKeyboardFocus = true;
                     KeyboardFocusOnClick = true;
-                    DefaultCursorShape = CursorShape.IBeam;
                 }
             }
         }
@@ -105,6 +104,7 @@ namespace Robust.Client.UserInterface.Controls
             if (!Copyable)
                 return;
 
+            // Copy selection to clipboard.
             if (args.Function == EngineKeyFunctions.TextCopy)
             {
                 if (!HasKeyboardFocus())
@@ -118,6 +118,14 @@ namespace Robust.Client.UserInterface.Controls
                 _selection.CopySelectionOrAll(clipboard, text);
                 args.Handle();
                 return;
+            }
+
+            // Any non-copy input should not trap gameplay input.
+            if (_selection.HasSelection)
+            {
+                _selection.ClearSelection();
+                if (HasKeyboardFocus())
+                    ReleaseKeyboardFocus();
             }
 
             if (args.Function != EngineKeyFunctions.UIClick && args.Function != EngineKeyFunctions.TextCursorSelect)
@@ -140,7 +148,13 @@ namespace Robust.Client.UserInterface.Controls
                 return;
 
             if (args.Function == EngineKeyFunctions.UIClick || args.Function == EngineKeyFunctions.TextCursorSelect)
+            {
                 _selection.EndSelection();
+
+                // If there is no selection and we have focus, release it.
+                if (!_selection.HasSelection && HasKeyboardFocus())
+                    ReleaseKeyboardFocus();
+            }
         }
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)

@@ -54,6 +54,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             IoCManager.InjectDependencies(this);
             MouseFilter = MouseFilterMode.Pass;
+            Copyable = true;
             RectClipContent = true;
 
             _scrollBar = new VScrollBar

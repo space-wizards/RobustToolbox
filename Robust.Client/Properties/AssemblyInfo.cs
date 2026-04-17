@@ -2,6 +2,7 @@
 
 [assembly: InternalsVisibleTo("Robust.UnitTesting")]
 [assembly: InternalsVisibleTo("Robust.Client.WebView")]
+[assembly: InternalsVisibleTo("Robust.Client.PiShock")]
 [assembly: InternalsVisibleTo("Robust.Lite")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 [assembly: InternalsVisibleTo("Robust.Benchmarks")]

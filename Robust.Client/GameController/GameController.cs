@@ -23,6 +23,7 @@ using Robust.Client.UserInterface.RichText;
 using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
+using Robust.Client.PiShockHook;
 using Robust.Client.WebViewHook;
 using Robust.LoaderApi;
 using Robust.Shared;
@@ -76,7 +77,6 @@ namespace Robust.Client
         [Dependency] private readonly ITaskManager _taskManager = default!;
         [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariablesManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
-        [Dependency] private readonly IPiShockManager _piShock = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IAudioInternal _audio = default!;
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
@@ -105,6 +105,7 @@ namespace Robust.Client
         [Dependency] private readonly ClientTransferTestManager _transferTest = default!;
 
         private IWebViewManagerHook? _webViewHook;
+        private IPiShockManagerHook? _piShockHook;
 
         private CommandLineArgs? _commandLineArgs;
 
@@ -244,7 +245,7 @@ namespace Robust.Client
             _loadscr.LoadingStep(_scriptClient.Initialize, _scriptClient);
             _loadscr.LoadingStep(_client.Initialize, _client);
             _loadscr.LoadingStep(_discord.Initialize, _discord);
-            _loadscr.LoadingStep(_piShock.Initialize, _piShock);
+            _loadscr.LoadingStep(() => _piShockHook?.Initialize(), "PiShock init");
             _loadscr.LoadingStep(_tagManager.Initialize, _tagManager);
             _loadscr.LoadingStep(_protoLoadMan.Initialize, _protoLoadMan);
             _loadscr.LoadingStep(_netResMan.Initialize, _netResMan);

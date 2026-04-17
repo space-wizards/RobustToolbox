@@ -11,6 +11,7 @@
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // Gives access to Castle(Moq)
 [assembly: InternalsVisibleTo("Robust.Benchmarks")]
 [assembly: InternalsVisibleTo("Robust.Client.WebView")]
+[assembly: InternalsVisibleTo("Robust.Client.PiShock")]
 [assembly: InternalsVisibleTo("Robust.Packaging")]
 [assembly: InternalsVisibleTo("Robust.Shared.Tests")]
 [assembly: InternalsVisibleTo("Robust.Server.IntegrationTests")]

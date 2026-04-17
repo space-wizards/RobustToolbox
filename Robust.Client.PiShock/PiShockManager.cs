@@ -3,16 +3,19 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Robust.Shared;
+using Robust.Client.PiShockHook;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
+using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 
-namespace Robust.Client.Utility;
+[assembly: PiShockManagerImpl(typeof(Robust.Client.PiShock.PiShockManager))]
 
-internal sealed class PiShockManager : IPiShockManager
+namespace Robust.Client.PiShock;
+
+internal sealed class PiShockManager : IPiShockManager, IPiShockManagerHook
 {
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly HttpClientHolder _http = default!;
@@ -43,17 +46,29 @@ internal sealed class PiShockManager : IPiShockManager
         Operate = DoOperate;
     }
 
+    public void PreInitialize(IDependencyCollection dependencies)
+    {
+        var cfg = dependencies.Resolve<IConfigurationManagerInternal>();
+        cfg.LoadCVarsFromAssembly(typeof(PiShockManager).Assembly);
+
+        var refl = dependencies.Resolve<IReflectionManager>();
+        refl.LoadAssemblies(typeof(PiShockManager).Assembly);
+
+        dependencies.RegisterInstance<IPiShockManager>(this);
+        dependencies.InjectDependencies(this, oneOff: true);
+    }
+
     public void Initialize()
     {
         _sawmill = _logManager.GetSawmill("pishock");
 
-        _cfg.OnValueChanged(CVars.PiShockEnabled, v => _enabled = v, invokeImmediately: true);
-        _cfg.OnValueChanged(CVars.PiShockUsername, v => _username = v, invokeImmediately: true);
-        _cfg.OnValueChanged(CVars.PiShockApiKey, v => _apiKey = v, invokeImmediately: true);
-        _cfg.OnValueChanged(CVars.PiShockShareCode, v => _shareCode = v, invokeImmediately: true);
-        _cfg.OnValueChanged(CVars.PiShockMaxIntensity, v => _maxIntensity = Math.Clamp(v, 1, 100), invokeImmediately: true);
-        _cfg.OnValueChanged(CVars.PiShockMaxDuration, v => _maxDuration = Math.Clamp(v, 1, 15), invokeImmediately: true);
-        _cfg.OnValueChanged(CVars.PiShockCooldown, OnCooldownChanged, invokeImmediately: true);
+        _cfg.OnValueChanged(PCVars.PiShockEnabled, v => _enabled = v, invokeImmediately: true);
+        _cfg.OnValueChanged(PCVars.PiShockUsername, v => _username = v, invokeImmediately: true);
+        _cfg.OnValueChanged(PCVars.PiShockApiKey, v => _apiKey = v, invokeImmediately: true);
+        _cfg.OnValueChanged(PCVars.PiShockShareCode, v => _shareCode = v, invokeImmediately: true);
+        _cfg.OnValueChanged(PCVars.PiShockMaxIntensity, v => _maxIntensity = Math.Clamp(v, 1, 100), invokeImmediately: true);
+        _cfg.OnValueChanged(PCVars.PiShockMaxDuration, v => _maxDuration = Math.Clamp(v, 1, 15), invokeImmediately: true);
+        _cfg.OnValueChanged(PCVars.PiShockCooldown, OnCooldownChanged, invokeImmediately: true);
     }
 
     private void DoOperate(PiShockOp op, int intensity, int duration)

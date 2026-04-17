@@ -1,12 +1,11 @@
 using System;
+using Robust.Shared.Analyzers;
 
-namespace Robust.Client.Utility;
+namespace Robust.Client.PiShock;
 
 [NotContentImplementable]
 public interface IPiShockManager
 {
-    void Initialize();
-
     /// <remarks>
     /// op, intensity (1–100), duration (1–15 seconds).
     /// </remarks>

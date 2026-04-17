@@ -1,0 +1,7 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- If you are using Robust.Client.PiShock, import this to depend on it. -->
+
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client.PiShock\Robust.Client.PiShock.csproj" />
+  </ItemGroup>
+</Project>

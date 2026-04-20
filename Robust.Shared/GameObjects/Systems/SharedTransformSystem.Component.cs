@@ -635,8 +635,8 @@ public abstract partial class SharedTransformSystem
         if (xform.ParentUid == xform.MapUid)
             DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid || xform.GridUid == xform.MapUid);
 #endif
-        // Don't check for grid traversal if we're already setting the target parent
-        RaiseMoveEvent(entity, oldParentUid, oldPosition, oldRotation, oldMap, checkTraversal: newParent == null);
+        // No need to check for grid traversal since we've already handled it
+        RaiseMoveEvent(entity, oldParentUid, oldPosition, oldRotation, oldMap, checkTraversal: false);
     }
 
     public void SetCoordinates(

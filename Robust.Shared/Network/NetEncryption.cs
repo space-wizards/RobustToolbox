@@ -94,33 +94,38 @@ internal sealed class NetEncryption
         var nonce = message.ReadUInt64();
         var cipherText = message.Data.AsSpan(sizeof(ulong), message.LengthBytes - sizeof(ulong));
 
+        if (cipherText.Length < CryptoAeadXChaCha20Poly1305Ietf.AddBytes) return false;
+
         var buffer = ArrayPool<byte>.Shared.Rent(cipherText.Length);
-        cipherText.CopyTo(buffer);
+        try
+        {
+            cipherText.CopyTo(buffer);
 
-        Span<byte> nonceData = stackalloc byte[CryptoAeadXChaCha20Poly1305Ietf.NoncePublicBytes];
-        nonceData.Fill(0);
-        BinaryPrimitives.WriteUInt64LittleEndian(nonceData, nonce);
+            Span<byte> nonceData = stackalloc byte[CryptoAeadXChaCha20Poly1305Ietf.NoncePublicBytes];
+            nonceData.Fill(0);
+            BinaryPrimitives.WriteUInt64LittleEndian(nonceData, nonce);
 
-        var result = CryptoAeadXChaCha20Poly1305Ietf.Decrypt(
-            // plaintext
-            message.Data,
-            out var messageLength,
-            // ciphertext
-            buffer.AsSpan(0, cipherText.Length),
-            // additional data (unused)
-            ReadOnlySpan<byte>.Empty,
-            // nonce
-            nonceData,
-            // key
-            _key);
+            var result = CryptoAeadXChaCha20Poly1305Ietf.Decrypt(
+                // plaintext
+                message.Data,
+                out var messageLength,
+                // ciphertext
+                buffer.AsSpan(0, cipherText.Length),
+                // additional data (unused)
+                ReadOnlySpan<byte>.Empty,
+                // nonce
+                nonceData,
+                // key
+                _key);
 
-        ArrayPool<byte>.Shared.Return(buffer);
+            if (!result)
+                return false;
 
-        if (!result)
-            return false;
-
-        message.Position = 0;
-        message.LengthBytes = messageLength;
-        return true;
+            message.Position = 0;
+            message.LengthBytes = messageLength;
+            return true;
+        }
+        finally
+        { ArrayPool<byte>.Shared.Return(buffer); }
     }
 }

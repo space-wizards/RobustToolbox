@@ -9,6 +9,8 @@ namespace Robust.Shared.Network;
 
 internal sealed class NetEncryption
 {
+    private const int ReplayWindowSize = 64; // Forge-Change
+
     // Use a counter for nonces. The counter is 64-bit, I will be impressed if you ever manage to run it out.
     // 64-bit counter (incl over the wire) is fine, don't need the whole 192-bit.
     // Server starts at 0, client starts at 1, increment by two.
@@ -16,6 +18,10 @@ internal sealed class NetEncryption
     // Keep in mind, our keys are only valid for one session.
     private ulong _nonce;
     private readonly byte[] _key;
+    private readonly ulong _expectedRemoteParity; // Forge-Change
+    private ulong _highestReceivedNonce; // Forge-Change
+    private ulong _receivedNonceWindow; // Forge-Change
+    private bool _hasReceivedNonce; // Forge-Change
 
     public NetEncryption(byte[] key, bool isServer)
     {
@@ -24,6 +30,7 @@ internal sealed class NetEncryption
 
         _nonce = isServer ? 0ul : 1ul;
         _key = key;
+        _expectedRemoteParity = isServer ? 1ul : 0ul; // Forge-Change
     }
 
     public unsafe void Encrypt(NetOutgoingMessage message)
@@ -91,10 +98,29 @@ internal sealed class NetEncryption
     /// <returns>Whether the operation was successful. If this fails, you likely want to drop the connection.</returns>
     public unsafe bool TryDecrypt(NetIncomingMessage message)
     {
-        var nonce = message.ReadUInt64();
-        var cipherText = message.Data.AsSpan(sizeof(ulong), message.LengthBytes - sizeof(ulong));
+        return TryDecrypt(message, out _); // Forge-Change
+    }
+    // Forge-Change-start
+    /// <summary>
+    ///     Attempts to decrypt an incoming network message, falliably.
+    /// </summary>
+    /// <param name="message">The message to decrypt in-place. This will be mutated with the decrypted results.</param>
+    /// <param name="failure">The reason why decryption failed.</param>
+    /// <returns>Whether the operation was successful. If this fails, you likely want to drop the connection.</returns>
+    public unsafe bool TryDecrypt(NetIncomingMessage message, out NetDecryptionFailure failure) // Forge-Change-function
+    {
+        if (message.LengthBytes < sizeof(ulong) + CryptoAeadXChaCha20Poly1305Ietf.AddBytes)
+        {
+            failure = NetDecryptionFailure.InvalidPacket;
+            return false;
+        }
 
-        if (cipherText.Length < CryptoAeadXChaCha20Poly1305Ietf.AddBytes) return false;
+        var nonce = message.ReadUInt64();
+
+        if (!ValidateAndTrackIncomingNonce(nonce, out failure))
+            return false;
+    // Forge-Change-end
+        var cipherText = message.Data.AsSpan(sizeof(ulong), message.LengthBytes - sizeof(ulong));
 
         var buffer = ArrayPool<byte>.Shared.Rent(cipherText.Length);
         try
@@ -119,13 +145,75 @@ internal sealed class NetEncryption
                 _key);
 
             if (!result)
+            {
+                failure = NetDecryptionFailure.AuthenticationFailed; // Forge-Change
                 return false;
+            }
 
             message.Position = 0;
             message.LengthBytes = messageLength;
+            failure = NetDecryptionFailure.None; // Forge-Change
             return true;
         }
         finally
         { ArrayPool<byte>.Shared.Return(buffer); }
     }
+// Forge-Change-start
+    private bool ValidateAndTrackIncomingNonce(ulong nonce, out NetDecryptionFailure failure)
+    {
+        if ((nonce & 1ul) != _expectedRemoteParity)
+        {
+            failure = NetDecryptionFailure.InvalidNonce;
+            return false;
+        }
+
+        var normalizedNonce = nonce >> 1;
+        if (!_hasReceivedNonce)
+        {
+            _hasReceivedNonce = true;
+            _highestReceivedNonce = normalizedNonce;
+            _receivedNonceWindow = 1;
+            failure = NetDecryptionFailure.None;
+            return true;
+        }
+
+        if (normalizedNonce > _highestReceivedNonce)
+        {
+            var shift = normalizedNonce - _highestReceivedNonce;
+            _receivedNonceWindow = shift >= ReplayWindowSize
+                ? 1
+                : (_receivedNonceWindow << (int) shift) | 1;
+            _highestReceivedNonce = normalizedNonce;
+            failure = NetDecryptionFailure.None;
+            return true;
+        }
+
+        var age = _highestReceivedNonce - normalizedNonce;
+        if (age >= ReplayWindowSize)
+        {
+            failure = NetDecryptionFailure.Replay;
+            return false;
+        }
+
+        var bit = 1UL << (int) age;
+        if ((_receivedNonceWindow & bit) != 0)
+        {
+            failure = NetDecryptionFailure.Replay;
+            return false;
+        }
+
+        _receivedNonceWindow |= bit;
+        failure = NetDecryptionFailure.None;
+        return true;
+    }
 }
+
+internal enum NetDecryptionFailure : byte
+{
+    None,
+    InvalidPacket,
+    InvalidNonce,
+    Replay,
+    AuthenticationFailed,
+}
+// Forge-Change-end

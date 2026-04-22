@@ -78,6 +78,23 @@ namespace Robust.Shared.Network
         private static readonly Counter MessagesDroppedMetrics = Metrics.CreateCounter(
             "robust_net_dropped",
             "Number of incoming messages that have been dropped.");
+        // Forge-Change-start
+        private static readonly Counter DecryptSuccessMetrics = Metrics.CreateCounter(
+            "robust_net_decrypt_success_total",
+            "Number of encrypted packets successfully decrypted.");
+
+        private static readonly Counter DecryptFailureMetrics = Metrics.CreateCounter(
+            "robust_net_decrypt_failures_total",
+            "Number of encrypted packets rejected during decryption.",
+            new CounterConfiguration
+            {
+                LabelNames = ["reason"],
+            });
+
+        private static readonly Counter ReplayRejectMetrics = Metrics.CreateCounter(
+            "robust_net_replay_rejects_total",
+            "Number of encrypted packets rejected as replayed or stale.");
+        // Forge-Change-end
 
         // TODO: Disabled for now since calculating these from Lidgren is way too expensive.
         // Need to go through and have Lidgren properly keep track of counters for these.
@@ -149,6 +166,7 @@ namespace Robust.Shared.Network
         private ISawmill _authLogger = default!;
 
         private readonly ConcurrentDictionary<IPAddress, (int TotalCount, DateTime LastSeen)> _decryptFailCounts = new();
+        private readonly ConcurrentDictionary<IPAddress, (DateTime NextLogAt, int SuppressedCount, DateTime LastSeen)> _decryptFailLogState = new(); // Forge-Change
         private DateTime _lastDecryptFailCleanup = DateTime.UtcNow;
 
         private bool _clientSerializerComplete;
@@ -522,7 +540,58 @@ namespace Robust.Shared.Network
             _lastDecryptFailCleanup = now;
             foreach (var (ip, (_, lastSeen)) in _decryptFailCounts)
             { if ((now - lastSeen).TotalMinutes >= intervalMinutes) _decryptFailCounts.TryRemove(ip, out _); }
+            foreach (var (ip, (_, _, lastSeen)) in _decryptFailLogState) // Forge-Change
+            { if ((now - lastSeen).TotalMinutes >= intervalMinutes) _decryptFailLogState.TryRemove(ip, out _); } // Forge-Change
         }
+        // Forge-Chang-start
+        private static string GetDecryptFailureReason(NetDecryptionFailure failure)
+        {
+            return failure switch
+            {
+                NetDecryptionFailure.InvalidPacket => "invalid_packet",
+                NetDecryptionFailure.InvalidNonce => "invalid_nonce",
+                NetDecryptionFailure.Replay => "replay",
+                NetDecryptionFailure.AuthenticationFailed => "authentication_failed",
+                _ => "unknown",
+            };
+        }
+
+        private bool ShouldLogDecryptFailure(IPAddress remoteIp, out int suppressedCount)
+        {
+            suppressedCount = 0;
+            var intervalSeconds = _config.GetCVar(CVars.NetDecryptFailLogIntervalSeconds);
+            if (intervalSeconds <= 0)
+                return true;
+
+            var now = DateTime.UtcNow;
+            var interval = TimeSpan.FromSeconds(intervalSeconds);
+
+            while (true)
+            {
+                if (!_decryptFailLogState.TryGetValue(remoteIp, out var state))
+                {
+                    if (_decryptFailLogState.TryAdd(remoteIp, (now + interval, 0, now)))
+                        return true;
+
+                    continue;
+                }
+
+                if (now < state.NextLogAt)
+                {
+                    var updated = (state.NextLogAt, state.SuppressedCount + 1, now);
+                    if (_decryptFailLogState.TryUpdate(remoteIp, updated, state))
+                        return false;
+
+                    continue;
+                }
+
+                suppressedCount = state.SuppressedCount;
+                var refreshed = (now + interval, 0, now);
+                if (_decryptFailLogState.TryUpdate(remoteIp, refreshed, state))
+                    return true;
+            }
+        }
+        // Forge-Change-end
 
         public void ProcessPackets()
         {
@@ -985,38 +1054,63 @@ namespace Robust.Shared.Network
             }
 
             // Attempt to decrypt the message, only logging if we fail to decrypt and we actually have encryption.
-            if ((!channel.Encryption?.TryDecrypt(msg)) ?? false)
+            if (channel.Encryption != null && !channel.Encryption.TryDecrypt(msg, out var decryptFailure)) // Forge-Change
             {
                 var remoteEndPoint = msg.SenderConnection.RemoteEndPoint;
+                var failureReason = GetDecryptFailureReason(decryptFailure); // Forge-Change
+                DecryptFailureMetrics.WithLabels(failureReason).Inc(); // Forge-Change
+                if (decryptFailure is NetDecryptionFailure.Replay or NetDecryptionFailure.InvalidNonce) // Forge-Change
+                    ReplayRejectMetrics.Inc(); // Forge-Change
+
                 if (IsServer)
                 {
                     var remoteIp = NormalizeIp(remoteEndPoint.Address);
                     var now = DateTime.UtcNow;
                     var maxTracked = _config.GetCVar(CVars.NetDecryptFailMaxTracked);
 
-                    // Drop silently if tracking limit reached
+                    // Disconnect but avoid allocating tracking state for unbounded numbers of IPs.
                     if (_decryptFailCounts.Count >= maxTracked && !_decryptFailCounts.ContainsKey(remoteIp))
+                    // Forge-Change-start
+                    {
+                        if (_logPacketIssues && ShouldLogDecryptFailure(remoteIp, out var suppressedCount))
+                        {
+                            var suppressed = suppressedCount > 0 ? $" ({suppressedCount} similar failures suppressed)" : string.Empty;
+                            _logger.Debug($"{remoteEndPoint}: Rejected encrypted packet ({failureReason}) without tracking due to fail-tracker limits{suppressed}.");
+                        }
+
+                        msg.SenderConnection.Disconnect("Failed to decrypt packet.", false);
                         return true;
+                    }
+                    // Forge-Change-end
                     var (failCount, _) = _decryptFailCounts.AddOrUpdate(
                         remoteIp,
                         _ => (1, now),
                         (_, old) => (old.TotalCount + 1, now));
-                    if (failCount == 1 && _logPacketIssues)
-                        _logger.Debug($"{remoteEndPoint}: Got a packet that fails to decrypt.");
+                    // Forge-Change-start
+                    if (_logPacketIssues && ShouldLogDecryptFailure(remoteIp, out var trackedSuppressedCount))
+                    {
+                        var suppressed = trackedSuppressedCount > 0 ? $" ({trackedSuppressedCount} similar failures suppressed)" : string.Empty;
+                        _logger.Debug($"{remoteEndPoint}: Rejected encrypted packet ({failureReason}); failCount={failCount}{suppressed}.");
+                    }
+                    // Forge-Change-end
 
                     var banThreshold = _config.GetCVar(CVars.NetDecryptFailBanThreshold);
                     if (failCount >= banThreshold)
                     {
-                        _authLogger.Warning($"[DECRYPTBAN] {remoteIp} reached {failCount} decryption failures. Consider banning this IP.");
+                        _authLogger.Warning($"[DECRYPTBAN] {remoteIp} reached {failCount} decryption failures ({failureReason}). Consider banning this IP."); // Forge-Change
                         if (_config.GetCVar(CVars.NetDecryptFailKick))
                             msg.SenderConnection.Disconnect("Failed to decrypt packet.", false);
                         return true;
                     }
                 }
                 else if (_logPacketIssues)
-                { _logger.Debug($"{remoteEndPoint}: Got a packet that fails to decrypt."); }
+                { _logger.Debug($"{remoteEndPoint}: Rejected encrypted packet ({failureReason})."); } // Forge-Change
                 msg.SenderConnection.Disconnect("Failed to decrypt packet.", false);
                 return true;
+            }
+            else if (channel.Encryption != null) // Forge-Change
+            {
+                DecryptSuccessMetrics.Inc(); // Forge-Change
             }
 
             var id = msg.ReadByte();

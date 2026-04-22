@@ -27,6 +27,13 @@ namespace Robust.Shared
          */
 
         /// <summary>
+        /// Minimum delay in seconds between detailed decrypt failure log entries for the same IP/subnet.
+        /// Set to 0 or below to disable log sampling.
+        /// </summary>
+        public static readonly CVarDef<int> NetDecryptFailLogIntervalSeconds = // Forge-Change
+            CVarDef.Create("net.dos_fail_log_interval", 30, CVar.SERVERONLY); // Forge-Change
+
+        /// <summary>
         /// Hard max-cap of concurrent connections for the main game networking.
         /// </summary>
         /// <remarks>

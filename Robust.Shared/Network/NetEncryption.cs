@@ -9,7 +9,7 @@ namespace Robust.Shared.Network;
 
 internal sealed class NetEncryption
 {
-    private const int ReplayWindowSize = 64; // Forge-Change
+    private const int ReplayWindowSize = 512; // Forge-Change
 
     // Use a counter for nonces. The counter is 64-bit, I will be impressed if you ever manage to run it out.
     // 64-bit counter (incl over the wire) is fine, don't need the whole 192-bit.

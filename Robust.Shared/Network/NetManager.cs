@@ -1058,6 +1058,7 @@ namespace Robust.Shared.Network
             {
                 var remoteEndPoint = msg.SenderConnection.RemoteEndPoint;
                 var failureReason = GetDecryptFailureReason(decryptFailure); // Forge-Change
+                var disconnectReason = $"Failed to decrypt packet ({failureReason})."; // Forge-Change
                 DecryptFailureMetrics.WithLabels(failureReason).Inc(); // Forge-Change
                 if (decryptFailure is NetDecryptionFailure.Replay or NetDecryptionFailure.InvalidNonce) // Forge-Change
                     ReplayRejectMetrics.Inc(); // Forge-Change
@@ -1078,7 +1079,7 @@ namespace Robust.Shared.Network
                             _logger.Debug($"{remoteEndPoint}: Rejected encrypted packet ({failureReason}) without tracking due to fail-tracker limits{suppressed}.");
                         }
 
-                        msg.SenderConnection.Disconnect("Failed to decrypt packet.", false);
+                        msg.SenderConnection.Disconnect(disconnectReason, false); // Forge-Change
                         return true;
                     }
                     // Forge-Change-end
@@ -1099,13 +1100,13 @@ namespace Robust.Shared.Network
                     {
                         _authLogger.Warning($"[DECRYPTBAN] {remoteIp} reached {failCount} decryption failures ({failureReason}). Consider banning this IP."); // Forge-Change
                         if (_config.GetCVar(CVars.NetDecryptFailKick))
-                            msg.SenderConnection.Disconnect("Failed to decrypt packet.", false);
+                            msg.SenderConnection.Disconnect(disconnectReason, false); // Forge-Change
                         return true;
                     }
                 }
                 else if (_logPacketIssues)
                 { _logger.Debug($"{remoteEndPoint}: Rejected encrypted packet ({failureReason})."); } // Forge-Change
-                msg.SenderConnection.Disconnect("Failed to decrypt packet.", false);
+                msg.SenderConnection.Disconnect(disconnectReason, false); // Forge-Change
                 return true;
             }
             else if (channel.Encryption != null) // Forge-Change

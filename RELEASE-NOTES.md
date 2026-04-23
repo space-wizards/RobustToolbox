@@ -39,22 +39,130 @@ END TEMPLATE-->
 
 ### New features
 
-* If a sandbox error is caused by a compiler-generated method, the engine will now attempt to point out which using code is responsible.
-* Added `OrderedDictionary<TKey, TValue>` and `System.StringComparer` to the sandbox whitelist.
-* Added more overloads to `MapLoaderSystem` taking `TextReader`/`TextWriter` where appropriate.
-* The tooltip when hovering an entry in the entity spawn panel now contains the entity's protoid as well as its description.
+*None yet*
 
 ### Bugfixes
 
-*None yet*
+* Fixed `EntitySystem` dependencies throwing an exception when opening a BUI.
 
 ### Other
 
-* Public APIs involving `System.Random` have been obsoleted. Use `IRobustRandom`/`RobustRandom` and such instead.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 275.2.0
+
+### Bugfixes
+
+* Fixed clients being unable to connect to dev servers.
+
+
+## 275.1.0
+
+### Bugfixes
+
+* Fixed a DoS exploit related to decrypting network packets.
+
+
+## 275.0.0
+
+### Breaking changes
+
+* Removed some obsolete code that has been marked as obsolete for over 2 years.
+  * Several methods were removed from `PvsOverrideSystem` and `ContainerManagerComponent`.
+  * `TimerComponent` has been completely removed.
+
+### New features
+
+* Added `StringReader` and `StringWriter` to the sandbox whitelist.
+* Added `IEmitter`, `Emitter`, and `EmitterSettings` from `YamlDotNet` to the sandbox whitelist.
+
+### Bugfixes
+
+* Fixed hiding scrollbars preventing manual scrolling, but better.
+
+
+## 274.0.1
+
+### Bugfixes
+
+- Fixed hiding the scrollbar preventing manual scrolling
+- Fixed wrong behavior in `HScrollBarHidden` getter
+
+### Other
+
+- Add documentation for analyzer attributes
+
+## 274.0.0
+
+### Breaking changes
+
+- ITestPair.Init() now requires a TextWriter be provided to write its gravestone to.
+  This gravestone is where TestPair test history is now written to.
+- ITestPair.AddToHistory() must be used to add tests to the test history.
+- Test history is now stored in ITestPair.ExtendedTestHistory.
+- Engine and content tests relying on TestPair using NUnit will now automatically
+  output gravestone files for test history. You should set the working directory for tests if you wish to
+  use these artifacts.
+- Using test pairs outside of a test environment without providing an `ITestContextLike` implementor will
+  now crash due to the lack of a running NUnit test. Use an `ExternalTestContext` for this use case.
+- Test logs no longer contain TestPair history.
+- Test history now includes the GC total memory usage at time of AddToHistory() call. This is typically while the test
+  is obtaining a pair.
+- ITestPair is now `[NotContentImplementable]` and future additions to the interface will not be considered breaking.
+- Erroneous logs in tests are now allowed to occur more than once, and assert a failure at the end of the test while doing pair cleanup instead of during it.
+- `Prototype<T>`, a precursor to `ProtoId<T>` used by toolshed, has been removed.
+
+### New features
+
+- TestPairs now automatically log their test history to a gravestone file.
+- The visibility of `ScrollContainer` scrollbars can now controlled by the `VScrollBarHidden` and `HScrollBarHidden` properties.
+- Improved error message when failing to create a cursor.
+- Improved error logging for exceptions raised while applying entity states in `ClientGameStateManager`.
+
+### Bugfixes
+
+- Toolshed commands trying to complete `EntProtoId` fields now actually return completion results.
+- UI styling and update limits are now disabled in testing through the `ui.obey_update_limits` cvar. This cvar is only
+  functional in debug builds of engine.
+
+
+## 273.0.0
+
+### Breaking changes
+
+* `RemoveJoint(uid, id)` now accepts an optional recursive argument, which is true by default. This recursive argument controls whether or not relayed joints attached to the uid are also removed. Code that relies on relayed joints not being deleted should set the recursive argument to false.
+
+### New features
+
+* If a sandbox error is caused by a compiler-generated method, the engine will now attempt to point out which using code is responsible.
+* Added `OrderedDictionary<TKey, TValue>` and `System.StringComparer` to the sandbox whitelist.
+* Added more overloads to `MapLoaderSystem` taking `TextReader`/`TextWriter` where appropriate.
+* The tooltip when hovering an entry in the entity spawn panel now contains the entity's protoid as well as its description.
+* Added more info to the exception thrown when failing to validate a static `ProtoId` field in a generic class.
+* `EntityQuery`s can now be injected as dependencies using the `[Dependency]` attribute.
+* BUIs can now inject systems (and `EntityQuery`s) as dependencies.
+* Added `[Animatable]` to `SharedPointlightComponent.Offset`.
+* Added `[AlwaysPushInheritance]` to `UserInterfaceComponent.Interfaces`.
+* Added an analyzer to raise a warning for instances where a proxy method available within a class is not used (for example, calling `EntityManager.TryGetComponent` within an `EntitySystem` instead of using `TryComp`). A code fixer is also provided that can automatically correct such instances.
+* Added a new attribute `[ProxyFor]` which is used to mark a method as a proxy to a method in another class. The attribute has been applied to the methods in `EntitySystem.Proxy`.
+* `RemoveComponentImmediate` now throws an `InvalidOperationException` when attempting to remove a component that is in the PreAdd stage.
+
+### Bugfixes
+
+* Rectangle delete no longer deletes child entities of Actors.
+* Fixed `OSWindow` size on MacOS.
+* Fixed a potential exception when calling `EnsureComp(ref Entity<T>)` with only an `EntityUid` when the component is present on the entity.
+* Shader compilation is now wrapped in a try-catch block to prevent client crashes while developing shaders.
+* Fixed incorrect `UIBox2i.Center` calculation.
+
+### Other
+
+* Public APIs involving `System.Random` have been obsoleted. Use `IRobustRandom`/`RobustRandom` and such instead.
 
 
 ## 272.0.0

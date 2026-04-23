@@ -1994,6 +1994,13 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> UIXamlJitPreload =
             CVarDef.Create("ui.xaml_jit_preload", false, CVar.CLIENTONLY);
 
+        /// <summary>
+        ///     If false, the UI engine will not ever sleep updating controls.
+        ///     This should <b>never</b> be set outside of test frameworks, doing so worsens user experience by allowing
+        ///     the game to do excessive amounts of work in one frame, causing extra lag.
+        /// </summary>
+        public static readonly CVarDef<bool> UIObeyUpdateLimits =
+            CVarDef.Create("ui.obey_update_limits", true, CVar.CLIENTONLY);
         /*
          * FONT
          */

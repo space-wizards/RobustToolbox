@@ -30,10 +30,7 @@ internal sealed partial class PvsSystem
             return;
 
         sessionData.LastReceivedAck = ackedTick;
-        lock (PendingAcks)
-        {
-            PendingAcks.Add(session);
-        }
+        EnqueuePendingAck(session); // Forge-Change
     }
 
     /// <summary>
@@ -42,21 +39,23 @@ internal sealed partial class PvsSystem
     /// <param name="histogram"></param>
     private WaitHandle? ProcessQueuedAcks()
     {
-        lock (PendingAcks)
+        _toAck.Clear(); // Forge-Change
+        _pendingAckBatch.Clear(); // Forge-Change
+
+        while (TryDequeuePendingAck(out var session)) // Forge-Change
         {
-            if (PendingAcks.Count == 0)
-                return null;
-
-            _toAck.Clear();
-
-            foreach (var session in PendingAcks)
-            {
-                if (session.Status != SessionStatus.Disconnected)
-                    _toAck.Add(GetOrNewPvsSession(session));
-            }
-
-            PendingAcks.Clear();
+            _pendingAckBatch.Add(session); // Forge-Change
         }
+
+        if (_pendingAckBatch.Count == 0) // Forge-Change
+            return null; // Forge-Change
+
+        foreach (var pendingSession in _pendingAckBatch) // Forge-Change
+        {
+            if (pendingSession.Status != SessionStatus.Disconnected) // Forge-Change
+                _toAck.Add(GetOrNewPvsSession(pendingSession)); // Forge-Change
+        }
+        _pendingAckBatch.Clear(); // Forge-Change
 
         if (!_async)
         {

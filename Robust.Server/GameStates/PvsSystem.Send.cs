@@ -65,20 +65,14 @@ internal sealed partial class PvsSystem
                 {
                     data.RequestedFull = false;
                     data.LastReceivedAck = _gameTiming.CurTick;
-                    lock (PendingAcks)
-                    {
-                        PendingAcks.Add(data.Session);
-                    }
+                    EnqueuePendingAck(data.Session); // Forge-Change
                 }
             }
             else
             {
                 data.LastReceivedAck = _gameTiming.CurTick;
                 data.RequestedFull = false;
-                lock (PendingAcks)
-                {
-                    PendingAcks.Add(data.Session);
-                }
+                EnqueuePendingAck(data.Session); // Forge-Change
             }
         }
         finally

@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Concurrent; // Forge-Change
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading; // Forge-Change
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Server.Configuration;
@@ -71,7 +73,9 @@ internal sealed partial class PvsSystem : EntitySystem
     /// Per-tick ack data to avoid re-allocating.
     /// </summary>
     private readonly List<PvsSession> _toAck = new();
-    internal readonly HashSet<ICommonSession> PendingAcks = new();
+    private readonly ConcurrentQueue<ICommonSession> _pendingAckQueue = new(); // Forge-Change
+    private readonly HashSet<ICommonSession> _pendingAckBatch = new(); // Forge-Change
+    private int _pendingAckCount; // Forge-Change
     private int _maxEntityStates;
 
     private PvsAckJob _ackJob;
@@ -96,7 +100,8 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     private readonly List<GameTick> _deletedTick = new();
 
-    private readonly HashSet<EntityUid> _toDelete = new();
+    private readonly ConcurrentQueue<EntityUid> _toDeleteQueue = new(); // Forge-Change
+    private readonly HashSet<EntityUid> _toDeleteBatch = new(); // Forge-Change
 
     /// <summary>
     /// The sessions that are currently being processed. Note that this is in general used by parallel & async tasks.
@@ -211,10 +216,7 @@ internal sealed partial class PvsSystem : EntitySystem
         PvsSessionsGauge.Set(PlayerData.Count);
         PvsChunksGauge.Set(_chunks.Count);
         PvsMetadataCurrentSizeGauge.Set(_metadataMemory.CurrentSize);
-        lock (PendingAcks)
-        {
-            PvsPendingAcksGauge.Set(PendingAcks.Count);
-        }
+        PvsPendingAcksGauge.Set(Math.Max(0, Volatile.Read(ref _pendingAckCount))); // Forge-Change
 
         // Wait for pending jobs and process disconnected players
         ProcessDisconnections();
@@ -227,12 +229,19 @@ internal sealed partial class PvsSystem : EntitySystem
 
         // Construct & serialize the game state for each player (and for the replay).
         SerializeStates();
-
-        foreach (var uid in _toDelete)
+        // Forge-Change-start
+        _toDeleteBatch.Clear();
+        while (_toDeleteQueue.TryDequeue(out var uid))
         {
-            QueueDel(uid);
+            _toDeleteBatch.Add(uid);
         }
-        _toDelete.Clear();
+
+        foreach (var toDelete in _toDeleteBatch)
+        {
+            QueueDel(toDelete);
+        }
+        _toDeleteBatch.Clear();
+        // Forge-Change-end
 
         // Compress & send the states.
         SendStates();
@@ -242,7 +251,30 @@ internal sealed partial class PvsSystem : EntitySystem
 
         ProcessLeavePvs();
     }
+    // Forge-Change-start
+    private void EnqueuePendingAck(ICommonSession session)
+    {
+        _pendingAckQueue.Enqueue(session);
+        Interlocked.Increment(ref _pendingAckCount);
+    }
 
+    private void QueueDeletionCandidate(EntityUid uid)
+    {
+        _toDeleteQueue.Enqueue(uid);
+    }
+
+    private bool TryDequeuePendingAck(out ICommonSession session)
+    {
+        if (_pendingAckQueue.TryDequeue(out session!))
+        {
+            Interlocked.Decrement(ref _pendingAckCount);
+            return true;
+        }
+
+        session = default!;
+        return false;
+    }
+    // Forge-Change-end
     private void ResetParallelism(int _) => ResetParallelism();
     private void ResetParallelism()
     {
@@ -462,22 +494,18 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         _leaveTask?.WaitOne();
         _leaveTask = null;
-
-        lock (PendingAcks)
+        // Forge-Change-start
+        foreach (var session in _disconnected)
         {
-            foreach (var session in _disconnected)
-            {
-                PendingAcks.Remove(session);
-                _seenAllEnts.Remove(session);
+            _seenAllEnts.Remove(session);
 
-                if (PlayerData.Remove(session, out var pvsSession))
-                {
-                    ClearSendHistory(pvsSession);
-                    FreeSessionDataMemory(pvsSession);
-                }
+            if (PlayerData.Remove(session, out var pvsSession))
+            {
+                ClearSendHistory(pvsSession);
+                FreeSessionDataMemory(pvsSession);
             }
         }
-
+        // Forge-Change-end
         _disconnected.Clear();
     }
 

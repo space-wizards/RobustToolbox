@@ -148,13 +148,9 @@ internal sealed partial class PvsSystem
             // This can happen if some entity was some removed from it's parent while that parent was being deleted.
             // As a result the entity was marked for deletion but was never actually properly deleted.
 
-            bool queued;
-            lock (_toDelete)
-            {
-                queued = EntityManager.IsQueuedForDeletion(uid) || _toDelete.Contains(uid);
-                if (!queued)
-                    _toDelete.Add(uid);
-            }
+            var queued = EntityManager.IsQueuedForDeletion(uid); // Forge-Change
+            if (!queued) // Forge-Change
+                QueueDeletionCandidate(uid); // Forge-Change
 
             var rep = new EntityStringRepresentation(entity);
             Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {queued}. Trace:\n{Environment.StackTrace}");

@@ -395,7 +395,7 @@ namespace Robust.Shared.CompNetworkGenerator
                     if ({name}Value == null)
                         component.{name} = null!;
                     else
-                        component.{name} = {nullCast}({name}Value.Clone());");
+                        component.{name} = ({nullCast})({name}Value.Clone());");
                                 shallowClone.Append($@"
                 {name} = this.{name},");
                                 deltaApply.Add($"fullState.{name} = {name} == null ? null! : {name}.Clone();");

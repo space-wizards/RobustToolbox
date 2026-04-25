@@ -33,6 +33,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
+using Robust.Shared.Maths.Colors;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
@@ -307,6 +308,76 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        ///     Casts a sRGB Color value to a SrgbColor value.
+        /// </summary>
+        /// <remarks>
+        ///     This expects sRGB, not Linear sRGB which is also represented via Color.
+        /// </remarks>
+        public readonly SrgbColor ToColors()
+        {
+            return new SrgbColor(R, G, B, A);
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to a LinearSrgbColor value.
+        /// </summary>
+        /// <remarks>
+        ///     This expects sRGB, not Linear sRGB which is also represented via Color.
+        /// </remarks>
+        public readonly LinearSrgbColor ToLinear()
+        {
+            return ToColors().ToLinear();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to a CiexyzColor value.
+        /// </summary>
+        public readonly CiexyzColor ToXyz()
+        {
+            return ToColors().ToLinear().ToCiexyz();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to a HslColor value.
+        /// </summary>
+        public readonly HslColor ToHsl()
+        {
+            return ToColors().ToHsl();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to a HsvColor value.
+        /// </summary>
+        public readonly HsvColor ToHsv()
+        {
+            return ToColors().ToHsv();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to an OklabColor value.
+        /// </summary>
+        public readonly OklabColor ToLab()
+        {
+            return ToColors().ToLinear().ToOklab();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to an OklchColor value.
+        /// </summary>
+        public readonly OklchColor ToLch()
+        {
+            return ToColors().ToLinear().ToOklab().ToOklch();
+        }
+
+        /// <summary>
+        ///     Converts a sRGB Color value to an SyccColor value.
+        /// </summary>
+        public readonly SyccColor ToYcbcr()
+        {
+            return ToColors().ToSycc();
+        }
+
+        /// <summary>
         ///     Converts sRGB color values to linear RGB color values.
         /// </summary>
         /// <returns>
@@ -377,6 +448,7 @@ namespace Robust.Shared.Maths
         ///     Alpha (which is copied to the output's Alpha value).
         ///     Each has a range of 0.0 to 1.0.
         /// </param>
+        [Obsolete("Use Colors API instead")]
         public static Color FromHsl(Vector4 hsl)
         {
             var hue = (hsl.X - MathF.Truncate(hsl.X)) * 360.0f;
@@ -446,6 +518,7 @@ namespace Robust.Shared.Maths
         ///     Each has a range of 0.0 to 1.0.
         /// </returns>
         /// <param name="rgb">Color value to convert.</param>
+        [Obsolete("Use Colors API instead")]
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
         public static Vector4 ToHsl(Color rgb)
         {
@@ -489,6 +562,7 @@ namespace Robust.Shared.Maths
         ///     (which is copied to the output's Alpha value).
         ///     Each has a range of 0.0 to 1.0.
         /// </param>
+        [Obsolete("Use Colors API instead")]
         public static Color FromHsv(Vector4 hsv)
         {
             var hue = (hsv.X - MathF.Truncate(hsv.X)) * 360.0f;
@@ -558,6 +632,7 @@ namespace Robust.Shared.Maths
         ///     Each has a range of 0.0 to 1.0.
         /// </returns>
         /// <param name="rgb">Color value to convert.</param>
+        [Obsolete("Use Colors API instead")]
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
         public static Vector4 ToHsv(Color rgb)
         {
@@ -623,6 +698,7 @@ namespace Robust.Shared.Maths
         ///     L and Alpha have a range of 0 to 1, while a and b are unbounded, but roughly -0.5 to 0.5
         /// </returns>
         /// <param name="srgb">Linear sRGB color value to convert. <see cref="FromSrgb"/> to convert an sRGB color into linear sRGB.</param>
+        [Obsolete("Use Colors API instead")]
         public static Vector4 ToLab(Color srgb)
         {
             // convert from srgb to linear lms
@@ -654,6 +730,7 @@ namespace Robust.Shared.Maths
         ///     Returns the converted color value. <see cref="ToSrgb"/> to convert an sRGB color into linear sRGB.
         /// </returns>
         /// <param name="oklab">Oklab color value to convert.</param>
+        [Obsolete("Use Colors API instead")]
         public static Color FromLab(Vector4 oklab)
         {
             var l_ = oklab.X + 0.3963377774f * oklab.Y + 0.2158037573f * oklab.Z;
@@ -682,6 +759,7 @@ namespace Robust.Shared.Maths
         ///     Returns the converted color value.
         /// </returns>
         /// <param name="oklab">Oklab color value to convert.</param>
+        [Obsolete("Use Colors API instead")]
         public static Vector4 ToLch(Vector4 oklab)
         {
             var c = MathF.Sqrt(oklab.Y * oklab.Y + oklab.Z * oklab.Z);
@@ -699,6 +777,7 @@ namespace Robust.Shared.Maths
         ///     Returns the converted color value.
         /// </returns>
         /// <param name="oklch">Oklch color value to convert.</param>
+        [Obsolete("Use Colors API instead")]
         public static Vector4 FromLch(Vector4 oklch)
         {
             var a = oklch.Y * MathF.Cos(oklch.Z);
@@ -720,6 +799,7 @@ namespace Robust.Shared.Maths
         ///     Each has a range of 0.0 to 1.0.
         /// </param>
         /// <remarks>Uses the CIE XYZ colorspace.</remarks>
+        [Obsolete("This implementation of CIEXYZ is incorrect. Use Colors API instead for correct CIEXYZ handling.")]
         public static Color FromXyz(Vector4 xyz)
         {
             var r = 0.41847f * xyz.X + -0.15866f * xyz.Y + -0.082835f * xyz.Z;
@@ -738,6 +818,7 @@ namespace Robust.Shared.Maths
         /// </returns>
         /// <param name="rgb">Color value to convert.</param>
         /// <remarks>Uses the CIE XYZ colorspace.</remarks>
+        [Obsolete("This implementation of CIEXYZ is incorrect. Use Colors API instead for correct CIEXYZ handling.")]
         public static Vector4 ToXyz(Color rgb)
         {
             var x = (0.49f * rgb.R + 0.31f * rgb.G + 0.20f * rgb.B) / 0.17697f;
@@ -759,6 +840,7 @@ namespace Robust.Shared.Maths
         ///     to the output's Alpha value).
         /// </param>
         /// <remarks>Converts using ITU-R BT.601/CCIR 601 W(r) = 0.299 W(b) = 0.114 U(max) = 0.436 V(max) = 0.615.</remarks>
+        [Obsolete("Use Colors API instead")]
         public static Color FromYcbcr(Vector4 ycbcr)
         {
             var r = 1.0f * ycbcr.X + 0.0f * ycbcr.Y + 1.402f * ycbcr.Z;
@@ -779,6 +861,7 @@ namespace Robust.Shared.Maths
         /// </returns>
         /// <param name="rgb">Color value to convert.</param>
         /// <remarks>Converts using ITU-R BT.601/CCIR 601 W(r) = 0.299 W(b) = 0.114 U(max) = 0.436 V(max) = 0.615.</remarks>
+        [Obsolete("Use Colors API instead")]
         public static Vector4 ToYcbcr(Color rgb)
         {
             var y = 0.299f * rgb.R + 0.587f * rgb.G + 0.114f * rgb.B;

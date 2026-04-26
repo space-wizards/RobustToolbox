@@ -439,7 +439,8 @@ internal partial class Clyde
 
         private static void WinThreadWinSetSize(CmdWinSetSize cmd)
         {
-            SDL.SDL_SetWindowSize(cmd.Window, cmd.W, cmd.H);
+            var density = SDL.SDL_GetWindowPixelDensity(cmd.Window);
+            SDL.SDL_SetWindowSize(cmd.Window, (int)(cmd.W / density), (int)(cmd.H / density));
         }
 
         private static void WinThreadWinSetVisible(CmdWinSetVisible cmd)

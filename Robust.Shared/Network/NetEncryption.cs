@@ -9,8 +9,7 @@ namespace Robust.Shared.Network;
 
 internal sealed class NetEncryption
 {
-    private const bool NetEncryptionDosProtection = true; // Forge-Change: net.encryption_dos_protection
-    private const int ReplayWindowSize = NetEncryptionDosProtection ? 1024 : 0; // Forge-Change - эта константа выведена под флагом
+    private const int ReplayWindowSize = 1024; // Forge-Change - управляется CVar net.encryption_dos_protection
 
     // Use a counter for nonces. The counter is 64-bit, I will be impressed if you ever manage to run it out.
     // 64-bit counter (incl over the wire) is fine, don't need the whole 192-bit.
@@ -25,7 +24,7 @@ internal sealed class NetEncryption
     private bool _hasReceivedNonce; // Forge-Change
     private readonly bool _dosProtectionEnabled;
 
-    public NetEncryption(byte[] key, bool isServer, bool dosProtectionEnabled = NetEncryptionDosProtection)
+    public NetEncryption(byte[] key, bool isServer, bool dosProtectionEnabled = true)
     {
         if (key.Length != CryptoAeadXChaCha20Poly1305Ietf.KeyBytes)
             throw new ArgumentException("Key is of wrong size!");
@@ -33,7 +32,7 @@ internal sealed class NetEncryption
         _nonce = isServer ? 0ul : 1ul;
         _key = key;
         _expectedRemoteParity = isServer ? 1ul : 0ul; // Forge-Change
-        _dosProtectionEnabled = NetEncryptionDosProtection && dosProtectionEnabled;
+        _dosProtectionEnabled = dosProtectionEnabled;
     }
 
     public unsafe void Encrypt(NetOutgoingMessage message)

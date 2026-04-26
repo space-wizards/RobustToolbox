@@ -51,6 +51,7 @@ namespace Robust.Shared.Network
                 var canAuth = msgLogin.CanAuth;
                 var needPk = msgLogin.NeedPubKey;
                 var authServer = _config.GetCVar(CVars.AuthServer);
+                var encryptionDosProtection = _config.GetCVar(CVars.NetEncryptionDosProtection);
 
                 _logger.Verbose(
                     $"{connection.RemoteEndPoint}: Received MsgLoginStart. " +
@@ -132,7 +133,7 @@ namespace Robust.Shared.Network
                     }
 
                     if (msgLogin.Encrypt)
-                        encryption = new NetEncryption(sharedSecret, isServer: true);
+                        encryption = new NetEncryption(sharedSecret, isServer: true, dosProtectionEnabled: encryptionDosProtection);
 
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: Checking with session server for auth hash...");

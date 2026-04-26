@@ -342,6 +342,13 @@ namespace Robust.Shared
             CVarDef.Create("net.encrypt", true, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Whether nonce replay-window checks are enabled for encrypted packets.
+        /// Disable only for diagnostics or compatibility testing.
+        /// </summary>
+        public static readonly CVarDef<bool> NetEncryptionDosProtection =
+            CVarDef.Create("net.encryption_dos_protection", true);
+
+        /// <summary>
         /// If true, use UPnP to automatically forward ports on startup if possible.
         /// </summary>
         public static readonly CVarDef<bool> NetUPnP =

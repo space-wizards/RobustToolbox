@@ -346,7 +346,7 @@ namespace Robust.Shared
         /// Disable only for diagnostics or compatibility testing.
         /// </summary>
         public static readonly CVarDef<bool> NetEncryptionDosProtection =
-            CVarDef.Create("net.encryption_dos_protection", true);
+            CVarDef.Create("net.encryption_dos_protection", false);
 
         /// <summary>
         /// If true, use UPnP to automatically forward ports on startup if possible.

@@ -1054,7 +1054,7 @@ namespace Robust.Shared.Network
             }
 
             // Attempt to decrypt the message, only logging if we fail to decrypt and we actually have encryption.
-            if (channel.Encryption != null && !channel.Encryption.TryDecrypt(msg, out var decryptFailure)) // Forge-Change
+            if (channel.Encryption != null && !channel.Encryption.TryDecrypt(msg, _config.GetCVar(CVars.NetEncryptionDosProtection), out var decryptFailure)) // Forge-Change
             {
                 var remoteEndPoint = msg.SenderConnection.RemoteEndPoint;
                 var failureReason = GetDecryptFailureReason(decryptFailure); // Forge-Change

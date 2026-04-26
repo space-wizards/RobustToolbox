@@ -223,7 +223,7 @@ namespace Robust.Shared.Network
                 response = await AwaitData(connection, cancel);
 
                 // Attempt to decrypt the message, only logging if we fail to decrypt and we actually have encryption.
-                if (encryption != null && !encryption.TryDecrypt(response, out _)) // Forge-Change
+                if (encryption != null && !encryption.TryDecrypt(response, encryptionDosProtection, out _)) // Forge-Change
                 {
                     const string msg = "Failed to decrypt login success.";
                     connection.Disconnect(msg);

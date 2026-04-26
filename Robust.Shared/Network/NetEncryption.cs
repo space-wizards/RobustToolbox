@@ -100,7 +100,7 @@ internal sealed class NetEncryption
     /// <returns>Whether the operation was successful. If this fails, you likely want to drop the connection.</returns>
     public unsafe bool TryDecrypt(NetIncomingMessage message)
     {
-        return TryDecrypt(message, out _); // Forge-Change
+        return TryDecrypt(message, _dosProtectionEnabled, out _); // Forge-Change
     }
     // Forge-Change-start
     /// <summary>
@@ -111,6 +111,11 @@ internal sealed class NetEncryption
     /// <returns>Whether the operation was successful. If this fails, you likely want to drop the connection.</returns>
     public unsafe bool TryDecrypt(NetIncomingMessage message, out NetDecryptionFailure failure) // Forge-Change-function
     {
+        return TryDecrypt(message, _dosProtectionEnabled, out failure); // Forge-Change
+    }
+
+    public unsafe bool TryDecrypt(NetIncomingMessage message, bool dosProtectionEnabled, out NetDecryptionFailure failure) // Forge-Change-function
+    {
         if (message.LengthBytes < sizeof(ulong) + CryptoAeadXChaCha20Poly1305Ietf.AddBytes)
         {
             failure = NetDecryptionFailure.InvalidPacket;
@@ -119,7 +124,7 @@ internal sealed class NetEncryption
 
         var nonce = message.ReadUInt64();
 
-        if (_dosProtectionEnabled && !ValidateAndTrackIncomingNonce(nonce, out failure))
+        if (dosProtectionEnabled && !ValidateAndTrackIncomingNonce(nonce, out failure))
             return false;
     // Forge-Change-end
         var cipherText = message.Data.AsSpan(sizeof(ulong), message.LengthBytes - sizeof(ulong));

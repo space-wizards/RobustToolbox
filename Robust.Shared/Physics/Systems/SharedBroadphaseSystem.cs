@@ -317,33 +317,41 @@ namespace Robust.Shared.Physics.Systems
                                 {
                                     var fixture = tuple.grid.Comp1.Fixtures[ourId];
 
-                                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                                    foreach (var otherId in collidingChunk.Fixtures)
                                     {
-                                        var fixAABB = fixture.Shape.ComputeAABB(tuple.transform, i);
+                                        var otherFixture = fixturesB.Fixtures[otherId];
 
-                                        foreach (var otherId in collidingChunk.Fixtures)
+                                        // There's already a contact so ignore it.
+                                        if (fixture.Contacts.ContainsKey(otherFixture))
+                                            continue;
+
+                                        bool addedPair = false;
+                                        for (var i = 0; i < fixture.Shape.ChildCount && !addedPair; i++)
                                         {
-                                            var otherFixture = fixturesB.Fixtures[otherId];
+                                            var fixAABB = fixture.Shape.ComputeAABB(tuple.transform, i);
 
-                                            // There's already a contact so ignore it.
-                                            if (fixture.Contacts.ContainsKey(otherFixture))
-                                                continue;
-
-                                            for (var j = 0; j < otherFixture.Shape.ChildCount; j++)
+                                            for (var j = 0; j < otherFixture.Shape.ChildCount && !addedPair; j++)
                                             {
                                                 var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
 
                                                 if (!fixAABB.Intersects(otherAABB)) continue;
 
                                                 tuple._physicsSystem.AddPair(
-                                                    (tuple.grid.Owner, tuple.grid.Comp3, tuple.grid.Comp4),
-                                                    (uid, physicsB, collidingXform),
-                                                    ourId, otherId,
-                                                    fixture, i,
-                                                    otherFixture, j,
-                                                    physicsA, physicsB,
-                                                    ContactFlags.Grid);
-                                                break;
+                                                        (tuple.grid.Owner, tuple.grid.Comp3, tuple.grid.Comp4),
+                                                        (uid, physicsB, collidingXform),
+                                                        ourId, otherId,
+                                                        fixture, i,
+                                                        otherFixture, j,
+                                                        physicsA, physicsB,
+                                                        ContactFlags.Grid);
+
+                                                // Early out now and ignore every other i/j pair
+                                                addedPair = true;
+                                                // TODO: AddPair only handles a *single* contact between multiple
+                                                // fixtures, even if the contact is added for distinct child shapes i
+                                                // and j. Right now, there is only one child shape per fixture, but
+                                                // this code will fail to detect some collisions if this assumption is
+                                                // ever changed!
                                             }
                                         }
                                     }

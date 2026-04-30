@@ -405,13 +405,6 @@ namespace Robust.Shared.GameObjects
         void CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents);
 
         /// <summary>
-        /// Returns a cached struct enumerator with the specified component.
-        /// </summary>
-        EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent;
-
-        EntityQuery<IComponent> GetEntityQuery(Type type);
-
-        /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance
         ///     can have multiple component types.
         /// </summary>
@@ -471,80 +464,93 @@ namespace Robust.Shared.GameObjects
         /// Returns all instances of a component in an array.
         /// Use sparingly.
         /// </summary>
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property")]
         (EntityUid Uid, T Component)[] AllComponents<T>() where T : IComponent;
 
         /// <summary>
         /// Returns an array of all entities that have the given component.
         /// Use sparingly.
         /// </summary>
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property")]
         Entity<T>[] AllEntities<T>() where T : IComponent;
 
         /// <summary>
         /// Returns an array of all entities that have the given component.
         /// Use sparingly.
         /// </summary>
+        [Obsolete($"Prefer non-generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property")]
         Entity<IComponent>[] AllEntities(Type tComp);
 
         /// <summary>
         /// Returns an array uids of all entities that have the given component.
         /// Use sparingly.
         /// </summary>
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property")]
         EntityUid[] AllEntityUids<T>() where T : IComponent;
 
         /// <summary>
         /// Returns an array uids of all entities that have the given component.
         /// Use sparingly.
         /// </summary>
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property")]
         EntityUid[] AllEntityUids(Type tComp);
 
         /// <summary>
         /// Returns all instances of a component in a List.
         /// Use sparingly.
         /// </summary>
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property and .ToList()")]
         List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : IComponent;
 
-        /// <summary>
-        /// <see cref="ComponentQueryEnumerator"/>
-        /// </summary>
+        [Obsolete($"Use {nameof(GameObjects.EntityQuery<>)}.All and non-generic {nameof(IEntityManager.GetEntityQuery)}. This API is questionable.")]
         public ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry);
 
         /// <summary>
-        /// <see cref="CompRegistryQueryEnumerator"/>
+        /// <see cref="GameObjects.CompRegistryQueryEnumerator"/>
         /// </summary>
         public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
 
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property")]
         AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
 
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property")]
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent;
 
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property")]
         AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQueryEnumerator<TComp1, TComp2>()
             where TComp1 : IComponent
             where TComp2 : IComponent;
 
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property")]
         AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQueryEnumerator<TComp1, TComp2, TComp3>()
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent;
 
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}, using the All property")]
         AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent
             where TComp4 : IComponent;
 
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
         EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent;
 
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
         EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
             where TComp1 : IComponent
             where TComp2 : IComponent;
 
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
         EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent;
 
+        [Obsolete($"Prefer generic {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
         EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
             where TComp1 : IComponent
             where TComp2 : IComponent
@@ -556,6 +562,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
         /// <returns>All components that have the specified type.</returns>
+        [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
         IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T: IComponent;
 
         /// <summary>
@@ -564,6 +571,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp1">First required component.</typeparam>
         /// <typeparam name="TComp2">Second required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the two required components.</returns>
+        [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
         IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent;
@@ -575,6 +583,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp2">Second required component.</typeparam>
         /// <typeparam name="TComp3">Third required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the three required components.</returns>
+        [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
         IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent
@@ -588,6 +597,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp3">Third required component.</typeparam>
         /// <typeparam name="TComp4">Fourth required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the four required components.</returns>
+        [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
         IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent
@@ -600,6 +610,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="type">A trait or component type to check for.</param>
         /// <param name="includePaused"></param>
         /// <returns>All components that are the specified type.</returns>
+        [Obsolete($"Prefer {nameof(GetEntityQuery)} and dependencies on {nameof(GameObjects.EntityQuery<>)}")]
         IEnumerable<(EntityUid Uid, IComponent Component)> GetAllComponents(Type type, bool includePaused = false);
 
         /// <summary>

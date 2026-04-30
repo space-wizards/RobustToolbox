@@ -327,6 +327,7 @@ namespace Robust.UnitTesting
             public AuthMode Auth => AuthMode.Disabled;
             public Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
             public IServerNetManager.NetApprovalDelegate? HandleApprovalCallback { get; set; }
+            public event Action<INetChannel>? OnMessageError;
 
             public void DisconnectChannel(INetChannel channel, string reason)
             {

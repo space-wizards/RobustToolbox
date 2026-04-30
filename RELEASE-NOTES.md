@@ -35,11 +35,30 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Obsolete methods in `MapGridComponent` have been fully removed. Use the corresponding `MapSystem` API methods instead.
+*None yet*
 
 ### New features
 
 *None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 276.0.0
+
+### Breaking changes
+
+* Obsolete methods in `MapGridComponent` have been fully removed. Use the corresponding `MapSystem` API methods instead.
 
 ### Bugfixes
 
@@ -54,10 +73,6 @@ END TEMPLATE-->
 ### Other
 
 * `TestPair`s with multiple failed assertions now report all failures instead of saying to consult the server logs.
-
-### Internal
-
-*None yet*
 
 
 ## 275.2.0

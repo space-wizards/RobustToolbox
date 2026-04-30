@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
@@ -36,6 +37,8 @@ namespace Robust.Client.Graphics.Clyde
         private readonly List<IClydeWindow> _windows = new();
         private int _nextWindowId = 2;
         private long _nextViewportId = 1;
+        private readonly Lock _clipboardLock = new();
+        private string _clipboardText = string.Empty;
 
         public ShaderInstance InstanceShader(ShaderSourceResource handle, bool? light = null, ShaderBlendMode? blend = null)
         {
@@ -47,7 +50,7 @@ namespace Robust.Client.Graphics.Clyde
             SixLabors.ImageSharp.Configuration.Default.PreferContiguousImageBuffers = true;
 
             var mainRt = new DummyRenderWindow(this);
-            var window = new DummyWindow(mainRt) {Id = new WindowId(1)};
+            var window = new DummyWindow(mainRt) { Id = new WindowId(1) };
 
             _windows.Add(window);
             MainWindow = window;
@@ -283,7 +286,7 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null)
+        public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string, string>? defines = null)
         {
             return default;
         }
@@ -300,12 +303,18 @@ namespace Robust.Client.Graphics.Clyde
 
         public Task<string> GetText()
         {
-            return Task.FromResult(string.Empty);
+            lock (_clipboardLock)
+            {
+                return Task.FromResult(_clipboardText);
+            }
         }
 
         public void SetText(string text)
         {
-            // Nada.
+            lock (_clipboardLock)
+            {
+                _clipboardText = text ?? string.Empty;
+            }
         }
 
         public void RunOnWindowThread(Action action)

@@ -303,6 +303,166 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        ///     Returns the plain text for this entry with all markup tags removed.
+        /// </summary>
+        public readonly string GetPlainText(MarkupTagManager tagManager, Font defaultFont)
+        {
+            if (Message.IsEmpty)
+                return string.Empty;
+
+            var builder = new StringBuilder();
+            var context = new MarkupDrawingContext();
+
+            context.Clear();
+            context.Font.Push(defaultFont);
+            context.Color.Push(_defaultColor);
+
+            foreach (var node in Message)
+            {
+                var text = ProcessNode(tagManager, node, context);
+                if (text.Length > 0)
+                    builder.Append(text);
+            }
+
+            return builder.ToString();
+        }
+
+        /// <summary>
+        ///     Maps a position in draw coordinates to a UTF-16 text index within this entry.
+        /// </summary>
+        public readonly int GetIndexAtPosition(
+            MarkupTagManager tagManager,
+            Font defaultFont,
+            UIBox2 drawBox,
+            float verticalOffset,
+            Vector2 position,
+            float uiScale,
+            float lineHeightScale = 1)
+        {
+            if (Message.IsEmpty)
+                return 0;
+
+            var context = new MarkupDrawingContext();
+            var map = BuildSelectionMap(tagManager, defaultFont, drawBox, verticalOffset, uiScale, lineHeightScale, context);
+            return map.GetIndexAtPosition(position);
+        }
+
+        /// <summary>
+        ///     Draws a selection highlight for the given UTF-16 index range.
+        /// </summary>
+        public readonly void DrawSelection(
+            MarkupTagManager tagManager,
+            DrawingHandleBase handle,
+            Font defaultFont,
+            UIBox2 drawBox,
+            float verticalOffset,
+            MarkupDrawingContext context,
+            float uiScale,
+            float lineHeightScale,
+            int selectionLower,
+            int selectionUpper,
+            Color color)
+        {
+            if (selectionUpper <= selectionLower || Message.IsEmpty)
+                return;
+
+            if (handle is not DrawingHandleScreen screen)
+                return;
+
+            var map = BuildSelectionMap(tagManager, defaultFont, drawBox, verticalOffset, uiScale, lineHeightScale, context);
+            map.DrawSelection(screen, selectionLower, selectionUpper, color);
+        }
+
+        private readonly TextSelectionGeometry.SelectionMap BuildSelectionMap(
+            MarkupTagManager tagManager,
+            Font defaultFont,
+            UIBox2 drawBox,
+            float verticalOffset,
+            float uiScale,
+            float lineHeightScale,
+            MarkupDrawingContext context)
+        {
+            var map = new TextSelectionGeometry.SelectionMap();
+            if (Message.IsEmpty)
+                return map;
+
+            context.Clear();
+            context.Color.Push(_defaultColor);
+            context.Font.Push(defaultFont);
+
+            var globalBreakCounter = 0;
+            var lineBreakIndex = 0;
+            var baseLine = drawBox.TopLeft + new Vector2(0, defaultFont.GetAscent(uiScale) + verticalOffset);
+            var controlYAdvance = 0f;
+
+            var textIndex = 0;
+            var currentFont = defaultFont;
+            var lineTop = baseLine.Y - currentFont.GetAscent(uiScale);
+            var lineBottom = lineTop + GetLineHeight(currentFont, uiScale, lineHeightScale);
+            map.BeginLine(textIndex, drawBox.Left, lineTop, lineBottom);
+
+            var spaceRune = new Rune(' ');
+
+            var nodeIndex = -1;
+            foreach (var node in Message)
+            {
+                nodeIndex++;
+                var text = ProcessNode(tagManager, node, context);
+                if (!context.Color.TryPeek(out _) || !context.Font.TryPeek(out currentFont))
+                    currentFont = defaultFont;
+
+                foreach (var rune in text.EnumerateRunes())
+                {
+                    var skipSpaceBaseline = false;
+
+                    if (lineBreakIndex < LineBreaks.Count &&
+                        LineBreaks[lineBreakIndex] == globalBreakCounter)
+                    {
+                        map.EndLine(textIndex, baseLine.X);
+
+                        baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(currentFont, uiScale, lineHeightScale) + controlYAdvance);
+                        controlYAdvance = 0;
+                        lineBreakIndex += 1;
+
+                        if (rune == spaceRune)
+                            skipSpaceBaseline = true;
+
+                        lineTop = baseLine.Y - currentFont.GetAscent(uiScale);
+                        lineBottom = lineTop + GetLineHeight(currentFont, uiScale, lineHeightScale);
+                        map.BeginLine(textIndex, drawBox.Left, lineTop, lineBottom);
+                    }
+
+                    map.AddBoundary(textIndex, baseLine.X);
+                    if (currentFont.TryGetCharMetrics(rune, uiScale, out var metrics) && !skipSpaceBaseline)
+                        baseLine += new Vector2(metrics.Advance, 0);
+
+                    textIndex += rune.Utf16SequenceLength;
+                    globalBreakCounter += 1;
+                    map.AddBoundary(textIndex, baseLine.X);
+                }
+
+                if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
+                    continue;
+
+                control.Measure(new Vector2(Width, Height));
+                var invertedScale = 1f / uiScale;
+                control.Arrange(UIBox2.FromDimensions(
+                    baseLine.X * invertedScale,
+                    (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale,
+                    control.DesiredSize.X,
+                    control.DesiredSize.Y
+                ));
+                var advanceX = control.DesiredPixelSize.X;
+                controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(currentFont, uiScale, lineHeightScale)) * invertedScale);
+                baseLine += new Vector2(advanceX, 0);
+                map.AddBoundary(textIndex, baseLine.X);
+            }
+
+            map.EndLine(textIndex, baseLine.X);
+            return map;
+        }
+
         private readonly string ProcessNode(MarkupTagManager tagManager, MarkupNode node, MarkupDrawingContext context)
         {
             // If a nodes name is null it's a text node.

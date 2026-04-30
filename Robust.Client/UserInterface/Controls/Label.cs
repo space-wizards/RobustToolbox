@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface.Controls
     ///     A label is a GUI control that displays simple text.
     /// </summary>
     [Virtual]
-    public class Label : Control
+    public class Label : SelectableTextControl
     {
         public const string StylePropertyFontColor = "font-color";
         public const string StylePropertyFont = "font";
@@ -28,10 +28,12 @@ namespace Robust.Client.UserInterface.Controls
         private bool _clipText;
         private AlignMode _align;
         private Font? _fontOverride;
+        private readonly LabelSelectionLayout _selectionLayout;
 
         public Label()
         {
             VerticalAlignment = VAlignment.Center;
+            _selectionLayout = new LabelSelectionLayout(this);
         }
 
         /// <summary>
@@ -53,6 +55,7 @@ namespace Robust.Client.UserInterface.Controls
                 _text = value;
                 _textMemory = value.AsMemory();
                 _textDimensionCacheValid = false;
+                ClearSelection();
                 InvalidateMeasure();
             }
         }
@@ -77,6 +80,7 @@ namespace Robust.Client.UserInterface.Controls
                 _text = null;
                 _textMemory = value;
                 _textDimensionCacheValid = false;
+                ClearSelection();
                 InvalidateMeasure();
             }
         }
@@ -93,7 +97,9 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        [ViewVariables] public AlignMode Align {
+        [ViewVariables]
+        public AlignMode Align
+        {
             get
             {
                 if (TryGetStyleProperty<AlignMode>(StylePropertyAlignMode, out var alignMode))
@@ -225,6 +231,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var baseLine = CalcBaseline();
+            DrawSelectionIfNeeded(handle);
 
             foreach (var rune in _textMemory.Span.EnumerateRunes())
             {
@@ -238,6 +245,8 @@ namespace Robust.Client.UserInterface.Controls
                 baseLine += new Vector2(advance, 0);
             }
         }
+
+        protected override ISelectableTextLayout SelectionLayout => _selectionLayout;
 
         public enum AlignMode : byte
         {
@@ -326,6 +335,124 @@ namespace Robust.Client.UserInterface.Controls
             _textDimensionCacheValid = false;
 
             base.StylePropertiesChanged();
+        }
+
+        /// <summary>
+        ///     Maps a control-relative position to a UTF-16 index within the label text.
+        /// </summary>
+        private int GetIndexAtPositionInternal(Vector2 relativePosition)
+        {
+            if (_textMemory.Length == 0)
+                return 0;
+
+            var map = BuildSelectionMap(ActualFont);
+            return map.GetIndexAtPosition(relativePosition * UIScale);
+        }
+
+        /// <summary>
+        ///     Draws selection rectangles for the active UTF-16 index range.
+        /// </summary>
+        private void DrawSelection(DrawingHandleScreen handle, Font font, int selectionLower, int selectionUpper, Color color)
+        {
+            if (selectionUpper <= selectionLower)
+                return;
+            var map = BuildSelectionMap(font);
+            map.DrawSelection(handle, selectionLower, selectionUpper, color);
+        }
+
+        /// <summary>
+        ///     Computes the starting X offset for the given line based on alignment.
+        /// </summary>
+        private float GetLineStartX(int lineWidth)
+        {
+            return Align switch
+            {
+                AlignMode.Left => 0,
+                AlignMode.Center => (PixelSize.X - lineWidth) / 2f,
+                AlignMode.Fill => (PixelSize.X - lineWidth) / 2f,
+                AlignMode.Right => PixelSize.X - lineWidth,
+                _ => 0
+            };
+        }
+
+        private TextSelectionGeometry.SelectionMap BuildSelectionMap(Font font)
+        {
+            if (!_textDimensionCacheValid)
+            {
+                _calculateTextDimension();
+                DebugTools.Assert(_textDimensionCacheValid);
+            }
+
+            var map = new TextSelectionGeometry.SelectionMap();
+            if (_textMemory.Length == 0)
+                return map;
+
+            var vOffset = VAlign switch
+            {
+                VAlignMode.Top => 0,
+                VAlignMode.Fill or VAlignMode.Center => (PixelSize.Y - _cachedTextHeight) / 2,
+                VAlignMode.Bottom => PixelSize.Y - _cachedTextHeight,
+                _ => throw new NotImplementedException()
+            };
+
+            var lineHeight = font.GetLineHeight(UIScale);
+            var line = 0;
+            var textIndex = 0;
+            var lineWidth = _cachedTextWidths[line];
+            var lineStartX = GetLineStartX(lineWidth);
+            var lineTop = vOffset + lineHeight * line;
+            var lineBottom = lineTop + lineHeight;
+            var x = lineStartX;
+
+            map.BeginLine(0, lineStartX, lineTop, lineBottom);
+
+            foreach (var rune in _textMemory.Span.EnumerateRunes())
+            {
+                if (rune == new Rune('\n'))
+                {
+                    map.EndLine(textIndex, lineStartX + lineWidth);
+
+                    textIndex += rune.Utf16SequenceLength;
+                    line++;
+                    lineWidth = _cachedTextWidths[Math.Min(line, _cachedTextWidths.Count - 1)];
+                    lineStartX = GetLineStartX(lineWidth);
+                    lineTop = vOffset + lineHeight * line;
+                    lineBottom = lineTop + lineHeight;
+                    x = lineStartX;
+                    map.BeginLine(textIndex, lineStartX, lineTop, lineBottom);
+                    continue;
+                }
+
+                map.AddBoundary(textIndex, x);
+                if (font.TryGetCharMetrics(rune, UIScale, out var metrics))
+                    x += metrics.Advance;
+
+                textIndex += rune.Utf16SequenceLength;
+                map.AddBoundary(textIndex, x);
+            }
+
+            map.EndLine(textIndex, x);
+            return map;
+        }
+
+        private sealed class LabelSelectionLayout(Label owner) : ISelectableTextLayout
+        {
+            private readonly Label _owner = owner;
+
+            public ReadOnlySpan<char> GetTextSpan()
+            {
+                return _owner._textMemory.Span;
+            }
+
+            public int GetIndexAtPosition(Vector2 relativePosition)
+            {
+                return _owner.GetIndexAtPositionInternal(relativePosition);
+            }
+
+            public void DrawSelection(DrawingHandleScreen handle, int selectionLower, int selectionUpper, Color color)
+            {
+                _owner.DrawSelection(handle, _owner.ActualFont, selectionLower, selectionUpper, color);
+            }
         }
     }
 }

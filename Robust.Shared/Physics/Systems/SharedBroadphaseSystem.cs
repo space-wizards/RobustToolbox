@@ -327,7 +327,7 @@ namespace Robust.Shared.Physics.Systems
 
                                             // There's already a contact so ignore it.
                                             if (fixture.Contacts.ContainsKey(otherFixture))
-                                                break;
+                                                continue;
 
                                             for (var j = 0; j < otherFixture.Shape.ChildCount; j++)
                                             {

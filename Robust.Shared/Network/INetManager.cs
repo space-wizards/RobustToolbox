@@ -13,11 +13,13 @@ namespace Robust.Shared.Network
         /// <summary>
         ///     Is this a server, or a client?
         /// </summary>
+        [SharedOnly]
         bool IsServer { get; }
 
         /// <summary>
         ///     Is this a client, or a server?
         /// </summary>
+        [SharedOnly]
         bool IsClient { get; }
 
         /// <summary>

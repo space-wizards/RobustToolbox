@@ -25,7 +25,8 @@ public sealed partial class SpriteSystem
             eyeRotation,
             worldRotation,
             worldPosition,
-            sprite.Comp.EnableDirectionOverride ? sprite.Comp.DirectionOverride : null);
+            sprite.Comp.EnableDirectionOverride ? sprite.Comp.DirectionOverride : null, 
+            null);
     }
 
     public void RenderSprite(
@@ -34,7 +35,7 @@ public sealed partial class SpriteSystem
         Angle eyeRotation,
         Angle worldRotation,
         Vector2 worldPosition,
-        Direction? overrideDirection)
+        Direction? overrideDirection, Color? colorOverride = null)
     {
         // TODO SPRITE RENDERING
         // Add fast path for simple sprites.
@@ -65,7 +66,7 @@ public sealed partial class SpriteSystem
         {
             foreach (var layer in sprite.Comp.Layers)
             {
-                RenderLayer(layer, drawingHandle, ref spriteMatrix, angle, overrideDirection);
+                RenderLayer(layer, drawingHandle, ref spriteMatrix, angle, overrideDirection, colorOverride);
             }
             return;
         }
@@ -87,16 +88,16 @@ public sealed partial class SpriteSystem
             switch (layer.RenderingStrategy)
             {
                 case LayerRenderingStrategy.UseSpriteStrategy:
-                    RenderLayer(layer, drawingHandle, ref spriteMatrix, angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, ref spriteMatrix, angle, overrideDirection, colorOverride);
                     break;
                 case LayerRenderingStrategy.Default:
-                    RenderLayer(layer, drawingHandle, ref transformDefault, angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, ref transformDefault, angle, overrideDirection, colorOverride);
                     break;
                 case LayerRenderingStrategy.NoRotation:
-                    RenderLayer(layer, drawingHandle, ref transformNoRot, angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, ref transformNoRot, angle, overrideDirection, colorOverride);
                     break;
                 case LayerRenderingStrategy.SnapToCardinals:
-                    RenderLayer(layer, drawingHandle, ref transformSnap, angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, ref transformSnap, angle, overrideDirection, colorOverride);
                     break;
                 default:
                     Log.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
@@ -108,7 +109,7 @@ public sealed partial class SpriteSystem
     /// <summary>
     /// Render a layer. This assumes that the input angle is between 0 and 2pi.
     /// </summary>
-    private void RenderLayer(Layer layer, DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection)
+    private void RenderLayer(Layer layer, DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection, Color? colorOverride = null)
     {
         if (!layer.Visible || layer.Blank)
             return;
@@ -143,7 +144,7 @@ public sealed partial class SpriteSystem
         if (layer.Shader != null)
             drawingHandle.UseShader(layer.Shader);
 
-        var layerColor = layer.Owner.Comp.color * layer.Color;
+        var layerColor = (colorOverride ?? layer.Owner.Comp.color) * layer.Color;
         var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
         var quad = Box2.FromDimensions(textureSize / -2, textureSize);
 

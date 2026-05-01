@@ -33,6 +33,7 @@ namespace Robust.Client.Graphics.Clyde
         public static float PostShadeScale = 1.25f;
 
         private List<Overlay> _overlays = new();
+        private readonly List<int> _drawOverFovSprites = new();
 
         public void Render()
         {
@@ -297,6 +298,12 @@ namespace Robust.Client.Graphics.Clyde
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];
 
+                if (entry.Sprite.DrawOverFov)
+                {
+                    _drawOverFovSprites.Add(indexList[i]);
+                    continue;
+                }
+
                 for (; overlayIndex < worldOverlays.Count; overlayIndex++)
                 {
                     var overlay = worldOverlays[overlayIndex];
@@ -316,98 +323,7 @@ namespace Robust.Client.Graphics.Clyde
                     RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
                 }
 
-                Vector2i roundedPos = default;
-                if (entry.Sprite.PostShader != null)
-                {
-                    // get the size of the sprite on screen, scaled slightly to allow for shaders that increase the final sprite size.
-                    var screenSpriteSize = (Vector2i)(entry.SpriteScreenBB.Size * PostShadeScale).Rounded();
-
-                    // I'm not 100% sure why it works, but without it post-shader
-                    // can be lower or upper by 1px than original sprite depending on sprite rotation or scale
-                    // probably some rotation rounding error
-                    if (screenSpriteSize.X % 2 != 0)
-                        screenSpriteSize.X++;
-                    if (screenSpriteSize.Y % 2 != 0)
-                        screenSpriteSize.Y++;
-
-                    bool exit = false;
-                    if (entry.Sprite.GetScreenTexture && entry.Sprite.PostShader != null)
-                    {
-                        FlushRenderQueue();
-                        var tex = CopyScreenTexture(viewport.RenderTarget);
-                        if (tex == null)
-                            exit = true;
-                        else
-                            entry.Sprite.PostShader.SetParameter("SCREEN_TEXTURE", tex);
-                    }
-
-                    // check that sprite size is valid
-                    if (!exit && screenSpriteSize.X > 0 && screenSpriteSize.Y > 0)
-                    {
-                        // This is really bare-bones render target re-use logic. One problem is that if it ever draws a
-                        // single large entity in a frame, the render target may be way to big for every subsequent
-                        // entity. But the vast majority of sprites are currently all 32x32, so it doesn't matter all that
-                        // much.
-                        //
-                        // Also, if there are many differenty sizes, and they all happen to be drawn in order of
-                        // increasing size, then this will still generate a whole bunch of render targets. So maybe
-                        // iterate once _drawingSpriteList, check sprite sizes, and decide what render targets to create
-                        // based off of that?
-                        //
-                        // TODO PERFORMANCE better renderTarget re-use / caching.
-
-                        if (entityPostRenderTarget == null
-                            || entityPostRenderTarget.Size.X < screenSpriteSize.X
-                            || entityPostRenderTarget.Size.Y < screenSpriteSize.Y)
-                        {
-                            entityPostRenderTarget = CreateRenderTarget(screenSpriteSize,
-                                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
-                                name: nameof(entityPostRenderTarget));
-                        }
-
-                        _renderHandle.UseRenderTarget(entityPostRenderTarget);
-                        _renderHandle.Clear(default, 0, ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
-
-                        // Calculate viewport so that the entity thinks it's drawing to the same position,
-                        // which is necessary for light application,
-                        // but it's ACTUALLY drawing into the center of the render target.
-                        roundedPos = (Vector2i) entry.SpriteScreenBB.Center;
-                        var flippedPos = new Vector2i(roundedPos.X, screenSize.Y - roundedPos.Y);
-                        flippedPos -= entityPostRenderTarget.Size / 2;
-                        _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
-
-                        if (entry.Sprite.RaiseShaderEvent)
-                            _entityManager.EventBus.RaiseLocalEvent(entry.Uid,
-                                new BeforePostShaderRenderEvent(entry.Sprite, viewport), false);
-                    }
-                }
-
-                spriteSystem.RenderSprite(new(entry.Uid, entry.Sprite), _renderHandle.DrawingHandleWorld, eye.Rotation, entry.WorldRot, entry.WorldPos);
-
-                if (entry.Sprite.PostShader != null && entityPostRenderTarget != null)
-                {
-                    var oldProj = _currentMatrixProj;
-                    var oldView = _currentMatrixView;
-
-                    _renderHandle.UseRenderTarget(viewport.RenderTarget);
-                    _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
-
-                    _renderHandle.UseShader(entry.Sprite.PostShader);
-                    CalcScreenMatrices(viewport.Size, out var proj, out var view);
-                    _renderHandle.SetProjView(proj, view);
-                    _renderHandle.SetModelTransform(Matrix3x2.Identity);
-
-                    var rounded = roundedPos - entityPostRenderTarget.Size / 2;
-
-                    var box = Box2i.FromDimensions(rounded, entityPostRenderTarget.Size);
-
-                    _renderHandle.DrawTextureScreen(entityPostRenderTarget.Texture,
-                        box.BottomLeft, box.BottomRight, box.TopLeft, box.TopRight,
-                        Color.White, null);
-
-                    _renderHandle.SetProjView(oldProj, oldView);
-                    _renderHandle.UseShader(null);
-                }
+                DrawEntity(viewport, eye, spriteSystem, ref entry, ref entityPostRenderTarget, screenSize);
             }
 
             // draw remainder of overlays
@@ -424,10 +340,131 @@ namespace Robust.Client.Graphics.Clyde
 
             ArrayPool<int>.Shared.Return(indexList);
             entityPostRenderTarget?.DisposeDeferred();
+            FlushRenderQueue();
+        }
+
+        private void DrawEntity(
+            Viewport viewport,
+            IEye eye,
+            SpriteSystem spriteSystem,
+            ref SpriteData entry,
+            ref RenderTexture? entityPostRenderTarget,
+            Vector2i screenSize)
+        {
+            Vector2i roundedPos = default;
+            if (entry.Sprite.PostShader != null)
+            {
+                // get the size of the sprite on screen, scaled slightly to allow for shaders that increase the final sprite size.
+                var screenSpriteSize = (Vector2i)(entry.SpriteScreenBB.Size * PostShadeScale).Rounded();
+
+                // I'm not 100% sure why it works, but without it post-shader
+                // can be lower or upper by 1px than original sprite depending on sprite rotation or scale
+                // probably some rotation rounding error
+                if (screenSpriteSize.X % 2 != 0)
+                    screenSpriteSize.X++;
+                if (screenSpriteSize.Y % 2 != 0)
+                    screenSpriteSize.Y++;
+
+                bool exit = false;
+                if (entry.Sprite.GetScreenTexture)
+                {
+                    FlushRenderQueue();
+                    var tex = CopyScreenTexture(viewport.RenderTarget);
+                    if (tex == null)
+                        exit = true;
+                    else
+                        entry.Sprite.PostShader.SetParameter("SCREEN_TEXTURE", tex);
+                }
+
+                // check that sprite size is valid
+                if (!exit && screenSpriteSize.X > 0 && screenSpriteSize.Y > 0)
+                {
+                    // This is really bare-bones render target re-use logic. One problem is that if it ever draws a
+                    // single large entity in a frame, the render target may be way to big for every subsequent
+                    // entity. But the vast majority of sprites are currently all 32x32, so it doesn't matter all that
+                    // much.
+                    //
+                    // Also, if there are many differenty sizes, and they all happen to be drawn in order of
+                    // increasing size, then this will still generate a whole bunch of render targets. So maybe
+                    // iterate once _drawingSpriteList, check sprite sizes, and decide what render targets to create
+                    // based off of that?
+                    //
+                    // TODO PERFORMANCE better renderTarget re-use / caching.
+
+                    if (entityPostRenderTarget == null
+                        || entityPostRenderTarget.Size.X < screenSpriteSize.X
+                        || entityPostRenderTarget.Size.Y < screenSpriteSize.Y)
+                    {
+                        entityPostRenderTarget = CreateRenderTarget(screenSpriteSize,
+                            new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                            name: nameof(entityPostRenderTarget));
+                    }
+
+                    _renderHandle.UseRenderTarget(entityPostRenderTarget);
+                    _renderHandle.Clear(default, 0, ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
+
+                    // Calculate viewport so that the entity thinks it's drawing to the same position,
+                    // which is necessary for light application,
+                    // but it's ACTUALLY drawing into the center of the render target.
+                    roundedPos = (Vector2i)entry.SpriteScreenBB.Center;
+                    var flippedPos = new Vector2i(roundedPos.X, screenSize.Y - roundedPos.Y);
+                    flippedPos -= entityPostRenderTarget.Size / 2;
+                    _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
+
+                    if (entry.Sprite.RaiseShaderEvent)
+                        _entityManager.EventBus.RaiseLocalEvent(entry.Uid,
+                            new BeforePostShaderRenderEvent(entry.Sprite, viewport), false);
+                }
+            }
+
+            spriteSystem.RenderSprite(new(entry.Uid, entry.Sprite), _renderHandle.DrawingHandleWorld, eye.Rotation, entry.WorldRot, entry.WorldPos);
+
+            if (entry.Sprite.PostShader == null || entityPostRenderTarget == null)
+                return;
+
+            var oldProj = _currentMatrixProj;
+            var oldView = _currentMatrixView;
+
+            _renderHandle.UseRenderTarget(viewport.RenderTarget);
+            _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
+
+            _renderHandle.UseShader(entry.Sprite.PostShader);
+            CalcScreenMatrices(viewport.Size, out var proj, out var view);
+            _renderHandle.SetProjView(proj, view);
+            _renderHandle.SetModelTransform(Matrix3x2.Identity);
+
+            var rounded = roundedPos - entityPostRenderTarget.Size / 2;
+            var box = Box2i.FromDimensions(rounded, entityPostRenderTarget.Size);
+
+            _renderHandle.DrawTextureScreen(entityPostRenderTarget.Texture,
+                box.BottomLeft, box.BottomRight, box.TopLeft, box.TopRight,
+                Color.White, null);
+
+            _renderHandle.SetProjView(oldProj, oldView);
+            _renderHandle.UseShader(null);
+        }
+
+        private void DrawEntitiesOverFov(Viewport viewport, IEye eye)
+        {
+            if (_drawingSpriteList.Count == 0)
+                return;
+
+            var spriteSystem = _entityManager.System<SpriteSystem>();
+            var screenSize = viewport.Size;
+            RenderTexture? entityPostRenderTarget = null;
+
+            for (var i = 0; i < _drawOverFovSprites.Count; i++)
+            {
+                ref var entry = ref _drawingSpriteList[_drawOverFovSprites[i]];
+                DrawEntity(viewport, eye, spriteSystem, ref entry, ref entityPostRenderTarget, screenSize);
+            }
+
+            entityPostRenderTarget?.DisposeDeferred();
+            FlushRenderQueue();
 
             _debugStats.Entities += _drawingSpriteList.Count;
+            _drawOverFovSprites.Clear();
             _drawingSpriteList.Clear();
-            FlushRenderQueue();
         }
 
         private void DrawLoadingScreen(IRenderHandle handle)
@@ -437,7 +474,7 @@ namespace Robust.Client.Graphics.Clyde
             _loadingScreenManager.DrawLoadingScreen(handle, ScreenSize);
         }
 
-        private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color? clearColor=default)
+        private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color? clearColor = default)
         {
             // TODO: for the love of god all this state pushing/popping needs to be cleaned up.
 
@@ -556,6 +593,8 @@ namespace Robust.Client.Graphics.Clyde
                         if (_entityManager.GetComponent<MapComponent>(mapUid).LightingEnabled)
                             ApplyFovToBuffer(viewport, eye);
                     }
+
+                    DrawEntitiesOverFov(viewport, eye);
                 }
 
                 _lightingReady = false;

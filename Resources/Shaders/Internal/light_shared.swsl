@@ -1,10 +1,8 @@
 preset raw;
 
-#include "/Shaders/Internal/shadow_cast_shared.swsl"
-
+const highp float PI = 3.1415926535897932384626433;
 const highp float LIGHTING_HEIGHT = 1.0;
-
-const highp float g_MinVariance = 0.0;
+const highp int VOLUMETRIC_STEPS = 8;
 
 varying highp vec2 worldPosition;
 
@@ -16,8 +14,9 @@ uniform highp float lightPower;
 uniform highp float lightSoftness;
 uniform highp float lightFalloff;
 uniform highp float lightCurveFactor;
+// Negative means the light is intentionally shadowless. Non-negative lights are
+// clipped by the CPU visibility fan before this fragment shader runs.
 uniform highp float lightIndex;
-uniform sampler2D shadowMap;
 
 void vertex()
 {
@@ -28,40 +27,102 @@ void vertex()
     VERTEX = transformed.xy;
 }
 
-highp float shadowContrib(highp vec2 diff)
+highp float hash12(highp vec2 p)
 {
-    highp float dist = length(diff);
+    highp vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
 
-    return smoothstep(0.0, 1.0, ChebyshevUpperBound(occludeDepth(diff, shadowMap, lightIndex), dist));
+highp float valueNoise(highp vec2 p)
+{
+    highp vec2 i = floor(p);
+    highp vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+
+    highp float a = hash12(i);
+    highp float b = hash12(i + vec2(1.0, 0.0));
+    highp float c = hash12(i + vec2(0.0, 1.0));
+    highp float d = hash12(i + vec2(1.0, 1.0));
+
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+highp vec2 distortedMaskUv(highp vec2 uv, highp vec2 world, highp float sourceSeed)
+{
+    // Procedural mask drift makes moving shadows feel agentive while staying
+    // bounded to sub-texel scale for ordinary station lighting. The distortion is
+    // intentionally low frequency: plausible enough to be read as electrical or
+    // optical instability, but not as a decorative screen filter.
+    highp float emotionalGain = clamp(lightSoftness * 0.08 + lightCurveFactor * 0.04, 0.0, 0.16);
+    highp vec2 flow = vec2(
+        valueNoise(world * 1.7 + vec2(TIME * 0.19 + sourceSeed, sourceSeed)),
+        valueNoise(world * 1.3 + vec2(sourceSeed, TIME * -0.23 - sourceSeed)));
+
+    return uv + (flow - 0.5) * emotionalGain;
+}
+
+highp float psychophysicalFlicker(highp float sourceSeed)
+{
+    // Small luminance fluctuations are most unsettling when they remain in the
+    // range of faulty fixtures rather than becoming an obvious strobe. Three bands
+    // are layered: slow mains drift, visible shimmer, and rare micro dropouts.
+    highp float slow = sin(TIME * (0.65 + sourceSeed * 0.21) + sourceSeed * 6.0) * 0.018;
+    highp float shimmer = sin(TIME * (7.0 + sourceSeed * 5.0) + sourceSeed * 17.0) * 0.010;
+    highp float dropoutNoise = valueNoise(vec2(sourceSeed * 31.0, TIME * 3.7));
+    highp float dropout = smoothstep(0.965, 1.0, dropoutNoise) * (0.035 + lightSoftness * 0.012);
+
+    return clamp(1.0 + slow + shimmer - dropout, 0.82, 1.14);
+}
+
+highp float volumetricMarch(highp vec2 diff, highp float normalizedDistance, highp float sourceSeed)
+{
+    highp vec2 stepVector = diff / float(VOLUMETRIC_STEPS);
+    highp vec2 p = lightCenter;
+    highp float transmittance = 1.0;
+    highp float accumulated = 0.0;
+
+    for (int i = 0; i < VOLUMETRIC_STEPS; i++)
+    {
+        p += stepVector;
+        highp float fog = valueNoise(p * 0.55 + vec2(sourceSeed * 13.0, TIME * 0.07));
+        fog = smoothstep(0.34, 1.0, fog);
+
+        highp float phase = pow(1.0 - normalizedDistance, 1.6);
+        highp float density = fog * (0.010 + lightSoftness * 0.005) * phase;
+        accumulated += density * transmittance;
+        transmittance *= 1.0 - density;
+    }
+
+    return clamp(accumulated, 0.0, 0.25);
 }
 
 void fragment()
 {
-    highp float mask = zTexture(UV).r;
-
     highp vec2 diff = worldPosition - lightCenter;
+    highp float distSquared = dot(diff, diff);
+    highp float dist = sqrt(distSquared + LIGHTING_HEIGHT);
+    highp float sourceSeed = hash12(lightCenter + vec2(lightRange, lightPower));
 
-    // Totally not hacky PCF on top of VSM.
-    highp float occlusion = lightIndex < 0.0 ? 1.0 : createOcclusion(diff);
+    highp vec2 maskUv = distortedMaskUv(UV, worldPosition, sourceSeed);
+    highp float mask = zTexture(maskUv).r;
 
-    if (occlusion == 0.0)
-    {
-        discard;
-    }
-
-    // this implementation of light attenuation primarily adapted from
-    // https://lisyarus.github.io/blog/posts/point-light-attenuation.html
-    highp float sqr_dist = dot(diff, diff) + LIGHTING_HEIGHT;
-
-    highp float s = clamp(sqrt(sqr_dist) / lightRange, 0.0, 1.0);
+    highp float s = clamp(dist / lightRange, 0.0, 1.0);
     highp float s2 = s * s;
-    // controls curve by lerping between two variants (inverse-shape and inversequadratic-shape)
     highp float curveFactor = mix(s, s2, clamp(lightCurveFactor, 0.0, 1.0));
-    highp float val = clamp(((1.0 - s2) * (1.0 - s2)) / (1.0 + lightFalloff * curveFactor), 0.0, 1.0);
+    highp float attenuation = clamp(((1.0 - s2) * (1.0 - s2)) / (1.0 + lightFalloff * curveFactor), 0.0, 1.0);
 
-    val *= lightPower;
-    val *= mask;
+    // The CPU fan provides binary geometric visibility. This edge term models
+    // light source area at the receiver: larger softness yields a wider falloff
+    // near the fixture boundary without reintroducing wall leaks.
+    highp float areaEdge = 1.0 - smoothstep(clamp(1.0 - lightSoftness * 0.035, 0.75, 0.999), 1.0, s);
+    highp float flicker = psychophysicalFlicker(sourceSeed);
+    highp float volume = volumetricMarch(diff, s, sourceSeed);
 
-    COLOR = vec4(lightColor.rgb, val * occlusion);
+    highp float val = attenuation * lightPower * mask * flicker;
+    highp vec3 shiftedColor = lightColor.rgb;
+    shiftedColor.r += (flicker - 1.0) * 0.15;
+    shiftedColor.b -= (flicker - 1.0) * 0.10;
+
+    COLOR = vec4(max(shiftedColor, vec3(0.0)), val * areaEdge + volume * lightPower * mask);
 }
-

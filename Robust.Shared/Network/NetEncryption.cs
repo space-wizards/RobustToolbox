@@ -91,6 +91,11 @@ internal sealed class NetEncryption
     /// <returns>Whether the operation was successful. If this fails, you likely want to drop the connection.</returns>
     public unsafe bool TryDecrypt(NetIncomingMessage message)
     {
+        // Minimum possible size a message can be is the nonce + 16 bytes of message.
+        // So we immediately bail on anything smaller.
+        if (message.LengthBytes < sizeof(ulong) + CryptoAeadXChaCha20Poly1305Ietf.AddBytes)
+            return false;
+
         var nonce = message.ReadUInt64();
         var cipherText = message.Data.AsSpan(sizeof(ulong), message.LengthBytes - sizeof(ulong));
 

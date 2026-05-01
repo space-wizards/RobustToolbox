@@ -211,7 +211,14 @@ namespace Robust.Shared.Network
 
                 // Expect login success here.
                 response = await AwaitData(connection, cancel);
-                encryption?.Decrypt(response);
+
+                // Attempt to decrypt the message, only logging if we fail to decrypt and we actually have encryption.
+                if ((!encryption?.TryDecrypt(response)) ?? false)
+                {
+                    const string msg = "Failed to decrypt login success.";
+                    connection.Disconnect(msg);
+                    throw new Exception(msg);
+                }
             }
 
             var msgSuc = new MsgLoginSuccess();

@@ -1279,6 +1279,16 @@ namespace Robust.Shared
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
+        /// Whether to enable HRTF (head-related transfer function) support for positional audio.
+        /// </summary>
+        /// <remarks>
+        /// This CVar being true isn't necessarily enough to actually use HRTF. Your platform must be using openal-soft,
+        /// and your device needs to actually support it (although it almost certainly does).
+        /// </remarks>
+        public static readonly CVarDef<bool> AudioHrtf =
+            CVarDef.Create("audio.hrtf", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
         /// Audio device to try to output audio to by default.
         /// </summary>
         public static readonly CVarDef<string> AudioDevice =

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
+using Robust.Client.PiShockHook;
 using Robust.Client.WebViewHook;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Log;
@@ -19,6 +20,9 @@ namespace Robust.Client
                 {
                     case "Robust.Client.WebView":
                         LoadRobustWebView(mode);
+                        break;
+                    case "Robust.Client.PiShock":
+                        LoadRobustPiShock();
                         break;
                     default:
                         _logger.Error($"Unknown Robust module: {module}");
@@ -41,6 +45,22 @@ namespace Robust.Client
             _webViewHook.PreInitialize(_dependencyCollection, mode);
 
             _logger.Debug("Done pre-initializing Robust.Client.WebView");
+        }
+
+        private void LoadRobustPiShock()
+        {
+            _logger.Debug("Loading Robust.Client.PiShock");
+
+            var alc = CreateModuleLoadContext("Robust.Client.PiShock");
+            var assembly = alc.LoadFromAssemblyName(new AssemblyName("Robust.Client.PiShock"));
+            var attribute = assembly.GetCustomAttribute<PiShockManagerImplAttribute>()!;
+            DebugTools.AssertNotNull(attribute);
+
+            var managerType = attribute.ImplementationType;
+            _piShockHook = (IPiShockManagerHook)Activator.CreateInstance(managerType)!;
+            _piShockHook.PreInitialize(_dependencyCollection);
+
+            _logger.Debug("Done pre-initializing Robust.Client.PiShock");
         }
 
         /// <summary>

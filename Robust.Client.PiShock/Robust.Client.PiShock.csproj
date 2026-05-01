@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\MSBuild\Robust.Engine.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\Robust.Client\Robust.Client.csproj" />
+    <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
+</Project>

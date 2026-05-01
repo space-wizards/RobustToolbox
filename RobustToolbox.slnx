@@ -33,6 +33,7 @@
     <File Path="Imports/Shared.props" />
     <File Path="Imports/Testing.props" />
     <File Path="Imports/WebView.props" />
+    <File Path="Imports/PiShock.props" />
   </Folder>
   <Folder Name="/MSBuild/">
     <File Path="MSBuild/MacOSAppBundle.targets" />
@@ -120,6 +121,11 @@
   <Project Path="Robust.Client.WebView/Robust.Client.WebView.csproj">
     <Properties Name="RobustToolbox">
       <Property Name="Feature" Value="WebView" />
+    </Properties>
+  </Project>
+  <Project Path="Robust.Client.PiShock/Robust.Client.PiShock.csproj">
+    <Properties Name="RobustToolbox">
+      <Property Name="Feature" Value="PiShock" />
     </Properties>
   </Project>
   <Project Path="Robust.Client.IntegrationTests/Robust.Client.IntegrationTests.csproj" />

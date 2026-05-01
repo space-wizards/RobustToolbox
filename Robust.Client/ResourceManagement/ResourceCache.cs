@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using Robust.Client.Audio;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.ResourceManagement;
@@ -20,12 +19,12 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
     private readonly Dictionary<Type, TypeData> _cachedResources = new();
     private readonly Dictionary<Type, BaseResource> _fallbacks = new();
 
-    public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
+    public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, IBaseResource, new()
     {
         return GetResource<T>(new ResPath(path), useFallback);
     }
 
-    public T GetResource<T>(ResPath path, bool useFallback = true) where T : BaseResource, new()
+    public T GetResource<T>(ResPath path, bool useFallback = true) where T : BaseResource, IBaseResource, new()
     {
         var cache = GetTypeData<T>();
         if (cache.Resources.TryGetValue(path, out var cached))
@@ -43,11 +42,11 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         }
         catch (Exception e)
         {
-            if (useFallback && resource.Fallback != null)
+            if (useFallback && T.FallbackPath != null)
             {
                 Sawmill.Error(
                     $"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}\n{e}");
-                return GetResource<T>(resource.Fallback.Value, false);
+                return GetResource<T>(T.FallbackPath.Value, false);
             }
             else
             {
@@ -107,6 +106,29 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         return true;
     }
 
+    public bool TryRemoveResource<T>(string path) where T : BaseResource, IBaseResource, new()
+        => TryRemoveResource<T>(new ResPath(path));
+
+    public bool TryRemoveResource<T>(ResPath path) where T : BaseResource, IBaseResource, new()
+    {
+        if (!T.CanBeRemoved)
+            throw new NotSupportedException($"Resource type '{typeof(T)}' does not support deterministic removal.");
+
+        if (T.FallbackPath == path)
+            return false;
+
+        var cache = GetTypeData<T>();
+
+        if (!cache.Resources.TryGetValue(path, out var resource))
+            return false;
+
+        cache.Resources.Remove(path);
+        cache.NonExistent.Remove(path);
+        resource.Dispose();
+
+        return true;
+    }
+
     public void ReloadResource<T>(string path) where T : BaseResource, new()
     {
         ReloadResource<T>(new ResPath(path));
@@ -153,20 +175,19 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         GetTypeData<T>().Resources[path] = resource;
     }
 
-    public T GetFallback<T>() where T : BaseResource, new()
+    public T GetFallback<T>() where T : BaseResource, IBaseResource, new()
     {
         if (_fallbacks.TryGetValue(typeof(T), out var fallback))
         {
             return (T) fallback;
         }
 
-        var res = new T();
-        if (res.Fallback == null)
+        if (T.FallbackPath == null)
         {
             throw new InvalidOperationException($"Resource of type '{typeof(T)}' has no fallback.");
         }
 
-        fallback = GetResource<T>(res.Fallback.Value, useFallback: false);
+        fallback = GetResource<T>(T.FallbackPath.Value, useFallback: false);
         _fallbacks.Add(typeof(T), fallback);
         return (T) fallback;
     }

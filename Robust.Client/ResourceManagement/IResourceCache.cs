@@ -15,10 +15,10 @@ namespace Robust.Client.ResourceManagement;
 public interface IResourceCache : IResourceManager
 {
     T GetResource<T>(string path, bool useFallback = true)
-        where T : BaseResource, new();
+        where T : BaseResource, IBaseResource, new();
 
     T GetResource<T>(ResPath path, bool useFallback = true)
-        where T : BaseResource, new();
+        where T : BaseResource, IBaseResource, new();
 
     bool TryGetResource<T>(string path, [NotNullWhen(true)] out T? resource)
         where T : BaseResource, new();
@@ -27,6 +27,10 @@ public interface IResourceCache : IResourceManager
         where T : BaseResource, new();
 
     bool TryGetResource(AudioStream stream, [NotNullWhen(true)] out AudioResource? resource);
+
+    bool TryRemoveResource<T>(string path) where T : BaseResource, IBaseResource, new();
+
+    bool TryRemoveResource<T>(ResPath path) where T : BaseResource, IBaseResource, new();
 
     void ReloadResource<T>(string path)
         where T : BaseResource, new();
@@ -41,7 +45,7 @@ public interface IResourceCache : IResourceManager
         where T : BaseResource, new();
 
     T GetFallback<T>()
-        where T : BaseResource, new();
+        where T : BaseResource, IBaseResource, new();
 
     IEnumerable<KeyValuePair<ResPath, T>> GetAllResources<T>() where T : BaseResource, new();
 

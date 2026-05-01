@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading;
 using Robust.Client.Graphics;
 using Robust.Shared.ContentPack;
@@ -13,12 +14,23 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.ResourceManagement
 {
-    public sealed class TextureResource : BaseResource
+    public sealed class TextureResource : BaseResource, IBaseResource
     {
         private OwnedTexture _texture = default!;
-        public override ResPath? Fallback => new("/Textures/noSprite.png");
+        private bool _disposed;
+        private readonly Lock _lock = new();
 
-        public Texture Texture => _texture;
+        static ResPath? IBaseResource.FallbackPath => new("/Textures/noSprite.png");
+        static bool IBaseResource.CanBeRemoved => true;
+
+        public Texture Texture
+        {
+            get
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                return _texture;
+            }
+        }
 
         public override void Load(IDependencyCollection dependencies, ResPath path)
         {
@@ -106,12 +118,14 @@ namespace Robust.Client.ResourceManagement
 
         public override void Reload(IDependencyCollection dependencies, ResPath path, CancellationToken ct = default)
         {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+
             var data = new LoadStepData {Path = path};
 
             LoadTextureParameters(dependencies.Resolve<IResourceManager>(), data);
             LoadPreTextureData(dependencies.Resolve<IResourceManager>(), data);
 
-            if (data.Image.Width == Texture.Width && data.Image.Height == Texture.Height)
+            if (data.Image.Width == _texture.Width && data.Image.Height == _texture.Height)
             {
                 // Dimensions match, rewrite texture in place.
                 _texture.SetSubImage(Vector2i.Zero, data.Image);
@@ -125,6 +139,18 @@ namespace Robust.Client.ResourceManagement
             }
 
             data.Image.Dispose();
+        }
+
+        public override void Dispose()
+        {
+            lock (_lock)
+            {
+                if (_disposed) return;
+                _disposed = true;
+                _texture?.Dispose();
+            }
+
+            base.Dispose();
         }
 
         internal sealed class LoadStepData

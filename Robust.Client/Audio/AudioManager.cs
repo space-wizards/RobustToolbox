@@ -123,6 +123,8 @@ internal sealed partial class AudioManager : IAudioInternal
         _reload.Register("/Audio", "*.wav");
 
         _reload.OnChanged += OnReload;
+
+        InitializeDeviceSwitch();
     }
 
     private void OnReload(ResPath args)

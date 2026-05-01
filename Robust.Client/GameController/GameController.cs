@@ -702,6 +702,7 @@ namespace Robust.Client
             }
 
             _audio.FlushALDisposeQueues();
+            _audio.PollAudioDeviceStatus();
         }
 
         internal static void SetupLogging(

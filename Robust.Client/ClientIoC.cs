@@ -70,6 +70,7 @@ namespace Robust.Client
             deps.Register<IMapManagerInternal, NetworkedMapManager>();
             deps.Register<INetworkedMapManager, NetworkedMapManager>();
             deps.Register<IEntityManager, ClientEntityManager>();
+            deps.Register<IRemoteEntityManager, ClientEntityManager>();
             deps.Register<FontTagHijackHolder>();
             deps.Register<IReflectionManager, ClientReflectionManager>();
             deps.Register<IConsoleHost, ClientConsoleHost>();

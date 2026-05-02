@@ -13,6 +13,8 @@ using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
@@ -135,6 +137,58 @@ namespace Robust.Server.GameObjects
         #region IEntityNetworkManager impl
 
         public override IEntityNetworkManager EntityNetManager => this;
+
+        public override EntityUid Spawn(
+            string? protoName,
+            MapCoordinates coordinates,
+            ComponentRegistry? overrides = null,
+            Angle rotation = default)
+        {
+            // Start building the entity as described...
+            var builder = EntityBuilder(protoName)
+                .LocatedAt(coordinates, rotation);
+
+            // If we got overrides, apply them here.
+            if (overrides is not null)
+                builder.ApplyRegistry(overrides);
+
+            // Spawn it into the simulation and return the id.
+            return Spawn(builder);
+        }
+
+        public override EntityUid SpawnAttachedTo(
+            string? protoName,
+            EntityCoordinates coordinates,
+            ComponentRegistry? overrides = null,
+            Angle rotation = default)
+        {
+            if (!coordinates.IsValid(this))
+                throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
+
+            // Start building the entity as described...
+            var builder = EntityBuilder(protoName)
+                .ChildOf(coordinates, rotation);
+
+            // If we got overrides, apply them here.
+            if (overrides is not null)
+                builder.ApplyRegistry(overrides);
+
+            // Spawn it into the simulation and return the id.
+            return Spawn(builder);
+        }
+
+        public override EntityUid Spawn(string? protoName = null, ComponentRegistry? overrides = null, bool doMapInit = true)
+        {
+            // Start building the entity as described...
+            var builder = EntityBuilder(protoName);
+
+            // If we got overrides, apply them here.
+            if (overrides is not null)
+                builder.ApplyRegistry(overrides);
+
+            // Spawn it into the simulation and return the id.
+            return Spawn(builder, doMapInit);
+        }
 
         /// <inheritdoc />
         public event EventHandler<object>? ReceivedSystemMessage;

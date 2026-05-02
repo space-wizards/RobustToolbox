@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
@@ -8,7 +9,7 @@ namespace Robust.Client.GameObjects;
 
 public sealed partial class ClientEntityManager
 {
-    protected override NetEntity GenerateNetEntity() => new(NextNetworkId++ | NetEntity.ClientEntity);
+    protected override NetEntity GenerateNetEntity() => new(Interlocked.Increment(ref NextNetworkId) | NetEntity.ClientEntity);
 
     /// <summary>
     /// If the client fails to resolve a NetEntity then during component state handling or the likes we

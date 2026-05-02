@@ -13,15 +13,14 @@ namespace Robust.Shared.GameObjects;
 
 public partial class EntityManager
 {
-    // This method will soon(TM) be marked as obsolete.
+    [Obsolete("Use Spawn() instead, ideally EntityBuilder-based.")]
     public EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         => SpawnAttachedTo(protoName, coordinates, overrides);
 
-    // This method will soon(TM) be marked as obsolete.
+    [Obsolete("Use Spawn() instead, ideally EntityBuilder-based.")]
     public EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         => Spawn(protoName, coordinates, overrides);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params string?[] protoNames)
     {
         var ents = new EntityUid[protoNames.Length];
@@ -32,7 +31,6 @@ public partial class EntityManager
         return ents;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames)
     {
         var ents = new EntityUid[protoNames.Length];
@@ -63,7 +61,6 @@ public partial class EntityManager
         return ents;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, List<string?> protoNames)
     {
         var ents = new EntityUid[protoNames.Count];
@@ -74,7 +71,6 @@ public partial class EntityManager
         return ents;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames)
     {
         var ents = new EntityUid[protoNames.Count];
@@ -108,8 +104,7 @@ public partial class EntityManager
         return entity;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public EntityUid Spawn(string? protoName = null, ComponentRegistry? overrides = null, bool doMapInit = true)
+    public virtual EntityUid Spawn(string? protoName = null, ComponentRegistry? overrides = null, bool doMapInit = true)
     {
         var entity = CreateEntityUninitialized(protoName, MapCoordinates.Nullspace, overrides);
         InitializeAndStartEntity(entity, doMapInit);
@@ -123,7 +118,6 @@ public partial class EntityManager
         return entity;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid SpawnAtPosition(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         => Spawn(protoName, _xforms.ToMapCoordinates(coordinates), overrides);
 

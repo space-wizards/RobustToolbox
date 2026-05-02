@@ -207,6 +207,39 @@ namespace Robust.Shared.GameObjects
                     .Invoke(dep.Resolve<IEntityManager>(), null)!
             );
 
+            var queryMethod2 = typeof(EntityManager).GetMethod(nameof(EntityManager.GetEntityQuery), 2, [])!;
+            SystemDependencyCollection.RegisterBaseGenericLazy(
+                typeof(EntityQuery<,>),
+                (queryType, dep) =>
+                {
+                    var args = queryType.GetGenericArguments();
+                    return queryMethod2
+                        .MakeGenericMethod(args[0], args[1])
+                        .Invoke(dep.Resolve<IEntityManager>(), null)!;
+                });
+
+            var queryMethod3 = typeof(EntityManager).GetMethod(nameof(EntityManager.GetEntityQuery), 3, [])!;
+            SystemDependencyCollection.RegisterBaseGenericLazy(
+                typeof(EntityQuery<,,>),
+                (queryType, dep) =>
+                {
+                    var args = queryType.GetGenericArguments();
+                    return queryMethod3
+                        .MakeGenericMethod(args[0], args[1], args[2])
+                        .Invoke(dep.Resolve<IEntityManager>(), null)!;
+                });
+
+            var queryMethod4 = typeof(EntityManager).GetMethod(nameof(EntityManager.GetEntityQuery), 4, [])!;
+            SystemDependencyCollection.RegisterBaseGenericLazy(
+                typeof(EntityQuery<,,,>),
+                (queryType, dep) =>
+                {
+                    var args = queryType.GetGenericArguments();
+                    return queryMethod4
+                        .MakeGenericMethod(args[0], args[1], args[2], args[3])
+                        .Invoke(dep.Resolve<IEntityManager>(), null)!;
+                });
+
             SystemDependencyCollection.BuildGraph();
 
             foreach (var systemType in _systemTypes)

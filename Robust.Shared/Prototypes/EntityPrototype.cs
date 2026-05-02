@@ -158,14 +158,14 @@ namespace Robust.Shared.Prototypes
         public EntityPrototype()
         {
             // Everybody gets a transform component!
-            Components.Add("Transform", new ComponentRegistryEntry(new TransformComponent(), new MappingDataNode()));
+            Components.AddComponentManual("Transform", new TransformComponent());
             // And a metadata component too!
-            Components.Add("MetaData", new ComponentRegistryEntry(new MetaDataComponent(), new MappingDataNode()));
+            Components.AddComponentManual("MetaData", new MetaDataComponent());
         }
 
-        void ISerializationHooks.AfterDeserialization()
+        void ISerializationHooks.AfterDeserialization(IDependencyCollection collection)
         {
-            _loc = IoCManager.Resolve<ILocalizationManager>();
+            _loc = collection.Resolve<ILocalizationManager>();
         }
 
         [Obsolete("Pass in IComponentFactory")]
@@ -215,16 +215,18 @@ namespace Robust.Shared.Prototypes
 
             if (prototype != null)
             {
-                foreach (var (name, entry) in prototype.Components)
+                foreach (var comp in prototype.Components.Components())
                 {
-                    if (context != null && context.ShouldSkipComponent(name))
+                    var compReg = factory.GetRegistration(comp);
+
+                    if (context != null && context.ShouldSkipComponent(compReg.Name))
                         continue;
 
-                    var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
-                    var compReg = factory.GetRegistration(name);
-                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, ctx);
+                    var fullData = context != null && context.TryGetComponent(factory, comp.GetType(), out var data) ? data : comp;
 
-                    if (!entry.Component.NetSyncEnabled && compReg.NetID is {} netId)
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, fullData, ctx);
+
+                    if (!fullData.NetSyncEnabled && compReg.NetID is {} netId)
                         meta.NetComponents.Remove(netId);
                 }
             }
@@ -233,7 +235,7 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var name in context.GetExtraComponentTypes())
                 {
-                    if (prototype != null && prototype.Components.ContainsKey(name))
+                    if (prototype != null && prototype.Components.ContainsComponentByName(factory, name))
                     {
                         // This component also exists in the prototype.
                         // This means that the previous step already caught both the prototype data AND map data.
@@ -241,14 +243,14 @@ namespace Robust.Shared.Prototypes
                         continue;
                     }
 
-                    if (!context.TryGetComponent(name, out var data))
+                    if (!context.TryGetComponent(factory, name, out var data))
                     {
                         throw new InvalidOperationException(
                             $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
                     }
 
                     var compReg = factory.GetRegistration(name);
-                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, ctx);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, data, ctx);
                 }
             }
         }
@@ -258,13 +260,12 @@ namespace Robust.Shared.Prototypes
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
-            string compName,
             IComponent data,
             ISerializationContext? context)
         {
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                var newComponent = factory.GetComponent(compName);
+                var newComponent = factory.GetComponent(data.GetType());
                 entityManager.AddComponent(entity, newComponent);
                 component = newComponent;
             }
@@ -275,7 +276,7 @@ namespace Robust.Shared.Prototypes
                 return;
             }
 
-            map.CurrentComponent = compName;
+            map.CurrentComponent = factory.GetComponentName(data.GetType());
             serManager.CopyTo(data, ref component, context, notNullableOverride: true);
             map.CurrentComponent = null;
         }
@@ -286,7 +287,14 @@ namespace Robust.Shared.Prototypes
         }
 
         [DataRecord]
-        public partial record ComponentRegistryEntry(IComponent Component, MappingDataNode Mapping);
+        public partial record ComponentRegistryEntry(
+            IComponent Component,
+            MappingDataNode? Mapping)
+        {
+            public ComponentRegistryEntry(IComponent component) : this(component, null)
+            {
+            }
+        }
 
         [DataDefinition]
         public sealed partial class EntityPlacementProperties
@@ -401,54 +409,5 @@ namespace Robust.Shared.Prototypes
                 return prototype.DataCache.TryGetValue(field, out value);
             }
         }*/
-    }
-
-    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext
-    {
-        public ComponentRegistry()
-        {
-        }
-
-        public ComponentRegistry(Dictionary<string, EntityPrototype.ComponentRegistryEntry> components) : base(components)
-        {
-        }
-
-        /// <inheritdoc />
-        public bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
-        {
-            var success = TryGetValue(componentName, out var comp);
-            component = comp?.Component;
-
-            return success;
-        }
-
-        /// <inheritdoc />
-        public bool TryGetComponent<TComponent>(
-            IComponentFactory componentFactory,
-            [NotNullWhen(true)] out TComponent? component
-        ) where TComponent : class, IComponent, new()
-        {
-            component = null;
-            var componentName = componentFactory.GetComponentName<TComponent>();
-            if (TryGetComponent(componentName, out var foundComponent))
-            {
-                component = (TComponent)foundComponent;
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<string> GetExtraComponentTypes()
-        {
-            return Keys;
-        }
-
-        /// <inheritdoc />
-        public bool ShouldSkipComponent(string compName)
-        {
-            return false; //Registries cannot represent the "remove this component" state.
-        }
     }
 }

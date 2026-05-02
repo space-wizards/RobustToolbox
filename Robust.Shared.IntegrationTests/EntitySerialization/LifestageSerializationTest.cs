@@ -57,7 +57,7 @@ internal sealed partial class LifestageSerializationTest : RobustIntegrationTest
         {
             foreach (var uid in uids)
             {
-                Assert.That(entMan.GetComponent<MetaDataComponent>(uid).EntityPaused, Is.EqualTo(expected));
+                Assert.That(entMan.GetComponent<MetaDataComponent>(uid).EntityPaused, Is.EqualTo(expected), $"Entity {entMan.ToPrettyString(uid)} was not paused.");
             }
         }
 

@@ -246,6 +246,7 @@ namespace Robust.UnitTesting.Server
             //Tier 2: Simulation
             container.RegisterInstance<IConsoleHost>(new Mock<IConsoleHost>().Object); //Console is technically a frontend, we want to run headless
             container.Register<IEntityManager, ServerEntityManager>();
+            container.Register<IRemoteEntityManager, ServerEntityManager>();
             container.Register<IServerEntityNetworkManager, ServerEntityManager>();
             container.Register<EntityManager, ServerEntityManager>();
             container.Register<IMapManager, NetworkedMapManager>();

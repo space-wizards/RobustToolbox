@@ -4,10 +4,13 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Prometheus;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
+using Robust.Shared.GameObjects.EntityBuilders;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -17,6 +20,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -34,6 +38,8 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
+        [IoC.Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [IoC.Dependency] private readonly IRobustRandom _random = default!;
         [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
         [IoC.Dependency] protected readonly ILogManager LogManager = default!;
         [IoC.Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
@@ -82,9 +88,9 @@ namespace Robust.Shared.GameObjects
 
         internal EntityEventBus EventBusInternal = null!;
 
-        protected int NextEntityUid = (int) EntityUid.FirstUid;
+        protected int NextEntityUid = (int) EntityUid.Invalid;
 
-        protected int NextNetworkId = (int) NetEntity.First;
+        protected int NextNetworkId = (int) NetEntity.Invalid;
 
         /// <inheritdoc />
         public IEventBus EventBus => EventBusInternal;
@@ -140,6 +146,9 @@ namespace Robust.Shared.GameObjects
         {
             if (Initialized)
                 throw new InvalidOperationException("Initialize() called multiple times");
+
+            // This can store at most 8MiB worth of command buffers.
+            CommandBufferPool = new(new CommandBufferPolicy(_dependencyCollection), 256);
 
             EventBusInternal = new EntityEventBus(this, _reflection);
 
@@ -348,11 +357,22 @@ namespace Robust.Shared.GameObjects
             var newEntity = CreateEntity(prototypeName, out _, overrides);
             var transform = TransformQuery.GetComponent(newEntity);
 
+            SetMapCoordinates(coordinates, rotation, newEntity, transform);
+
+            return newEntity;
+        }
+
+        protected internal void SetMapCoordinates(
+            MapCoordinates coordinates,
+            Angle rotation,
+            EntityUid newEntity,
+            TransformComponent transform)
+        {
             if (coordinates.MapId == MapId.Nullspace)
             {
                 transform._parent = EntityUid.Invalid;
                 transform.Anchored = false;
-                return newEntity;
+                return;
             }
 
             var mapEnt = _mapSystem.GetMap(coordinates.MapId);
@@ -373,8 +393,6 @@ namespace Robust.Shared.GameObjects
                 coords = new EntityCoordinates(mapEnt, coordinates.Position);
                 _xforms.SetCoordinates(newEntity, transform, coords, rotation, newParent: mapXform);
             }
-
-            return newEntity;
         }
 
         /// <inheritdoc />
@@ -949,6 +967,50 @@ namespace Robust.Shared.GameObjects
             return uid;
         }
 
+        private void AllocBuilderEntity(EntityBuilder builder)
+        {
+            ThreadCheck();
+
+            var uid = builder.ReservedEntity;
+
+#if DEBUG
+            if (EntityExists(uid))
+            {
+                throw new InvalidOperationException($"Entity builder entity already taken: {uid}, did something unusual happen?");
+            }
+#endif
+
+            // Mark ourselves as having been modified for the first time Right Now.
+            builder.MetaData.EntityLastModifiedTick = _gameTiming.CurTick;
+
+            var netEntity = GenerateNetEntity();
+            SetNetEntity(uid, netEntity, builder.MetaData);
+
+
+            EntityAdded?.Invoke((uid, builder.MetaData));
+            EventBusInternal.OnEntityAdded(uid);
+
+            Entities.Add(uid);
+
+            // TODO: Clean up xform and metadata logic enough we don't need to special case their addition anymore.
+            //       as builders always have both anyway.
+            // Add our initial components, starting with the most important two.
+            AddComponentInternal(uid, builder.MetaData, _metaReg, false, true, builder.MetaData);
+            AddComponentInternal(uid, builder.Transform, false, true, builder.MetaData);
+
+            // Add the rest of our components.
+            foreach (var (_, component) in builder.EntityComponents)
+            {
+                if (component is MetaDataComponent or TransformComponent)
+                    continue; // Don't add them twice.
+
+                AddComponentInternal(uid, component, false, true, builder.MetaData);
+            }
+
+            if (builder.MapCoordinates is {} coords)
+                SetMapCoordinates(coords, builder.Transform._localRotation, uid, builder.Transform);
+        }
+
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
@@ -1113,13 +1175,13 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         internal EntityUid GenerateEntityUid()
         {
-            return new EntityUid(NextEntityUid++);
+            return new EntityUid(Interlocked.Increment(ref NextEntityUid));
         }
 
         /// <summary>
         /// Generates a unique network id and increments <see cref="NextNetworkId"/>
         /// </summary>
-        protected virtual NetEntity GenerateNetEntity() => new(NextNetworkId++);
+        protected virtual NetEntity GenerateNetEntity() => new(Interlocked.Increment(ref NextNetworkId));
 
         [Conditional("DEBUG")]
         protected void ThreadCheck()

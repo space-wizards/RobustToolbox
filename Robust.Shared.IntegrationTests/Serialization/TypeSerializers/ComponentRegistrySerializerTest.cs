@@ -25,7 +25,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         public void SerializationTest()
         {
             var component = new TestComponent();
-            var registry = new ComponentRegistry {{"Test", new ComponentRegistryEntry(component, new MappingDataNode())}};
+            var registry = new ComponentRegistry(new Dictionary<string, ComponentRegistryEntry>() {{"Test", new ComponentRegistryEntry(component, new MappingDataNode())}});
             var node = Serialization.WriteValueAs<SequenceDataNode>(registry);
 
             Assert.That(node.Sequence.Count, Is.EqualTo(1));

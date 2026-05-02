@@ -24,7 +24,7 @@ internal sealed class WithCommand : ToolshedCommand
             return input.Where(x => !EntityManager.HasComponent(x, component));
 
         if (input is EntitiesCommand.AllEntityEnumerator)
-            return EntityManager.AllEntityUids(component);
+            return EntityManager.GetEntityQuery(component).Select(x => x.Owner);
 
         return input.Where(x => EntityManager.HasComponent(x, component));
     }

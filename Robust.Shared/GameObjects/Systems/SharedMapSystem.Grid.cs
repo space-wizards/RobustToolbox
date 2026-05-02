@@ -524,7 +524,7 @@ public abstract partial class SharedMapSystem
             }
         }
 
-        var msg = new GridInitializeEvent(uid);
+        var msg = new GridInitializeEvent(uid, component);
         RaiseLocalEvent(uid, msg, true);
     }
 
@@ -667,7 +667,7 @@ public abstract partial class SharedMapSystem
 
         _physics.WakeBody(uid);
         OnGridBoundsChange(uid, grid);
-        var ev = new RegenerateGridBoundsEvent(uid, chunkRectangles, removedChunks);
+        var ev = new RegenerateGridBoundsEvent(uid, chunkRectangles, removedChunks, grid);
         RaiseLocalEvent(ref ev);
     }
 

@@ -10,8 +10,8 @@
   <Import Project="../Robust.Roslyn.Shared/Robust.Roslyn.Shared.props" />
 
   <PropertyGroup>
-    <!-- XamlX doesn't do NRTs. -->
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
   </PropertyGroup>
 
 </Project>

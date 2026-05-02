@@ -411,6 +411,12 @@ public abstract partial class SharedPhysicsSystem
 
     internal void CollideContacts()
     {
+        // Forge-Change: reset per-substep matrix/transform caches before iterating contacts.
+        // These caches are populated lazily by GetCachedBroadphaseMatrix / GetCachedPhysicsTransform
+        // and dramatically reduce repeated GetWorldMatrix / GetPhysicsTransform calls when many
+        // contacts share the same broadphase or grid (typical for shuttle-heavy scenarios).
+        _broadphase.ClearPhysicsCaches();
+
         // Due to the fact some contacts may be removed (and we need to update this array as we iterate).
         // the length may not match the actual contact count, hence we track the index.
         var contactCount = ContactCount;
@@ -497,8 +503,9 @@ public abstract partial class SharedPhysicsSystem
             // Special-case grid contacts.
             if ((contact.Flags & ContactFlags.Grid) != 0x0)
             {
-                var gridABounds = fixtureA.Shape.ComputeAABB(GetPhysicsTransform(uidA, xformA), 0);
-                var gridBBounds = fixtureB.Shape.ComputeAABB(GetPhysicsTransform(uidB, xformB), 0);
+                // Forge-Change: cache grid physics transforms — same grid appears in many contacts.
+                var gridABounds = fixtureA.Shape.ComputeAABB(_broadphase.GetCachedPhysicsTransform(uidA, xformA), 0);
+                var gridBBounds = fixtureB.Shape.ComputeAABB(_broadphase.GetCachedPhysicsTransform(uidB, xformB), 0);
 
                 if (!gridABounds.Intersects(gridBBounds))
                 {
@@ -547,12 +554,17 @@ public abstract partial class SharedPhysicsSystem
                 }
                 else
                 {
+                    // Forge-Change: cache broadphase world matrices for the substep — without this
+                    // we recompute the same matrix once per cross-broadphase contact, which dominates
+                    // CollideContacts when many shuttles are colliding.
                     // TODO maybe change this? Needs benchmarking.
                     // Instead of transforming both boxes (which enlarges both aabbs), maybe just transform one box.
                     // I.e. use (matrixA * invMatrixB).TransformBox(). Or (invMatrixB * matrixA), whichever is correct.
                     // Alternatively, maybe just directly construct the relative transform matrix?
-                    var proxyAWorldAABB = _transform.GetWorldMatrix(XformQuery.GetComponent(broadphaseA.Value)).TransformBox(proxyA.AABB);
-                    var proxyBWorldAABB = _transform.GetWorldMatrix(XformQuery.GetComponent(broadphaseB.Value)).TransformBox(proxyB.AABB);
+                    var (worldA, _) = _broadphase.GetCachedBroadphaseMatrix(broadphaseA.Value);
+                    var (worldB, _) = _broadphase.GetCachedBroadphaseMatrix(broadphaseB.Value);
+                    var proxyAWorldAABB = worldA.TransformBox(proxyA.AABB);
+                    var proxyBWorldAABB = worldB.TransformBox(proxyB.AABB);
                     overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                 }
             }

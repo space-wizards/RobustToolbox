@@ -36,6 +36,14 @@ namespace Robust.Shared.Physics.Systems
 
         private float _frameTime;
 
+        // Forge-Change-start: per-substep caches reused by CollideContacts to avoid recomputing
+        // grid-broadphase world matrices and physics transforms for every cross-grid contact.
+        // Cleared at the start of FindNewContacts and CollideContacts; never written from
+        // worker threads (the parallel grid collision job recomputes locally).
+        private readonly Dictionary<EntityUid, (Matrix3x2 World, Matrix3x2 InvWorld)> _broadphaseMatrixCache = new();
+        private readonly Dictionary<EntityUid, Transform> _physicsTransformCache = new();
+        // Forge-Change-end
+
         /*
          * Okay so Box2D has its own "MoveProxy" stuff so you can easily find new contacts when required.
          * Our problem is that we have nested broadphases (rather than being on separate maps) which makes this
@@ -44,6 +52,7 @@ namespace Robust.Shared.Physics.Systems
          */
 
         private BroadphaseContactJob _contactJob;
+        private GridCollisionJob _gridCollisionJob; // Forge-Change
 
         public override void Initialize()
         {
@@ -57,6 +66,13 @@ namespace Robust.Shared.Physics.Systems
                 // TODO: EntityManager one isn't ready yet?
                 XformQuery = GetEntityQuery<TransformComponent>(),
             };
+
+            // Forge-Change-start
+            _gridCollisionJob = new()
+            {
+                System = this,
+            };
+            // Forge-Change-end
 
             _broadphaseQuery = GetEntityQuery<BroadphaseComponent>();
             _fixturesQuery = GetEntityQuery<FixturesComponent>();
@@ -160,11 +176,61 @@ namespace Robust.Shared.Physics.Systems
             }, enlargedAABB, true);
         }
 
+        // Forge-Change-start: per-substep cache helpers used by CollideContacts.
+        /// <summary>
+        /// Clears the per-substep matrix and physics transform caches.
+        /// Called at the start of <see cref="FindNewContacts"/> and at the start of CollideContacts.
+        /// Must NOT be called concurrently with <see cref="GetCachedBroadphaseMatrix"/> or
+        /// <see cref="GetCachedPhysicsTransform"/>.
+        /// </summary>
+        internal void ClearPhysicsCaches()
+        {
+            _broadphaseMatrixCache.Clear();
+            _physicsTransformCache.Clear();
+        }
+
+        /// <summary>
+        /// Returns the world and inverse world matrix for the given broadphase entity, cached for
+        /// the duration of the current substep. Not thread-safe — only call from the main physics
+        /// thread (CollideContacts is single-threaded).
+        /// </summary>
+        internal (Matrix3x2 World, Matrix3x2 InvWorld) GetCachedBroadphaseMatrix(EntityUid uid)
+        {
+            if (_broadphaseMatrixCache.TryGetValue(uid, out var cached))
+                return cached;
+
+            var xform = _xformQuery.GetComponent(uid);
+            var world = _transform.GetWorldMatrix(xform);
+            if (!Matrix3x2.Invert(world, out var inv))
+                inv = Matrix3x2.Identity;
+
+            cached = (world, inv);
+            _broadphaseMatrixCache[uid] = cached;
+            return cached;
+        }
+
+        /// <summary>
+        /// Returns <see cref="SharedPhysicsSystem.GetPhysicsTransform(EntityUid, TransformComponent)"/>,
+        /// cached for the duration of the current substep. Not thread-safe.
+        /// </summary>
+        internal Transform GetCachedPhysicsTransform(EntityUid uid, TransformComponent xform)
+        {
+            if (_physicsTransformCache.TryGetValue(uid, out var cached))
+                return cached;
+
+            cached = _physicsSystem.GetPhysicsTransform(uid, xform);
+            _physicsTransformCache[uid] = cached;
+            return cached;
+        }
+        // Forge-Change-end
+
         /// <summary>
         /// Go through every single created, moved, or touched proxy on the map and try to find any new contacts that should be created.
         /// </summary>
         internal void FindNewContacts()
         {
+            ClearPhysicsCaches(); // Forge-Change
+
             _contactJob.FrameTime = _frameTime;
             _contactJob.Pairs.Clear();
 
@@ -233,131 +299,175 @@ namespace Robust.Shared.Physics.Systems
             movedGrids.Clear();
         }
 
+        // Forge-Change-start: HandleGridCollisions is now a thin orchestrator over a parallel job.
+        // The per-moved-grid work (FindGridsIntersecting + nested chunk/fixture loops) runs in
+        // worker threads and writes candidate pairs into a shared list under lock. AddPair itself
+        // mutates contact lists and is called sequentially after the parallel phase.
         private void HandleGridCollisions(HashSet<EntityUid> movedGrids)
         {
-            // TODO: Could move this into its own job.
-            // Ideally we'd just have some way to flag an entity as "AABB moves not proxy" into its own movebuffer.
+            if (movedGrids.Count == 0)
+                return;
+
+            _gridCollisionJob.MovedGrids.Clear();
+            _gridCollisionJob.Pairs.Clear();
+
             foreach (var gridUid in movedGrids)
             {
-                var grid = _gridQuery.GetComponent(gridUid);
-                var xform = _xformQuery.GetComponent(gridUid);
+                _gridCollisionJob.MovedGrids.Add(gridUid);
+            }
 
-                if (xform.MapID == MapId.Nullspace)
-                    continue;
+            _parallel.ProcessNow(_gridCollisionJob, _gridCollisionJob.MovedGrids.Count);
 
-                var (worldPos, worldRot, worldMatrix, invWorldMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(xform);
+            // Drain collected pairs serially. AddPair touches LinkedList<Contact>, fixture
+            // contact dictionaries, and may wake bodies — none of which are thread-safe.
+            foreach (var pair in _gridCollisionJob.Pairs)
+            {
+                _physicsSystem.AddPair(
+                    (pair.GridA, pair.PhysicsA, pair.XformA),
+                    (pair.GridB, pair.PhysicsB, pair.XformB),
+                    pair.FixtureAId, pair.FixtureBId,
+                    pair.FixtureA, pair.IndexA,
+                    pair.FixtureB, pair.IndexB,
+                    pair.PhysicsA, pair.PhysicsB,
+                    ContactFlags.Grid);
+            }
+        }
 
-                var aabb = new Box2Rotated(grid.LocalAABB, worldRot).CalcBoundingBox().Translated(worldPos);
+        /// <summary>
+        /// Worker entry point for <see cref="GridCollisionJob"/>. Performs the same work as the
+        /// original sequential foreach body in <see cref="HandleGridCollisions"/>, but instead of
+        /// calling <see cref="SharedPhysicsSystem.AddPair"/> directly it appends candidate pairs
+        /// into <paramref name="output"/> under a lock.
+        /// </summary>
+        internal void ProcessGridCollisionFor(EntityUid gridUid, List<GridContactPair> output)
+        {
+            var grid = _gridQuery.GetComponent(gridUid);
+            var xform = _xformQuery.GetComponent(gridUid);
 
-                // TODO: Need to handle grids colliding with non-grid entities with the same layer
-                // (nothing in SS14 does this yet).
-                var fixture = _fixturesQuery.Comp(gridUid);
-                var physics = _physicsQuery.Comp(gridUid);
+            if (xform.MapID == MapId.Nullspace)
+                return;
 
-                var transform = _physicsSystem.GetPhysicsTransform(gridUid);
-                var state = (
-                    new Entity<FixturesComponent, MapGridComponent, PhysicsComponent, TransformComponent>(gridUid, fixture, grid, physics, xform),
-                    transform,
-                    worldMatrix,
-                    invWorldMatrix,
-                    _map,
-                    _physicsSystem,
-                    _transform,
-                    _fixturesQuery,
-                    _physicsQuery,
-                    _xformQuery);
+            var (worldPos, worldRot, worldMatrix, invWorldMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(xform);
 
-                _mapManager.FindGridsIntersecting(xform.MapID, aabb, ref state,
-                    static (EntityUid uid, MapGridComponent component,
-                        ref (Entity<FixturesComponent, MapGridComponent, PhysicsComponent, TransformComponent> grid,
-                            Transform transform,
-                            Matrix3x2 worldMatrix,
-                            Matrix3x2 invWorldMatrix,
-                            SharedMapSystem _map,
-                            SharedPhysicsSystem _physicsSystem,
-                            SharedTransformSystem xformSystem,
-                            EntityQuery<FixturesComponent> fixturesQuery,
-                            EntityQuery<PhysicsComponent> physicsQuery,
-                            EntityQuery<TransformComponent> xformQuery) tuple) =>
+            var aabb = new Box2Rotated(grid.LocalAABB, worldRot).CalcBoundingBox().Translated(worldPos);
+
+            // TODO: Need to handle grids colliding with non-grid entities with the same layer
+            // (nothing in SS14 does this yet).
+            var fixture = _fixturesQuery.Comp(gridUid);
+            var physics = _physicsQuery.Comp(gridUid);
+
+            var transform = _physicsSystem.GetPhysicsTransform(gridUid);
+            var state = (
+                new Entity<FixturesComponent, MapGridComponent, PhysicsComponent, TransformComponent>(gridUid, fixture, grid, physics, xform),
+                transform,
+                worldMatrix,
+                invWorldMatrix,
+                _map,
+                _physicsSystem,
+                _transform,
+                _fixturesQuery,
+                _physicsQuery,
+                _xformQuery,
+                output);
+
+            _mapManager.FindGridsIntersecting(xform.MapID, aabb, ref state,
+                static (EntityUid uid, MapGridComponent component,
+                    ref (Entity<FixturesComponent, MapGridComponent, PhysicsComponent, TransformComponent> grid,
+                        Transform transform,
+                        Matrix3x2 worldMatrix,
+                        Matrix3x2 invWorldMatrix,
+                        SharedMapSystem _map,
+                        SharedPhysicsSystem _physicsSystem,
+                        SharedTransformSystem xformSystem,
+                        EntityQuery<FixturesComponent> fixturesQuery,
+                        EntityQuery<PhysicsComponent> physicsQuery,
+                        EntityQuery<TransformComponent> xformQuery,
+                        List<GridContactPair> output) tuple) =>
+                {
+                    if (tuple.grid.Owner == uid ||
+                    !tuple.xformQuery.TryGetComponent(uid, out var collidingXform))
                     {
-                        if (tuple.grid.Owner == uid ||
-                        !tuple.xformQuery.TryGetComponent(uid, out var collidingXform))
+                        return true;
+                    }
+
+                    // If the other entity is lower ID and also moved then let that handle the collision.
+                    if (tuple.grid.Owner.Id > uid.Id && tuple._physicsSystem.MovedGrids.Contains(uid))
+                    {
+                        return true;
+                    }
+
+                    var (_, _, otherGridMatrix, otherGridInvMatrix) =  tuple.xformSystem.GetWorldPositionRotationMatrixWithInv(collidingXform);
+                    var otherGridBounds = otherGridMatrix.TransformBox(component.LocalAABB);
+                    var otherTransform = tuple._physicsSystem.GetPhysicsTransform(uid);
+
+                    // Get Grid2 AABB in grid1 ref
+                    var aabb1 = tuple.grid.Comp2.LocalAABB.Intersect(tuple.invWorldMatrix.TransformBox(otherGridBounds));
+
+                    // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
+                    var ourChunks = tuple._map.GetLocalMapChunks(tuple.grid.Owner, tuple.grid, aabb1);
+                    var physicsA = tuple.grid.Comp3;
+                    var physicsB = tuple.physicsQuery.GetComponent(uid);
+                    var fixturesB = tuple.fixturesQuery.Comp(uid);
+
+                    // Only care about chunks on other grid overlapping us.
+                    while (ourChunks.MoveNext(out var ourChunk))
+                    {
+                        var ourChunkWorld =
+                            tuple.worldMatrix.TransformBox(
+                                ourChunk.CachedBounds.Translated(ourChunk.Indices * tuple.grid.Comp2.ChunkSize));
+                        var ourChunkOtherRef = otherGridInvMatrix.TransformBox(ourChunkWorld);
+                        var collidingChunks = tuple._map.GetLocalMapChunks(uid, component, ourChunkOtherRef);
+
+                        while (collidingChunks.MoveNext(out var collidingChunk))
                         {
-                            return true;
-                        }
-
-                        // If the other entity is lower ID and also moved then let that handle the collision.
-                        if (tuple.grid.Owner.Id > uid.Id && tuple._physicsSystem.MovedGrids.Contains(uid))
-                        {
-                            return true;
-                        }
-
-                        var (_, _, otherGridMatrix, otherGridInvMatrix) =  tuple.xformSystem.GetWorldPositionRotationMatrixWithInv(collidingXform);
-                        var otherGridBounds = otherGridMatrix.TransformBox(component.LocalAABB);
-                        var otherTransform = tuple._physicsSystem.GetPhysicsTransform(uid);
-
-                        // Get Grid2 AABB in grid1 ref
-                        var aabb1 = tuple.grid.Comp2.LocalAABB.Intersect(tuple.invWorldMatrix.TransformBox(otherGridBounds));
-
-                        // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
-                        var ourChunks = tuple._map.GetLocalMapChunks(tuple.grid.Owner, tuple.grid, aabb1);
-                        var physicsA = tuple.grid.Comp3;
-                        var physicsB = tuple.physicsQuery.GetComponent(uid);
-                        var fixturesB = tuple.fixturesQuery.Comp(uid);
-
-                        // Only care about chunks on other grid overlapping us.
-                        while (ourChunks.MoveNext(out var ourChunk))
-                        {
-                            var ourChunkWorld =
-                                tuple.worldMatrix.TransformBox(
-                                    ourChunk.CachedBounds.Translated(ourChunk.Indices * tuple.grid.Comp2.ChunkSize));
-                            var ourChunkOtherRef = otherGridInvMatrix.TransformBox(ourChunkWorld);
-                            var collidingChunks = tuple._map.GetLocalMapChunks(uid, component, ourChunkOtherRef);
-
-                            while (collidingChunks.MoveNext(out var collidingChunk))
+                            foreach (var ourId in ourChunk.Fixtures)
                             {
-                                foreach (var ourId in ourChunk.Fixtures)
+                                var fixture = tuple.grid.Comp1.Fixtures[ourId];
+
+                                for (var i = 0; i < fixture.Shape.ChildCount; i++)
                                 {
-                                    var fixture = tuple.grid.Comp1.Fixtures[ourId];
+                                    var fixAABB = fixture.Shape.ComputeAABB(tuple.transform, i);
 
-                                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                                    foreach (var otherId in collidingChunk.Fixtures)
                                     {
-                                        var fixAABB = fixture.Shape.ComputeAABB(tuple.transform, i);
+                                        var otherFixture = fixturesB.Fixtures[otherId];
 
-                                        foreach (var otherId in collidingChunk.Fixtures)
+                                        // There's already a contact so ignore it.
+                                        // NOTE: fixture.Contacts is read-only here — AddPair is deferred to the
+                                        // sequential drain phase, so this dict won't change during the parallel job.
+                                        if (fixture.Contacts.ContainsKey(otherFixture))
+                                            break;
+
+                                        for (var j = 0; j < otherFixture.Shape.ChildCount; j++)
                                         {
-                                            var otherFixture = fixturesB.Fixtures[otherId];
+                                            var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
 
-                                            // There's already a contact so ignore it.
-                                            if (fixture.Contacts.ContainsKey(otherFixture))
-                                                break;
+                                            if (!fixAABB.Intersects(otherAABB)) continue;
 
-                                            for (var j = 0; j < otherFixture.Shape.ChildCount; j++)
+                                            var pair = new GridContactPair(
+                                                tuple.grid.Owner, uid,
+                                                physicsA, physicsB,
+                                                tuple.grid.Comp4, collidingXform,
+                                                ourId, otherId,
+                                                fixture, otherFixture,
+                                                i, j);
+
+                                            lock (tuple.output)
                                             {
-                                                var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
-
-                                                if (!fixAABB.Intersects(otherAABB)) continue;
-
-                                                tuple._physicsSystem.AddPair(
-                                                    (tuple.grid.Owner, tuple.grid.Comp3, tuple.grid.Comp4),
-                                                    (uid, physicsB, collidingXform),
-                                                    ourId, otherId,
-                                                    fixture, i,
-                                                    otherFixture, j,
-                                                    physicsA, physicsB,
-                                                    ContactFlags.Grid);
-                                                break;
+                                                tuple.output.Add(pair);
                                             }
+                                            break;
                                         }
                                     }
                                 }
                             }
                         }
+                    }
 
-                        return true;
-                    }, approx: true, includeMap: false);
-            }
+                    return true;
+                }, approx: true, includeMap: false);
         }
+        // Forge-Change-end
 
         #endregion
 
@@ -653,5 +763,71 @@ namespace Robust.Shared.Physics.Systems
             /// </summary>
             Grid = 1 << 1,
         }
+
+        // Forge-Change-start
+        /// <summary>
+        /// Candidate cross-grid fixture pair collected during the parallel grid collision job.
+        /// AddPair is deferred to a sequential drain phase because it mutates non-thread-safe
+        /// contact lists.
+        /// </summary>
+        internal readonly struct GridContactPair
+        {
+            public readonly EntityUid GridA;
+            public readonly EntityUid GridB;
+            public readonly PhysicsComponent PhysicsA;
+            public readonly PhysicsComponent PhysicsB;
+            public readonly TransformComponent XformA;
+            public readonly TransformComponent XformB;
+            public readonly string FixtureAId;
+            public readonly string FixtureBId;
+            public readonly Fixture FixtureA;
+            public readonly Fixture FixtureB;
+            public readonly int IndexA;
+            public readonly int IndexB;
+
+            public GridContactPair(
+                EntityUid gridA, EntityUid gridB,
+                PhysicsComponent physicsA, PhysicsComponent physicsB,
+                TransformComponent xformA, TransformComponent xformB,
+                string fixtureAId, string fixtureBId,
+                Fixture fixtureA, Fixture fixtureB,
+                int indexA, int indexB)
+            {
+                GridA = gridA;
+                GridB = gridB;
+                PhysicsA = physicsA;
+                PhysicsB = physicsB;
+                XformA = xformA;
+                XformB = xformB;
+                FixtureAId = fixtureAId;
+                FixtureBId = fixtureBId;
+                FixtureA = fixtureA;
+                FixtureB = fixtureB;
+                IndexA = indexA;
+                IndexB = indexB;
+            }
+        }
+
+        /// <summary>
+        /// Parallel job that runs <see cref="ProcessGridCollisionFor"/> for each moved grid.
+        /// One iteration per grid; pairs accumulate in <see cref="Pairs"/> under lock.
+        /// </summary>
+        private record struct GridCollisionJob() : IParallelRobustJob
+        {
+            public SharedBroadphaseSystem System = default!;
+
+            public readonly List<EntityUid> MovedGrids = new();
+            public readonly List<GridContactPair> Pairs = new(64);
+
+            // Each iteration does a non-trivial amount of work (FindGridsIntersecting + nested
+            // chunk/fixture loops), so a batch size of 1 is appropriate.
+            public int BatchSize => 1;
+
+            public void Execute(int index)
+            {
+                System.ProcessGridCollisionFor(MovedGrids[index], Pairs);
+            }
+        }
+        // Forge-Change-end
     }
 }

@@ -12,13 +12,4 @@ namespace Robust.Shared.Map.Events;
 /// Really this exists to get around test dependency creeping.
 /// </remarks>
 [ByRefEvent]
-internal readonly record struct RegenerateGridBoundsEvent(EntityUid Entity, Dictionary<MapChunk, List<Box2i>> ChunkRectangles, List<MapChunk> RemovedChunks, MapGridComponent? Grid = null)
-{
-    public readonly EntityUid Entity = Entity;
-
-    public readonly Dictionary<MapChunk, List<Box2i>> ChunkRectangles = ChunkRectangles;
-
-    public readonly List<MapChunk> RemovedChunks = RemovedChunks;
-
-    public readonly MapGridComponent? Grid = Grid;
-}
+internal readonly record struct RegenerateGridBoundsEvent(EntityUid Entity, Dictionary<MapChunk, List<Box2i>> ChunkRectangles, List<MapChunk> RemovedChunks, MapGridComponent? Grid = null);

@@ -274,6 +274,14 @@ namespace Robust.Shared.Configuration
 
         public event Action<CVarChangeInfo>? OnCVarValueChanged;
 
+        /// <summary>
+        /// Registers any fields and properties with the <see cref="CVarAttribute"/> on the
+        /// given <see cref="obj"/>.
+        /// These fields and properties will be automatically assigned when the CVar value
+        /// changes, including their current value when calling this method.
+        /// </summary>
+        void RegisterCVarAttributes(object obj);
+
         //
         // Rollback
         //

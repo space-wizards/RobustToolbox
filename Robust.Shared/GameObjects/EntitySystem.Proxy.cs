@@ -1783,4 +1783,71 @@ public partial class EntitySystem
     }
 
     #endregion
+
+    #region Filters
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.MatchesFilter(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Prototypes.ComponentFilter)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool MatchesFilter(EntityUid ent, ComponentFilter filter)
+    {
+        return EntityManager.MatchesFilter(ent, filter);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.AnyMatchingComponent(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Prototypes.ComponentFilter)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool AnyMatchingComponent(EntityUid ent, ComponentFilter filter)
+    {
+        return EntityManager.AnyMatchingComponent(ent, filter);
+    }
+
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ExactlyMatchesFilter(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Prototypes.ComponentFilter)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool ExactlyMatchesFilter(EntityUid ent, ComponentFilter filter)
+    {
+        return EntityManager.ExactlyMatchesFilter(ent, filter);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.EnumerateFilterMisses(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Prototypes.ComponentFilter)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public IEnumerable<Type> EnumerateFilterMisses(EntityUid ent, ComponentFilter filter)
+    {
+        return EntityManager.EnumerateFilterMisses(ent, filter);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.EnumerateEntityMisses(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Prototypes.ComponentFilter)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public IEnumerable<Type> EnumerateEntityMisses(EntityUid ent, ComponentFilter filter)
+    {
+        return EntityManager.EnumerateEntityMisses(ent, filter);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.EnumerateFilterHits(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Prototypes.ComponentFilter)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public IEnumerable<Type> EnumerateFilterHits(EntityUid ent, ComponentFilter filter)
+    {
+        return EntityManager.EnumerateFilterHits(ent, filter);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.FillMissesFromRegistry(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Prototypes.ComponentFilter,Robust.Shared.Prototypes.ComponentRegistry)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public void FillMissesFromRegistry(EntityUid ent, ComponentFilter filter, ComponentRegistry registry)
+    {
+        EntityManager.FillMissesFromRegistry(ent, filter, registry);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.FillMissesWithNewComponents(Robust.Shared.GameObjects.EntityUid,Robust.Shared.Prototypes.ComponentFilter)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public void FillMissesWithNewComponents(EntityUid ent, ComponentFilter filter)
+    {
+        EntityManager.FillMissesWithNewComponents(ent, filter);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ComponentFilterQuery(Robust.Shared.Prototypes.ComponentFilter,System.Boolean)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public ComponentFilterQuery ComponentFilterQuery(ComponentFilter filter, bool matchPaused = false)
+    {
+        return EntityManager.ComponentFilterQuery(filter, matchPaused);
+    }
+
+    #endregion
 }

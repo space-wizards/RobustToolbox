@@ -617,8 +617,8 @@ public sealed class EntityDeserializer :
                 }
 
                 var datanode = compData;
-                if (proto != null && proto.Components.TryGetValue(name, out var protoData))
-                    datanode = _seriMan.CombineMappings(compData, protoData.Mapping);
+                if (proto != null && proto.Components.TryGetEntry(_factory, name, out var protoData))
+                    datanode = protoData?.Mapping is not null ? _seriMan.CombineMappings(compData, protoData.Mapping!) : compData;
 
                 _components.Add(name, datanode);
             }
@@ -628,7 +628,7 @@ public sealed class EntityDeserializer :
         // that component from the map file
         if (proto != null)
         {
-            foreach (var (name, entry) in proto.Components)
+            foreach (var (name, toClone) in proto.Components.ComponentsAndNames(_factory))
             {
                 if (missingComps != null && missingComps.Contains(name))
                     continue;
@@ -646,9 +646,9 @@ public sealed class EntityDeserializer :
                     component = newComponent;
                 }
 
-                _seriMan.CopyTo(entry.Component, ref component, this, notNullableOverride: true);
+                _seriMan.CopyTo(toClone, ref component, this, notNullableOverride: true);
 
-                if (!entry.Component.NetSyncEnabled && compReg.NetID is { } netId)
+                if (!toClone.NetSyncEnabled && compReg.NetID is { } netId)
                     meta.NetComponents.Remove(netId);
             }
         }
@@ -1003,7 +1003,7 @@ public sealed class EntityDeserializer :
                 continue;
             }
 
-            if (prototype.Components.ContainsKey(compName))
+            if (prototype.Components.ContainsComponentByName(_factory, compName))
             {
                 // This component is modified by the map so we have to send state.
                 // Though it's still in the prototype itself so creation doesn't need to be sent.

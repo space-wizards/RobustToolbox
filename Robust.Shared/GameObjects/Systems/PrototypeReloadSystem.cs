@@ -40,12 +40,12 @@ internal sealed class PrototypeReloadSystem : EntitySystem
     {
         var oldPrototype = metaData.EntityPrototype;
 
-        var oldPrototypeComponents = oldPrototype?.Components.Keys
+        var oldPrototypeComponents = oldPrototype?.Components.Names(_componentFactory)
             .Where(n => n != "Transform" && n != "MetaData")
             .Select(name => (name, _componentFactory.GetRegistration(name).Type))
             .ToList() ?? new List<(string name, Type Type)>();
 
-        var newPrototypeComponents = newPrototype.Components.Keys
+        var newPrototypeComponents = newPrototype.Components.Names(_componentFactory)
             .Where(n => n != "Transform" && n != "MetaData")
             .Select(name => (name, _componentFactory.GetRegistration(name).Type))
             .ToList();
@@ -55,7 +55,7 @@ internal sealed class PrototypeReloadSystem : EntitySystem
         // Find components to be removed, and remove them
         foreach (var (name, type) in oldPrototypeComponents.Except(newPrototypeComponents))
         {
-            if (newPrototype.Components.ContainsKey(name))
+            if (newPrototype.Components.ContainsComponentByName(_componentFactory, name))
             {
                 ignoredComponents.Add(name);
                 continue;
@@ -70,7 +70,7 @@ internal sealed class PrototypeReloadSystem : EntitySystem
         foreach (var (name, _) in newPrototypeComponents.Where(t => !ignoredComponents.Contains(t.name))
                      .Except(oldPrototypeComponents))
         {
-            var data = newPrototype.Components[name];
+            var data = newPrototype.Components.GetComponentByName(_componentFactory, name);
             var component = _componentFactory.GetComponent(name);
 
             if (!HasComp(entity, component.GetType()))

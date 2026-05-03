@@ -1,0 +1,10 @@
+<BoxContainer xmlns="https://spacestation14.io"
+    Orientation="Horizontal"
+    SeparationOverride="3">
+    <Label Name="ChannelLabel" />
+    <ColorableSlider Name="ColorSlider"
+        HorizontalExpand="True"
+        VerticalAlignment="Center"
+        MaxValue="1.0" />
+    <SpinBox Name="InputBox" />
+</BoxContainer>

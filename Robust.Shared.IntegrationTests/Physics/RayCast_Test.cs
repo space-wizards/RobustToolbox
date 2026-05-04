@@ -55,6 +55,21 @@ internal sealed class RayCast_Test
         new(new SlimPolygon(Box2.UnitCentered), new Transform(Vector2.Zero, Angle.Zero), -Vector2.UnitY, null),
     };
 
+    private static TestCaseData[] _kinematicMoveCases =
+    {
+        // No hit, full movement.
+        new(new Transform(Vector2.Zero, Angle.Zero), -Vector2.UnitY, -Vector2.UnitY, false),
+
+        // Stops on the wall.
+        new(new Transform(Vector2.Zero, Angle.Zero), Vector2.UnitY, new Vector2(0f, 0.5f - PhysicsConstants.LinearSlop), true),
+
+        // Clips into the wall and slides along it.
+        new(new Transform(Vector2.Zero, Angle.Zero), new Vector2(0.25f, 1f), new Vector2(0.25f, 0.5f - PhysicsConstants.LinearSlop), true),
+
+        // Initial overlap, no depenetration.
+        new(new Transform(Vector2.UnitY / 2f, Angle.Zero), Vector2.UnitY, Vector2.UnitY, false),
+    };
+
     [Test, TestCaseSource(nameof(_rayCases))]
     public void RayCast(Vector2 origin, Vector2 direction, Vector2? point)
     {
@@ -111,6 +126,62 @@ internal sealed class RayCast_Test
         {
             Assert.That(hits.Results.First().Point, Is.EqualTo(point.Value));
         }
+    }
+
+    [Test, TestCaseSource(nameof(_kinematicMoveCases))]
+    public void CollideAndSlide(Transform origin, Vector2 translation, Vector2 expected, bool hit)
+    {
+        var sim = RobustServerSimulation.NewSimulation().RegisterEntitySystems(f =>
+        {
+            f.LoadExtraSystemType<RayCastSystem>();
+        }).InitializeInstance();
+        Setup(sim, out var mapId);
+        var raycast = sim.System<RayCastSystem>();
+
+        var result = raycast.CollideAndSlide(mapId,
+            new PhysShapeCircle(0.5f, Vector2.Zero),
+            origin,
+            translation,
+            new QueryFilter()
+            {
+                LayerBits = 1,
+            });
+
+        Assert.That(result.Hit, Is.EqualTo(hit));
+        AssertVectorApprox(result.Translation, expected);
+        Assert.That(result.Remainder.LengthSquared(), Is.LessThan(0.0001f));
+    }
+
+    [Test]
+    public void CollideAndSlideEntity()
+    {
+        var sim = RobustServerSimulation.NewSimulation().RegisterEntitySystems(f =>
+        {
+            f.LoadExtraSystemType<RayCastSystem>();
+        }).InitializeInstance();
+        Setup(sim, out var mapId);
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+        var physicsSystem = entManager.System<SharedPhysicsSystem>();
+        var raycast = sim.System<RayCastSystem>();
+
+        var mover = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var physics = entManager.AddComponent<PhysicsComponent>(mover);
+        fixtureSystem.CreateFixture(mover, "fix1", new Fixture(new PhysShapeCircle(0.5f), 1, 1, true), body: physics);
+        physicsSystem.SetCanCollide(mover, true, body: physics);
+
+        var result = raycast.CollideAndSlide(mover, Vector2.UnitY);
+
+        Assert.That(result.Hit);
+        AssertVectorApprox(result.Translation, new Vector2(0f, 0.5f - PhysicsConstants.LinearSlop));
+        Assert.That(result.Remainder.LengthSquared(), Is.LessThan(0.0001f));
+    }
+
+    private static void AssertVectorApprox(Vector2 actual, Vector2 expected)
+    {
+        Assert.That(actual.X, Is.EqualTo(expected.X).Within(0.001f));
+        Assert.That(actual.Y, Is.EqualTo(expected.Y).Within(0.001f));
     }
 
     private void Setup(ISimulation sim, out MapId mapId)

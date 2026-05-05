@@ -39,7 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `[YamlTagShortener]` attribute. It can be used on abstract base types ending with 'Base' to enable short-form YAML tags for their children (i.e.: `!type:SomeThingA` can be written as `!A`), if said children are named like the base type with only the 'Base' part being changed.
+* Added `[CustomChildTag<T>]` attribute. These can be added to abstract base types to enable short-form YAML tags in cases where type names are incompatible with `[YamlTagShortener]`.
+* Added `YamlTagShortenerAnalyzer` analyzer for detecting invalid usage of the `[YamlTagShortener]` attribute.
+* Added `YamlTagShortenerGenerator` source generator for generating type serializers of types using the `[YamlTagShortener]` or `[CustomChildTag<T>]` attribute.
+* Added tests for `YamlTagShortenerAnalyzer` & `YamlTagShortenerGenerator`.
 
 ### Bugfixes
 

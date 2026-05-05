@@ -130,8 +130,9 @@ internal sealed partial class ServerMapEditorSystem
 
         var ms = new MemoryStream();
         using (var compress = new ZStdCompressStream(ms))
+        using (var text = new StreamWriter(compress))
         {
-            MapLoaderSystem.Write(compress, node);
+            MapLoaderSystem.Write(text, node);
         }
 
         RaiseNetworkEvent(new MEM.SaveMapData

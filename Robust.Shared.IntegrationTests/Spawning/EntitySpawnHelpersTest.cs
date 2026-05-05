@@ -16,7 +16,6 @@ namespace Robust.UnitTesting.Shared.Spawning;
 /// <see cref="IEntityManager.TrySpawnNextTo"/>) work as intended.
 /// </summary>
 [TestFixture]
-[Virtual]
 public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
 {
     protected ServerIntegrationInstance Server = default!;

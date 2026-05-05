@@ -20,9 +20,9 @@ internal sealed class ReloadManager : IReloadManager
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly ILogManager _logMan = default!;
     [Dependency] private readonly IResourceManagerInternal _res = default!;
-#pragma warning disable CS0414
+#if TOOLS
     [Dependency] private readonly ITaskManager _tasks = default!;
-#pragma warning restore CS0414
+#endif
 
     private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
     private CancellationTokenSource _reloadToken = new();

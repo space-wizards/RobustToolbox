@@ -252,27 +252,6 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
         }
     }
 
-    [Obsolete("Use variant that takes in an EntityUid")]
-    public void AddGlobalOverride(NetEntity entity, bool removeExistingOverride = true, bool recursive = false)
-    {
-        if (TryGetEntity(entity, out var uid))
-            AddGlobalOverride(uid.Value);
-    }
-
-    [Obsolete("Use variant that takes in an EntityUid")]
-    public void AddSessionOverride(NetEntity entity, ICommonSession session, bool removeExistingOverride = true)
-    {
-        if (TryGetEntity(entity, out var uid))
-            AddSessionOverride(uid.Value, session);
-    }
-
-    [Obsolete("Don't use this, clear specific overrides")]
-    public void ClearOverride(NetEntity entity)
-    {
-        if (TryGetEntity(entity, out var uid))
-            Clear(uid.Value);
-    }
-
     #region Map/Grid Events
 
     private void OnGridRemoved(GridRemovalEvent ev)

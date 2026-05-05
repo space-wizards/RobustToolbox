@@ -1279,6 +1279,16 @@ namespace Robust.Shared
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
+        /// Whether to enable HRTF (head-related transfer function) support for positional audio.
+        /// </summary>
+        /// <remarks>
+        /// This CVar being true isn't necessarily enough to actually use HRTF. Your platform must be using openal-soft,
+        /// and your device needs to actually support it (although it almost certainly does).
+        /// </remarks>
+        public static readonly CVarDef<bool> AudioHrtf =
+            CVarDef.Create("audio.hrtf", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
         /// Audio device to try to output audio to by default.
         /// </summary>
         public static readonly CVarDef<string> AudioDevice =
@@ -1970,6 +1980,14 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> UIXamlJitPreload =
             CVarDef.Create("ui.xaml_jit_preload", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        ///     If false, the UI engine will not ever sleep updating controls.
+        ///     This should <b>never</b> be set outside of test frameworks, doing so worsens user experience by allowing
+        ///     the game to do excessive amounts of work in one frame, causing extra lag.
+        /// </summary>
+        public static readonly CVarDef<bool> UIObeyUpdateLimits =
+            CVarDef.Create("ui.obey_update_limits", true, CVar.CLIENTONLY);
 
         /// <summary>
         /// The amount of pixels you need to move while holding click before a drag is detected in UI.

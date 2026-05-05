@@ -48,7 +48,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* `ComponentNetworkGenerator` received some internal refactoring, and should now work on `internal` types.
 
 ### Other
 

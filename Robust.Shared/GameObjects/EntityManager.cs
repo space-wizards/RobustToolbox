@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Prometheus;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
@@ -85,6 +86,13 @@ namespace Robust.Shared.GameObjects
         protected int NextEntityUid = (int) EntityUid.FirstUid;
 
         protected int NextNetworkId = (int) NetEntity.First;
+
+        /// <summary>
+        ///     A "version" of the ECS marks whenever internal state changes in a way that invalidates
+        ///     enumerators of one or more of the primary storages (the component dictionaries, entity
+        ///     hashset, or entity component index.)
+        /// </summary>
+        internal long Version = 0;
 
         /// <inheritdoc />
         public IEventBus EventBus => EventBusInternal;
@@ -548,6 +556,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             ThreadCheck();
+            IncrementVersion();
 
             if (meta.EntityLifeStage >= EntityLifeStage.Deleted)
                 return;
@@ -910,6 +919,7 @@ namespace Robust.Shared.GameObjects
         private EntityUid AllocEntity(out MetaDataComponent metadata)
         {
             ThreadCheck();
+            IncrementVersion();
 
             var uid = GenerateEntityUid();
 
@@ -1129,6 +1139,14 @@ namespace Robust.Shared.GameObjects
                 Environment.CurrentManagedThreadId == _mainThreadId,
                 "Environment.CurrentManagedThreadId == _mainThreadId");
 #endif
+        }
+
+        /// <summary>
+        ///     Increments the version number to indicate to enumerators that they're invalidated.
+        /// </summary>
+        internal void IncrementVersion()
+        {
+            Interlocked.Increment(ref Version);
         }
     }
 

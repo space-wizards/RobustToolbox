@@ -23,7 +23,7 @@ public sealed class HasDependenciesAnalyzer : DiagnosticAnalyzer
     public static readonly DiagnosticDescriptor DiagnosticNotPartialParent = new(
         Diagnostics.IdHasDependenciesNotPartialParent,
         "Type has dependencies but is not in a partial type",
-        "Type '{0}' has [Dependency] fields but is nested in a non-partial type. This will be illegal in the future.",
+        "Type '{0}' has [Dependency] fields but is nested in a non-partial type. The parent being partial will be required in the future.",
         "Usage",
         DiagnosticSeverity.Warning,
         true);

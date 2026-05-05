@@ -10,7 +10,7 @@ namespace Robust.Shared.IoC;
 /// <para>
 /// This type should only be used by engine.
 /// The API may change in the future so content should not implement or use it itself.
-/// Automatic implementation via the source generator is the only supported method.
+/// Automatic implementation via the source generator is the only supported method, this is not ABI stable.
 /// </para>
 /// </remarks>
 [EditorBrowsable(EditorBrowsableState.Never)]

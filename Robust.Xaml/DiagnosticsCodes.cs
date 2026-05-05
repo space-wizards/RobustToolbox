@@ -1,7 +1,7 @@
 using System;
 using XamlX;
 
-namespace Robust.Client.NameGenerator;
+namespace Robust.Xaml;
 
 internal static class DiagnosticsCodes
 {

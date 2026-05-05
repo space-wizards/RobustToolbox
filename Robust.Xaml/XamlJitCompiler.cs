@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading;
+using XamlX;
 using XamlX.IL;
 using XamlX.Parsers;
 using XamlX.TypeSystem;
@@ -206,7 +207,13 @@ internal sealed class XamlJitCompiler
     )
     {
 
-        var xaml = new XamlCustomizations(_typeSystem, _typeSystem.FindAssembly(t.Assembly.FullName!)!);
+        void LogDiagnostic(XamlDiagnostic diagnostic)
+        {
+            if (diagnostic.Severity >= XamlDiagnosticSeverity.Error)
+                throw new Exception($"Error when recompiling {filePath}: {diagnostic.Title}");
+        }
+
+        var xaml = new XamlCustomizations(_typeSystem, _typeSystem.FindAssembly(t.Assembly.FullName!)!, LogDiagnostic);
 
         // attempt to parse the code
         var document = XDocumentXamlParser.Parse(contents);

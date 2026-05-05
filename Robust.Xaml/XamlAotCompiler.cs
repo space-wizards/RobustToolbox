@@ -88,7 +88,37 @@ internal partial class XamlAotCompiler
         var asm = typeSystem.TargetAssemblyDefinition!;
         var embrsc = new EmbeddedResources(asm);
 
-        var xaml = new XamlCustomizations(typeSystem, typeSystem.TargetAssembly!);
+        void LogDiagnostic(XamlDiagnostic diagnostic)
+        {
+            if (diagnostic.Severity == XamlDiagnosticSeverity.Warning)
+            {
+                engine.LogWarningEvent(new BuildWarningEventArgs("Xaml",
+                    diagnostic.Code,
+                    diagnostic.Document ?? "",
+                    diagnostic.LineNumber ?? 0,
+                    diagnostic.LinePosition ?? 0,
+                    diagnostic.LineNumber ?? 0,
+                    diagnostic.LinePosition ?? 0,
+                    diagnostic.Title,
+                    "",
+                    "Robust.Xaml"));
+            }
+            else if (diagnostic.Severity != XamlDiagnosticSeverity.None)
+            {
+                engine.LogErrorEvent(new BuildErrorEventArgs("Xaml",
+                    diagnostic.Code,
+                    diagnostic.Document ?? "",
+                    diagnostic.LineNumber ?? 0,
+                    diagnostic.LinePosition ?? 0,
+                    diagnostic.LineNumber ?? 0,
+                    diagnostic.LinePosition ?? 0,
+                    diagnostic.Title,
+                    "",
+                    "Robust.Xaml"));
+            }
+        }
+
+        var xaml = new XamlCustomizations(typeSystem, typeSystem.TargetAssembly!, LogDiagnostic);
         var lowLevel = new LowLevelCustomizations(typeSystem);
 
         var contextDef = new TypeDefinition("CompiledRobustXaml", "XamlIlContext",

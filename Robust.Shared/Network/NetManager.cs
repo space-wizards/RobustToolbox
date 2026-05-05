@@ -1000,16 +1000,12 @@ namespace Robust.Shared.Network
             var instance = (NetMessage) Activator.CreateInstance(type)!;
             instance.MsgChannel = channel;
 
-#if DEBUG
-
             if (!_bandwidthUsage.TryGetValue(type, out var bandwidth))
             {
                 bandwidth = 0;
             }
 
             _bandwidthUsage[type] = bandwidth + msg.LengthBytes;
-
-#endif
 
             try
             {

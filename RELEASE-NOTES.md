@@ -40,7 +40,7 @@ END TEMPLATE-->
 ### New features
 
 - Statics on interfaces, and other cases of `static abstract` methods and properties, are now allowed by the sandbox.
-- `INumber<T>` and all associated types in `System.Numberics` are now allowed by the sandbox.
+- `INumber<T>` and all associated types in `System.Numerics` are now allowed by the sandbox.
 - `BigInteger` is now allowed by the sandbox.
 - `ISpanFormattable` and `IUtf8SpanFormattable` are now allowed by the sandbox.
 - `IParsable`, `ISpanParsable`, and `IUtf8SpanParsable` are now allowed by the sandbox.

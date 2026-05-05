@@ -15,12 +15,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class TeleportCommand : LocalizedEntityCommands
+internal sealed partial class TeleportCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
+    [Dependency] private IMapManager _map = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
 
     public override string Command => "tp";
     public override bool RequireServerOrSingleplayer => true;
@@ -83,11 +83,11 @@ internal sealed class TeleportCommand : LocalizedEntityCommands
     }
 }
 
-public sealed class TeleportToCommand : LocalizedEntityCommands
+public sealed partial class TeleportToCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly ISharedPlayerManager _players = default!;
-    [Dependency] private readonly IEntityManager _entities = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private ISharedPlayerManager _players = default!;
+    [Dependency] private IEntityManager _entities = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     public override string Command => "tpto";
     public override bool RequireServerOrSingleplayer => true;
@@ -191,10 +191,10 @@ public sealed class TeleportToCommand : LocalizedEntityCommands
     }
 }
 
-sealed class LocationCommand : LocalizedEntityCommands
+sealed partial class LocationCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IEntityManager _ent = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private IEntityManager _ent = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     public override string Command => "loc";
 
@@ -213,10 +213,10 @@ sealed class LocationCommand : LocalizedEntityCommands
     }
 }
 
-sealed class TpGridCommand : LocalizedEntityCommands
+sealed partial class TpGridCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IEntityManager _ent = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
+    [Dependency] private IEntityManager _ent = default!;
+    [Dependency] private SharedMapSystem _map = default!;
 
     public override string Command => "tpgrid";
     public override bool RequireServerOrSingleplayer => true;

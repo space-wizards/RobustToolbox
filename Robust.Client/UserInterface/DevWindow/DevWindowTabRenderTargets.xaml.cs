@@ -19,8 +19,8 @@ namespace Robust.Client.UserInterface;
 [GenerateTypedNameReferences]
 internal sealed partial class DevWindowTabRenderTargets : Control
 {
-    [Dependency] private readonly IClydeInternal _clyde = default!;
-    [Dependency] private readonly ILocalizationManager _loc = default!;
+    [Dependency] private IClydeInternal _clyde = default!;
+    [Dependency] private ILocalizationManager _loc = default!;
 
     private readonly Control[] _gridHeader;
 

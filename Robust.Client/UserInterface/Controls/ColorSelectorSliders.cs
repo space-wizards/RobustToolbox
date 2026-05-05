@@ -9,9 +9,9 @@ using Robust.Shared.Maths;
 namespace Robust.Client.UserInterface.Controls;
 
 // condensed version of the original ColorSlider set
-public sealed class ColorSelectorSliders : Control
+public sealed partial class ColorSelectorSliders : Control
 {
-    [Dependency] private readonly ILocalizationManager _localization = default!;
+    [Dependency] private ILocalizationManager _localization = default!;
 
     public Color Color
     {

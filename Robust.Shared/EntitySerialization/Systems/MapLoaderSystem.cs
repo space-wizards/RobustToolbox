@@ -24,10 +24,10 @@ namespace Robust.Shared.EntitySerialization.Systems;
 /// </remarks>
 public sealed partial class MapLoaderSystem : EntitySystem
 {
-    [Dependency] private readonly IResourceManager _resourceManager = default!;
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
-    [Dependency] private readonly SharedTransformSystem _xform = default!;
-    [Dependency] private readonly IDependencyCollection _dependency = default!;
+    [Dependency] private IResourceManager _resourceManager = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedTransformSystem _xform = default!;
+    [Dependency] private IDependencyCollection _dependency = default!;
 
     private Stopwatch _stopwatch = new();
 

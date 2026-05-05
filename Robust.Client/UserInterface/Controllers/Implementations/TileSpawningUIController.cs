@@ -18,11 +18,11 @@ using static Robust.Client.UserInterface.Controls.BaseButton;
 
 namespace Robust.Client.UserInterface.Controllers.Implementations;
 
-public sealed class TileSpawningUIController : UIController
+public sealed partial class TileSpawningUIController : UIController
 {
-    [Dependency] private readonly IPlacementManager _placement = default!;
-    [Dependency] private readonly IResourceCache _resources = default!;
-    [Dependency] private readonly ITileDefinitionManager _tiles = default!;
+    [Dependency] private IPlacementManager _placement = default!;
+    [Dependency] private IResourceCache _resources = default!;
+    [Dependency] private ITileDefinitionManager _tiles = default!;
 
     private TileSpawnWindow? _window;
     private bool _init;
@@ -106,7 +106,7 @@ public sealed class TileSpawningUIController : UIController
         if (_window is { Disposed: false })
             return;
         _window = UIManager.CreateWindow<TileSpawnWindow>();
-        LayoutContainer.SetAnchorPreset(_window,LayoutContainer.LayoutPreset.CenterLeft);
+        LayoutContainer.SetAnchorPreset(_window, LayoutContainer.LayoutPreset.CenterLeft);
         _window.ClearButton.OnPressed += OnTileClearPressed;
         _window.SearchBar.OnTextChanged += OnTileSearchChanged;
         _window.TileList.OnItemSelected += OnTileItemSelected;

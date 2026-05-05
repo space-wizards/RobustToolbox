@@ -34,16 +34,16 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
-        [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
-        [IoC.Dependency] protected readonly ILogManager LogManager = default!;
-        [IoC.Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
-        [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
-        [IoC.Dependency] private readonly ISerializationManager _serManager = default!;
-        [IoC.Dependency] private readonly ProfManager _prof = default!;
-        [IoC.Dependency] private readonly INetManager _netMan = default!;
-        [IoC.Dependency] private readonly IReflectionManager _reflection = default!;
-        [IoC.Dependency] private readonly EntityConsoleHost _entityConsoleHost = default!;
+        [IoC.Dependency] protected IPrototypeManager PrototypeManager = default!;
+        [IoC.Dependency] protected ILogManager LogManager = default!;
+        [IoC.Dependency] private IEntitySystemManager _entitySystemManager = default!;
+        [IoC.Dependency] private IMapManager _mapManager = default!;
+        [IoC.Dependency] private IGameTiming _gameTiming = default!;
+        [IoC.Dependency] private ISerializationManager _serManager = default!;
+        [IoC.Dependency] private ProfManager _prof = default!;
+        [IoC.Dependency] private INetManager _netMan = default!;
+        [IoC.Dependency] private IReflectionManager _reflection = default!;
+        [IoC.Dependency] private EntityConsoleHost _entityConsoleHost = default!;
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....

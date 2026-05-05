@@ -19,10 +19,10 @@ namespace Robust.Client.UserInterface.Controls
     ///     Allows the user to input and modify a line of text.
     /// </summary>
     [Virtual]
-    public class LineEdit : Control
+    public partial class LineEdit : Control
     {
-        [Dependency] private readonly IConfigurationManager _cfgManager = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private IConfigurationManager _cfgManager = default!;
+        [Dependency] private IGameTiming _timing = default!;
 
         private const float MouseScrollDelay = 0.001f;
 
@@ -292,12 +292,12 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (_lastMousePosition < contentBox.Left)
                 {
-                    _drawOffset = Math.Max(0, _drawOffset - (int) Math.Ceiling(args.DeltaSeconds / MouseScrollDelay));
+                    _drawOffset = Math.Max(0, _drawOffset - (int)Math.Ceiling(args.DeltaSeconds / MouseScrollDelay));
                 }
                 else if (_lastMousePosition > contentBox.Right)
                 {
                     // Will get clamped inside rendering code.
-                    _drawOffset += (int) Math.Ceiling(args.DeltaSeconds / MouseScrollDelay);
+                    _drawOffset += (int)Math.Ceiling(args.DeltaSeconds / MouseScrollDelay);
                 }
 
                 var index = GetIndexAtPos(MathHelper.Clamp(_lastMousePosition, contentBox.Left, contentBox.Right));
@@ -1154,7 +1154,7 @@ namespace Robust.Client.UserInterface.Controls
                             contentBox.Right,
                             contentBox.Bottom);
 
-                        window.TextInputSetRect((UIBox2i) imeBox.Translated(GlobalPixelPosition), actualCursorPosition);
+                        window.TextInputSetRect((UIBox2i)imeBox.Translated(GlobalPixelPosition), actualCursorPosition);
                     }
                 }
 

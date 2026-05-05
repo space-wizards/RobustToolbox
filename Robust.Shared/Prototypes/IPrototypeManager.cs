@@ -625,6 +625,10 @@ public interface IPrototypeManager
 internal interface IPrototypeManagerInternal : IPrototypeManager
 {
     event Action<DataNodeDocument>? LoadedData;
+
+    void ReloadPrototypesOrThrow(
+        Dictionary<Type, HashSet<string>> modified,
+        Dictionary<Type, HashSet<string>>? removed = null);
 }
 
 /// <summary>

@@ -1,4 +1,5 @@
-﻿using Robust.Client.MapEditor.Interface;
+﻿using Robust.Client.Input;
+using Robust.Client.MapEditor.Interface;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.ContentPack;
@@ -12,6 +13,7 @@ internal sealed class MapEditorState : State.State
 {
     [Dependency] private readonly IUserInterfaceManager _uiManager = null!;
     [Dependency] private readonly IEntitySystemManager _entitySystem = null!;
+    [Dependency] private readonly IInputManager _inputManager = null!;
 
     private readonly MapEditorMain _main;
 
@@ -26,6 +28,8 @@ internal sealed class MapEditorState : State.State
     {
         _uiManager.StateRoot.AddChild(_main);
         LayoutContainer.SetAnchorAndMarginPreset(_main, LayoutContainer.LayoutPreset.Wide);
+
+        _inputManager.Contexts.SetActiveContext(MapEditorInputContext.ContextName);
     }
 
     protected override void Shutdown()

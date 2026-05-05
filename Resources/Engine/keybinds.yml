@@ -1,5 +1,11 @@
 ﻿version: 1 # Currently unused.
 binds: # These are all the current engine keybinds.
+
+#
+# Map editor!
+#
+
+# File actions
 - function: MapEditorNewFile
   type: State
   key: N
@@ -21,6 +27,8 @@ binds: # These are all the current engine keybinds.
   type: State
   key: W
   mod1: Control
+
+# Edit actions
 - function: MapEditorUndo
   type: State
   key: Z
@@ -30,3 +38,11 @@ binds: # These are all the current engine keybinds.
   key: Z
   mod1: Control
   mod2: Shift
+
+# Viewport actions
+- function: MapEditorViewportDrag
+  type: State
+  key: MouseLeft
+  mod1: Alt
+  canFocus: true
+

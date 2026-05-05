@@ -83,4 +83,14 @@ internal static class MapEditorMessages
     {
         public required NetEntity MapData;
     }
+
+    /// <summary>
+    /// C->S
+    /// </summary>
+    [Serializable, NetSerializable]
+    internal sealed class EyeMoveTo : EntityEventArgs
+    {
+        public required NetEntity Eye;
+        public required Vector2 Position;
+    }
 }

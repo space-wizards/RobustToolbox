@@ -9,6 +9,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
+using Robust.Client.MapEditor;
 using Robust.Client.UserInterface;
 using Robust.Shared.Collections;
 using Robust.Shared.Console;
@@ -130,6 +131,7 @@ namespace Robust.Client.Input
             NetworkBindMap.PopulateKeyFunctionsMap();
 
             EngineContexts.SetupContexts(Contexts);
+            MapEditorInputContext.SetupContexts(Contexts);
 
             Contexts.ContextChanged += OnContextChanged;
 

@@ -77,13 +77,6 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.TextCompleteNext);
             common.AddFunction(EngineKeyFunctions.TextCompletePrev);
 
-            var editor = contexts.New("editor", common);
-            editor.AddFunction(EngineKeyFunctions.EditorLinePlace);
-            editor.AddFunction(EngineKeyFunctions.EditorGridPlace);
-            editor.AddFunction(EngineKeyFunctions.EditorPlaceObject);
-            editor.AddFunction(EngineKeyFunctions.EditorCancelPlace);
-            editor.AddFunction(EngineKeyFunctions.EditorRotateObject);
-
             var human = contexts.New("human", common);
         }
     }

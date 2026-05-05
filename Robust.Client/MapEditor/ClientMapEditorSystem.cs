@@ -13,14 +13,13 @@ using MEM = Robust.Shared.MapEditor.MapEditorMessages;
 
 namespace Robust.Client.MapEditor;
 
-internal sealed class ClientMapEditorSystem : MapEditorSystem
+internal sealed partial class ClientMapEditorSystem : MapEditorSystem
 {
     [Dependency] private readonly IPlayerManager _playerManager = null!;
     [Dependency] private readonly IStateManager _stateManager = null!;
     [Dependency] private readonly MapFileHandleManager _mapFileHandles = null!;
 
     internal event Action<IEnumerable<EntityUid>>? OpenMapsUpdated;
-    internal event Action<Entity<MapEditorEyeComponent>>? EyeCreated;
 
     [ViewVariables(VVAccess.ReadWrite)]
     private bool _readyToMap;
@@ -68,6 +67,13 @@ internal sealed class ClientMapEditorSystem : MapEditorSystem
         }
     }
 
+    public override void FrameUpdate(float frameTime)
+    {
+        base.FrameUpdate(frameTime);
+
+        EyeFrameUpdate();
+    }
+
     private void EditorUserDataStartup(Entity<MapEditorUserStateComponent> ent, ref ComponentStartup args)
     {
         if (ent.Comp.User != _playerManager.LocalUser)
@@ -82,11 +88,6 @@ internal sealed class ClientMapEditorSystem : MapEditorSystem
             return;
 
         OpenMapsUpdated?.Invoke(ent.Comp.OpenMaps);
-    }
-
-    private void AfterViewStartup(Entity<MapEditorEyeComponent> ent, ref ComponentStartup args)
-    {
-        EyeCreated?.Invoke(ent);
     }
 
     public void RequestStartEditing()

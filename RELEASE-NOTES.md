@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added an analyzer to detect and warn about `[Dependency]` fields with nullable types. These have never done anything special and are programming error.
 
 ### Bugfixes
 

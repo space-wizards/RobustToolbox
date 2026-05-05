@@ -39,7 +39,7 @@ namespace Robust.Server.GameObjects
         [Dependency] private IPlayerManager _playerManager = default!;
         [Dependency] private IConfigurationManager _configurationManager = default!;
 #if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+        [Dependency] private IRuntimeLog _runtimeLog = default!;
 #endif
 
         private ISawmill _netEntSawmill = default!;

@@ -30,7 +30,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private ILogManager _logManager = default!;
 
 #if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+        [Dependency] private IRuntimeLog _runtimeLog = default!;
 #endif
 
         private ISawmill _sawmill = default!;

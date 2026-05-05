@@ -11,7 +11,7 @@ namespace Robust.Server.Console.Commands
     // Disabled for now since it doesn't actually work.
     sealed class RestartCommand : LocalizedCommands
     {
-        [Dependency] private readonly IBaseServer _server = default!;
+        [Dependency] private IBaseServer _server = default!;
 
         public override string Command => "restart";
 

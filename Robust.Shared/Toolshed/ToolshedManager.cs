@@ -30,7 +30,7 @@ public sealed partial class ToolshedManager
     [Dependency] private IReflectionManager _reflection = default!;
     [Dependency] private ILogManager _logManager = default!;
 #if !CLIENT_SCRIPTING
-    [Dependency] private readonly INetManager _net = default!;
+    [Dependency] private INetManager _net = default!;
 #endif
     [Dependency] private ISharedPlayerManager _player = default!;
     [Dependency] private IConsoleHost _conHost = default!;

@@ -486,9 +486,11 @@ public abstract partial class SharedPhysicsSystem
 
             bool activeA = bodyA.Awake && bodyA.BodyType != BodyType.Static;
             bool activeB = bodyB.Awake && bodyB.BodyType != BodyType.Static;
+            var sensorContact = !fixtureA.Hard || !fixtureB.Hard;
 
-            // At least one body must be awake and it must be dynamic or kinematic.
-            if (activeA == false && activeB == false)
+            // Hard contacts need at least one active non-static body.
+            // Sensors still need to update while asleep/static so they can raise Start/EndCollide.
+            if (!sensorContact && activeA == false && activeB == false)
             {
                 continue;
             }
@@ -793,8 +795,7 @@ public abstract partial class SharedPhysicsSystem
         TransformComponent xform,
         TransformComponent otherXform)
     {
-        if (((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
-             (otherBody.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0) ||
+        if (
             // Kinematic controllers can't collide.
             (fixture.Hard && body.BodyType == BodyType.KinematicController &&
              otherFixture.Hard && otherBody.BodyType == BodyType.KinematicController))
@@ -804,6 +805,12 @@ public abstract partial class SharedPhysicsSystem
 
         if (fixture.Hard && otherFixture.Hard)
         {
+            if ((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
+                (otherBody.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0)
+            {
+                return false;
+            }
+
             // Prevent self-propelling entities. I.e., prevent a fixture on a static child entity from propelling the
             // parent forwards.
             // TODO Add recursive parent checks, without somehow killing performance.

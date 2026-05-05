@@ -453,6 +453,7 @@ Types:
     LinkedList`1: { All: True }
     LinkedListNode`1: { All: True }
     List`1: { All: True }
+    OrderedDictionary`2: { All: True }
     Queue`1: { All: True }
     ReferenceEqualityComparer: { All: True }
     SortedDictionary`2: { All: True }
@@ -612,7 +613,9 @@ Types:
       - "void .ctor(System.IO.Stream, System.Text.Encoding, int, bool)"
       - "void DiscardBufferedData()"
     TextReader: { All: True }
-    TextWriter: { All: True}
+    TextWriter: { All: True }
+    StringReader: { All: True }
+    StringWriter: { All: True }
   System.Linq.Expressions:
     # TODO: Review
     ConstantExpression: { }
@@ -1510,6 +1513,7 @@ Types:
       - "void .ctor(char[], int, int)"
       - "void .ctor(System.ReadOnlySpan`1<char>)"
       - "void CopyTo(int, char[], int, int)"
+    StringComparer: { All: True }
     StringComparison: { } # Enum
     StringSplitOptions: { } # Enum
     TimeOnly: { All: True }
@@ -1663,6 +1667,9 @@ Types:
   YamlDotNet.Core:
     Mark: { All: True }
     ScalarStyle: { } # Enum
+    IEmitter: { All: True }
+    Emitter: { All: True }
+    EmitterSettings: { All: True }
   YamlDotNet.RepresentationModel:
     IYamlVisitor: { All: True }
     YamlDocument: { All: True }

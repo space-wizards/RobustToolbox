@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
@@ -83,6 +84,10 @@ namespace Robust.Shared.GameObjects
 
         public T? GetEntitySystemOrNull<T>() where T : IEntitySystem
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (SystemDependencyCollection == null)
+                return default;
+
             SystemDependencyCollection.TryResolveType<T>(out var system);
             return system;
         }
@@ -125,7 +130,9 @@ namespace Robust.Shared.GameObjects
         public bool TryGetEntitySystem<T>([NotNullWhen(true)] out T? entitySystem)
             where T : IEntitySystem
         {
-            return SystemDependencyCollection.TryResolveType<T>(out entitySystem);
+            entitySystem = default;
+            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+            return SystemDependencyCollection?.TryResolveType(out entitySystem) ?? false;
         }
 
         /// <inheritdoc />
@@ -191,6 +198,14 @@ namespace Robust.Shared.GameObjects
                 SystemDependencyCollection.Register(baseType, type, overwrite: true);
                 _systemTypes.Remove(baseType);
             }
+
+            var queryMethod = typeof(EntityManager).GetMethod(nameof(EntityManager.GetEntityQuery), 1, [])!;
+            SystemDependencyCollection.RegisterBaseGenericLazy(
+                typeof(EntityQuery<>),
+                (queryType, dep) => queryMethod
+                    .MakeGenericMethod(queryType.GetGenericArguments()[0])
+                    .Invoke(dep.Resolve<IEntityManager>(), null)!
+            );
 
             SystemDependencyCollection.BuildGraph();
 
@@ -314,9 +329,10 @@ namespace Robust.Shared.GameObjects
                 try
                 {
 #endif
-                    var sw = ProfSampler.StartNew();
-                    updReg.System.Update(frameTime);
-                    _profManager.WriteValue(updReg.System.GetType().Name, sw);
+                    using (_profManager.Value(updReg.System.GetType().Name))
+                    {
+                        updReg.System.Update(frameTime);
+                    }
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)
@@ -341,9 +357,10 @@ namespace Robust.Shared.GameObjects
                 try
                 {
 #endif
-                    var sw = ProfSampler.StartNew();
-                    system.FrameUpdate(frameTime);
-                    _profManager.WriteValue(system.GetType().Name, sw);
+                    using (_profManager.Value(system.GetType().Name))
+                    {
+                        system.FrameUpdate(frameTime);
+                    }
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)
@@ -372,7 +389,9 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetEntitySystem(Type sysType, [NotNullWhen(true)] out object? system)
         {
-            return SystemDependencyCollection.TryResolveType(sysType, out system);
+            system = null;
+            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+            return SystemDependencyCollection?.TryResolveType(sysType, out system) ?? false;
         }
 
         public object GetEntitySystem(Type sysType)

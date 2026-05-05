@@ -601,6 +601,11 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde._windowing!.TextInputStop(Reg);
             }
 
+            public void SetWindowProgress(WindowProgressState state, float value)
+            {
+                _clyde._windowing!.WindowSetProgress(Reg, state, value);
+            }
+
             public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);
         }
 

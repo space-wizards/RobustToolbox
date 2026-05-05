@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
+using Lidgren.Network;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -123,5 +124,10 @@ internal sealed class DummyChannel(DummySession session) : INetChannel
     public void Disconnect(string reason, bool sendBye)
     {
         throw new NotImplementedException();
+    }
+
+    public bool CanSendImmediately(NetDeliveryMethod method, int sequenceChannel)
+    {
+        return true;
     }
 }

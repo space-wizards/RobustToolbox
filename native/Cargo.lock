@@ -25,9 +25,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.45"
+version = "1.2.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35900b6c8d709fb1d854671ae27aeaa9eec2f8b01b364e1619a40da3e6fe2afe"
+checksum = "7a0aeaff4ff1a90589618835a598e545176939b97874f7abc7851caa0618f203"
 dependencies = [
  "find-msvc-tools",
  "shlex",
@@ -36,6 +36,7 @@ dependencies = [
 [[package]]
 name = "cef"
 version = "141.6.0+141.0.11"
+source = "git+https://github.com/space-wizards/cef-rs.git?rev=10afdf90bcafb0491adc4ef535530eeee77f4ef9#10afdf90bcafb0491adc4ef535530eeee77f4ef9"
 dependencies = [
  "cef-dll-sys",
  "libloading",
@@ -46,6 +47,7 @@ dependencies = [
 [[package]]
 name = "cef-dll-sys"
 version = "141.6.0+141.0.11"
+source = "git+https://github.com/space-wizards/cef-rs.git?rev=10afdf90bcafb0491adc4ef535530eeee77f4ef9#10afdf90bcafb0491adc4ef535530eeee77f4ef9"
 dependencies = [
  "anyhow",
  "cmake",
@@ -67,9 +69,9 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
 name = "cmake"
-version = "0.1.54"
+version = "0.1.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7caa3f9de89ddbe2c607f4101924c5abec803763ae9534e4f4d7d8f84aa81f0"
+checksum = "75443c44cd6b379beb8c5b45d85d0773baf31cce901fe7bb252f4eff3008ef7d"
 dependencies = [
  "cc",
 ]
@@ -87,21 +89,22 @@ dependencies = [
 [[package]]
 name = "download-cef"
 version = "2.2.0"
+source = "git+https://github.com/space-wizards/cef-rs.git?rev=10afdf90bcafb0491adc4ef535530eeee77f4ef9#10afdf90bcafb0491adc4ef535530eeee77f4ef9"
 dependencies = [
  "thiserror",
 ]
 
 [[package]]
 name = "find-msvc-tools"
-version = "0.1.4"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52051878f80a721bb68ebfbc930e07b65ba72f2da88968ea5c06fd6ca3d3a127"
+checksum = "645cbb3a84e60b7531617d5ae4e57f7e27308f6445f5abf653209ea76dec8dff"
 
 [[package]]
 name = "libc"
-version = "0.2.177"
+version = "0.2.179"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2874a2af47a2325c2001a6e6fad9b16a53b802102b528163885171cf92b15976"
+checksum = "c5a2d376baa530d1238d133232d15e239abad80d05838b4b59354e5268af431f"
 
 [[package]]
 name = "libloading"
@@ -111,6 +114,25 @@ checksum = "d7c4b02199fee7c5d21a5ae7d8cfa79a6ef5bb2fc834d6e9058e89c825efdc55"
 dependencies = [
  "cfg-if",
  "windows-link",
+]
+
+[[package]]
+name = "libmimalloc-sys"
+version = "0.1.44"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "667f4fec20f29dfc6bc7357c582d91796c169ad7e2fce709468aefeb2c099870"
+dependencies = [
+ "cc",
+ "libc",
+]
+
+[[package]]
+name = "mimalloc"
+version = "0.1.48"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1ee66a4b64c74f4ef288bcbb9192ad9c3feaad75193129ac8509af543894fd8"
+dependencies = [
+ "libmimalloc-sys",
 ]
 
 [[package]]
@@ -265,9 +287,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.103"
+version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ee95bc4ef87b8d5ba32e8b7714ccc834865276eab0aed5c9958d00ec45f49e8"
+checksum = "9695f8df41bb4f3d222c95a67532365f569318332d03d5f3f67f37b20e6ebdf0"
 dependencies = [
  "unicode-ident",
 ]
@@ -289,6 +311,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "robust-native-client"
+version = "0.1.0"
+dependencies = [
+ "mimalloc",
+ "robust-native-shared",
+]
+
+[[package]]
+name = "robust-native-server"
+version = "0.1.0"
+dependencies = [
+ "mimalloc",
+ "robust-native-shared",
+]
+
+[[package]]
+name = "robust-native-shared"
+version = "0.1.0"
+
+[[package]]
 name = "robust-native-webview"
 version = "0.1.0"
 dependencies = [
@@ -306,9 +348,9 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "syn"
-version = "2.0.109"
+version = "2.0.113"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f17c7e013e88258aa9543dcbe81aca68a667a9ac37cd69c9fbc07858bfe0e2f"
+checksum = "678faa00651c9eb72dd2020cbdf275d92eccb2400d568e419efdd64838145cb4"
 dependencies = [
  "proc-macro2",
  "quote",

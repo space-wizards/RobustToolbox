@@ -13,6 +13,7 @@ using Robust.Client.HWId;
 using Robust.Client.Input;
 using Robust.Client.Localization;
 using Robust.Client.Map;
+using Robust.Client.Network.Transfer;
 using Robust.Client.Placement;
 using Robust.Client.Player;
 using Robust.Client.Profiling;
@@ -41,6 +42,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Physics;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -174,6 +176,8 @@ namespace Robust.Client
             deps.Register<IXamlProxyHelper, XamlProxyHelper>();
             deps.Register<MarkupTagManager>();
             deps.Register<IHWId, BasicHWId>();
+            deps.Register<ITransferManager, ClientTransferManager>();
+            deps.Register<ClientTransferTestManager>();
         }
     }
 }

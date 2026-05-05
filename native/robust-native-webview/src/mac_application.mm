@@ -1,7 +1,7 @@
 #import <Cocoa/Cocoa.h>
 #include <objc/runtime.h>
 
-#include <cstdio>
+// #include <cstdio>
 
 #include "include/cef_application_mac.h"
 
@@ -32,21 +32,14 @@ bool g_handling_send_event = false;
 }
 
 - (void)setHandlingSendEvent:(BOOL)handlingSendEvent {
-    printf("setHandlingSendEvent: %i\n", (int) handlingSendEvent);
+    // printf("setHandlingSendEvent: %i\n", (int) handlingSendEvent);
     g_handling_send_event = handlingSendEvent;
 }
 
 - (void)_swizzled_sendEvent:(NSEvent*)event {
-    printf("send it");
+    // printf("send it\n");
     CefScopedSendingEvent sendingEventScoper;
     [self _swizzled_sendEvent:event];
 }
 
 @end
-
-extern "C" {
-    void get_swizzled_idiot() {
-        NSApplication* app = [NSApplication sharedApplication];
-        [app isHandlingSendEvent];
-    }
-}

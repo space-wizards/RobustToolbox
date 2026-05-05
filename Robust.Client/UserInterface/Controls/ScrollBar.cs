@@ -7,7 +7,6 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [Virtual]
     public abstract class ScrollBar : Range
     {
         public const string StylePropertyGrabber = "grabber";

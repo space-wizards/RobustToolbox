@@ -7,13 +7,31 @@ namespace Robust.Client.UserInterface.Controls
     ///     Most common button type that draws text in a fancy box.
     /// </summary>
     [Virtual]
-    public class Button : PushButton
+    public class Button : ContainerButton
     {
         public Label Label { get; }
 
+        // Compatibility shim for old XAML behaviour that assumed setting
+        // classes would concatenate with the StyleClassButton instead of overwriting
+        // all of them
+        [ViewVariables]
+        new public StyleClassCollection StyleClasses
+        {
+            get => base.StyleClasses;
+            set
+            {
+                base.StyleClasses = value;
+                base.StyleClasses.Add(StyleClassButton);
+            }
+        }
+
         public Button()
         {
-            Label = new Label();
+            AddStyleClass(StyleClassButton);
+            Label = new Label
+            {
+                StyleClasses = { StyleClassButton }
+            };
             AddChild(Label);
         }
 

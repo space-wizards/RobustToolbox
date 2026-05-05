@@ -136,7 +136,7 @@ public sealed class DefaultStylesheet
              */
 
             // Button style normal
-            Element<PushButton>().Pseudo(ContainerButton.StylePseudoClassNormal)
+            Element<ContainerButton>().Class(ContainerButton.StyleClassButton).Pseudo(ContainerButton.StylePseudoClassNormal)
                 .Prop(ContainerButton.StylePropertyStyleBox, new StyleBoxFlat
                 {
                     BackgroundColor = theme.ResolveColorOrSpecified("buttonBackground", Color.FromHex("#171717")),
@@ -150,7 +150,7 @@ public sealed class DefaultStylesheet
                 }),
 
             // Button style hovered
-            Element<PushButton>().Pseudo(ContainerButton.StylePseudoClassHover)
+            Element<ContainerButton>().Class(ContainerButton.StyleClassButton).Pseudo(ContainerButton.StylePseudoClassHover)
                 .Prop(ContainerButton.StylePropertyStyleBox, new StyleBoxFlat
                 {
                     BackgroundColor = theme.ResolveColorOrSpecified("buttonBackgroundHovered", Color.FromHex("#272727")),
@@ -164,7 +164,7 @@ public sealed class DefaultStylesheet
                 }),
 
             // Button style pressed
-            Element<PushButton>().Pseudo(ContainerButton.StylePseudoClassPressed)
+            Element<ContainerButton>().Class(ContainerButton.StyleClassButton).Pseudo(ContainerButton.StylePseudoClassPressed)
                 .Prop(ContainerButton.StylePropertyStyleBox, new StyleBoxFlat
                 {
                     BackgroundColor = theme.ResolveColorOrSpecified("buttonBackgroundPressed", Color.FromHex("#173717")),
@@ -178,7 +178,7 @@ public sealed class DefaultStylesheet
                 }),
 
             // Button style disabled
-            Element<PushButton>().Pseudo(ContainerButton.StylePseudoClassDisabled)
+            Element<ContainerButton>().Class(ContainerButton.StyleClassButton).Pseudo(ContainerButton.StylePseudoClassDisabled)
                 .Prop(ContainerButton.StylePropertyStyleBox, new StyleBoxFlat
                 {
                     BackgroundColor = theme.ResolveColorOrSpecified("buttonBackgroundDisabled", Color.FromHex("#333333")),

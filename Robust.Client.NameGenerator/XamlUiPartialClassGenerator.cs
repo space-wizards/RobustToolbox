@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Robust.Client.UserInterface;
+using Robust.Xaml;
 using XamlX;
 using XamlX.Ast;
 using XamlX.Emit;

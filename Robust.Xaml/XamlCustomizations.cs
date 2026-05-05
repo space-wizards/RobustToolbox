@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using XamlX;
 using XamlX.Ast;
@@ -32,7 +33,7 @@ internal sealed class XamlCustomizations
     ///     (both <see cref="CecilTypeSystem"/> and <see cref="CecilTypeSystem"/> work)
     /// </param>
     /// <param name="defaultAssembly">the default assembly (for unqualified names to be looked up in)</param>
-    public XamlCustomizations(IXamlTypeSystem typeSystem, IXamlAssembly defaultAssembly)
+    public XamlCustomizations(IXamlTypeSystem typeSystem, IXamlAssembly defaultAssembly, Action<XamlDiagnostic>? handleDiagnostic)
     {
         TypeSystem = typeSystem;
         TypeMappings = new XamlLanguageTypeMappings(typeSystem)
@@ -63,12 +64,22 @@ internal sealed class XamlCustomizations
         {
             ContextTypeBuilderCallback = EmitNameScopeField
         };
+        var diagnosticsHandler = new XamlDiagnosticsHandler()
+        {
+            HandleDiagnostic = diagnostic =>
+            {
+                handleDiagnostic?.Invoke(diagnostic);
+                return diagnostic.Severity;
+            },
+            CodeMappings = DiagnosticsCodes.XamlXCodeMappings
+        };
         TransformerConfiguration = new TransformerConfiguration(
             typeSystem,
             defaultAssembly,
             TypeMappings,
             XamlXmlnsMappings.Resolve(typeSystem, TypeMappings),
-            CustomValueConverter
+            CustomValueConverter,
+            diagnosticsHandler: diagnosticsHandler
         );
         ILCompiler = new RobustXamlILCompiler(TransformerConfiguration, EmitMappings, true);
     }

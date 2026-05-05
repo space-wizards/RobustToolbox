@@ -5,6 +5,8 @@
     <Compile Remove="../XamlX/src/XamlX/**/SreTypeSystem.cs" />
     <Compile Remove="../XamlX/src/XamlX/obj/**" />
     <Compile Include="..\Robust.Client\UserInterface\ControlPropertyAccess.cs" />
+    <!-- we need to share diagnostics codes but aren't ready to migrate robust roslyn stuff to net10.0 from netstandard2.0 yet -->
+    <Compile Include="..\Robust.Xaml\DiagnosticsCodes.cs" />
   </ItemGroup>
 
   <Import Project="../Robust.Roslyn.Shared/Robust.Roslyn.Shared.props" />

@@ -190,22 +190,45 @@ public sealed class HasDependenciesGenerator : IIncrementalGenerator
 
     private static void WriteGetDependencies(ref IndentWriter sb, EquatableArray<FieldInfo> fields, bool isOverride)
     {
-        sb.AppendLineIndented("return [");
-        sb.PushDepth();
-
-        foreach (var field in fields)
-        {
-            sb.AppendLineIndented($"typeof(global::{field.TypeName}),");
-        }
-
         if (isOverride)
         {
-            sb.AppendLine();
-            sb.AppendLineIndented("..base.GetDependencyTypesImpl()");
-        }
+            sb.AppendLineIndented("var baseTypes = base.GetDependencyTypesImpl();");
+            sb.AppendLineIndented($"var types = new global::System.Type[baseTypes.Length + {fields.Length}];");
 
-        sb.PopDepth();
-        sb.AppendLineIndented("];");
+            sb.AppendLine();
+
+            for (var i = 0; i < fields.Length; i++)
+            {
+                var field = fields[i];
+                sb.AppendLineIndented($"types[{i}] = typeof(global::{field.TypeName});");
+            }
+
+            sb.AppendLine();
+
+            sb.AppendLineIndented($"global::System.Array.Copy(baseTypes, 0, types, {fields.Length}, baseTypes.Length);");
+
+            sb.AppendLine();
+
+            sb.AppendLineIndented("return types;");
+        }
+        else
+        {
+            sb.AppendLineIndented("return new global::System.Type[]");
+            sb.AppendOpeningBrace();
+
+            for (var i = 0; i < fields.Length; i++)
+            {
+                var field = fields[i];
+                sb.AppendIndents();
+                sb.Append($"typeof(global::{field.TypeName})");
+                if (i !=  fields.Length - 1)
+                    sb.Append(",");
+                sb.AppendLine();
+            }
+
+            sb.PopDepth();
+            sb.AppendLineIndented("};");
+        }
     }
 
     private static void WriteInject(ref IndentWriter sb, EquatableArray<FieldInfo> fields, bool isOverride)

@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+- XamlX has been upgraded, and has a new class syntax. Use `StyleClasses="A B C"` instead of the old explicit list notation.
 
 ### New features
 

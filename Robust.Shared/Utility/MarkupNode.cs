@@ -14,6 +14,8 @@ public sealed class MarkupNode : IComparable<MarkupNode>, IEquatable<MarkupNode>
     public readonly Dictionary<string, MarkupParameter> Attributes;
     public readonly bool Closing;
 
+    public bool IsPlainText => Name == null;
+
     /// <summary>
     /// Creates a nameless tag for plaintext
     /// </summary>

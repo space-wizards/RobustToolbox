@@ -44,6 +44,7 @@ END TEMPLATE-->
 - `BigInteger` is now allowed by the sandbox.
 - `ISpanFormattable` and `IUtf8SpanFormattable` are now allowed by the sandbox.
 - `IParsable`, `ISpanParsable`, and `IUtf8SpanParsable` are now allowed by the sandbox.
+- Added `MarkupNode.IsPlainText` helper property.
 
 ### Bugfixes
 

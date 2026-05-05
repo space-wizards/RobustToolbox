@@ -21,7 +21,7 @@ public sealed class HasDependenciesGenerator : IIncrementalGenerator
             static (syntaxContext, token) =>
             {
                 var field = (IFieldSymbol)syntaxContext.TargetSymbol;
-                var fieldType = (INamedTypeSymbol)field.Type;
+                var fieldType = (INamedTypeSymbol)field.Type.WithNullableAnnotation(NullableAnnotation.NotAnnotated);
                 var owningType = (INamedTypeSymbol)field.ContainingSymbol;
 
                 var declarationSyntax = (TypeDeclarationSyntax)owningType.DeclaringSyntaxReferences[0]

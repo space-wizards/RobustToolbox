@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text;
 using Linguini.Bundle;
 using Linguini.Bundle.Builder;
@@ -27,6 +28,7 @@ namespace Robust.Shared.Localization
     internal abstract partial class LocalizationManager : ILocalizationManagerInternal
     {
         protected static readonly ResPath LocaleDirPath = new("/Locale");
+        protected static readonly ResPath SupplementalDirPath = new("/Locale/supplemental");
 
         [Dependency] private readonly IConfigurationManager _configuration = default!;
         [Dependency] private readonly IResourceManager _res = default!;
@@ -35,10 +37,11 @@ namespace Robust.Shared.Localization
         [Dependency] private readonly IEntityManager _entMan = default!;
 
         private ISawmill _logSawmill = default!;
-        private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();
+        private readonly Dictionary<CultureInfo, (FluentBundle, CldrResource)> _contexts = new();
 
-        private (CultureInfo, FluentBundle)? _defaultCulture;
-        private (CultureInfo, FluentBundle)[] _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();
+        private CldrSupplementalData _supplemental = new(null);
+        private (CultureInfo, FluentBundle, CldrResource)? _defaultCulture;
+        private (CultureInfo, FluentBundle, CldrResource)[] _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle, CldrResource)>();
 
         void ILocalizationManager.Initialize() => Initialize();
 
@@ -46,6 +49,8 @@ namespace Robust.Shared.Localization
         {
             _logSawmill = _log.GetSawmill("loc");
             _prototype.PrototypesReloaded += OnPrototypesReloaded;
+
+            ReadSupplementalData(_res, ref _supplemental);
         }
 
         public CultureInfo SetDefaultCulture()
@@ -147,6 +152,13 @@ namespace Robust.Shared.Localization
         }
 
         public bool TryGetString(string messageId,
+            (CultureInfo, FluentBundle, CldrResource) bundle,
+            [NotNullWhen(true)] out string? value)
+        {
+            return TryGetString(messageId, (bundle.Item1, bundle.Item2), out value);
+        }
+
+        public bool TryGetString(string messageId,
             (CultureInfo, FluentBundle) bundle,
             [NotNullWhen(true)] out string? value)
         {
@@ -186,8 +198,8 @@ namespace Robust.Shared.Localization
                 return false;
             }
 
-            var (info, bundle) = culture.Value;
-            var context = new LocContext(bundle);
+            var (info, bundle, _) = culture.Value;
+            var context = new LocContext(bundle, this);
             var args = new Dictionary<string, IFluentType>
             {
                 { arg.Item1, arg.Item2.FluentFromObject(context) }
@@ -210,8 +222,8 @@ namespace Robust.Shared.Localization
                 return false;
             }
 
-            var (info, bundle) = culture.Value;
-            var context = new LocContext(bundle);
+            var (info, bundle, _) = culture.Value;
+            var context = new LocContext(bundle, this);
             var args = new Dictionary<string, IFluentType>
             {
                 { arg1.Item1, arg1.Item2.FluentFromObject(context) },
@@ -234,8 +246,8 @@ namespace Robust.Shared.Localization
                 return false;
             }
 
-            var (info, bundle) = culture.Value;
-            var context = new LocContext(bundle);
+            var (info, bundle, _) = culture.Value;
+            var context = new LocContext(bundle, this);
             var args = new Dictionary<string, IFluentType>(keyArgs.Length);
             foreach (var (k, v) in keyArgs)
             {
@@ -273,7 +285,7 @@ namespace Robust.Shared.Localization
 
         private bool HasMessage(
             string messageId,
-            [NotNullWhen(true)] out (CultureInfo, FluentBundle)? culture)
+            [NotNullWhen(true)] out (CultureInfo, FluentBundle, CldrResource)? culture)
         {
             if (_defaultCulture == null)
             {
@@ -329,10 +341,13 @@ namespace Robust.Shared.Localization
 
         public void ReloadLocalizations()
         {
-            foreach (var (culture, context) in _contexts.ToArray())
+            foreach (var (culture, data) in _contexts)
             {
-                _loadData(_res, culture, context);
+                var cldr = data.Item2;
+                _loadData(_res, culture, data.Item1, ref cldr);
+                _contexts[culture] = (data.Item1, cldr);
             }
+            ReadSupplementalData(_res, ref _supplemental);
 
             FlushEntityCache();
         }
@@ -345,12 +360,12 @@ namespace Robust.Shared.Localization
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (!_contexts.TryGetValue(value, out var bundle))
+                if (!_contexts.TryGetValue(value, out var data))
                 {
                     throw new ArgumentException("That culture is not yet loaded and cannot be used.", nameof(value));
                 }
 
-                _defaultCulture = (value, bundle);
+                _defaultCulture = (value, data.Item1, data.Item2);
                 CultureInfo.CurrentCulture = value;
                 CultureInfo.CurrentUICulture = value;
             }
@@ -372,11 +387,10 @@ namespace Robust.Shared.Localization
             return _contexts.ContainsKey(culture);
         }
 
-        public void LoadCulture(CultureInfo culture)
+        private void LoadCultureNoParents(CultureInfo culture)
         {
-            // Attempting to load an already loaded culture
             if (HasCulture(culture))
-                throw new InvalidOperationException("Culture is already loaded");
+                return;
 
             var bundle = LinguiniBuilder.Builder()
                 .CultureInfo(culture)
@@ -385,11 +399,101 @@ namespace Robust.Shared.Localization
                 .UseConcurrent()
                 .UncheckedBuild();
 
-            _contexts.Add(culture, bundle);
             AddBuiltInFunctions(bundle);
+            _initData(_res, culture, bundle, out var cldr);
+            _contexts.Add(culture, (bundle, cldr));
+        }
 
-            _initData(_res, culture, bundle);
+        private void LoadCultureParents(CultureInfo culture)
+        {
+            // Attempting to load an already loaded culture
+            if (HasCulture(culture))
+                throw new InvalidOperationException("Culture is already loaded");
+
+            var parent = culture;
+            while (parent != parent.Parent)
+            {
+                LoadCultureNoParents(parent);
+                parent = parent.Parent;
+            }
+        }
+
+        public void LoadCulture(CultureInfo culture)
+        {
+            LoadCultureParents(culture);
             DefaultCulture ??= culture;
+        }
+
+        private CldrPersonListGender ResolvePersonListGender(CultureInfo info)
+        {
+            if (_supplemental.Gender is not { } genderData)
+                return CldrPersonListGender.Neutral;
+
+            if (genderData.PersonList.TryGetValue(new(info), out var personList))
+                return personList;
+
+            var parent = info;
+            while (!parent.Equals(parent.Parent))
+            {
+                parent = parent.Parent;
+
+                if (genderData.PersonList.TryGetValue(new(parent), out var parentPersonList))
+                    return parentPersonList;
+            }
+
+            return CldrPersonListGender.Neutral;
+        }
+
+        public Dictionary<CldrListPatternKey, CldrListPatternParts>? ResolveListPatterns(CultureInfo info)
+        {
+            if (!_contexts.TryGetValue(info, out var data))
+                return null;
+
+            if (data.Item2.ListPatterns is not null)
+                return data.Item2.ListPatterns;
+
+            var parent = info;
+            while (!parent.Equals(parent.Parent))
+            {
+                parent = parent.Parent;
+                if (_contexts.TryGetValue(parent, out data) && data.Item2.ListPatterns is not null)
+                    return data.Item2.ListPatterns;
+            }
+
+            return null;
+        }
+
+        private Dictionary<CldrListPatternKey, CldrListPatternParts>? FindListPatterns(CultureInfo? provided)
+        {
+            if (provided is { } providedCulture && ResolveListPatterns(providedCulture) is { } providedPatterns)
+                return providedPatterns;
+
+            if (_defaultCulture is not { } defaultCulture)
+                return null;
+
+            if (ResolveListPatterns(defaultCulture.Item1) is { } patterns)
+                return patterns;
+
+            foreach (var fallback in _fallbackCultures)
+            {
+                if (ResolveListPatterns(fallback.Item1) is { } fallbackPatterns)
+                    return fallbackPatterns;
+            }
+
+            return null;
+        }
+
+        private string FormatList(List<string> strings, ListType type = ListType.And, ListWidth width = ListWidth.Wide, CultureInfo? culture = null)
+        {
+            if (FindListPatterns(culture) is not { } patterns || !patterns.TryGetValue(new(type, width), out var parts))
+                throw new InvalidOperationException($"List pattern data is missing for {_defaultCulture?.Item1} or fallbacks");
+
+            return parts.FormatList(strings);
+        }
+
+        public string FormatList(List<string> strings, ListType type = ListType.And, ListWidth width = ListWidth.Wide)
+        {
+            return FormatList(strings, type, width, null);
         }
 
         public List<CultureInfo> GetFoundCultures()
@@ -408,15 +512,15 @@ namespace Robust.Shared.Localization
 
         public void SetFallbackCluture(params CultureInfo[] cultures)
         {
-            _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();
-            var tuples = new (CultureInfo, FluentBundle)[cultures.Length];
+            _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle, CldrResource)>();
+            var tuples = new (CultureInfo, FluentBundle, CldrResource)[cultures.Length];
             var i = 0;
             foreach (var culture in cultures)
             {
-                if (!_contexts.TryGetValue(culture, out var bundle))
+                if (!_contexts.TryGetValue(culture, out var data))
                     throw new ArgumentException("That culture is not loaded.", nameof(culture));
 
-                tuples[i++] = (culture, bundle);
+                tuples[i++] = (culture, data.Item1, data.Item2);
             }
 
             _fallbackCultures = tuples;
@@ -446,7 +550,7 @@ namespace Robust.Shared.Localization
             */
         }
 
-        private void _loadData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context)
+        private void _loadData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context, ref CldrResource cldr)
         {
             var resources = ReadLocaleFolder(resourceManager, culture);
 
@@ -456,9 +560,11 @@ namespace Robust.Shared.Localization
                 context.AddResourceOverriding(resource);
                 WriteWarningForErrs(path, errors, data);
             }
+
+            ReadCldrData(resourceManager, culture, ref cldr);
         }
 
-        private void _initData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context)
+        private void _initData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context, out CldrResource cldr)
         {
             var resources = ReadLocaleFolder(resourceManager, culture);
 
@@ -477,6 +583,36 @@ namespace Robust.Shared.Localization
             if (resErrors.Count > 0)
             {
                 WriteLocErrors(resErrors);
+            }
+
+            cldr = new CldrResource(CldrIdentity.FromCultureInfo(culture), null);
+            ReadCldrData(resourceManager, culture, ref cldr);
+        }
+
+        private void ReadCldrData(IResourceManager resourceManager, CultureInfo culture, ref CldrResource cldr)
+        {
+            var cldrResources = ReadCldrLocaleFolder(resourceManager, culture);
+
+            foreach (var (path, resource) in cldrResources)
+            {
+                try
+                {
+                    cldr = CldrResource.Merge(cldr, resource);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception($"Failed to merge into CLDR resource at {path}", e);
+                }
+            }
+        }
+
+        private void ReadSupplementalData(IResourceManager resourceManager, ref CldrSupplementalData cldr)
+        {
+            var cldrSupplemental = ReadCldrSupplementalFolder(resourceManager);
+
+            foreach (var supplemental in cldrSupplemental)
+            {
+                cldr = CldrSupplementalData.Merge(cldr, supplemental);
             }
         }
 
@@ -507,6 +643,44 @@ namespace Robust.Shared.Localization
                 return (path, resource, contents);
             });
             return resources;
+        }
+
+        private static ParallelQuery<(ResPath, CldrResource)> ReadCldrLocaleFolder(
+            IResourceManager resourceManager, CultureInfo culture)
+        {
+            var root = LocaleDirPath / culture.Name;
+
+            var files = resourceManager.ContentFindFiles(root)
+                .Where(c => c.Filename.EndsWith(".json", StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
+
+            return files.AsParallel().SelectMany(path => ReadCldrResources(resourceManager, path));
+        }
+
+        private static ParallelQuery<CldrSupplementalData> ReadCldrSupplementalFolder(
+            IResourceManager resourceManager)
+        {
+            var files = resourceManager.ContentFindFiles(SupplementalDirPath)
+                .Where(c => c.Filename.EndsWith(".json", StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
+
+            return files.AsParallel().Select(path =>
+            {
+                using var fileStream = resourceManager.ContentFileRead(path);
+
+                return JsonSerializer.Deserialize<CldrBundle>(fileStream)!.Supplemental;
+            }).OfType<CldrSupplementalData>();
+        }
+
+        private static IEnumerable<(ResPath, CldrResource)> ReadCldrResources(IResourceManager resourceManager, ResPath path)
+        {
+            using var fileStream = resourceManager.ContentFileRead(path);
+
+            var bundle = JsonSerializer.Deserialize<CldrBundle>(fileStream)!;
+            foreach (var resource in bundle.Resources.Values)
+            {
+                yield return (path, resource);
+            }
         }
 
         private void WriteWarningForErrs(ResPath path, List<ParseError> errs, string resource)

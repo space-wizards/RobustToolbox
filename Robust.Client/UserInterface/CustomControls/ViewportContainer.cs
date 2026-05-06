@@ -89,8 +89,11 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
-        protected sealed override void Resized()
+        [MustCallBase]
+        protected override void Resized()
         {
+            base.Resized();
+
             Viewport?.Dispose();
             Viewport = _displayManager.CreateViewport(
                 Vector2i.ComponentMax((1, 1), (Vector2i) (PixelSize * _viewportResolution)),

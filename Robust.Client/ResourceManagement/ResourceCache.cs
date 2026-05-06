@@ -119,10 +119,9 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
 
         var cache = GetTypeData<T>();
 
-        if (!cache.Resources.TryGetValue(path, out var resource))
+        if (!cache.Resources.Remove(path, out var resource))
             return false;
 
-        cache.Resources.Remove(path);
         cache.NonExistent.Remove(path);
         resource.Dispose();
 

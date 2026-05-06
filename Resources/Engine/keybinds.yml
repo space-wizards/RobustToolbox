@@ -42,7 +42,7 @@ binds: # These are all the current engine keybinds.
 # Viewport actions
 - function: MapEditorViewportDrag
   type: State
-  key: MouseLeft
+  key: MouseMiddle
   mod1: Alt
   canFocus: true
 

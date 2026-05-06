@@ -18,9 +18,8 @@ namespace Robust.Client.ResourceManagement
     {
         private OwnedTexture _texture = default!;
         private bool _disposed;
-        private readonly Lock _lock = new();
 
-        static ResPath? IBaseResource.FallbackPath => new("/Textures/noSprite.png");
+        public override ResPath? Fallback => new("/Textures/noSprite.png");
         static bool IBaseResource.CanBeRemoved => true;
 
         public Texture Texture
@@ -143,12 +142,9 @@ namespace Robust.Client.ResourceManagement
 
         public override void Dispose()
         {
-            lock (_lock)
-            {
-                if (_disposed) return;
-                _disposed = true;
-                _texture?.Dispose();
-            }
+            if (_disposed) return;
+            _disposed = true;
+            _texture?.Dispose();
 
             base.Dispose();
         }

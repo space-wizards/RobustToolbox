@@ -19,12 +19,12 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
     private readonly Dictionary<Type, TypeData> _cachedResources = new();
     private readonly Dictionary<Type, BaseResource> _fallbacks = new();
 
-    public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, IBaseResource, new()
+    public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
     {
         return GetResource<T>(new ResPath(path), useFallback);
     }
 
-    public T GetResource<T>(ResPath path, bool useFallback = true) where T : BaseResource, IBaseResource, new()
+    public T GetResource<T>(ResPath path, bool useFallback = true) where T : BaseResource, new()
     {
         var cache = GetTypeData<T>();
         if (cache.Resources.TryGetValue(path, out var cached))
@@ -42,11 +42,11 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         }
         catch (Exception e)
         {
-            if (useFallback && T.FallbackPath != null)
+            if (useFallback && resource.Fallback != null)
             {
                 Sawmill.Error(
                     $"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}\n{e}");
-                return GetResource<T>(T.FallbackPath.Value, false);
+                return GetResource<T>(resource.Fallback.Value, false);
             }
             else
             {
@@ -114,7 +114,7 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         if (!T.CanBeRemoved)
             throw new NotSupportedException($"Resource type '{typeof(T)}' does not support deterministic removal.");
 
-        if (T.FallbackPath == path)
+        if (new T().Fallback == path)
             return false;
 
         var cache = GetTypeData<T>();
@@ -174,19 +174,20 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         GetTypeData<T>().Resources[path] = resource;
     }
 
-    public T GetFallback<T>() where T : BaseResource, IBaseResource, new()
+    public T GetFallback<T>() where T : BaseResource, new()
     {
         if (_fallbacks.TryGetValue(typeof(T), out var fallback))
         {
             return (T) fallback;
         }
 
-        if (T.FallbackPath == null)
+        var res = new T();
+        if (res.Fallback == null)
         {
             throw new InvalidOperationException($"Resource of type '{typeof(T)}' has no fallback.");
         }
 
-        fallback = GetResource<T>(T.FallbackPath.Value, useFallback: false);
+        fallback = GetResource<T>(res.Fallback.Value, useFallback: false);
         _fallbacks.Add(typeof(T), fallback);
         return (T) fallback;
     }

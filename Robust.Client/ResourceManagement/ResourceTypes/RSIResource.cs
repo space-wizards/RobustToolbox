@@ -18,9 +18,9 @@ namespace Robust.Client.ResourceManagement
     ///     Handles the loading code for RSI files.
     ///     See <see cref="RSI"/> for the RSI API itself.
     /// </summary>
-    public sealed class RSIResource : BaseResource, IBaseResource
+    public sealed class RSIResource : BaseResource
     {
-        static ResPath? IBaseResource.FallbackPath => new("/Textures/error.rsi");
+        public override ResPath? Fallback => new("/Textures/error.rsi");
 
         public RSI RSI { get; private set; } = default!;
 

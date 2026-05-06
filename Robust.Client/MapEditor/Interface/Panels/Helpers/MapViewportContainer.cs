@@ -4,12 +4,15 @@ using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Graphics;
+using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.MapEditor.Interface.Panels.Helpers;
 
 internal sealed class MapViewportContainer : ViewportContainer
 {
+    [Dependency] private readonly IOverlayManager _overlayManager = null!;
+
     private Vector2? _dragStartPos;
     private Vector2 _dragStartWorldPos;
 
@@ -17,8 +20,12 @@ internal sealed class MapViewportContainer : ViewportContainer
 
     public event Action<Vector2>? WorldPosChanged;
 
+    private readonly GridBackgroundOverlay.Parameters _gridParameters = new();
+
     public MapViewportContainer()
     {
+        IoCManager.InjectDependencies(this);
+
         MouseFilter = MouseFilterMode.Stop;
     }
 
@@ -69,5 +76,21 @@ internal sealed class MapViewportContainer : ViewportContainer
 
         if (Viewport != null)
             Viewport.Eye = Eye;
+    }
+
+    protected override void Resized()
+    {
+        // TODO: The way this state is managed sucks. Wish I could set overlays on a per-viewport basis sanely.
+        if (Viewport != null && _overlayManager.TryGetOverlay(out GridBackgroundOverlay? bg))
+        {
+            bg.ViewportParameters.Remove(Viewport.Id);
+        }
+
+        base.Resized();
+
+        if (Viewport != null && _overlayManager.TryGetOverlay(out bg))
+        {
+            bg.ViewportParameters[Viewport.Id] = _gridParameters;
+        }
     }
 }

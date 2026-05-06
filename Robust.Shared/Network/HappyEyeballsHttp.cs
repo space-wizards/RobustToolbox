@@ -236,21 +236,21 @@ internal static class HappyEyeballsHttp
         cancel.ThrowIfCancellationRequested();
         await successCts.CancelAsync().ConfigureAwait(false);
 
-        await Task.WhenAll(  
-            allTasks  
-                .Where(t => t != successTask)  
-                .Select(static t => t.ContinueWith(  
-                    static _ => { },  
-                    CancellationToken.None,  
-                    TaskContinuationOptions.ExecuteSynchronously,  
-                    TaskScheduler.Default)))  
-            .ConfigureAwait(false);
-
         if (successTask == null)
         {
             // We didn't get a single successful connection. Well heck.
             throw new AggregateException(
                 allTasks.Where(x => x.IsFaulted).SelectMany(x => x.Exception!.InnerExceptions));
+        }
+
+        // Wait for losing tasks to finish before cleanup.
+        try
+        {
+            await Task.WhenAll(allTasks.Where(t => t != successTask)).ConfigureAwait(false);
+        }
+        catch
+        {
+            // We don't care if losing tasks throw.
         }
 
         // I don't know if this is possible but MAKE SURE that we don't get two sockets completing at once.

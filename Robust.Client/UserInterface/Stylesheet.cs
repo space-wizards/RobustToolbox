@@ -74,7 +74,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="SelectorElement"/>
         public static MutableSelectorElement Element<T>() where T : Control
         {
-            return new() {Type = typeof(T)};
+            return new() { Type = typeof(T) };
         }
 
         /// <summary>
@@ -101,13 +101,15 @@ namespace Robust.Client.UserInterface
         [Obsolete("Use Prop(StyleProperty<T>, T) with a typed style property key.")]
         public MutableSelector Prop<T>(string key, T value)
         {
-            _props.Add(new StyleProperty((StyleProperty<T>)key, value));
+            _props.Add(new StyleProperty(key, value));
             return this;
         }
 
-        public MutableSelector Prop<T>(StyleProperty<T> property, T value)
+        public MutableSelector Prop<T>(StylePropertyKey<T> propertyKey, T value)
         {
-            _props.Add(new StyleProperty(property, value));
+#pragma warning disable CS0618
+            _props.Add(new StyleProperty(propertyKey.Name, value));
+#pragma warning enable CS0618
             return this;
         }
 
@@ -326,7 +328,7 @@ namespace Robust.Client.UserInterface
             Value = value;
         }
 
-        public StyleProperty(StyleProperty property, object? value)
+        public StyleProperty(IStylePropertyKey property, object? value)
         {
             ArgumentNullException.ThrowIfNull(property);
             Name = property.Name;
@@ -335,14 +337,24 @@ namespace Robust.Client.UserInterface
     }
 
     /// <summary>
-    /// A typed StyleProperty to ensure the correct type of value is provided.
+    /// A style property key.
+    /// </summary>
+    public interface IStylePropertyKey
+    {
+        string Name { get; }
+    }
+
+    /// <summary>
+    /// A typed key to ensure the correct type of the value for the StyleProperty is provided.
     /// </summary>
     /// <typeparam name="T">Type</typeparam>
-    public sealed class StyleProperty<T>(string name) : StyleProperty(name)
+    public readonly struct StylePropertyKey<T>(string name) : IStylePropertyKey
     {
-        public static implicit operator StyleProperty<T>(string name)
+        public string Name { get; } = name;
+
+        public static implicit operator StylePropertyKey<T>(string name)
         {
-            return new StyleProperty<T>(name);
+            return new StylePropertyKey<T>(name);
         }
     }
 

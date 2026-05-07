@@ -98,7 +98,7 @@ namespace Robust.Client.UserInterface
     {
         private readonly List<StyleProperty> _props = new();
 
-        [Obsolete("Use Prop(StyleProperty<T>, T) with a typed style property key.")]
+        [Obsolete("Use Prop(StylePropertyKey<T>, T) with a typed style property key.")]
         public MutableSelector Prop<T>(string key, T value)
         {
             _props.Add(new StyleProperty(key, value));
@@ -321,7 +321,7 @@ namespace Robust.Client.UserInterface
             Name = name;
         }
 
-        [Obsolete("Use typed StyleProperty<T> key instead of string key.")]
+        [Obsolete("Use typed StylePropertyKey<T> instead of string key.")]
         public StyleProperty(string name, object? value)
             : this(name)
         {

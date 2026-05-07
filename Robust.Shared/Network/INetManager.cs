@@ -116,6 +116,12 @@ namespace Robust.Shared.Network
         ///     A client has just disconnected from the server.
         /// </summary>
         event EventHandler<NetDisconnectedArgs> Disconnect;
+        
+        /// <summary>
+        ///     A client sent a malformed packet that threw an exception while handling it.
+        ///     Invoked before it gets kicked.
+        /// </summary>
+        event Action<INetChannel>? OnMessageError;
 
         /// <summary>
         ///     Registers a NetMessage to be sent or received.

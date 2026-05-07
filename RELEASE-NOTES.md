@@ -46,6 +46,7 @@ END TEMPLATE-->
 * Added `IUserInterfaceManager.GetRootForMouse()`.
 * Added `Popup.OpenAtCursor()`.
 * Added `FormattedStringBuilder` for safely constructing markup with code.
+* Added `VBox` and `HBox` convenience types for more concisely construct `BoxContainer`s.
 
 ### Bugfixes
 

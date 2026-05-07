@@ -1,9 +1,11 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.CustomControls;
 
+[Obsolete("Use ItemsControl instead")]
 public sealed class PrototypeListContainer : Container
 {
     // Quick and dirty container to do virtualization of the list.

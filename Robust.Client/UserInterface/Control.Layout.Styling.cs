@@ -81,13 +81,13 @@ public partial class Control
         return;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void UpdateField<T>(ref T field, object value, LayoutStyleProperties flag)
+        void UpdateField<T>(ref T field, object value, LayoutStyleProperties flag) where T : struct
         {
             if ((_layoutStyleOverride & flag) != 0)
                 return;
 
             // TODO: Probably need better error handling...
-            if (value is not T valueCast)
+            if (!TryConvertStyleValueToLayoutProp(value, out T valueCast))
                 return;
 
             field = valueCast;
@@ -102,6 +102,24 @@ public partial class Control
 
             field = defaultValue;
         }
+    }
+
+    private static bool TryConvertStyleValueToLayoutProp<T>(object boxed, out T value) where T : struct
+    {
+        if (boxed is T valueCast)
+        {
+            value = valueCast;
+            return true;
+        }
+
+        if (typeof(T) == typeof(float) && boxed is int i)
+        {
+            value = (T)(object)(float)i;
+            return true;
+        }
+
+        value = default;
+        return false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

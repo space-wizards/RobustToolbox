@@ -28,10 +28,10 @@ namespace Robust.Client.UserInterface.Controls
         public event Action<ItemListDeselectedEventArgs>? OnItemDeselected;
         public event Action<ItemListHoverEventArgs>? OnItemHover;
 
-        public const string StylePropertyBackground = "itemlist-background";
-        public const string StylePropertyItemBackground = "item-background";
-        public const string StylePropertySelectedItemBackground = "selected-item-background";
-        public const string StylePropertyDisabledItemBackground = "disabled-item-background";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyBackground = "itemlist-background";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyItemBackground = "item-background";
+        public static readonly StylePropertyKey<StyleBox> StylePropertySelectedItemBackground = "selected-item-background";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyDisabledItemBackground = "disabled-item-background";
 
         /// <summary>
         /// Gets or sets the ItemSeparation of individual list items
@@ -367,7 +367,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty<Font>("font", out var font))
+                if (TryGetStyleProperty(Label.StylePropertyFont, out var font))
                 {
                     return font;
                 }
@@ -380,7 +380,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty("font-color", out Color fontColor))
+                if (TryGetStyleProperty(Label.StylePropertyFontColor, out Color fontColor))
                 {
                     return fontColor;
                 }

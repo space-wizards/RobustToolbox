@@ -53,7 +53,7 @@ internal sealed partial class SystemFontDebugWindow : DefaultWindow
                 var richTextLabel = new RichTextLabel
                 {
                     Stylesheet = new Stylesheet([
-                        StylesheetHelpers.Element<RichTextLabel>().Prop("font", fontInstance)
+                        StylesheetHelpers.Element<RichTextLabel>().Prop(Label.StylePropertyFont, fontInstance)
                     ]),
                 };
                 richTextLabel.SetMessage(FormattedMessage.FromUnformatted(ExampleString));

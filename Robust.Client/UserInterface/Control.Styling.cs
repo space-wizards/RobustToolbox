@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
@@ -8,7 +10,7 @@ namespace Robust.Client.UserInterface
     // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control
     {
-        public const string StylePropertyModulateSelf = "modulate-self";
+        public static readonly StylePropertyKey<Color> StylePropertyModulateSelf = "modulate-self";
 
         /// <summary>
         ///     Overrides the style sheet used for this control and its descendants.
@@ -44,12 +46,13 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private readonly Dictionary<string, object> _styleProperties = new();
+        private readonly Dictionary<string, object?> _styleProperties = new();
         private readonly HashSet<string> _styleClasses = new();
         private readonly HashSet<string> _stylePseudoClass = new();
 
         // Styling needs to be updated.
         private bool _stylingDirty;
+
         // _actualStylesheetCached needs update.
         private bool _stylesheetUpdateNeeded;
         internal int RestyleGeneration;
@@ -94,6 +97,7 @@ namespace Robust.Client.UserInterface
             _stylePseudoClass.Add(className);
             Restyle();
         }
+
         public bool HasStyleClass(string className)
         {
             return _styleClasses.Contains(className);
@@ -256,6 +260,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        [Obsolete("Use TryGetStyleProperty(StylePropertyKey<T>, out T) with a typed style property key.")]
         public bool TryGetStyleProperty<T>(string param, [MaybeNullWhen(false)] out T value)
         {
             if (_styleProperties.TryGetValue(param, out var val) && val is T cast)
@@ -268,12 +273,30 @@ namespace Robust.Client.UserInterface
             return false;
         }
 
+        public bool TryGetStyleProperty<T>(StylePropertyKey<T> propertyKey, [MaybeNullWhen(false)] out T value)
+        {
+            if (_styleProperties.TryGetValue(propertyKey.Name, out var val) && val is T cast)
+            {
+                value = cast;
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
+        [Obsolete("Use StylePropertyDefault(StylePropertyKey<T>, T) with a typed style property key.")]
         public T StylePropertyDefault<T>(string param, T defaultValue)
         {
-            if (TryGetStyleProperty<T>(param, out var value))
-                return value;
+            if (_styleProperties.TryGetValue(param, out var value) && value is T typedValue)
+                return typedValue;
 
             return defaultValue;
+        }
+
+        public T StylePropertyDefault<T>(StylePropertyKey<T> propertyKey, T defaultValue)
+        {
+            return TryGetStyleProperty(propertyKey, out var value) ? value : defaultValue;
         }
 
         private sealed class StyleClassCollection : ICollection<string>, IReadOnlyCollection<string>

@@ -74,7 +74,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="SelectorElement"/>
         public static MutableSelectorElement Element<T>() where T : Control
         {
-            return new() {Type = typeof(T)};
+            return new() { Type = typeof(T) };
         }
 
         /// <summary>
@@ -98,9 +98,18 @@ namespace Robust.Client.UserInterface
     {
         private readonly List<StyleProperty> _props = new();
 
-        public MutableSelector Prop(string key, object value)
+        [Obsolete("Use Prop(StylePropertyKey<T>, T) with a typed style property key.")]
+        public MutableSelector Prop<T>(string key, T value)
         {
             _props.Add(new StyleProperty(key, value));
+            return this;
+        }
+
+        public MutableSelector Prop<T>(StylePropertyKey<T> propertyKey, T value)
+        {
+#pragma warning disable CS0618
+            _props.Add(new StyleProperty(propertyKey.Name, value));
+#pragma warning enable CS0618
             return this;
         }
 
@@ -298,18 +307,55 @@ namespace Robust.Client.UserInterface
     }
 
     /// <summary>
-    ///     A single property in a rule, with a name and an object value.
+    /// A single property in a rule, with a name and object value.
     /// </summary>
-    public readonly struct StyleProperty
+    [Virtual]
+    public class StyleProperty
     {
-        public StyleProperty(string name, object value)
+        public string Name { get; }
+        public object? Value { get; }
+
+        protected StyleProperty(string name)
         {
+            ArgumentNullException.ThrowIfNull(name);
             Name = name;
+        }
+
+        [Obsolete("Use typed StylePropertyKey<T> instead of string key.")]
+        public StyleProperty(string name, object? value)
+            : this(name)
+        {
             Value = value;
         }
 
-        public string Name { get; }
-        public object Value { get; }
+        public StyleProperty(IStylePropertyKey property, object? value)
+        {
+            ArgumentNullException.ThrowIfNull(property);
+            Name = property.Name;
+            Value = value;
+        }
+    }
+
+    /// <summary>
+    /// A style property key.
+    /// </summary>
+    public interface IStylePropertyKey
+    {
+        string Name { get; }
+    }
+
+    /// <summary>
+    /// A typed key to ensure the correct type of the value for the StyleProperty is provided.
+    /// </summary>
+    /// <typeparam name="T">Type</typeparam>
+    public readonly struct StylePropertyKey<T>(string name) : IStylePropertyKey
+    {
+        public string Name { get; } = name;
+
+        public static implicit operator StylePropertyKey<T>(string name)
+        {
+            return new StylePropertyKey<T>(name);
+        }
     }
 
     public abstract class Selector

@@ -50,19 +50,21 @@ namespace Robust.UnitTesting.Client.UserInterface
         [Test]
         public void TestStyleProperties()
         {
+            var foo = new StylePropertyKey<string>("foo");
+
             var sheet = new Stylesheet(new[]
             {
                 new StyleRule(new SelectorElement(typeof(Label), null, "baz", null), new[]
                 {
-                    new StyleProperty("foo", "honk"),
+                    new StyleProperty(foo, "honk"),
                 }),
                 new StyleRule(new SelectorElement(typeof(Label), null, null, null), new[]
                 {
-                    new StyleProperty("foo", "heh"),
+                    new StyleProperty(foo, "heh"),
                 }),
                 new StyleRule(new SelectorElement(typeof(Label), null, null, null), new[]
                 {
-                    new StyleProperty("foo", "bar"),
+                    new StyleProperty(foo, "bar"),
                 }),
             });
 
@@ -74,27 +76,29 @@ namespace Robust.UnitTesting.Client.UserInterface
             uiMgr.StateRoot.AddChild(control);
             control.ForceRunStyleUpdate();
 
-            control.TryGetStyleProperty("foo", out string? value);
+            control.TryGetStyleProperty(foo, out string? value);
             Assert.That(value, Is.EqualTo("bar"));
 
             control.StyleIdentifier = "baz";
             control.ForceRunStyleUpdate();
 
-            control.TryGetStyleProperty("foo", out value);
+            control.TryGetStyleProperty(foo, out value);
             Assert.That(value, Is.EqualTo("honk"));
         }
 
         [Test]
         public void TestStylesheetOverride()
         {
+            var foo = new StylePropertyKey<string>("foo");
+
             var sheetA = new Stylesheet(new[]
             {
-                new StyleRule(SelectorElement.Class("A"), new[] {new StyleProperty("foo", "bar")}),
+                new StyleRule(SelectorElement.Class("A"), new[] {new StyleProperty(foo, "bar")}),
             });
 
             var sheetB = new Stylesheet(new[]
             {
-                new StyleRule(SelectorElement.Class("A"), new[] {new StyleProperty("foo", "honk!")})
+                new StyleRule(SelectorElement.Class("A"), new[] {new StyleProperty(foo, "honk!")})
             });
 
             // Set style sheet to null, property shouldn't exist.
@@ -116,7 +120,7 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             baseControl.ForceRunStyleUpdate();
 
-            Assert.That(baseControl.TryGetStyleProperty("foo", out object? _), Is.False);
+            Assert.That(baseControl.TryGetStyleProperty(foo, out _), Is.False);
 
             uiMgr.RootControl.Stylesheet = sheetA;
             childA.Stylesheet = sheetB;
@@ -124,13 +128,13 @@ namespace Robust.UnitTesting.Client.UserInterface
             // Assign sheets.
             baseControl.ForceRunStyleUpdate();
 
-            baseControl.TryGetStyleProperty("foo", out object? value);
+            baseControl.TryGetStyleProperty(foo, out var value);
             Assert.That(value, Is.EqualTo("bar"));
 
-            childA.TryGetStyleProperty("foo", out value);
+            childA.TryGetStyleProperty(foo, out value);
             Assert.That(value, Is.EqualTo("honk!"));
 
-            childB.TryGetStyleProperty("foo", out value);
+            childB.TryGetStyleProperty(foo, out value);
             Assert.That(value, Is.EqualTo("honk!"));
         }
     }

@@ -6,8 +6,8 @@ namespace Robust.Client.UserInterface.Controls;
 
 public sealed class ColorableSlider : Slider
 {
-    public const string StylePropertyFillWhite = "fillWhite"; // needs to be filled with white
-    public const string StylePropertyBackgroundWhite = "backgroundWhite"; // also needs to be filled with white
+    public static readonly StylePropertyKey<StyleBox> StylePropertyFillWhite = "fillWhite"; // needs to be filled with white
+    public static readonly StylePropertyKey<StyleBox> StylePropertyBackgroundWhite = "backgroundWhite"; // also needs to be filled with white
 
     public Color Color { get; private set; } = Color.White;
     public PartSelector Part
@@ -39,9 +39,9 @@ public sealed class ColorableSlider : Slider
 
     protected override void UpdateStyleBoxes()
     {
-        StyleBox? GetStyleBox(string name)
+        StyleBox? GetStyleBox(StylePropertyKey<StyleBox> propertyKey)
         {
-            if (TryGetStyleProperty<StyleBox>(name, out var box))
+            if (TryGetStyleProperty(propertyKey, out var box))
             {
                 return box;
             }
@@ -49,8 +49,8 @@ public sealed class ColorableSlider : Slider
             return null;
         }
 
-        string backBox = StylePropertyBackground;
-        string fillBox = StylePropertyFill;
+        var backBox = StylePropertyBackground;
+        var fillBox = StylePropertyFill;
 
         switch (Part)
         {

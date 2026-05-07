@@ -39,8 +39,8 @@ public sealed class TextEdit : Control
     [Dependency] private readonly IClipboardManager _clipboard = null!;
 
     // @formatter:off
-    public const string StylePropertyCursorColor    = "cursor-color";
-    public const string StylePropertySelectionColor = "selection-color";
+    public static readonly StylePropertyKey<Color> StylePropertyCursorColor    = "cursor-color";
+    public static readonly StylePropertyKey<Color> StylePropertySelectionColor = "selection-color";
     public const string StylePseudoClassNotEditable = "notEditable";
     public const string StylePseudoClassPlaceholder = "placeholder";
     // @formatter:on
@@ -824,13 +824,13 @@ public sealed class TextEdit : Control
     [Pure]
     private Font GetFont()
     {
-        return StylePropertyDefault("font", UserInterfaceManager.ThemeDefaults.DefaultFont);
+        return StylePropertyDefault(Label.StylePropertyFont, UserInterfaceManager.ThemeDefaults.DefaultFont);
     }
 
     [Pure]
     private Color GetFontColor()
     {
-        return StylePropertyDefault("font-color", Color.White);
+        return StylePropertyDefault(Label.StylePropertyFontColor, Color.White);
     }
 
     internal void QueueLineBreakUpdate()

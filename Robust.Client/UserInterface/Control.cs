@@ -350,24 +350,31 @@ namespace Robust.Client.UserInterface
         public bool TrackingTooltip { get; set; }
 
         /// <summary>
+        /// Specify a custom callback for providing tooltips on this control.
+        /// </summary>
+        /// <remarks>
+        /// <para>
         /// When a tooltip should be shown for this control, this will be invoked to
         /// produce a control which will serve as the tooltip (doing nothing if null is returned).
         /// This is the generally recommended way to implement custom tooltips for controls, as it takes
         /// care of the various edge cases for showing / hiding the tooltip.
-        /// For an even more customizable approach, <see cref="OnShowTooltip"/>
-        ///
+        /// For an even more customizable approach, see <see cref="OnShowTooltip"/>.
+        /// </para>
+        /// <para>
         /// The returned control will be added to PopupRoot, and positioned
         /// within the user interface under the current mouse position to avoid going off the edge of the
         /// screen. When the tooltip should be hidden, the control will be hidden by removing it from the tree.
-        ///
+        /// </para>
+        /// <para>
         /// It is expected that the returned control remains within PopupRoot. Other classes should
         /// not move it around in the tree or move it out of PopupRoot, but may access and modify
         /// the control and its children via <see cref="SuppliedTooltip"/>.
-        /// </summary>
-        /// <remarks>
+        /// </para>
+        /// <para>
         /// Returning a new instance of a tooltip control every time is usually fine. If for some
         /// reason constructing the tooltip control is expensive, it MAY be fine to cache + reuse a single instance but this
         /// approach has not yet been tested.
+        /// </para>
         /// </remarks>
         public TooltipSupplier? TooltipSupplier { get; set; }
 

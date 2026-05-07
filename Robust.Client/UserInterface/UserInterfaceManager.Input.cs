@@ -573,6 +573,8 @@ internal partial class UserInterfaceManager
         if (_suppliedTooltip == null)
             return;
 
+        _suppliedTooltip.Stylesheet ??= hovered.ActualStylesheetCached;
+
         hovered.Root.PopupRoot.AddChild(_suppliedTooltip);
         Tooltips.PositionTooltip(_suppliedTooltip);
         hovered.PerformShowTooltip();

@@ -59,6 +59,8 @@ namespace Robust.Client.UserInterface
         private Stylesheet? _actualStylesheetCached;
         private Stylesheet? _stylesheet;
 
+        internal Stylesheet? ActualStylesheetCached => _actualStylesheetCached;
+
         public bool HasStylePseudoClass(string className)
         {
             return _stylePseudoClass.Contains(className);

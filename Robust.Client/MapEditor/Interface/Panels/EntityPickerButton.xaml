@@ -1,0 +1,8 @@
+﻿<Control xmlns="https://spacestation14.io">
+    <Button Name="TheButton">
+        <BoxContainer Orientation="Horizontal" SeparationOverride="8">
+            <EntityPrototypeView Name="PrototypeView" SetSize="32,32" />
+            <Label Name="PrototypeName" HorizontalExpand="True" ClipText="True" />
+        </BoxContainer>
+    </Button>
+</Control>

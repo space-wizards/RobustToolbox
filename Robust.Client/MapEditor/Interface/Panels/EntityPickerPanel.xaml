@@ -1,0 +1,9 @@
+﻿<interface:EditorPanel xmlns="https://spacestation14.io"
+                       xmlns:interface="clr-namespace:Robust.Client.Editor.Interface">
+    <BoxContainer Orientation="Vertical">
+        <LineEdit Name="Search" PlaceHolder="Filter..." />
+        <ScrollContainer HScrollEnabled="False" VerticalExpand="True">
+            <ItemsControl Name="PrototypeList" />
+        </ScrollContainer>
+    </BoxContainer>
+</interface:EditorPanel>

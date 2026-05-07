@@ -81,7 +81,7 @@ public partial class Control
         return;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void UpdateField<T>(ref T field, object value, LayoutStyleProperties flag)
+        void UpdateField<T>(ref T field, object? value, LayoutStyleProperties flag)
         {
             if ((_layoutStyleOverride & flag) != 0)
                 return;

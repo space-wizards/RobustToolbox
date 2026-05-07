@@ -98,9 +98,16 @@ namespace Robust.Client.UserInterface
     {
         private readonly List<StyleProperty> _props = new();
 
-        public MutableSelector Prop(string key, object value)
+        [Obsolete("Use Prop(StyleProperty<T>, T) with a typed style property key.")]
+        public MutableSelector Prop<T>(string key, T value)
         {
-            _props.Add(new StyleProperty(key, value));
+            _props.Add(new StyleProperty((StyleProperty<T>)key, value));
+            return this;
+        }
+
+        public MutableSelector Prop<T>(StyleProperty<T> property, T value)
+        {
+            _props.Add(new StyleProperty(property, value));
             return this;
         }
 
@@ -298,18 +305,45 @@ namespace Robust.Client.UserInterface
     }
 
     /// <summary>
-    ///     A single property in a rule, with a name and an object value.
+    /// A single property in a rule, with a name and object value.
     /// </summary>
-    public readonly struct StyleProperty
+    [Virtual]
+    public class StyleProperty
     {
-        public StyleProperty(string name, object value)
+        protected StyleProperty(string name)
         {
+            ArgumentNullException.ThrowIfNull(name);
             Name = name;
+        }
+
+        [Obsolete("Use typed StyleProperty<T> key instead of string key.")]
+        public StyleProperty(string name, object? value)
+            : this(name)
+        {
+            Value = value;
+        }
+
+        public StyleProperty(StyleProperty property, object? value)
+        {
+            ArgumentNullException.ThrowIfNull(property);
+            Name = property.Name;
             Value = value;
         }
 
         public string Name { get; }
-        public object Value { get; }
+        public object? Value { get; }
+    }
+
+    /// <summary>
+    /// A typed StyleProperty to ensure the correct type of value is provided.
+    /// </summary>
+    /// <typeparam name="T">Type</typeparam>
+    public sealed class StyleProperty<T>(string name) : StyleProperty(name)
+    {
+        public static implicit operator StyleProperty<T>(string name)
+        {
+            return new StyleProperty<T>(name);
+        }
     }
 
     public abstract class Selector

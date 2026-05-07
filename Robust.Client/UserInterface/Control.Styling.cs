@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.ViewVariables;
@@ -44,7 +45,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private readonly Dictionary<string, object> _styleProperties = new();
+        private readonly Dictionary<string, object?> _styleProperties = new();
         private readonly HashSet<string> _styleClasses = new();
         private readonly HashSet<string> _stylePseudoClass = new();
 
@@ -256,6 +257,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        [Obsolete("Use TryGetStyleProperty(StyleProperty<T>, out T) with a typed style property key.")]
         public bool TryGetStyleProperty<T>(string param, [MaybeNullWhen(false)] out T value)
         {
             if (_styleProperties.TryGetValue(param, out var val) && val is T cast)
@@ -268,12 +270,30 @@ namespace Robust.Client.UserInterface
             return false;
         }
 
+        public bool TryGetStyleProperty<T>(StyleProperty<T> property, [MaybeNullWhen(false)] out T value)
+        {
+            if (_styleProperties.TryGetValue(property.Name, out var val) && val is T cast)
+            {
+                value = cast;
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
+        [Obsolete("Use StylePropertyDefault(StyleProperty<T>, T) with a typed style property key.")]
         public T StylePropertyDefault<T>(string param, T defaultValue)
         {
-            if (TryGetStyleProperty<T>(param, out var value))
-                return value;
+            if (_styleProperties.TryGetValue(param, out var value) && value is T typedValue)
+                return typedValue;
 
             return defaultValue;
+        }
+
+        public T StylePropertyDefault<T>(StyleProperty<T> property, T defaultValue)
+        {
+            return TryGetStyleProperty(property, out var value) ? value : defaultValue;
         }
 
         private sealed class StyleClassCollection : ICollection<string>, IReadOnlyCollection<string>

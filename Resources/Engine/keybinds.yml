@@ -43,6 +43,5 @@ binds: # These are all the current engine keybinds.
 - function: MapEditorViewportDrag
   type: State
   key: MouseMiddle
-  mod1: Alt
   canFocus: true
 

@@ -32,6 +32,8 @@ public partial class EditorTabBar : Control
     {
         Owner = owner;
         RobustXamlLoader.Load(this);
+
+        RectClipContent = true;
     }
 
     public override void DragLeave(DragLeaveEventArgs eventArgs)

@@ -20,6 +20,8 @@ public partial class EditorPanel : Control
     public EditorPanel()
     {
         RobustXamlLoader.Load(this);
+
+        RectClipContent = true;
     }
 
     public string Title

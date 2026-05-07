@@ -39,11 +39,17 @@ END TEMPLATE-->
 
 ### New features
 
-* Added an analyzer to detect and warn about `[Dependency]` fields with nullable types. These have never done anything special and are programming error.
+- Statics on interfaces, and other cases of `static abstract` methods and properties, are now allowed by the sandbox.
+- `INumber<T>` and all associated types in `System.Numerics` are now allowed by the sandbox.
+- `BigInteger` is now allowed by the sandbox.
+- `ISpanFormattable` and `IUtf8SpanFormattable` are now allowed by the sandbox.
+- `IParsable`, `ISpanParsable`, and `IUtf8SpanParsable` are now allowed by the sandbox.
+- Added `MarkupNode.IsPlainText` helper property.
+- Added an analyzer to detect and warn about `[Dependency]` fields with nullable types. These have never done anything special and are programming error.
 
 ### Bugfixes
 
-*None yet*
+* `ComponentNetworkGenerator` received some internal refactoring, and should now work on `internal` types.
 
 ### Other
 

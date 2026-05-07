@@ -21,7 +21,7 @@ namespace Robust.Client.UserInterface.Controls
 
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
 
-        public static readonly StyleProperty<StyleBox> StylePropertyStyleBox = "stylebox";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyStyleBox = "stylebox";
 
         public bool ShowScrollDownButton
         {

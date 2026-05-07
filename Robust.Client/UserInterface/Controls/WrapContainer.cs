@@ -13,12 +13,12 @@ public sealed class WrapContainer : Container
     /// <summary>
     /// Specifies the amount of space between two children, on the main axis.
     /// </summary>
-    public static readonly StyleProperty<int> StylePropertySeparation = "separation";
+    public static readonly StylePropertyKey<int> StylePropertySeparation = "separation";
 
     /// <summary>
     /// Specifies the amount of space between two children, on the cross axis.
     /// </summary>
-    public static readonly StyleProperty<int> StylePropertyCrossSeparation = "cross-separation";
+    public static readonly StylePropertyKey<int> StylePropertyCrossSeparation = "cross-separation";
 
     // Parameters.
     private Axis _layoutAxis;

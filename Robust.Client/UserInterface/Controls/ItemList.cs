@@ -28,10 +28,10 @@ namespace Robust.Client.UserInterface.Controls
         public event Action<ItemListDeselectedEventArgs>? OnItemDeselected;
         public event Action<ItemListHoverEventArgs>? OnItemHover;
 
-        public static readonly StyleProperty<StyleBox> StylePropertyBackground = "itemlist-background";
-        public static readonly StyleProperty<StyleBox> StylePropertyItemBackground = "item-background";
-        public static readonly StyleProperty<StyleBox> StylePropertySelectedItemBackground = "selected-item-background";
-        public static readonly StyleProperty<StyleBox> StylePropertyDisabledItemBackground = "disabled-item-background";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyBackground = "itemlist-background";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyItemBackground = "item-background";
+        public static readonly StylePropertyKey<StyleBox> StylePropertySelectedItemBackground = "selected-item-background";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyDisabledItemBackground = "disabled-item-background";
 
         /// <summary>
         /// Gets or sets the ItemSeparation of individual list items

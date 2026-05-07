@@ -14,11 +14,11 @@ namespace Robust.Client.UserInterface.Controls
         public static readonly AttachedProperty<bool> TabVisibleProperty = AttachedProperty<bool>.Create("TabVisible", typeof(TabContainer), true);
         public static readonly AttachedProperty<string?> TabTitleProperty = AttachedProperty<string?>.CreateNull("TabTitle", typeof(TabContainer));
 
-        public static readonly StyleProperty<StyleBox> StylePropertyTabStyleBox = "tab-stylebox";
-        public static readonly StyleProperty<StyleBox> StylePropertyTabStyleBoxInactive = "tab-stylebox-inactive";
-        public static readonly StyleProperty<Color> stylePropertyTabFontColor = "tab-font-color";
-        public static readonly StyleProperty<Color> StylePropertyTabFontColorInactive = "tab-font-color-inactive";
-        public static readonly StyleProperty<StyleBox> StylePropertyPanelStyleBox = "panel-stylebox";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyTabStyleBox = "tab-stylebox";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyTabStyleBoxInactive = "tab-stylebox-inactive";
+        public static readonly StylePropertyKey<Color> stylePropertyTabFontColor = "tab-font-color";
+        public static readonly StylePropertyKey<Color> StylePropertyTabFontColorInactive = "tab-font-color-inactive";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyPanelStyleBox = "panel-stylebox";
 
         private int _currentTab;
         private bool _tabsVisible = true;

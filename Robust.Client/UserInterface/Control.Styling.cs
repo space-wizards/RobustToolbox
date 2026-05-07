@@ -10,7 +10,7 @@ namespace Robust.Client.UserInterface
     // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control
     {
-        public static readonly StyleProperty<Color> StylePropertyModulateSelf = "modulate-self";
+        public static readonly StylePropertyKey<Color> StylePropertyModulateSelf = "modulate-self";
 
         /// <summary>
         ///     Overrides the style sheet used for this control and its descendants.
@@ -260,7 +260,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        [Obsolete("Use TryGetStyleProperty(StyleProperty<T>, out T) with a typed style property key.")]
+        [Obsolete("Use TryGetStyleProperty(StylePropertyKey<T>, out T) with a typed style property key.")]
         public bool TryGetStyleProperty<T>(string param, [MaybeNullWhen(false)] out T value)
         {
             if (_styleProperties.TryGetValue(param, out var val) && val is T cast)
@@ -273,9 +273,9 @@ namespace Robust.Client.UserInterface
             return false;
         }
 
-        public bool TryGetStyleProperty<T>(StyleProperty<T> property, [MaybeNullWhen(false)] out T value)
+        public bool TryGetStyleProperty<T>(StylePropertyKey<T> propertyKey, [MaybeNullWhen(false)] out T value)
         {
-            if (_styleProperties.TryGetValue(property.Name, out var val) && val is T cast)
+            if (_styleProperties.TryGetValue(propertyKey.Name, out var val) && val is T cast)
             {
                 value = cast;
                 return true;
@@ -285,7 +285,7 @@ namespace Robust.Client.UserInterface
             return false;
         }
 
-        [Obsolete("Use StylePropertyDefault(StyleProperty<T>, T) with a typed style property key.")]
+        [Obsolete("Use StylePropertyDefault(StylePropertyKey<T>, T) with a typed style property key.")]
         public T StylePropertyDefault<T>(string param, T defaultValue)
         {
             if (_styleProperties.TryGetValue(param, out var value) && value is T typedValue)
@@ -294,9 +294,9 @@ namespace Robust.Client.UserInterface
             return defaultValue;
         }
 
-        public T StylePropertyDefault<T>(StyleProperty<T> property, T defaultValue)
+        public T StylePropertyDefault<T>(StylePropertyKey<T> propertyKey, T defaultValue)
         {
-            return TryGetStyleProperty(property, out var value) ? value : defaultValue;
+            return TryGetStyleProperty(propertyKey, out var value) ? value : defaultValue;
         }
 
         private sealed class StyleClassCollection : ICollection<string>, IReadOnlyCollection<string>

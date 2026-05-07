@@ -10,8 +10,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class Tree : Control
     {
-        public static readonly StyleProperty<StyleBox> StylePropertyItemBoxSelected = "item-selected";
-        public static readonly StyleProperty<StyleBox> StylePropertyBackground = "background";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyItemBoxSelected = "item-selected";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyBackground = "background";
 
         private readonly List<Item> _itemList = new();
 

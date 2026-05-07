@@ -50,7 +50,7 @@ namespace Robust.UnitTesting.Client.UserInterface
         [Test]
         public void TestStyleProperties()
         {
-            var foo = new StyleProperty<string>("foo");
+            var foo = new StylePropertyKey<string>("foo");
 
             var sheet = new Stylesheet(new[]
             {
@@ -89,7 +89,7 @@ namespace Robust.UnitTesting.Client.UserInterface
         [Test]
         public void TestStylesheetOverride()
         {
-            var foo = new StyleProperty<string>("foo");
+            var foo = new StylePropertyKey<string>("foo");
 
             var sheetA = new Stylesheet(new[]
             {

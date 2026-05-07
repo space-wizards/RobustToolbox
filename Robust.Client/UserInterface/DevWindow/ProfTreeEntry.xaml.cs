@@ -9,8 +9,8 @@ namespace Robust.Client.UserInterface;
 [GenerateTypedNameReferences]
 internal sealed partial class ProfTreeEntry : Control
 {
-    public static readonly StyleProperty<Color> StylePropertyArrowColor = "arrowColor";
-    public static readonly StyleProperty<Color> StylePropertyArrowOutline = "arrowOutline";
+    public static readonly StylePropertyKey<Color> StylePropertyArrowColor = "arrowColor";
+    public static readonly StylePropertyKey<Color> StylePropertyArrowOutline = "arrowOutline";
 
     private readonly ProfTree _tab;
     private readonly ProfTree.TreeExpand _parentExpand;

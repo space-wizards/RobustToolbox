@@ -16,9 +16,9 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class Label : Control
     {
-        public static readonly StyleProperty<Color> StylePropertyFontColor = "font-color";
-        public static readonly StyleProperty<Font> StylePropertyFont = "font";
-        public static readonly StyleProperty<AlignMode> StylePropertyAlignMode = "alignMode";
+        public static readonly StylePropertyKey<Color> StylePropertyFontColor = "font-color";
+        public static readonly StylePropertyKey<Font> StylePropertyFont = "font";
+        public static readonly StylePropertyKey<AlignMode> StylePropertyAlignMode = "alignMode";
 
         private int _cachedTextHeight;
         private readonly List<int> _cachedTextWidths = new();

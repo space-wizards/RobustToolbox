@@ -26,9 +26,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private const float MouseScrollDelay = 0.001f;
 
-        public static readonly StyleProperty<StyleBox> StylePropertyStyleBox = "stylebox";
-        public static readonly StyleProperty<Color> StylePropertyCursorColor = "cursor-color";
-        public static readonly StyleProperty<Color> StylePropertySelectionColor = "selection-color";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyStyleBox = "stylebox";
+        public static readonly StylePropertyKey<Color> StylePropertyCursorColor = "cursor-color";
+        public static readonly StylePropertyKey<Color> StylePropertySelectionColor = "selection-color";
         public const string StyleClassLineEditNotEditable = "notEditable";
         public const string StylePseudoClassPlaceholder = "placeholder";
 

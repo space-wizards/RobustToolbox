@@ -15,11 +15,11 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class TextureRect : Control
     {
-        public static readonly StyleProperty<Texture?> StylePropertyTexture = "texture";
-        public static readonly StyleProperty<ShaderInstance?> StylePropertyShader = "shader";
-        public static readonly StyleProperty<StretchMode> StylePropertyTextureStretch = "texture-stretch";
-        public static readonly StyleProperty<Vector2> StylePropertyTextureScale = "texture-scale";
-        public static readonly StyleProperty<Vector2> StylePropertyTextureSizeTarget = "texture-size-target";
+        public static readonly StylePropertyKey<Texture?> StylePropertyTexture = "texture";
+        public static readonly StylePropertyKey<ShaderInstance?> StylePropertyShader = "shader";
+        public static readonly StylePropertyKey<StretchMode> StylePropertyTextureStretch = "texture-stretch";
+        public static readonly StylePropertyKey<Vector2> StylePropertyTextureScale = "texture-scale";
+        public static readonly StylePropertyKey<Vector2> StylePropertyTextureSizeTarget = "texture-size-target";
 
         private bool _canShrink;
         private Texture? _texture;

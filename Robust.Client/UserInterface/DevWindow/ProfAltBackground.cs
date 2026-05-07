@@ -5,7 +5,7 @@ namespace Robust.Client.UserInterface;
 
 internal sealed class ProfAltBackground : Control
 {
-    public static readonly StyleProperty<Color> StylePropertyColor = "color";
+    public static readonly StylePropertyKey<Color> StylePropertyColor = "color";
 
     public bool IsAltBackground { get; set; }
     public Color Color = DefaultColor;

@@ -11,10 +11,10 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class Slider : Range
     {
-        public static readonly StyleProperty<StyleBox> StylePropertyBackground = "background";
-        public static readonly StyleProperty<StyleBox> StylePropertyForeground = "foreground";
-        public static readonly StyleProperty<StyleBox> StylePropertyFill = "fill";
-        public static readonly StyleProperty<StyleBox> StylePropertyGrabber = "grabber";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyBackground = "background";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyForeground = "foreground";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyFill = "fill";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyGrabber = "grabber";
 
         public event Action<Slider>? OnGrabbed;
         public event Action<Slider>? OnReleased;
@@ -184,9 +184,9 @@ namespace Robust.Client.UserInterface.Controls
 
         protected virtual void UpdateStyleBoxes()
         {
-            StyleBox? GetStyleBox(StyleProperty<StyleBox> property)
+            StyleBox? GetStyleBox(StylePropertyKey<StyleBox> propertyKey)
             {
-                if (TryGetStyleProperty(property, out var box))
+                if (TryGetStyleProperty(propertyKey, out var box))
                 {
                     return box;
                 }

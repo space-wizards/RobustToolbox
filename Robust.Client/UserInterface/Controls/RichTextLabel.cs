@@ -15,7 +15,7 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class RichTextLabel : Control
     {
-        public static readonly StyleProperty<float> StylePropertyLineHeightScale = nameof(LineHeightScale);
+        public static readonly StylePropertyKey<float> StylePropertyLineHeightScale = nameof(LineHeightScale);
 
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
 

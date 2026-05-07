@@ -8,8 +8,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class ProgressBar : Range
     {
-        public static readonly StyleProperty<StyleBox> StylePropertyBackground = "background";
-        public static readonly StyleProperty<StyleBox> StylePropertyForeground = "foreground";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyBackground = "background";
+        public static readonly StylePropertyKey<StyleBox> StylePropertyForeground = "foreground";
 
         private StyleBox? _backgroundStyleBoxOverride;
         private StyleBox? _foregroundStyleBoxOverride;

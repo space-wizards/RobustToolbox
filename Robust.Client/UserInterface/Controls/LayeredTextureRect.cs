@@ -13,7 +13,7 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class LayeredTextureRect : Control
     {
-        public static readonly StyleProperty<ShaderInstance?> StylePropertyShader = "shader";
+        public static readonly StylePropertyKey<ShaderInstance?> StylePropertyShader = "shader";
 
         private bool _canShrink;
         private List<Texture> _textures = new();

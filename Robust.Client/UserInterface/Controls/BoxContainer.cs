@@ -13,7 +13,7 @@ namespace Robust.Client.UserInterface.Controls
     public class BoxContainer : Container
     {
         private LayoutOrientation _orientation;
-        public static readonly StyleProperty<int> StylePropertySeparation = "separation";
+        public static readonly StylePropertyKey<int> StylePropertySeparation = "separation";
 
         private const int DefaultSeparation = 0;
 

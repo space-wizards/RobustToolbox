@@ -8,8 +8,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class ScrollContainer : Container
     {
-        public static readonly StyleProperty<bool> StylePropertyVScrollBarHidden = nameof(VScrollBarHidden);
-        public static readonly StyleProperty<bool> StylePropertyHScrollBarHidden = nameof(HScrollBarHidden);
+        public static readonly StylePropertyKey<bool> StylePropertyVScrollBarHidden = nameof(VScrollBarHidden);
+        public static readonly StylePropertyKey<bool> StylePropertyHScrollBarHidden = nameof(HScrollBarHidden);
 
         private bool _queueScrolled = false;
         private bool _vScrollEnabled = true;

@@ -310,6 +310,9 @@ namespace Robust.Client.UserInterface
     [Virtual]
     public class StyleProperty
     {
+        public string Name { get; }
+        public object? Value { get; }
+
         protected StyleProperty(string name)
         {
             ArgumentNullException.ThrowIfNull(name);
@@ -329,9 +332,6 @@ namespace Robust.Client.UserInterface
             Name = property.Name;
             Value = value;
         }
-
-        public string Name { get; }
-        public object? Value { get; }
     }
 
     /// <summary>

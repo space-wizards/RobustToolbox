@@ -84,6 +84,6 @@ internal sealed class MapEditorToolEntitySystem : EntitySystem
 
     internal static bool IsEligible(EntityPrototype prototype)
     {
-        return !prototype.Abstract && !prototype.Abstract;
+        return prototype is { Abstract: false, HideSpawnMenu: false };
     }
 }

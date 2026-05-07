@@ -2,6 +2,7 @@
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.MapEditor.Interface.Panels;
 
@@ -13,12 +14,25 @@ internal sealed partial class EntityPickerButton : Control
         RobustXamlLoader.Load(this);
 
         PrototypeView.SetPrototype(prototype);
+
+        PrototypeName.SetMessage(FormatName(prototype));
+    }
+
+    public static FormattedMessage FormatName(EntityPrototype prototype)
+    {
+        var msg = new FormattedMessage();
+
+        string name;
         if (string.IsNullOrWhiteSpace(prototype.Name))
-            PrototypeName.Text = prototype.ID;
+            name = prototype.ID;
         else
-            PrototypeName.Text = prototype.Name;
+            name = prototype.Name;
+
+        msg.AddText(name);
 
         if (!string.IsNullOrWhiteSpace(prototype.EditorSuffix))
-            PrototypeName.Text +=  $" [{prototype.EditorSuffix}]";
+            msg.AddMarkupOrThrow($@" [color=gray]\[{FormattedMessage.EscapeText(prototype.EditorSuffix)}\]");
+
+        return msg;
     }
 }

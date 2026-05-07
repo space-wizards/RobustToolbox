@@ -1,0 +1,11 @@
+﻿<interface:EditorPanel xmlns="https://spacestation14.io"
+                       xmlns:interface="clr-namespace:Robust.Client.Editor.Interface"
+                       Margin="4">
+    <ScrollContainer HScrollEnabled="False">
+        <ItemsControl Name="RecentTools" VerticalExpand="True">
+            <ItemsControl.PanelControl>
+                <WrapContainer />
+            </ItemsControl.PanelControl>
+        </ItemsControl>
+    </ScrollContainer>
+</interface:EditorPanel>

@@ -56,7 +56,7 @@ internal sealed partial class ServerMapEditorSystem
         var userDataEnt = Spawn(null, new EntityCoordinates(state, default));
         var userData = AddComp<MapEditorUserStateComponent>(userDataEnt);
         userData.User = session.UserId;
-        _metaSys.SetEntityName(userDataEnt, $"MapEditorUserData {session}");
+        MetaSys.SetEntityName(userDataEnt, $"MapEditorUserData {session}");
 
         state.Comp.Users.Add(userDataEnt);
 

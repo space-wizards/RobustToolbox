@@ -92,7 +92,7 @@ internal sealed partial class ServerMapEditorSystem
         var mapDataEnt = Spawn(null, new EntityCoordinates(gState, default));
         var mapData = AddComp<MapEditorMapDataComponent>(mapDataEnt);
         mapData.MapEntity = map;
-        _metaSys.SetEntityName(mapDataEnt, name);
+        MetaSys.SetEntityName(mapDataEnt, name);
         Dirty(mapDataEnt, mapData);
 
         gState.Comp.Maps.Add(mapDataEnt);

@@ -18,7 +18,7 @@ internal sealed partial class ServerMapEditorSystem
         var mapData = Comp<MapEditorMapDataComponent>(mapEnt);
 
         var eyeEnt = Spawn(null, new EntityCoordinates(mapData.MapEntity, msg.Position));
-        _metaSys.SetEntityName(eyeEnt, $"MapEditorEye for {args.SenderSession}");
+        MetaSys.SetEntityName(eyeEnt, $"MapEditorEye for {args.SenderSession}");
         AddComp<MapEditorUnsavedComponent>(eyeEnt);
         AddComp<EyeComponent>(eyeEnt);
         var eyeData = AddComp<MapEditorEyeComponent>(eyeEnt);

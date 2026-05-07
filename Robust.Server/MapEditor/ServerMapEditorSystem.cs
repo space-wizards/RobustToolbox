@@ -13,7 +13,6 @@ namespace Robust.Server.MapEditor;
 internal sealed partial class ServerMapEditorSystem : MapEditorSystem
 {
     [Dependency] private readonly IConGroupController _conGroup = null!;
-    [Dependency] private readonly MetaDataSystem _metaSys = null!;
     [Dependency] private readonly SharedPvsOverrideSystem _pvsOverride = null!;
     [Dependency] private readonly ISharedPlayerManager _playerManager = null!;
     [Dependency] private readonly MapLoaderSystem _mapLoader = null!;
@@ -50,7 +49,7 @@ internal sealed partial class ServerMapEditorSystem : MapEditorSystem
         {
             Log.Debug("Initializing map editor state!");
             _stateEntity = Spawn();
-            _metaSys.SetEntityName(_stateEntity.Value, "MapEditorState");
+            MetaSys.SetEntityName(_stateEntity.Value, "MapEditorState");
             var comp = AddComp<MapEditorGlobalStateComponent>(_stateEntity.Value);
             return (_stateEntity.Value, comp);
         }

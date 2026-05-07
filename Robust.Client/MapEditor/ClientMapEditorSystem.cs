@@ -18,6 +18,7 @@ internal sealed partial class ClientMapEditorSystem : MapEditorSystem
     [Dependency] private readonly IPlayerManager _playerManager = null!;
     [Dependency] private readonly IStateManager _stateManager = null!;
     [Dependency] private readonly MapFileHandleManager _mapFileHandles = null!;
+    [Dependency] private readonly IDependencyCollection _deps = null!;
 
     internal event Action<IEnumerable<EntityUid>>? OpenMapsUpdated;
 
@@ -42,6 +43,7 @@ internal sealed partial class ClientMapEditorSystem : MapEditorSystem
         SubscribeLocalEvent<MapEditorUserStateComponent, ComponentStartup>(EditorUserDataStartup);
         SubscribeLocalEvent<MapEditorUserStateComponent, AfterAutoHandleStateEvent>(AfterUserDataState);
         SubscribeLocalEvent<MapEditorEyeComponent, ComponentStartup>(AfterViewStartup);
+        SubscribeLocalEvent<MapEditorMapDataComponent, ComponentStartup>(AfterMapDataStartup);
 
         SubscribeNetworkEvent<MEM.SaveMapData>(HandleSaveMapData);
     }
@@ -72,6 +74,11 @@ internal sealed partial class ClientMapEditorSystem : MapEditorSystem
         base.FrameUpdate(frameTime);
 
         EyeFrameUpdate();
+    }
+
+    private void AfterMapDataStartup(EntityUid uid, MapEditorMapDataComponent component, ComponentStartup args)
+    {
+        EnsureComp<MapEditorClientMapDataComponent>(uid);
     }
 
     private void EditorUserDataStartup(Entity<MapEditorUserStateComponent> ent, ref ComponentStartup args)

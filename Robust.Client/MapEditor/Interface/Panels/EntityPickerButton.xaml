@@ -1,8 +1,8 @@
 ﻿<Control xmlns="https://spacestation14.io">
-    <Button Name="TheButton">
+    <Button Name="TheButton" Access="Public">
         <BoxContainer Orientation="Horizontal" SeparationOverride="8">
             <EntityPrototypeView Name="PrototypeView" SetSize="32,32" />
-            <Label Name="PrototypeName" HorizontalExpand="True" ClipText="True" />
+            <RichTextLabel Name="PrototypeName" HorizontalExpand="True" />
         </BoxContainer>
     </Button>
 </Control>

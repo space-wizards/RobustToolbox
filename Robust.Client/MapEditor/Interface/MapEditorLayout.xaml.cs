@@ -37,8 +37,12 @@ internal sealed partial class MapEditorLayout : EditorPanel
         Docker.AddPanel(viewportPanel);
 
         var outliner = new MapEditorOutlinerPanel { Scope = _scope };
+        var inspector = new MapEditorInspectorPanel { Scope = _scope };
+        var activeTool = new ActiveToolPanel(mapEditor, mapData);
         Docker.AddPanelRelative(outliner, viewportPanel.CurrentParent!, DockRelative.Left);
-        Docker.AddPanelRelative(new EntityPickerPanel(), outliner.CurrentParent!, DockRelative.Down);
-        Docker.AddPanelRelative(new MapEditorInspectorPanel { Scope = _scope }, viewportPanel.CurrentParent!, DockRelative.Right);
+        Docker.AddPanelRelative(new EntityPickerPanel(mapData), outliner.CurrentParent!, DockRelative.Down);
+        Docker.AddPanelRelative(inspector, viewportPanel.CurrentParent!, DockRelative.Right);
+        Docker.AddPanelRelative(activeTool, inspector.CurrentParent!, DockRelative.Down);
+        Docker.AddPanelRelative(new ToolHistoryPanel(mapEditor, mapData), activeTool.CurrentParent!, DockRelative.Down);
     }
 }

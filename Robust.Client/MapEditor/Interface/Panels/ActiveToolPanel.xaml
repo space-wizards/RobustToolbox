@@ -1,0 +1,17 @@
+﻿<interface:EditorPanel xmlns="https://spacestation14.io"
+                       xmlns:interface="clr-namespace:Robust.Client.Editor.Interface"
+                       Margin="4"
+                       Title="Active tool">
+    <ScrollContainer HScrollEnabled="False">
+        <Control Name="ActiveToolContainer" VerticalAlignment="Top">
+            <HBox>
+                <Control Name="ActiveToolPreview" SetSize="32,32" />
+                <RichTextLabel Name="ActiveToolName" Margin="8, 0, 0, 0" HorizontalExpand="True" />
+            </HBox>
+            <Control Name="ActiveToolInfo" />
+        </Control>
+        <Control Name="NoToolContainer" VerticalAlignment="Top">
+            <Label Text="No active tool" Margin="40" HorizontalAlignment="Center" />
+        </Control>
+    </ScrollContainer>
+</interface:EditorPanel>

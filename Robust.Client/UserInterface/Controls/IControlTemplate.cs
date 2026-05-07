@@ -13,4 +13,9 @@ public sealed class ControlTemplateDelegate(Func<object?, Control> @delegate) : 
     {
         return @delegate(data);
     }
+
+    public static IControlTemplate Typed<T>(Func<T, Control> @delegate)
+    {
+        return new ControlTemplateDelegate(obj => @delegate((T)obj!));
+    }
 }

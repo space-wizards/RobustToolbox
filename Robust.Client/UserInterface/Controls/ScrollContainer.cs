@@ -8,6 +8,9 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class ScrollContainer : Container
     {
+        public static readonly StyleProperty<bool> StylePropertyVScrollBarHidden = nameof(VScrollBarHidden);
+        public static readonly StyleProperty<bool> StylePropertyHScrollBarHidden = nameof(HScrollBarHidden);
+
         private bool _queueScrolled = false;
         private bool _vScrollEnabled = true;
         private bool _hScrollEnabled = true;
@@ -163,10 +166,10 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private bool StyleVScrollBarHidden =>
-            _vScrollBarHidden ?? TryGetStyleProperty<bool>(nameof(VScrollBarHidden), out var v) && v;
+            _vScrollBarHidden ?? TryGetStyleProperty(StylePropertyVScrollBarHidden, out var v) && v;
 
         private bool StyleHScrollBarHidden =>
-            _hScrollBarHidden ?? TryGetStyleProperty<bool>(nameof(HScrollBarHidden), out var v) && v;
+            _hScrollBarHidden ?? TryGetStyleProperty(StylePropertyHScrollBarHidden, out var v) && v;
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {

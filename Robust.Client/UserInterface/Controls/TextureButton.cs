@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         private Vector2 _scale = new(1, 1);
         private Texture? _textureNormal;
-        public const string StylePropertyTexture = "texture";
+        public static readonly StyleProperty<Texture?> StylePropertyTexture = "texture";
         public const string StylePseudoClassNormal = "normal";
         public const string StylePseudoClassHover = "hover";
         public const string StylePseudoClassDisabled = "disabled";

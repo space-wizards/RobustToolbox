@@ -14,11 +14,11 @@ namespace Robust.Client.UserInterface.Controls
         public static readonly AttachedProperty<bool> TabVisibleProperty = AttachedProperty<bool>.Create("TabVisible", typeof(TabContainer), true);
         public static readonly AttachedProperty<string?> TabTitleProperty = AttachedProperty<string?>.CreateNull("TabTitle", typeof(TabContainer));
 
-        public const string StylePropertyTabStyleBox = "tab-stylebox";
-        public const string StylePropertyTabStyleBoxInactive = "tab-stylebox-inactive";
-        public const string stylePropertyTabFontColor = "tab-font-color";
-        public const string StylePropertyTabFontColorInactive = "tab-font-color-inactive";
-        public const string StylePropertyPanelStyleBox = "panel-stylebox";
+        public static readonly StyleProperty<StyleBox> StylePropertyTabStyleBox = "tab-stylebox";
+        public static readonly StyleProperty<StyleBox> StylePropertyTabStyleBoxInactive = "tab-stylebox-inactive";
+        public static readonly StyleProperty<Color> stylePropertyTabFontColor = "tab-font-color";
+        public static readonly StyleProperty<Color> StylePropertyTabFontColorInactive = "tab-font-color-inactive";
+        public static readonly StyleProperty<StyleBox> StylePropertyPanelStyleBox = "panel-stylebox";
 
         private int _currentTab;
         private bool _tabsVisible = true;
@@ -388,7 +388,7 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty<Font>("font", out var font))
+            if (TryGetStyleProperty(Label.StylePropertyFont, out var font))
             {
                 return font;
             }

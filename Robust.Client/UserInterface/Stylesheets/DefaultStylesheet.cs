@@ -47,14 +47,14 @@ public sealed class DefaultStylesheet
              */
 
             Element().Class("monospace")
-                .Prop("font", notoSansMono12),
+                .Prop(Label.StylePropertyFont, notoSansMono12),
 
             /*
              * OS Window defaults
              */
 
             Element<WindowRoot>()
-                .Prop("background", theme.ResolveColorOrSpecified("rootBackground", Color.Black)),
+                .Prop(UIRoot.StylePropBackground, theme.ResolveColorOrSpecified("rootBackground", Color.Black)),
 
             /*
              * Scrollbars
@@ -90,7 +90,7 @@ public sealed class DefaultStylesheet
 
             // Background
             Element().Class(DefaultWindow.StyleClassWindowPanel)
-                .Prop("panel", new StyleBoxFlat
+                .Prop(PanelContainer.StylePropertyPanel, new StyleBoxFlat
                 {
                     BackgroundColor = theme.ResolveColorOrSpecified("windowBackground", Color.FromHex("#111111")),
                     BorderColor = theme.ResolveColorOrSpecified("windowBorder", Color.FromHex("#444444")),
@@ -128,8 +128,8 @@ public sealed class DefaultStylesheet
              */
 
             Element()
-                .Prop("font", notoSansFont12)
-                .Prop("font-color", Color.White),
+                .Prop(Label.StylePropertyFont, notoSansFont12)
+                .Prop(Label.StylePropertyFontColor, Color.White),
 
             /*
              * Buttons
@@ -221,16 +221,16 @@ public sealed class DefaultStylesheet
                     ContentMarginTopOverride = 3,
                 })
                 // default font color
-                .Prop("font-color", Color.White)
-                .Prop("cursor-color", Color.White),
+                .Prop(Label.StylePropertyFontColor, Color.White)
+                .Prop(LineEdit.StylePropertyCursorColor, Color.White),
 
             // LineEdit non-editable text color
             Element<LineEdit>().Class(LineEdit.StyleClassLineEditNotEditable)
-                .Prop("font-color", theme.ResolveColorOrSpecified("lineEditUneditableText", Color.FromHex("#444444"))),
+                .Prop(Label.StylePropertyFontColor, theme.ResolveColorOrSpecified("lineEditUneditableText", Color.FromHex("#444444"))),
 
             // LineEdit placeholder text color
             Element<LineEdit>().Pseudo(LineEdit.StylePseudoClassPlaceholder)
-                .Prop("font-color",  theme.ResolveColorOrSpecified("lineEditPlaceholderText", Color.FromHex("#7d7d7d"))),
+                .Prop(Label.StylePropertyFontColor,  theme.ResolveColorOrSpecified("lineEditPlaceholderText", Color.FromHex("#7d7d7d"))),
 
             /*
              * TabContainer
@@ -268,7 +268,7 @@ public sealed class DefaultStylesheet
                     ContentMarginRightOverride = 5,
                     ContentMarginTopOverride = 3,
                 })
-                .Prop("font", notoSansFont12),
+                .Prop(Label.StylePropertyFont, notoSansFont12),
         });
     }
 }

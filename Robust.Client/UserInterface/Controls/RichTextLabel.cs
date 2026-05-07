@@ -15,6 +15,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class RichTextLabel : Control
     {
+        public static readonly StyleProperty<float> StylePropertyLineHeightScale = nameof(LineHeightScale);
+
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
 
         private RichTextEntry? _entry;
@@ -26,7 +28,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (!_lineHeightOverride && TryGetStyleProperty(nameof(LineHeightScale), out float value))
+                if (!_lineHeightOverride && TryGetStyleProperty(StylePropertyLineHeightScale, out float value))
                     return value;
 
                 return _lineHeightScale;
@@ -156,7 +158,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty<Font>("font", out var font))
+            if (TryGetStyleProperty(Label.StylePropertyFont, out var font))
             {
                 return font;
             }

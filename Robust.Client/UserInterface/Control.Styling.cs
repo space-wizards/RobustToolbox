@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
@@ -9,7 +10,7 @@ namespace Robust.Client.UserInterface
     // ReSharper disable once RequiredBaseTypesIsNotInherited
     public partial class Control
     {
-        public const string StylePropertyModulateSelf = "modulate-self";
+        public static readonly StyleProperty<Color> StylePropertyModulateSelf = "modulate-self";
 
         /// <summary>
         ///     Overrides the style sheet used for this control and its descendants.
@@ -51,6 +52,7 @@ namespace Robust.Client.UserInterface
 
         // Styling needs to be updated.
         private bool _stylingDirty;
+
         // _actualStylesheetCached needs update.
         private bool _stylesheetUpdateNeeded;
         internal int RestyleGeneration;
@@ -95,6 +97,7 @@ namespace Robust.Client.UserInterface
             _stylePseudoClass.Add(className);
             Restyle();
         }
+
         public bool HasStyleClass(string className)
         {
             return _styleClasses.Contains(className);

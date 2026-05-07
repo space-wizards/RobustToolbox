@@ -21,7 +21,7 @@ namespace Robust.Client.UserInterface.Controls
 
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
 
-        public const string StylePropertyStyleBox = "stylebox";
+        public static readonly StyleProperty<StyleBox> StylePropertyStyleBox = "stylebox";
 
         public bool ShowScrollDownButton
         {
@@ -297,7 +297,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty<Font>("font", out var font))
+            if (TryGetStyleProperty(Label.StylePropertyFont, out var font))
             {
                 return font;
             }

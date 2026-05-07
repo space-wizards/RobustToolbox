@@ -6,7 +6,7 @@ namespace Robust.Client.UserInterface.Controls
 {
     public abstract class UIRoot : Control
     {
-        public const string StylePropBackground = "background";
+        public static readonly StyleProperty<Color> StylePropBackground = "background";
 
         public override UIRoot? Root
         {

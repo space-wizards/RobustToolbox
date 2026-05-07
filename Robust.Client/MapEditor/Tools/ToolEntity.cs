@@ -1,4 +1,5 @@
-﻿using Robust.Client.MapEditor.Interface.Panels;
+﻿using System.Numerics;
+using Robust.Client.MapEditor.Interface.Panels;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -35,6 +36,7 @@ internal sealed class MapEditorToolEntitySystem : EntitySystem
 
         SubscribeLocalEvent<MapEditorToolEntityComponent, MapEditorToolValidateEvent>(ValidateTool);
         SubscribeLocalEvent<MapEditorToolEntityComponent, MapEditorToolMakePreviewControl>(MakePreviewControl);
+        SubscribeLocalEvent<MapEditorToolEntityComponent, MapEditorToolCheckEqual>(CheckEqual);
     }
 
     public void SwitchToTool(EntityUid mapData, EntProtoId protoId)
@@ -66,9 +68,18 @@ internal sealed class MapEditorToolEntitySystem : EntitySystem
         Entity<MapEditorToolEntityComponent> ent,
         ref MapEditorToolMakePreviewControl args)
     {
-        var view = new EntityPrototypeView();
+        var view = new EntityPrototypeView { Scale = new Vector2(2, 2) };
         view.SetPrototype(ent.Comp.PrototypeId);
         args.SetControl(view);
+    }
+
+    private void CheckEqual(Entity<MapEditorToolEntityComponent> ent, ref MapEditorToolCheckEqual args)
+    {
+        if (!TryComp(args.Other, out MapEditorToolEntityComponent? otherComp))
+            return;
+
+        if (ent.Comp.PrototypeId == otherComp.PrototypeId)
+            args.SetEqual();
     }
 
     internal static bool IsEligible(EntityPrototype prototype)

@@ -6,6 +6,7 @@ namespace Robust.Client.Editor.Styling;
 
 public abstract class BaseEditorStylesheet : CommonEngineStylesheet
 {
+    public const string StyleClassToolButton = "EditorToolButton";
     public const string StyleClassLowBackground = "EditorLowBackground";
     public const string StyleClassEditorDockerLarge = "EditorDockerLarge";
 

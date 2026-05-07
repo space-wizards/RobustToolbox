@@ -2,5 +2,5 @@
 
 internal static class MapEditorStyleClasses
 {
-    public const string ToolHistoryEntry = "ToolHistoryEntry";
+    public const string ToolPreview = "ToolPreview";
 }

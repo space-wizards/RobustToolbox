@@ -5,7 +5,7 @@
     <ScrollContainer HScrollEnabled="False">
         <Control Name="ActiveToolContainer" VerticalAlignment="Top">
             <HBox>
-                <Control Name="ActiveToolPreview" SetSize="32,32" />
+                <Control Name="ActiveToolPreview" StyleClasses="ToolPreview" />
                 <RichTextLabel Name="ActiveToolName" Margin="8, 0, 0, 0" HorizontalExpand="True" />
             </HBox>
             <Control Name="ActiveToolInfo" />

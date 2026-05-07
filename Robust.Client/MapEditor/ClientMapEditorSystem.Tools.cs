@@ -49,6 +49,26 @@ public struct MapEditorToolMakePreviewControl
     }
 }
 
+[ByRefEvent]
+public struct MapEditorToolCheckEqual
+{
+    public readonly EntityUid Other;
+    internal bool IsEqual;
+
+    public void SetEqual()
+    {
+        if (IsEqual)
+            throw new InvalidOperationException("Already set!");
+
+        IsEqual = true;
+    }
+
+    internal MapEditorToolCheckEqual(EntityUid other)
+    {
+        Other = other;
+    }
+}
+
 internal sealed partial class ClientMapEditorSystem
 {
     private static readonly SerializationOptions ToolSerializationOptions = new()
@@ -61,9 +81,6 @@ internal sealed partial class ClientMapEditorSystem
 
     public void SwitchToTool(EntityUid map, Action<Entity<MapEditorToolDataComponent>> ent)
     {
-        var mapData = Comp<MapEditorClientMapDataComponent>(map);
-        PushActiveToolToHistory((map, mapData));
-
         var newToolEnt = Spawn(null, new EntityCoordinates(map, Vector2.Zero));
         var toolData = AddComp<MapEditorToolDataComponent>(newToolEnt);
         MetaSys.SetEntityName(newToolEnt, "Tool entity");
@@ -80,10 +97,53 @@ internal sealed partial class ClientMapEditorSystem
         DebugTools.Assert(validateEvent.Name != null);
 
         toolData.ToolName = validateEvent.Name;
-        Log.Debug($"Selected tool: {validateEvent.Name}");
 
-        mapData.ActiveToolEntity = newToolEnt;
-        ActiveToolChanged?.Invoke(map, (newToolEnt, toolData));
+        var mapData = Comp<MapEditorClientMapDataComponent>(map);
+
+        if (mapData.ActiveToolEntity is { } active && AreToolEntitiesEqual(active, newToolEnt))
+        {
+            Log.Debug("New tool ent is equal to active.");
+            Del(newToolEnt);
+            return;
+        }
+
+        // Check if tool already exists in history, just pull it out in that case.
+        if (TryGetExistingHistoryTool((map, mapData), newToolEnt, out var foundTool))
+        {
+            Log.Debug("New tool ent is equal to history entry.");
+            Del(newToolEnt);
+            SwitchToHistoryTool(map, foundTool);
+            return;
+        }
+
+        PushActiveToolToHistory((map, mapData));
+        SwitchToToolEntity((map, mapData), newToolEnt);
+    }
+
+    public void SwitchToHistoryTool(EntityUid map, EntityUid historyTool)
+    {
+        var mapData = Comp<MapEditorClientMapDataComponent>(map);
+
+        var index = mapData.ToolEntityHistory.IndexOf(historyTool);
+        if (index < 0)
+            throw new InvalidOperationException("Tool was not in the history!");
+        mapData.ToolEntityHistory.RemoveAt(index);
+        ToolHistoryChanged?.Invoke(map, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, historyTool, index));
+
+        PushActiveToolToHistory((map, mapData));
+        SwitchToToolEntity((map, mapData), historyTool);
+    }
+
+    private void SwitchToToolEntity(Entity<MapEditorClientMapDataComponent> mapData, EntityUid newTool)
+    {
+        if (mapData.Comp.ActiveToolEntity is not null)
+            throw new InvalidOperationException("Already have an active tool!");
+
+        var toolData = Comp<MapEditorToolDataComponent>(newTool);
+        Log.Debug($"Selected tool: {toolData.ToolName}");
+
+        mapData.Comp.ActiveToolEntity = newTool;
+        ActiveToolChanged?.Invoke(mapData, (newTool, toolData));
     }
 
     private void PushActiveToolToHistory(Entity<MapEditorClientMapDataComponent> mapData)
@@ -126,5 +186,30 @@ internal sealed partial class ClientMapEditorSystem
             return null;
 
         return (active, Comp<MapEditorToolDataComponent>(active));
+    }
+
+    private bool TryGetExistingHistoryTool(
+        Entity<MapEditorClientMapDataComponent> mapData,
+        EntityUid newTool,
+        out EntityUid foundTool)
+    {
+        foreach (var historyEntry in mapData.Comp.ToolEntityHistory)
+        {
+            if (AreToolEntitiesEqual(historyEntry, newTool))
+            {
+                foundTool = historyEntry;
+                return true;
+            }
+        }
+
+        foundTool = default;
+        return false;
+    }
+
+    private bool AreToolEntitiesEqual(EntityUid a, EntityUid b)
+    {
+        var checkEqual = new MapEditorToolCheckEqual(b);
+        RaiseLocalEvent(a, ref checkEqual);
+        return checkEqual.IsEqual;
     }
 }

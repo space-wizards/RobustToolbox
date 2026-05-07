@@ -4,6 +4,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.Stylesheets;
+using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.StylesheetHelpers;
 
 namespace Robust.Client.Editor.Styling.Sheetlets;
@@ -16,12 +17,23 @@ internal sealed class ButtonSheetlet : EngineSheetlet<BaseEditorStylesheet>
         var box = CreateBox(sheet);
         var selectedBox = new StyleBoxTexture(box) { Modulate = sheet.ButtonBackgroundHover };
 
+        var toolButton = new StyleBoxTexture(box) { Modulate = Color.Transparent };
+
         return
         [
+            // Normal buttons
             Element<ContainerButton>()
                 .Prop(ContainerButton.StylePropertyStyleBox, box),
             Element<ContainerButton>().Pseudo(ContainerButton.StylePseudoClassHover)
-                .Prop(ContainerButton.StylePropertyStyleBox, selectedBox)
+                .Prop(ContainerButton.StylePropertyStyleBox, selectedBox),
+
+            // Tool buttons
+            Element<ContainerButton>()
+                .Class(BaseEditorStylesheet.StyleClassToolButton)
+                .Prop(ContainerButton.StylePropertyStyleBox, toolButton),
+            Element<ContainerButton>().Pseudo(ContainerButton.StylePseudoClassHover)
+                .Class(BaseEditorStylesheet.StyleClassToolButton)
+                .Prop(ContainerButton.StylePropertyStyleBox, selectedBox),
         ];
     }
 

@@ -137,7 +137,7 @@ public readonly record struct MarkupParameter(string? StringValue = null, long? 
     public override string ToString()
     {
         if (StringValue != null)
-            return $"=\"{FormattedMessage.EscapeText(StringValue).Replace("\"", "\\\"")}\"";
+            return $"=\"{FormattedMessage.EscapeStringParameter(StringValue)}\"";
 
         if (LongValue.HasValue)
             return LongValue?.ToString().Insert(0, "=") ?? "";

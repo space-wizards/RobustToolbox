@@ -79,7 +79,7 @@ namespace Robust.Shared.Tests.Utility
         [TestCase("te\"[\\xt")]
         public static void TestEscapedStringParameters(string value)
         {
-            var escaped = FormattedMessage.EscapeText(value).Replace("\"", "\\\"");
+            var escaped = FormattedMessage.EscapeStringParameter(value);
             var parameterMessage = FormattedMessage.FromMarkupOrThrow($"[tag=\"{escaped}\"]");
             var attributeMessage = FormattedMessage.FromMarkupOrThrow($"[tag attr=\"{escaped}\"]");
 

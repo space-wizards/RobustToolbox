@@ -8,6 +8,7 @@
     We use Directory.Build.props to get copy the state *after* our MSBuild config but before Nuget's config.
     -->
     <ManagePackageVersionsCentrally />
+    <CefNativeVersion>147.0.10</CefNativeVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
@@ -49,7 +50,8 @@
     <PackageVersion Include="Pidgin" Version="3.5.1" />
     <PackageVersion Include="Robust.Natives" Version="0.2.3" />
     <PackageVersion Include="Robust.Natives.Zstd" Version="0.1.1-zstd1.5.7" />
-    <PackageVersion Include="Robust.Natives.Cef" Version="131.3.5" />
+    <PackageVersion Include="Robust.Natives.Cef.win-x64" Version="$(CefNativeVersion)" />
+    <PackageVersion Include="Robust.Natives.Cef.linux-x64" Version="$(CefNativeVersion)" />
     <PackageVersion Include="Robust.Shared.AuthLib" Version="0.1.2" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
     <PackageVersion Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.10" />

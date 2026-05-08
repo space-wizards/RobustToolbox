@@ -106,7 +106,7 @@ namespace Robust.Client.WebView.Cef
                 settings.UserAgent = userAgentOverride;
             }
 
-            _sawmill.Info($"CEF Version: {CefRuntime.ChromeVersion}");
+            _sawmill.Info($"CEF Build Version: {CefRuntime.ChromeBuildVersion}");
 
             _app = new RobustCefApp(_sawmill);
 
@@ -118,6 +118,8 @@ namespace Robust.Client.WebView.Cef
             // The first argument is literally nonsense, but it needs to be there as otherwise the second argument doesn't apply
             // The second argument turns off CEF's bullshit error handling, which breaks dotnet's error handling.
             CefRuntime.Initialize(new CefMainArgs(new string[]{"binary","--disable-in-process-stack-traces"}), settings, _app, IntPtr.Zero);
+
+            _sawmill.Info($"CEF Runtime Version: {CefRuntime.ChromeRuntimeVersion}");
 
             if (_cfg.GetCVar(WCVars.WebResProtocol))
             {

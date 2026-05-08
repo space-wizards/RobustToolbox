@@ -215,6 +215,21 @@ namespace Robust.Client.UserInterface.Controls
                 return Vector2.Zero;
             }
 
+            // We need to measure our children again, to ensure they're aware of
+            // our real, final arrangement. It's a violation of invariants
+            // to measure a large space then try to draw them in something smaller.
+            //
+            // We only call our override, not Measure, to avoid infinite loops.
+            // We don't need to update ourselves after all.
+            //
+            // Atop that, we shouldn't remeasure if we ReturnMeasure, because then
+            // we do actually use all of our space and no invariants are getting
+            // broken unless our parent is themselves violating invariants.
+            // So measuring again using the final size may result in us
+            // mysteriously completely rearranging when we're not expected to.
+            if (!ReturnMeasure)
+                MeasureOverride(finalSize);
+
             var maxChildMinSize = Vector2.Zero;
 
             foreach (var child in Children)
@@ -364,15 +379,13 @@ namespace Robust.Client.UserInterface.Controls
 
             var h = _hScrollBar.Value;
             var v = _vScrollBar.Value;
-            if (!_hScrollEnabled)
-            {
+            // reset the values if everything fits, this is usually the case when the scrollbar is hidden
+            // when we intentionally hide the scrollbars this is not the case, so leave it as-is then
+            if (!_hScrollVisible && _hScrollBarHidden != true)
                 h = 0;
-            }
 
-            if (!_vScrollEnabled)
-            {
+            if (!_vScrollVisible && _vScrollBarHidden != true)
                 v = 0;
-            }
 
             return new Vector2(h, v);
         }

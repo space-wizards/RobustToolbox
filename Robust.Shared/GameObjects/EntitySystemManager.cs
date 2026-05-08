@@ -84,6 +84,10 @@ namespace Robust.Shared.GameObjects
 
         public T? GetEntitySystemOrNull<T>() where T : IEntitySystem
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (SystemDependencyCollection == null)
+                return default;
+
             SystemDependencyCollection.TryResolveType<T>(out var system);
             return system;
         }
@@ -126,7 +130,9 @@ namespace Robust.Shared.GameObjects
         public bool TryGetEntitySystem<T>([NotNullWhen(true)] out T? entitySystem)
             where T : IEntitySystem
         {
-            return SystemDependencyCollection.TryResolveType<T>(out entitySystem);
+            entitySystem = default;
+            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+            return SystemDependencyCollection?.TryResolveType(out entitySystem) ?? false;
         }
 
         /// <inheritdoc />
@@ -383,7 +389,9 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetEntitySystem(Type sysType, [NotNullWhen(true)] out object? system)
         {
-            return SystemDependencyCollection.TryResolveType(sysType, out system);
+            system = null;
+            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+            return SystemDependencyCollection?.TryResolveType(sysType, out system) ?? false;
         }
 
         public object GetEntitySystem(Type sysType)

@@ -461,9 +461,11 @@ public abstract partial class SharedPhysicsSystem
 
             bool activeA = bodyA.Awake && bodyA.BodyType != BodyType.Static;
             bool activeB = bodyB.Awake && bodyB.BodyType != BodyType.Static;
+            var sensorContact = !fixtureA.Hard || !fixtureB.Hard;
 
-            // At least one body must be awake and it must be dynamic or kinematic.
-            if (activeA == false && activeB == false)
+            // Hard contacts need at least one active non-static body.
+            // Sensors still need to update while asleep/static so they can raise Start/EndCollide.
+            if (!sensorContact &&  activeA == false && activeB == false)
             {
                 continue;
             }

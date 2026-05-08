@@ -11,17 +11,6 @@
         This is also preferable if you may have already looked up the component, saving on lookup time.
     </remarks>
   </entry>
-  <entry name="SingleOrSpawnRemark">
-    <remarks>
-      <para>
-          This does not return the entity it spawns, it tries to look it up, so if spawning that entity violates
-          singleton status (or it lacks the necessary component) this will throw immediately after instead of later
-          on next call.
-
-          This will also still throw <see cref="MatchNotFoundException"/> if the spawned entity doesn't match at all.
-      </para>
-    </remarks>
-  </entry>
   <entry name="SingletonPauseRemark">
     <remarks>
       <para>

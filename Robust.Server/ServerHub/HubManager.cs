@@ -52,6 +52,7 @@ internal sealed partial class HubManager
             try
             {
                 url = await GuessAddress();
+                _cfg.SetCVar(CVars.HubServerUrl, url);
             }
             catch (Exception e)
             {
@@ -139,7 +140,7 @@ internal sealed partial class HubManager
         }
     }
 
-    private async Task<string?> GuessAddress()
+    private async Task<string> GuessAddress()
     {
         DebugTools.AssertNotNull(_httpClient);
 

@@ -10,10 +10,11 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.Invocation;
 
 /// <inheritdoc />
-internal sealed class OldShellInvocationContext : IInvocationContext
+internal sealed partial class OldShellInvocationContext : IInvocationContext
 {
-    [field: Dependency]
-    public ToolshedManager Toolshed { get; } = default!;
+    [Dependency]
+    private ToolshedManager _toolshed = null!;
+    public ToolshedManager Toolshed => _toolshed;
 
     public ToolshedEnvironment Environment => Toolshed.DefaultEnvironment;
 

@@ -36,7 +36,7 @@ namespace Robust.Shared.EntitySerialization;
 /// document using the various "Write" methods. (e.g., <see cref="WriteEntitySection"/>). After a one has finished using
 /// the generated data, the serializer needs to be reset (<see cref="Reset"/>) using it again to serialize other entities.
 /// </remarks>
-public sealed class EntitySerializer : ISerializationContext,
+public sealed partial class EntitySerializer : ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
     ITypeSerializer<NetEntity, ValueDataNode>,
     ITypeSerializer<MapId, ValueDataNode>
@@ -50,14 +50,14 @@ public sealed class EntitySerializer : ISerializationContext,
 
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
 
-    [Dependency] public readonly EntityManager EntMan = default!;
-    [Dependency] public readonly IGameTiming Timing = default!;
-    [Dependency] private readonly IComponentFactory _factory = default!;
-    [Dependency] private readonly ISerializationManager _serialization = default!;
-    [Dependency] private readonly ITileDefinitionManager _tileDef = default!;
-    [Dependency] private readonly IConfigurationManager _conf = default!;
-    [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
+    [Dependency] public EntityManager EntMan = default!;
+    [Dependency] public IGameTiming Timing = default!;
+    [Dependency] private IComponentFactory _factory = default!;
+    [Dependency] private ISerializationManager _serialization = default!;
+    [Dependency] private ITileDefinitionManager _tileDef = default!;
+    [Dependency] private IConfigurationManager _conf = default!;
+    [Dependency] private ILogManager _logMan = default!;
+    [Dependency] private SharedMapSystem _map = default!;
 
     private readonly ISawmill _log;
     public readonly Dictionary<EntityUid, int> YamlUidMap = new();
@@ -79,7 +79,7 @@ public sealed class EntitySerializer : ISerializationContext,
 
     /// <summary>
     /// If set, the serializer will refuse to serialize the given entity and will orphan any entity that is parented to
-    /// it. This is useful for serializing things like a grid (or multiple grids & entities) that are parented to a map
+    /// it. This is useful for serializing things like a grid (or multiple grids &amp; entities) that are parented to a map
     /// without actually serializing the map itself.
     /// </summary>
     public EntityUid Truncate { get; private set; }

@@ -8,8 +8,8 @@ namespace Robust.Client.Console
 {
     public sealed partial class ScriptClient : IScriptClient
     {
-        [Dependency] private readonly IClientConGroupController _conGroupController = default!;
-        [Dependency] private readonly IClientNetManager _netManager = default!;
+        [Dependency] private IClientConGroupController _conGroupController = default!;
+        [Dependency] private IClientNetManager _netManager = default!;
 
         private readonly Dictionary<int, ScriptConsoleServer> _activeConsoles = new();
 

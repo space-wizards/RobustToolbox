@@ -20,16 +20,16 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Server.Placement
 {
-    public sealed class PlacementManager : IPlacementManager
+    public sealed partial class PlacementManager : IPlacementManager
     {
-        [Dependency] private readonly IComponentFactory _factory = default!;
-        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
-        [Dependency] private readonly IServerNetManager _networkManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IPrototypeManager _prototype = default!;
-        [Dependency] private readonly IServerEntityManager _entityManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IComponentFactory _factory = default!;
+        [Dependency] private ITileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private IServerNetManager _networkManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IPrototypeManager _prototype = default!;
+        [Dependency] private IServerEntityManager _entityManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private EntityLookupSystem _lookup => _entityManager.System<EntityLookupSystem>();
         private SharedMapSystem _maps => _entityManager.System<SharedMapSystem>();
@@ -283,7 +283,7 @@ namespace Robust.Server.Placement
                     _entityManager.GetComponent<TransformComponent>(entity).Coordinates,
                     PlacementEventAction.Erase,
                     msg.MsgChannel.UserId);
-                
+
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
                 _entityManager.DeleteEntity(entity);
             }

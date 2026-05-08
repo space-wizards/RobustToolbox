@@ -14,13 +14,13 @@ using Con = System.Console;
 
 namespace Robust.Server.Console
 {
-    internal sealed class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
+    internal sealed partial class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
     {
-        [Dependency] private readonly IServerConsoleHost _conShell = default!;
-        [Dependency] private readonly ITaskManager _taskManager = default!;
-        [Dependency] private readonly IBaseServer _baseServer = default!;
-        [Dependency] private readonly IServerNetManager _netManager = default!;
-        [Dependency] private readonly IGameTiming _time = default!;
+        [Dependency] private IServerConsoleHost _conShell = default!;
+        [Dependency] private ITaskManager _taskManager = default!;
+        [Dependency] private IBaseServer _baseServer = default!;
+        [Dependency] private IServerNetManager _netManager = default!;
+        [Dependency] private IGameTiming _time = default!;
 
         //
         // Command entry stuff.
@@ -142,10 +142,10 @@ namespace Robust.Server.Console
             // Set up the new thread & thread accessories
             var rlc = new CancellationTokenSource();
             var chan = Channel.CreateBounded<string>(new BoundedChannelOptions(capacity: 32)
-                {
-                    FullMode=BoundedChannelFullMode.Wait,
-                    SingleReader=true,
-                }
+            {
+                FullMode = BoundedChannelFullMode.Wait,
+                SingleReader = true,
+            }
             );
 
             _rdLine = (
@@ -175,7 +175,7 @@ namespace Robust.Server.Console
             {
                 ConsoleKeyInfo key = Con.ReadKey(true);
                 if (Con.WindowWidth > 0)
-               		Con.SetCursorPosition(0, Con.CursorTop);
+                    Con.SetCursorPosition(0, Con.CursorTop);
                 if (!Char.IsControl(key.KeyChar))
                 {
                     currentBuffer = currentBuffer.Insert(internalCursor++, key.KeyChar.ToString());

@@ -6,9 +6,9 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    internal sealed class VVPropEditorReference : VVPropEditor
+    internal sealed partial class VVPropEditorReference : VVPropEditor
     {
-        [Dependency] private readonly IClientViewVariablesManager _vvMan = default!;
+        [Dependency] private IClientViewVariablesManager _vvMan = default!;
 
         private object? _localValue;
         private ViewVariablesObjectSelector? _selector;
@@ -22,7 +22,7 @@ namespace Robust.Client.ViewVariables.Editors
         {
             if (value == null)
             {
-                return new Label {Text = "null", Align = Label.AlignMode.Right};
+                return new Label { Text = "null", Align = Label.AlignMode.Right };
             }
 
             _localValue = value;

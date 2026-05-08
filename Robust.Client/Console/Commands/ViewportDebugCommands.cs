@@ -7,9 +7,9 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Console.Commands;
 
-internal sealed class ViewportClearAllCachedCommand : IConsoleCommand
+internal sealed partial class ViewportClearAllCachedCommand : IConsoleCommand
 {
-    [Dependency] private readonly IClydeInternal _clyde = default!;
+    [Dependency] private IClydeInternal _clyde = default!;
 
     public string Command => "vp_clear_all_cached";
     public string Description => "Fires IClydeViewport.ClearCachedResources on all viewports";
@@ -21,10 +21,10 @@ internal sealed class ViewportClearAllCachedCommand : IConsoleCommand
     }
 }
 
-internal sealed class ViewportTestFinalizeCommand : IConsoleCommand
+internal sealed partial class ViewportTestFinalizeCommand : IConsoleCommand
 {
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
 
     public string Command => "vp_test_finalize";
     public string Description => "Creates a viewport, renders it once, then leaks it (finalizes it).";

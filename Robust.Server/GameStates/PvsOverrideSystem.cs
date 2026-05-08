@@ -12,10 +12,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
-public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
+public sealed partial class PvsOverrideSystem : SharedPvsOverrideSystem
 {
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IConsoleHost _console = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IConsoleHost _console = default!;
 
     private readonly HashSet<EntityUid> _hasOverride = new();
 

@@ -9,7 +9,7 @@ using Robust.Shared.Physics.Components;
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, TestOf(typeof(EntitySystemManager))]
-    internal sealed class EntitySystemManager_Tests: OurRobustUnitTest
+    internal sealed partial class EntitySystemManager_Tests: OurRobustUnitTest
     {
 
         public abstract class ESystemBase : IEntitySystem
@@ -28,22 +28,22 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public abstract class ESystemBase2 : ESystemBase { }
         internal sealed class ESystemB : ESystemBase2 { }
 
-        internal sealed class ESystemDepA : ESystemBase
+        internal sealed partial class ESystemDepA : ESystemBase
         {
-            [Dependency] public readonly ESystemDepB ESystemDepB = default!;
+            [Dependency] public ESystemDepB ESystemDepB = default!;
         }
 
-        internal sealed class ESystemDepB : ESystemBase
+        internal sealed partial class ESystemDepB : ESystemBase
         {
-            [Dependency] public readonly ESystemDepA ESystemDepA = default!;
+            [Dependency] public ESystemDepA ESystemDepA = default!;
         }
 
-        internal sealed class ESystemDepAll : EntitySystem
+        internal sealed partial class ESystemDepAll : EntitySystem
         {
-            [Dependency] public readonly ESystemDepA ESystemDepA = default!;
-            [Dependency] public readonly IConfigurationManager Config = default!;
-            [Dependency] public readonly EntityQuery<TransformComponent> TransformQuery = default!;
-            [Dependency] public readonly EntityQuery<PhysicsComponent> PhysicsQuery = default!;
+            [Dependency] public ESystemDepA ESystemDepA = default!;
+            [Dependency] public IConfigurationManager Config = default!;
+            [Dependency] public EntityQuery<TransformComponent> TransformQuery = default!;
+            [Dependency] public EntityQuery<PhysicsComponent> PhysicsQuery = default!;
         }
 
         /*

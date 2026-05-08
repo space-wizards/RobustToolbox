@@ -15,10 +15,10 @@ namespace Robust.Client.Audio;
 
 internal sealed partial class AudioManager : IAudioInternal
 {
-    [Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;
-    [Shared.IoC.Dependency] private readonly IReloadManager _reload = default!;
-    [Shared.IoC.Dependency] private readonly IResourceCache _cache = default!;
+    [Shared.IoC.Dependency] private IConfigurationManager _cfg = default!;
+    [Shared.IoC.Dependency] private ILogManager _logMan = default!;
+    [Shared.IoC.Dependency] private IReloadManager _reload = default!;
+    [Shared.IoC.Dependency] private IResourceCache _cache = default!;
 
     private Thread? _gameThread;
 

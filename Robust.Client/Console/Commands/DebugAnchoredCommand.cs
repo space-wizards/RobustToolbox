@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
-    public sealed class DebugAnchoredCommand : LocalizedEntityCommands
+    public sealed partial class DebugAnchoredCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly DebugAnchoringSystem _system = default!;
+        [Dependency] private DebugAnchoringSystem _system = default!;
 
         public override string Command => "showanchored";
 

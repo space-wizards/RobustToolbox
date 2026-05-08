@@ -22,8 +22,8 @@ namespace Robust.Shared.Physics.Systems
     public partial class SharedPhysicsSystem
     {
 #if DEBUG
-        [Dependency] private readonly SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
-        [Dependency] private readonly INetManager _netMan = default!;
+        [Dependency] private SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
+        [Dependency] private INetManager _netMan = default!;
 #endif
 
         /// <summary>

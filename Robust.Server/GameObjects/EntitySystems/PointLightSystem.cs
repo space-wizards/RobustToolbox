@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Server.GameObjects;
 
-public sealed class PointLightSystem : SharedPointLightSystem
+public sealed partial class PointLightSystem : SharedPointLightSystem
 {
-    [Dependency] private readonly MetaDataSystem _metadata = default!;
+    [Dependency] private MetaDataSystem _metadata = default!;
 
     public override void Initialize()
     {
@@ -36,7 +36,7 @@ public sealed class PointLightSystem : SharedPointLightSystem
 
     private bool IsHighPriority(SharedPointLightComponent comp)
     {
-        return comp is {Enabled: true, CastShadows: true, Radius: > 7, LifeStage: <= ComponentLifeStage.Running};
+        return comp is { Enabled: true, CastShadows: true, Radius: > 7, LifeStage: <= ComponentLifeStage.Running };
     }
 
     protected override void UpdatePriority(EntityUid uid, SharedPointLightComponent comp, MetaDataComponent meta)

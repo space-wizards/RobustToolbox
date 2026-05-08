@@ -24,14 +24,14 @@ namespace Robust.Client.WebView.Cef
 
         private CefApp _app = default!;
 
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IGameControllerInternal _gameController = default!;
-        [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly ILocalizationManager _localization = default!;
+        [Dependency] private IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IGameControllerInternal _gameController = default!;
+        [Dependency] private IResourceManagerInternal _resourceManager = default!;
+        [Dependency] private IClientConsoleHost _consoleHost = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private ILocalizationManager _localization = default!;
 
         private ISawmill _sawmill = default!;
 

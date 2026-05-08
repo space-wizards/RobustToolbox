@@ -9,9 +9,9 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Console.Commands;
 
-public sealed class ProfileEntitySpawningCommand : IConsoleCommand
+public sealed partial class ProfileEntitySpawningCommand : IConsoleCommand
 {
-    [Dependency] private readonly IEntityManager _entities = default!;
+    [Dependency] private IEntityManager _entities = default!;
 
     public string Command => "profileEntitySpawning";
     public string Description => "Profiles entity spawning with n entities";

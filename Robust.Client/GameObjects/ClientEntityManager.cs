@@ -19,12 +19,12 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed partial class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
-        [Dependency] private readonly IClientGameStateManager _stateMan = default!;
-        [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IClientNetManager _networkManager = default!;
+        [Dependency] private IClientGameTiming _gameTiming = default!;
+        [Dependency] private IClientGameStateManager _stateMan = default!;
+        [Dependency] private IBaseClient _client = default!;
+        [Dependency] private IReplayRecordingManager _replayRecording = default!;
 
         internal event Action? AfterStartup;
         internal event Action? AfterShutdown;

@@ -17,15 +17,15 @@ namespace Robust.Server.Console
 {
     /// <inheritdoc cref="IServerConsoleHost" />
     [Virtual]
-    internal class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
+    internal partial class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
     {
-        [Dependency] private readonly IConGroupController _groupController = default!;
-        [Dependency] private readonly IPlayerManager _players = default!;
-        [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
-        [Dependency] private readonly ToolshedManager _toolshed = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
+        [Dependency] private IConGroupController _groupController = default!;
+        [Dependency] private IPlayerManager _players = default!;
+        [Dependency] private ISystemConsoleManager _systemConsole = default!;
+        [Dependency] private ToolshedManager _toolshed = default!;
+        [Dependency] private ProfManager _prof = default!;
 
-        public ServerConsoleHost() : base(isServer: true) {}
+        public ServerConsoleHost() : base(isServer: true) { }
 
         public override event ConAnyCommandCallback? AnyCommandExecuted;
 
@@ -254,7 +254,7 @@ namespace Robust.Server.Console
                 result = new CompletionResult(options.ToArray(), hints);
             }
 
-            done:
+        done:
 
             result ??= CompletionResult.Empty;
 

@@ -46,6 +46,8 @@ END TEMPLATE-->
 - `IParsable`, `ISpanParsable`, and `IUtf8SpanParsable` are now allowed by the sandbox.
 - Added `MarkupNode.IsPlainText` helper property.
 - Added an analyzer to detect and warn about `[Dependency]` fields with nullable types. These have never done anything special and are programming error.
+- Added a `[Dependency]` source generator. This should reduce runtime codegen overhead amount and reduce reflection use.
+  - Existing code using dependency fields should be updated to be `partial` and not use `readonly`. Analyzers and code fixers exist for this. It is not yet an error, but will become one in the future.
 - `IEntityManager` has a new family of 1-4 component methods for working with *singleton entities*, entities which only
   one instance of exists at a time for state management. Consult `IEntityManager.Single.cs` and the documentation for
   details.

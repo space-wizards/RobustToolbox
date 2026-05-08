@@ -15,11 +15,11 @@ namespace Robust.Client.UserInterface.Controls
     ///     A control to handle output of message-by-message output panels, like the debug console and chat panel.
     /// </summary>
     [Virtual]
-    public class OutputPanel : Control
+    public partial class OutputPanel : Control
     {
         public const string StyleClassOutputPanelScrollDownButton = "outputPanelScrollDownButton";
 
-        [Dependency] private readonly MarkupTagManager _tagManager = default!;
+        [Dependency] private MarkupTagManager _tagManager = default!;
 
         public const string StylePropertyStyleBox = "stylebox";
 

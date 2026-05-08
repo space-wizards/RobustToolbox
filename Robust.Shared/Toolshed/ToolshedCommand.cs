@@ -45,8 +45,8 @@ namespace Robust.Shared.Toolshed;
 [Reflect(false)]
 public abstract partial class ToolshedCommand
 {
-    [Dependency] protected readonly ToolshedManager Toolshed = default!;
-    [Dependency] protected readonly ILocalizationManager Loc = default!;
+    [Dependency] protected ToolshedManager Toolshed = default!;
+    [Dependency] protected ILocalizationManager Loc = default!;
 
     /// <summary>
     ///     The user-facing name of the command.

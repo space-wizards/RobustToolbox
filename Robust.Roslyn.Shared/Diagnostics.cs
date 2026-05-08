@@ -56,6 +56,7 @@ public static class Diagnostics
     public const string IdHasDependenciesNotPartialParent = "RA0050";
     public const string IdHasDependenciesReadOnly = "RA0051";
     public const string IdHasDependenciesPropertyField = "RA0052";
+    public const string IdExclusiveVirtual = "RA0053";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

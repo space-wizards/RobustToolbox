@@ -33,9 +33,9 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassNormal = "normal";
         public const string StylePseudoClassHover = "hover";
         public const string StylePseudoClassFocus = "focus";
-        public const string StylePseudoClassDisabled = "disabled";
+        public const string StylePseudoClassNotEditable = "notEditable";
 
-        [Obsolete("Use StylePseudoClassDisabled instead")]
+        [Obsolete("Use StylePseudoClassNotEditable instead")]
         public const string StyleClassLineEditNotEditable = "notEditable";
         public const string StylePseudoClassPlaceholder = "placeholder";
 
@@ -997,7 +997,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (!Editable)
             {
-                SetOnlyStylePseudoClass(StylePseudoClassDisabled);
+                SetOnlyStylePseudoClass(StylePseudoClassNotEditable);
 #pragma warning disable CS0618
                 AddStyleClass(StyleClassLineEditNotEditable);
 #pragma warning restore CS0618

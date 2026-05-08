@@ -621,6 +621,12 @@ namespace Robust.Shared.GameObjects
 #endif
         }
 
+        private void ThrowPreAddRemovalException(EntityUid target, IComponent component)
+        {
+            throw new InvalidOperationException(
+                $"Removing a component, {component.GetType()} before it has been added is probably not what you wanted to do. Target entity was {ToPrettyString(target)}.");
+        }
+
         private void RemoveComponentImmediate(
             EntityUid uid,
             IComponent component,
@@ -629,6 +635,12 @@ namespace Robust.Shared.GameObjects
             MetaDataComponent? meta)
         {
             ThreadCheck();
+            DebugTools.AssertOwner(uid, component);
+
+            if (component.LifeStage == ComponentLifeStage.PreAdd)
+            {
+                ThrowPreAddRemovalException(uid, component);
+            }
 
             if (component.Deleted)
             {

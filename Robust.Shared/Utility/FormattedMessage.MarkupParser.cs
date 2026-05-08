@@ -125,6 +125,10 @@ public sealed partial class FormattedMessage
     private static readonly Parser<char, char> EscapeSequence =
         Try(Escape.Then(OneOf(Escape, Begin, End, Slash)));
 
+    //This checks for a backslash and one reserved character inside a string parameter
+    private static readonly Parser<char, char> ParameterEscapeSequence =
+        Try(Escape.Then(OneOf(Escape, Begin, End, Quote, Slash)));
+
     //Parses text by repeatedly parsing escape sequences or any character except [ and \
     //The result is put into a new markup node representing text (it has no name)
     private static readonly Parser<char, List<MarkupNode>> Text =
@@ -140,9 +144,9 @@ public sealed partial class FormattedMessage
             Token(char.IsLetterOrDigit).ManyString()
         );
 
-    //Parses any character except ". Used for parsing a string parameter wrapped in ""
+    //Parses parameter escape sequences or any character except ". Used for parsing a string parameter wrapped in ""
     private static readonly Parser<char, string> ParameterString =
-        Token(c => c != '"').ManyString();
+        ParameterEscapeSequence.Or(Token(c => c != '"')).ManyString();
 
     //Parses eiter a string not wrapped by "" or a hexadecimal value beginning with #
     //The distinction is made by checking if the first character is a pound sign

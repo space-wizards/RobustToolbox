@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using Robust.Shared;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -16,6 +17,14 @@ namespace Robust.UnitTesting.Pool;
 
 public abstract class BasePoolManager
 {
+    /// <summary>
+    ///     Stores a global count for pair IDs, so they're unique across the entire run regardless of how many pools we
+    ///     create and use.
+    ///
+    ///     This ensures things like gravestone files are truly unique.
+    /// </summary>
+    internal static int PairIdCounter = 0;
+
     internal static readonly Meter MetricsMeter = new("Robust.UnitTesting.PoolManager");
 
     internal abstract void Return(ITestPair pair);
@@ -30,14 +39,14 @@ public abstract class BasePoolManager
         (CVars.ThreadParallelCount.Name, "1"),
         (CVars.ReplayClientRecordingEnabled.Name, "false"),
         (CVars.ReplayServerRecordingEnabled.Name, "false"),
-        (CVars.NetBufferSize.Name, "0")
+        (CVars.NetBufferSize.Name, "0"),
+        (CVars.UIObeyUpdateLimits.Name, "false")
     ];
 }
 
 [Virtual]
 public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair, new()
 {
-    private int _nextPairId;
     private readonly Lock _pairLock = new();
     private bool _initialized;
 
@@ -140,10 +149,10 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
             foreach (var pair in pairs)
             {
                 var borrowed = Pairs[pair];
-                builder.AppendLine($"Pair {pair.Id}, Tests Run: {pair.TestHistory.Count}, Borrowed: {borrowed}");
-                for (var i = 0; i < pair.TestHistory.Count; i++)
+                builder.AppendLine($"Pair {pair.Id}, Tests Run: {pair.ExtendedTestHistory.Count}, Borrowed: {borrowed}");
+                for (var i = 0; i < pair.ExtendedTestHistory.Count; i++)
                 {
-                    builder.AppendLine($"#{i}: {pair.TestHistory[i]}");
+                    builder.AppendLine($"#{i}: {pair.ExtendedTestHistory[i]}");
                 }
             }
 
@@ -177,7 +186,7 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
             {
                 await testOut.WriteLineAsync(
                     $"{nameof(GetPair)}: Creating pair, because settings of pool settings");
-                pair = await CreateServerClientPair(settings, testOut, "MustBeNew", currentTestName);
+                pair = await CreateServerClientPair(settings, testContext, testOut, "MustBeNew", currentTestName);
             }
             else
             {
@@ -188,16 +197,16 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
                     pair.ActivateContext(testOut);
                     await testOut.WriteLineAsync($"{nameof(GetPair)}: Suitable pair found");
 
-                    if (pair.Settings.CanFastRecycle(settings))
-                    {
-                        await testOut.WriteLineAsync($"{nameof(GetPair)}: Cleanup not needed, Skipping cleanup of pair");
-                        await pair.ApplySettings(settings);
-                    }
-                    else
-                    {
-                        await testOut.WriteLineAsync($"{nameof(GetPair)}: Cleaning existing pair");
-                        await pair.RecycleInternal(settings, testOut);
-                    }
+                if (pair.Settings.CanFastRecycle(settings))
+                {
+                    await testOut.WriteLineAsync($"{nameof(GetPair)}: Cleanup not needed, Skipping cleanup of pair");
+                    await pair.ApplySettings(settings);
+                }
+                else
+                {
+                    await testOut.WriteLineAsync($"{nameof(GetPair)}: Cleaning existing pair");
+                    await pair.RecycleInternal(settings, testOut);
+                }
 
                     await pair.RunTicksSync(5);
                     await pair.SyncTicks(targetDelta: 1);
@@ -205,18 +214,18 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
                 else
                 {
                     await testOut.WriteLineAsync($"{nameof(GetPair)}: Creating a new pair, no suitable pair found in pool");
-                    pair = await CreateServerClientPair(settings, testOut, "NoneInPool", currentTestName);
+                    pair = await CreateServerClientPair(settings, testContext, testOut, "NoneInPool", currentTestName);
                 }
             }
         }
         finally
         {
-            if (pair != null && pair.TestHistory.Count > 0)
+            if (pair != null && pair.ExtendedTestHistory.Count > 0)
             {
                 await testOut.WriteLineAsync($"{nameof(GetPair)}: Pair {pair.Id} Test History Start");
-                for (var i = 0; i < pair.TestHistory.Count; i++)
+                for (var i = 0; i < pair.ExtendedTestHistory.Count; i++)
                 {
-                    await testOut.WriteLineAsync($"- Pair {pair.Id} Test #{i}: {pair.TestHistory[i]}");
+                    await testOut.WriteLineAsync($"- Pair {pair.Id} Test #{i}: {pair.ExtendedTestHistory[i].TestName}");
                 }
                 await testOut.WriteLineAsync($"{nameof(GetPair)}: Pair {pair.Id} Test History End");
             }
@@ -229,10 +238,10 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
             pair.Id,
             currentTestName);
 
+        await pair.AddToHistory(currentTestName);
         pair.ValidateSettings(settings);
         pair.ClearModifiedCvars();
         pair.Settings = settings;
-        pair.TestHistory.Add(currentTestName);
         pair.SetupSeed();
 
         await testOut.WriteLineAsync($"{nameof(GetPair)}: Returning pair {pair.Id} with client/server seeds: {pair.ClientSeed}/{pair.ServerSeed}");
@@ -309,16 +318,22 @@ we are just going to end this here to save a lot of time. This is the exception 
 
     private async Task<TPair> CreateServerClientPair(
         PairSettings settings,
+        ITestContextLike context,
         TextWriter testOut,
         string reason,
         string testName)
     {
         try
         {
-            var id = Interlocked.Increment(ref _nextPairId);
+            var id = Interlocked.Increment(ref PairIdCounter);
             var pair = new TPair();
+
+            TextWriter? gravestone = null;
+            if (context is NUnitTestContextWrap)
+                gravestone = File.CreateText($"{TestContext.CurrentContext.WorkDirectory}/gravestone-{id}.txt");
+
             PoolManagerEvents.Log.PairCreated(typeof(TPair).FullName!, id, reason, testName);
-            await pair.Init(id, this, settings, testOut);
+            await pair.Init(id, this, settings, testOut, gravestone);
             pair.Use();
             await pair.RunTicksSync(5);
             await pair.SyncTicks(targetDelta: 1);

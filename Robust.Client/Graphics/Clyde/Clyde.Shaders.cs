@@ -115,7 +115,16 @@ namespace Robust.Client.Graphics.Clyde
 
             var (vertBody, fragBody) = GetShaderCode(newShader);
 
-            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, loaded.Name);
+            GLShaderProgram? program = null;
+            try
+            {
+                program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, loaded.Name);
+            }
+            catch (ShaderCompilationException e)
+            {
+                _clydeSawmill.Warning($"Compilation failed: {e}");
+                return;
+            }
 
             loaded.Program.Delete();
 

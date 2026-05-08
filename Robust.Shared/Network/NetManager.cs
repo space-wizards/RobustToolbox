@@ -105,15 +105,15 @@ namespace Robust.Shared.Network
 
         private readonly Dictionary<Type, long> _bandwidthUsage = new();
 
-        [Dependency] private readonly IRobustSerializer _serializer = default!;
-        [Dependency] private readonly IConfigurationManagerInternal _config = default!;
-        [Dependency] private readonly IAuthManager _authManager = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
-        [Dependency] private readonly HttpClientHolder _http = default!;
-        [Dependency] private readonly IHWId _hwId = default!;
-        [Dependency] private readonly ITransferManager _transfer = default!;
+        [Dependency] private IRobustSerializer _serializer = default!;
+        [Dependency] private IConfigurationManagerInternal _config = default!;
+        [Dependency] private IAuthManager _authManager = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private ILogManager _logMan = default!;
+        [Dependency] private ProfManager _prof = default!;
+        [Dependency] private HttpClientHolder _http = default!;
+        [Dependency] private IHWId _hwId = default!;
+        [Dependency] private ITransferManager _transfer = default!;
 
         /// <summary>
         ///     Whether we bother to log problematic packets. Set by <see cref="CVars.NetLogging"/>.

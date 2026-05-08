@@ -13,9 +13,9 @@ public delegate Font? FontTagHijack(ProtoId<FontPrototype> protoId, int size);
 /// <summary>
 /// Allows replacing font resolution done by <see cref="FontPrototype"/>
 /// </summary>
-public sealed class FontTagHijackHolder
+public sealed partial class FontTagHijackHolder
 {
-    [Dependency] private readonly IUserInterfaceManager _ui = null!;
+    [Dependency] private IUserInterfaceManager _ui = null!;
 
     /// <summary>
     /// Called when a font prototype gets resolved.

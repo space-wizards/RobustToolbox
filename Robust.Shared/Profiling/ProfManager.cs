@@ -14,10 +14,10 @@ namespace Robust.Shared.Profiling;
 
 // See ProfData.cs for description of profiling data layout.
 
-public sealed class ProfManager
+public sealed partial class ProfManager
 {
-    [IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
-    [IoC.Dependency] private readonly ILogManager _logManager = default!;
+    [IoC.Dependency] private IConfigurationManager _cfg = default!;
+    [IoC.Dependency] private ILogManager _logManager = default!;
 
     /// <summary>
     /// Proxy to <c>prof.enabled</c> CVar.

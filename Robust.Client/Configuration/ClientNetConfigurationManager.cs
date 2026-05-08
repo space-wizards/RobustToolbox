@@ -10,11 +10,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Configuration;
 
-internal sealed class ClientNetConfigurationManager : NetConfigurationManager, IClientNetConfigurationManager
+internal sealed partial class ClientNetConfigurationManager : NetConfigurationManager, IClientNetConfigurationManager
 {
-    [Dependency] private readonly IBaseClient _client = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IReplayRecordingManager _replay = default!;
+    [Dependency] private IBaseClient _client = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IReplayRecordingManager _replay = default!;
 
     private bool _receivedInitialNwVars = false;
 

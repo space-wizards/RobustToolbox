@@ -27,7 +27,7 @@ namespace Robust.Shared.EntitySerialization;
 /// This class provides methods for deserializing entities from yaml. It provides some more control over
 /// serialization than the methods provided by <see cref="MapLoaderSystem"/>.
 /// </summary>
-public sealed class EntityDeserializer :
+public sealed partial class EntityDeserializer :
     ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
     ITypeSerializer<NetEntity, ValueDataNode>,
@@ -44,14 +44,14 @@ public sealed class EntityDeserializer :
 
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
 
-    [Dependency] public readonly EntityManager EntMan = default!;
-    [Dependency] public readonly IGameTiming Timing = default!;
-    [Dependency] private readonly ISerializationManager _seriMan = default!;
-    [Dependency] private readonly IComponentFactory _factory = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
-    [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly IDependencyCollection _deps = default!;
+    [Dependency] public EntityManager EntMan = default!;
+    [Dependency] public IGameTiming Timing = default!;
+    [Dependency] private ISerializationManager _seriMan = default!;
+    [Dependency] private IComponentFactory _factory = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private SharedMapSystem _map = default!;
+    [Dependency] private ILogManager _logMan = default!;
+    [Dependency] private IDependencyCollection _deps = default!;
 
     private readonly ISawmill _log;
     private Stopwatch _stopwatch = new();

@@ -30,10 +30,24 @@ public abstract partial class ToolshedCommand
         return true;
     }
 
-    internal IEnumerable<MethodInfo> GetGenericImplementations()
+    internal MethodInfo[] GetMethods()
     {
+        var methods = GetType().GetMethods(MethodFlags);
+
+        // CommandImplementationAttribute is optional if there is only a single method defined by the type,
+        return methods.Length == 1
+            ? methods
+            : methods.Where(x => x.HasCustomAttribute<CommandImplementationAttribute>()).ToArray();
+    }
+
+    internal MethodInfo[] GetMethods(string? subCommand)
+    {
+        if (subCommand == null)
+            return GetMethods();
+
         return GetType()
             .GetMethods(MethodFlags)
-            .Where(x => x.HasCustomAttribute<CommandImplementationAttribute>());
+            .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
+            .ToArray();
     }
 }

@@ -8,6 +8,7 @@
 //
 
 
+using System.Numerics;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Audio.Effects;

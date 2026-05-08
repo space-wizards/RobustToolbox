@@ -6,7 +6,7 @@ namespace Robust.Client.Serialization;
 
 internal sealed partial class ClientRobustSerializer : RobustSerializer, IClientRobustSerializer
 {
-    [Dependency] private readonly IBaseClient _client = default!;
+    [Dependency] private IBaseClient _client = default!;
 
     public void SetStringSerializerPackage(byte[] hash, byte[] package)
     {

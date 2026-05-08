@@ -28,11 +28,11 @@ namespace Robust.Shared.Localization
     {
         protected static readonly ResPath LocaleDirPath = new("/Locale");
 
-        [Dependency] private readonly IConfigurationManager _configuration = default!;
-        [Dependency] private readonly IResourceManager _res = default!;
-        [Dependency] private readonly ILogManager _log = default!;
-        [Dependency] private readonly IPrototypeManager _prototype = default!;
-        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private IConfigurationManager _configuration = default!;
+        [Dependency] private IResourceManager _res = default!;
+        [Dependency] private ILogManager _log = default!;
+        [Dependency] private IPrototypeManager _prototype = default!;
+        [Dependency] private IEntityManager _entMan = default!;
 
         private ISawmill _logSawmill = default!;
         private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();
@@ -67,7 +67,7 @@ namespace Robust.Shared.Localization
 
             if (!TryGetString(messageId, out var msg))
             {
-                _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+                _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                     messageId);
                 msg = messageId;
             }
@@ -85,7 +85,7 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, arg))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+            _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                 messageId);
             return messageId;
         }
@@ -98,7 +98,7 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, arg1, arg2))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+            _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                 messageId);
             return messageId;
         }
@@ -111,7 +111,7 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, args))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+            _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                 messageId);
             return messageId;
         }

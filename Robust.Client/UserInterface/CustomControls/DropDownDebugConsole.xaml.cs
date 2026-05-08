@@ -71,7 +71,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
             else
             {
-                _curAnchorOffset = MathHelper.Lerp(_curAnchorOffset, targetOffset, args.DeltaSeconds * 20);
+                _curAnchorOffset = UIAnimations.LerpAnimate(_curAnchorOffset, targetOffset, args.DeltaSeconds, 20);
             }
 
             UpdateAnchorOffset();

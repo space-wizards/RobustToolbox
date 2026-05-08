@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 using System.IO;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -6,17 +6,16 @@ using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Network;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Upload.Commands;
 
-public sealed class UploadFolderCommand : IConsoleCommand
+public sealed partial class UploadFolderCommand : IConsoleCommand
 {
     [Dependency] private IResourceManager _resourceManager = default!;
     [Dependency] private IConfigurationManager _configManager = default!;
-    [Dependency] private INetManager _netMan = default!;
+    [Dependency] private NetworkResourceManager _netRes = default!;
 
     public string Command => "uploadfolder";
     public string Description => Loc.GetString("uploadfolder-command-description");
@@ -30,14 +29,14 @@ public sealed class UploadFolderCommand : IConsoleCommand
 
         if (!_configManager.GetCVar(CVars.ResourceUploadingEnabled))
         {
-            shell.WriteError( Loc.GetString("uploadfolder-command-resource-upload-disabled"));
+            shell.WriteError(Loc.GetString("uploadfolder-command-resource-upload-disabled"));
             return;
         }
 
         if (args.Length != 1)
         {
-            shell.WriteError( Loc.GetString("uploadfolder-command-wrong-args"));
-            shell.WriteLine( Loc.GetString("uploadfolder-command-help"));
+            shell.WriteError(Loc.GetString("uploadfolder-command-wrong-args"));
+            shell.WriteLine(Loc.GetString("uploadfolder-command-help"));
             return;
         }
 
@@ -45,35 +44,33 @@ public sealed class UploadFolderCommand : IConsoleCommand
 
         if (!_resourceManager.UserData.Exists(folderPath))
         {
-            shell.WriteError( Loc.GetString("uploadfolder-command-folder-not-found",("folder", folderPath)));
+            shell.WriteError(Loc.GetString("uploadfolder-command-folder-not-found", ("folder", folderPath)));
             return; // bomb out if the folder doesnt exist in /UploadFolder
         }
 
         //Grab all files in specified folder and upload them
-        foreach (var filepath in _resourceManager.UserData.Find($"{folderPath.ToRelativePath()}/").files )
+        var files = new List<(ResPath Relative, byte[] Data)>();
+        foreach (var filepath in _resourceManager.UserData.Find($"{folderPath.ToRelativePath()}/").files)
         {
             await using var filestream = _resourceManager.UserData.Open(filepath, FileMode.Open);
             {
                 var sizeLimit = _configManager.GetCVar(CVars.ResourceUploadingLimitMb);
                 if (sizeLimit > 0f && filestream.Length * SharedNetworkResourceManager.BytesToMegabytes > sizeLimit)
                 {
-                    shell.WriteError( Loc.GetString("uploadfolder-command-file-too-big", ("filename",filepath), ("sizeLimit",sizeLimit)));
+                    shell.WriteError(Loc.GetString("uploadfolder-command-file-too-big", ("filename", filepath), ("sizeLimit", sizeLimit)));
                     return;
                 }
 
                 var data = filestream.CopyToArray();
 
-                var msg = new NetworkResourceUploadMessage
-                {
-                    RelativePath = filepath.RelativeTo(BaseUploadFolderPath),
-                    Data = data
-                };
+                files.Add((filepath.RelativeTo(BaseUploadFolderPath), data));
 
-                _netMan.ClientSendMessage(msg);
                 fileCount++;
             }
         }
 
-        shell.WriteLine( Loc.GetString("uploadfolder-command-success",("fileCount",fileCount)));
+        _netRes.UploadResources(files);
+
+        shell.WriteLine(Loc.GetString("uploadfolder-command-success", ("fileCount", fileCount)));
     }
 }

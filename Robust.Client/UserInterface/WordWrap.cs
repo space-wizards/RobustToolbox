@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.Contracts;
 using System.Text;
 using Robust.Client.Graphics;
@@ -36,10 +36,18 @@ internal struct WordWrap
         LastRune = new Rune('A');
     }
 
+    /// <summary>
+    /// Add <paramref name="rune" /> as the next glyph in the sequence and update internal line break state.
+    /// </summary>
+    /// <param name="breakLine">If non-null, indicates that a line break needs to be added at this rune
+    /// index within the string. This index will refer to the offset of a previously-entered rune</param>
+    /// <param name="breakNewLine">If non-null, indicates the rune index of an entered newline</param>
+    /// <param name="skip">If true, indicates that the rune should occupy zero space. Currently only used
+    /// for newlines.</param>
     public void NextRune(Rune rune, out int? breakLine, out int? breakNewLine, out bool skip)
     {
         BreakIndexCounter = NextBreakIndexCounter;
-        NextBreakIndexCounter += rune.Utf16SequenceLength;
+        NextBreakIndexCounter += 1;
 
         breakLine = null;
         breakNewLine = null;
@@ -98,6 +106,14 @@ internal struct WordWrap
 
         if (PosX <= _maxSizeX)
             return;
+
+        // Break the "word" at the last word index
+        if (WordStartBreakIndex.HasValue && oldWordSizePixels != 0)
+        {
+            breakLine = WordStartBreakIndex!.Value.index;
+            MaxUsedWidth = Math.Max(MaxUsedWidth, WordStartBreakIndex.Value.lineSize);
+            PosX = WordSizePixels;
+        }
 
         if (!ForceSplitData.HasValue)
         {

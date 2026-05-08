@@ -37,7 +37,13 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
 
         var timing = ctx.Timing;
         var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
-        return TimeSpan.FromSeconds(seconds) + timing.CurTime;
+        var time = TimeSpan.FromSeconds(seconds);
+        
+        // Checks if adding time and curTime will overflow.
+        if(time > TimeSpan.MaxValue - timing.CurTime)
+            return TimeSpan.MaxValue;
+        
+        return time + timing.CurTime;
     }
 
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,

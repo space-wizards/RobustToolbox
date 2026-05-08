@@ -23,6 +23,7 @@ namespace Robust.Shared.Reflection
     /// </remarks>
     /// <seealso cref="IoCManager"/>
     /// <seealso cref="ReflectAttribute"/>
+[NotContentImplementable]
     public interface IReflectionManager
     {
         /// <summary>

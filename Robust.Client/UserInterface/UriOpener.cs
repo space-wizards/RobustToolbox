@@ -7,6 +7,7 @@ namespace Robust.Client.UserInterface
     /// <summary>
     ///     Helper for opening <see cref="Uri"/>s on the user's machine.
     /// </summary>
+    [NotContentImplementable]
     public interface IUriOpener
     {
         /// <summary>

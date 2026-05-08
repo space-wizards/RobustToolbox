@@ -11,6 +11,7 @@ namespace Robust.Shared.GameObjects
     ///     They get managed by an <see cref="IEntitySystemManager" />.
     /// </summary>
     [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
+    [NotContentImplementable]
     public interface IEntitySystem : IEntityEventSubscriber
     {
         IEnumerable<Type> UpdatesAfter { get; }

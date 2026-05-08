@@ -76,9 +76,9 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // Short path to render only the splash.
-            if (_drawingSplash)
+            if (_drawingLoadingScreen)
             {
-                DrawSplash(_renderHandle);
+                DrawLoadingScreen(_renderHandle);
                 FlushRenderQueue();
                 SwapAllBuffers();
                 return;
@@ -121,6 +121,19 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        public void RenderNow(IRenderTarget renderTarget, Action<IRenderHandle> callback)
+        {
+            ClearRenderState();
+
+            _renderHandle.RenderInRenderTarget(
+                renderTarget,
+                () =>
+                {
+                    callback(_renderHandle);
+                },
+                null);
+        }
+
         private void RenderSingleWorldOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
         {
             // Check that entity manager has started.
@@ -150,7 +163,15 @@ namespace Robust.Client.Graphics.Clyde
             }
             catch (Exception e)
             {
-                _logManager.GetSawmill("clyde.overlay").Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+                _logManager.GetSawmill("clyde.overlay")
+                    .Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+            }
+            finally
+            {
+                // cleanup state so shaders/transforms dont leak into future overlays
+                // many overlays already do cleanup manually, but ideally they don't have to at all
+                _renderHandle.SetModelTransform(Matrix3x2.Identity);
+                _renderHandle.UseShader(null);
             }
         }
 
@@ -214,7 +235,16 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (Exception e)
                 {
-                    _logManager.GetSawmill("clyde.overlay").Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+                    _logManager.GetSawmill("clyde.overlay")
+                        .Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+                }
+                finally
+                {
+                    // cleanup state so shaders/transforms dont leak into future overlays
+                    // many overlays already do cleanup manually, but ideally they don't have to at all
+                    // screen and world handles are backed by the same renderhandle, so we only need to do this for one
+                    handle.DrawingHandleScreen.SetTransform(Matrix3x2.Identity);
+                    handle.DrawingHandleScreen.UseShader(null);
                 }
             }
         }
@@ -417,18 +447,11 @@ namespace Robust.Client.Graphics.Clyde
             FlushRenderQueue();
         }
 
-        private void DrawSplash(IRenderHandle handle)
+        private void DrawLoadingScreen(IRenderHandle handle)
         {
-            // Clear screen to black for splash.
             ClearFramebuffer(Color.Black);
 
-            var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
-            if (string.IsNullOrEmpty(splashTex))
-                return;
-
-            var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
-
-            handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
+            _loadingScreenManager.DrawLoadingScreen(handle, ScreenSize);
         }
 
         private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color? clearColor=default)
@@ -487,6 +510,9 @@ namespace Robust.Client.Graphics.Clyde
         {
             if (viewport.Eye == null || viewport.Eye.Position.MapId == MapId.Nullspace)
             {
+                if (viewport.ClearWhenMissingEye)
+                    RenderInRenderTarget(viewport.RenderTarget, () => { }, viewport.ClearColor);
+
                 return;
             }
 

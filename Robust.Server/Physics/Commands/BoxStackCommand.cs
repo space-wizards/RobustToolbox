@@ -13,9 +13,9 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Server.Physics.Commands;
 
-public sealed class BoxStackCommand : IConsoleCommand
+public sealed partial class BoxStackCommand : IConsoleCommand
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private IEntityManager _entManager = default!;
 
     public string Command => "boxstack";
     public string Description => string.Empty;

@@ -21,6 +21,7 @@ color-brown = brown
 color-white = white
 color-gray = gray
 color-black = black
+color-unknown = unknown color, you should not see this
 
 color-pink-color-red = pinkish red
 color-red-color-orange = reddish orange

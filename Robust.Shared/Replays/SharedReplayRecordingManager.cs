@@ -39,13 +39,13 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     // I don't think anybody's gonna write 256 MB of chunk at once yeah?
     private const int MaxTickBatchSize = 256 * 1024;
 
-    [Dependency] protected readonly IGameTiming Timing = default!;
-    [Dependency] protected readonly INetConfigurationManager NetConf = default!;
-    [Dependency] private readonly IComponentFactory _factory = default!;
-    [Dependency] private readonly IRobustSerializer _serializer = default!;
-    [Dependency] private readonly INetManager _netMan = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly ITaskManager _taskManager = default!;
+    [Dependency] protected IGameTiming Timing = default!;
+    [Dependency] protected INetConfigurationManager NetConf = default!;
+    [Dependency] private IComponentFactory _factory = default!;
+    [Dependency] private IRobustSerializer _serializer = default!;
+    [Dependency] private INetManager _netMan = default!;
+    [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
 
     public event Action<MappingDataNode, List<object>>? RecordingStarted;
     public event Action<MappingDataNode>? RecordingStopped;
@@ -375,6 +375,11 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     private void WriteFinalMetadata(RecordingState recState)
     {
         var yamlMetadata = new MappingDataNode();
+
+        // TODO REPLAYS
+        // Why are these separate events?
+        // I assume it was for backwards compatibility / avoiding breaking changes?
+        // But eventually RecordingStopped2 will probably be renamed and there'll just be more breaking changes.
         RecordingStopped?.Invoke(yamlMetadata);
         RecordingStopped2?.Invoke(new ReplayRecordingStopped
         {
@@ -550,6 +555,12 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             CheckDisposed();
 
             manager.WriteBytes(state, path, bytes, compressionLevel);
+        }
+
+        void IReplayFileWriter.WriteYaml(ResPath path, YamlDocument document, CompressionLevel compressionLevel)
+        {
+            CheckDisposed();
+            manager.WriteYaml(state, path, document, compressionLevel);
         }
 
         private void CheckDisposed()

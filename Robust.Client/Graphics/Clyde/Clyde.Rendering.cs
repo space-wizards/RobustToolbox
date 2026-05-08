@@ -11,8 +11,6 @@ using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -541,7 +539,7 @@ namespace Robust.Client.Graphics.Clyde
                     case Matrix3x2 matrix3:
                         program.SetUniform(name, matrix3);
                         break;
-                    case Matrix4 matrix4:
+                    case Matrix4x4 matrix4:
                         program.SetUniform(name, matrix4);
                         break;
                     case ClydeTexture clydeTexture:

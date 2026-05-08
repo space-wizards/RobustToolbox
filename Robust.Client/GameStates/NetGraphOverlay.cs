@@ -20,14 +20,14 @@ namespace Robust.Client.GameStates
     /// <summary>
     ///     Visual debug overlay for the network diagnostic graph.
     /// </summary>
-    internal sealed class NetGraphOverlay : Overlay
+    internal sealed partial class NetGraphOverlay : Overlay
     {
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IClientNetManager _netManager = default!;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
-        [Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [Dependency] private readonly IConsoleHost _host = default!;
-        [Dependency] private readonly IEntityManager _entManager = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private IClientNetManager _netManager = default!;
+        [Dependency] private IClientGameStateManager _gameStateManager = default!;
+        [Dependency] private IComponentFactory _componentFactory = default!;
+        [Dependency] private IConsoleHost _host = default!;
+        [Dependency] private IEntityManager _entManager = default!;
 
         private const int HistorySize = 60 * 5; // number of ticks to keep in history.
         private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?
@@ -43,7 +43,7 @@ namespace Robust.Client.GameStates
 
         private readonly Font _font;
 
-        private readonly List<(GameTick Tick, int Payload, int lag, int Buffer)> _history = new(HistorySize+10);
+        private readonly List<(GameTick Tick, int Payload, int lag, int Buffer)> _history = new(HistorySize + 10);
 
         // sum of all data point sizes in bytes
         private int _totalHistoryPayload;
@@ -74,7 +74,7 @@ namespace Robust.Client.GameStates
             _history.Add((toSeq, sz, lag, buffer));
 
             // not watching an ent
-            if(!WatchEntId.IsValid() || _entManager.IsClientSide(WatchEntId))
+            if (!WatchEntId.IsValid() || _entManager.IsClientSide(WatchEntId))
                 return;
 
             string? entStateString = null;
@@ -175,7 +175,7 @@ namespace Robust.Client.GameStates
             // the minimum size seems to be about 10 bytes.
             // 10 bytes = 15 pixel, then doubling every 15 more pixels.
             bytes = Math.Max(bytes - 10, 1);
-            return (int) Math.Round((1 + Math.Log2(bytes)) * 15);
+            return (int)Math.Round((1 + Math.Log2(bytes)) * 15);
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)
@@ -209,9 +209,9 @@ namespace Robust.Client.GameStates
                 handle.DrawLine(new Vector2(xOff, height), new Vector2(xOff, yoff), Color.LimeGreen.WithAlpha(0.8f));
 
                 // second tick marks
-                if (state.Tick.Value % (_gameTiming.TickRate/5) == 0)
+                if (state.Tick.Value % (_gameTiming.TickRate / 5) == 0)
                 {
-                    handle.DrawLine(new Vector2(xOff, height), new Vector2(xOff, height+2), Color.LightGray);
+                    handle.DrawLine(new Vector2(xOff, height), new Vector2(xOff, height + 2), Color.LightGray);
                 }
 
                 // lag data
@@ -222,19 +222,19 @@ namespace Robust.Client.GameStates
 
                 // interp data
                 Color interpColor;
-                if(state.Buffer < _gameStateManager.MinBufferSize)
+                if (state.Buffer < _gameStateManager.MinBufferSize)
                     interpColor = Color.Red;
-                else if(state.Buffer < _gameStateManager.TargetBufferSize)
+                else if (state.Buffer < _gameStateManager.TargetBufferSize)
                     interpColor = Color.Yellow;
                 else
                     interpColor = Color.Green;
 
                 var delta = (state.Buffer - _gameStateManager.MinBufferSize);
-                handle.DrawLine(new Vector2(xOff, height + LowerGraphOffset), new Vector2(xOff, height + LowerGraphOffset +  delta * 6), interpColor.WithAlpha(0.8f));
+                handle.DrawLine(new Vector2(xOff, height + LowerGraphOffset), new Vector2(xOff, height + LowerGraphOffset + delta * 6), interpColor.WithAlpha(0.8f));
             }
 
             // average payload line
-            var avg = height - BytesToPixels(_totalHistoryPayload/HistorySize);
+            var avg = height - BytesToPixels(_totalHistoryPayload / HistorySize);
             var avgEnd = new Vector2(LeftMargin + width, avg) + new Vector2(70, 0);
             handle.DrawLine(new Vector2(LeftMargin, avg), avgEnd, Color.DarkGray.WithAlpha(0.8f));
 
@@ -264,7 +264,7 @@ namespace Robust.Client.GameStates
             handle.DrawString(_font, avgEnd - new Vector2(lineHeight, lineHeight), "average");
 
             // lag text info
-            if(lastLagY != -1)
+            if (lastLagY != -1)
                 handle.DrawString(_font, new Vector2(LeftMargin + width, lastLagY), $"{lastLagMs.ToString()}ms");
 
             // buffer text
@@ -286,7 +286,7 @@ namespace Robust.Client.GameStates
             {
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if(!overlayMan.HasOverlay(typeof(NetGraphOverlay)))
+                if (!overlayMan.HasOverlay(typeof(NetGraphOverlay)))
                 {
                     overlayMan.AddOverlay(new NetGraphOverlay());
                     shell.WriteLine("Enabled network overlay.");
@@ -299,11 +299,11 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private sealed class NetWatchEntCommand : LocalizedCommands
+        private sealed partial class NetWatchEntCommand : LocalizedCommands
         {
-            [Dependency] private readonly IEntityManager _entManager = default!;
-            [Dependency] private readonly IOverlayManager _overlayManager = default!;
-            [Dependency] private readonly IPlayerManager _playerManager = default!;
+            [Dependency] private IEntityManager _entManager = default!;
+            [Dependency] private IOverlayManager _overlayManager = default!;
+            [Dependency] private IPlayerManager _playerManager = default!;
 
             public override string Command => "net_watchent";
 

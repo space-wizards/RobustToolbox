@@ -1,5 +1,7 @@
+using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
@@ -8,7 +10,7 @@ namespace Robust.Shared.Physics.Systems;
 
 public abstract partial class SharedPhysicsSystem
 {
-    [Dependency] private readonly FixtureSystem _fixtures = default!;
+    [Dependency] private FixtureSystem _fixtures = default!;
 
     public void SetDensity(EntityUid uid, string fixtureId, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
     {
@@ -69,6 +71,45 @@ public abstract partial class SharedPhysicsSystem
 
         if (update)
             _fixtures.FixtureUpdate(uid, manager: manager);
+    }
+
+    /// <summary>
+    /// Increases or decreases all fixtures of an entity in size by a certain factor.
+    /// </summary>
+    public void ScaleFixtures(Entity<FixturesComponent?> ent, float factor)
+    {
+        if (!Resolve(ent, ref ent.Comp))
+            return;
+
+        foreach (var (id, fixture) in ent.Comp.Fixtures)
+        {
+            switch (fixture.Shape)
+            {
+                case EdgeShape edge:
+                    SetVertices(ent, id, fixture,
+                        edge,
+                        edge.Vertex0 * factor,
+                        edge.Vertex1 * factor,
+                        edge.Vertex2 * factor,
+                        edge.Vertex3 * factor, ent.Comp);
+                    break;
+                case PhysShapeCircle circle:
+                    SetPositionRadius(ent, id, fixture, circle, circle.Position * factor, circle.Radius * factor, ent.Comp);
+                    break;
+                case PolygonShape poly:
+                    var verts = poly.Vertices;
+
+                    for (var i = 0; i < poly.VertexCount; i++)
+                    {
+                        verts[i] *= factor;
+                    }
+
+                    SetVertices(ent, id, fixture, poly, verts, ent.Comp);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
     }
 
     #region Collision Masks & Layers

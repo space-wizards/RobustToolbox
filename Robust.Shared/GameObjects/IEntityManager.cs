@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="prototypeName">Name of the <see cref="EntityPrototype"/> to spawn.</param>
         /// <param name="coordinates">Coordinates to place the newly spawned entity.</param>
         /// <param name="overrides">Overrides to add or remove components that differ from the prototype.</param>
-        /// <param name="rotation">Map rotation to set the newly spawned entity to.</param>
+        /// <param name="rotation">World rotation to set the newly spawned entity to.</param>
         /// <returns>A new uninitialized entity.</returns>
         /// <remarks>If there is a grid at the <paramref name="coordinates"/>, the entity will be parented to the grid.
         /// Otherwise, it will be parented to the map.</remarks>
@@ -167,20 +167,31 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent);
 
-        /// <summary>
-        /// <see cref="PredictedDeleteEntity(Robust.Shared.GameObjects.Entity{Robust.Shared.GameObjects.MetaDataComponent?,Robust.Shared.GameObjects.TransformComponent?})"/>
-        /// </summary>
+        /// <inheritdoc cref="PredictedDeleteEntity(Entity{MetaDataComponent?,TransformComponent?})"/>
         void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent);
 
         /// <summary>
-        /// Tries to predict entity deletion. On the server it runs the normal code path and on the client the entity is detached.
+        /// Variant of <see cref="PredictedDeleteEntity(Entity{MetaDataComponent?,TransformComponent?})"/> that defers deletion until the end of the tick.
         /// </summary>
+        void PredictedQueueDeleteEntity(Entity<MetaDataComponent?> ent);
+
+        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        void PredictedQueueDeleteEntity(Entity<MetaDataComponent?>? ent);
+
+        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        [Obsolete("use variant without TransformComponent")]
         void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent);
 
-        /// <summary>
-        /// <see cref="PredictedQueueDeleteEntity(Robust.Shared.GameObjects.Entity{Robust.Shared.GameObjects.MetaDataComponent?,Robust.Shared.GameObjects.TransformComponent?})"/>
-        /// </summary>
+        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        [Obsolete("use variant without TransformComponent")]
         void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent);
+
+        // The following 2 methods exist to handle ambiguous implicit casts.
+        // They should probably be removed whenever the transform variants are removed
+        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        void PredictedQueueDeleteEntity(EntityUid ent);
+        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        void PredictedQueueDeleteEntity(EntityUid? ent);
 
         /// <summary>
         /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.

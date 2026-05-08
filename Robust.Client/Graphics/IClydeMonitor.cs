@@ -6,6 +6,7 @@ namespace Robust.Client.Graphics
     /// <summary>
     ///     Represents a connected monitor on the user's system.
     /// </summary>
+    [NotContentImplementable]
     public interface IClydeMonitor
     {
         /// <summary>

@@ -19,6 +19,9 @@ namespace Robust.Client.UserInterface
             get => _stylesheet;
             set
             {
+                if (ReferenceEquals(_stylesheet, value))
+                    return;
+
                 _stylesheet = value;
                 StylesheetUpdateRecursive();
             }

@@ -85,7 +85,7 @@ namespace Robust.Client.Console
                 MouseFilter = MouseFilterMode.Stop;
                 Result = result;
                 var compl = new FormattedMessage();
-                var dim = Color.FromHsl((0f, 0f, 0.8f, 1f));
+                var dim = Color.FromHsl(new Vector4(0f, 0f, 0.8f, 1f));
 
                 // warning: ew ahead
                 string basen = "default";

@@ -31,5 +31,6 @@
     <Python>python3</Python>
     <Python Condition="'$(ActualOS)' == 'Windows'">py -3</Python>
     <UseSystemSqlite Condition="'$(TargetOS)' == 'FreeBSD'">True</UseSystemSqlite>
+    <IsFreedesktop Condition="'$(TargetOS)' == 'FreeBSD' Or '$(TargetOS)' == 'Linux'">True</IsFreedesktop>
   </PropertyGroup>
 </Project>

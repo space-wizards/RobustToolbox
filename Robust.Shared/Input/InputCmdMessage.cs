@@ -192,6 +192,7 @@ namespace Robust.Shared.Input
         }
     }
 
+    [NotContentImplementable]
     public interface IFullInputCmdMessage
     {
         GameTick Tick { get; }

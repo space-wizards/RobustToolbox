@@ -10,7 +10,6 @@ using Lidgren.Network;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -20,11 +19,11 @@ namespace Robust.UnitTesting
 {
     public partial class RobustIntegrationTest
     {
-        internal sealed class IntegrationNetManager : IClientNetManager, IServerNetManager
+        internal sealed partial class IntegrationNetManager : IClientNetManager, IServerNetManager
         {
-            [Dependency] private readonly IGameTiming _gameTiming = default!;
-            [Dependency] private readonly ITaskManager _taskManager = default!;
-            [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
+            [Dependency] private IGameTiming _gameTiming = default!;
+            [Dependency] private ITaskManager _taskManager = default!;
+            [Dependency] private IRobustSerializer _robustSerializer = default!;
 
             public bool IsServer { get; private set; }
             public bool IsClient => !IsServer;
@@ -264,6 +263,10 @@ namespace Robust.UnitTesting
                     return;
 
                 var channel = (IntegrationNetChannel) recipient;
+
+                if (!channel.IsConnected)
+                    throw new InvalidOperationException("Channel is not connected!");
+
                 channel.OtherChannel.TryWrite(SerializeNetMessage(message, channel.RemoteUid));
             }
 
@@ -492,6 +495,11 @@ namespace Robust.UnitTesting
                 {
                     // Don't handle bye sending in here I guess.
                     Disconnect(reason);
+                }
+
+                public bool CanSendImmediately(NetDeliveryMethod method, int sequenceChannel)
+                {
+                    return true;
                 }
             }
 

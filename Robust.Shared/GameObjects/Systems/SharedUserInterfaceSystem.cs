@@ -18,16 +18,16 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
-public abstract class SharedUserInterfaceSystem : EntitySystem
+public abstract partial class SharedUserInterfaceSystem : EntitySystem
 {
-    [Dependency] private   readonly IDynamicTypeFactory _factory = default!;
-    [Dependency] private   readonly IGameTiming _timing = default!;
-    [Dependency] private   readonly INetManager _netManager = default!;
-    [Dependency] private   readonly IParallelManager _parallel = default!;
-    [Dependency] protected readonly IPrototypeManager ProtoManager = default!;
-    [Dependency] private   readonly IReflectionManager _reflection = default!;
-    [Dependency] protected readonly ISharedPlayerManager Player = default!;
-    [Dependency] private   readonly SharedTransformSystem _transforms = default!;
+    [Dependency] private IDynamicTypeFactory _factory = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private IParallelManager _parallel = default!;
+    [Dependency] protected IPrototypeManager ProtoManager = default!;
+    [Dependency] private IReflectionManager _reflection = default!;
+    [Dependency] protected ISharedPlayerManager Player = default!;
+    [Dependency] private SharedTransformSystem _transforms = default!;
 
     private EntityQuery<IgnoreUIRangeComponent> _ignoreUIRangeQuery;
     private EntityQuery<TransformComponent> _xformQuery;
@@ -305,7 +305,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
     {
-        if (ent.Comp.LastFieldUpdate >= args.FromTick)
+        if (args.FromTick > ent.Comp.CreationTick && ent.Comp.LastFieldUpdate >= args.FromTick)
         {
             var fields = EntityManager.GetModifiedFields(ent.Comp, args.FromTick);
 
@@ -536,7 +536,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // states. E.g., stripping UI used to throw NREs in some instances while fetching the identity of unknown
         // entities.
         var type = _reflection.LooseGetType(data.ClientType);
-        var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
+        // No dependency injection because the BUI constructor will handle it.
+        var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key], inject: false);
         entity.Comp.ClientOpenInterfaces[key] = boundUserInterface;
 
         // This is just so we don't open while applying UI states.
@@ -799,6 +800,41 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return false;
 
         return actors.Contains(actor);
+    }
+
+    /// <summary>
+    /// Returns true if any of the specified UI keys are open for this entity by anyone.
+    /// </summary>
+    /// <param name="entity">The entity to check.</param>
+    /// <param name="uiKeys">The UI keys to check.</param>
+    /// <returns>True if any UI is open, false otherwise.</returns>
+    [PublicAPI]
+    public bool IsUiOpen(Entity<UserInterfaceComponent?> entity, IEnumerable<Enum> uiKeys)
+    {
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return false;
+
+        foreach (var key in uiKeys)
+        {
+            if (entity.Comp.Actors.ContainsKey(key))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Returns true if any UI is open for this entity by anyone.
+    /// </summary>
+    /// <param name="entity">The entity to check.</param>
+    /// <returns>True if any UI is open, false otherwise.</returns>
+    [PublicAPI]
+    public bool IsAnyUiOpen(Entity<UserInterfaceComponent?> entity)
+    {
+        if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
+            return false;
+
+        return entity.Comp.Actors.Count > 0;
     }
 
     /// <summary>

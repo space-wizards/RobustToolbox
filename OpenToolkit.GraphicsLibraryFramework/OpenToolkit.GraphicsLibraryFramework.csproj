@@ -1,9 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>9.0</LangVersion>
-    <SkipRobustAnalyzer>true</SkipRobustAnalyzer>
-  </PropertyGroup>
-
-  <Import Project="..\MSBuild\Robust.Properties.targets" />
-</Project>

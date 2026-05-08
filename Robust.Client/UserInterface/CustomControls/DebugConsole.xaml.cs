@@ -42,10 +42,10 @@ namespace Robust.Client.UserInterface.CustomControls
     [GenerateTypedNameReferences]
     public sealed partial class DebugConsole : Control, IDebugConsoleView
     {
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private IClientConsoleHost _consoleHost = default!;
+        [Dependency] private IResourceManager _resourceManager = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private ILogManager _logMan = default!;
 
         private static readonly ResPath HistoryPath = new("/debug_console_history.json");
 
@@ -83,7 +83,7 @@ namespace Robust.Client.UserInterface.CustomControls
             _consoleHost.ClearText += OnClearText;
             _cfg.OnValueChanged(CVars.ConMaxEntries, MaxEntriesChanged, true);
 
-            UserInterfaceManager.ModalRoot.AddChild(_compPopup);
+            Root!.ModalRoot.AddChild(_compPopup);
         }
 
         protected override void ExitedTree()
@@ -95,7 +95,7 @@ namespace Robust.Client.UserInterface.CustomControls
             _consoleHost.ClearText -= OnClearText;
             _cfg.UnsubValueChanged(CVars.ConMaxEntries, MaxEntriesChanged);
 
-            UserInterfaceManager.ModalRoot.RemoveChild(_compPopup);
+            _compPopup.Orphan();
         }
 
         private void MaxEntriesChanged(int value)

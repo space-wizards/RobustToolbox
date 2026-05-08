@@ -14,6 +14,7 @@ using Robust.Server.Replays;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
@@ -26,19 +27,19 @@ namespace Robust.Server.GameStates;
 
 internal sealed partial class PvsSystem : EntitySystem
 {
-    [Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Dependency] private readonly INetworkedMapManager _mapManager = default!;
-    [Dependency] private readonly IServerEntityNetworkManager _netEntMan = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IParallelManager _parallelManager = default!;
-    [Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
-    [Dependency] private readonly IServerNetConfigurationManager _netConfigManager = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly InputSystem _input = default!;
-    [Dependency] private readonly IServerNetManager _netMan = default!;
-    [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
-    [Dependency] private readonly PvsOverrideSystem _pvsOverride = default!;
-    [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
+    [Dependency] private IConfigurationManager _configManager = default!;
+    [Dependency] private INetworkedMapManager _mapManager = default!;
+    [Dependency] private IServerEntityNetworkManager _netEntMan = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IParallelManager _parallelManager = default!;
+    [Dependency] private IServerGameStateManager _serverGameStateManager = default!;
+    [Dependency] private IServerNetConfigurationManager _netConfigManager = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private InputSystem _input = default!;
+    [Dependency] private IServerNetManager _netMan = default!;
+    [Dependency] private IParallelManagerInternal _parallelMgr = default!;
+    [Dependency] private PvsOverrideSystem _pvsOverride = default!;
+    [Dependency] private IServerReplayRecordingManager _replay = default!;
 
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
     // Main issue is that I CBF figuring out the logic for handling it changing mid-game.
@@ -105,6 +106,7 @@ internal sealed partial class PvsSystem : EntitySystem
     private bool _async;
 
     private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
+    private EntityEventBus.DirectedEventHandler?[]? _getStateHandlers;
 
     private static readonly Histogram Histogram = Metrics.CreateHistogram("robust_game_state_update_usage",
         "Amount of time spent processing different parts of the game state update", new HistogramConfiguration
@@ -173,6 +175,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         ClearPvsData();
         ShutdownDirty();
+        _getStateHandlers = null;
     }
 
     public override void Update(float frameTime)
@@ -185,6 +188,8 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     internal void SendGameStates(ICommonSession[] players)
     {
+        _getStateHandlers ??= EntityManager.EventBusInternal.GetNetCompEventHandlers<ComponentGetState>();
+
         // Wait for pending jobs and process disconnected players
         ProcessDisconnections();
 

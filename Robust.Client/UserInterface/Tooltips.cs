@@ -21,7 +21,7 @@ namespace Robust.Client.UserInterface
         /// <param name="tooltip">control to position (current size will be used to determine bounds)</param>
         public static void PositionTooltip(Control tooltip)
         {
-            PositionTooltip(tooltip.UserInterfaceManager.RootControl.Size,
+            PositionTooltip(tooltip.Root!.Size,
                 tooltip.UserInterfaceManager.MousePositionScaled.Position,
                 tooltip);
         }

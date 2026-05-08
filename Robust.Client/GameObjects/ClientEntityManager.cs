@@ -19,15 +19,18 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed partial class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
-        [Dependency] private readonly IClientGameStateManager _stateMan = default!;
-        [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IClientNetManager _networkManager = default!;
+        [Dependency] private IClientGameTiming _gameTiming = default!;
+        [Dependency] private IClientGameStateManager _stateMan = default!;
+        [Dependency] private IBaseClient _client = default!;
+        [Dependency] private IReplayRecordingManager _replayRecording = default!;
 
         internal event Action? AfterStartup;
         internal event Action? AfterShutdown;
+
+        private readonly Queue<EntityUid> _queuedPredictedDeletions = new();
+        private readonly HashSet<EntityUid> _queuedPredictedDeletionsSet = new();
 
         public override void Initialize()
         {
@@ -216,6 +219,35 @@ namespace Robust.Client.GameObjects
             base.TickUpdate(frameTime, noPredictions, histogram);
         }
 
+        internal override void ProcessQueueudDeletions()
+        {
+            base.ProcessQueueudDeletions();
+            while (_queuedPredictedDeletions.TryDequeue(out var uid))
+            {
+                if (!MetaQuery.TryGetComponentInternal(uid, out var meta))
+                    continue;
+
+                if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
+                    continue;
+
+                var xform = TransformQuery.GetComponentInternal(uid);
+                if (meta.NetEntity.IsClientSide())
+                {
+                    DeleteEntity(uid, meta, xform);
+                }
+                else
+                {
+                    _xforms.DetachEntity(uid, xform, meta, null);
+                    // base call bypasses IGameTiming.InPrediction check
+                    // This is pretty janky and there should be a way for the client to dirty an entity outside of prediction
+                    // TODO PREDICTION Is actually needed after the current predicted deletion fix?
+                    base.Dirty(uid, xform, meta);
+                }
+            }
+
+            _queuedPredictedDeletionsSet.Clear();
+        }
+
         /// <inheritdoc />
         public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true)
         {
@@ -317,18 +349,23 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        /// <inheritdoc />
-        public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
-        {
-            if (IsQueuedForDeletion(ent.Owner)
-                || !MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
-                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
-                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
-            {
-                return;
-            }
+        public override bool IsQueuedForDeletion(EntityUid uid)
+            => QueuedDeletionsSet.Contains(uid) || _queuedPredictedDeletions.Contains(uid);
 
-            if (ent.Comp1.NetEntity.IsClientSide())
+        /// <inheritdoc />
+        public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?> ent)
+        {
+            // Some UIs get disposed after entity-manager has shut down and already deleted all entities.
+            if (!Started)
+                return;
+
+            if (IsQueuedForDeletion(ent.Owner))
+                return;
+
+            if (!MetaQuery.Resolve(ent.Owner, ref ent.Comp, false))
+                return;
+
+            if (ent.Comp.NetEntity.IsClientSide())
             {
                 // client-side QueueDeleteEntity re-fetches MetadataComp and checks IsClientSide().
                 // base call to skip that.
@@ -337,7 +374,10 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                _xforms.DetachEntity(ent.Owner, ent.Comp2);
+                if (!_queuedPredictedDeletionsSet.Add(ent.Owner))
+                    return;
+
+                _queuedPredictedDeletions.Enqueue(ent.Owner);
             }
         }
     }

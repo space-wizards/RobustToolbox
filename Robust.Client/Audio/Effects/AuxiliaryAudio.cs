@@ -1,4 +1,4 @@
-using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
+using OpenTK.Audio.OpenAL;
 using Robust.Shared.Audio.Effects;
 
 namespace Robust.Client.Audio.Effects;
@@ -6,13 +6,13 @@ namespace Robust.Client.Audio.Effects;
 /// <inheritdoc />
 internal sealed class AuxiliaryAudio : IAuxiliaryAudio
 {
-    internal int Handle = EFX.GenAuxiliaryEffectSlot();
+    internal int Handle = ALC.EFX.GenAuxiliaryEffectSlot();
 
     public void Dispose()
     {
         if (Handle != -1)
         {
-            EFX.DeleteAuxiliaryEffectSlot(Handle);
+            ALC.EFX.DeleteAuxiliaryEffectSlot(Handle);
             Handle = -1;
         }
     }
@@ -22,11 +22,11 @@ internal sealed class AuxiliaryAudio : IAuxiliaryAudio
     {
         if (effect is AudioEffect audEffect)
         {
-            EFX.AuxiliaryEffectSlot(Handle, EffectSlotInteger.Effect, audEffect.Handle);
+            ALC.EFX.AuxiliaryEffectSlot(Handle, EffectSlotInteger.Effect, audEffect.Handle);
         }
         else
         {
-            EFX.AuxiliaryEffectSlot(Handle, EffectSlotInteger.Effect, 0);
+            ALC.EFX.AuxiliaryEffectSlot(Handle, EffectSlotInteger.Effect, 0);
         }
     }
 }

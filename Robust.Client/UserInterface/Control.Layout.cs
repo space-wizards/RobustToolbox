@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Animations;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
@@ -355,6 +356,7 @@ namespace Robust.Client.UserInterface
         /// </remarks>
         /// <seealso cref="MinWidth"/>
         /// <seealso cref="MinHeight"/>
+        [Animatable]
         public Vector2 MinSize
         {
             get => new(_minWidth, _minHeight);
@@ -378,6 +380,7 @@ namespace Robust.Client.UserInterface
         /// </remarks>
         /// <seealso cref="SetWidth"/>
         /// <seealso cref="SetHeight"/>
+        [Animatable]
         public Vector2 SetSize
         {
             get => new(_setWidth, _setHeight);
@@ -434,6 +437,7 @@ namespace Robust.Client.UserInterface
         /// Width component of <see cref="SetSize"/>.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public float SetWidth
         {
             get => _setWidth;
@@ -449,6 +453,7 @@ namespace Robust.Client.UserInterface
         /// Height component of <see cref="SetSize"/>.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public float SetHeight
         {
             get => _setHeight;

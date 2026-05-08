@@ -81,6 +81,11 @@ internal partial class Clyde
                 case EventQuit:
                     ProcessEventQuit();
                     break;
+#if MACOS
+                case EventWindowDestroyed:
+                    ProcessEventWindowDestroyed();
+                    break;
+#endif
                 default:
                     _sawmill.Error($"Unknown SDL3 event type: {evb.GetType().Name}");
                     break;
@@ -158,7 +163,7 @@ internal partial class Clyde
 
             var button = ConvertSdl3Button(ev.Button);
             var key = Mouse.MouseButtonToKey(button);
-            EmitKeyEvent(key, ev.Type, false, ev.Mods, 0);
+            EmitKeyEvent(key, ev.Type, false, ev.Mods, 0, 0);
         }
 
         private void ProcessEventMouseMotion(EventMouseMotion ev)
@@ -222,10 +227,10 @@ internal partial class Clyde
 
         private void ProcessEventKey(EventKey ev)
         {
-            EmitKeyEvent(ConvertSdl3Scancode(ev.Scancode), ev.Type, ev.Repeat, ev.Mods, ev.Scancode);
+            EmitKeyEvent(ConvertSdl3Scancode(ev.Scancode), ev.Type, ev.Repeat, ev.Mods, ev.Scancode, ev.Raw);
         }
 
-        private void EmitKeyEvent(Key key, ET type, bool repeat, SDL.SDL_Keymod mods, SDL.SDL_Scancode scancode)
+        private void EmitKeyEvent(Key key, ET type, bool repeat, SDL.SDL_Keymod mods, SDL.SDL_Scancode scancode, ushort rawCode)
         {
             var shift = (mods & SDL_Keymod.SDL_KMOD_SHIFT) != 0;
             var alt = (mods & SDL_Keymod.SDL_KMOD_ALT) != 0;
@@ -236,7 +241,8 @@ internal partial class Clyde
                 key,
                 repeat,
                 alt, control, shift, system,
-                (int)scancode);
+                (int)scancode,
+                rawCode);
 
             switch (type)
             {
@@ -255,5 +261,15 @@ internal partial class Clyde
         {
             _clyde.SendInputModeChanged();
         }
+
+#if MACOS
+        private void ProcessEventWindowDestroyed()
+        {
+            // For some reason, on macOS, closing a secondary window
+            // causes the GL context on the primary thread to crap itself.
+            // Rebinding it seems to fix it.
+            GLMakeContextCurrent(_clyde._mainWindow);
+        }
+#endif
     }
 }

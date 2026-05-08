@@ -30,7 +30,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool CloseOnEscape { get; set; } = true;
 
-        public virtual void Open(UIBox2? box = null, Vector2? altPos = null)
+        public virtual void Open(UIBox2? box = null, Vector2? altPos = null, Vector2? altPosUp = null)
         {
             if (Visible)
             {
@@ -44,10 +44,12 @@ namespace Robust.Client.UserInterface.Controls
             if (box != null &&
                 (_desiredSize != box.Value.Size ||
                  PopupContainer.GetPopupOrigin(this) != box.Value.TopLeft ||
-                 PopupContainer.GetAltOrigin(this) != altPos))
+                 PopupContainer.GetAltOrigin(this) != altPos ||
+                 PopupContainer.GetAltOriginUp(this) != altPosUp))
             {
                 PopupContainer.SetPopupOrigin(this, box.Value.TopLeft);
                 PopupContainer.SetAltOrigin(this, altPos);
+                PopupContainer.SetAltOriginUp(this, altPosUp);
 
                 _desiredSize = box.Value.Size;
                 InvalidateMeasure();

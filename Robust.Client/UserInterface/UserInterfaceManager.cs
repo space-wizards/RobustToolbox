@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
-using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
-using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.UserInterface.CustomControls.DebugMonitorControls;
@@ -20,9 +18,7 @@ using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -33,28 +29,29 @@ namespace Robust.Client.UserInterface
 {
     internal sealed partial class UserInterfaceManager : IUserInterfaceManagerInternal
     {
-        [Dependency] private readonly IDependencyCollection _rootDependencies = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IFontManager _fontManager = default!;
-        [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IStateManager _stateManager = default!;
-        [Dependency] private readonly IClientNetManager _netManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IPrototypeManager _protoManager = default!;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
-        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
-        [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IEntitySystemManager _systemManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IRuntimeLog _runtime = default!;
-        [Dependency] private readonly IClipboardManager _clipboard = null!;
+        /// <summary>
+        /// A type that will always be instantiated anyways.
+        /// </summary>
+        public static readonly Type XamlHotReloadWarmupType = typeof(DropDownDebugConsole);
+
+        [Dependency] private IDependencyCollection _rootDependencies = default!;
+        [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private IFontManager _fontManager = default!;
+        [Dependency] private IClydeInternal _clyde = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] private IStateManager _stateManager = default!;
+        [Dependency] private IPrototypeManager _protoManager = default!;
+        [Dependency] private IUserInterfaceManagerInternal _userInterfaceManager = default!;
+        [Dependency] private IDynamicTypeFactoryInternal _typeFactory = default!;
+        [Dependency] private IUserInterfaceManager _uiManager = default!;
+        [Dependency] private IConfigurationManager _configurationManager = default!;
+        [Dependency] private ProfManager _prof = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IEntitySystemManager _systemManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IRuntimeLog _runtime = default!;
+        [Dependency] private IClipboardManager _clipboard = null!;
 
         private IAudioSource? _clickSource;
         private IAudioSource? _hoverSource;
@@ -64,6 +61,8 @@ namespace Robust.Client.UserInterface
         /// to the next frame update. This is just meant to prevent infinite loops from completely locking up the UI.
         /// </summary>
         public const int ControlUpdateLimit = 25_000;
+
+        private bool _obeyUpdateLimits = true;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
         [ViewVariables]
@@ -86,10 +85,10 @@ namespace Robust.Client.UserInterface
 
         [ViewVariables] public ViewportContainer MainViewport { get; private set; } = default!;
         [ViewVariables] public LayoutContainer StateRoot { get; private set; } = default!;
-        [ViewVariables] public PopupContainer ModalRoot { get; private set; } = default!;
+        [ViewVariables] public PopupContainer ModalRoot => RootControl.ModalRoot;
         [ViewVariables] public WindowRoot RootControl { get; private set; } = default!;
         [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
-        [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
+        [ViewVariables] public LayoutContainer PopupRoot => RootControl.PopupRoot;
         [ViewVariables] public DropDownDebugConsole DebugConsole { get; private set; } = default!;
         [ViewVariables] public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors = default!;
@@ -103,6 +102,7 @@ namespace Robust.Client.UserInterface
         private Stylesheet? _stylesheet;
 
         private ISawmill _sawmillUI = default!;
+        public ISawmill ControlSawmill { get; private set; } = default!;
 
         public event Action<Control>? OnKeyBindDown;
 
@@ -110,6 +110,9 @@ namespace Robust.Client.UserInterface
         {
             _dependencies = new DependencyCollection(_rootDependencies);
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
+#if DEBUG
+            _configurationManager.OnValueChanged(CVars.UIObeyUpdateLimits, _uiObeyUpdateLimitsChanged, true);
+#endif
             ThemeDefaults = new InterfaceThemeDummy();
             _initScaling();
             SetupControllers();
@@ -117,10 +120,11 @@ namespace Robust.Client.UserInterface
 
             DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
-            DebugConsole.SetPositionInParent(ModalRoot.GetPositionInParent());
+            DebugConsole.SetPositionInParent(RootControl.ModalRoot.GetPositionInParent());
 
-            _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
-                _clyde, _netManager, _mapManager);
+            _debugMonitors = new DebugMonitors();
+            _rootDependencies.InjectDependencies(_debugMonitors);
+            _debugMonitors.Init();
             DebugConsole.BelowConsole.AddChild(_debugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,
@@ -136,9 +140,15 @@ namespace Robust.Client.UserInterface
                     disabled: session => _rendering = true));
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
+            _inputManager.CheckUIIsFocused += OnIsUIFocused;
             _initThemes();
 
             _stylesheet = new DefaultStylesheet(_resourceCache, this).Stylesheet;
+        }
+
+        private void _uiObeyUpdateLimitsChanged(bool newValue, in CVarChangeInfo info)
+        {
+            _obeyUpdateLimits = newValue;
         }
 
         public void PostInitialize()
@@ -149,6 +159,7 @@ namespace Robust.Client.UserInterface
         private void _initializeCommon()
         {
             _sawmillUI = _logManager.GetSawmill("ui");
+            ControlSawmill = _logManager.GetSawmill("ctrl");
 
             RootControl = CreateWindowRoot(_clyde.MainWindow);
             RootControl.Name = "MainWindowRoot";
@@ -177,19 +188,7 @@ namespace Robust.Client.UserInterface
             };
             RootControl.AddChild(WindowRoot);
 
-            ModalRoot = new PopupContainer
-            {
-                Name = "ModalRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore,
-            };
-            RootControl.AddChild(ModalRoot);
-
-            PopupRoot = new LayoutContainer
-            {
-                Name = "PopupRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore
-            };
-            RootControl.AddChild(PopupRoot);
+            RootControl.CreateRootControls();
         }
 
         public void InitializeTesting()
@@ -237,7 +236,7 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_styleUpdateQueue.Count != 0)
                 {
-                    if (total >= ControlUpdateLimit)
+                    if (total >= ControlUpdateLimit && _obeyUpdateLimits)
                     {
                         _sawmillUI.Warning($"Hit style update limit. Queued: {_styleUpdateQueue.Count}. Next in queue: {_styleUpdateQueue.Peek()}. Parent: {_styleUpdateQueue.Peek().Parent}");
                         break;
@@ -260,7 +259,7 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_measureUpdateQueue.Count != 0)
                 {
-                    if (total >= ControlUpdateLimit)
+                    if (total >= ControlUpdateLimit && _obeyUpdateLimits)
                     {
                         _sawmillUI.Warning($"Hit measure update limit. Queued: {_measureUpdateQueue.Count}. Next in queue: {_measureUpdateQueue.Peek()}. Parent: {_measureUpdateQueue.Peek().Parent}");
                         break;
@@ -274,6 +273,7 @@ namespace Robust.Client.UserInterface
                     RunMeasure(control);
                     if (!control.IsMeasureValid && control.IsInsideTree)
                         _sawmillUI.Warning($"Control's measure is invalid after measuring. Control: {control}. Parent: {control.Parent}.");
+                    control.InvalidateArrange();
                     total += 1;
                 }
 
@@ -285,7 +285,7 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_arrangeUpdateQueue.Count != 0)
                 {
-                    if (total >= ControlUpdateLimit)
+                    if (total >= ControlUpdateLimit && _obeyUpdateLimits)
                     {
                         _sawmillUI.Warning($"Hit arrange update limit. Queued: {_arrangeUpdateQueue.Count}. Next in queue: {_arrangeUpdateQueue.Peek()}. Parent: {_arrangeUpdateQueue.Peek().Parent}");
                         break;

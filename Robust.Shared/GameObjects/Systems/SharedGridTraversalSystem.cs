@@ -11,11 +11,11 @@ namespace Robust.Shared.GameObjects;
 /// <summary>
 ///     Handles moving entities between grids as they move around.
 /// </summary>
-public sealed class SharedGridTraversalSystem : EntitySystem
+public sealed partial class SharedGridTraversalSystem : EntitySystem
 {
-    [Dependency] private readonly IMapManagerInternal _mapManager = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private IMapManagerInternal _mapManager = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     private EntityUid _recursionGuard;
 
@@ -100,7 +100,7 @@ public sealed class SharedGridTraversalSystem : EntitySystem
         if (_mapManager.TryFindGridAt(map, mapPos, out var gridUid, out _))
         {
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
-            if (gridUid != xform.GridUid)
+            if (gridUid != xform.GridUid && !TerminatingOrDeleted(gridUid))
                 _transform.SetParent(entity, xform, gridUid);
             return;
         }
@@ -110,4 +110,3 @@ public sealed class SharedGridTraversalSystem : EntitySystem
             _transform.SetParent(entity, xform, map);
     }
 }
-

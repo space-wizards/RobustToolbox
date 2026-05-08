@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
@@ -407,6 +408,11 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
             data.VBO.Delete();
             data.EBO.Delete();
+
+            DeleteVertexArray(data.EdgeVAO);
+            CheckGlError();
+            data.EdgeVBO.Delete();
+            data.EdgeEBO.Delete();
         }
 
         private void _updateTileMapOnUpdate(ref TileChangedEvent args)

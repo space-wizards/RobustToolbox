@@ -8,7 +8,9 @@ public sealed class RobustServerPackaging
     {
         "Textures",
         "Fonts",
+        "EngineFonts",
         "Shaders",
+        "Midi"
     };
 
     public static async Task WriteServerResources(

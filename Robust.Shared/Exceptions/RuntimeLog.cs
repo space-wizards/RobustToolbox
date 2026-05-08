@@ -9,9 +9,9 @@ using Robust.Shared.Log;
 
 namespace Robust.Shared.Exceptions
 {
-    internal sealed class RuntimeLog : IRuntimeLog, IPostInjectInit
+    internal sealed partial class RuntimeLog : IRuntimeLog, IPostInjectInit
     {
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private readonly Dictionary<Type, List<LoggedException>> exceptions = new();
         private ISawmill _sawmill = default!;
@@ -95,6 +95,7 @@ namespace Robust.Shared.Exceptions
     ///     The term "runtime" dates back to BYOND, in which an exception is called a "runtime error".
     ///     As such, what we call exceptions is called a "runtime" in BYOND.
     /// </remarks>
+    [NotContentImplementable]
     public interface IRuntimeLog
     {
         int ExceptionCount { get; }

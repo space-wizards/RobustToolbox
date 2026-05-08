@@ -1,5 +1,6 @@
 using System;
-using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
+using System.Numerics;
+using OpenTK.Audio.OpenAL;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Effects;
 using Robust.Shared.Maths;
@@ -15,16 +16,16 @@ internal sealed class AudioEffect : IAudioEffect
 
     public AudioEffect(IAudioInternal manager)
     {
-        Handle = EFX.GenEffect();
+        Handle = ALC.EFX.GenEffect();
         _master = manager;
-        EFX.Effect(Handle, EffectInteger.EffectType, (int) EffectType.EaxReverb);
+        ALC.EFX.Effect(Handle, EffectInteger.EffectType, (int) EffectType.EaxReverb);
     }
 
     public void Dispose()
     {
         if (Handle != 0)
         {
-            EFX.DeleteEffect(Handle);
+            ALC.EFX.DeleteEffect(Handle);
             Handle = 0;
         }
     }
@@ -43,14 +44,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbDensity, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbDensity, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbDensity, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbDensity, value);
             _master._checkAlError();
         }
     }
@@ -61,14 +62,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbDiffusion, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbDiffusion, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbDiffusion, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbDiffusion, value);
             _master._checkAlError();
         }
     }
@@ -79,14 +80,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbGain, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbGain, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbGain, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbGain, value);
             _master._checkAlError();
         }
     }
@@ -97,14 +98,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbGainHF, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbGainHF, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbGainHF, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbGainHF, value);
             _master._checkAlError();
         }
     }
@@ -115,14 +116,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbGainLF, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbGainLF, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbGainLF, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbGainLF, value);
             _master._checkAlError();
         }
     }
@@ -133,14 +134,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbDecayTime, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbDecayTime, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbDecayTime, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbDecayTime, value);
             _master._checkAlError();
         }
     }
@@ -151,14 +152,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbDecayHFRatio, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbDecayHFRatio, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbDecayHFRatio, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbDecayHFRatio, value);
             _master._checkAlError();
         }
     }
@@ -169,14 +170,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbDecayLFRatio, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbDecayLFRatio, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbDecayLFRatio, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbDecayLFRatio, value);
             _master._checkAlError();
         }
     }
@@ -187,14 +188,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbReflectionsGain, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbReflectionsGain, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbReflectionsGain, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbReflectionsGain, value);
             _master._checkAlError();
         }
     }
@@ -205,14 +206,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbReflectionsDelay, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbReflectionsDelay, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbReflectionsDelay, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbReflectionsDelay, value);
             _master._checkAlError();
         }
     }
@@ -223,7 +224,7 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            var value = EFX.GetEffect(Handle, EffectVector3.EaxReverbReflectionsPan);
+            var value = ALC.EFX.GetEffect(Handle, EffectVector3.EaxReverbReflectionsPan);
             _master._checkAlError();
             return new Vector3(value.X, value.Z, value.Y);
         }
@@ -231,7 +232,7 @@ internal sealed class AudioEffect : IAudioEffect
         {
             _checkDisposed();
             var openVec = new OpenTK.Mathematics.Vector3(value.X, value.Y, value.Z);
-            EFX.Effect(Handle, EffectVector3.EaxReverbReflectionsPan, ref openVec);
+            ALC.EFX.Effect(Handle, EffectVector3.EaxReverbReflectionsPan, ref openVec);
             _master._checkAlError();
         }
     }
@@ -242,14 +243,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbLateReverbGain, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbLateReverbGain, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbLateReverbGain, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbLateReverbGain, value);
             _master._checkAlError();
         }
     }
@@ -260,14 +261,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbLateReverbDelay, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbLateReverbDelay, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbLateReverbDelay, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbLateReverbDelay, value);
             _master._checkAlError();
         }
     }
@@ -278,7 +279,7 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            var value = EFX.GetEffect(Handle, EffectVector3.EaxReverbLateReverbPan);
+            var value = ALC.EFX.GetEffect(Handle, EffectVector3.EaxReverbLateReverbPan);
             _master._checkAlError();
             return new Vector3(value.X, value.Z, value.Y);
         }
@@ -286,7 +287,7 @@ internal sealed class AudioEffect : IAudioEffect
         {
             _checkDisposed();
             var openVec = new OpenTK.Mathematics.Vector3(value.X, value.Y, value.Z);
-            EFX.Effect(Handle, EffectVector3.EaxReverbLateReverbPan, ref openVec);
+            ALC.EFX.Effect(Handle, EffectVector3.EaxReverbLateReverbPan, ref openVec);
             _master._checkAlError();
         }
     }
@@ -297,14 +298,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbEchoTime, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbEchoTime, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbEchoTime, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbEchoTime, value);
             _master._checkAlError();
         }
     }
@@ -315,14 +316,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbEchoDepth, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbEchoDepth, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbEchoDepth, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbEchoDepth, value);
             _master._checkAlError();
         }
     }
@@ -333,14 +334,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbModulationTime, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbModulationTime, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbModulationTime, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbModulationTime, value);
             _master._checkAlError();
         }
     }
@@ -351,14 +352,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbModulationDepth, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbModulationDepth, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbModulationDepth, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbModulationDepth, value);
             _master._checkAlError();
         }
     }
@@ -369,14 +370,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbAirAbsorptionGainHF, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbAirAbsorptionGainHF, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbAirAbsorptionGainHF, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbAirAbsorptionGainHF, value);
             _master._checkAlError();
         }
     }
@@ -387,14 +388,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbHFReference, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbHFReference, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbHFReference, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbHFReference, value);
             _master._checkAlError();
         }
     }
@@ -405,14 +406,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbLFReference, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbLFReference, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbLFReference, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbLFReference, value);
             _master._checkAlError();
         }
     }
@@ -423,14 +424,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectFloat.EaxReverbRoomRolloffFactor, out var value);
+            ALC.EFX.GetEffect(Handle, EffectFloat.EaxReverbRoomRolloffFactor, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectFloat.EaxReverbRoomRolloffFactor, value);
+            ALC.EFX.Effect(Handle, EffectFloat.EaxReverbRoomRolloffFactor, value);
             _master._checkAlError();
         }
     }
@@ -441,14 +442,14 @@ internal sealed class AudioEffect : IAudioEffect
         get
         {
             _checkDisposed();
-            EFX.GetEffect(Handle, EffectInteger.EaxReverbDecayHFLimit, out var value);
+            ALC.EFX.GetEffect(Handle, EffectInteger.EaxReverbDecayHFLimit, out var value);
             _master._checkAlError();
             return value;
         }
         set
         {
             _checkDisposed();
-            EFX.Effect(Handle, EffectInteger.EaxReverbDecayHFLimit, value);
+            ALC.EFX.Effect(Handle, EffectInteger.EaxReverbDecayHFLimit, value);
             _master._checkAlError();
         }
     }

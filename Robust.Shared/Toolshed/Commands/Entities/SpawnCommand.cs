@@ -50,9 +50,10 @@ internal sealed class SpawnCommand : ToolshedCommand
     {
         var spawned = SpawnOn(target, proto);
         if (!TryComp<TransformComponent>(spawned, out var transformComponent) ||
-            !TryComp<MetaDataComponent>(spawned, out var metaDataComp) ||
-            !TryComp<PhysicsComponent>(spawned, out var physicsComponent))
+            !TryComp<MetaDataComponent>(spawned, out var metaDataComp))
             return spawned;
+        // The PhysicsComponent isn't required, so continue with or without it
+        TryComp<PhysicsComponent>(spawned, out var physicsComponent);
         sharedContainerSystem ??= EntityManager.System<SharedContainerSystem>();
         var container = sharedContainerSystem.GetContainer(target, containerId);
         sharedContainerSystem.InsertOrDrop((spawned, transformComponent, metaDataComp, physicsComponent),

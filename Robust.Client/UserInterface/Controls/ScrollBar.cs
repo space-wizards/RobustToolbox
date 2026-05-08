@@ -7,7 +7,6 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [Virtual]
     public abstract class ScrollBar : Range
     {
         public const string StylePropertyGrabber = "grabber";
@@ -74,7 +73,7 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 _updating = true;
-                Value = MathHelper.Lerp(Value, ValueTarget, Math.Min(args.DeltaSeconds * 15, 1));
+                Value = UIAnimations.LerpAnimate(Value, ValueTarget, args.DeltaSeconds, 15);
                 _updating = false;
             }
         }

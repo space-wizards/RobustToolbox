@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Audio.OpenAL;
-using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Shared.Audio.Sources;
 
 namespace Robust.Client.Audio.Sources;
@@ -37,9 +36,9 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
         get
         {
             _checkDisposed();
-            var state = AL.GetSourceState(SourceHandle);
+            var state = AL.GetSource(SourceHandle, ALGetSourcei.SourceState);
             _master._checkAlError();
-            return state == ALSourceState.Playing;
+            return state == (int)ALSourceState.Playing;
         }
         set
         {
@@ -84,7 +83,7 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
         else
         {
             if (FilterHandle != 0)
-                EFX.DeleteFilter(FilterHandle);
+                ALC.EFX.DeleteFilter(FilterHandle);
 
             AL.DeleteSource(SourceHandle);
             AL.DeleteBuffers(BufferHandles);

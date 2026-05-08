@@ -1,6 +1,8 @@
 using System;
+using System.Numerics;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.ColorNaming;
 
@@ -20,7 +22,8 @@ public static class ColorNaming
         (float.DegreesToRadians(285f), "color-purple"),
         (float.DegreesToRadians(330f), "color-pink"),
     };
-    private static readonly (float Hue, string Loc) HueFallback = (float.DegreesToRadians(360f), "color-pink");
+    // one past 360 because we're now inclusive on the upper for testing if we're out of bounds
+    private static readonly (float Hue, string Loc) HueFallback = (float.DegreesToRadians(361f), "color-pink");
 
     private const float BrownLightnessThreshold = 0.675f;
     private static readonly LocId OrangeString = "color-orange";
@@ -62,7 +65,7 @@ public static class ColorNaming
             var prevData = HueNames[i];
             var nextData = i+1 < HueNames.Length ? HueNames[i+1] : HueFallback;
 
-            if (prevData.Hue >= hue || hue > nextData.Hue)
+            if (prevData.Hue > hue || hue >= nextData.Hue)
                 continue;
 
             var loc = prevData.Loc;
@@ -84,7 +87,8 @@ public static class ColorNaming
             return (localization.GetString(loc), adjustedLightness);
         }
 
-        throw new ArgumentOutOfRangeException("oklch", $"colour ({oklch}) hue {hue} is outside of expected bounds");
+        DebugTools.Assert($"colour ({oklch}) hue {hue} is outside of expected bounds");
+        return (localization.GetString("color-unknown"), lightness);
     }
 
     private static string? DescribeChroma(Vector4 oklch, ILocalizationManager localization)

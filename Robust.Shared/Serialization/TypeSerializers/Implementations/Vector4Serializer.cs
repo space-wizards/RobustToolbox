@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Numerics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
@@ -63,7 +64,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public Vector4 CreateCopy(ISerializationManager serializationManager, Vector4 source,
             IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
-            return new(source);
+            return source;
         }
     }
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Numerics;
 using OpenTK.Audio.OpenAL;
-using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Shared.Audio;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -77,7 +76,7 @@ internal sealed class AudioSource : BaseAudioSource
         else
         {
             if (FilterHandle != 0)
-                EFX.DeleteFilter(FilterHandle);
+                ALC.EFX.DeleteFilter(FilterHandle);
 
             AL.DeleteSource(SourceHandle);
             Master.RemoveAudioSource(SourceHandle);

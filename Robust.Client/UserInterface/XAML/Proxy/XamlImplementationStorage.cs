@@ -2,7 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using Robust.Shared.Log;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Xaml;
 
 namespace Robust.Client.UserInterface.XAML.Proxy;
@@ -36,6 +39,8 @@ internal sealed class XamlImplementationStorage
     /// </summary>
     private readonly Dictionary<string, Type> _fileType = new();
 
+    private readonly Dictionary<Type, string> _fileTypeReverse = new();
+
     /// <summary>
     /// For each type, store the JIT-compiled implementation of Populate.
     /// </summary>
@@ -49,6 +54,8 @@ internal sealed class XamlImplementationStorage
 
     private readonly ISawmill _sawmill;
     private readonly XamlJitDelegate _jitDelegate;
+
+    private readonly Lock _compileLock = new();
 
     /// <summary>
     /// Create the storage.
@@ -102,6 +109,8 @@ internal sealed class XamlImplementationStorage
     /// <param name="assembly">an assembly</param>
     public void Add(Assembly assembly)
     {
+        using var _ = _compileLock.EnterScope();
+
         foreach (var (type, metadata) in TypesWithXamlMetadata(assembly))
         {
             // this can fail, but if it does, that means something is _really_ wrong
@@ -132,6 +141,8 @@ internal sealed class XamlImplementationStorage
                     $"{fileName}. ({type.FullName} and {_fileType[fileName].FullName}). this is a bug in XamlAotCompiler"
                 );
             }
+
+            _fileTypeReverse.Add(type, fileName);
         }
     }
 
@@ -145,6 +156,8 @@ internal sealed class XamlImplementationStorage
     /// </remarks>
     public void ForceReloadAll()
     {
+        using var _ = _compileLock.EnterScope();
+
         foreach (var (fileName, fileContent) in _fileContent)
         {
             SetImplementation(fileName, fileContent, true);
@@ -161,7 +174,17 @@ internal sealed class XamlImplementationStorage
     /// <returns>true if not a no-op</returns>
     public bool CanSetImplementation(string fileName)
     {
+        using var _ = _compileLock.EnterScope();
         return _fileType.ContainsKey(fileName);
+    }
+
+    public MethodInfo? CompileType(Type type)
+    {
+        if (_fileTypeReverse.TryGetValue(type, out var fileName))
+            return SetImplementation(fileName, _fileContent[fileName], quiet: true);
+
+        _sawmill.Warning($"Type {type} has no XAML file!");
+        return null;
     }
 
     /// <summary>
@@ -174,12 +197,14 @@ internal sealed class XamlImplementationStorage
     /// <param name="fileName">the name of the file whose implementation should be replaced</param>
     /// <param name="fileContent">the new implementation</param>
     /// <param name="quiet">if true, then don't bother to log</param>
-    public void SetImplementation(string fileName, string fileContent, bool quiet)
+    public MethodInfo? SetImplementation(string fileName, string fileContent, bool quiet)
     {
+        using var _ = _compileLock.EnterScope();
+
         if (!_fileType.TryGetValue(fileName, out var type))
         {
             _sawmill.Warning($"SetImplementation called with {fileName}, but no types care about its contents");
-            return;
+            return null;
         }
 
         var uri =
@@ -190,12 +215,14 @@ internal sealed class XamlImplementationStorage
         {
             _sawmill.Debug($"replacing {fileName} for {type}");
         }
+
         var impl = _jitDelegate(type, uri, fileName, fileContent);
         if (impl != null)
         {
             _populateImplementations[type] = impl;
         }
         _fileContent[fileName] = fileContent;
+        return impl;
     }
 
     /// <summary>
@@ -210,8 +237,12 @@ internal sealed class XamlImplementationStorage
     {
         if (!_populateImplementations.TryGetValue(t, out var implementation))
         {
-            // pop out if we never JITed anything
-            return false;
+            // JIT if needed.
+            implementation = CompileType(t);
+
+            // pop out if we never JITed anything/couldn't JIT
+            if (implementation == null)
+                return false;
         }
 
         implementation.Invoke(null, [null, o]);

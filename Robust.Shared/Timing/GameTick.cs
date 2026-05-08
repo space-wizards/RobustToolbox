@@ -4,8 +4,25 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.Timing
 {
     /// <summary>
-    ///     Wraps a game tick value.
+    ///     Represents a tick at some point in time over the game's runtime.
+    ///     The actual span of time a tick <b>is</b> depends on the <see cref="F:Robust.Shared.CVars.NetTickrate"/>.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    ///     While the game does use ticks for some timing, they are always an arbitrary time step. If you need to
+    ///     measure exact passage of time, you should use <see cref="TimeSpan"/>s instead in your reference frame
+    ///     (client, server, etc.) from <see cref="IGameTiming"/>.
+    /// </para>
+    /// <para>
+    ///     Ticks are appropriate for thinking purely relative to previous game ticks, for example tracking the last
+    ///     time modification occurred on a component for networking purposes.
+    /// </para>
+    /// <para>
+    ///     The game can theoretically run out of ticks. At the default tickrate, this is after approximately 4.5 years.
+    ///     It is recommended to reboot the game before that happens.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="IGameTiming"/>
     [Serializable, NetSerializable]
     public readonly struct GameTick : IEquatable<GameTick>, IComparable<GameTick>
     {

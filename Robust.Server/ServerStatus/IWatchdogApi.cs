@@ -5,6 +5,7 @@ namespace Robust.Server.ServerStatus
     /// <summary>
     /// API for interacting with <c>SS14.Watchdog</c>.
     /// </summary>
+    [NotContentImplementable]
     public interface IWatchdogApi
     {
         /// <summary>

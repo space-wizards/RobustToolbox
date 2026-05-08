@@ -88,6 +88,7 @@ public sealed partial class SpriteSystem
 
         target.Comp.RenderOrder = source.Comp.RenderOrder;
         target.Comp.GranularLayersRendering = source.Comp.GranularLayersRendering;
+        target.Comp.Loop = source.Comp.Loop;
 
         DirtyBounds(target!);
         _tree.QueueTreeUpdate(target!);

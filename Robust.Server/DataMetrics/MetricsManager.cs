@@ -30,6 +30,7 @@ namespace Robust.Server.DataMetrics;
 /// IoC contains an implementation of <see cref="IMeterFactory"/> that can be used to instantiate meters.
 /// </para>
 /// </remarks>
+[NotContentImplementable]
 public interface IMetricsManager
 {
     /// <summary>
@@ -45,10 +46,10 @@ public interface IMetricsManager
 
 internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposable
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly ITaskManager _taskManager = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IEntitySystemManager _entitySystemManager = default!;
+    [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
 
     private bool _initialized;
 

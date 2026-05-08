@@ -27,8 +27,6 @@ namespace Robust.Client.UserInterface.Controls
         /// </remarks>
         public AlignMode Align { get; set; }
 
-        private bool Vertical => Orientation == LayoutOrientation.Vertical;
-
         public LayoutOrientation Orientation
         {
             get => _orientation;
@@ -56,19 +54,24 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            // Account for separation.
-            var separation = ActualSeparation * (Children.Where(c => c.Visible).Count() - 1);
-            var desiredSize = Vector2.Zero;
-            if (Vertical)
+            if (Orientation == LayoutOrientation.Vertical)
             {
-                desiredSize.Y += separation;
-                availableSize.Y = Math.Max(0, availableSize.Y - separation);
+                return MeasureItems<VerticalAxis>(availableSize);
             }
             else
             {
-                desiredSize.X += separation;
-                availableSize.X = Math.Max(0, availableSize.X - separation);
+                return MeasureItems<HorizontalAxis>(availableSize);
             }
+        }
+
+        private Vector2 MeasureItems<TAxis>(Vector2 availableSize) where TAxis : IAxisImplementation
+        {
+            availableSize = TAxis.SizeToAxis(availableSize);
+
+            // Account for separation.
+            var separation = ActualSeparation * (Children.Where(c => c.Visible).Count() - 1);
+            var desiredSize = new Vector2(separation, 0);
+            availableSize.X = Math.Max(0, availableSize.X) - separation;
 
             // First, we measure non-stretching children.
             foreach (var child in Children)
@@ -76,46 +79,74 @@ namespace Robust.Client.UserInterface.Controls
                 if (!child.Visible)
                     continue;
 
-                child.Measure(availableSize);
+                child.Measure(TAxis.SizeFromAxis(availableSize));
+                var childDesired = TAxis.SizeToAxis(child.DesiredSize);
 
-                if (Vertical)
-                {
-                    desiredSize.Y += child.DesiredSize.Y;
-                    desiredSize.X = Math.Max(desiredSize.X, child.DesiredSize.X);
-                    availableSize.Y = Math.Max(0, availableSize.Y - child.DesiredSize.Y);
-                }
-                else
-                {
-                    desiredSize.X += child.DesiredSize.X;
-                    desiredSize.Y = Math.Max(desiredSize.Y, child.DesiredSize.Y);
-                    availableSize.X = Math.Max(0, availableSize.X - child.DesiredSize.X);
-                }
+                desiredSize.X += childDesired.X;
+                desiredSize.Y = Math.Max(desiredSize.Y, childDesired.Y);
+
+                availableSize.X = Math.Max(0, availableSize.X - childDesired.X);
             }
 
-            return desiredSize;
+            return TAxis.SizeFromAxis(desiredSize);
         }
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
             var separation = ActualSeparation;
-            var visibleChildCount = Children.Where(c => c.Visible).Count();
 
-            var stretchAvail = Vertical ? finalSize.Y : finalSize.X;
+            if (Orientation == LayoutOrientation.Vertical)
+            {
+                LayOutItems<VerticalAxis>(default, finalSize, Align, Children, 0, ChildCount, separation);
+            }
+            else
+            {
+                LayOutItems<HorizontalAxis>(default, finalSize, Align, Children, 0, ChildCount, separation);
+            }
+
+            return finalSize;
+        }
+
+        internal static void LayOutItems<TAxis>(
+            Vector2 baseOffset,
+            Vector2 finalSize,
+            AlignMode align,
+            OrderedChildCollection children,
+            int start,
+            int end,
+            float separation,
+            Vector2? fixedSize = null)
+            where TAxis : IAxisImplementation
+        {
+            var realFinalSize = finalSize;
+            finalSize = TAxis.SizeToAxis(finalSize);
+            fixedSize = fixedSize == null ? null : TAxis.SizeToAxis(fixedSize.Value);
+
+            var visibleChildCount = 0;
+            for (var i = start; i < end; i++)
+            {
+                if (children[i].Visible)
+                    visibleChildCount += 1;
+            }
+
+            var stretchAvail = finalSize.X;
             stretchAvail -= separation * (visibleChildCount - 1);
             stretchAvail = Math.Max(0, stretchAvail);
 
             // Step one: figure out the sizes of all our children and whether they want to stretch.
             var sizeList = new List<(Control control, float size, bool stretch)>(visibleChildCount);
             var totalStretchRatio = 0f;
-            foreach (var child in Children)
+            for (var i = start; i < end; i++)
             {
+                var child = children[i];
                 if (!child.Visible)
                     continue;
 
-                bool stretch = Vertical ? child.VerticalExpand : child.HorizontalExpand;
+                bool stretch = TAxis.GetMainExpandFlag(child);
                 if (!stretch)
                 {
-                    var size = Vertical ? child.DesiredSize.Y : child.DesiredSize.X;
+                    var measuredSize = fixedSize ?? TAxis.SizeToAxis(child.DesiredSize);
+                    var size = measuredSize.X;
                     size = Math.Clamp(size, 0, stretchAvail);
                     stretchAvail -= size;
                     sizeList.Add((child, size, false));
@@ -146,7 +177,8 @@ namespace Robust.Client.UserInterface.Controls
                             continue;
 
                         var share = stretchAvail * control.SizeFlagsStretchRatio / totalStretchRatio;
-                        var desired = Vertical ? control.DesiredSize.Y : control.DesiredSize.X;
+                        var measuredSize = fixedSize ?? TAxis.SizeToAxis(control.DesiredSize);
+                        var desired = measuredSize.X;
                         if (share >= desired)
                         {
                             sizeList[i] = (control, share, true);
@@ -164,7 +196,7 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 // No stretching children -> offset the children based on the alignment.
-                switch (Align)
+                switch (align)
                 {
                     case AlignMode.Begin:
                         break;
@@ -190,22 +222,14 @@ namespace Robust.Client.UserInterface.Controls
 
                 first = false;
 
-                UIBox2 targetBox;
-                if (Vertical)
-                {
-                    targetBox = new UIBox2(0, offset, finalSize.X, offset + size);
-                }
-                else
-                {
-                    targetBox = new UIBox2(offset, 0, offset + size, finalSize.Y);
-                }
+                var targetBox = TAxis.BoxFromAxis(new UIBox2(offset, 0, offset + size, finalSize.Y), realFinalSize);
+
+                targetBox = targetBox.Translated(baseOffset);
 
                 control.Arrange(targetBox);
 
                 offset += size;
             }
-
-            return finalSize;
         }
 
         public enum AlignMode : byte

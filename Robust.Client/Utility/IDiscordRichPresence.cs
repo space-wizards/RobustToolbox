@@ -2,6 +2,7 @@ using System;
 
 namespace Robust.Client.Utility
 {
+    [NotContentImplementable]
     public interface IDiscordRichPresence: IDisposable
     {
         void Initialize();

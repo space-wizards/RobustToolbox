@@ -1,6 +1,8 @@
+using System;
 using System.Numerics;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
@@ -8,6 +10,8 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.GameObjects;
 public abstract class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent, OccluderComponent>
 {
+    public const float MaxRaycastRange = 100f;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -68,5 +72,85 @@ public abstract class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent
         Dirty(uid, comp, meta);
         QueueTreeUpdate(uid, comp);
     }
+    #endregion
+
+    #region InRangeUnoccluded
+
+    /// <summary>
+    /// Returns true if two points are within the specified range and there are no occluders between them that aren't
+    /// ignored by the predicate.
+    /// </summary>
+    public bool InRangeUnoccluded<TState>(
+        MapCoordinates origin,
+        MapCoordinates other,
+        float range,
+        TState state,
+        Func<Entity<OccluderComponent, TransformComponent>, TState, bool> ignore)
+    {
+        if (!GetRay(origin, other, range, out var length, out var ray, out var result))
+            return result;
+
+        return IntersectRay(origin.MapId, ray, length, state, ignore) == null;
+    }
+
+    /// <summary>
+    /// Returns true if two points are within the specified range and there are no occluders between them.
+    /// </summary>
+    /// <param name="ignoreTouching">If true, this will use <see cref="IsTouchingEndpoint"/> as a predicate to ignore \
+    /// occluders that are touching the start or end point.</param>
+    public bool InRangeUnoccluded(MapCoordinates origin, MapCoordinates other, float range, bool ignoreTouching)
+    {
+        if (!GetRay(origin, other, range, out var length, out var ray, out var result))
+            return result;
+
+        if (!ignoreTouching)
+            return IntersectRay(origin.MapId, ray, length) == null;
+
+        var state = (XformSystem, origin.Position, other.Position);
+        return IntersectRay(origin.MapId, ray, length, state, IsTouchingEndpoint) == null;
+    }
+
+    private bool GetRay(MapCoordinates origin, MapCoordinates other, float range, out float length, out Ray ray, out bool result)
+    {
+        ray = default;
+        length = default;
+        result = false;
+        if (other.MapId != origin.MapId || other.MapId == MapId.Nullspace)
+            return false;
+
+        var dir = other.Position - origin.Position;
+        length = dir.Length();
+        if (MathHelper.CloseTo(length, 0))
+        {
+            result = true;
+            return false;
+        }
+
+        var normalized = dir / length;
+
+        if (range > 0f && length > range + 0.01f)
+            return false;
+
+        if (length > MaxRaycastRange)
+        {
+            Log.Warning($"{nameof(InRangeUnoccluded)} check performed over extreme range. Limiting range.");
+            length = MaxRaycastRange;
+        }
+
+        ray = new Ray(origin.Position, normalized);
+        return true;
+    }
+
+    /// <summary>
+    /// Simple predicate for use with <see cref="InRangeUnoccluded"/> that will ignore any occluders that intersect the
+    /// start and end points.
+    /// </summary>
+    public static bool IsTouchingEndpoint(Entity<OccluderComponent, TransformComponent> ent, (SharedTransformSystem Sys, Vector2 Start, Vector2 End) state)
+    {
+        var occluderBox = ent.Comp1.BoundingBox;
+        occluderBox = occluderBox.Translated(state.Sys.GetWorldPosition(ent.Comp2));
+        return occluderBox.Contains(state.Start) || occluderBox.Contains(state.End);
+    }
+
     #endregion
 }

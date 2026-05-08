@@ -13,7 +13,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.UserInterface.Controls;
 
@@ -35,12 +34,12 @@ namespace Robust.Client.UserInterface.Controls;
 /// Cursor positions and such should never be inside a surrogate pair, however.
 /// </para>
 /// </remarks>
-public sealed class TextEdit : Control
+public sealed partial class TextEdit : Control
 {
-    [Dependency] private readonly IClipboardManager _clipboard = null!;
+    [Dependency] private IClipboardManager _clipboard = null!;
 
     // @formatter:off
-    public const string StylePropertyCursorColor    = "cursor-color";
+    public const string StylePropertyCursorColor = "cursor-color";
     public const string StylePropertySelectionColor = "selection-color";
     public const string StylePseudoClassNotEditable = "notEditable";
     public const string StylePseudoClassPlaceholder = "placeholder";
@@ -557,130 +556,130 @@ public sealed class TextEdit : Control
         switch (type)
         {
             case MoveType.Left:
-            {
-                if (breakingSelection)
                 {
-                    // If we're breaking an active selection, move to the lower side of it.
-                    return SelectionLower;
+                    if (breakingSelection)
+                    {
+                        // If we're breaking an active selection, move to the lower side of it.
+                        return SelectionLower;
+                    }
+
+                    var (_, lineStart, _) = GetLineForCursorPos(_cursorPosition);
+
+                    if (_cursorPosition.Bias == LineBreakBias.Bottom && _cursorPosition.Index == lineStart)
+                    {
+                        // Swap cursor bias around to make the cursor appear at the end of the previous line.
+                        // This maintains the index, it's the same position in the text
+                        return _cursorPosition with { Bias = LineBreakBias.Top };
+                    }
+
+                    var newPos = CursorShiftedLeft();
+                    // Explicit newlines work kinda funny with bias, so keep it at top there.
+                    var bias = _cursorPosition.Index == TextLength || Rope.Index(TextRope, newPos) == '\n'
+                        ? LineBreakBias.Top
+                        : LineBreakBias.Bottom;
+
+                    return new CursorPos(newPos, bias);
                 }
-
-                var (_, lineStart, _) = GetLineForCursorPos(_cursorPosition);
-
-                if (_cursorPosition.Bias == LineBreakBias.Bottom && _cursorPosition.Index == lineStart)
-                {
-                    // Swap cursor bias around to make the cursor appear at the end of the previous line.
-                    // This maintains the index, it's the same position in the text
-                    return _cursorPosition with { Bias = LineBreakBias.Top };
-                }
-
-                var newPos = CursorShiftedLeft();
-                // Explicit newlines work kinda funny with bias, so keep it at top there.
-                var bias = _cursorPosition.Index == TextLength || Rope.Index(TextRope, newPos) == '\n'
-                    ? LineBreakBias.Top
-                    : LineBreakBias.Bottom;
-
-                return new CursorPos(newPos, bias);
-            }
             case MoveType.Right:
-            {
-                if (breakingSelection)
                 {
-                    return SelectionUpper;
-                }
+                    if (breakingSelection)
+                    {
+                        return SelectionUpper;
+                    }
 
-                var (_, _, lineEnd) = GetLineForCursorPos(_cursorPosition);
-                // Explicit newlines work kinda funny with bias, so keep it at top there.
-                if (_cursorPosition.Bias == LineBreakBias.Top
-                    && _cursorPosition.Index == lineEnd
-                    && _cursorPosition.Index != TextLength
-                    && Rope.Index(TextRope, _cursorPosition.Index) != '\n')
-                {
-                    // Swap cursor bias around to make the cursor appear at the start of the next line.
-                    // This maintains the index, it's the same position in the text.
-                    return _cursorPosition with { Bias = LineBreakBias.Bottom };
-                }
+                    var (_, _, lineEnd) = GetLineForCursorPos(_cursorPosition);
+                    // Explicit newlines work kinda funny with bias, so keep it at top there.
+                    if (_cursorPosition.Bias == LineBreakBias.Top
+                        && _cursorPosition.Index == lineEnd
+                        && _cursorPosition.Index != TextLength
+                        && Rope.Index(TextRope, _cursorPosition.Index) != '\n')
+                    {
+                        // Swap cursor bias around to make the cursor appear at the start of the next line.
+                        // This maintains the index, it's the same position in the text.
+                        return _cursorPosition with { Bias = LineBreakBias.Bottom };
+                    }
 
-                return new CursorPos(CursorShiftedRight(), LineBreakBias.Top);
-            }
+                    return new CursorPos(CursorShiftedRight(), LineBreakBias.Top);
+                }
             case MoveType.LeftWord:
-            {
-                var runes = Rope.EnumerateRunesReverse(TextRope, _cursorPosition.Index);
-                var pos = _cursorPosition.Index + TextEditShared.PrevWordPosition(runes.GetEnumerator());
+                {
+                    var runes = Rope.EnumerateRunesReverse(TextRope, _cursorPosition.Index);
+                    var pos = _cursorPosition.Index + TextEditShared.PrevWordPosition(runes.GetEnumerator());
 
-                return new CursorPos(pos, LineBreakBias.Bottom);
-            }
+                    return new CursorPos(pos, LineBreakBias.Bottom);
+                }
             case MoveType.RightWord:
-            {
-                var runes = Rope.EnumerateRunes(TextRope, _cursorPosition.Index);
-                var pos = _cursorPosition.Index + TextEditShared.EndWordPosition(runes.GetEnumerator());
+                {
+                    var runes = Rope.EnumerateRunes(TextRope, _cursorPosition.Index);
+                    var pos = _cursorPosition.Index + TextEditShared.EndWordPosition(runes.GetEnumerator());
 
-                return new CursorPos(pos, LineBreakBias.Bottom);
-            }
+                    return new CursorPos(pos, LineBreakBias.Bottom);
+                }
             case MoveType.Up:
-            {
-                var cursor = _cursorPosition;
-                if (breakingSelection)
                 {
-                    // If we're in a selection, we move from the selection LOWER upwards, not the cursor position.
-                    InvalidateHorizontalCursorPos();
+                    var cursor = _cursorPosition;
+                    if (breakingSelection)
+                    {
+                        // If we're in a selection, we move from the selection LOWER upwards, not the cursor position.
+                        InvalidateHorizontalCursorPos();
 
-                    cursor = SelectionLower;
+                        cursor = SelectionLower;
+                    }
+
+                    CacheHorizontalCursorPos(cursor);
+                    DebugTools.Assert(_horizontalCursorPos.HasValue, "Horizontal cursor pos must be cached!");
+
+                    var (line, _, _) = GetLineForCursorPos(cursor);
+
+                    if (line == 0)
+                    {
+                        // We're on the top line already, move to the start of it instead.
+                        return new CursorPos(0, LineBreakBias.Top);
+                    }
+
+                    keepHorizontalCursorPos = true;
+
+                    return GetIndexAtHorizontalPos(line - 1, _horizontalCursorPos!.Value);
                 }
-
-                CacheHorizontalCursorPos(cursor);
-                DebugTools.Assert(_horizontalCursorPos.HasValue, "Horizontal cursor pos must be cached!");
-
-                var (line, _, _) = GetLineForCursorPos(cursor);
-
-                if (line == 0)
-                {
-                    // We're on the top line already, move to the start of it instead.
-                    return new CursorPos(0, LineBreakBias.Top);
-                }
-
-                keepHorizontalCursorPos = true;
-
-                return GetIndexAtHorizontalPos(line - 1, _horizontalCursorPos!.Value);
-            }
             case MoveType.Down:
-            {
-                var cursor = _cursorPosition;
-                if (breakingSelection)
                 {
-                    // If we're in a selection, we move from the selection LOWER upwards, not the cursor position.
-                    InvalidateHorizontalCursorPos();
+                    var cursor = _cursorPosition;
+                    if (breakingSelection)
+                    {
+                        // If we're in a selection, we move from the selection LOWER upwards, not the cursor position.
+                        InvalidateHorizontalCursorPos();
 
-                    cursor = SelectionUpper;
+                        cursor = SelectionUpper;
+                    }
+
+                    CacheHorizontalCursorPos(cursor);
+                    DebugTools.Assert(_horizontalCursorPos.HasValue, "Horizontal cursor pos must be cached!");
+
+                    var (line, _, _) = GetLineForCursorPos(cursor);
+
+                    if (line == _lineBreaks.Count)
+                    {
+                        // On the last line already, move to the end of it.
+                        return new CursorPos(TextLength, LineBreakBias.Top);
+                    }
+
+                    keepHorizontalCursorPos = true;
+
+                    return GetIndexAtHorizontalPos(line + 1, _horizontalCursorPos!.Value);
                 }
-
-                CacheHorizontalCursorPos(cursor);
-                DebugTools.Assert(_horizontalCursorPos.HasValue, "Horizontal cursor pos must be cached!");
-
-                var (line, _, _) = GetLineForCursorPos(cursor);
-
-                if (line == _lineBreaks.Count)
-                {
-                    // On the last line already, move to the end of it.
-                    return new CursorPos(TextLength, LineBreakBias.Top);
-                }
-
-                keepHorizontalCursorPos = true;
-
-                return GetIndexAtHorizontalPos(line + 1, _horizontalCursorPos!.Value);
-            }
             case MoveType.BeginOfLine:
-            {
-                var (_, lineStart, _) = GetLineForCursorPos(_cursorPosition);
-                if (Rope.Index(TextRope, lineStart) == '\n')
-                    lineStart += 1;
+                {
+                    var (_, lineStart, _) = GetLineForCursorPos(_cursorPosition);
+                    if (Rope.Index(TextRope, lineStart) == '\n')
+                        lineStart += 1;
 
-                return new CursorPos(lineStart, LineBreakBias.Bottom);
-            }
+                    return new CursorPos(lineStart, LineBreakBias.Bottom);
+                }
             case MoveType.EndOfLine:
-            {
-                var (_, _, lineEnd) = GetLineForCursorPos(_cursorPosition);
-                return new CursorPos(lineEnd, LineBreakBias.Top);
-            }
+                {
+                    var (_, _, lineEnd) = GetLineForCursorPos(_cursorPosition);
+                    return new CursorPos(lineEnd, LineBreakBias.Top);
+                }
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
@@ -1374,7 +1373,7 @@ public sealed class TextEdit : Control
                             baseLine.Y + descent);
                         var cursorOffset = baseLine.X - drawBox.Left;
 
-                        window.TextInputSetRect(box.Translated(GlobalPixelPosition), (int) cursorOffset);
+                        window.TextInputSetRect(box.Translated(GlobalPixelPosition), (int)cursorOffset);
                     }
                 }
 
@@ -1483,7 +1482,7 @@ public sealed class TextEdit : Control
     public enum LineBreakBias : byte
     {
         // @formatter:off
-        Top    = 0,
+        Top = 0,
         Bottom = 1
         // @formatter:on
     }
@@ -1548,17 +1547,17 @@ public sealed class TextEdit : Control
     private enum MoveType
     {
         // @formatter:off
-        Left            =  1 << 0,
-        Right           =  1 << 1,
-        LeftWord        =  1 << 2,
-        RightWord       =  1 << 3,
-        Up              =  1 << 4,
-        Down            =  1 << 5,
-        BeginOfLine     =  1 << 6,
-        EndOfLine       =  1 << 7,
+        Left = 1 << 0,
+        Right = 1 << 1,
+        LeftWord = 1 << 2,
+        RightWord = 1 << 3,
+        Up = 1 << 4,
+        Down = 1 << 5,
+        BeginOfLine = 1 << 6,
+        EndOfLine = 1 << 7,
 
-        ActionMask      = (1 << 16) - 1,
-        SelectFlag      =  1 << 16,
+        ActionMask = (1 << 16) - 1,
+        SelectFlag = 1 << 16,
         // @formatter:on
     }
 }
@@ -1569,9 +1568,9 @@ public sealed class TextEdit : Control
 //
 
 // bind F12 Command textedit_ropeviz
-internal sealed class TextEditRopeVizCommand : IConsoleCommand
+internal sealed partial class TextEditRopeVizCommand : IConsoleCommand
 {
-    [Dependency] private readonly IUserInterfaceManager _ui = default!;
+    [Dependency] private IUserInterfaceManager _ui = default!;
 
     public string Command => "textedit_ropeviz";
     public string Description => "";
@@ -1587,9 +1586,9 @@ internal sealed class TextEditRopeVizCommand : IConsoleCommand
 }
 
 // bind F11 Command textedit_rebalance
-internal sealed class TextEditRebalanceCommand : IConsoleCommand
+internal sealed partial class TextEditRebalanceCommand : IConsoleCommand
 {
-    [Dependency] private readonly IUserInterfaceManager _ui = default!;
+    [Dependency] private IUserInterfaceManager _ui = default!;
 
     public string Command => "textedit_rebalance";
     public string Description => "";
@@ -1605,9 +1604,9 @@ internal sealed class TextEditRebalanceCommand : IConsoleCommand
 }
 
 // bind F10 Command textedit_debugoverlay
-internal sealed class TextEditDebugOverlayCommand : IConsoleCommand
+internal sealed partial class TextEditDebugOverlayCommand : IConsoleCommand
 {
-    [Dependency] private readonly IUserInterfaceManager _ui = default!;
+    [Dependency] private IUserInterfaceManager _ui = default!;
 
     public string Command => "textedit_debugoverlay";
     public string Description => "";
@@ -1623,9 +1622,9 @@ internal sealed class TextEditDebugOverlayCommand : IConsoleCommand
 }
 
 // bind F9 Command textedit_queuelinebreak
-internal sealed class TextEditQueueLineBreakCommand : IConsoleCommand
+internal sealed partial class TextEditQueueLineBreakCommand : IConsoleCommand
 {
-    [Dependency] private readonly IUserInterfaceManager _ui = default!;
+    [Dependency] private IUserInterfaceManager _ui = default!;
 
     public string Command => "textedit_queuelinebreak";
     public string Description => "";

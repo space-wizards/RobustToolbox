@@ -326,7 +326,7 @@ namespace Robust.Client.UserInterface.Controls
             var parentSize = control.Parent?.Size ?? Vector2.Zero;
 
             var anchorLeft = control.GetValue<float>(AnchorLeftProperty);
-            var anchorTop = control.GetValue<float>(AnchorBottomProperty);
+            var anchorTop = control.GetValue<float>(AnchorTopProperty);
             var anchorRight = control.GetValue<float>(AnchorRightProperty);
             var anchorBottom = control.GetValue<float>(AnchorBottomProperty);
 

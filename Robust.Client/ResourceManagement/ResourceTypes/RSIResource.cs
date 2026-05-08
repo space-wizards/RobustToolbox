@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using Robust.Client.Graphics;
-using Robust.Client.Utility;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
@@ -58,12 +57,88 @@ namespace Robust.Client.ResourceManagement
         internal static void LoadPreTexture(IResourceManager manager, LoadStepData data)
         {
             var manifestPath = data.Path / "meta.json";
+            if (manager.TryContentFileRead(manifestPath, out var manifestFile))
+            {
+                LoadPreTextureFolder(manager, data, manifestFile);
+            }
+            else
+            {
+                var rsicPath = data.Path.WithExtension("rsic");
+                if (manager.TryContentFileRead(rsicPath, out var rsicFile))
+                {
+                    LoadPreTextureRsic(data, rsicFile);
+                }
+                else
+                {
+                    throw new FileNotFoundException($"Unable to find .rsi file: {data.Path}");
+                }
+            }
+        }
+
+        private static void LoadPreTextureFolder(IResourceManager manager, LoadStepData data, Stream manifestFile)
+        {
             RsiLoading.RsiMetadata metadata;
-            using (var manifestFile = manager.ContentFileRead(manifestPath))
+            using (manifestFile)
             {
                 metadata = RsiLoading.LoadRsiMetadata(manifestFile);
             }
 
+            data.FrameCounts = RsiLoading.CalculateFrameCounts(metadata);
+            data.Images = RsiLoading.LoadImages(
+                metadata,
+                SixLabors.ImageSharp.Configuration.Default,
+                name =>
+                {
+                    var texPath = data.Path / (name + ".png");
+                    return manager.ContentFileRead(texPath);
+                });
+
+            var sheet = RsiLoading.GenerateAtlas(
+                metadata,
+                data.FrameCounts,
+                data.Images,
+                SixLabors.ImageSharp.Configuration.Default,
+                out var dimensionX);
+
+            LoadPreTextureCommon(metadata, data);
+
+            data.AtlasSheet = sheet;
+            data.DimX = dimensionX;
+            data.LoadParameters = metadata.LoadParameters;
+            data.MetaAtlas = metadata.MetaAtlas;
+        }
+
+        private static void LoadPreTextureRsic(LoadStepData data, Stream rsicFile)
+        {
+            Image<Rgba32> image;
+            using (rsicFile)
+            {
+                image = Image.Load<Rgba32>(rsicFile);
+            }
+
+            data.AtlasSheet = image;
+
+            var textDataList = image.Metadata.GetPngMetadata().TextData;
+            if (!textDataList.TryFirstOrNull(
+                    static data => data.Keyword == RsiLoading.RsicPngField,
+                    out var pngMetadata))
+                throw new InvalidDataException(".rsic does not have metadata field");
+
+            var metadata = RsiLoading.LoadRsiMetadata(pngMetadata.Value.Value);
+
+            data.FrameCounts = RsiLoading.CalculateFrameCounts(metadata);
+
+            LoadPreTextureCommon(metadata, data);
+
+            data.DimX = image.Width / metadata.Size.X;
+            data.LoadParameters = metadata.LoadParameters;
+            data.MetaAtlas = metadata.MetaAtlas;
+        }
+
+        private static void LoadPreTextureCommon(
+            RsiLoading.RsiMetadata metadata,
+            LoadStepData data)
+        {
             var stateCount = metadata.States.Length;
             var toAtlas = new StateReg[stateCount];
 
@@ -72,40 +147,12 @@ namespace Robust.Client.ResourceManagement
 
             var callbackOffsets = new Dictionary<RSI.StateId, Vector2i[][]>(stateCount);
 
-            // Check for duplicate states
-            for (var i = 0; i < metadata.States.Length; i++)
-            {
-                var stateId = metadata.States[i].StateId;
-
-                for (int j = i + 1; j < metadata.States.Length; j++)
-                {
-                    if (stateId == metadata.States[j].StateId)
-                        throw new RSILoadException($"RSI '{data.Path}' has a duplicate stateId '{stateId}'.");
-                }
-            }
-
             // Do every state.
             for (var index = 0; index < metadata.States.Length; index++)
             {
                 ref var reg = ref toAtlas[index];
 
                 var stateObject = metadata.States[index];
-                // Load image from disk.
-                var texPath = data.Path / (stateObject.StateId + ".png");
-                using (var stream = manager.ContentFileRead(texPath))
-                {
-                    reg.Src = Image.Load<Rgba32>(stream);
-                }
-
-                if (reg.Src.Width % frameSize.X != 0 || reg.Src.Height % frameSize.Y != 0)
-                {
-                    var regDims = $"{reg.Src.Width}x{reg.Src.Height}";
-                    var iconDims = $"{frameSize.X}x{frameSize.Y}";
-                    throw new RSILoadException($"State '{stateObject.StateId}' image size ({regDims}) is not a multiple of the icon size ({iconDims}).");
-                }
-
-                // Load all frames into a list so we can operate on it more sanely.
-                reg.TotalFrameCount = stateObject.Delays.Sum(delayList => delayList.Length);
 
                 var (foldedDelays, foldedIndices) = FoldDelays(stateObject.Delays);
 
@@ -130,60 +177,23 @@ namespace Robust.Client.ResourceManagement
                     _ => throw new InvalidOperationException()
                 };
 
-                var state = new RSI.State(frameSize, rsi, stateObject.StateId, dirType, foldedDelays,
+                var state = new RSI.State(
+                    frameSize,
+                    rsi,
+                    stateObject.StateId,
+                    dirType,
+                    foldedDelays,
                     textures);
+
                 rsi.AddState(state);
 
                 callbackOffsets[stateObject.StateId] = callbackOffset;
             }
 
-            // Poorly hacked in texture atlas support here.
-            var totalFrameCount = toAtlas.Sum(p => p.TotalFrameCount);
-
-            // Generate atlas.
-            var dimensionX = (int) MathF.Ceiling(MathF.Sqrt(totalFrameCount));
-            var dimensionY = (int) MathF.Ceiling((float) totalFrameCount / dimensionX);
-
-            var sheet = new Image<Rgba32>(dimensionX * frameSize.X, dimensionY * frameSize.Y);
-
-            var sheetIndex = 0;
-            for (var index = 0; index < toAtlas.Length; index++)
-            {
-                ref var reg = ref toAtlas[index];
-                // Blit all the frames over.
-                for (var i = 0; i < reg.TotalFrameCount; i++)
-                {
-                    var srcWidth = (reg.Src.Width / frameSize.X);
-                    var srcColumn = i % srcWidth;
-                    var srcRow = i / srcWidth;
-                    var srcPos = (srcColumn * frameSize.X, srcRow * frameSize.Y);
-
-                    var sheetColumn = (sheetIndex + i) % dimensionX;
-                    var sheetRow = (sheetIndex + i) / dimensionX;
-                    var sheetPos = (sheetColumn * frameSize.X, sheetRow * frameSize.Y);
-
-                    var srcBox = UIBox2i.FromDimensions(srcPos, frameSize);
-
-                    reg.Src.Blit(srcBox, sheet, sheetPos);
-                }
-
-                sheetIndex += reg.TotalFrameCount;
-            }
-
-            for (var i = 0; i < toAtlas.Length; i++)
-            {
-                ref var reg = ref toAtlas[i];
-                reg.Src.Dispose();
-            }
-
             data.Rsi = rsi;
-            data.AtlasSheet = sheet;
+            data.CallbackOffsets = callbackOffsets;
             data.AtlasList = toAtlas;
             data.FrameSize = frameSize;
-            data.DimX = dimensionX;
-            data.CallbackOffsets = callbackOffsets;
-            data.LoadParameters = metadata.LoadParameters;
-            data.MetaAtlas = metadata.MetaAtlas;
         }
 
         internal static void LoadPostTexture(LoadStepData data)
@@ -216,7 +226,7 @@ namespace Robust.Client.ResourceManagement
                     }
                 }
 
-                sheetOffset += reg.TotalFrameCount;
+                sheetOffset += data.FrameCounts[toAtlasIndex];
             }
         }
 
@@ -381,6 +391,8 @@ namespace Robust.Client.ResourceManagement
             public Image<Rgba32> AtlasSheet = default!;
             public int DimX;
             public StateReg[] AtlasList = default!;
+            public int[] FrameCounts = default!;
+            public Image<Rgba32>[] Images = default!;
             public Vector2i FrameSize;
             public Dictionary<RSI.StateId, Vector2i[][]> CallbackOffsets = default!;
             public Texture AtlasTexture = default!;
@@ -392,11 +404,9 @@ namespace Robust.Client.ResourceManagement
 
         internal struct StateReg
         {
-            public Image<Rgba32> Src;
             public Texture[][] Output;
             public int[][] Indices;
             public Vector2i[][] Offsets;
-            public int TotalFrameCount;
         }
     }
 }

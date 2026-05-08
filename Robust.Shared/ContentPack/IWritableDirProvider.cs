@@ -9,11 +9,12 @@ namespace Robust.Shared.ContentPack
     /// Provides an API for file and directory manipulation inside of a rooted folder.
     /// </summary>
     [PublicAPI]
+    [NotContentImplementable]
     public interface IWritableDirProvider
     {
         /// <summary>
         /// The root path of this provider.
-        /// Can be null if it's a virtual provider.
+        /// Can be null if it's a virtual provider or the path is protected (e.g. on the client).
         /// </summary>
         string? RootDir { get; }
 

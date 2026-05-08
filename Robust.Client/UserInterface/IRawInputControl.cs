@@ -35,13 +35,15 @@ namespace Robust.Client.UserInterface
         public readonly int ScanCode;
         public readonly RawKeyAction Action;
         public readonly Vector2i MouseRelative;
+        public readonly ushort RawCode;
 
-        public GuiRawKeyEvent(Keyboard.Key key, int scanCode, RawKeyAction action, Vector2i mouseRelative)
+        public GuiRawKeyEvent(Keyboard.Key key, int scanCode, RawKeyAction action, Vector2i mouseRelative, ushort rawCode)
         {
             Key = key;
             ScanCode = scanCode;
             Action = action;
             MouseRelative = mouseRelative;
+            RawCode = rawCode;
         }
     }
 

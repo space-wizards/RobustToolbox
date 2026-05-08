@@ -2,6 +2,7 @@ input-key-Escape = Escape
 input-key-Control = Control
 input-key-Shift = Shift
 input-key-Alt = Alt
+input-key-Alt-mac = ⌥
 input-key-Menu = Menu
 input-key-F1 = F1
 input-key-F2 = F2
@@ -67,11 +68,12 @@ input-key-MouseButton6 = Mouse 6
 input-key-MouseButton7 = Mouse 7
 input-key-MouseButton8 = Mouse 8
 input-key-MouseButton9 = Mouse 9
+input-key-CapsLock = Caps Lock
 
 input-key-LSystem-win = Left Win
 input-key-RSystem-win = Right Win
-input-key-LSystem-mac = Left Cmd
-input-key-RSystem-mac = Right Cmd
+input-key-LSystem-mac = Left ⌘
+input-key-RSystem-mac = Right ⌘
 input-key-LSystem-linux = Left Meta
 input-key-RSystem-linux = Right Meta
 

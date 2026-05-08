@@ -4,8 +4,6 @@ using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics
 {
@@ -169,7 +167,7 @@ namespace Robust.Client.Graphics
             SetParameterImpl(name, value);
         }
 
-        public void SetParameter(string name, in Matrix4 value)
+        public void SetParameter(string name, in Matrix4x4 value)
         {
             EnsureAlive();
             EnsureMutable();
@@ -236,7 +234,7 @@ namespace Robust.Client.Graphics
         private protected abstract void SetParameterImpl(string name, bool value);
         private protected abstract void SetParameterImpl(string name, bool[] value);
         private protected abstract void SetParameterImpl(string name, in Matrix3x2 value);
-        private protected abstract void SetParameterImpl(string name, in Matrix4 value);
+        private protected abstract void SetParameterImpl(string name, in Matrix4x4 value);
         private protected abstract void SetParameterImpl(string name, Texture value);
         private protected abstract void SetStencilImpl(StencilParameters value);
     }

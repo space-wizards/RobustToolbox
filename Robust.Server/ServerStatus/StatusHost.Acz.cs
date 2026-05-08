@@ -92,7 +92,7 @@ namespace Robust.Server.ServerStatus
             {
                 context.ResponseHeaders.Add("Content-Encoding", "zstd");
 
-                await context.RespondAsync(result.ManifestData, HttpStatusCode.OK);
+                await context.RespondAsync(result.ManifestData, HttpStatusCode.OK, "text/plain; charset=utf-8");
             }
             else
             {
@@ -110,7 +110,7 @@ namespace Robust.Server.ServerStatus
                 }
                 else
                 {
-                    await context.RespondAsync(result.ManifestData, HttpStatusCode.OK);
+                    await context.RespondAsync(result.ManifestData, HttpStatusCode.OK, "text/plain; charset=utf-8");
                 }
             }
 

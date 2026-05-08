@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -23,6 +24,8 @@ public abstract class BasePoolManager
     ///     This ensures things like gravestone files are truly unique.
     /// </summary>
     internal static int PairIdCounter = 0;
+
+    internal static readonly Meter MetricsMeter = new("Robust.UnitTesting.PoolManager");
 
     internal abstract void Return(ITestPair pair);
     public abstract Assembly[] ClientAssemblies { get; }
@@ -59,6 +62,16 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
 
     public override Assembly[] ClientAssemblies => _clientAssemblies;
     public override Assembly[] ServerAssemblies => _serverAssemblies;
+
+    protected PoolManager()
+    {
+        MetricsMeter.CreateObservableUpDownCounter(
+            "pair_count",
+            MeasurePairCount,
+            null,
+            null,
+            tags: [new KeyValuePair<string, object?>("type", typeof(TPair).FullName)]);
+    }
 
     /// <summary>
     /// Initialize the pool manager. Override this to configure what assemblies should get loaded.
@@ -166,21 +179,23 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
         var watch = new Stopwatch();
         await testOut.WriteLineAsync($"{nameof(GetPair)}: Called by test {currentTestName}");
         TPair? pair = null;
-        watch.Start();
-        if (settings.MustBeNew)
+        try
         {
-            await testOut.WriteLineAsync(
-                $"{nameof(GetPair)}: Creating pair, because settings of pool settings");
-            pair = await CreateServerClientPair(settings, testContext, testOut);
-        }
-        else
-        {
-            await testOut.WriteLineAsync($"{nameof(GetPair)}: Looking in pool for a suitable pair");
-            pair = GrabOptimalPair(settings);
-            if (pair != null)
+            watch.Start();
+            if (settings.MustBeNew)
             {
-                pair.ActivateContext(testOut);
-                await testOut.WriteLineAsync($"{nameof(GetPair)}: Suitable pair found");
+                await testOut.WriteLineAsync(
+                    $"{nameof(GetPair)}: Creating pair, because settings of pool settings");
+                pair = await CreateServerClientPair(settings, testContext, testOut, "MustBeNew", currentTestName);
+            }
+            else
+            {
+                await testOut.WriteLineAsync($"{nameof(GetPair)}: Looking in pool for a suitable pair");
+                pair = GrabOptimalPair(settings);
+                if (pair != null)
+                {
+                    pair.ActivateContext(testOut);
+                    await testOut.WriteLineAsync($"{nameof(GetPair)}: Suitable pair found");
 
                 if (pair.Settings.CanFastRecycle(settings))
                 {
@@ -193,17 +208,35 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
                     await pair.RecycleInternal(settings, testOut);
                 }
 
-                await pair.RunTicksSync(5);
-                await pair.SyncTicks(targetDelta: 1);
+                    await pair.RunTicksSync(5);
+                    await pair.SyncTicks(targetDelta: 1);
+                }
+                else
+                {
+                    await testOut.WriteLineAsync($"{nameof(GetPair)}: Creating a new pair, no suitable pair found in pool");
+                    pair = await CreateServerClientPair(settings, testContext, testOut, "NoneInPool", currentTestName);
+                }
             }
-            else
+        }
+        finally
+        {
+            if (pair != null && pair.ExtendedTestHistory.Count > 0)
             {
-                await testOut.WriteLineAsync($"{nameof(GetPair)}: Creating a new pair, no suitable pair found in pool");
-                pair = await CreateServerClientPair(settings, testContext, testOut);
+                await testOut.WriteLineAsync($"{nameof(GetPair)}: Pair {pair.Id} Test History Start");
+                for (var i = 0; i < pair.ExtendedTestHistory.Count; i++)
+                {
+                    await testOut.WriteLineAsync($"- Pair {pair.Id} Test #{i}: {pair.ExtendedTestHistory[i].TestName}");
+                }
+                await testOut.WriteLineAsync($"{nameof(GetPair)}: Pair {pair.Id} Test History End");
             }
         }
 
         await testOut.WriteLineAsync($"{nameof(GetPair)}: Retrieving pair {pair.Id} from pool took {watch.Elapsed.TotalMilliseconds} ms");
+
+        PoolManagerEvents.Log.PairRetrieved(
+            typeof(TPair).FullName!,
+            pair.Id,
+            currentTestName);
 
         await pair.AddToHistory(currentTestName);
         pair.ValidateSettings(settings);
@@ -283,7 +316,12 @@ we are just going to end this here to save a lot of time. This is the exception 
         }
     }
 
-    private async Task<TPair> CreateServerClientPair(PairSettings settings, ITestContextLike context, TextWriter testOut)
+    private async Task<TPair> CreateServerClientPair(
+        PairSettings settings,
+        ITestContextLike context,
+        TextWriter testOut,
+        string reason,
+        string testName)
     {
         try
         {
@@ -294,10 +332,12 @@ we are just going to end this here to save a lot of time. This is the exception 
             if (context is NUnitTestContextWrap)
                 gravestone = File.CreateText($"{TestContext.CurrentContext.WorkDirectory}/gravestone-{id}.txt");
 
+            PoolManagerEvents.Log.PairCreated(typeof(TPair).FullName!, id, reason, testName);
             await pair.Init(id, this, settings, testOut, gravestone);
             pair.Use();
             await pair.RunTicksSync(5);
             await pair.SyncTicks(targetDelta: 1);
+            PoolManagerEvents.Log.PairFinishedInit(typeof(TPair).FullName!, id);
             return pair;
         }
         catch (Exception ex)
@@ -328,5 +368,24 @@ we are just going to end this here to save a lot of time. This is the exception 
                 TestPrototypes.Add(str);
             }
         }
+    }
+
+    private IEnumerable<Measurement<int>> MeasurePairCount()
+    {
+        var inUse = 0;
+        var notInUse = 0;
+        lock (_pairLock)
+        {
+            foreach (var useBool in Pairs.Values)
+            {
+                if (useBool)
+                    inUse += 1;
+                else
+                    notInUse += 1;
+            }
+        }
+
+        yield return new Measurement<int>(inUse, new KeyValuePair<string, object?>("in_use", "true"));
+        yield return new Measurement<int>(notInUse, new KeyValuePair<string, object?>("in_use", "false"));
     }
 }

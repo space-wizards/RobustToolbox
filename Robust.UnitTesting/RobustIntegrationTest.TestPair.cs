@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Robust.Shared;
 using Robust.Shared.Log;
 using Robust.UnitTesting.Pool;
 
@@ -50,6 +51,8 @@ public partial class RobustIntegrationTest
                 options.CVarOverrides[cvar] = value;
             }
 
+            options.CVarOverrides[CVars.MetricsInstanceName.Name] = $"{GetType().FullName}_client_{Id}";
+
             return options;
         }
 
@@ -71,6 +74,8 @@ public partial class RobustIntegrationTest
             {
                 options.CVarOverrides[cvar] = value;
             }
+
+            options.CVarOverrides[CVars.MetricsInstanceName.Name] = $"{GetType().FullName}_server_{Id}";
 
             return options;
         }

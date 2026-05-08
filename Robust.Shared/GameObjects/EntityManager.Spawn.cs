@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects;
 
@@ -147,14 +146,7 @@ public partial class EntityManager
             return true;
         }
 
-        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
-        uid = Spawn(protoName, overrides, doMapInit);
-        if (_containers.Insert(uid.Value, container))
-            return true;
-
-        DeleteEntity(uid.Value);
-        uid = null;
-        return false;
+        return TrySpawnInContainer(protoName, container, out uid, xform.MapUid, overrides);
     }
 
     public bool TrySpawnInContainer(
@@ -172,15 +164,45 @@ public partial class EntityManager
         if (!containerComp.Containers.TryGetValue(containerId, out var container))
             return false;
 
-        var doMapInit = _mapSystem.IsInitialized(TransformQuery.GetComponent(containerUid).MapUid);
-        uid = Spawn(protoName, overrides, doMapInit);
+        return TrySpawnInContainer(protoName, container, out uid, overrides);
+    }
 
-        if (_containers.Insert(uid.Value, container))
-            return true;
+    public bool TrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ComponentRegistry? overrides = null)
+    {
+        return TrySpawnInContainer(protoName, container, out uid, TransformQuery.GetComponent(container.Owner).MapUid, overrides);
+    }
 
-        DeleteEntity(uid.Value);
-        uid = null;
-        return false;
+    /// <summary>
+    /// Attempts to spawn an entity prototype in a container then initialize it once it has been successfully inserted into the container.
+    /// Deletes the entity if it fails to insert.
+    /// </summary>
+    /// <returns>True if entity was spawned and inserted successfully</returns>
+    public bool TrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        EntityUid? mapUid,
+        ComponentRegistry? overrides = null)
+    {
+        uid = CreateEntityUninitialized(protoName, overrides);
+        var meta = MetaQuery.GetComponent(uid.Value);
+        InitializeAndStartEntity((uid.Value, meta), doMapInit: false);
+
+        if (!_containers.Insert(uid.Value, container))
+        {
+            DeleteEntity(uid);
+            uid = null;
+            return false;
+        }
+
+        if (_mapSystem.IsInitialized(mapUid))
+            RunMapInit(uid.Value, meta);
+
+        return true;
     }
 
     public EntityUid SpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
@@ -189,9 +211,14 @@ public partial class EntityManager
         if (!xform.ParentUid.IsValid())
             return Spawn(protoName);
 
-        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
-        var uid = Spawn(protoName, overrides, doMapInit);
+        var uid = CreateEntityUninitialized(protoName, overrides);
+        var meta = MetaQuery.GetComponent(uid);
+        InitializeAndStartEntity((uid, meta), doMapInit: false);
         _xforms.DropNextTo(uid, target);
+
+        if (_mapSystem.IsInitialized(xform.MapUid))
+            RunMapInit(uid, meta);
+
         return uid;
     }
 
@@ -217,8 +244,9 @@ public partial class EntityManager
     {
         inserted = true;
         xform ??= TransformQuery.GetComponent(containerUid);
-        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
-        var uid = Spawn(protoName, overrides, doMapInit);
+        var uid = CreateEntityUninitialized(protoName, overrides);
+        var meta = MetaQuery.GetComponent(uid);
+        InitializeAndStartEntity((uid, meta), doMapInit: false);
 
         if ((containerComp == null && !TryGetComponent(containerUid, out containerComp))
              || !containerComp.Containers.TryGetValue(containerId, out var container)
@@ -228,6 +256,46 @@ public partial class EntityManager
             if (xform.ParentUid.IsValid())
                 _xforms.DropNextTo(uid, (containerUid, xform));
         }
+
+        if (_mapSystem.IsInitialized(xform.MapUid))
+            RunMapInit(uid, meta);
+
+        return uid;
+    }
+
+    public EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return SpawnInContainerOrDrop(protoName, container, out _, xform, containerComp, overrides);
+    }
+
+    public EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        inserted = true;
+        xform ??= TransformQuery.GetComponent(container.Owner);
+        var uid = CreateEntityUninitialized(protoName, overrides);
+        var meta = MetaQuery.GetComponent(uid);
+        InitializeAndStartEntity((uid, meta), doMapInit: false);
+
+        if (!_containers.Insert(uid, container))
+        {
+            inserted = false;
+            if (xform.ParentUid.IsValid())
+                _xforms.DropNextTo(uid, (container.Owner, xform));
+        }
+
+        if (_mapSystem.IsInitialized(xform.MapUid))
+            RunMapInit(uid, meta);
 
         return uid;
     }
@@ -275,6 +343,25 @@ public partial class EntityManager
         return TrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
     }
 
+    public virtual bool PredictedTrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ComponentRegistry? overrides = null)
+    {
+        return TrySpawnInContainer(protoName, container, out uid, overrides);
+    }
+
+    public virtual bool PredictedTrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        EntityUid? mapUid,
+        ComponentRegistry? overrides = null)
+    {
+        return TrySpawnInContainer(protoName, container, out uid, mapUid, overrides);
+    }
+
     public virtual EntityUid PredictedSpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
     {
         return SpawnNextToOrDrop(protoName, target, xform, overrides);
@@ -303,6 +390,32 @@ public partial class EntityManager
         return SpawnInContainerOrDrop(protoName,
             containerUid,
             containerId,
+            out inserted,
+            xform,
+            containerComp,
+            overrides);
+    }
+
+    public virtual EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return SpawnInContainerOrDrop(protoName, container, xform, containerComp, overrides);
+    }
+
+    public virtual EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return SpawnInContainerOrDrop(protoName,
+            container,
             out inserted,
             xform,
             containerComp,

@@ -79,7 +79,7 @@ public sealed partial class EntitySerializer : ISerializationContext,
 
     /// <summary>
     /// If set, the serializer will refuse to serialize the given entity and will orphan any entity that is parented to
-    /// it. This is useful for serializing things like a grid (or multiple grids & entities) that are parented to a map
+    /// it. This is useful for serializing things like a grid (or multiple grids &amp; entities) that are parented to a map
     /// without actually serializing the map itself.
     /// </summary>
     public EntityUid Truncate { get; private set; }

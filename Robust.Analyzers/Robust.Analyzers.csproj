@@ -38,11 +38,6 @@
     <Compile Include="..\Robust.Shared\Prototypes\PrototypeUtility.cs" LinkBase="Implementations" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Needed for ExplicitVirtualAnalyzer. -->
-    <Compile Include="..\Robust.Shared\Analyzers\VirtualAttribute.cs" LinkBase="Implementations" />
-  </ItemGroup>
-
   <Import Project="../Robust.Roslyn.Shared/Robust.Roslyn.Shared.props" />
 
   <PropertyGroup>

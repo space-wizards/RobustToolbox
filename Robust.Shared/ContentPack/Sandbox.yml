@@ -687,6 +687,8 @@ Types:
     IUnaryNegationOperators`2: { All: True }
     IUnaryPlusOperators`2: { All: True }
     IUnsignedNumber`1: { All: True }
+  System.Numerics.Tensors:
+    TensorPrimitives: { All: True }
   System.Reflection:
     Assembly:
       Methods:

@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 277.0.0
+
+### New features
+
 * Statics on interfaces, and other cases of `static abstract` methods and properties, are now allowed by the sandbox.
 * `INumber<T>` and all associated types in `System.Numerics` are now allowed by the sandbox.
 * `BigInteger` is now allowed by the sandbox.

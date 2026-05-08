@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
     <PackageReference Include="Nett" PrivateAssets="compile" />
     <PackageReference Include="System.Management" />
+    <PackageReference Include="System.Numerics.Tensors" />
     <PackageReference Include="VorbisPizza" PrivateAssets="compile" />
     <PackageReference Include="Pidgin" />
     <PackageReference Include="prometheus-net" />

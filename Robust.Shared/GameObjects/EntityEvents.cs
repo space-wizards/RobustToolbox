@@ -10,17 +10,13 @@ namespace Robust.Shared.GameObjects
     }
 
     public delegate void EntityEventHandler<in T>(T ev);
-
     public delegate void EntityEventRefHandler<T>(ref T ev);
-
     public delegate void EntitySessionEventHandler<in T>(T msg, EntitySessionEventArgs args);
 
     [Serializable, NetSerializable]
-    public abstract class EntityEventArgs
-    {
-    }
+    public abstract class EntityEventArgs { }
 
-    [Obsolete]
+    [Obsolete("Use IHandleableEvent instead with a by ref struct event")]
     [Serializable, NetSerializable]
     public abstract class HandledEntityEventArgs : EntityEventArgs
     {
@@ -30,7 +26,7 @@ namespace Robust.Shared.GameObjects
         public bool Handled { get; set; }
     }
 
-    [Obsolete]
+    [Obsolete("Use ICancelableEvent instead with a by ref struct event")]
     [Serializable, NetSerializable]
     public abstract class CancellableEntityEventArgs : EntityEventArgs
     {
@@ -89,12 +85,12 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public static class EventExtensions
     {
-        extension<T>(T ev) where T : struct, IHandleableEvent
+        extension<T>(ref T ev) where T : struct, IHandleableEvent
         {
             public void Handle() => ev.Handle();
         }
 
-        extension<T>(T ev) where T : struct, ICancelableEvent
+        extension<T>(ref T ev) where T : struct, ICancelableEvent
         {
             public void Cancel() => ev.Cancel();
         }

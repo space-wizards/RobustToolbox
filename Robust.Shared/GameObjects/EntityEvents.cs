@@ -4,9 +4,7 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
 {
-    public interface IEntityEventSubscriber
-    {
-    }
+    public interface IEntityEventSubscriber { }
 
     public delegate void EntityEventHandler<in T>(T ev);
     public delegate void EntityEventRefHandler<T>(ref T ev);

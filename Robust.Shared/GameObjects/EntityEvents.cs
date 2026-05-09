@@ -1,5 +1,4 @@
 using System;
-using System.Reflection.Metadata;
 using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 

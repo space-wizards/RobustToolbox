@@ -6,9 +6,9 @@ using Robust.Shared.Reflection;
 
 namespace Robust.Client.UserInterface
 {
-    sealed class ChangeSceneCommpand : LocalizedCommands
+    sealed partial class ChangeSceneCommpand : LocalizedCommands
     {
-        [Dependency] private readonly IReflectionManager _reflection = default!;
+        [Dependency] private IReflectionManager _reflection = default!;
 
         public override string Command => "scene";
         public override void Execute(IConsoleShell shell, string argStr, string[] args)

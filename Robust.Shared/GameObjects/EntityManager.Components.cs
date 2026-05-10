@@ -23,7 +23,7 @@ namespace Robust.Shared.GameObjects
 {
     public partial class EntityManager
     {
-        [IoC.Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [IoC.Dependency] private IComponentFactory _componentFactory = default!;
 
 #if EXCEPTION_TOLERANCE
         [IoC.Dependency] private readonly IRuntimeLog _runtimeLog = default!;

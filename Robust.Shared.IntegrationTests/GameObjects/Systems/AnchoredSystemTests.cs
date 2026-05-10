@@ -93,9 +93,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         }
 
         [Reflect(false)]
-        internal sealed class MoveEventTestSystem : EntitySystem
+        internal sealed partial class MoveEventTestSystem : EntitySystem
         {
-            [Dependency] private readonly SharedTransformSystem _transform = default!;
+            [Dependency] private SharedTransformSystem _transform = default!;
 
             public override void Initialize()
             {

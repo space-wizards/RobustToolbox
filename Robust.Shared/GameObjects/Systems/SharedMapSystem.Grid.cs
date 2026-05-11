@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -790,6 +791,18 @@ public abstract partial class SharedMapSystem
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Returns the total number of filled tiles on a grid
+    /// by summing the counts of filled tiles in each chunk.
+    /// </summary>
+    /// <param name="ent">The target map grid entity</param>
+    /// <returns>The total number of filled tiles in <paramref name="ent"/>.</returns>
+    [Pure]
+    public int GetFilledTileCount(Entity<MapGridComponent> ent)
+    {
+        return ent.Comp.Chunks.Values.Sum(chunk => chunk.FilledTiles);
     }
 
     public GridTileEnumerator GetAllTilesEnumerator(EntityUid uid, MapGridComponent grid, bool ignoreEmpty = true)

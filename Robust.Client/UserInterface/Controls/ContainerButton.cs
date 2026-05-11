@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
@@ -9,6 +9,8 @@ namespace Robust.Client.UserInterface.Controls
     public class ContainerButton : BaseButton
     {
         public const string StylePropertyStyleBox = "stylebox";
+
+        [Obsolete("Use the Element<> selector or Parent/Child selectors instead.")]
         public const string StyleClassButton = "button";
         public const string StylePseudoClassNormal = "normal";
         public const string StylePseudoClassPressed = "pressed";

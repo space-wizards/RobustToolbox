@@ -418,9 +418,7 @@ public abstract partial class SharedBroadphaseSystem : EntitySystem
 
             if (tuple.proxy.Entity == other.Entity ||
                 !SharedPhysicsSystem.ShouldCollide(tuple.proxy.Fixture, other.Fixture))
-            {
                 return true;
-            }
 
             // Avoid creating duplicate pairs.
             // We give priority to whoever has the lower entity ID.
@@ -449,9 +447,7 @@ public abstract partial class SharedBroadphaseSystem : EntitySystem
             if (tuple.proxy.Fixture.Hard &&
                 other.Fixture.Hard &&
                 (tuple.broadphase._gridMoveBuffer.Contains(tuple.proxy) || tuple.broadphase._gridMoveBuffer.Contains(other)))
-            {
                 flags |= PairFlag.Wake;
-            }
 
             lock (tuple.pairs)
             {

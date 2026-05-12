@@ -25,13 +25,13 @@ namespace Robust.Server.Physics
     /// </summary>
     public sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
-        [Dependency] private IMapManager _mapManager = default!;
-        [Dependency] private IConfigurationManager _cfg = default!;
-        [Dependency] private IConGroupController _conGroup = default!;
-        [Dependency] private EntityLookupSystem _lookup = default!;
-        [Dependency] private SharedMapSystem _maps = default!;
-        [Dependency] private SharedPhysicsSystem _physics = default!;
-        [Dependency] private SharedTransformSystem _xformSystem = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IConGroupController _conGroup = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedMapSystem _maps = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, ChunkNodeGroup>> _nodes = new();
 
@@ -736,44 +736,32 @@ namespace Robust.Server.Physics
 ///     Event raised on a grid after it has been split but before the old grid has been cleaned up.
 /// </summary>
 [ByRefEvent]
-public readonly struct PostGridSplitEvent
+public readonly struct PostGridSplitEvent(EntityUid oldGrid, EntityUid grid)
 {
     /// <summary>
     ///     The grid it was part of previously.
     /// </summary>
-    public readonly EntityUid OldGrid;
+    public readonly EntityUid OldGrid = oldGrid;
 
     /// <summary>
     ///     The grid that has been split.
     /// </summary>
-    public readonly EntityUid Grid;
-
-    public PostGridSplitEvent(EntityUid oldGrid, EntityUid grid)
-    {
-        OldGrid = oldGrid;
-        Grid = grid;
-    }
+    public readonly EntityUid Grid = grid;
 }
 
 /// <summary>
 ///     Event raised on a grid that has been split into multiple grids.
 /// </summary>
 [ByRefEvent]
-public readonly struct GridSplitEvent
+public readonly struct GridSplitEvent(EntityUid[] newGrids, EntityUid grid)
 {
     /// <summary>
     ///     Contains the IDs of the newly created grids.
     /// </summary>
-    public readonly EntityUid[] NewGrids;
+    public readonly EntityUid[] NewGrids = newGrids;
 
     /// <summary>
     ///     The grid that has been split.
     /// </summary>
-    public readonly EntityUid Grid;
-
-    public GridSplitEvent(EntityUid[] newGrids, EntityUid grid)
-    {
-        NewGrids = newGrids;
-        Grid = grid;
-    }
+    public readonly EntityUid Grid = grid;
 }

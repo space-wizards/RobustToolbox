@@ -138,7 +138,7 @@ public sealed partial class EntityPrototype : IPrototype, IInheritingPrototype, 
     /// The prototype we inherit from.
     /// </summary>
     [ViewVariables]
-    [ParentDataFieldAttribute(typeof(AbstractPrototypeIdArraySerializer<EntityPrototype>))]
+    [ParentDataField(typeof(AbstractPrototypeIdArraySerializer<EntityPrototype>))]
     public string[]? Parents { get; private set; }
 
     [ViewVariables]

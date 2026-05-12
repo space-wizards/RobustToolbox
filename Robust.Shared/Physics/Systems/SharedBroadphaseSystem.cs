@@ -17,20 +17,20 @@ namespace Robust.Shared.Physics.Systems;
 
 public abstract partial class SharedBroadphaseSystem : EntitySystem
 {
-    [Dependency] private IConfigurationManager _cfg = default!;
-    [Dependency] private IMapManagerInternal _mapManager = default!;
-    [Dependency] private IParallelManager _parallel = default!;
-    [Dependency] private EntityLookupSystem _lookup = default!;
-    [Dependency] private SharedGridTraversalSystem _traversal = default!;
-    [Dependency] private SharedMapSystem _map = default!;
-    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
-    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private readonly IMapManagerInternal _mapManager = default!;
+    [Dependency] private readonly IParallelManager _parallel = default!;
+    [Dependency] private readonly EntityLookupSystem _lookup = default!;
+    [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
+    [Dependency] private readonly SharedMapSystem _map = default!;
+    [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
 
-    private EntityQuery<BroadphaseComponent> _broadphaseQuery;
-    private EntityQuery<FixturesComponent> _fixturesQuery;
-    private EntityQuery<MapGridComponent> _gridQuery;
-    private EntityQuery<PhysicsComponent> _physicsQuery;
-    private EntityQuery<TransformComponent> _xformQuery;
+    [Dependency] private readonly EntityQuery<BroadphaseComponent> _broadphaseQuery = default!;
+    [Dependency] private readonly EntityQuery<FixturesComponent> _fixturesQuery = default!;
+    [Dependency] private readonly EntityQuery<MapGridComponent> _gridQuery = default!;
+    [Dependency] private readonly EntityQuery<PhysicsComponent> _physicsQuery = default!;
+    [Dependency] private readonly EntityQuery<TransformComponent> _xformQuery = default!;
 
     private readonly HashSet<FixtureProxy> _gridMoveBuffer = new();
 
@@ -57,12 +57,6 @@ public abstract partial class SharedBroadphaseSystem : EntitySystem
             // TODO: EntityManager one isn't ready yet?
             XformQuery = GetEntityQuery<TransformComponent>(),
         };
-
-        _broadphaseQuery = GetEntityQuery<BroadphaseComponent>();
-        _fixturesQuery = GetEntityQuery<FixturesComponent>();
-        _gridQuery = GetEntityQuery<MapGridComponent>();
-        _physicsQuery = GetEntityQuery<PhysicsComponent>();
-        _xformQuery = GetEntityQuery<TransformComponent>();
 
         UpdatesOutsidePrediction = true;
         UpdatesAfter.Add(typeof(SharedTransformSystem));

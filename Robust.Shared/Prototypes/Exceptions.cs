@@ -22,15 +22,9 @@ public class PrototypeLoadException : Exception
 
 [Serializable]
 [Virtual]
-public class UnknownPrototypeException : Exception
+public class UnknownPrototypeException(string prototype, Type kind) : Exception
 {
     public override string Message => $"Unknown {Kind.Name} prototype: {Prototype}" ;
-    public readonly string Prototype;
-    public readonly Type Kind;
-
-    public UnknownPrototypeException(string prototype, Type kind)
-    {
-        Prototype = prototype;
-        Kind = kind;
-    }
+    public readonly string Prototype = prototype;
+    public readonly Type Kind = kind;
 }

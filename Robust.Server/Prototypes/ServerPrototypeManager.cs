@@ -13,11 +13,11 @@ namespace Robust.Server.Prototypes;
 public sealed partial class ServerPrototypeManager : PrototypeManager
 {
 #if TOOLS
-    [Dependency] private IPlayerManager _playerManager = default!;
-    [Dependency] private IConGroupController _conGroups = default!;
+    [Dependency] private readonly IPlayerManager _playerManager = default!;
+    [Dependency] private readonly IConGroupController _conGroups = default!;
 #endif
-    [Dependency] private INetManager _netManager = default!;
-    [Dependency] private IBaseServerInternal _server = default!;
+    [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private readonly IBaseServerInternal _server = default!;
 
     public ServerPrototypeManager()
     {

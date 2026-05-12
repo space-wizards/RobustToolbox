@@ -15,13 +15,13 @@ namespace Robust.Client.GameObjects;
 
 public sealed partial class ContainerSystem : SharedContainerSystem
 {
-    [Dependency] private readonly IRobustSerializer _serializer = default!;
-    [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
-    [Dependency] private readonly PointLightSystem _lightSys = default!;
-    [Dependency] private readonly SpriteSystem _sprite = default!;
+    [Dependency] private IRobustSerializer _serializer = default!;
+    [Dependency] private IDynamicTypeFactoryInternal _dynFactory = default!;
+    [Dependency] private PointLightSystem _lightSys = default!;
+    [Dependency] private SpriteSystem _sprite = default!;
 
-    [Dependency] private readonly EntityQuery<PointLightComponent> _pointLightQuery = default!;
-    [Dependency] private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
+    [Dependency] private EntityQuery<PointLightComponent> _pointLightQuery = default!;
+    [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 
     private readonly HashSet<EntityUid> _updateQueue = new();
 

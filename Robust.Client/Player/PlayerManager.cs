@@ -19,8 +19,8 @@ namespace Robust.Client.Player
     /// </summary>
     internal sealed partial class PlayerManager : SharedPlayerManager, IPlayerManager
     {
-        [Dependency] private IClientNetManager _network = default!;
-        [Dependency] private IBaseClient _client = default!;
+        [Dependency] private readonly IClientNetManager _network = default!;
+        [Dependency] private readonly IBaseClient _client = default!;
 
         /// <summary>
         /// Received player states that had an unknown <see cref="NetEntity"/>.

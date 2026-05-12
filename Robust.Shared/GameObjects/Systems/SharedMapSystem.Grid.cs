@@ -794,7 +794,7 @@ public abstract partial class SharedMapSystem
     }
 
     /// <summary>
-    /// Returns the total number of filled tiles on a grid
+    /// Returns the total number of tiles on a grid.
     /// by summing the counts of filled tiles in each chunk.
     /// </summary>
     /// <param name="ent">The target map grid entity</param>

@@ -92,6 +92,10 @@ namespace Robust.Client.UserInterface.Controls
                 case DrawModeEnum.Disabled:
                     SetOnlyStylePseudoClass(StylePseudoClassDisabled);
                     break;
+                case DrawModeEnum.PressedHover:
+                    SetOnlyStylePseudoClass(StylePseudoClassPressed);
+                    AddStylePseudoClass(StylePseudoClassHover);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

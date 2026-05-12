@@ -20,21 +20,21 @@ namespace Robust.Shared.Containers
 {
     public abstract partial class SharedContainerSystem
     {
-        [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
-        [Dependency] private readonly INetManager _net = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly SharedJointSystem _joint = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private IDynamicTypeFactoryInternal _dynFactory = default!;
+        [Dependency] private INetManager _net = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private SharedJointSystem _joint = default!;
+        [Dependency] private IGameTiming _timing = default!;
 
-        [Dependency] private readonly EntityQuery<ContainerManagerComponent> _managerQuery = default!;
-        [Dependency] private readonly EntityQuery<MapGridComponent> _gridQuery = default!;
-        [Dependency] private readonly EntityQuery<MapComponent> _mapQuery = default!;
-        [Dependency] protected readonly EntityQuery<MetaDataComponent> MetaQuery = default!;
-        [Dependency] protected readonly EntityQuery<PhysicsComponent> PhysicsQuery = default!;
-        [Dependency] protected readonly EntityQuery<JointComponent> JointQuery = default!;
-        [Dependency] protected readonly EntityQuery<TransformComponent> TransformQuery = default!;
+        [Dependency] private EntityQuery<ContainerManagerComponent> _managerQuery = default!;
+        [Dependency] private EntityQuery<MapGridComponent> _gridQuery = default!;
+        [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
+        [Dependency] protected EntityQuery<MetaDataComponent> MetaQuery = default!;
+        [Dependency] protected EntityQuery<PhysicsComponent> PhysicsQuery = default!;
+        [Dependency] protected EntityQuery<JointComponent> JointQuery = default!;
+        [Dependency] protected EntityQuery<TransformComponent> TransformQuery = default!;
 
         /// <inheritdoc />
         public override void Initialize()

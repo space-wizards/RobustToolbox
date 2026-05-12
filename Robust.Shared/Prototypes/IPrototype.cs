@@ -62,13 +62,10 @@ public interface IInheritingPrototype
 ///     This field is always required.
 /// </summary>
 /// <seealso cref="IPrototype"/>
-public sealed class IdDataFieldAttribute : DataFieldAttribute
+public sealed class IdDataFieldAttribute(int priority = 1, Type? customTypeSerializer = null)
+    : DataFieldAttribute(Name, false, priority, true, false, customTypeSerializer)
 {
     public const string Name = "id";
-    public IdDataFieldAttribute(int priority = 1, Type? customTypeSerializer = null) :
-        base(Name, false, priority, true, false, customTypeSerializer)
-    {
-    }
 }
 
 /// <summary>
@@ -78,13 +75,10 @@ public sealed class IdDataFieldAttribute : DataFieldAttribute
 ///     This field is never required.
 /// </summary>
 /// <seealso cref="IInheritingPrototype"/>
-public sealed class ParentDataFieldAttribute : DataFieldAttribute
+public sealed class ParentDataFieldAttribute(Type prototypeIdSerializer, int priority = 1)
+    : DataFieldAttribute(Name, false, priority, false, false, prototypeIdSerializer)
 {
     public const string Name = "parent";
-    public ParentDataFieldAttribute(Type prototypeIdSerializer, int priority = 1) :
-        base(Name, false, priority, false, false, prototypeIdSerializer)
-    {
-    }
 }
 
 /// <summary>
@@ -94,11 +88,8 @@ public sealed class ParentDataFieldAttribute : DataFieldAttribute
 ///     This field is never required.
 /// </summary>
 /// <seealso cref="IInheritingPrototype"/>
-public sealed class AbstractDataFieldAttribute : DataFieldAttribute
+public sealed class AbstractDataFieldAttribute(int priority = 1)
+    : DataFieldAttribute(Name, false, priority, false, false, null)
 {
     public const string Name = "abstract";
-    public AbstractDataFieldAttribute(int priority = 1) :
-        base(Name, false, priority, false, false, null)
-    {
-    }
 }

@@ -1,13 +1,12 @@
 using Robust.Shared.Physics.Systems;
 
-namespace Robust.Client.Physics
+namespace Robust.Client.Physics;
+
+internal sealed class BroadPhaseSystem : SharedBroadphaseSystem
 {
-    internal sealed class BroadPhaseSystem : SharedBroadphaseSystem
+    public override void Initialize()
     {
-        public override void Initialize()
-        {
-            base.Initialize();
-            UpdatesBefore.Add(typeof(PhysicsSystem));
-        }
+        base.Initialize();
+        UpdatesBefore.Add(typeof(PhysicsSystem));
     }
 }

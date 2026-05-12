@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Prototypes;
 
 // This partial class handles entity prototype categories
-public abstract partial class PrototypeManager : IPrototypeManagerInternal
+public abstract partial class PrototypeManager
 {
     /// <summary>
     /// Cached array of components with the <see cref="EntityCategoryAttribute"/>

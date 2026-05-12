@@ -188,22 +188,15 @@ public partial class PrototypeManager
         }
     }
 
-    private sealed class PrototypeValidationData
+    private sealed class PrototypeValidationData(string id, MappingDataNode mapping, string file)
     {
-        public readonly string Id;
-        public MappingDataNode Mapping;
-        public readonly string File;
+        public readonly string Id = id;
+        public MappingDataNode Mapping = mapping;
+        public readonly string File = file;
         public bool Pushed;
 
         public string[]? Parents;
         public MappingDataNode[]? ParentMappings;
-
-        public PrototypeValidationData(string id, MappingDataNode mapping, string file)
-        {
-            Id = id;
-            File = file;
-            Mapping = mapping;
-        }
     }
 
     private void EnsurePushed(

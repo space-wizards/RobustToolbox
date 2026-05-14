@@ -46,25 +46,31 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (Orientation == LayoutOrientation.Vertical)
             {
-                return MeasureItems<VerticalAxis>(availableSize);
+                return MeasureItems<VerticalAxis>(availableSize, Children, 0, ChildCount, ActualSeparation);
             }
             else
             {
-                return MeasureItems<HorizontalAxis>(availableSize);
+                return MeasureItems<HorizontalAxis>(availableSize, Children, 0, ChildCount, ActualSeparation);
             }
         }
 
-        private Vector2 MeasureItems<TAxis>(Vector2 availableSize) where TAxis : IAxisImplementation
+        internal static Vector2 MeasureItems<TAxis>(
+            Vector2 availableSize,
+            OrderedChildCollection children,
+            int start,
+            int end,
+            float separation)
+            where TAxis : IAxisImplementation
         {
             availableSize = TAxis.SizeToAxis(availableSize);
 
             // Account for separation.
-            var separation = ActualSeparation * (Children.Where(c => c.Visible).Count() - 1);
-            var desiredSize = new Vector2(separation, 0);
-            availableSize.X = Math.Max(0, availableSize.X) - separation;
+            var totalSeparation = separation * (children.Skip(start).Take(end - start).Count(c => c.Visible) - 1);
+            var desiredSize = new Vector2(totalSeparation, 0);
+            availableSize.X = Math.Max(0, availableSize.X) - totalSeparation;
 
             // First, we measure non-stretching children.
-            foreach (var child in Children)
+            foreach (var child in children.Skip(start).Take(end - start))
             {
                 if (!child.Visible)
                     continue;

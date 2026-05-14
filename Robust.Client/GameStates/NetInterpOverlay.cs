@@ -11,13 +11,13 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
 {
-    internal sealed class NetInterpOverlay : Overlay
+    internal sealed partial class NetInterpOverlay : Overlay
     {
         private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
 
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
         private readonly EntityLookupSystem _lookup;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
@@ -43,7 +43,7 @@ namespace Robust.Client.GameStates
         {
             var handle = args.DrawingHandle;
             handle.UseShader(_shader);
-            var worldHandle = (DrawingHandleWorld) handle;
+            var worldHandle = (DrawingHandleWorld)handle;
             var viewport = args.WorldAABB;
 
             var query = _entityManager.AllEntityQueryEnumerator<TransformComponent>();
@@ -57,7 +57,7 @@ namespace Robust.Client.GameStates
                     continue;
 
                 var delta = (_timing.CurTick.Value - transform.LastLerp.Value) * _timing.TickPeriod;
-                if(!transform.ActivelyLerping && delta > Delay)
+                if (!transform.ActivelyLerping && delta > Delay)
                     continue;
 
                 var aabb = _lookup.GetWorldAABB(uid);
@@ -90,10 +90,10 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private sealed class NetShowInterpCommand : LocalizedCommands
+        private sealed partial class NetShowInterpCommand : LocalizedCommands
         {
-            [Dependency] private readonly IEntityManager _entManager = default!;
-            [Dependency] private readonly IOverlayManager _overlay = default!;
+            [Dependency] private IEntityManager _entManager = default!;
+            [Dependency] private IOverlayManager _overlay = default!;
 
             public override string Command => "net_draw_interp";
 

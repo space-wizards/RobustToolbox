@@ -34,24 +34,24 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public static readonly Type XamlHotReloadWarmupType = typeof(DropDownDebugConsole);
 
-        [Dependency] private readonly IDependencyCollection _rootDependencies = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IFontManager _fontManager = default!;
-        [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IStateManager _stateManager = default!;
-        [Dependency] private readonly IPrototypeManager _protoManager = default!;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
-        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
-        [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IEntitySystemManager _systemManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IRuntimeLog _runtime = default!;
-        [Dependency] private readonly IClipboardManager _clipboard = null!;
+        [Dependency] private IDependencyCollection _rootDependencies = default!;
+        [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private IFontManager _fontManager = default!;
+        [Dependency] private IClydeInternal _clyde = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] private IStateManager _stateManager = default!;
+        [Dependency] private IPrototypeManager _protoManager = default!;
+        [Dependency] private IUserInterfaceManagerInternal _userInterfaceManager = default!;
+        [Dependency] private IDynamicTypeFactoryInternal _typeFactory = default!;
+        [Dependency] private IUserInterfaceManager _uiManager = default!;
+        [Dependency] private IConfigurationManager _configurationManager = default!;
+        [Dependency] private ProfManager _prof = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IEntitySystemManager _systemManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IRuntimeLog _runtime = default!;
+        [Dependency] private IClipboardManager _clipboard = null!;
 
         private IAudioSource? _clickSource;
         private IAudioSource? _hoverSource;
@@ -61,6 +61,8 @@ namespace Robust.Client.UserInterface
         /// to the next frame update. This is just meant to prevent infinite loops from completely locking up the UI.
         /// </summary>
         public const int ControlUpdateLimit = 25_000;
+
+        private bool _obeyUpdateLimits = true;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
         [ViewVariables]
@@ -108,6 +110,9 @@ namespace Robust.Client.UserInterface
         {
             _dependencies = new DependencyCollection(_rootDependencies);
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
+#if DEBUG
+            _configurationManager.OnValueChanged(CVars.UIObeyUpdateLimits, _uiObeyUpdateLimitsChanged, true);
+#endif
             ThemeDefaults = new InterfaceThemeDummy();
             _initScaling();
             SetupControllers();
@@ -139,6 +144,11 @@ namespace Robust.Client.UserInterface
             _initThemes();
 
             _stylesheet = new DefaultStylesheet(_resourceCache, this).Stylesheet;
+        }
+
+        private void _uiObeyUpdateLimitsChanged(bool newValue, in CVarChangeInfo info)
+        {
+            _obeyUpdateLimits = newValue;
         }
 
         public void PostInitialize()
@@ -226,7 +236,7 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_styleUpdateQueue.Count != 0)
                 {
-                    if (total >= ControlUpdateLimit)
+                    if (total >= ControlUpdateLimit && _obeyUpdateLimits)
                     {
                         _sawmillUI.Warning($"Hit style update limit. Queued: {_styleUpdateQueue.Count}. Next in queue: {_styleUpdateQueue.Peek()}. Parent: {_styleUpdateQueue.Peek().Parent}");
                         break;
@@ -249,7 +259,7 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_measureUpdateQueue.Count != 0)
                 {
-                    if (total >= ControlUpdateLimit)
+                    if (total >= ControlUpdateLimit && _obeyUpdateLimits)
                     {
                         _sawmillUI.Warning($"Hit measure update limit. Queued: {_measureUpdateQueue.Count}. Next in queue: {_measureUpdateQueue.Peek()}. Parent: {_measureUpdateQueue.Peek().Parent}");
                         break;
@@ -275,7 +285,7 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_arrangeUpdateQueue.Count != 0)
                 {
-                    if (total >= ControlUpdateLimit)
+                    if (total >= ControlUpdateLimit && _obeyUpdateLimits)
                     {
                         _sawmillUI.Warning($"Hit arrange update limit. Queued: {_arrangeUpdateQueue.Count}. Next in queue: {_arrangeUpdateQueue.Peek()}. Parent: {_arrangeUpdateQueue.Peek().Parent}");
                         break;

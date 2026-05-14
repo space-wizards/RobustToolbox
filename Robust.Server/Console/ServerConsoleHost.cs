@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
+using Robust.Shared.Profiling;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Utility;
 
@@ -16,14 +17,15 @@ namespace Robust.Server.Console
 {
     /// <inheritdoc cref="IServerConsoleHost" />
     [Virtual]
-    internal class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
+    internal partial class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
     {
-        [Dependency] private readonly IConGroupController _groupController = default!;
-        [Dependency] private readonly IPlayerManager _players = default!;
-        [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
-        [Dependency] private readonly ToolshedManager _toolshed = default!;
+        [Dependency] private IConGroupController _groupController = default!;
+        [Dependency] private IPlayerManager _players = default!;
+        [Dependency] private ISystemConsoleManager _systemConsole = default!;
+        [Dependency] private ToolshedManager _toolshed = default!;
+        [Dependency] private ProfManager _prof = default!;
 
-        public ServerConsoleHost() : base(isServer: true) {}
+        public ServerConsoleHost() : base(isServer: true) { }
 
         public override event ConAnyCommandCallback? AnyCommandExecuted;
 
@@ -108,7 +110,8 @@ namespace Robust.Server.Console
                 if (args.Count == 0)
                     return;
 
-                string? cmdName = args[0];
+                var cmdName = args[0];
+                using var _ = _prof.Group(cmdName);
 
                 if (RegisteredCommands.TryGetValue(cmdName, out var conCmd)) // command registered
                 {
@@ -251,7 +254,7 @@ namespace Robust.Server.Console
                 result = new CompletionResult(options.ToArray(), hints);
             }
 
-            done:
+        done:
 
             result ??= CompletionResult.Empty;
 

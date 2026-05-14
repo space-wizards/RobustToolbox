@@ -13,9 +13,9 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 /// <summary>
 /// This is custom type parser that uses reflection to search for constructible types that are the children of some base type.
 /// </summary>
-internal sealed class ReflectionTypeParser<TBase> : CustomTypeParser<Type> where TBase : class
+internal sealed partial class ReflectionTypeParser<TBase> : CustomTypeParser<Type> where TBase : class
 {
-    [Dependency] private readonly IReflectionManager _reflection = default!;
+    [Dependency] private IReflectionManager _reflection = default!;
     private Dictionary<string, Type>? _cache;
     private CompletionOption[]? _options;
 

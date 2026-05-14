@@ -20,13 +20,13 @@ namespace Robust.Shared.Containers
 {
     public abstract partial class SharedContainerSystem
     {
-        [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
-        [Dependency] private readonly INetManager _net = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly SharedJointSystem _joint = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private IDynamicTypeFactoryInternal _dynFactory = default!;
+        [Dependency] private INetManager _net = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private SharedJointSystem _joint = default!;
+        [Dependency] private IGameTiming _timing = default!;
 
         private EntityQuery<ContainerManagerComponent> _managerQuery;
         private EntityQuery<MapGridComponent> _gridQuery;

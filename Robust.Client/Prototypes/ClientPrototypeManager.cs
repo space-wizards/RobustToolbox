@@ -10,14 +10,14 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Prototypes
 {
-    public sealed class ClientPrototypeManager : PrototypeManager
+    public sealed partial class ClientPrototypeManager : PrototypeManager
     {
-        [Dependency] private readonly INetManager _netManager = default!;
-#pragma warning disable CS0414
-        [Dependency] private readonly IClientGameTiming _timing = default!;
-#pragma warning restore CS0414
-        [Dependency] private readonly IGameControllerInternal _controller = default!;
-        [Dependency] private readonly IReloadManager _reload = default!;
+        [Dependency] private INetManager _netManager = default!;
+#if TOOLS
+        [Dependency] private IClientGameTiming _timing = default!;
+#endif
+        [Dependency] private IGameControllerInternal _controller = default!;
+        [Dependency] private IReloadManager _reload = default!;
 
         public override void Initialize()
         {

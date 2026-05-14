@@ -15,10 +15,10 @@ namespace Robust.Client.Audio;
 
 internal sealed partial class AudioManager : IAudioInternal
 {
-    [Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;
-    [Shared.IoC.Dependency] private readonly IReloadManager _reload = default!;
-    [Shared.IoC.Dependency] private readonly IResourceCache _cache = default!;
+    [Shared.IoC.Dependency] private IConfigurationManager _cfg = default!;
+    [Shared.IoC.Dependency] private ILogManager _logMan = default!;
+    [Shared.IoC.Dependency] private IReloadManager _reload = default!;
+    [Shared.IoC.Dependency] private IResourceCache _cache = default!;
 
     private Thread? _gameThread;
 
@@ -46,14 +46,7 @@ internal sealed partial class AudioManager : IAudioInternal
 
     private void _audioCreateContext()
     {
-        unsafe
-        {
-            _openALContext = ALC.CreateContext(_openALDevice, (int*) 0);
-        }
-
-        ALC.MakeContextCurrent(_openALContext);
-        _checkAlcError(_openALDevice);
-        _checkAlError();
+        var useHrtf = _cfg.GetCVar(CVars.AudioHrtf);
 
         // Load up AL context extensions.
         var s = ALC.GetString(_openALDevice, AlcGetString.Extensions) ?? "";
@@ -62,9 +55,41 @@ internal sealed partial class AudioManager : IAudioInternal
             _alContextExtensions.Add(extension);
         }
 
+        var supportsHrtf = HasAlContextExtension("ALC_SOFT_HRTF");
+        var attributeList = new [] { 0 };
+        if (useHrtf && supportsHrtf)
+        {
+            var hrtfCount = ALC.GetInteger(_openALDevice, (AlcGetInteger)AlcSoftGetInteger.NumHrtfSpecifiers);
+            OpenALSawmill.Debug("HRTF specifier count: {0}", hrtfCount);
+
+            if (hrtfCount > 0)
+            {
+                attributeList =
+                [
+                    (int) AlcSoftGetInteger.Hrtf, 1,
+                    // default to the first specifier, im not even really sure in what contexts more than one of these
+                    // exists and i dont think its super valuable to expose another cvar for changing the index
+                    (int) AlcSoftGetInteger.HrtfId, 0,
+                    0
+                ];
+            }
+            else
+            {
+                OpenALSawmill.Warning("HRTF support enabled but no supported specifiers, HRTF will be disabled");
+            }
+        }
+
+        _openALContext = ALC.CreateContext(_openALDevice, attributeList);
+
+        ALC.MakeContextCurrent(_openALContext);
+        _checkAlcError(_openALDevice);
+        _checkAlError();
+
+        var hrtfEnabled = supportsHrtf ? ALC.GetInteger(_openALDevice, (AlcGetInteger)AlcSoftGetInteger.HrtfStatus) : 0;
         OpenALSawmill.Debug("OpenAL Vendor: {0}", AL.Get(ALGetString.Vendor));
         OpenALSawmill.Debug("OpenAL Renderer: {0}", AL.Get(ALGetString.Renderer));
         OpenALSawmill.Debug("OpenAL Version: {0}", AL.Get(ALGetString.Version));
+        OpenALSawmill.Debug("HRTF status: {0}", hrtfEnabled == 1 ? "Enabled" : "Disabled");
     }
 
     private bool _audioOpenDevice()
@@ -181,6 +206,19 @@ internal sealed partial class AudioManager : IAudioInternal
         {
             OpenALSawmill.Error("[{0}:{1}] AL error: {2}", callerMember, callerLineNumber, error);
         }
+    }
+
+    /// <summary>
+    ///     OpenAL Soft specific enum. OpenTK packages the regular OpenAL ones, but we use OpenAL Soft on most platforms,
+    ///     and these are used at the moment for HRTF support specifically.
+    /// </summary>
+    // https://github.com/kcat/openal-soft/blob/e9c479eb4190101bc51179afae56fc6dd5d26066/include/AL/alext.h#L471
+    public enum AlcSoftGetInteger
+    {
+        Hrtf = 0x1992,
+        HrtfStatus = 0x1993,
+        NumHrtfSpecifiers = 0x1994,
+        HrtfId = 0x1996
     }
 
     private sealed class LoadedAudioSample

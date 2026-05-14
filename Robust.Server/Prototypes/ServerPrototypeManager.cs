@@ -11,14 +11,14 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Server.Prototypes
 {
-    public sealed class ServerPrototypeManager : PrototypeManager
+    public sealed partial class ServerPrototypeManager : PrototypeManager
     {
-#pragma warning disable CS0414
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IConGroupController _conGroups = default!;
-#pragma warning restore CS0414
-        [Dependency] private readonly INetManager _netManager = default!;
-        [Dependency] private readonly IBaseServerInternal _server = default!;
+#if TOOLS
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IConGroupController _conGroups = default!;
+#endif
+        [Dependency] private INetManager _netManager = default!;
+        [Dependency] private IBaseServerInternal _server = default!;
 
         public ServerPrototypeManager()
         {

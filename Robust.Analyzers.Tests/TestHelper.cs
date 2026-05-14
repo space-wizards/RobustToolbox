@@ -1,4 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Text;
 
@@ -15,8 +19,18 @@ public static class TestHelper
     {
         foreach (var fileName in embeddedFiles)
         {
-            using var stream = typeof(AccessAnalyzer_Test).Assembly.GetManifestResourceStream(fileName)!;
-            state.Sources.Add((fileName, SourceText.From(stream)));
+            state.Sources.Add((fileName, GetEmbeddedFile(fileName)));
         }
+    }
+
+    public static IEnumerable<SyntaxTree> GetEmbeddedSyntaxTrees(params string[] embeddedFiles)
+    {
+        return embeddedFiles.Select(fileName => CSharpSyntaxTree.ParseText(GetEmbeddedFile(fileName)));
+    }
+
+    private static SourceText GetEmbeddedFile(string fileName)
+    {
+        using var stream = typeof(TestHelper).Assembly.GetManifestResourceStream(fileName)!;
+        return SourceText.From(stream);
     }
 }

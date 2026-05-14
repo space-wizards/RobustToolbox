@@ -9,11 +9,11 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.ContentPack
 {
-    internal abstract class BaseModLoader : IPostInjectInit
+    internal abstract partial class BaseModLoader : IPostInjectInit
     {
-        [Dependency] protected readonly IReflectionManager ReflectionManager = default!;
-        [Dependency] protected readonly ILogManager LogManager = default!;
-        [Dependency] private readonly IDependencyCollection _dependencies = default!;
+        [Dependency] protected IReflectionManager ReflectionManager = default!;
+        [Dependency] protected ILogManager LogManager = default!;
+        [Dependency] private IDependencyCollection _dependencies = default!;
 
         private readonly List<ModuleTestingCallbacks> _testingCallbacks = new();
 

@@ -39,16 +39,16 @@ namespace Robust.Shared.Physics.Systems
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IManifoldManager _manifoldManager = default!;
-        [Dependency] private readonly IParallelManager _parallel = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
-        [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-        [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
-        [Dependency] private readonly SharedJointSystem _joints = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly CollisionWakeSystem _wakeSystem = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IManifoldManager _manifoldManager = default!;
+        [Dependency] private IParallelManager _parallel = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private SharedContainerSystem _containerSystem = default!;
+        [Dependency] private SharedDebugPhysicsSystem _debugPhysics = default!;
+        [Dependency] private SharedJointSystem _joints = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private CollisionWakeSystem _wakeSystem = default!;
 
         private int _substeps;
 

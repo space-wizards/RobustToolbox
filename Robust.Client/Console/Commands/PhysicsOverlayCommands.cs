@@ -6,9 +6,9 @@ using Robust.Shared.Localization;
 
 namespace Robust.Client.Console.Commands
 {
-    public sealed class PhysicsOverlayCommands : LocalizedCommands
+    public sealed partial class PhysicsOverlayCommands : LocalizedCommands
     {
-        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+        [Dependency] private IEntitySystemManager _entitySystems = default!;
 
         public override string Command => "physics";
 

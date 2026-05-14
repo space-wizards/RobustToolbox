@@ -1,16 +1,26 @@
-using System;
 using System.Numerics;
 using Robust.Shared.Maths;
-using System.Linq;
 using Robust.Client.Graphics;
 
 namespace Robust.Client.UserInterface.Controls;
 
+/// <summary>
+/// A button with all the features but lays out children like a BoxContainer.
+/// </summary>
+/// <remarks>
+/// This control does not wrap an internal <see cref="BoxContainer"/>, all children are directly parented to this control.
+/// </remarks>
 [Virtual]
 public class BoxButton : ContainerButton
 {
+    /// <summary>
+    /// Style property for the amount of spacing inserted between visible children.
+    /// </summary>
     public const string StylePropertySeparation = BoxContainer.StylePropertySeparation;
 
+    /// <summary>
+    /// The direction in which children are laid out.
+    /// </summary>
     public BoxContainer.LayoutOrientation Orientation
     {
         get;
@@ -21,6 +31,9 @@ public class BoxButton : ContainerButton
         }
     }
 
+    /// <summary>
+    /// Changes how children are aligned along the orientation axis when there is unused space.
+    /// </summary>
     public BoxContainer.AlignMode Align
     {
         get;
@@ -31,6 +44,9 @@ public class BoxButton : ContainerButton
         }
     }
 
+    /// <summary>
+    /// Overrides <see cref="StylePropertySeparation"/>, setting the separation spacing between children.
+    /// </summary>
     public int? SeparationOverride
     {
         get;
@@ -41,13 +57,19 @@ public class BoxButton : ContainerButton
         }
     }
 
+    /// <summary>
+    /// Actual spacing between children.
+    /// </summary>
     private int Separation => SeparationOverride ?? StylePropertyDefault(StylePropertySeparation, 0);
 
+    /// <summary>
+    /// The style box, for both drawing the background and content margins.
+    /// </summary>
     private StyleBox StyleBox => StyleBoxOverride ??
                                  StylePropertyDefault(StylePropertyStyleBox,
                                      UserInterfaceManager.ThemeDefaults.ButtonStyle);
 
-
+    /// <inheritdoc />
     protected override Vector2 MeasureOverride(Vector2 availableSize)
     {
         var boxSize = StyleBox.MinimumSize;
@@ -60,6 +82,7 @@ public class BoxButton : ContainerButton
         return contents + boxSize;
     }
 
+    /// <inheritdoc />
     protected override Vector2 ArrangeOverride(Vector2 finalSize)
     {
         var box = UIBox2.FromDimensions(Vector2.Zero, finalSize);

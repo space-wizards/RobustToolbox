@@ -76,8 +76,8 @@ public class BoxButton : ContainerButton
         var childBox = Vector2.Max(availableSize - boxSize, Vector2.Zero);
 
         var contents = Orientation == BoxContainer.LayoutOrientation.Vertical
-            ? BoxContainer.MeasureItems<VerticalAxis>(childBox, Children, Separation)
-            : BoxContainer.MeasureItems<HorizontalAxis>(childBox, Children, Separation);
+            ? BoxContainer.MeasureItems<VerticalAxis>(childBox, Children, 0, ChildCount, Separation)
+            : BoxContainer.MeasureItems<HorizontalAxis>(childBox, Children, 0, ChildCount, Separation);
 
         return contents + boxSize;
     }

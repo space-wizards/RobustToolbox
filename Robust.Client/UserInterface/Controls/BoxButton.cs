@@ -54,37 +54,10 @@ public class BoxButton : ContainerButton
         var childBox = Vector2.Max(availableSize - boxSize, Vector2.Zero);
 
         var contents = Orientation == BoxContainer.LayoutOrientation.Vertical
-            ? MeasureItems<VerticalAxis>(childBox)
-            : MeasureItems<HorizontalAxis>(childBox);
+            ? BoxContainer.MeasureItems<VerticalAxis>(childBox, Children, Separation)
+            : BoxContainer.MeasureItems<HorizontalAxis>(childBox, Children, Separation);
 
         return contents + boxSize;
-    }
-
-    private Vector2 MeasureItems<TAxis>(Vector2 availableSize) where TAxis : IAxisImplementation
-    {
-        availableSize = TAxis.SizeToAxis(availableSize);
-
-        // Account for separation.
-        var separation = Separation * (Children.Count(c => c.Visible) - 1);
-        var desiredSize = new Vector2(separation, 0);
-        availableSize.X = Math.Max(0, availableSize.X) - separation;
-
-        // First, we measure non-stretching children.
-        foreach (var child in Children)
-        {
-            if (!child.Visible)
-                continue;
-
-            child.Measure(TAxis.SizeFromAxis(availableSize));
-            var childDesired = TAxis.SizeToAxis(child.DesiredSize);
-
-            desiredSize.X += childDesired.X;
-            desiredSize.Y = Math.Max(desiredSize.Y, childDesired.Y);
-
-            availableSize.X = Math.Max(0, availableSize.X - childDesired.X);
-        }
-
-        return TAxis.SizeFromAxis(desiredSize);
     }
 
     protected override Vector2 ArrangeOverride(Vector2 finalSize)

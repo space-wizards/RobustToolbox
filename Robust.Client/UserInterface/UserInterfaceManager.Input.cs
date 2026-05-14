@@ -516,8 +516,8 @@ internal partial class UserInterfaceManager
     public void ReleaseKeyboardFocus()
     {
         var oldFocused = KeyboardFocused;
-        oldFocused?.KeyboardFocusExited();
         KeyboardFocused = null;
+        oldFocused?.KeyboardFocusExited();
     }
 
     public void ReleaseKeyboardFocus(Control ifControl)

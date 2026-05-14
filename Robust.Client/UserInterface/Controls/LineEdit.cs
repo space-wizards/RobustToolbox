@@ -29,6 +29,13 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyStyleBox = "stylebox";
         public const string StylePropertyCursorColor = "cursor-color";
         public const string StylePropertySelectionColor = "selection-color";
+
+        public const string StylePseudoClassNormal = "normal";
+        public const string StylePseudoClassHover = "hover";
+        public const string StylePseudoClassFocus = "focus";
+        public const string StylePseudoClassNotEditable = "notEditable";
+
+        [Obsolete("Use StylePseudoClassNotEditable instead")]
         public const string StyleClassLineEditNotEditable = "notEditable";
         public const string StylePseudoClassPlaceholder = "placeholder";
 
@@ -45,6 +52,16 @@ namespace Robust.Client.UserInterface.Controls
 
         private TextEditShared.CursorBlink _blink;
         private readonly LineEditRenderBox _renderBox;
+
+        private bool Hovered
+        {
+            get;
+            set
+            {
+                field = value;
+                _updatePseudoClass();
+            }
+        }
 
         private bool _mouseSelectingText;
         private float _lastMousePosition;
@@ -140,16 +157,9 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _editable = value;
-                if (_editable)
-                {
-                    DefaultCursorShape = CursorShape.IBeam;
-                    RemoveStyleClass(StyleClassLineEditNotEditable);
-                }
-                else
-                {
-                    DefaultCursorShape = CursorShape.Arrow;
-                    AddStyleClass(StyleClassLineEditNotEditable);
-                }
+                DefaultCursorShape = _editable ? CursorShape.IBeam : CursorShape.Arrow;
+
+                _updatePseudoClass();
             }
         }
 
@@ -194,7 +204,20 @@ namespace Robust.Client.UserInterface.Controls
         public int SelectionLower => Math.Min(_selectionStart, _cursorPosition);
         public int SelectionUpper => Math.Max(_selectionStart, _cursorPosition);
 
-        public bool HidePlaceHolderOnFocus { get; set; }
+        public bool HidePlaceHolderOnFocus
+        {
+            get;
+            set
+            {
+                if (field == value)
+                {
+                    return;
+                }
+
+                field = value;
+                _updatePseudoClass();
+            }
+        }
 
         public bool IgnoreNext { get; set; }
 
@@ -227,6 +250,7 @@ namespace Robust.Client.UserInterface.Controls
             DefaultCursorShape = CursorShape.IBeam;
 
             AddChild(_renderBox = new LineEditRenderBox(this));
+            _updatePseudoClass();
         }
 
         public void Clear()
@@ -790,6 +814,20 @@ namespace Robust.Client.UserInterface.Controls
             _lastMousePosition = args.RelativePosition.X;
         }
 
+        protected internal override void MouseEntered()
+        {
+            base.MouseEntered();
+
+            Hovered = true;
+        }
+
+        protected internal override void MouseExited()
+        {
+            base.MouseExited();
+
+            Hovered = false;
+        }
+
         private int GetIndexAtPos(float horizontalPos)
         {
             var style = _getStyleBox();
@@ -888,6 +926,8 @@ namespace Robust.Client.UserInterface.Controls
                 CursorPosition = _text.Length;
                 SelectionStart = 0;
             }
+
+            _updatePseudoClass();
         }
 
         protected internal override void KeyboardFocusExited()
@@ -899,6 +939,7 @@ namespace Robust.Client.UserInterface.Controls
             Root?.Window?.TextInputStop();
 
             AbortIme(delete: false);
+            _updatePseudoClass();
         }
 
         [Pure]
@@ -941,7 +982,37 @@ namespace Robust.Client.UserInterface.Controls
 
         private void _updatePseudoClass()
         {
-            SetOnlyStylePseudoClass(IsPlaceHolderVisible ? StylePseudoClassPlaceholder : null);
+            if (HasKeyboardFocus())
+            {
+                SetOnlyStylePseudoClass(StylePseudoClassFocus);
+            }
+            else if (Hovered)
+            {
+                SetOnlyStylePseudoClass(StylePseudoClassHover);
+            }
+            else
+            {
+                SetOnlyStylePseudoClass(StylePseudoClassNormal);
+            }
+
+            if (!Editable)
+            {
+                SetOnlyStylePseudoClass(StylePseudoClassNotEditable);
+#pragma warning disable CS0618
+                AddStyleClass(StyleClassLineEditNotEditable);
+#pragma warning restore CS0618
+            }
+            else
+            {
+#pragma warning disable CS0618
+                RemoveStyleClass(StyleClassLineEditNotEditable);
+#pragma warning restore CS0618
+            }
+
+            if (IsPlaceHolderVisible)
+            {
+                AddStylePseudoClass(StylePseudoClassPlaceholder);
+            }
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -41,7 +41,12 @@ public sealed partial class TextEdit : Control
     // @formatter:off
     public const string StylePropertyCursorColor = "cursor-color";
     public const string StylePropertySelectionColor = "selection-color";
+
+    public const string StylePseudoClassNormal = "normal";
+    public const string StylePseudoClassHover = "hover";
+    public const string StylePseudoClassFocus = "focus";
     public const string StylePseudoClassNotEditable = "notEditable";
+
     public const string StylePseudoClassPlaceholder = "placeholder";
     // @formatter:on
 
@@ -84,6 +89,19 @@ public sealed partial class TextEdit : Control
     private bool _mouseSelectingText;
     private Vector2 _lastMouseSelectPos;
 
+    private bool Hovered
+    {
+        get;
+        set
+        {
+            if (field == value)
+                return;
+
+            field = value;
+            UpdatePseudoClass();
+        }
+    }
+
     // Debug overlay stuff.
     internal bool DebugOverlay;
     private Vector2? _lastDebugMousePos;
@@ -101,6 +119,8 @@ public sealed partial class TextEdit : Control
         KeyboardFocusOnClick = true;
         MouseFilter = MouseFilterMode.Stop;
         DefaultCursorShape = CursorShape.IBeam;
+
+        UpdatePseudoClass();
     }
 
     /// <summary>
@@ -1096,11 +1116,19 @@ public sealed partial class TextEdit : Control
         return _lineBreaks[lineIndex - 1];
     }
 
+    protected internal override void MouseEntered()
+    {
+        base.MouseEntered();
+
+        Hovered = true;
+    }
+
     protected internal override void MouseExited()
     {
         base.MouseExited();
 
         _lastDebugMousePos = null;
+        Hovered = false;
     }
 
     protected internal override void MouseMove(GUIMouseMoveEventArgs args)
@@ -1172,9 +1200,25 @@ public sealed partial class TextEdit : Control
 
     private void UpdatePseudoClass()
     {
-        SetOnlyStylePseudoClass(IsPlaceholderVisible ? StylePseudoClassPlaceholder : null);
         if (!Editable)
-            AddStylePseudoClass(StylePseudoClassNotEditable);
+        {
+            SetOnlyStylePseudoClass(StylePseudoClassNotEditable);
+        }
+        else if (HasKeyboardFocus())
+        {
+            SetOnlyStylePseudoClass(StylePseudoClassFocus);
+        }
+        else if (Hovered)
+        {
+            SetOnlyStylePseudoClass(StylePseudoClassHover);
+        }
+        else
+        {
+            SetOnlyStylePseudoClass(StylePseudoClassNormal);
+        }
+
+        if (IsPlaceholderVisible)
+            AddStylePseudoClass(StylePseudoClassPlaceholder);
     }
 
 
@@ -1447,6 +1491,8 @@ public sealed partial class TextEdit : Control
         {
             Root?.Window?.TextInputStart();
         }
+
+        UpdatePseudoClass();
     }
 
     protected internal override void KeyboardFocusExited()
@@ -1455,6 +1501,8 @@ public sealed partial class TextEdit : Control
 
         Root?.Window?.TextInputStop();
         AbortIme(delete: false);
+
+        UpdatePseudoClass();
     }
 
     public sealed class TextEditEventArgs(TextEdit control, Rope.Node textRope) : EventArgs

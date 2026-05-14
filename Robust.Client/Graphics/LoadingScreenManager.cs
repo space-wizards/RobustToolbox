@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Shared;
@@ -48,15 +49,20 @@ internal sealed partial class LoadingScreenManager : ILoadingScreenManager
 
     #region UI constants
 
-    private const int LoadingBarWidth = 250;
-    private const int LoadingBarHeight = 20;
-    private const int LoadingBarOutlineOffset = 5;
-    private static readonly Vector2i LogoLoadingBarOffset = (0, 20);
-    private static readonly Vector2i LoadTimesIndent = (20, 0);
+    private const int LoadingBarWidth = 340;
+    private const int LoadingBarHeight = 18;
+    private const int LoadingBarOutlineOffset = 3;
+    private const int NumLongestLoadTimes = 6;
 
-    private const int NumLongestLoadTimes = 5;
+    private const string EclipseBackground = "/Textures/Loading/eclipse-loading-background.png";
+    private const string EclipseLoadingLogo = "/Textures/Logo/eclipse-icon-loading.png";
+    private const string EclipseTitle = "E C L I P S E   S T A T I O N";
 
-    private static readonly Color LoadingBarColor = Color.White;
+    private static readonly Color LoadingBarColor = Color.FromHex("#ffc55d");
+    private static readonly Color LoadingBarTrackColor = Color.FromHex("#0b0906cc");
+    private static readonly Color EclipseGold = Color.FromHex("#ffc55d");
+    private static readonly Color EclipseGoldDim = Color.FromHex("#8a6025");
+    private static readonly Color EclipseText = Color.FromHex("#bda879");
 
     #endregion
 
@@ -199,101 +205,185 @@ internal sealed partial class LoadingScreenManager : ILoadingScreenManager
             return;
 
         var scale = UserInterfaceManager.CalculateUIScale(_clyde.MainWindow.ContentScale.X, _cfg);
+        scale *= Math.Clamp(screenSize.Y / 1080f, 1f, 1.35f);
+        var screen = new UIBox2(0, 0, screenSize.X, screenSize.Y);
 
-        // Start at the center!
-        var location = screenSize / 2;
+        var shadeWidth = screenSize.X * 0.337f;
+        DrawEclipseBackground(handle, screenSize, screen, shadeWidth);
+
+        var panelRightPadding = 42f * scale;
+        var panelLeft = Math.Clamp(screenSize.X * 0.07f, 42f * scale, MathF.Max(42f * scale, shadeWidth - LoadingBarWidth * scale - panelRightPadding));
+        var panelWidth = MathF.Min(LoadingBarWidth * scale, MathF.Max(180f * scale, shadeWidth - panelLeft - panelRightPadding));
+        var panelTop = MathF.Max(64f * scale, screenSize.Y * 0.31f);
+        var location = new Vector2(panelLeft, panelTop);
 
         DrawSplash(handle, ref location, scale);
-
-        DrawLoadingBar(handle, ref location, scale);
-
-        if (_showDebug)
-        {
-            DrawCurrentLoading(handle, ref location, scale);
-
-            DrawTopTimes(handle, ref location, scale);
-        }
+        DrawTitle(handle, ref location, scale, panelWidth);
+        DrawLoadingBar(handle, ref location, scale, panelWidth);
+        DrawCurrentLoading(handle, ref location, scale, panelWidth);
+        DrawTopTimes(handle, ref location, scale, panelWidth);
     }
 
-    private void DrawSplash(IRenderHandle handle, ref Vector2i startLocation, float scale)
+    private void DrawEclipseBackground(IRenderHandle handle, Vector2i screenSize, UIBox2 screen, float shadeWidth)
+    {
+        var screenHandle = handle.DrawingHandleScreen;
+
+        if (_resourceCache.TryGetResource<TextureResource>(EclipseBackground, out var background))
+        {
+            var texture = background.Texture;
+            var textureSize = (Vector2) texture.Size;
+            var coverScale = MathF.Max(screenSize.X / textureSize.X, screenSize.Y / textureSize.Y);
+            var drawSize = textureSize * coverScale;
+            var drawPos = ((Vector2) screenSize - drawSize) / 2f;
+
+            screenHandle.DrawTextureRect(texture, UIBox2.FromDimensions(drawPos, drawSize));
+        }
+        else
+        {
+            screenHandle.DrawRect(screen, Color.Black);
+        }
+
+        screenHandle.DrawRect(screen, Color.FromHex("#00000040"));
+        screenHandle.DrawRect(new UIBox2(0, 0, shadeWidth, screenSize.Y), Color.FromHex("#00000066"));
+    }
+
+    private void DrawSplash(IRenderHandle handle, ref Vector2 startLocation, float scale)
     {
         if (string.IsNullOrEmpty(_splashLogo))
             return;
 
-        if (!_resourceCache.TryGetResource<TextureResource>(_splashLogo, out var textureResource))
+        if (!_resourceCache.TryGetResource<TextureResource>(EclipseLoadingLogo, out var textureResource) &&
+            !_resourceCache.TryGetResource<TextureResource>(_splashLogo, out textureResource))
             return;
 
-        var drawSize = textureResource.Texture.Size * scale;
+        var maxLogoSize = 120f * scale;
+        var textureSize = (Vector2) textureResource.Texture.Size;
+        var logoScale = maxLogoSize / MathF.Max(textureSize.X, textureSize.Y);
+        var drawSize = textureSize * logoScale;
+        var drawPosition = startLocation;
 
-        handle.DrawingHandleScreen.DrawTextureRect(textureResource.Texture, UIBox2.FromDimensions(startLocation - drawSize / 2, drawSize));
-        startLocation += Vector2i.Up * (int)drawSize.Y / 2;
+        handle.DrawingHandleScreen.DrawTextureRect(textureResource.Texture, UIBox2.FromDimensions(drawPosition, drawSize));
+
+        startLocation.Y += drawSize.Y + 34f * scale;
     }
 
-    private void DrawLoadingBar(IRenderHandle handle, ref Vector2i location, float scale)
+    private void DrawTitle(IRenderHandle handle, ref Vector2 location, float scale, float panelWidth)
+    {
+        if (_font == null)
+            return;
+
+        var maxTitleWidth = panelWidth * 0.98f;
+        var titleScale = 2.1f * scale;
+        var titleSize = handle.DrawingHandleScreen.GetDimensions(_font, EclipseTitle, titleScale);
+        if (titleSize.X > maxTitleWidth)
+            titleScale *= maxTitleWidth / titleSize.X;
+
+        handle.DrawingHandleScreen.DrawString(_font, location, EclipseTitle, titleScale, EclipseGold);
+        location.Y += _font.GetLineHeight(titleScale) + 18f * scale;
+
+        var lineY = location.Y;
+        var lineWidth = MathF.Min(panelWidth, LoadingBarWidth * scale);
+        handle.DrawingHandleScreen.DrawRect(new UIBox2(location.X, lineY, location.X + lineWidth, lineY + 1f * scale), EclipseGoldDim);
+        handle.DrawingHandleScreen.DrawCircle(new Vector2(location.X + lineWidth * 0.5f, lineY + 0.5f * scale), 3f * scale, EclipseGold);
+        location.Y += 28f * scale;
+    }
+
+    private void DrawLoadingBar(IRenderHandle handle, ref Vector2 location, float scale, float panelWidth)
     {
         var barWidth = (int)(LoadingBarWidth * scale);
         var barHeight = (int)(LoadingBarHeight * scale);
         var outlineOffset = (int)(LoadingBarOutlineOffset * scale);
 
-        // Always do the offsets, it looks a lot better!
-        location.X -= barWidth / 2;
-        location += (Vector2i)(LogoLoadingBarOffset * scale);
-
         if (!_showLoadingBar)
             return;
 
-        var sectionWidth = barWidth / _numberOfLoadingSections;
+        barWidth = (int) MathF.Min(barWidth, panelWidth);
+        var progress = _numberOfLoadingSections <= 0
+            ? 0f
+            : Math.Clamp(_currentSection / (float) _numberOfLoadingSections, 0f, 1f);
 
         var barTopLeft = location;
-        var barBottomRight = new Vector2i(_currentSection * sectionWidth % barWidth, barHeight);
-        var barBottomRightMax = new Vector2i(barWidth, barHeight);
+        var barSize = new Vector2(barWidth, barHeight);
+        var progressSize = new Vector2(barWidth * progress, barHeight);
 
-        var outlinePosition = barTopLeft + Vector2i.DownLeft * outlineOffset;
-        var outlineSize = barBottomRightMax + Vector2i.UpRight * 2 * outlineOffset;
+        var outlinePosition = barTopLeft + new Vector2(-outlineOffset, -outlineOffset);
+        var outlineSize = barSize + new Vector2(outlineOffset * 2, outlineOffset * 2);
 
-        // Outline
-        handle.DrawingHandleScreen.DrawRect(UIBox2.FromDimensions(outlinePosition, outlineSize), LoadingBarColor, false);
+        handle.DrawingHandleScreen.DrawRect(UIBox2.FromDimensions(outlinePosition, outlineSize), EclipseGoldDim, false);
+        handle.DrawingHandleScreen.DrawRect(UIBox2.FromDimensions(barTopLeft, barSize), LoadingBarTrackColor);
+        handle.DrawingHandleScreen.DrawRect(UIBox2.FromDimensions(barTopLeft, progressSize), LoadingBarColor);
 
-        // Progress bar
-        handle.DrawingHandleScreen.DrawRect(UIBox2.FromDimensions(barTopLeft, barBottomRight), LoadingBarColor);
-
-        location += Vector2i.Up * outlineSize;
+        location.Y += outlineSize.Y + 22f * scale;
     }
 
     // Draw the currently loading section to the screen.
-    private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i location, float scale)
+    private void DrawCurrentLoading(IRenderHandle handle, ref Vector2 location, float scale, float panelWidth)
     {
         if (_font == null || _currentSectionName == null)
             return;
 
-        handle.DrawingHandleScreen.DrawString(_font, location, _currentSectionName, scale, Color.White);
-        location += Vector2i.Up * _font.GetLineHeight(scale);
+        var titleScale = 1.15f * scale;
+        handle.DrawingHandleScreen.DrawString(_font, location, "LOADING SYSTEMS", titleScale, EclipseGold);
+
+        var dots = "...";
+        var dotsSize = handle.DrawingHandleScreen.GetDimensions(_font, dots, titleScale);
+        handle.DrawingHandleScreen.DrawString(_font, new Vector2(location.X + MathF.Min(panelWidth, LoadingBarWidth * scale) - dotsSize.X, location.Y), dots, titleScale, EclipseGold);
+
+        location.Y += _font.GetLineHeight(titleScale) + 18f * scale;
     }
 
     // Draw the slowest loading times to the screen.
-    private void DrawTopTimes(IRenderHandle handle, ref Vector2i location, float scale)
+    private void DrawTopTimes(IRenderHandle handle, ref Vector2 location, float scale, float panelWidth)
+    {
+        if (_font == null || !_showDebug)
+            return;
+
+        var entries = Times
+            .Where(x => x.Name != "Texture preload")
+            .TakeLast(NumLongestLoadTimes)
+            .Reverse()
+            .ToList();
+
+        var offset = 0;
+        for (var x = 0; x < entries.Count; x++)
+        {
+            var (name, time) = entries[x];
+
+            DrawLoadingEntry(handle, location + new Vector2(0, offset), name, (float) time.TotalSeconds / 100f, scale, x == 0, x < entries.Count - 1, panelWidth);
+            offset += _font.GetLineHeight(scale);
+        }
+
+        location.Y += offset;
+    }
+
+    private void DrawLoadingEntry(IRenderHandle handle, Vector2 location, string name, float value, float scale, bool active, bool hasNext, float panelWidth)
     {
         if (_font == null)
             return;
 
-        location += (Vector2i)(LoadTimesIndent * scale);
+        var clamped = Math.Clamp(value, 0f, 1f);
+        var color = active ? EclipseGold : EclipseText;
+        var markerColor = active ? LoadingBarColor : EclipseGoldDim;
+        var percent = $"[{clamped * 100f:0.00}%]";
+        var percentSize = handle.DrawingHandleScreen.GetDimensions(_font, percent, scale);
+        var right = location.X + MathF.Min(panelWidth, LoadingBarWidth * scale);
 
-        var offset = 0;
-        var x = 0;
-        Times.Sort((a, b) => b.LoadTime.CompareTo(a.LoadTime));
-
-        foreach (var (name, time) in Times)
+        var markerCenter = location + new Vector2(5f * scale, 8f * scale);
+        if (hasNext)
         {
-            if (x >= NumLongestLoadTimes)
-                break;
-
-            var entry = $"{time.TotalSeconds:F2} - {name}";
-            handle.DrawingHandleScreen.DrawString(_font, location + new Vector2i(0, offset), entry, scale, Color.White);
-            offset += _font.GetLineHeight(scale);
-            x++;
+            var dashWidth = MathF.Max(1f, 1.3f * scale);
+            var dashHeight = MathF.Max(3f, 4f * scale);
+            handle.DrawingHandleScreen.DrawRect(new UIBox2(
+                markerCenter.X - dashWidth / 2f,
+                markerCenter.Y + 6f * scale,
+                markerCenter.X + dashWidth / 2f,
+                markerCenter.Y + 6f * scale + dashHeight),
+                EclipseGoldDim);
         }
 
-        location += Vector2i.Up * offset;
+        handle.DrawingHandleScreen.DrawCircle(markerCenter, 3f * scale, markerColor);
+        handle.DrawingHandleScreen.DrawString(_font, location + new Vector2(22f * scale, 0), name, scale, color);
+        handle.DrawingHandleScreen.DrawString(_font, new Vector2(right - percentSize.X, location.Y), percent, scale, EclipseGold);
     }
 
     #endregion // Drawing functions

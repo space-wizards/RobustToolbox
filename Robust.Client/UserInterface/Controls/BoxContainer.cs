@@ -40,7 +40,15 @@ namespace Robust.Client.UserInterface.Controls
         private int ActualSeparation =>
             SeparationOverride ?? StylePropertyDefault(StylePropertySeparation, DefaultSeparation);
 
-        public int? SeparationOverride { get; set; }
+        public int? SeparationOverride
+        {
+            get;
+            set
+            {
+                field = value;
+                InvalidateMeasure();
+            }
+        }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {

@@ -949,7 +949,7 @@ namespace Robust.Shared.Prototypes
             if (TryGetInstances<T>(out var dict))
                 return dict;
 
-            throw new Exception($"Failed to fetch instances for kind {nameof(T)}");
+            throw new Exception($"Failed to fetch instances for kind {typeof(T).Name}");
         }
 
         public bool TryGetInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)

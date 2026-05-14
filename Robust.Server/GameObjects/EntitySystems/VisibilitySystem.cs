@@ -125,8 +125,7 @@ namespace Robust.Server.GameObjects
 
                 var childMask = mask;
 
-                if (_visibilityQuery.TryGetComponent(child, out var childVis))
-                    childMask |= childVis.Layer;
+                childMask |= GetVisibilityLayer(child);
 
                 RecursivelyApplyVisibility(child, childMask, childMeta);
             }
@@ -135,14 +134,23 @@ namespace Robust.Server.GameObjects
         private ushort GetParentVisibilityMask(Entity<VisibilityComponent?> ent)
         {
             ushort visMask = 1; // apparently some content expects everything to have the first bit/flag set to true.
-            if (_visibilityQuery.Resolve(ent.Owner, ref ent.Comp, false))
-                visMask |= ent.Comp.Layer;
+            visMask |= GetVisibilityLayer(ent);
 
             // Include parent vis masks
             if (_xformQuery.TryGetComponent(ent.Owner, out var xform) && xform.ParentUid.IsValid())
                 visMask |= GetParentVisibilityMask(xform.ParentUid);
 
             return visMask;
+        }
+
+        private ushort GetVisibilityLayer(Entity<VisibilityComponent?> ent)
+        {
+            if (!_visibilityQuery.Resolve(ent.Owner, ref ent.Comp, false))
+                return 0;
+
+            var ev = new RefreshVisibilityModifiersEvent(ent.Comp.Layer);
+            RaiseLocalEvent(ent.Owner, ref ev);
+            return ev.Layer;
         }
     }
 }

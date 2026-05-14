@@ -66,7 +66,7 @@ public sealed partial class EntProtoIdTypeParser : TypeParser<EntProtoId>
     public override bool TryParse(ParserContext ctx, out EntProtoId result)
     {
         result = default;
-        if (!Toolshed.TryParse(ctx, out ProtoId<EntityPrototype> proto))
+        if (!Toolshed.TryParse(ctx, out EntProtoId proto))
             return false;
 
         result = new(proto.Id);

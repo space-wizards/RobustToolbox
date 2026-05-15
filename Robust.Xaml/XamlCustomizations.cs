@@ -1,4 +1,7 @@
-﻿using XamlX;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using XamlX;
 using XamlX.Ast;
 using XamlX.Emit;
 using XamlX.IL;
@@ -30,7 +33,7 @@ internal sealed class XamlCustomizations
     ///     (both <see cref="CecilTypeSystem"/> and <see cref="CecilTypeSystem"/> work)
     /// </param>
     /// <param name="defaultAssembly">the default assembly (for unqualified names to be looked up in)</param>
-    public XamlCustomizations(IXamlTypeSystem typeSystem, IXamlAssembly defaultAssembly)
+    public XamlCustomizations(IXamlTypeSystem typeSystem, IXamlAssembly defaultAssembly, Action<XamlDiagnostic>? handleDiagnostic)
     {
         TypeSystem = typeSystem;
         TypeMappings = new XamlLanguageTypeMappings(typeSystem)
@@ -61,12 +64,22 @@ internal sealed class XamlCustomizations
         {
             ContextTypeBuilderCallback = EmitNameScopeField
         };
+        var diagnosticsHandler = new XamlDiagnosticsHandler()
+        {
+            HandleDiagnostic = diagnostic =>
+            {
+                handleDiagnostic?.Invoke(diagnostic);
+                return diagnostic.Severity;
+            },
+            CodeMappings = DiagnosticsCodes.XamlXCodeMappings
+        };
         TransformerConfiguration = new TransformerConfiguration(
             typeSystem,
             defaultAssembly,
             TypeMappings,
             XamlXmlnsMappings.Resolve(typeSystem, TypeMappings),
-            CustomValueConverter
+            CustomValueConverter,
+            diagnosticsHandler: diagnosticsHandler
         );
         ILCompiler = new RobustXamlILCompiler(TransformerConfiguration, EmitMappings, true);
     }
@@ -78,16 +91,15 @@ internal sealed class XamlCustomizations
     /// <param name="typeBuilder">the type to alter</param>
     /// <param name="constructor">the constructor to alter</param>
     private void EmitNameScopeField(
-        IXamlTypeBuilder<IXamlILEmitter> typeBuilder,
-        IXamlILEmitter constructor
+        IXamlILContextDefinition<IXamlILEmitter> xaml
     )
     {
-        var nameScopeType = TypeSystem.FindType("Robust.Client.UserInterface.XAML.NameScope");
-        var field = typeBuilder.DefineField(nameScopeType,
+        var nameScopeType = TypeSystem.FindType("Robust.Client.UserInterface.XAML.NameScope")!;
+        var field = xaml.TypeBuilder.DefineField(nameScopeType,
             ContextNameScopeFieldName,
-            true,
+            XamlVisibility.Public,
             false);
-        constructor
+        xaml.ConstructorBuilder.Generator
             .Ldarg_0()
             .Newobj(nameScopeType.GetConstructor())
             .Stfld(field);
@@ -113,8 +125,9 @@ internal sealed class XamlCustomizations
     private static bool CustomValueConverter(
         AstTransformationContext context,
         IXamlAstValueNode node,
+        IReadOnlyList<IXamlCustomAttribute>? customAttributes,
         IXamlType type,
-        out IXamlAstValueNode? result)
+        [NotNullWhen(true)] out IXamlAstValueNode? result)
     {
         if (!(node is XamlAstTextNode textNode))
         {

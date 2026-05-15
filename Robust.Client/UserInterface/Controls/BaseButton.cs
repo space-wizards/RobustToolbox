@@ -186,7 +186,11 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     return DrawModeEnum.Disabled;
                 }
-                else if (Pressed || (_attemptingPress > 0 && IsHovered))
+                else if ((Pressed || _attemptingPress > 0) && IsHovered)
+                {
+                    return DrawModeEnum.PressedHover;
+                }
+                else if (Pressed)
                 {
                     return DrawModeEnum.Pressed;
                 }
@@ -406,7 +410,8 @@ namespace Robust.Client.UserInterface.Controls
             Normal = 0,
             Pressed = 1,
             Hover = 2,
-            Disabled = 3
+            Disabled = 3,
+            PressedHover = 4,
         }
 
         [Virtual]

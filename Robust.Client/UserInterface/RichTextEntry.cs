@@ -45,9 +45,11 @@ namespace Robust.Client.UserInterface
         public int Width;
 
         /// <summary>
-        ///     The combined text indices in the message's text tags to put line breaks.
+        ///     The combined layout indices in the message's text tags and inline controls to put line breaks.
         /// </summary>
         public ValueList<int> LineBreaks;
+
+        private ValueList<LineMetrics> _lineMetrics;
 
         public readonly Dictionary<int, Control>? Controls;
 
@@ -67,6 +69,7 @@ namespace Robust.Client.UserInterface
             Height = 0;
             Width = 0;
             LineBreaks = default;
+            _lineMetrics = default;
             _defaultColor = defaultColor ?? new(200, 200, 200);
             _tagsAllowed = tagsAllowed;
             Controls = GetControls(parent, tagManager);
@@ -129,16 +132,16 @@ namespace Robust.Client.UserInterface
             // I am so deeply sorry for the person adding stuff to this in the future.
 
             Height = 0;
+            Width = 0;
             LineBreaks.Clear();
+            _lineMetrics.Clear();
 
             int? breakLine;
             var wordWrap = new WordWrap(maxSizeX);
+            ValueList<LayoutItemMetrics> itemMetrics = default;
             var context = new MarkupDrawingContext();
             context.Font.Push(defaultFont);
             context.Color.Push(_defaultColor);
-            
-            // Track maximum height for current line to handle non-standard font sizes
-            var maxCurrentLineHeight = defaultFont.GetHeight(uiScale);
 
             // Go over every node.
             // Nodes can change the markup drawing context and return additional text.
@@ -152,29 +155,36 @@ namespace Robust.Client.UserInterface
                 if (!context.Font.TryPeek(out var font))
                     font = defaultFont;
 
-                // Track the maximum height for the current line
-                var currentLineHeight = GetLineHeight(font, uiScale, lineHeightScale);
-                if (currentLineHeight > maxCurrentLineHeight)
-                    maxCurrentLineHeight = currentLineHeight;
-
                 // And go over every character.
                 foreach (var rune in text.EnumerateRunes())
                 {
-                    if (ProcessRune(ref this, rune, out breakLine))
+                    wordWrap.NextRune(rune, out breakLine, out var breakNewLine, out var skip);
+                    AddLineBreak(ref this, breakLine);
+                    AddLineBreak(ref this, breakNewLine);
+
+                    if (skip)
+                    {
+                        itemMetrics.Add(default);
                         continue;
+                    }
 
                     // Uh just skip unknown characters I guess.
                     if (!font.TryGetCharMetrics(rune, uiScale, out var metrics))
+                    {
+                        itemMetrics.Add(default);
                         continue;
+                    }
 
                     if (ProcessMetric(ref this, metrics, out breakLine))
                         return this;
+
+                    itemMetrics.Add(LayoutItemMetrics.ForFont(font, uiScale, lineHeightScale));
                 }
 
                 if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
                     continue;
 
-                control.Measure(new Vector2(maxSizeX, Height));
+                control.Measure(new Vector2(maxSizeX, float.PositiveInfinity));
 
                 var desiredSize = control.DesiredPixelSize;
                 var controlMetrics = new CharMetrics(
@@ -183,47 +193,104 @@ namespace Robust.Client.UserInterface
                     desiredSize.X,
                     desiredSize.Y);
 
-                if (ProcessMetric(ref this, controlMetrics, out breakLine))
+                wordWrap.NextObject(controlMetrics, out breakLine, out var abort);
+                AddLineBreak(ref this, breakLine);
+                if (abort)
                     return this;
+
+                itemMetrics.Add(LayoutItemMetrics.ForControl(desiredSize.Y));
             }
 
             Width = wordWrap.FinalizeText(out breakLine);
-            CheckLineBreak(ref this, breakLine);
-            
-            // Add the height of the final line (current line)
-            Height += maxCurrentLineHeight;
+            AddLineBreak(ref this, breakLine);
+            CalculateLineMetrics(ref this, itemMetrics, defaultFont, uiScale, lineHeightScale);
 
             return this;
-
-            bool ProcessRune(ref RichTextEntry src, Rune rune, out int? outBreakLine)
-            {
-                wordWrap.NextRune(rune, out breakLine, out var breakNewLine, out var skip);
-                CheckLineBreak(ref src, breakLine);
-                CheckLineBreak(ref src, breakNewLine);
-                outBreakLine = breakLine;
-                return skip;
-            }
 
             bool ProcessMetric(ref RichTextEntry src, CharMetrics metrics, out int? outBreakLine)
             {
                 wordWrap.NextMetrics(metrics, out breakLine, out var abort);
-                CheckLineBreak(ref src, breakLine);
+                AddLineBreak(ref src, breakLine);
                 outBreakLine = breakLine;
                 return abort;
             }
 
-            void CheckLineBreak(ref RichTextEntry src, int? line)
+            static void AddLineBreak(ref RichTextEntry src, int? line)
             {
-                if (line is { } l)
+                if (line is not { } l)
+                    return;
+
+                if (src.LineBreaks.Count > 0 && src.LineBreaks[src.LineBreaks.Count - 1] == l)
+                    return;
+
+                src.LineBreaks.Add(l);
+            }
+
+            static void CalculateLineMetrics(
+                ref RichTextEntry src,
+                ValueList<LayoutItemMetrics> items,
+                Font defaultFont,
+                float uiScale,
+                float lineHeightScale)
+            {
+                if (items.Count == 0 && src.LineBreaks.Count == 0)
+                    return;
+
+                var lineStart = 0;
+                for (var i = 0; i < src.LineBreaks.Count; i++)
                 {
-                    // Before adding a line break, add the current line's maximum height
-                    src.Height += maxCurrentLineHeight;
-                    src.LineBreaks.Add(l);
-                    
-                    // Reset max height tracker for the next line to default font height
-                    // It will be updated as we process nodes in the next line
-                    maxCurrentLineHeight = defaultFont.GetHeight(uiScale);
+                    var lineEnd = Math.Clamp(src.LineBreaks[i], lineStart, items.Count);
+                    AddLineMetrics(ref src, items, lineStart, lineEnd, false, defaultFont, uiScale, lineHeightScale);
+                    lineStart = lineEnd;
                 }
+
+                AddLineMetrics(ref src, items, lineStart, items.Count, true, defaultFont, uiScale, lineHeightScale);
+            }
+
+            static void AddLineMetrics(
+                ref RichTextEntry src,
+                ValueList<LayoutItemMetrics> items,
+                int start,
+                int end,
+                bool finalLine,
+                Font defaultFont,
+                float uiScale,
+                float lineHeightScale)
+            {
+                var contentHeight = 0;
+                var advance = 0;
+                var ascent = 0;
+                var hasContent = false;
+                var hasFont = false;
+
+                for (var i = start; i < end; i++)
+                {
+                    ref var item = ref items[i];
+                    if (!item.HasContent)
+                        continue;
+
+                    hasContent = true;
+                    contentHeight = Math.Max(contentHeight, item.ContentHeight);
+                    advance = Math.Max(advance, item.Advance);
+
+                    if (!item.HasFont)
+                        continue;
+
+                    hasFont = true;
+                    ascent = Math.Max(ascent, item.Ascent);
+                }
+
+                if (!hasContent)
+                {
+                    contentHeight = defaultFont.GetHeight(uiScale);
+                    advance = GetLineHeight(defaultFont, uiScale, lineHeightScale);
+                }
+
+                if (!hasFont)
+                    ascent = defaultFont.GetAscent(uiScale);
+
+                src._lineMetrics.Add(new LineMetrics(contentHeight, advance, ascent));
+                src.Height += finalLine ? contentHeight : advance;
             }
         }
 
@@ -254,8 +321,9 @@ namespace Robust.Client.UserInterface
 
             var globalBreakCounter = 0;
             var lineBreakIndex = 0;
-            var baseLine = drawBox.TopLeft + new Vector2(0, defaultFont.GetAscent(uiScale) + verticalOffset);
-            var controlYAdvance = 0f;
+            var lineIndex = 0;
+            var lineTop = drawBox.Top + verticalOffset;
+            var baseLine = new Vector2(drawBox.Left, lineTop + GetLineAscent(defaultFont, uiScale, lineIndex));
 
             var spaceRune = new Rune(' ');
 
@@ -277,8 +345,9 @@ namespace Robust.Client.UserInterface
                     if (lineBreakIndex < LineBreaks.Count &&
                         LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
-                        baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(font, uiScale, lineHeightScale) + controlYAdvance);
-                        controlYAdvance = 0;
+                        lineTop += GetLineAdvance(defaultFont, uiScale, lineHeightScale, lineIndex);
+                        lineIndex += 1;
+                        baseLine = new Vector2(drawBox.Left, lineTop + GetLineAscent(defaultFont, uiScale, lineIndex));
                         lineBreakIndex += 1;
 
                         // The baseline calc is kind of messed up, the newline is After the space but the space is being drawn after doing the newline
@@ -298,6 +367,15 @@ namespace Robust.Client.UserInterface
                 if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
                     continue;
 
+                if (lineBreakIndex < LineBreaks.Count &&
+                    LineBreaks[lineBreakIndex] == globalBreakCounter)
+                {
+                    lineTop += GetLineAdvance(defaultFont, uiScale, lineHeightScale, lineIndex);
+                    lineIndex += 1;
+                    baseLine = new Vector2(drawBox.Left, lineTop + GetLineAscent(defaultFont, uiScale, lineIndex));
+                    lineBreakIndex += 1;
+                }
+
                 // Controls may have been previously hidden via HideControls due to being "out-of frame".
                 // If this ever gets replaced with RectClipContents / scissor box testing, this can be removed.
                 control.Visible = true;
@@ -306,13 +384,13 @@ namespace Robust.Client.UserInterface
                 control.Measure(new Vector2(Width, Height));
                 control.Arrange(UIBox2.FromDimensions(
                     baseLine.X * invertedScale,
-                    (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale,
+                    lineTop * invertedScale,
                     control.DesiredSize.X,
                     control.DesiredSize.Y
                 ));
                 var advanceX = control.DesiredPixelSize.X;
-                controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(font, uiScale, lineHeightScale)) * invertedScale);
                 baseLine += new Vector2(advanceX, 0);
+                globalBreakCounter += 1;
             }
         }
 
@@ -340,6 +418,68 @@ namespace Robust.Client.UserInterface
         {
             var height = font.GetLineHeight(uiScale);
             return (int)(height * lineHeightScale);
+        }
+
+        private readonly int GetLineAdvance(Font defaultFont, float uiScale, float lineHeightScale, int lineIndex)
+        {
+            if (lineIndex < _lineMetrics.Count)
+                return _lineMetrics[lineIndex].Advance;
+
+            return GetLineHeight(defaultFont, uiScale, lineHeightScale);
+        }
+
+        private readonly int GetLineAscent(Font defaultFont, float uiScale, int lineIndex)
+        {
+            if (lineIndex < _lineMetrics.Count)
+                return _lineMetrics[lineIndex].Ascent;
+
+            return defaultFont.GetAscent(uiScale);
+        }
+
+        private readonly struct LayoutItemMetrics
+        {
+            public readonly int ContentHeight;
+            public readonly int Advance;
+            public readonly int Ascent;
+            public readonly bool HasContent;
+            public readonly bool HasFont;
+
+            private LayoutItemMetrics(int contentHeight, int advance, int ascent, bool hasFont)
+            {
+                ContentHeight = contentHeight;
+                Advance = advance;
+                Ascent = ascent;
+                HasContent = true;
+                HasFont = hasFont;
+            }
+
+            public static LayoutItemMetrics ForFont(Font font, float uiScale, float lineHeightScale)
+            {
+                return new LayoutItemMetrics(
+                    font.GetHeight(uiScale),
+                    GetLineHeight(font, uiScale, lineHeightScale),
+                    font.GetAscent(uiScale),
+                    true);
+            }
+
+            public static LayoutItemMetrics ForControl(int height)
+            {
+                return new LayoutItemMetrics(height, height, 0, false);
+            }
+        }
+
+        private readonly struct LineMetrics
+        {
+            public readonly int ContentHeight;
+            public readonly int Advance;
+            public readonly int Ascent;
+
+            public LineMetrics(int contentHeight, int advance, int ascent)
+            {
+                ContentHeight = contentHeight;
+                Advance = advance;
+                Ascent = ascent;
+            }
         }
     }
 }

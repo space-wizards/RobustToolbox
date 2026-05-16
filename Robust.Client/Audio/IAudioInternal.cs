@@ -62,4 +62,9 @@ internal interface IAudioInternal : IAudioManager
     /// Manually calculates the specified gain for an attenuation source with the specified distance.
     /// </summary>
     float GetAttenuationGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance);
+
+    /// <summary>
+    /// Polls for device disconnection and manages confirmation state.
+    /// </summary>
+    void PollAudioDeviceStatus();
 }

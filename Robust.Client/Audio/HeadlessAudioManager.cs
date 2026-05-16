@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using Robust.Shared.Audio;
@@ -109,6 +110,26 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     {
         var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
         return new AudioStream(this, _audioBuffer++, null, length, channels, name);
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyList<string> GetAudioDevices() => Array.Empty<string>();
+
+    /// <inheritdoc />
+    public string GetCurrentDeviceName() => string.Empty;
+
+    /// <inheritdoc />
+    public bool CanSwitchDevice() => false;
+
+    /// <inheritdoc />
+    public bool RequestDeviceSwitch(string? deviceName) => false;
+
+    /// <inheritdoc />
+    public event Action? AudioDeviceChanged;
+
+    /// <inheritdoc />
+    public void PollAudioDeviceStatus()
+    {
     }
 
     private AudioStream AudioStreamFromMetadata(AudioMetadata metadata, string? name)

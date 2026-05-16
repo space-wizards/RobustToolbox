@@ -51,7 +51,7 @@ namespace Robust.Server
     /// <summary>
     /// The master class that runs the rest of the engine.
     /// </summary>
-    internal sealed class BaseServer : IBaseServerInternal, IPostInjectInit
+    internal sealed partial class BaseServer : IBaseServerInternal, IPostInjectInit
     {
         private static readonly Gauge ServerUpTime = Metrics.CreateGauge(
             "robust_server_uptime",
@@ -70,47 +70,47 @@ namespace Robust.Server
             "Time usage of the main loop Update()s",
             new HistogramConfiguration
             {
-                LabelNames = new[] {"area"},
+                LabelNames = new[] { "area" },
                 Buckets = Histogram.ExponentialBuckets(0.000_01, 2, 13)
             });
 
-        [Dependency] private readonly INetConfigurationManagerInternal _config = default!;
-        [Dependency] private readonly IServerEntityManager _entityManager = default!;
-        [Dependency] private readonly ILogManager _log = default!;
-        [Dependency] private readonly IRobustSerializer _serializer = default!;
-        [Dependency] private readonly IGameTiming _time = default!;
-        [Dependency] private readonly IResourceManagerInternal _resources = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly ITimerManager _timerManager = default!;
-        [Dependency] private readonly IServerGameStateManager _stateManager = default!;
-        [Dependency] private readonly IServerNetManager _network = default!;
-        [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
-        [Dependency] private readonly ITaskManager _taskManager = default!;
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-        [Dependency] private readonly IModLoaderInternal _modLoader = default!;
-        [Dependency] private readonly IWatchdogApiInternal _watchdogApi = default!;
-        [Dependency] private readonly HubManager _hubManager = default!;
-        [Dependency] private readonly IScriptHost _scriptHost = default!;
-        [Dependency] private readonly IMetricsManagerInternal _metricsManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
-        [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
-        [Dependency] private readonly IServerConsoleHost _consoleHost = default!;
-        [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
-        [Dependency] private readonly IPrototypeManagerInternal _prototype = default!;
-        [Dependency] private readonly IPlacementManager _placement = default!;
-        [Dependency] private readonly IServerViewVariablesInternal _viewVariables = default!;
-        [Dependency] private readonly ISerializationManager _serialization = default!;
-        [Dependency] private readonly IStatusHost _statusHost = default!;
-        [Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [Dependency] private readonly IReplayRecordingManagerInternal _replay = default!;
-        [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
-        [Dependency] private readonly UploadedContentManager _uploadedContMan = default!;
-        [Dependency] private readonly NetworkResourceManager _netResMan = default!;
-        [Dependency] private readonly IReflectionManager _refMan = default!;
-        [Dependency] private readonly ITransferManager _transfer = default!;
-        [Dependency] private readonly ServerTransferTestManager _transferTest = default!;
+        [Dependency] private INetConfigurationManagerInternal _config = default!;
+        [Dependency] private IServerEntityManager _entityManager = default!;
+        [Dependency] private ILogManager _log = default!;
+        [Dependency] private IRobustSerializer _serializer = default!;
+        [Dependency] private IGameTiming _time = default!;
+        [Dependency] private IResourceManagerInternal _resources = default!;
+        [Dependency] private IMapManager _mapManager = default!;
+        [Dependency] private ITimerManager _timerManager = default!;
+        [Dependency] private IServerGameStateManager _stateManager = default!;
+        [Dependency] private IServerNetManager _network = default!;
+        [Dependency] private ISystemConsoleManager _systemConsole = default!;
+        [Dependency] private ITaskManager _taskManager = default!;
+        [Dependency] private IRuntimeLog _runtimeLog = default!;
+        [Dependency] private IModLoaderInternal _modLoader = default!;
+        [Dependency] private IWatchdogApiInternal _watchdogApi = default!;
+        [Dependency] private HubManager _hubManager = default!;
+        [Dependency] private IScriptHost _scriptHost = default!;
+        [Dependency] private IMetricsManagerInternal _metricsManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IRobustMappedStringSerializer _stringSerializer = default!;
+        [Dependency] private ILocalizationManagerInternal _loc = default!;
+        [Dependency] private IServerConsoleHost _consoleHost = default!;
+        [Dependency] private IParallelManagerInternal _parallelMgr = default!;
+        [Dependency] private ProfManager _prof = default!;
+        [Dependency] private IPrototypeManagerInternal _prototype = default!;
+        [Dependency] private IPlacementManager _placement = default!;
+        [Dependency] private IServerViewVariablesInternal _viewVariables = default!;
+        [Dependency] private ISerializationManager _serialization = default!;
+        [Dependency] private IStatusHost _statusHost = default!;
+        [Dependency] private IComponentFactory _componentFactory = default!;
+        [Dependency] private IReplayRecordingManagerInternal _replay = default!;
+        [Dependency] private IGamePrototypeLoadManager _protoLoadMan = default!;
+        [Dependency] private UploadedContentManager _uploadedContMan = default!;
+        [Dependency] private NetworkResourceManager _netResMan = default!;
+        [Dependency] private IReflectionManager _refMan = default!;
+        [Dependency] private ITransferManager _transfer = default!;
+        [Dependency] private ServerTransferTestManager _transferTest = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -279,6 +279,7 @@ namespace Robust.Server
 
             // Load metrics really early so that we can profile startup times in the future maybe.
             _metricsManager.Initialize();
+            _prof.Initialize();
 
             try
             {
@@ -427,7 +428,7 @@ namespace Robust.Server
 
             if (OperatingSystem.IsWindows() && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
             {
-                WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+                WindowsTickPeriod.TimeBeginPeriod((uint)_config.GetCVar(CVars.SysWinTickPeriod));
             }
 
             _config.CheckUnusedCVars();
@@ -601,7 +602,7 @@ namespace Robust.Server
         {
             _config.OnValueChanged(CVars.NetTickrate, i =>
             {
-                var b = (ushort) i;
+                var b = (ushort)i;
                 _time.TickRate = b;
 
                 _logger.Info($"Tickrate changed to: {b} on tick {_time.CurTick}");
@@ -622,7 +623,7 @@ namespace Robust.Server
 
             var startOffset = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetTimeStartOffset));
             _time.TimeBase = (startOffset, GameTick.First);
-            _time.TickRate = (ushort) _config.GetCVar(CVars.NetTickrate);
+            _time.TickRate = (ushort)_config.GetCVar(CVars.NetTickrate);
 
             _logger.Info($"Name: {ServerName}");
             _logger.Info($"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
@@ -710,7 +711,7 @@ namespace Robust.Server
 
             if (OperatingSystem.IsWindows() && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
             {
-                WindowsTickPeriod.TimeEndPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+                WindowsTickPeriod.TimeEndPeriod((uint)_config.GetCVar(CVars.SysWinTickPeriod));
             }
 
             _config.Shutdown();

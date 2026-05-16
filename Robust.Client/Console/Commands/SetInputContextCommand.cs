@@ -6,9 +6,9 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    public sealed class SetInputContextCommand : LocalizedCommands
+    public sealed partial class SetInputContextCommand : LocalizedCommands
     {
-        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private IInputManager _inputManager = default!;
 
         public override string Command => "setinputcontext";
 

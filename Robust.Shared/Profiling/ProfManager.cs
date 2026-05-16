@@ -14,10 +14,10 @@ namespace Robust.Shared.Profiling;
 
 // See ProfData.cs for description of profiling data layout.
 
-public sealed class ProfManager
+public sealed partial class ProfManager
 {
-    [IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
-    [IoC.Dependency] private readonly ILogManager _logManager = default!;
+    [IoC.Dependency] private IConfigurationManager _cfg = default!;
+    [IoC.Dependency] private ILogManager _logManager = default!;
 
     /// <summary>
     /// Proxy to <c>prof.enabled</c> CVar.
@@ -131,6 +131,14 @@ public sealed class ProfManager
     /// <param name="int64">The value to write.</param>
     /// <returns>The absolute position of the written log entry.</returns>
     public long WriteValue(string text, long int64) => WriteValue(text, ProfData.Int64(int64));
+
+    /// <summary>
+    /// Make a guarded value for usage with using blocks.
+    /// </summary>
+    public ValueGuard Value(string text)
+    {
+        return new ValueGuard(this, text);
+    }
 
     /// <summary>
     /// Write the start of a new log group.
@@ -248,6 +256,25 @@ public sealed class ProfManager
         public void Dispose()
         {
             _mgr.WriteGroupEnd(_startIndex, _groupName, _sampler);
+        }
+    }
+
+    public readonly struct ValueGuard : IDisposable
+    {
+        private readonly ProfManager _mgr;
+        private readonly string _text;
+        private readonly ProfSampler _sampler;
+
+        public ValueGuard(ProfManager mgr, string text)
+        {
+            _mgr = mgr;
+            _text = text;
+            _sampler = ProfSampler.StartNew();
+        }
+
+        public void Dispose()
+        {
+            _mgr.WriteValue(_text, _sampler);
         }
     }
 }

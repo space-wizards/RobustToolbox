@@ -19,14 +19,14 @@ namespace Robust.Server.ViewVariables
 {
     internal sealed partial class ServerViewVariablesManager : ViewVariablesManager, IServerViewVariablesInternal
     {
-        [Dependency] private readonly INetManager _netManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IConGroupController _groupController = default!;
-        [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private INetManager _netManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IConGroupController _groupController = default!;
+        [Dependency] private IRobustSerializer _robustSerializer = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
 
         private readonly Dictionary<uint, ViewVariablesSession>
             _sessions = new();

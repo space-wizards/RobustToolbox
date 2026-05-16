@@ -23,8 +23,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("offset")]
+        [Animatable]
         [Access(Other = AccessPermissions.ReadWriteExecute)]
-        public Vector2 Offset = Vector2.Zero;
+        public Vector2 Offset { get; set; } = Vector2.Zero;
 
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("energy")]

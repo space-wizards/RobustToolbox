@@ -18,13 +18,13 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.ServerStatus
 {
-    internal sealed class WatchdogApi : IWatchdogApiInternal, IPostInjectInit
+    internal sealed partial class WatchdogApi : IWatchdogApiInternal, IPostInjectInit
     {
-        [Dependency] private readonly IStatusHost _statusHost = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-        [Dependency] private readonly ITaskManager _taskManager = default!;
-        [Dependency] private readonly IBaseServer _baseServer = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private IStatusHost _statusHost = default!;
+        [Dependency] private IConfigurationManager _configurationManager = default!;
+        [Dependency] private ITaskManager _taskManager = default!;
+        [Dependency] private IBaseServer _baseServer = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
 
         // Ping watchdog every 15 seconds.
         private static readonly TimeSpan PingGap = TimeSpan.FromSeconds(15);

@@ -233,9 +233,6 @@ namespace Robust.Client.UserInterface
                 float uiScale,
                 float lineHeightScale)
             {
-                if (items.Count == 0 && src.LineBreaks.Count == 0)
-                    return;
-
                 var lineStart = 0;
                 for (var i = 0; i < src.LineBreaks.Count; i++)
                 {
@@ -260,6 +257,9 @@ namespace Robust.Client.UserInterface
                 var contentHeight = 0;
                 var advance = 0;
                 var ascent = 0;
+                var descent = 0;
+                var fontHeight = 0;
+                var controlHeight = 0;
                 var hasContent = false;
                 var hasFont = false;
 
@@ -270,26 +270,44 @@ namespace Robust.Client.UserInterface
                         continue;
 
                     hasContent = true;
-                    contentHeight = Math.Max(contentHeight, item.ContentHeight);
                     advance = Math.Max(advance, item.Advance);
 
-                    if (!item.HasFont)
+                    if (item.HasFont)
+                    {
+                        hasFont = true;
+                        fontHeight = Math.Max(fontHeight, item.ContentHeight);
+                        ascent = Math.Max(ascent, item.Ascent);
+                        descent = Math.Max(descent, item.Descent);
                         continue;
+                    }
 
-                    hasFont = true;
-                    ascent = Math.Max(ascent, item.Ascent);
+                    controlHeight = Math.Max(controlHeight, item.ContentHeight);
                 }
 
                 if (!hasContent)
                 {
                     contentHeight = defaultFont.GetHeight(uiScale);
                     advance = GetLineHeight(defaultFont, uiScale, lineHeightScale);
+                    ascent = defaultFont.GetAscent(uiScale);
+                    descent = defaultFont.GetDescent(uiScale);
+                }
+                else
+                {
+                    if (!hasFont)
+                    {
+                        ascent = defaultFont.GetAscent(uiScale);
+                        descent = defaultFont.GetDescent(uiScale);
+                        contentHeight = controlHeight;
+                    }
+                    else
+                    {
+                        contentHeight = Math.Max(Math.Max(fontHeight, ascent + descent), controlHeight);
+                    }
                 }
 
-                if (!hasFont)
-                    ascent = defaultFont.GetAscent(uiScale);
+                advance = Math.Max(advance, contentHeight);
 
-                src._lineMetrics.Add(new LineMetrics(contentHeight, advance, ascent));
+                src._lineMetrics.Add(new LineMetrics(contentHeight, advance, ascent, descent));
                 src.Height += finalLine ? contentHeight : advance;
             }
         }
@@ -441,30 +459,36 @@ namespace Robust.Client.UserInterface
             public readonly int ContentHeight;
             public readonly int Advance;
             public readonly int Ascent;
+            public readonly int Descent;
             public readonly bool HasContent;
             public readonly bool HasFont;
 
-            private LayoutItemMetrics(int contentHeight, int advance, int ascent, bool hasFont)
+            private LayoutItemMetrics(int contentHeight, int advance, int ascent, int descent, bool hasFont)
             {
                 ContentHeight = contentHeight;
                 Advance = advance;
                 Ascent = ascent;
+                Descent = descent;
                 HasContent = true;
                 HasFont = hasFont;
             }
 
             public static LayoutItemMetrics ForFont(Font font, float uiScale, float lineHeightScale)
             {
+                var ascent = font.GetAscent(uiScale);
+                var descent = font.GetDescent(uiScale);
+
                 return new LayoutItemMetrics(
-                    font.GetHeight(uiScale),
+                    Math.Max(font.GetHeight(uiScale), ascent + descent),
                     GetLineHeight(font, uiScale, lineHeightScale),
-                    font.GetAscent(uiScale),
+                    ascent,
+                    descent,
                     true);
             }
 
             public static LayoutItemMetrics ForControl(int height)
             {
-                return new LayoutItemMetrics(height, height, 0, false);
+                return new LayoutItemMetrics(height, height, 0, 0, false);
             }
         }
 
@@ -473,12 +497,14 @@ namespace Robust.Client.UserInterface
             public readonly int ContentHeight;
             public readonly int Advance;
             public readonly int Ascent;
+            public readonly int Descent;
 
-            public LineMetrics(int contentHeight, int advance, int ascent)
+            public LineMetrics(int contentHeight, int advance, int ascent, int descent)
             {
                 ContentHeight = contentHeight;
                 Advance = advance;
                 Ascent = ascent;
+                Descent = descent;
             }
         }
     }

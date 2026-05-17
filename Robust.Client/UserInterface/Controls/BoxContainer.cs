@@ -37,18 +37,8 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        private int ActualSeparation
-        {
-            get
-            {
-                if (TryGetStyleProperty(StylePropertySeparation, out int separation))
-                {
-                    return separation;
-                }
-
-                return SeparationOverride ?? DefaultSeparation;
-            }
-        }
+        private int ActualSeparation =>
+            SeparationOverride ?? StylePropertyDefault(StylePropertySeparation, DefaultSeparation);
 
         public int? SeparationOverride { get; set; }
 

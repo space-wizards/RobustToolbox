@@ -12,7 +12,7 @@ namespace Robust.UnitTesting.Shared.Prototypes;
 /// </summary>
 [UsedImplicitly]
 [TestOf(typeof(EntityPrototype))]
-[Description($"Tests the {nameof(EntityPrototype)} HasComp family of methods"]
+[Description($"Tests the {nameof(EntityPrototype)} HasComp family of methods")]
 internal sealed class PrototypeHasCompTest : OurRobustUnitTest
 {
     private IComponentFactory _factory = default!;

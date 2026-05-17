@@ -204,7 +204,7 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <summary>
-        /// Returns true if this prototype contains a component.
+        /// Returns true if this prototype contains a <typeparamref name="T"/>.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComp<T>(IComponentFactory factory) where T : IComponent, new()

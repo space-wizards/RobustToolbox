@@ -694,7 +694,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    /// Returns true if an entity prototype has a component.
+    /// Returns true if an entity prototype has a <typeparamref name="T"/>.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool HasComp<T>([ForbidLiteral] EntProtoId id) where T : IComponent, new()

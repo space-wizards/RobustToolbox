@@ -11,7 +11,8 @@ namespace Robust.UnitTesting.Shared.Prototypes;
 /// Tests the <see cref="EntityPrototype"/> HasComp family of methods.
 /// </summary>
 [UsedImplicitly]
-[TestFixture]
+[TestOf(typeof(EntityPrototype))]
+[Description($"Tests the {nameof(EntityPrototype)} HasComp family of methods"]
 internal sealed class PrototypeHasCompTest : OurRobustUnitTest
 {
     private IComponentFactory _factory = default!;

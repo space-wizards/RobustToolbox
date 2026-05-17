@@ -717,7 +717,7 @@ public partial class EntitySystem
         => Proto.Resolve(id, out var proto) && proto.HasComp(name);
 
     /// <summary>
-    /// Returns true if a resolved entity prototype has a component.
+    /// Returns true if a resolved entity prototype has a <typeparamref name="T"/>.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool HasComp<T>(EntityPrototype proto) where T : IComponent, new()

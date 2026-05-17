@@ -10,7 +10,7 @@ namespace Robust.Shared.GameObjects;
 /// </summary>
 /// <remarks>
 /// This will be automatically validated by <see cref="CompNameSerializer"/> if used in data fields.
-/// Doing so however will NOT
+/// Doing so however will NOT skip ignored components, move your shitcode to shared!
 /// </remarks>
 public readonly record struct CompName :
     IEquatable<string>,

@@ -25,7 +25,7 @@ namespace Robust.Shared.GameObjects
     public abstract partial class EntitySystem : IEntitySystem, IPostInjectInit
     {
         [Dependency] protected EntityManager EntityManager = default!;
-        [Dependency] protected IPrototypeManager Proto = default!;
+        [Dependency] protected IPrototypeManager ProtoMan = default!;
         [Dependency] protected ILogManager LogManager = default!;
         [Dependency] private ISharedPlayerManager _playerMan = default!;
         [Dependency] private IReplayRecordingManager _replayMan = default!;

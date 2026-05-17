@@ -698,7 +698,7 @@ public partial class EntitySystem
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool HasComp<T>([ForbidLiteral] EntProtoId id) where T : IComponent, new()
-        => HasComp(id, Factory.GetComponentName<T>());
+        => HasComp(id, Factory.CompName<T>());
 
     /// <summary>
     /// Returns true if an entity prototype has a component with a given type.
@@ -706,40 +706,30 @@ public partial class EntitySystem
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool HasComp([ForbidLiteral] EntProtoId id, Type type)
-        => HasComp(id, Factory.GetComponentName(type));
+        => HasComp(id, Factory.CompName(type));
 
     /// <summary>
-    /// Returns true if an entity prototype contains a component with a given name.
-    /// Logs errors in case of the prototype not existing, debug asserts if the name is invalid.
-    /// If you call this a lot on the same prototype, resolve it first and use the <see cref="EntityPrototype"/>-using <c>HasComp</c> variants.
+    /// Returns true if a entity prototype contains a component with a given name.
+    /// Logs errors in case of the prototype not existing.
+    /// If you call this a lot on the same prototype, resolve it first and call the <see cref="EntityPrototype"/>-using <c>HasComp</c> variants.
     /// </summary>
-    protected bool HasComp([ForbidLiteral] EntProtoId id, string name)
-        => Proto.Resolve(id, out var proto) && proto.HasComp(name);
+    protected bool HasComp([ForbidLiteral] EntProtoId id, CompName name)
+        => ProtoMan.Resolve(id, out var proto) && proto.HasComp(name);
 
     /// <summary>
-    /// Returns true if a resolved entity prototype has a <typeparamref name="T"/>.
+    /// Returns true if an already-resolved entity prototype has a component of type <typeparamref name="T"/>.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool HasComp<T>(EntityPrototype proto) where T : IComponent, new()
-        => proto.HasComp<T>(Factory);
+        => proto.HasComp(Factory.CompName<T>());
 
     /// <summary>
-    /// Returns true if a resolved entity prototype has a component with a given type.
+    /// Returns true if an already-resolved entity prototype has a component with a given type.
     /// Will throw if the type does not belong to a component.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool HasComp(EntityPrototype proto, Type type)
-        => proto.HasComp(type, Factory);
-
-    /// <summary>
-    /// Returns true if a resolved entity prototype contains a component with a given name.
-    /// Debug asserts that the name is for a valid component.
-    /// </summary>
-    protected bool HasComp(EntityPrototype proto, string name)
-    {
-        DebugTools.Assert(Factory.TryGetRegistration(name, out _), $"Tried to check entity prototype {proto.ID} for unregistered component '{name}'");
-        return proto.HasComp(name);
-    }
+        => proto.HasComp(Factory.CompName(type));
 
     #endregion
 

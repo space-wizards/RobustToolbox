@@ -21,6 +21,46 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedMapSystem
 {
+    #region CreateGrid
+
+    public Entity<MapGridComponent> CreateGridEntity(MapId mapId, GridCreateOptions? options = null)
+    {
+        return CreateGridEntity(GetMap(mapId), options);
+    }
+
+    public Entity<MapGridComponent> CreateGridEntity(EntityUid mapEnt, GridCreateOptions? options = null)
+    {
+        options ??= GridCreateOptions.Default;
+        return CreateGridInternal(mapEnt, options.Value);
+    }
+
+    protected Entity<MapGridComponent> CreateGridInternal(EntityUid mapEnt, GridCreateOptions options)
+    {
+        var gridEnt = EntityManager.CreateEntityUninitialized(null);
+
+        var grid = EnsureComp<MapGridComponent>(gridEnt);
+        grid.ChunkSize = options.ChunkSize;
+
+        Log.Debug("Binding new grid {gridEnt}");
+
+        //TODO: This is a hack to get TransformComponent.MapId working before entity states
+        //are applied. After they are applied the parent may be different, but the MapId will
+        //be the same. This causes TransformComponent.ParentUid of a grid to be unsafe to
+        //use in transform states anytime before the state parent is properly set.
+        _transform.SetParent(gridEnt, mapEnt);
+
+        var meta = _metaQuery.GetComponent(gridEnt);
+        EntityManager.System<MetaDataSystem>().SetEntityName(gridEnt, $"grid", meta);
+        EntityManager.InitializeComponents(gridEnt, meta);
+        EntityManager.StartComponents(gridEnt);
+        // Note that this does not actually map-initialize the grid entity, even if the map its being spawn on has already been initialized.
+        // I don't know whether that is intentional or not.
+
+        return (gridEnt, grid);
+    }
+
+    #endregion
+
     #region Chunk helpers
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

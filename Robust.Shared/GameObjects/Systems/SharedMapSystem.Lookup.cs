@@ -308,12 +308,24 @@ public abstract partial class SharedMapSystem
 
     public IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId)
     {
-        throw new System.NotImplementedException();
+        var query = AllEntityQuery<MapGridComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var grid, out var xform))
+        {
+            if (xform.MapID != mapId)
+                continue;
+
+            yield return (uid, grid);
+        }
     }
 
     public IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
     {
-        throw new System.NotImplementedException();
+        var query = AllEntityQuery<MapGridComponent, TransformComponent>();
+        while (query.MoveNext(out var grid, out var xform))
+        {
+            if (xform.MapID == mapId)
+                yield return grid;
+        }
     }
 
     public void FindGridsIntersecting<TShape>(

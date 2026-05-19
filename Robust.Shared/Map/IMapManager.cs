@@ -70,14 +70,21 @@ namespace Robust.Shared.Map
         void DeleteMap(MapId mapId);
 
         // ReSharper disable once MethodOverloadWithOptionalParameter
+        [Obsolete("Use MapSystem.CreateGridEntity(...).Comp")]
         MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize = 16);
+        [Obsolete("Use MapSystem.CreateGridEntity(...).Comp")]
         MapGridComponent CreateGrid(MapId currentMapId, in GridCreateOptions options);
+        [Obsolete("Use MapSystem.CreateGridEntity(...).Comp")]
         MapGridComponent CreateGrid(MapId currentMapId);
+        [Obsolete("Use MapSystem")]
         Entity<MapGridComponent> CreateGridEntity(MapId currentMapId, GridCreateOptions? options = null);
+        [Obsolete("Use MapSystem")]
         Entity<MapGridComponent> CreateGridEntity(EntityUid map, GridCreateOptions? options = null);
 
+        [Obsolete("Use MapSystem")]
         IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId);
 
+        [Obsolete("Use MapSystem")]
         IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId);
 
         #region MapId

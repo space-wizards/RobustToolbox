@@ -80,19 +80,21 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
-    public bool SuppressOnTileChanged { get; set; }
+    [Obsolete("use SharedMapSystem.SuppressOnTileChanged")]
+    public bool SuppressOnTileChanged
+    {
+        get => _mapSystem.SuppressOnTileChanged;
+        set { _mapSystem.SuppressOnTileChanged = value; }
+    }
 
     /// <summary>
     ///     Raises the OnTileChanged event.
     /// </summary>
     /// <param name="tileRef">A reference to the new tile.</param>
     /// <param name="oldTile">The old tile that got replaced.</param>
+    [Obsolete("use SharedMapSystem.RaiseOnTileChanged")]
     void IMapManagerInternal.RaiseOnTileChanged(Entity<MapGridComponent> entity, TileRef tileRef, Tile oldTile, Vector2i chunk)
     {
-        if (SuppressOnTileChanged)
-            return;
-
-        var ev = new TileChangedEvent(entity, tileRef, oldTile, chunk);
-        EntityManager.EventBus.RaiseLocalEvent(entity.Owner, ref ev, true);
+        _mapSystem.RaiseOnTileChanged(entity, tileRef, oldTile, chunk);
     }
 }

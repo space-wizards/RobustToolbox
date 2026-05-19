@@ -41,6 +41,14 @@ namespace Robust.Shared.GameObjects
         internal Dictionary<MapId, EntityUid> Maps { get; } = new();
 
         /// <summary>
+        /// If set, this prevents the <see cref="TileChangedEvent"/> from being raised when modifying grids.
+        /// </summary>
+        /// <remarks>
+        /// Useful if you want to create a new grid, delete an existing grid, or bulk-modify tiles and don't want to spam ten billion individual tile-changed events.
+        /// </remarks>
+        internal bool SuppressOnTileChanged { get; set; }
+
+        /// <summary>
         /// This hashset is used to try prevent MapId re-use. This is mainly for auto-assigned map ids.
         /// Loading a map with a specific id (e.g., the various mapping commands) may still result in an id being
         /// reused.

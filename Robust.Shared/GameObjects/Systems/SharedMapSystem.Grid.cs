@@ -362,7 +362,7 @@ public abstract partial class SharedMapSystem
 
                     var gridIndices = deletedChunk.ChunkTileToGridTile((x, y));
                     var newTileRef = new TileRef(uid, gridIndices, Tile.Empty);
-                    _mapInternal.RaiseOnTileChanged(gridEnt, newTileRef, oldTile, index);
+                    RaiseOnTileChanged(gridEnt, newTileRef, oldTile, index);
                 }
             }
 
@@ -886,7 +886,7 @@ public abstract partial class SharedMapSystem
 
         // Suppress sending out events for each tile changed
         // We're going to send them all out together at the end
-        MapManager.SuppressOnTileChanged = true;
+        SuppressOnTileChanged = true;
 
         foreach (var (gridIndices, tile) in tiles)
         {
@@ -923,7 +923,7 @@ public abstract partial class SharedMapSystem
         RegenerateCollision(uid, grid, modified);
 
         // Back to normal
-        MapManager.SuppressOnTileChanged = false;
+        SuppressOnTileChanged = false;
     }
 
     public TilesEnumerator GetLocalTilesEnumerator(EntityUid uid, MapGridComponent grid, Box2 aabb,
@@ -1671,16 +1671,25 @@ public abstract partial class SharedMapSystem
         // The map serializer currently sets tiles of unbound grids as part of the deserialization process
         // It properly sets SuppressOnTileChanged so that the event isn't spammed for every tile on the grid.
         // ParentMapId is not able to be accessed on unbound grids, so we can't even call this function for unbound grids.
-        if (!MapManager.SuppressOnTileChanged)
+        if (!SuppressOnTileChanged)
         {
             var newTileRef = new TileRef(uid, gridTile, newTile);
-            _mapInternal.RaiseOnTileChanged((uid, grid), newTileRef, oldTile, mapChunk.Indices);
+            RaiseOnTileChanged((uid, grid), newTileRef, oldTile, mapChunk.Indices);
         }
 
         if (shapeChanged && !mapChunk.SuppressCollisionRegeneration)
         {
             RegenerateCollision(uid, grid, mapChunk);
         }
+    }
+
+    internal void RaiseOnTileChanged(Entity<MapGridComponent> entity, TileRef tileRef, Tile oldTile, Vector2i chunk)
+    {
+        if (SuppressOnTileChanged)
+            return;
+
+        var ev = new TileChangedEvent(entity, tileRef, oldTile, chunk);
+        EntityManager.EventBus.RaiseLocalEvent(entity.Owner, ref ev, true);
     }
 
     /// <summary>

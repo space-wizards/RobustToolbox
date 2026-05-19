@@ -28,6 +28,7 @@ namespace Robust.Shared.Map
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
         ///     so that you don't spam an event for each of the million station tiles.
         /// </summary>
+        [Obsolete("use SharedMapSystem")]
         bool SuppressOnTileChanged { get; set; }
 
         /// <summary>

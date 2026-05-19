@@ -17,7 +17,6 @@ namespace Robust.Shared.Console.Commands;
 
 internal sealed partial class TeleportCommand : LocalizedEntityCommands
 {
-    [Dependency] private IMapManager _map = default!;
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
@@ -53,7 +52,7 @@ internal sealed partial class TeleportCommand : LocalizedEntityCommands
             return;
         }
 
-        if (_map.TryFindGridAt(mapId, position, out var gridUid, out var grid))
+        if (_mapSystem.TryFindGridAt(mapId, position, out var gridUid, out var grid))
         {
             var gridPos = Vector2.Transform(position, _transform.GetInvWorldMatrix(gridUid));
 

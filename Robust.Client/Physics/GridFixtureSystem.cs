@@ -72,14 +72,12 @@ namespace Robust.Client.Physics
         {
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            private readonly IMapManager _mapManager;
             private readonly GridFixtureSystem _system;
             private readonly SharedTransformSystem _transform;
             private readonly SharedMapSystem _map;
 
             public GridSplitNodeOverlay(IMapManager mapManager, GridFixtureSystem system, SharedTransformSystem transform, SharedMapSystem map)
             {
-                _mapManager = mapManager;
                 _system = system;
                 _transform = transform;
                 _map = map;
@@ -91,7 +89,7 @@ namespace Robust.Client.Physics
 
                 var state = (_system, _transform, args.WorldBounds, worldHandle);
 
-                _mapManager.FindGridsIntersecting(args.MapId, args.WorldBounds, ref state,
+                _map.FindGridsIntersecting(args.MapId, args.WorldBounds, ref state,
                     (EntityUid uid, MapGridComponent grid,
                         ref (GridFixtureSystem system, SharedTransformSystem transform, Box2Rotated worldBounds, DrawingHandleWorld worldHandle) tuple) =>
                     {

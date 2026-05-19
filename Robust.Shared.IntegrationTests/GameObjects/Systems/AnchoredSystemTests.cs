@@ -160,9 +160,8 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var mapSys = sim.System<SharedMapSystem>();
 
             var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGridEntity(mapId);
+            var grid = mapSys.CreateGridEntity(mapId);
             var coordinates = new MapCoordinates(new Vector2(7, 7), mapId);
             var pos = mapSys.TileIndicesFor(grid, coordinates);
             mapSys.SetTile(grid, pos, new Tile(1));

@@ -19,7 +19,6 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
         public override UnitTestProject Project => UnitTestProject.Server;
 
         private IEntityManager EntityManager = default!;
-        private IMapManager MapManager = default!;
         private SharedTransformSystem XformSystem => EntityManager.System<SharedTransformSystem>();
 
         const string Prototypes = @"
@@ -47,7 +46,6 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             IoCManager.Resolve<IComponentFactory>().GenerateNetIds();
 
             EntityManager = IoCManager.Resolve<IEntityManager>();
-            MapManager = IoCManager.Resolve<IMapManager>();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
@@ -60,8 +58,8 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             mapSys.CreateMap(out MapA);
             mapSys.CreateMap(out MapB);
 
-            GridA = MapManager.CreateGridEntity(MapA);
-            GridB = MapManager.CreateGridEntity(MapB);
+            GridA = mapSys.CreateGridEntity(MapA);
+            GridB = mapSys.CreateGridEntity(MapB);
 
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the test
         }

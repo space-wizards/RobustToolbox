@@ -23,7 +23,6 @@ public sealed class MissingParentTest : RobustIntegrationTest
 
         await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
 
-        var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();

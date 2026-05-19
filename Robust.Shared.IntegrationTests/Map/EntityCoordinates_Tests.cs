@@ -46,7 +46,6 @@ namespace Robust.UnitTesting.Shared.Map
         public void IsValid_EntityDeleted_False()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapManager = IoCManager.Resolve<IMapManager>();
 
             var mapEntity = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
             var newEnt = entityManager.CreateEntityUninitialized(null, new MapCoordinates(Vector2.Zero, mapId));

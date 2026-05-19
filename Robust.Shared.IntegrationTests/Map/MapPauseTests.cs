@@ -26,7 +26,6 @@ internal sealed class MapPauseTests
     {
         var sim = SimulationFactory();
         var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
         var mapId = sim.CreateMap().Uid;
@@ -47,7 +46,6 @@ internal sealed class MapPauseTests
     {
         var sim = SimulationFactory();
         var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
         var mapId = sim.CreateMap().Uid;
@@ -68,7 +66,6 @@ internal sealed class MapPauseTests
     {
         var sim = SimulationFactory();
         var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
         var mapId = sim.CreateMap().Uid;
@@ -89,7 +86,6 @@ internal sealed class MapPauseTests
     {
         var sim = SimulationFactory();
         var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
         var mapId = sim.CreateMap().Uid;
@@ -108,7 +104,6 @@ internal sealed class MapPauseTests
     {
         var sim = SimulationFactory();
         var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
         var mapId = sim.CreateMap().Uid;
@@ -219,7 +214,6 @@ internal sealed class MapPauseTests
     {
         var sim = SimulationFactory();
         var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = sim.Resolve<IMapManager>();
 
         var mapId = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(mapId, false);

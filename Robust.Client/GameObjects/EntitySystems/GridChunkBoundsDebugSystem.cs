@@ -58,8 +58,6 @@ namespace Robust.Client.GameObjects
     internal sealed class GridChunkBoundsOverlay : Overlay
     {
         private readonly IEntityManager _entityManager;
-        private readonly IEyeManager _eyeManager;
-        private readonly IMapManager _mapManager;
         private readonly SharedTransformSystem _transformSystem;
         private readonly SharedMapSystem _mapSystem;
 
@@ -70,8 +68,6 @@ namespace Robust.Client.GameObjects
         public GridChunkBoundsOverlay(IEntityManager entManager, IEyeManager eyeManager, IMapManager mapManager, SharedTransformSystem transformSystem, SharedMapSystem mapSystem)
         {
             _entityManager = entManager;
-            _eyeManager = eyeManager;
-            _mapManager = mapManager;
             _transformSystem = transformSystem;
             _mapSystem = mapSystem;
         }
@@ -84,7 +80,7 @@ namespace Robust.Client.GameObjects
 
             var fixturesQuery = _entityManager.GetEntityQuery<FixturesComponent>();
             _grids.Clear();
-            _mapManager.FindGridsIntersecting(currentMap, viewport, ref _grids);
+            _mapSystem.FindGridsIntersecting(currentMap, viewport, ref _grids);
             foreach (var grid in _grids)
             {
                 var worldMatrix = _transformSystem.GetWorldMatrix(grid);

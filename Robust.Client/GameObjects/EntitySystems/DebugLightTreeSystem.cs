@@ -46,8 +46,6 @@ namespace Robust.Client.GameObjects
         private sealed class DebugLightOverlay : Overlay
         {
             private EntityLookupSystem _lookup;
-            private IEyeManager _eyeManager;
-            private IMapManager _mapManager;
 
             private LightTreeSystem _trees;
 
@@ -56,8 +54,6 @@ namespace Robust.Client.GameObjects
             public DebugLightOverlay(EntityLookupSystem lookup, IEyeManager eyeManager, IMapManager mapManager, LightTreeSystem trees)
             {
                 _lookup = lookup;
-                _eyeManager = eyeManager;
-                _mapManager = mapManager;
                 _trees = trees;
             }
 

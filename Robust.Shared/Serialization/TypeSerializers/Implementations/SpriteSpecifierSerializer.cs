@@ -29,6 +29,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         // So I guess it might as well go here?
         public static readonly ResPath TextureRoot = new("/Textures");
 
+        private Prototypes.IPrototypeManager? _proto;
+
         Texture ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
@@ -102,7 +104,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            return !dependencies.Resolve<Prototypes.IPrototypeManager>().HasIndex<Prototypes.EntityPrototype>(node.Value)
+            _proto ??= dependencies.Resolve<Prototypes.IPrototypeManager>();
+            return !_proto.HasIndex<Prototypes.EntityPrototype>(node.Value)
                 ? new ErrorNode(node, $"Invalid {nameof(EntityPrototype)} id")
                 : new ValidatedValueNode(node);
         }

@@ -22,6 +22,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         ITypeCopier<PrototypeFlags<T>>
         where T : class, IPrototype
     {
+        private ISawmill? _sawmill;
+
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
@@ -47,8 +49,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         {
             if (instanceProvider != null)
             {
-                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
-                sawmill.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
+                _sawmill ??= dependencies.Resolve<ILogManager>().GetSawmill("szr");
+                _sawmill.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
             }
 
             var flags = new List<string>(node.Sequence.Count);
@@ -83,8 +85,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         {
             if (instanceProvider != null)
             {
-                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
-                sawmill.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
+                _sawmill ??= dependencies.Resolve<ILogManager>().GetSawmill("szr");
+                _sawmill.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
             }
 
             return new PrototypeFlags<T>(node.Value);

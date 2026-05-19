@@ -19,10 +19,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations;
 [TypeSerializer]
 public sealed class EntProtoIdSerializer : ITypeSerializer<EntProtoId, ValueDataNode>, ITypeCopyCreator<EntProtoId>
 {
+    private IComponentFactory? _factory;
+    private IPrototypeManager? _proto;
+
     public ValidationNode Validate(ISerializationManager serialization, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context = null)
     {
-        var prototypes = dependencies.Resolve<IPrototypeManager>();
-        if (prototypes.TryGetKindFrom<EntityPrototype>(out _) && prototypes.HasMapping<EntityPrototype>(node.Value))
+        _proto ??= dependencies.Resolve<IPrototypeManager>();
+        if (_proto.TryGetKindFrom<EntityPrototype>(out _) && _proto.HasMapping<EntityPrototype>(node.Value))
             return new ValidatedValueNode(node);
 
         return new ErrorNode(node, $"No {nameof(EntityPrototype)} found with id {node.Value}");
@@ -50,17 +53,20 @@ public sealed class EntProtoIdSerializer : ITypeSerializer<EntProtoId, ValueData
 [TypeSerializer]
 public sealed class EntProtoIdSerializer<T> : ITypeSerializer<EntProtoId<T>, ValueDataNode>, ITypeCopyCreator<EntProtoId<T>> where T : IComponent, new()
 {
+    private IComponentFactory? _factory;
+    private IPrototypeManager? _proto;
+
     public ValidationNode Validate(ISerializationManager serialization, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context = null)
     {
-        var prototypes = dependencies.Resolve<IPrototypeManager>();
-        if (!prototypes.TryGetKindFrom<EntityPrototype>(out _) || !prototypes.TryGetMapping(typeof(EntityPrototype), node.Value, out var mapping))
+        _proto ??= dependencies.Resolve<IPrototypeManager>();
+        if (!_proto.TryGetKindFrom<EntityPrototype>(out _) || !_proto.TryGetMapping(typeof(EntityPrototype), node.Value, out var mapping))
             return new ErrorNode(node, $"No {nameof(EntityPrototype)} found with id {node.Value} that has a {typeof(T).Name}");
 
         if (!mapping.TryGet("components", out SequenceDataNode? components))
             return new ErrorNode(node, $"{nameof(EntityPrototype)} {node.Value} doesn't have a {typeof(T).Name}.");
 
-        var compFactory = dependencies.Resolve<IComponentFactory>();
-        var registration = compFactory.GetRegistration<T>();
+        _factory ??= dependencies.Resolve<IComponentFactory>();
+        var registration = _factory.GetRegistration<T>();
         foreach (var componentNode in components)
         {
             if (componentNode is MappingDataNode component &&

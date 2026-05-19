@@ -14,6 +14,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     [TypeSerializer]
     public sealed class TypeSerializer : ITypeSerializer<Type, ValueDataNode>, ITypeCopyCreator<Type>
     {
+        private IReflectionManager? _refMan;
+
         private static readonly Dictionary<string, Type> Shortcuts = new ()
         {
             {"bool", typeof(bool)}
@@ -25,7 +27,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             if (Shortcuts.ContainsKey(node.Value))
                 return new ValidatedValueNode(node);
 
-            return dependencies.Resolve<IReflectionManager>().GetType(node.Value) == null
+            _refMan ??= dependencies.Resolve<IReflectionManager>();
+            return _refMan.GetType(node.Value) == null
                 ? new ErrorNode(node, $"Type '{node.Value}' not found.")
                 : new ValidatedValueNode(node);
         }
@@ -37,7 +40,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             if (Shortcuts.TryGetValue(node.Value, out var shortcutType))
                 return shortcutType;
 
-            var type = dependencies.Resolve<IReflectionManager>().GetType(node.Value);
+            _refMan ??= dependencies.Resolve<IReflectionManager>();
+            var type = _refMan.GetType(node.Value);
 
             return type == null
                 ? throw new InvalidMappingException($"Type '{node.Value}' not found.")

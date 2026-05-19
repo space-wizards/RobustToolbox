@@ -16,10 +16,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations;
 [TypeSerializer]
 public sealed class LocIdSerializer : ITypeSerializer<LocId, ValueDataNode>, ITypeCopyCreator<LocId>
 {
+    private ILocalizationManager? _loc;
+
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context = null)
     {
-        var loc = dependencies.Resolve<ILocalizationManager>();
-        if (loc.HasString(node.Value))
+        _loc ??= dependencies.Resolve<ILocalizationManager>();
+        if (_loc.HasString(node.Value))
             return new ValidatedValueNode(node);
 
         return new ErrorNode(node, $"No localization message found with id {node.Value}");

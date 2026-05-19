@@ -14,11 +14,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 /// </summary>
 public sealed class ComponentNameSerializer : ITypeSerializer<string, ValueDataNode>
 {
+    private IComponentFactory? _factory;
+
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null)
     {
-        var factory = dependencies.Resolve<IComponentFactory>();
-        if (!factory.TryGetRegistration(node.Value, out _) && factory.GetComponentAvailability(node.Value) != ComponentAvailability.Ignore)
+        _factory ??= dependencies.Resolve<IComponentFactory>();
+        if (!_factory.TryGetRegistration(node.Value, out _) && _factory.GetComponentAvailability(node.Value) != ComponentAvailability.Ignore)
             return new ErrorNode(node, $"Unknown component kind: {node.Value}");
 
         return new ValidatedValueNode(node);

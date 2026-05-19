@@ -53,7 +53,7 @@ internal partial class MapManager
     public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform, GridCallback callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
         if (_mapSystem.TryGetMap(mapId, out var mapEnt))
-            FindGridsIntersecting(mapEnt.Value, shape, transform, callback, includeMap, approx);
+            FindGridsIntersecting(mapEnt.Value, shape, transform, callback, approx, includeMap);
     }
 
     public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)

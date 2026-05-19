@@ -48,6 +48,7 @@ namespace Robust.Client.Placement
 
         public IEntityManager EntityManager => _entityManager;
         public IEyeManager EyeManager => _eyeManager;
+        [Obsolete("use SharedMapSystem")]
         public IMapManager MapManager => _mapManager;
 
         private ISawmill _sawmill = default!;

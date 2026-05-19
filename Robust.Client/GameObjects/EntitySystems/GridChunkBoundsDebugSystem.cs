@@ -4,7 +4,6 @@ using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -15,8 +14,6 @@ namespace Robust.Client.GameObjects
 {
     public sealed partial class GridChunkBoundsDebugSystem : EntitySystem
     {
-        [Dependency] private IEyeManager _eyeManager = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private IOverlayManager _overlayManager = default!;
         [Dependency] private TransformSystem _transform = default!;
         [Dependency] private SharedMapSystem _map = default!;
@@ -37,8 +34,6 @@ namespace Robust.Client.GameObjects
                     DebugTools.Assert(_overlay == null);
                     _overlay = new GridChunkBoundsOverlay(
                         EntityManager,
-                        _eyeManager,
-                        _mapManager,
                         _transform,
                         _map);
 
@@ -65,7 +60,7 @@ namespace Robust.Client.GameObjects
 
         private List<Entity<MapGridComponent>> _grids = new();
 
-        public GridChunkBoundsOverlay(IEntityManager entManager, IEyeManager eyeManager, IMapManager mapManager, SharedTransformSystem transformSystem, SharedMapSystem mapSystem)
+        public GridChunkBoundsOverlay(IEntityManager entManager, SharedTransformSystem transformSystem, SharedMapSystem mapSystem)
         {
             _entityManager = entManager;
             _transformSystem = transformSystem;

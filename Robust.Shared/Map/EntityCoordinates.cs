@@ -106,7 +106,6 @@ namespace Robust.Shared.Map
         /// </summary>
         public Vector2i ToVector2i(
             IEntityManager entityManager,
-            IMapManager mapManager,
             SharedTransformSystem transformSystem)
         {
             if(!IsValid(entityManager))
@@ -123,6 +122,15 @@ namespace Robust.Shared.Map
             var vec = transformSystem.ToMapCoordinates(this);
 
             return new Vector2i((int)MathF.Floor(vec.X), (int)MathF.Floor(vec.Y));
+        }
+
+        [Obsolete("use the version without IMapManager")]
+        public Vector2i ToVector2i(
+            IEntityManager entityManager,
+            IMapManager mapManager,
+            SharedTransformSystem transformSystem)
+        {
+            return ToVector2i(entityManager, transformSystem);
         }
 
         /// <summary>

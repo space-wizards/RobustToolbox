@@ -10,7 +10,7 @@ namespace Robust.Shared.Map
     {
         public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
         {
-            IoCManager.Resolve(ref entityManager, ref mapManager);
+            IoCManager.Resolve(ref entityManager);
 
             var xform = entityManager.System<SharedTransformSystem>();
             var gridId = xform.GetGrid(coords);

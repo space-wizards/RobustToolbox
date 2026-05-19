@@ -323,6 +323,7 @@ namespace Robust.UnitTesting
             public ISharedPlayerManager PlayerMan { get; private set; } = default!;
             public INetManager NetMan { get; private set; } = default!;
             public IGameTiming Timing { get; private set; } = default!;
+            [Obsolete("use SharedMapSystem")]
             public IMapManager MapMan { get; private set; } = default!;
             public IConsoleHost ConsoleHost { get; private set; } = default!;
             public ISawmill Log { get; private set; } = default!;

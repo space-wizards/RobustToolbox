@@ -122,14 +122,14 @@ internal sealed class MapPauseTests
     {
         var sim = SimulationFactory();
         var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = sim.Resolve<IMapManager>();
+        var mapSys = entMan.System<SharedMapSystem>();
 
         // arrange
         var mapId = sim.CreateMap().MapId;
-        entMan.System<SharedMapSystem>().SetPaused(mapId, true);
+        mapSys.SetPaused(mapId, true);
 
         // act
-        var newGrid = mapMan.CreateGridEntity(mapId);
+        var newGrid = mapSys.CreateGridEntity(mapId);
 
         // assert
         var metaData = entMan.GetComponent<MetaDataComponent>(newGrid);
@@ -194,7 +194,6 @@ internal sealed class MapPauseTests
     {
         var sim = SimulationFactory();
         var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = sim.Resolve<IMapManager>();
 
         var mapId = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(mapId, true);

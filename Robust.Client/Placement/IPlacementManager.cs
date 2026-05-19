@@ -24,6 +24,7 @@ namespace Robust.Client.Placement
 
         IEntityManager EntityManager { get; }
         IEyeManager EyeManager { get; }
+        [Obsolete("Use MapSystem")]
         IMapManager MapManager { get; }
 
         /// <summary>

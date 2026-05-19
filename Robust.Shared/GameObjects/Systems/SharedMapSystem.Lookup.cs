@@ -14,6 +14,17 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedMapSystem
 {
+
+    /// <summary>
+    /// Whether <see cref="FindGridsIntersecting"/> and its extended family should only approximately check for intersection by default.
+    /// </summary>
+    public const bool Approximate = false;
+
+    /// <summary>
+    /// Whether <see cref="FindGridsIntersecting"/> and its extended family should also check the map itself by default.
+    /// </summary>
+    public const bool IncludeMap = true;
+
     #region TryFindGridAt
 
     public bool TryFindGridAt(EntityUid mapEnt, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
@@ -97,8 +108,8 @@ public abstract partial class SharedMapSystem
         T shape,
         Transform transform,
         ref List<Entity<MapGridComponent>> grids,
-        bool approx = IMapManager.Approximate,
-        bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
+        bool approx = Approximate,
+        bool includeMap = IncludeMap) where T : IPhysShape
     {
         if (TryGetMap(mapId, out var mapEnt))
             FindGridsIntersecting(mapEnt.Value, shape, transform, ref grids, approx: approx, includeMap: includeMap);
@@ -109,8 +120,8 @@ public abstract partial class SharedMapSystem
         T shape,
         Transform transform,
         GridCallback callback,
-        bool approx = IMapManager.Approximate,
-        bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
+        bool approx = Approximate,
+        bool includeMap = IncludeMap) where T : IPhysShape
     {
         if (TryGetMap(mapId, out var mapEnt))
             FindGridsIntersecting(mapEnt.Value, shape, transform, callback, approx: approx, includeMap: includeMap);
@@ -120,8 +131,8 @@ public abstract partial class SharedMapSystem
         MapId mapId,
         Box2 worldAABB,
         GridCallback callback,
-        bool approx = IMapManager.Approximate,
-        bool includeMap = IMapManager.IncludeMap)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         if (TryGetMap(mapId, out var mapEnt))
             FindGridsIntersecting(mapEnt.Value, worldAABB, callback, approx: approx, includeMap: includeMap);
@@ -132,8 +143,8 @@ public abstract partial class SharedMapSystem
         Box2 worldAABB,
         ref TState state,
         GridCallback<TState> callback,
-        bool approx = IMapManager.Approximate,
-        bool includeMap = IMapManager.IncludeMap)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         if (TryGetMap(mapId, out var map))
             FindGridsIntersecting(map.Value, worldAABB, ref state, callback, approx: approx, includeMap: includeMap);
@@ -143,8 +154,8 @@ public abstract partial class SharedMapSystem
         MapId mapId,
         Box2 worldAABB,
         ref List<Entity<MapGridComponent>> grids,
-        bool approx = IMapManager.Approximate,
-        bool includeMap = IMapManager.IncludeMap)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         if (TryGetMap(mapId, out var map))
             FindGridsIntersecting(map.Value, worldAABB, ref grids, approx: approx, includeMap: includeMap);
@@ -154,8 +165,8 @@ public abstract partial class SharedMapSystem
         MapId mapId,
         Box2Rotated worldBounds,
         GridCallback callback,
-        bool approx = IMapManager.Approximate,
-        bool includeMap = IMapManager.IncludeMap)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         if (TryGetMap(mapId, out var mapEnt))
             FindGridsIntersecting(mapEnt.Value, worldBounds, callback, approx: approx, includeMap: includeMap);
@@ -166,8 +177,8 @@ public abstract partial class SharedMapSystem
         Box2Rotated worldBounds,
         ref TState state,
         GridCallback<TState> callback,
-        bool approx = IMapManager.Approximate,
-        bool includeMap = IMapManager.IncludeMap)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         if (TryGetMap(mapId, out var mapEnt))
             FindGridsIntersecting(mapEnt.Value, worldBounds, ref state, callback, approx: approx, includeMap: includeMap);
@@ -177,8 +188,8 @@ public abstract partial class SharedMapSystem
         MapId mapId,
         Box2Rotated worldBounds,
         ref List<Entity<MapGridComponent>> grids,
-        bool approx = IMapManager.Approximate,
-        bool includeMap = IMapManager.IncludeMap)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         if (TryGetMap(mapId, out var mapEnt))
             FindGridsIntersecting(mapEnt.Value, worldBounds, ref grids, approx: approx, includeMap: includeMap);
@@ -193,8 +204,8 @@ public abstract partial class SharedMapSystem
         TShape shape,
         Transform transform,
         GridCallback callback,
-        bool approx = false,
-        bool includeMap = true) where TShape : IPhysShape
+        bool approx = Approximate,
+        bool includeMap = IncludeMap) where TShape : IPhysShape
     {
         FindGridsIntersecting(mapEnt, shape, shape.ComputeAABB(transform, 0), transform, callback, approx: approx, includeMap: includeMap);
     }
@@ -205,8 +216,8 @@ public abstract partial class SharedMapSystem
         Transform transform,
         ref TState state,
         GridCallback<TState> callback,
-        bool approx = false,
-        bool includeMap = true) where TShape : IPhysShape
+        bool approx = Approximate,
+        bool includeMap = IncludeMap) where TShape : IPhysShape
     {
         FindGridsIntersecting(mapEnt, shape, shape.ComputeAABB(transform, 0), transform, ref state, callback, approx: approx, includeMap: includeMap);
     }
@@ -216,8 +227,8 @@ public abstract partial class SharedMapSystem
         List<IPhysShape> shapes,
         Transform transform,
         ref List<Entity<MapGridComponent>> entities,
-        bool approx = false,
-        bool includeMap = true)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         foreach (var shape in shapes)
         {
@@ -230,8 +241,8 @@ public abstract partial class SharedMapSystem
         TShape shape,
         Transform transform,
         ref List<Entity<MapGridComponent>> grids,
-        bool approx = false,
-        bool includeMap = true) where TShape : IPhysShape
+        bool approx = Approximate,
+        bool includeMap = IncludeMap) where TShape : IPhysShape
     {
         FindGridsIntersecting(mapEnt, shape, shape.ComputeAABB(transform, 0), transform, ref grids, approx: approx, includeMap: includeMap);
     }
@@ -240,8 +251,8 @@ public abstract partial class SharedMapSystem
         EntityUid mapEnt,
         Box2 worldAABB,
         GridCallback callback,
-        bool approx = false,
-        bool includeMap = true)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         var shape = new SlimPolygon(worldAABB);
         FindGridsIntersecting(mapEnt, shape, worldAABB, Robust.Shared.Physics.Transform.Empty, callback, approx: approx, includeMap: includeMap);
@@ -252,8 +263,8 @@ public abstract partial class SharedMapSystem
         Box2 worldAABB,
         ref TState state,
         GridCallback<TState> callback,
-        bool approx = false,
-        bool includeMap = true)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         var shape = new SlimPolygon(worldAABB);
         FindGridsIntersecting(mapEnt, shape, worldAABB, Robust.Shared.Physics.Transform.Empty, ref state, callback, approx: approx, includeMap: includeMap);
@@ -263,8 +274,8 @@ public abstract partial class SharedMapSystem
         EntityUid mapEnt,
         Box2 worldAABB,
         ref List<Entity<MapGridComponent>> grids,
-        bool approx = false,
-        bool includeMap = true)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         var shape = new SlimPolygon(worldAABB);
         FindGridsIntersecting(mapEnt, shape, worldAABB, Robust.Shared.Physics.Transform.Empty, ref grids, approx: approx, includeMap: includeMap);
@@ -274,8 +285,8 @@ public abstract partial class SharedMapSystem
         EntityUid mapEnt,
         Box2Rotated worldBounds,
         GridCallback callback,
-        bool approx = false,
-        bool includeMap = true)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         var shape = new SlimPolygon(worldBounds);
         FindGridsIntersecting(mapEnt, shape, Robust.Shared.Physics.Transform.Empty, callback, approx: approx, includeMap: includeMap);
@@ -286,8 +297,8 @@ public abstract partial class SharedMapSystem
         Box2Rotated worldBounds,
         ref TState state,
         GridCallback<TState> callback,
-        bool approx = false,
-        bool includeMap = true)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         var shape = new SlimPolygon(worldBounds);
         FindGridsIntersecting(mapEnt, shape, Robust.Shared.Physics.Transform.Empty, ref state, callback, approx: approx, includeMap: includeMap);
@@ -297,8 +308,8 @@ public abstract partial class SharedMapSystem
         EntityUid mapEnt,
         Box2Rotated worldBounds,
         ref List<Entity<MapGridComponent>> grids,
-        bool approx = false,
-        bool includeMap = true)
+        bool approx = Approximate,
+        bool includeMap = IncludeMap)
     {
         var shape = new SlimPolygon(worldBounds);
         FindGridsIntersecting(mapEnt, shape, Robust.Shared.Physics.Transform.Empty, ref grids, approx: approx, includeMap: includeMap);

@@ -473,3 +473,6 @@ public abstract partial class SharedMapSystem
         bool Approximate
     ) where TShape : IPhysShape;
 }
+
+public delegate bool GridCallback(EntityUid gridUid, MapGridComponent gridComp);
+public delegate bool GridCallback<TState>(EntityUid gridUid, MapGridComponent gridComp, ref TState state);

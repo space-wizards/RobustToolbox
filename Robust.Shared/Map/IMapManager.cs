@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -11,18 +10,14 @@ using Robust.Shared.Physics.Collision.Shapes;
 
 namespace Robust.Shared.Map
 {
-    public delegate bool GridCallback(EntityUid uid, MapGridComponent grid);
-
-    public delegate bool GridCallback<TState>(EntityUid uid, MapGridComponent grid, ref TState state);
-
     /// <summary>
     ///     This manages all the grids and maps in the world. Largely superseded by <see cref="SharedMapSystem"/>.
     /// </summary>
     [NotContentImplementable]
     public interface IMapManager
     {
-        public const bool Approximate = false;
-        public const bool IncludeMap = true;
+        public const bool Approximate = SharedMapSystem.Approximate;
+        public const bool IncludeMap = SharedMapSystem.IncludeMap;
 
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
@@ -260,16 +255,5 @@ namespace Robust.Shared.Map
 
         [Obsolete("Use MapSystem")]
         bool IsMapInitialized(MapId mapId);
-
-    }
-
-    public struct GridCreateOptions
-    {
-        public static readonly GridCreateOptions Default = new()
-        {
-            ChunkSize = 16
-        };
-
-        public ushort ChunkSize;
     }
 }

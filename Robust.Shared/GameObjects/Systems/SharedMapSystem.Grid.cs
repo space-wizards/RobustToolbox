@@ -1787,3 +1787,8 @@ public abstract partial class SharedMapSystem
         }
     }
 }
+
+public record struct GridCreateOptions(ushort ChunkSize)
+{
+    public readonly static GridCreateOptions Default = new(ChunkSize: 16);
+}

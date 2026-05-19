@@ -13,35 +13,22 @@ namespace Robust.Shared.Map;
 [Virtual]
 internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 {
-    [Dependency] public IGameTiming GameTiming = default!;
     [Dependency] public IEntityManager EntityManager = default!;
-    [Dependency] private IManifoldManager _manifolds = default!;
     [Dependency] private ILogManager _logManager = default!;
-    [Dependency] private IConsoleHost _conhost = default!;
 
     private ISawmill _sawmill = default!;
 
     private SharedMapSystem _mapSystem = default!;
-    private SharedPhysicsSystem _physics = default!;
-    private SharedTransformSystem _transformSystem = default!;
-
-    private EntityQuery<GridTreeComponent> _gridTreeQuery;
-    private EntityQuery<MapGridComponent> _gridQuery;
 
     /// <inheritdoc />
     public void Initialize()
     {
-        _gridTreeQuery = EntityManager.GetEntityQuery<GridTreeComponent>();
-        _gridQuery = EntityManager.GetEntityQuery<MapGridComponent>();
-        InitializeMapPausing();
         _sawmill = _logManager.GetSawmill("system.map");
     }
 
     /// <inheritdoc />
     public void Startup()
     {
-        _physics = EntityManager.System<SharedPhysicsSystem>();
-        _transformSystem = EntityManager.System<SharedTransformSystem>();
         _mapSystem = EntityManager.System<SharedMapSystem>();
 
         _sawmill.Debug("Starting...");

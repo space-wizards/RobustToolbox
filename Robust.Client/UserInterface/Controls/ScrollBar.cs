@@ -45,6 +45,9 @@ namespace Robust.Client.UserInterface.Controls
             ReservesSpace = true;
 
             _orientation = orientation;
+            DefaultCursorShape = orientation == OrientationMode.Horizontal
+                ? CursorShape.HResize
+                : CursorShape.VResize;
         }
 
         public bool IsAtEnd

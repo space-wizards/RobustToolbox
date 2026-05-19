@@ -33,7 +33,6 @@ namespace Robust.Client.Placement
         [Dependency] internal IPlayerManager PlayerManager = default!;
         [Dependency] internal IResourceCache ResourceCache = default!;
         [Dependency] private IReflectionManager _reflectionManager = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private IGameTiming _time = default!;
         [Dependency] private IEyeManager _eyeManager = default!;
         [Dependency] internal IInputManager InputManager = default!;
@@ -48,8 +47,6 @@ namespace Robust.Client.Placement
 
         public IEntityManager EntityManager => _entityManager;
         public IEyeManager EyeManager => _eyeManager;
-        [Obsolete("use SharedMapSystem")]
-        public IMapManager MapManager => _mapManager;
 
         private ISawmill _sawmill = default!;
 

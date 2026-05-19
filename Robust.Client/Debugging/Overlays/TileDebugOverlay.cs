@@ -25,8 +25,6 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
 {
     [Dependency] protected IEntityManager Entity = default!;
     [Dependency] protected IEyeManager Eye = default!;
-    [Obsolete("use SharedMapSystem")]
-    [Dependency] protected IMapManager MapMan = default!;
     [Dependency] protected IInputManager Input = default!;
     [Dependency] protected IUserInterfaceManager Ui = default!;
     [Dependency] protected IResourceCache Cache = default!;

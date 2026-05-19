@@ -233,12 +233,6 @@ namespace Robust.Client.Debugging
             _font = new VectorFont(cache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
         }
 
-        [Obsolete("use the constructor that does not take IMapManager")]
-        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem, SharedTransformSystem transformSystem, SharedMapSystem? mapSystem = null)
-            : this(entityManager, eyeManager, inputManager, playerManager, cache, system, lookup, physicsSystem, transformSystem, mapSystem ?? entityManager.System<SharedMapSystem>())
-        {
-        }
-
         private void DrawWorld(DrawingHandleWorld worldHandle, OverlayDrawArgs args)
         {
             var viewBounds = args.WorldBounds;

@@ -95,12 +95,6 @@ namespace Robust.Shared.Map
             return transformSystem.ToCoordinates(entity, coordinates);
         }
 
-        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
-        public static EntityCoordinates FromMap(IMapManager mapManager, MapCoordinates coordinates)
-        {
-            return IoCManager.Resolve<IEntityManager>().System<SharedTransformSystem>().ToCoordinates(coordinates);
-        }
-
         /// <summary>
         ///     Converts this set of coordinates to Vector2i.
         /// </summary>
@@ -122,15 +116,6 @@ namespace Robust.Shared.Map
             var vec = transformSystem.ToMapCoordinates(this);
 
             return new Vector2i((int)MathF.Floor(vec.X), (int)MathF.Floor(vec.Y));
-        }
-
-        [Obsolete("use the version without IMapManager")]
-        public Vector2i ToVector2i(
-            IEntityManager entityManager,
-            IMapManager mapManager,
-            SharedTransformSystem transformSystem)
-        {
-            return ToVector2i(entityManager, transformSystem);
         }
 
         /// <summary>

@@ -8,7 +8,7 @@ namespace Robust.Shared.Map
 {
     public static class CoordinatesExtensions
     {
-        public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
+        public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null)
         {
             IoCManager.Resolve(ref entityManager);
 

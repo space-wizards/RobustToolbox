@@ -323,8 +323,6 @@ namespace Robust.UnitTesting
             public ISharedPlayerManager PlayerMan { get; private set; } = default!;
             public INetManager NetMan { get; private set; } = default!;
             public IGameTiming Timing { get; private set; } = default!;
-            [Obsolete("use SharedMapSystem")]
-            public IMapManager MapMan { get; private set; } = default!;
             public IConsoleHost ConsoleHost { get; private set; } = default!;
             public ISawmill Log { get; private set; } = default!;
 
@@ -336,7 +334,6 @@ namespace Robust.UnitTesting
                 PlayerMan = deps.Resolve<ISharedPlayerManager>();
                 Timing = deps.Resolve<IGameTiming>();
                 NetMan = deps.Resolve<INetManager>();
-                MapMan = deps.Resolve<IMapManager>();
                 ConsoleHost = deps.Resolve<IConsoleHost>();
                 Log = deps.Resolve<ILogManager>().GetSawmill("test");
             }

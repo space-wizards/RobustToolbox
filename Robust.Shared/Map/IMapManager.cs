@@ -82,29 +82,37 @@ namespace Robust.Shared.Map
 
         #region MapId
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform,
             ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform, GridCallback callback,
             bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = Approximate,
             bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state,
             GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, ref List<Entity<MapGridComponent>> grids,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback,
             bool approx = Approximate,
             bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<TState>(MapId mapId, Box2Rotated worldBounds, ref TState state,
             GridCallback<TState> callback,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> grids,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
@@ -112,38 +120,48 @@ namespace Robust.Shared.Map
 
         #region MapEnt
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Transform transform, GridCallback callback,
             bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<T, TState>(EntityUid mapEnt, T shape, Transform transform,
             ref TState state, GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
         /// <summary>
         /// Returns true if any grids overlap the specified shapes.
         /// </summary>
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(EntityUid mapEnt, List<IPhysShape> shapes, Transform transform,
             ref List<Entity<MapGridComponent>> entities, bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Transform transform,
             ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, GridCallback callback,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<TState>(EntityUid mapEnt, Box2 worldAABB, ref TState state,
             GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, ref List<Entity<MapGridComponent>> grids,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(EntityUid mapEnt, Box2Rotated worldBounds, GridCallback callback,
             bool approx = Approximate,
             bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<TState>(EntityUid mapEnt, Box2Rotated worldBounds, ref TState state,
             GridCallback<TState> callback,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(EntityUid mapEnt, Box2Rotated worldBounds,
             ref List<Entity<MapGridComponent>> grids,
             bool approx = Approximate, bool includeMap = IncludeMap);
@@ -152,6 +170,7 @@ namespace Robust.Shared.Map
 
         #region TryFindGridAt
 
+        [Obsolete("Use MapSystem")]
         public bool TryFindGridAt(
             EntityUid mapEnt,
             Vector2 worldPos,
@@ -161,12 +180,14 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Attempts to find the map grid under the map location.
         /// </summary>
+        [Obsolete("Use MapSystem")]
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, out EntityUid uid,
             [NotNullWhen(true)] out MapGridComponent? grid);
 
         /// <summary>
         /// Attempts to find the map grid under the map location.
         /// </summary>
+        [Obsolete("Use MapSystem")]
         public bool TryFindGridAt(MapCoordinates mapCoordinates, out EntityUid uid,
             [NotNullWhen(true)] out MapGridComponent? grid);
 

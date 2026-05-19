@@ -8,6 +8,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -22,6 +23,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private ITileDefinitionManager _tileMan = default!;
         [Dependency] private IGameTiming _timing = default!;
         [Dependency] protected IMapManager MapManager = default!;
+        [Dependency] private IManifoldManager _manifolds = default!;
         [Dependency] private IMapManagerInternal _mapInternal = default!;
         [Dependency] private INetManager _netManager = default!;
         [Dependency] private FixtureSystem _fixtures = default!;
@@ -34,6 +36,7 @@ namespace Robust.Shared.GameObjects
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
         private EntityQuery<TransformComponent> _xformQuery;
+        [Dependency] EntityQuery<GridTreeComponent> _gridTreeQuery;
 
         internal Dictionary<MapId, EntityUid> Maps { get; } = new();
 

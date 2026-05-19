@@ -524,6 +524,17 @@ public abstract partial class SharedMapSystem
 #endif
     }
 
+    public void CullDeletionHistory(GameTick upToTick)
+    {
+        var query = AllEntityQuery<MapGridComponent>();
+
+        while (query.MoveNext(out var grid))
+        {
+            var chunks = grid.ChunkDeletionHistory;
+            chunks.RemoveAll(t => t.tick < upToTick);
+        }
+    }
+
     private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
     {
         var msg = new GridAddEvent(uid);

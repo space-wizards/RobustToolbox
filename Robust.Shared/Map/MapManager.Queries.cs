@@ -18,53 +18,53 @@ internal partial class MapManager
     public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform,
         ref List<Entity<MapGridComponent>> grids, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
-        _mapSystem.FindGridsIntersecting(mapId, shape, transform, ref grids, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapId, shape, transform, ref grids, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform, GridCallback callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
-        _mapSystem.FindGridsIntersecting(mapId, shape, transform, callback, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapId, shape, transform, callback, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapId, worldAABB, callback, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapId, worldAABB, callback, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapId, worldAABB, ref state, callback, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapId, worldAABB, ref state, callback, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, ref List<Entity<MapGridComponent>> grids,
         bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapId, worldAABB, ref grids, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapId, worldAABB, ref grids, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = IMapManager.Approximate,
         bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapId, worldBounds, callback, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapId, worldBounds, callback, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting<TState>(MapId mapId, Box2Rotated worldBounds, ref TState state, GridCallback<TState> callback,
         bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapId, worldBounds, ref state, callback, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapId, worldBounds, ref state, callback, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> grids,
         bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapId, worldBounds, ref grids, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapId, worldBounds, ref grids, approx: approx, includeMap: includeMap);
     }
 
     #endregion
@@ -80,7 +80,7 @@ internal partial class MapManager
         bool approx = IMapManager.Approximate,
         bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
-        _mapSystem.FindGridsIntersecting(mapEnt, shape, transform, callback, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapEnt, shape, transform, callback, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
@@ -93,7 +93,7 @@ internal partial class MapManager
         bool approx = IMapManager.Approximate,
         bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
-        _mapSystem.FindGridsIntersecting(mapEnt, shape, transform, ref state, callback, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapEnt, shape, transform, ref state, callback, approx: approx, includeMap: includeMap);
     }
 
     /// <summary>
@@ -102,61 +102,61 @@ internal partial class MapManager
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting(EntityUid mapEnt, List<IPhysShape> shapes, Transform transform, ref List<Entity<MapGridComponent>> entities, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapEnt, shapes, transform, ref entities, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapEnt, shapes, transform, ref entities, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Transform transform,
         ref List<Entity<MapGridComponent>> grids, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
-        _mapSystem.FindGridsIntersecting(mapEnt, shape, transform, ref grids, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapEnt, shape, transform, ref grids, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Box2 worldAABB, Transform transform,
         ref List<Entity<MapGridComponent>> grids, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
-        _mapSystem.FindGridsIntersecting(mapEnt, shape, worldAABB, transform, ref grids, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapEnt, shape, worldAABB, transform, ref grids, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, GridCallback callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapEnt, worldAABB, callback, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapEnt, worldAABB, callback, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting<TState>(EntityUid mapEnt, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapEnt, worldAABB, ref state, callback, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapEnt, worldAABB, ref state, callback, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, ref List<Entity<MapGridComponent>> grids,
         bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapEnt, worldAABB, ref grids, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapEnt, worldAABB, ref grids, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting(EntityUid mapEnt, Box2Rotated worldBounds, GridCallback callback, bool approx = IMapManager.Approximate,
         bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapEnt, worldBounds, callback, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapEnt, worldBounds, callback, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting<TState>(EntityUid mapEnt, Box2Rotated worldBounds, ref TState state, GridCallback<TState> callback,
         bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapEnt, worldBounds, ref state, callback, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapEnt, worldBounds, ref state, callback, approx: approx, includeMap: includeMap);
     }
 
     [Obsolete("use SharedMapSystem")]
     public void FindGridsIntersecting(EntityUid mapEnt, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> grids,
         bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        _mapSystem.FindGridsIntersecting(mapEnt, worldBounds, ref grids, approx: approx, includeMap: includeMap);
+        MapSystem.FindGridsIntersecting(mapEnt, worldBounds, ref grids, approx: approx, includeMap: includeMap);
     }
 
     #endregion
@@ -170,7 +170,7 @@ internal partial class MapManager
         out EntityUid uid,
         [NotNullWhen(true)] out MapGridComponent? grid)
     {
-        return _mapSystem.TryFindGridAt(mapEnt, worldPos, out uid, out grid);
+        return MapSystem.TryFindGridAt(mapEnt, worldPos, out uid, out grid);
     }
 
     /// <summary>
@@ -179,7 +179,7 @@ internal partial class MapManager
     [Obsolete("use SharedMapSystem")]
     public bool TryFindGridAt(MapId mapId, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
     {
-        return _mapSystem.TryFindGridAt(mapId, worldPos, out uid, out grid);
+        return MapSystem.TryFindGridAt(mapId, worldPos, out uid, out grid);
     }
 
     /// <summary>
@@ -188,7 +188,7 @@ internal partial class MapManager
     [Obsolete("use SharedMapSystem")]
     public bool TryFindGridAt(MapCoordinates mapCoordinates, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
     {
-        return _mapSystem.TryFindGridAt(mapCoordinates, out uid, out grid);
+        return MapSystem.TryFindGridAt(mapCoordinates, out uid, out grid);
     }
 
     #endregion

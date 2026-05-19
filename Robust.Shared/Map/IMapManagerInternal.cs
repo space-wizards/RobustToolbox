@@ -6,6 +6,7 @@ using Robust.Shared.Maths;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc />
+    [Obsolete]
     internal interface IMapManagerInternal : IMapManager
     {
         /// <summary>

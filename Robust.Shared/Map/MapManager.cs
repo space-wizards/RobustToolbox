@@ -1,11 +1,7 @@
-using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Physics.Collision;
-using Robust.Shared.Physics.Systems;
-using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map;
 
@@ -18,7 +14,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
     private ISawmill _sawmill = default!;
 
-    private SharedMapSystem _mapSystem = default!;
+    protected SharedMapSystem MapSystem = default!;
 
     /// <inheritdoc />
     public void Initialize()
@@ -29,7 +25,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     /// <inheritdoc />
     public void Startup()
     {
-        _mapSystem = EntityManager.System<SharedMapSystem>();
+        MapSystem = EntityManager.System<SharedMapSystem>();
 
         _sawmill.Debug("Starting...");
     }

@@ -7,34 +7,34 @@ namespace Robust.Shared.Map
     {
         public void SetMapPaused(MapId mapId, bool paused)
         {
-            _mapSystem.SetPaused(mapId, paused);
+            MapSystem.SetPaused(mapId, paused);
         }
 
         public void SetMapPaused(EntityUid uid, bool paused)
         {
-            _mapSystem.SetPaused(uid, paused);
+            MapSystem.SetPaused(uid, paused);
         }
 
         public void DoMapInitialize(MapId mapId)
         {
-            _mapSystem.InitializeMap(mapId);
+            MapSystem.InitializeMap(mapId);
         }
 
         public bool IsMapInitialized(MapId mapId)
         {
-            return _mapSystem.IsInitialized(mapId);
+            return MapSystem.IsInitialized(mapId);
         }
 
         /// <inheritdoc />
         public bool IsMapPaused(MapId mapId)
         {
-            return _mapSystem.IsPaused(mapId);
+            return MapSystem.IsPaused(mapId);
         }
 
         /// <inheritdoc />
         public bool IsMapPaused(EntityUid uid)
         {
-            return _mapSystem.IsPaused(uid);
+            return MapSystem.IsPaused(uid);
         }
     }
 }

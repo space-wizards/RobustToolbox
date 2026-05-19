@@ -30,13 +30,13 @@ internal partial class MapManager
     [Obsolete("use SharedMapSystem.CreateGridEntity")]
     public Entity<MapGridComponent> CreateGridEntity(MapId currentMapId, GridCreateOptions? options = null)
     {
-        return _mapSystem.CreateGridEntity(currentMapId, options: options);
+        return MapSystem.CreateGridEntity(currentMapId, options: options);
     }
 
     [Obsolete("use SharedMapSystem.CreateGridEntity")]
     public Entity<MapGridComponent> CreateGridEntity(EntityUid map, GridCreateOptions? options = null)
     {
-        return _mapSystem.CreateGridEntity(map, options: options);
+        return MapSystem.CreateGridEntity(map, options: options);
     }
 
     [Obsolete("Use HasComponent<MapGridComponent>(uid)")]
@@ -48,13 +48,13 @@ internal partial class MapManager
     [Obsolete("use SharedMapSystem.GetAllMapGrids")]
     public IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
     {
-        return _mapSystem.GetAllMapGrids(mapId);
+        return MapSystem.GetAllMapGrids(mapId);
     }
 
     [Obsolete("use SharedMapSystem.GetAllGrids")]
     public IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId)
     {
-        return _mapSystem.GetAllGrids(mapId);
+        return MapSystem.GetAllGrids(mapId);
     }
 
     [Obsolete("just delete the grid entity")]
@@ -83,8 +83,8 @@ internal partial class MapManager
     [Obsolete("use SharedMapSystem.SuppressOnTileChanged")]
     public bool SuppressOnTileChanged
     {
-        get => _mapSystem.SuppressOnTileChanged;
-        set { _mapSystem.SuppressOnTileChanged = value; }
+        get => MapSystem.SuppressOnTileChanged;
+        set { MapSystem.SuppressOnTileChanged = value; }
     }
 
     /// <summary>
@@ -95,6 +95,6 @@ internal partial class MapManager
     [Obsolete("use SharedMapSystem.RaiseOnTileChanged")]
     void IMapManagerInternal.RaiseOnTileChanged(Entity<MapGridComponent> entity, TileRef tileRef, Tile oldTile, Vector2i chunk)
     {
-        _mapSystem.RaiseOnTileChanged(entity, tileRef, oldTile, chunk);
+        MapSystem.RaiseOnTileChanged(entity, tileRef, oldTile, chunk);
     }
 }

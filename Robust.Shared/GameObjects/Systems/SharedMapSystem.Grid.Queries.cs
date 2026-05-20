@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
@@ -27,6 +28,15 @@ public abstract partial class SharedMapSystem
 
     #region TryFindGridAt
 
+    /// <summary>
+    /// Attempts to find a grid which overlaps with a given position on a given map.
+    /// If the map is itself a grid and there is no other grid overlapping with the given position this will return the map itself as such a grid.
+    /// </summary>
+    /// <param name="mapEnt">The uid of the map to search for a valid grid.</param>
+    /// <param name="worldPos">The exact position within and relative to the map to search for a valid grid.</param>
+    /// <param name="uid">Returns the uid of the grid found, if any.</param>
+    /// <param name="grid">Returns the component of the grid found, if any.</param>
+    /// <returns>True if a grid overlapping with the given position within the given map was found, or false otherwise.</returns>
     public bool TryFindGridAt(EntityUid mapEnt, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
     {
         var rangeVec = new Vector2(0.2f, 0.2f);
@@ -56,12 +66,12 @@ public abstract partial class SharedMapSystem
             // NOTE:
             // If you change this to use fixtures instead (i.e. if you want half-tiles) then you need to make sure
             // you account for the fact that fixtures are shrunk slightly!
-            var chunkIndices = SharedMapSystem.GetChunkIndices(localPos, iGrid.ChunkSize);
+            var chunkIndices = GetChunkIndices(localPos, iGrid.ChunkSize);
 
             if (!iGrid.Chunks.TryGetValue(chunkIndices, out var chunk))
                 return true;
 
-            var chunkRelative = SharedMapSystem.GetChunkRelative(localPos, iGrid.ChunkSize);
+            var chunkRelative = GetChunkRelative(localPos, iGrid.ChunkSize);
             var chunkTile = chunk.GetTile(chunkRelative);
 
             if (chunkTile.IsEmpty)
@@ -84,6 +94,8 @@ public abstract partial class SharedMapSystem
         return grid != null;
     }
 
+    /// <inheritdoc cref="TryFindGridAt(EntityUid, Vector2, out EntityUid, out MapGridComponent?)"/>
+    /// <param name="mapId">The id of the map to search for a valid grid.</param>
     public bool TryFindGridAt(MapId mapId, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
     {
         if (TryGetMap(mapId, out var map))
@@ -94,6 +106,8 @@ public abstract partial class SharedMapSystem
         return false;
     }
 
+    /// <inheritdoc cref="TryFindGridAt(EntityUid, Vector2, out EntityUid, out MapGridComponent?)"/>
+    /// <param name="mapCoordinates">The map position to search for a valid grid.</param>
     public bool TryFindGridAt(MapCoordinates mapCoordinates, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
     {
         return TryFindGridAt(mapCoordinates.MapId, mapCoordinates.Position, out uid, out grid);
@@ -103,30 +117,62 @@ public abstract partial class SharedMapSystem
 
     #region MapId
 
-    public void FindGridsIntersecting<T>(
+    /// <summary>
+    /// Adds every grid on the specified map which intersects the given region to the provided collection.
+    /// </summary>
+    /// <param name="shape">The shape of the region to check.</param>
+    /// <param name="transform">The transform, relative to the map, of the region to check.</param>
+    public void FindGridsIntersecting<TShape>(
         MapId mapId,
-        T shape,
+        TShape shape,
         Transform transform,
         ref List<Entity<MapGridComponent>> grids,
         bool approx = Approximate,
-        bool includeMap = IncludeMap) where T : IPhysShape
+        bool includeMap = IncludeMap) where TShape : IPhysShape
     {
         if (TryGetMap(mapId, out var mapEnt))
             FindGridsIntersecting(mapEnt.Value, shape, transform, ref grids, approx: approx, includeMap: includeMap);
     }
 
-    public void FindGridsIntersecting<T>(
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// </summary>
+    /// <param name="shape">The shape of the region to check.</param>
+    /// <param name="transform">The transform, relative to the map, of the region to check.</param>
+    public void FindGridsIntersecting<TShape>(
         MapId mapId,
-        T shape,
+        TShape shape,
         Transform transform,
         GridCallback callback,
         bool approx = Approximate,
-        bool includeMap = IncludeMap) where T : IPhysShape
+        bool includeMap = IncludeMap) where TShape : IPhysShape
     {
         if (TryGetMap(mapId, out var mapEnt))
             FindGridsIntersecting(mapEnt.Value, shape, transform, callback, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// Allows providing some additional <paramref name="state"/> to pass to the callback when it is invoked.
+    /// </summary>
+    /// <param name="shape">The shape of the region to check.</param>
+    /// <param name="transform">The transform, relative to the map, of the region to check.</param>
+    public void FindGridsIntersecting<TShape, TState>(
+        MapId mapId,
+        TShape shape,
+        Transform transform,
+        ref TState state,
+        GridCallback<TState> callback,
+        bool approx = Approximate,
+        bool includeMap = IncludeMap) where TShape : IPhysShape
+    {
+        if (TryGetMap(mapId, out var mapEnt))
+            FindGridsIntersecting(mapEnt.Value, shape, transform, ref state, callback, approx: approx, includeMap: includeMap);
+    }
+
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// </summary>
     public void FindGridsIntersecting(
         MapId mapId,
         Box2 worldAABB,
@@ -138,6 +184,10 @@ public abstract partial class SharedMapSystem
             FindGridsIntersecting(mapEnt.Value, worldAABB, callback, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// Allows providing some additional <paramref name="state"/> to pass to the callback when it is invoked.
+    /// </summary>
     public void FindGridsIntersecting<TState>(
         MapId mapId,
         Box2 worldAABB,
@@ -150,6 +200,9 @@ public abstract partial class SharedMapSystem
             FindGridsIntersecting(map.Value, worldAABB, ref state, callback, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Adds every grid on the specified map which intersects the given region to the provided collection.
+    /// </summary>
     public void FindGridsIntersecting(
         MapId mapId,
         Box2 worldAABB,
@@ -161,6 +214,9 @@ public abstract partial class SharedMapSystem
             FindGridsIntersecting(map.Value, worldAABB, ref grids, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// </summary>
     public void FindGridsIntersecting(
         MapId mapId,
         Box2Rotated worldBounds,
@@ -172,6 +228,10 @@ public abstract partial class SharedMapSystem
             FindGridsIntersecting(mapEnt.Value, worldBounds, callback, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// Allows providing some additional <paramref name="state"/> to pass to the callback when it is invoked.
+    /// </summary>
     public void FindGridsIntersecting<TState>(
         MapId mapId,
         Box2Rotated worldBounds,
@@ -184,6 +244,9 @@ public abstract partial class SharedMapSystem
             FindGridsIntersecting(mapEnt.Value, worldBounds, ref state, callback, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Adds every grid on the specified map which intersects the given region to the provided collection.
+    /// </summary>
     public void FindGridsIntersecting(
         MapId mapId,
         Box2Rotated worldBounds,
@@ -199,6 +262,11 @@ public abstract partial class SharedMapSystem
 
     #region EntityUid
 
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// </summary>
+    /// <param name="shape">The shape of the region to check.</param>
+    /// <param name="transform">The transform, relative to the map, of the region to check.</param>
     public void FindGridsIntersecting<TShape>(
         EntityUid mapEnt,
         TShape shape,
@@ -210,6 +278,12 @@ public abstract partial class SharedMapSystem
         FindGridsIntersecting(mapEnt, shape, shape.ComputeAABB(transform, 0), transform, callback, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// Allows providing some additional <paramref name="state"/> to pass to the callback when it is invoked.
+    /// </summary>
+    /// <param name="shape">The shape of the region to check.</param>
+    /// <param name="transform">The transform, relative to the map, of the region to check.</param>
     public void FindGridsIntersecting<TShape, TState>(
         EntityUid mapEnt,
         TShape shape,
@@ -222,6 +296,27 @@ public abstract partial class SharedMapSystem
         FindGridsIntersecting(mapEnt, shape, shape.ComputeAABB(transform, 0), transform, ref state, callback, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Adds every grid on the specified map which intersects the given region to the provided list.
+    /// </summary>
+    /// <param name="shape">The shape of the region to check.</param>
+    /// <param name="transform">The transform, relative to the map, of the region to check.</param>
+    public void FindGridsIntersecting<TShape>(
+        EntityUid mapEnt,
+        TShape shape,
+        Transform transform,
+        ref List<Entity<MapGridComponent>> grids,
+        bool approx = Approximate,
+        bool includeMap = IncludeMap) where TShape : IPhysShape
+    {
+        FindGridsIntersecting(mapEnt, shape, shape.ComputeAABB(transform, 0), transform, ref grids, approx: approx, includeMap: includeMap);
+    }
+
+    /// <summary>
+    /// Adds every grid on the specified map which intersects the given regions to the provided collection.
+    /// </summary>
+    /// <param name="shapes">A set of regions to check.</param>
+    /// <param name="transform">The transform, relative to the map, of the regions to check.</param>
     public void FindGridsIntersecting(
         EntityUid mapEnt,
         List<IPhysShape> shapes,
@@ -236,17 +331,9 @@ public abstract partial class SharedMapSystem
         }
     }
 
-    public void FindGridsIntersecting<TShape>(
-        EntityUid mapEnt,
-        TShape shape,
-        Transform transform,
-        ref List<Entity<MapGridComponent>> grids,
-        bool approx = Approximate,
-        bool includeMap = IncludeMap) where TShape : IPhysShape
-    {
-        FindGridsIntersecting(mapEnt, shape, shape.ComputeAABB(transform, 0), transform, ref grids, approx: approx, includeMap: includeMap);
-    }
-
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// </summary>
     public void FindGridsIntersecting(
         EntityUid mapEnt,
         Box2 worldAABB,
@@ -258,6 +345,10 @@ public abstract partial class SharedMapSystem
         FindGridsIntersecting(mapEnt, shape, worldAABB, Robust.Shared.Physics.Transform.Empty, callback, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// Allows providing some additional <paramref name="state"/> to pass to the callback when it is invoked.
+    /// </summary>
     public void FindGridsIntersecting<TState>(
         EntityUid mapEnt,
         Box2 worldAABB,
@@ -270,6 +361,9 @@ public abstract partial class SharedMapSystem
         FindGridsIntersecting(mapEnt, shape, worldAABB, Robust.Shared.Physics.Transform.Empty, ref state, callback, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Adds every grid on the specified map which intersects the given regions to the provided list.
+    /// </summary>
     public void FindGridsIntersecting(
         EntityUid mapEnt,
         Box2 worldAABB,
@@ -281,6 +375,9 @@ public abstract partial class SharedMapSystem
         FindGridsIntersecting(mapEnt, shape, worldAABB, Robust.Shared.Physics.Transform.Empty, ref grids, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// </summary>
     public void FindGridsIntersecting(
         EntityUid mapEnt,
         Box2Rotated worldBounds,
@@ -292,6 +389,10 @@ public abstract partial class SharedMapSystem
         FindGridsIntersecting(mapEnt, shape, Robust.Shared.Physics.Transform.Empty, callback, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// Allows providing some additional <paramref name="state"/> to pass to the callback when it is invoked.
+    /// </summary>
     public void FindGridsIntersecting<TState>(
         EntityUid mapEnt,
         Box2Rotated worldBounds,
@@ -304,6 +405,9 @@ public abstract partial class SharedMapSystem
         FindGridsIntersecting(mapEnt, shape, Robust.Shared.Physics.Transform.Empty, ref state, callback, approx: approx, includeMap: includeMap);
     }
 
+    /// <summary>
+    /// Adds every grid on the specified map which intersects the given regions to the provided list.
+    /// </summary>
     public void FindGridsIntersecting(
         EntityUid mapEnt,
         Box2Rotated worldBounds,
@@ -317,6 +421,9 @@ public abstract partial class SharedMapSystem
 
     #endregion
 
+    /// <summary>
+    /// Enumerates all of the grids located on a given map.
+    /// </summary>
     public IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId)
     {
         var query = AllEntityQuery<MapGridComponent, TransformComponent>();
@@ -329,6 +436,11 @@ public abstract partial class SharedMapSystem
         }
     }
 
+    /// <remarks>
+    /// This version only provides the component without the uid and should not be used.
+    /// </remarks>
+    /// <inheritdoc cref="GetAllGrids(MapId)"/>
+    [Obsolete("use GetAllGrids instead")]
     public IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
     {
         var query = AllEntityQuery<MapGridComponent, TransformComponent>();
@@ -339,6 +451,13 @@ public abstract partial class SharedMapSystem
         }
     }
 
+    /// <summary>
+    /// Adds every grid on the specified map which intersects the given regions to the provided list.
+    /// </summary>
+    /// <param name="shape">The shape of the region to check.</param>
+    /// <param name="worldAABB">The world-local axis aligned bounding box of the region to check.</param>
+    /// <param name="transform">The transform, relative to the map, of the region to check.</param>
+    [Access(typeof(IMapManager), Other = AccessPermissions.None)]
     public void FindGridsIntersecting<TShape>(
         EntityUid mapEnt,
         TShape shape,
@@ -359,6 +478,12 @@ public abstract partial class SharedMapSystem
         );
     }
 
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// </summary>
+    /// <param name="shape">The shape of the region to check.</param>
+    /// <param name="worldAABB">The world-local axis aligned bounding box of the region to check.</param>
+    /// <param name="transform">The transform, relative to the map, of the region to check.</param>
     private void FindGridsIntersecting<TShape>(
         EntityUid mapEnt,
         TShape shape,
@@ -375,6 +500,13 @@ public abstract partial class SharedMapSystem
         );
     }
 
+    /// <summary>
+    /// Invokes the provided callback on every grid on the specified map which intersect the given region.
+    /// Allows providing some additional <paramref name="state"/> to pass to the callback when it is invoked.
+    /// </summary>
+    /// <param name="shape">The shape of the region to check.</param>
+    /// <param name="worldAABB">The world-local axis aligned bounding box of the region to check.</param>
+    /// <param name="transform">The transform, relative to the map, of the region to check.</param>
     private void FindGridsIntersecting<TShape, TState>(
         EntityUid mapEnt,
         TShape shape,
@@ -434,6 +566,9 @@ public abstract partial class SharedMapSystem
         state = gridState.State;
     }
 
+    /// <summary>
+    /// Tests whether any of a collection of grid chunks intersect with a given region.
+    /// </summary>
     private bool IsIntersecting<TShape>(
         ChunkEnumerator enumerator,
         TShape shape,

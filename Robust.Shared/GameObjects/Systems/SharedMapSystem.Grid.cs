@@ -23,11 +23,17 @@ public abstract partial class SharedMapSystem
 {
     #region CreateGrid
 
+    /// <summary>
+    /// Creates a new grid entity on a given map.
+    /// </summary>
     public Entity<MapGridComponent> CreateGridEntity(MapId mapId, GridCreateOptions? options = null)
     {
         return CreateGridEntity(GetMap(mapId), options);
     }
 
+    /// <summary>
+    /// Creates a new grid entity on a given map.
+    /// </summary>
     public Entity<MapGridComponent> CreateGridEntity(EntityUid mapEnt, GridCreateOptions? options = null)
     {
         options ??= GridCreateOptions.Default;
@@ -524,6 +530,9 @@ public abstract partial class SharedMapSystem
 #endif
     }
 
+    /// <summary>
+    /// Prunes tracked grid chunk deletions older than some given game tick.
+    /// </summary>
     public void CullDeletionHistory(GameTick upToTick)
     {
         var query = AllEntityQuery<MapGridComponent>();
@@ -1799,6 +1808,10 @@ public abstract partial class SharedMapSystem
     }
 }
 
+/// <summary>
+/// Additional parameters used when creating a new grid entity.
+/// </summary>
+/// <param name="ChunkSize">The number of tiles long/wide the grids chunks should be.</param>
 public record struct GridCreateOptions(ushort ChunkSize)
 {
     public readonly static GridCreateOptions Default = new(ChunkSize: 16);

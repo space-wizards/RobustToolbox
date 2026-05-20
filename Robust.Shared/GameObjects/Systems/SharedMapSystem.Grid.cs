@@ -1703,6 +1703,9 @@ public abstract partial class SharedMapSystem
         }
     }
 
+    /// <summary>
+    /// Raises <see cref="TileChangedEvent"/> on the provided grid unless <see cref="SuppressOnTileChanged"/> is set.
+    /// </summary>
     internal void RaiseOnTileChanged(Entity<MapGridComponent> entity, TileRef tileRef, Tile oldTile, Vector2i chunk)
     {
         if (SuppressOnTileChanged)

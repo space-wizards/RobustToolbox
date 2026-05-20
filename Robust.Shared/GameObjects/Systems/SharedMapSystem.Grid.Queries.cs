@@ -457,7 +457,7 @@ public abstract partial class SharedMapSystem
     /// <param name="shape">The shape of the region to check.</param>
     /// <param name="worldAABB">The world-local axis aligned bounding box of the region to check.</param>
     /// <param name="transform">The transform, relative to the map, of the region to check.</param>
-    [Access(typeof(IMapManager), Other = AccessPermissions.None)]
+    [Access(typeof(MapManager), Other = AccessPermissions.None)]
     public void FindGridsIntersecting<TShape>(
         EntityUid mapEnt,
         TShape shape,

@@ -5,6 +5,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Map.Commands;
 
+/// <summary>
+/// Pauses a given map, halting all entity processing on it.
+/// </summary>
 public sealed partial class PauseMapCommand : LocalizedEntityCommands
 {
     [Dependency] SharedMapSystem _mapSystem = default!;
@@ -30,6 +33,9 @@ public sealed partial class PauseMapCommand : LocalizedEntityCommands
     }
 }
 
+/// <summary>
+/// Unpauses a given map, resuming all entity processing on it.
+/// </summary>
 public sealed partial class UnpauseMapCommand : LocalizedEntityCommands
 {
     [Dependency] SharedMapSystem _mapSystem = default!;
@@ -55,6 +61,9 @@ public sealed partial class UnpauseMapCommand : LocalizedEntityCommands
     }
 }
 
+/// <summary>
+/// Checks whether a given map is currently paused.
+/// </summary>
 public sealed partial class QueryMapPausedCommand : LocalizedEntityCommands
 {
     [Dependency] SharedMapSystem _mapSystem = default!;

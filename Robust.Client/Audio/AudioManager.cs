@@ -119,7 +119,7 @@ internal sealed partial class AudioManager : IAudioInternal
 
     private bool _audioOpenDevice()
     {
-        var preferredDevice = NormalizeDeviceSpecifier(_cfg.GetCVar(CVars.AudioDevice));
+        var preferredDevice = _cfg.GetCVar(CVars.AudioDevice);
 
         // Open device.
         if (!string.IsNullOrEmpty(preferredDevice))
@@ -187,8 +187,6 @@ internal sealed partial class AudioManager : IAudioInternal
 
     private void SwitchAudioDevice(string requestedDevice)
     {
-        requestedDevice = NormalizeDeviceSpecifier(requestedDevice);
-
         OpenALSawmill.Info("Switching OpenAL output device to {0}.",
             string.IsNullOrEmpty(requestedDevice) ? "<default>" : requestedDevice);
 
@@ -215,11 +213,6 @@ internal sealed partial class AudioManager : IAudioInternal
         _audioCreateContext();
         IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
         SetMasterGain(_cfg.GetCVar(CVars.AudioMasterVolume));
-    }
-
-    private static string NormalizeDeviceSpecifier(string? deviceSpecifier)
-    {
-        return string.IsNullOrWhiteSpace(deviceSpecifier) ? string.Empty : deviceSpecifier;
     }
 
     private bool TryReopenAudioDevice(string requestedDevice)

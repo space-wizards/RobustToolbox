@@ -130,11 +130,21 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)
         {
+            DefaultCursorShape = CursorShape.Arrow;
+
+            if (_isHovered || _grabData != null)
+            {
+                DefaultCursorShape = _orientation == OrientationMode.Horizontal
+                    ? CursorShape.HResize
+                    : CursorShape.VResize;
+            }
+
             if (_grabData == null)
             {
                 var box = _getGrabberBox();
                 _isHovered = box.Contains(args.RelativePixelPosition);
                 _updatePseudoClass();
+
                 return;
             }
 

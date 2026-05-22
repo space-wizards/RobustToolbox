@@ -117,6 +117,11 @@ public sealed partial class RayCastSystem
             return input.MaxFraction;
         }
 
+        if ((worldContext.Filter.Flags & QueryFlags.Sensors) == 0x0 && !proxy.Fixture.Hard)
+        {
+            return input.MaxFraction;
+        }
+
         var transform = worldContext.Physics.GetLocalPhysicsTransform(proxy.Entity);
         var output = worldContext.System.RayCastShape(input, proxy.Fixture.Shape, transform);
 

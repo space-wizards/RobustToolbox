@@ -198,6 +198,7 @@ internal sealed partial class AudioManager : IAudioInternal
             return;
         }
 
+        // The skrunkly path that's hopefully never needed.
         OpenALSawmill.Warning(
             "ALC_SOFT_reopen_device is unavailable or failed. Falling back to full audio device rebuild.");
 

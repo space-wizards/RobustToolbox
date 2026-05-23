@@ -15,7 +15,7 @@ namespace Robust.Client.Audio;
 internal sealed class HeadlessAudioManager : IAudioInternal
 {
 
-    private static readonly IReadOnlyList<string> EmptyDevices = Array.Empty<string>();
+    private readonly IReadOnlyList<string> _emptyDevices = Array.Empty<string>();
     private int _audioBuffer;
 
     /// <inheritdoc />
@@ -41,7 +41,7 @@ internal sealed class HeadlessAudioManager : IAudioInternal
 
     public IReadOnlyList<string> GetAudioDevices()
     {
-        return EmptyDevices;
+        return _emptyDevices;
     }
 
     public string? GetDefaultAudioDevice()

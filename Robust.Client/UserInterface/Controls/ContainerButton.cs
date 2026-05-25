@@ -104,13 +104,13 @@ namespace Robust.Client.UserInterface.Controls
             SetOnlyStylePseudoClass(Pressed ? StylePseudoClassPressed : StylePseudoClassNormal);
 
             if (Disabled)
-                AddStyleClass(StylePseudoClassDisabled);
+                AddStylePseudoClass(StylePseudoClassDisabled);
 
             if (IsHovered)
-                AddStyleClass(StylePseudoClassHover);
+                AddStylePseudoClass(StylePseudoClassHover);
 
             if (AttemptingPress)
-                AddStyleClass(StylePseudoClassPressing);
+                AddStylePseudoClass(StylePseudoClassPressing);
         }
     }
 }

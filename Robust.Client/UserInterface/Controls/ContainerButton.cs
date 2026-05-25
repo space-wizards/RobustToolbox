@@ -12,6 +12,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StyleClassButton = "button";
         public const string StylePseudoClassNormal = "normal";
         public const string StylePseudoClassPressed = "pressed";
+        public const string StylePseudoClassPressing = "pressing";
         public const string StylePseudoClassHover = "hover";
         public const string StylePseudoClassDisabled = "disabled";
 
@@ -85,6 +86,9 @@ namespace Robust.Client.UserInterface.Controls
 
             if (IsHovered)
                 AddStyleClass(StylePseudoClassHover);
+
+            if (AttemptingPress)
+                AddStyleClass(StylePseudoClassPressing);
         }
     }
 }

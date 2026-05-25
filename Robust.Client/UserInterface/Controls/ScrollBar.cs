@@ -45,9 +45,7 @@ namespace Robust.Client.UserInterface.Controls
             ReservesSpace = true;
 
             _orientation = orientation;
-            DefaultCursorShape = orientation == OrientationMode.Horizontal
-                ? CursorShape.HResize
-                : CursorShape.VResize;
+            DefaultCursorShape = CursorShape.Pointer;
         }
 
         public bool IsAtEnd
@@ -134,9 +132,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (_isHovered || _grabData != null)
             {
-                DefaultCursorShape = _orientation == OrientationMode.Horizontal
-                    ? CursorShape.HResize
-                    : CursorShape.VResize;
+                DefaultCursorShape = CursorShape.Pointer;
             }
 
             if (_grabData == null)

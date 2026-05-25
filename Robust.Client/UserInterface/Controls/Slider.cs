@@ -81,7 +81,7 @@ namespace Robust.Client.UserInterface.Controls
         public Slider()
         {
             MouseFilter = MouseFilterMode.Stop;
-            DefaultCursorShape = CursorShape.HResize;
+            DefaultCursorShape = CursorShape.Pointer;
 
             AddChild(new LayoutContainer
             {

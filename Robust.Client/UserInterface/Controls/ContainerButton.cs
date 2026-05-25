@@ -10,10 +10,32 @@ namespace Robust.Client.UserInterface.Controls
     {
         public const string StylePropertyStyleBox = "stylebox";
         public const string StyleClassButton = "button";
+
+        /// <summary>
+        /// The button is toggled off.
+        /// </summary>
+        /// <remarks>Mutually exclusive with <see cref="StylePseudoClassPressed"/></remarks>
         public const string StylePseudoClassNormal = "normal";
+
+        /// <summary>
+        /// The button is toggled on.
+        /// </summary>
+        /// <remarks>Mutually exclusive with <see cref="StylePseudoClassNormal"/></remarks>
         public const string StylePseudoClassPressed = "pressed";
+
+        /// <summary>
+        /// The mouse is actively attempting to press/toggle the button.
+        /// </summary>
         public const string StylePseudoClassPressing = "pressing";
+
+        /// <summary>
+        /// The mouse is hovering over the button.
+        /// </summary>
         public const string StylePseudoClassHover = "hover";
+
+        /// <summary>
+        /// The button is not taking any interaction.
+        /// </summary>
         public const string StylePseudoClassDisabled = "disabled";
 
         public StyleBox? StyleBoxOverride { get; set; }

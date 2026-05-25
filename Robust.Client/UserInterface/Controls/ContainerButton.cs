@@ -78,23 +78,13 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override void DrawModeChanged()
         {
-            switch (DrawMode)
-            {
-                case DrawModeEnum.Normal:
-                    SetOnlyStylePseudoClass(StylePseudoClassNormal);
-                    break;
-                case DrawModeEnum.Pressed:
-                    SetOnlyStylePseudoClass(StylePseudoClassPressed);
-                    break;
-                case DrawModeEnum.Hover:
-                    SetOnlyStylePseudoClass(StylePseudoClassHover);
-                    break;
-                case DrawModeEnum.Disabled:
-                    SetOnlyStylePseudoClass(StylePseudoClassDisabled);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            SetOnlyStylePseudoClass(Pressed ? StylePseudoClassPressed : StylePseudoClassNormal);
+
+            if (Disabled)
+                AddStyleClass(StylePseudoClassDisabled);
+
+            if (IsHovered)
+                AddStyleClass(StylePseudoClassHover);
         }
     }
 }

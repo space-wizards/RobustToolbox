@@ -45,6 +45,7 @@ namespace Robust.Client.UserInterface.Controls
             ReservesSpace = true;
 
             _orientation = orientation;
+            DefaultCursorShape = CursorShape.Pointer;
         }
 
         public bool IsAtEnd
@@ -127,11 +128,19 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)
         {
+            DefaultCursorShape = CursorShape.Arrow;
+
+            if (_isHovered || _grabData != null)
+            {
+                DefaultCursorShape = CursorShape.Pointer;
+            }
+
             if (_grabData == null)
             {
                 var box = _getGrabberBox();
                 _isHovered = box.Contains(args.RelativePixelPosition);
                 _updatePseudoClass();
+
                 return;
             }
 

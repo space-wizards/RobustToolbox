@@ -7,8 +7,30 @@ using Robust.Shared.Maths;
 namespace Robust.Client.UserInterface.Controls;
 
 /// <summary>
-///     A container that lays out its children sequentially.
+/// A container that lays its children out sequentially along a major axis, <see cref="Orientation"/>.
 /// </summary>
+/// <example>
+/// <code>
+/// &lt;BoxContainer Orientation="Vertical"&gt;
+///     &lt;Label Text="Above" /&gt;
+///     &lt;Label Text="Below" /&gt;
+/// &lt;/BoxContainer&gt;
+/// </code>
+/// <code>
+/// var container = new BoxContainer
+/// {
+///     Orientation = LayoutOrientation.Vertical,
+///     Children =
+///     {
+///         new Label { Text = "Above" },
+///         new Label { Text = "Below" }
+///     },
+/// };
+/// </code>
+/// </example>
+/// <remarks>
+/// Use <see cref="WrapContainer"/> if you need wrapping along a minor axis.
+/// </remarks>
 [Virtual]
 public class BoxContainer : Container
 {

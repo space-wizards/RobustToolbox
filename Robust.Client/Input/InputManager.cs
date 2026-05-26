@@ -231,13 +231,6 @@ namespace Robust.Client.Input
 
             _keysPressed[(int)args.Key] = true;
 
-            if (_keysPressed[(int)Key.Alt] && _keysPressed[(int)Key.Control])
-            {
-                _keysPressed[(int)Key.Alt] = false;
-                _keysPressed[(int)Key.Control] = false;
-                _keysPressed[(int)Key.AltGr] = true;
-            }
-
             PackedKeyCombo matchedCombo = default;
 
             var bindsDown = new List<KeyBinding>();

@@ -168,23 +168,22 @@ namespace Robust.Shared.Prototypes
             _loc = IoCManager.Resolve<ILocalizationManager>();
         }
 
-        [Obsolete("Pass in IComponentFactory")]
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component)
             where T : IComponent, new()
         {
-            var compName = IoCManager.Resolve<IComponentFactory>().GetComponentName<T>();
+            var compName = IComponentFactory.ComponentName<T>();
             return TryGetComponent(compName, out component);
         }
 
+        [Obsolete($"{nameof(IComponentFactory)} parameter is no longer needed")]
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component, IComponentFactory factory) where T : IComponent, new()
         {
-            var compName = factory.GetComponentName<T>();
-            return TryGetComponent(compName, out component);
+            return TryGetComponent(out component);
         }
 
         public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent, new()
         {
-            DebugTools.AssertEqual(IoCManager.Resolve<IComponentFactory>().GetComponentName<T>(), name);
+            DebugTools.AssertEqual(IComponentFactory.ComponentName<T>(), name);
 
             if (!Components.TryGetValue(name, out var componentUnCast))
             {
@@ -429,7 +428,7 @@ namespace Robust.Shared.Prototypes
         ) where TComponent : class, IComponent, new()
         {
             component = null;
-            var componentName = componentFactory.GetComponentName<TComponent>();
+            var componentName = IComponentFactory.ComponentName<TComponent>();
             if (TryGetComponent(componentName, out var foundComponent))
             {
                 component = (TComponent)foundComponent;

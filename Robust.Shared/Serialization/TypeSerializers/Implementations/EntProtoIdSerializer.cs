@@ -60,12 +60,11 @@ public sealed class EntProtoIdSerializer<T> : ITypeSerializer<EntProtoId<T>, Val
             return new ErrorNode(node, $"{nameof(EntityPrototype)} {node.Value} doesn't have a {typeof(T).Name}.");
 
         var compFactory = dependencies.Resolve<IComponentFactory>();
-        var registration = compFactory.GetRegistration<T>();
         foreach (var componentNode in components)
         {
             if (componentNode is MappingDataNode component &&
                 component.TryGet("type", out ValueDataNode? compName) &&
-                compName.Value == registration.Name)
+                compName.Value == CompIdx.Name<T>())
             {
                 return new ValidatedValueNode(node);
             }

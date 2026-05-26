@@ -34,7 +34,6 @@ namespace Robust.Client.GameObjects
         [Dependency] private IPrototypeManager _proto = default!;
         [Dependency] private IResourceCache _resourceCache = default!;
         [Dependency] private ILogManager _logManager = default!;
-        [Dependency] private IComponentFactory _factory = default!;
 
         // Note that any new system dependencies have to be added to RobustUnitTest.BaseSetup()
         [Dependency] private SharedTransformSystem _xforms = default!;

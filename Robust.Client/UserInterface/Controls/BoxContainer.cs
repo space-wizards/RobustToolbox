@@ -202,14 +202,9 @@ public class BoxContainer : Container
 
     protected override Vector2 MeasureOverride(Vector2 availableSize)
     {
-        if (Orientation == LayoutOrientation.Vertical)
-        {
-            return MeasureItems<VerticalAxis>(availableSize);
-        }
-        else
-        {
-            return MeasureItems<HorizontalAxis>(availableSize);
-        }
+        return Orientation == LayoutOrientation.Vertical
+            ? MeasureItems<VerticalAxis>(availableSize)
+            : MeasureItems<HorizontalAxis>(availableSize);
     }
 
     private Vector2 MeasureItems<TAxis>(Vector2 availableSize) where TAxis : IAxisImplementation
@@ -217,7 +212,7 @@ public class BoxContainer : Container
         availableSize = TAxis.SizeToAxis(availableSize);
 
         // Account for separation.
-        var separation = Separation.Value * (Children.Where(c => c.Visible).Count() - 1);
+        var separation = Separation.Value * (Children.Count(c => c.Visible) - 1);
         var desiredSize = new Vector2(separation, 0);
         availableSize.X = Math.Max(0, availableSize.X) - separation;
 

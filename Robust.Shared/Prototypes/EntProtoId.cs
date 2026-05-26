@@ -93,11 +93,11 @@ public readonly record struct EntProtoId<T>(string Id) : IEquatable<string>, ICo
 
     public override string ToString() => Id ?? string.Empty;
 
-    public T Get(IPrototypeManager? prototypes, IComponentFactory compFactory)
+    public T Get(IPrototypeManager? prototypes)
     {
         prototypes ??= IoCManager.Resolve<IPrototypeManager>();
         var proto = prototypes.Index(this);
-        if (!proto.TryGetComponent(out T? comp, compFactory))
+        if (!proto.TryGetComponent(out T? comp))
         {
             throw new ArgumentException($"{nameof(EntityPrototype)} {proto.ID} has no {nameof(T)}");
         }
@@ -105,11 +105,23 @@ public readonly record struct EntProtoId<T>(string Id) : IEquatable<string>, ICo
         return comp;
     }
 
-    public bool TryGet([NotNullWhen(true)] out T? comp, IPrototypeManager? prototypes, IComponentFactory compFactory)
+    [Obsolete("IComponentFactory parameter is no longer needed")]
+    public T Get(IPrototypeManager? prototypes, IComponentFactory compFactory)
+    {
+        return Get(prototypes);
+    }
+
+    public bool TryGet([NotNullWhen(true)] out T? comp, IPrototypeManager? prototypes)
     {
         comp = default;
         prototypes ??= IoCManager.Resolve<IPrototypeManager>();
         return prototypes.TryIndex(this, out var proto) &&
-               proto.TryGetComponent(out comp, compFactory);
+               proto.TryGetComponent(out comp);
+    }
+
+    [Obsolete("IComponentFactory parameter is no longer needed")]
+    public bool TryGet([NotNullWhen(true)] out T? comp, IPrototypeManager? prototypes, IComponentFactory compFactory)
+    {
+        return TryGet(out comp, prototypes);
     }
 }

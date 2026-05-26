@@ -81,8 +81,6 @@ public class BoxContainer : Container
     /// </remarks>
     public const string StylePropertyAlignMode = "align-mode";
 
-    private const int DefaultSeparation = 0;
-
     /// <summary>
     /// Specifies the alignment of the controls <b>along the orientation axis.</b>
     /// </summary>
@@ -104,7 +102,7 @@ public class BoxContainer : Container
     }
 
     private int ActualSeparation =>
-        SeparationOverride ?? StylePropertyDefault(StylePropertySeparation, DefaultSeparation);
+        SeparationOverride ?? StylePropertyDefault(StylePropertySeparation, 0);
 
     public int? SeparationOverride
     {

@@ -25,7 +25,7 @@ namespace Robust.Client.UserInterface.Controls;
 ///     {
 ///         new Label { Text = "Above" },
 ///         new Label { Text = "Below" }
-///     },
+///     }
 /// };
 /// </code>
 /// </example>
@@ -36,7 +36,7 @@ namespace Robust.Client.UserInterface.Controls;
 public class BoxContainer : Container
 {
     /// <summary>
-    /// Style property modifying <see cref="ActualSeparation" />, which is the amount of space between children in the
+    /// Style property modifying <see cref="Separation"/>, which is the amount of space between children in the
     /// BoxContainer.
     /// </summary>
     /// <example>
@@ -46,12 +46,12 @@ public class BoxContainer : Container
     /// </code>
     /// </example>
     /// <remarks>
-    /// This is overridden by <see cref="SeparationOverride" />
+    /// This is overridden by a non-null <see cref="Separation"/> value.
     /// </remarks>
     public const string StylePropertySeparation = "separation";
 
     /// <summary>
-    /// Style property modifying <see cref="Orientation" />, which decides the major axis for children to be laid out on.
+    /// Style property modifying <see cref="Orientation"/>, which decides the major axis for children to be laid out on.
     /// </summary>
     /// <example>
     /// <code>
@@ -60,7 +60,7 @@ public class BoxContainer : Container
     /// </code>
     /// </example>
     /// <remarks>
-    /// This is overridden by <see cref="Orientation" />
+    /// This is overridden by a non-null <see cref="Orientation"/> value.
     /// </remarks>
     public const string StylePropertyOrientation = "orientation";
 
@@ -68,24 +68,28 @@ public class BoxContainer : Container
     /// Style property modifying <see cref="Align"/>, which decides how to layout children along the major axis when there is extra space.
     /// </summary>
     /// <example>
+    /// If the Orientation is Vertical and Align is Center, it will align children to the center of the vertical axis.
+    /// </example>
+    /// <example>
     /// <code>
     /// Element&lt;BoxContainer&gt;()
     ///     .Prop(BoxContainer.StylePropertyAlignMode, BoxContainer.AlignMode.Center)
     /// </code>
     /// </example>
     /// <remarks>
-    /// This is along the major axis, not the minor axis. If the Orientation is Vertical and Align is Center, it will
-    /// align children to the center of the vertical axis.
+    /// This is along the major axis, not the cross axis. Yes, this what's commonly called "justify".
     /// </remarks>
     /// <remarks>
-    /// This is overridden by <see cref="Align" />
+    /// This is overridden by a non-null <see cref="Align"/> value.
     /// </remarks>
     public const string StylePropertyAlignMode = "align-mode";
-
 
     /// <summary>
     /// The alignment of child controls <b>along the major axis</b>, defined by <see cref="Orientation"/>.
     /// </summary>
+    /// <example>
+    /// If the Orientation is Vertical and Align is Center, it will align children to the center of the vertical axis.
+    /// </example>
     /// <example>
     /// <code>
     /// &lt;BoxContainer Align="Center"&gt;
@@ -99,11 +103,14 @@ public class BoxContainer : Container
     ///     Children =
     ///     {
     ///         new Label { Text = "Child" }
-    ///     },
+    ///     }
     /// };
     /// </code>
     /// </example>
-    /// <param name="value">Overrides <see cref="StylePropertyAlignMode" /> and the default, <see cref="AlignMode.Begin" />, if non-null.</param>
+    /// <remarks>
+    /// This is along the major axis, not the cross axis. Yes, this what's commonly called "justify".
+    /// </remarks>
+    /// <param name="value">Overrides <see cref="StylePropertyAlignMode"/> and the default, <see cref="AlignMode.Begin"/>, if non-null.</param>
     [NotNull]
     public AlignMode? Align
     {
@@ -119,7 +126,7 @@ public class BoxContainer : Container
     }
 
     /// <summary>
-    /// The orientation of the major axis that child controls are laid down along.
+    /// The orientation/direction of the major axis that child controls are laid down along.
     /// </summary>
     /// <example>
     /// <code>
@@ -136,11 +143,11 @@ public class BoxContainer : Container
     ///     {
     ///         new Label { Text = "Above" },
     ///         new Label { Text = "Below" }
-    ///     },
+    ///     }
     /// };
     /// </code>
     /// </example>
-    /// <param name="value">Overrides <see cref="StylePropertyOrientation" /> and the default, <see cref="LayoutOrientation.Horizontal" />, if non-null.</param>
+    /// <param name="value">Overrides <see cref="StylePropertyOrientation"/> and the default, <see cref="LayoutOrientation.Horizontal"/>, if non-null.</param>
     [NotNull]
     public LayoutOrientation? Orientation
     {
@@ -173,11 +180,11 @@ public class BoxContainer : Container
     ///     {
     ///         new Label { Text = "Left" },
     ///         new Label { Text = "Right" }
-    ///     },
+    ///     }
     /// };
     /// </code>
     /// </example>
-    /// <param name="value">Overrides <see cref="StylePropertySeparation" /> and the default, 0, if non-null.</param>
+    /// <param name="value">Overrides <see cref="StylePropertySeparation"/> and the default, 0, if non-null.</param>
     [NotNull]
     public int? Separation
     {
@@ -200,6 +207,7 @@ public class BoxContainer : Container
         set => Separation = value;
     }
 
+    /// <inheritdoc/>
     protected override Vector2 MeasureOverride(Vector2 availableSize)
     {
         return Orientation == LayoutOrientation.Vertical
@@ -207,6 +215,12 @@ public class BoxContainer : Container
             : MeasureItems<HorizontalAxis>(availableSize);
     }
 
+    /// <summary>
+    /// Measures the desired size required to fit all visible children and the separation between them.
+    /// </summary>
+    /// <param name="availableSize">The available size to measure against.</param>
+    /// <typeparam name="TAxis">The major axis/orientation.</typeparam>
+    /// <returns>The desired size for the measured children.</returns>
     private Vector2 MeasureItems<TAxis>(Vector2 availableSize) where TAxis : IAxisImplementation
     {
         availableSize = TAxis.SizeToAxis(availableSize);
@@ -234,6 +248,7 @@ public class BoxContainer : Container
         return TAxis.SizeFromAxis(desiredSize);
     }
 
+    /// <inheritdoc/>
     protected override Vector2 ArrangeOverride(Vector2 finalSize)
     {
         var separation = Separation.Value;
@@ -250,6 +265,19 @@ public class BoxContainer : Container
         return finalSize;
     }
 
+    /// <summary>
+    /// Arranges a range of child controls sequentially along an axis.
+    /// </summary>
+    /// <param name="baseOffset">Initial offset for first child position.</param>
+    /// <param name="finalSize">The final available size of the arranged region.</param>
+    /// <param name="align">Mode to align children along the major axis.</param>
+    /// <param name="children">The children to lay out.</param>
+    /// <param name="start">Child index to start from.</param>
+    /// <param name="end">Child index to end at.</param>
+    /// <param name="separation">Amount of separation between children.</param>
+    /// <param name="fixedSize">A fixed size used for each child's size rather than their individual measures.</param>
+    /// <typeparam name="TAxis">The major axis/orientation.</typeparam>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="align"/> is outside <see cref="AlignMode"/>.</exception>
     internal static void LayOutItems<TAxis>(
         Vector2 baseOffset,
         Vector2 finalSize,
@@ -351,7 +379,7 @@ public class BoxContainer : Container
                     offset = stretchAvail;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(AlignMode), "AlignMode is out of range");
             }
         }
 
@@ -376,37 +404,73 @@ public class BoxContainer : Container
         }
     }
 
+    /// <summary>
+    /// The alignment of child controls <b>along the major axis</b>, dependent on a <see cref="LayoutOrientation"/>.
+    /// </summary>
+    /// <remarks>
+    /// This is along the major axis, not the cross axis. Yes, this what's commonly called "justify".
+    /// If the Orientation is Vertical and Align is Center, it will align children to the center of the vertical axis.
+    /// </remarks>
+    /// <remarks>Defaults to <see cref="AlignMode.Begin"/></remarks>
     public enum AlignMode : byte
     {
         /// <summary>
-        ///     Controls are laid out from the begin of the box container.
+        /// Child controls are laid out from the start/beginning.
         /// </summary>
+        /// <example>
+        /// <see cref="LayoutOrientation.Vertical"/> means start is the top. <br />
+        /// <see cref="LayoutOrientation.Horizontal"/> means start is the left.
+        /// </example>
+        /// <remarks>The default <see cref="AlignMode"/>.</remarks>
         Begin = 0,
 
         /// <summary>
-        ///     Controls are laid out from the center of the box container.
+        /// Child controls are laid out from the center.
         /// </summary>
+        /// <example>
+        /// <see cref="LayoutOrientation.Vertical"/> means start is the center vertically. <br />
+        /// <see cref="LayoutOrientation.Horizontal"/> means start is the center horizontally.
+        /// </example>
         Center = 1,
 
         /// <summary>
-        ///     Controls are laid out from the end of the box container.
+        /// Child controls are laid out from the end.
         /// </summary>
+        /// <example>
+        /// <see cref="LayoutOrientation.Vertical"/> means start is the bottom. <br />
+        /// <see cref="LayoutOrientation.Horizontal"/> means start is the right.
+        /// </example>
         End = 2
     }
 
     /// <summary>
-    /// Orientation for a box container.
+    /// The orientation of the major axis that child controls are laid out along.
     /// </summary>
+    /// <remarks>
+    /// <see cref="AlignMode"/>'s meaning changes based on the orientation.
+    /// </remarks>
+    /// <remarks>Defaults to <see cref="LayoutOrientation.Horizontal"/></remarks>
     public enum LayoutOrientation : byte
     {
         /// <summary>
         /// Controls are laid out horizontally, left to right.
         /// </summary>
+        /// <example>
+        /// <see cref="AlignMode.Begin"/> becomes the left. <br/>
+        /// <see cref="AlignMode.Center"/> becomes the center horizontally. <br/>
+        /// <see cref="AlignMode.End"/> becomes the right.
+        /// </example>
+        /// <remarks>The default <see cref="LayoutOrientation"/></remarks>
         Horizontal,
 
         /// <summary>
         /// Controls are laid out vertically, top to bottom.
         /// </summary>
+        /// <example>
+        /// <see cref="AlignMode.Begin"/> becomes the top. <br/>
+        /// <see cref="AlignMode.Center"/> becomes the center vertically. <br/>
+        /// <see cref="AlignMode.End"/> becomes the bottom.
+        /// </example>
         Vertical
     }
 }

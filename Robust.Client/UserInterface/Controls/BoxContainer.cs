@@ -34,10 +34,51 @@ namespace Robust.Client.UserInterface.Controls;
 [Virtual]
 public class BoxContainer : Container
 {
+    /// <summary>
+    /// Style property modifying <see cref="ActualSeparation" />, which is the amount of space between children in the
+    /// BoxContainer.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// Element&lt;BoxContainer&gt;()
+    ///     .Property(BoxContainer.StylePropertySeparation, 8);
+    /// </code>
+    /// </example>
+    /// <remarks>
+    /// This is overridden by <see cref="SeparationOverride" />
+    /// </remarks>
     public const string StylePropertySeparation = "separation";
 
+    /// <summary>
+    /// Style property modifying <see cref="Orientation" />, which decides the major axis for children to be laid out on.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// Element&lt;BoxContainer&gt;()
+    ///     .Prop(BoxContainer.StylePropertyOrientation, BoxContainer.LayoutOrientation.Vertical)
+    /// </code>
+    /// </example>
+    /// <remarks>
+    /// This is overridden by <see cref="Orientation" />
+    /// </remarks>
     public const string StylePropertyOrientation = "orientation";
 
+    /// <summary>
+    /// Style property modifying <see cref="Align"/>, which decides how to layout children along the major axis when there is extra space.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// Element&lt;BoxContainer&gt;()
+    ///     .Prop(BoxContainer.StylePropertyAlignMode, BoxContainer.AlignMode.Center)
+    /// </code>
+    /// </example>
+    /// <remarks>
+    /// This is along the major axis, not the minor axis. If the Orientation is Vertical and Align is Center, it will
+    /// align children to the center of the vertical axis.
+    /// </remarks>
+    /// <remarks>
+    /// This is overridden by <see cref="Align" />
+    /// </remarks>
     public const string StylePropertyAlignMode = "align-mode";
 
     private const int DefaultSeparation = 0;

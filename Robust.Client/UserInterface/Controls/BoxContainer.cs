@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Robust.Shared.Maths;
@@ -81,6 +82,40 @@ public class BoxContainer : Container
     /// </remarks>
     public const string StylePropertyAlignMode = "align-mode";
 
+
+    /// <summary>
+    /// The alignment of child controls <b>along the major axis</b>, defined by <see cref="Orientation"/>.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// &lt;BoxContainer Align="Center"&gt;
+    ///     &lt;Label Text="Child" /&gt;
+    /// &lt;/BoxContainer&gt;
+    /// </code>
+    /// <code>
+    /// var container = new BoxContainer
+    /// {
+    ///     Align = AlignMode.Center,
+    ///     Children =
+    ///     {
+    ///         new Label { Text = "Child" }
+    ///     },
+    /// };
+    /// </code>
+    /// </example>
+    /// <param name="value">Overrides <see cref="StylePropertyAlignMode" /> and the default, <see cref="AlignMode.Begin" />, if non-null.</param>
+    [NotNull]
+    public AlignMode? Align
+    {
+        get;
+        set
+        {
+            field = value ?? StylePropertyDefault(StylePropertyAlignMode, AlignMode.Begin);
+
+            InvalidateArrange();
+        }
+    }
+
     /// <summary>
     /// Specifies the alignment of the controls <b>along the orientation axis.</b>
     /// </summary>
@@ -89,7 +124,6 @@ public class BoxContainer : Container
     /// This means that if your orientation is vertical and you set this to center,
     /// your controls will be laid out in the vertical <i>center</i> of the box control instead of the top.
     /// </remarks>
-    public AlignMode Align { get; set; }
 
     public LayoutOrientation Orientation
     {
@@ -159,11 +193,11 @@ public class BoxContainer : Container
 
         if (Orientation == LayoutOrientation.Vertical)
         {
-            LayOutItems<VerticalAxis>(default, finalSize, Align, Children, 0, ChildCount, separation);
+            LayOutItems<VerticalAxis>(default, finalSize, Align.Value, Children, 0, ChildCount, separation);
         }
         else
         {
-            LayOutItems<HorizontalAxis>(default, finalSize, Align, Children, 0, ChildCount, separation);
+            LayOutItems<HorizontalAxis>(default, finalSize, Align.Value, Children, 0, ChildCount, separation);
         }
 
         return finalSize;

@@ -117,20 +117,36 @@ public class BoxContainer : Container
     }
 
     /// <summary>
-    /// Specifies the alignment of the controls <b>along the orientation axis.</b>
+    /// The orientation of the major axis that child controls are laid down along.
     /// </summary>
-    /// <remarks>
-    /// This is along the orientation axis, not cross to it.
-    /// This means that if your orientation is vertical and you set this to center,
-    /// your controls will be laid out in the vertical <i>center</i> of the box control instead of the top.
-    /// </remarks>
-
-    public LayoutOrientation Orientation
+    /// <example>
+    /// <code>
+    /// &lt;BoxContainer Orientation="Vertical"&gt;
+    ///     &lt;Label Text="Above" /&gt;
+    ///     &lt;Label Text="Below" /&gt;
+    /// &lt;/BoxContainer&gt;
+    /// </code>
+    /// <code>
+    /// var container = new BoxContainer
+    /// {
+    ///     Orientation = LayoutOrientation.Vertical,
+    ///     Children =
+    ///     {
+    ///         new Label { Text = "Above" },
+    ///         new Label { Text = "Below" }
+    ///     },
+    /// };
+    /// </code>
+    /// </example>
+    /// <param name="value">Overrides <see cref="StylePropertyOrientation" /> and the default, <see cref="LayoutOrientation.Horizontal" />, if non-null.</param>
+    [NotNull]
+    public LayoutOrientation? Orientation
     {
         get;
         set
         {
-            field = value;
+            field = value ?? StylePropertyDefault(StylePropertyOrientation, LayoutOrientation.Horizontal);
+
             InvalidateMeasure();
         }
     }

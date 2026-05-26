@@ -151,17 +151,47 @@ public class BoxContainer : Container
         }
     }
 
-    private int ActualSeparation =>
-        SeparationOverride ?? StylePropertyDefault(StylePropertySeparation, 0);
-
-    public int? SeparationOverride
+    /// <summary>
+    /// The separation/gap between the child elements along the major axis.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// &lt;BoxContainer Separation="2"&gt;
+    ///     &lt;Label Text="Left" /&gt;
+    ///     &lt;Label Text="Right" /&gt;
+    /// &lt;/BoxContainer&gt;
+    /// </code>
+    /// <code>
+    /// var container = new BoxContainer
+    /// {
+    ///     Separation = 2,
+    ///     Children =
+    ///     {
+    ///         new Label { Text = "Left" },
+    ///         new Label { Text = "Right" }
+    ///     },
+    /// };
+    /// </code>
+    /// </example>
+    /// <param name="value">Overrides <see cref="StylePropertySeparation" /> and the default, 0, if non-null.</param>
+    [NotNull]
+    public int? Separation
     {
         get;
         set
         {
-            field = value;
+            field = value ?? StylePropertyDefault(StylePropertySeparation, 0);
+
             InvalidateMeasure();
         }
+    }
+
+    /// <seealso cref="Separation"/>
+    [Obsolete("Use BoxContainer.Separation directly instead.")]
+    public int? SeparationOverride
+    {
+        get => Separation;
+        set => Separation = value;
     }
 
     protected override Vector2 MeasureOverride(Vector2 availableSize)
@@ -181,7 +211,7 @@ public class BoxContainer : Container
         availableSize = TAxis.SizeToAxis(availableSize);
 
         // Account for separation.
-        var separation = ActualSeparation * (Children.Where(c => c.Visible).Count() - 1);
+        var separation = Separation.Value * (Children.Where(c => c.Visible).Count() - 1);
         var desiredSize = new Vector2(separation, 0);
         availableSize.X = Math.Max(0, availableSize.X) - separation;
 
@@ -205,7 +235,7 @@ public class BoxContainer : Container
 
     protected override Vector2 ArrangeOverride(Vector2 finalSize)
     {
-        var separation = ActualSeparation;
+        var separation = Separation.Value;
 
         if (Orientation == LayoutOrientation.Vertical)
         {

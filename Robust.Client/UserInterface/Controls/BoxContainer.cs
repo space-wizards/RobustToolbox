@@ -107,11 +107,13 @@ public class BoxContainer : Container
     [NotNull]
     public AlignMode? Align
     {
-        get;
+        get => field ?? StylePropertyDefault(StylePropertyAlignMode, AlignMode.Begin);
         set
         {
-            field = value ?? StylePropertyDefault(StylePropertyAlignMode, AlignMode.Begin);
+            if (field == value)
+                return;
 
+            field = value;
             InvalidateArrange();
         }
     }
@@ -142,11 +144,13 @@ public class BoxContainer : Container
     [NotNull]
     public LayoutOrientation? Orientation
     {
-        get;
+        get => field ?? StylePropertyDefault(StylePropertyOrientation, LayoutOrientation.Horizontal);
         set
         {
-            field = value ?? StylePropertyDefault(StylePropertyOrientation, LayoutOrientation.Horizontal);
+            if (field == value)
+                return;
 
+            field = value;
             InvalidateMeasure();
         }
     }
@@ -177,11 +181,13 @@ public class BoxContainer : Container
     [NotNull]
     public int? Separation
     {
-        get;
+        get => field ?? StylePropertyDefault(StylePropertySeparation, 0);
         set
         {
-            field = value ?? StylePropertyDefault(StylePropertySeparation, 0);
+            if (field == value)
+                return;
 
+            field = value;
             InvalidateMeasure();
         }
     }

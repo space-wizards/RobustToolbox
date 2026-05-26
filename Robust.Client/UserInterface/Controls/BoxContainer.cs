@@ -12,7 +12,6 @@ namespace Robust.Client.UserInterface.Controls;
 [Virtual]
 public class BoxContainer : Container
 {
-    private LayoutOrientation _orientation;
     public const string StylePropertySeparation = "separation";
 
     public const string StylePropertyOrientation = "orientation";
@@ -33,10 +32,10 @@ public class BoxContainer : Container
 
     public LayoutOrientation Orientation
     {
-        get => _orientation;
+        get;
         set
         {
-            _orientation = value;
+            field = value;
             InvalidateMeasure();
         }
     }

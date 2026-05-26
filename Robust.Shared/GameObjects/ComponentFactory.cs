@@ -141,7 +141,7 @@ namespace Robust.Shared.GameObjects
             return registration;
         }
 
-        private static string CalculateComponentName(Type type)
+        internal static string CalculateComponentName(Type type)
         {
             // Attributes can use any name they want, they are for bypassing the automatic names
             // If a parent class has this attribute, a child class will use the same name, unless it also uses this attribute
@@ -340,7 +340,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public string GetComponentName<T>() where T : IComponent, new()
         {
-            return GetRegistration<T>().Name;
+            return IComponentFactory.ComponentName<T>();
         }
 
         [Pure]

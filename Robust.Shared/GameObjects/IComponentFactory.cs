@@ -180,7 +180,11 @@ namespace Robust.Shared.GameObjects
         string GetComponentName(Type componentType);
 
         [Pure]
+        [Obsolete("Use IComponentFactory.ComponentName<T>()")]
         string GetComponentName<T>() where T : IComponent, new();
+
+        [Pure]
+        static string ComponentName<T>() where T : IComponent, new() => CompIdx.Name<T>();
 
         /// <summary>
         ///     Gets the name of a component, throwing an exception if it does not exist.

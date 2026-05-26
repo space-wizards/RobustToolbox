@@ -14,6 +14,8 @@ public readonly struct CompIdx : IEquatable<CompIdx>
 
     internal static CompIdx Index<T>() => Store<T>.Index;
 
+    internal static string Name<T>() => Store<T>.Name;
+
     internal static int ArrayIndex<T>() => Index<T>().Value;
 
     internal static CompIdx GetIndex(Type type)
@@ -47,6 +49,7 @@ public readonly struct CompIdx : IEquatable<CompIdx>
     {
         // ReSharper disable once StaticMemberInGenericType
         public static readonly CompIdx Index = new(Interlocked.Increment(ref _CompIdxMaster));
+        public static readonly string Name = ComponentFactory.CalculateComponentName(typeof(T));
     }
 
     internal CompIdx(int value)

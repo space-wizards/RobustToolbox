@@ -15,6 +15,10 @@ public class BoxContainer : Container
     private LayoutOrientation _orientation;
     public const string StylePropertySeparation = "separation";
 
+    public const string StylePropertyOrientation = "orientation";
+
+    public const string StylePropertyAlignMode = "align-mode";
+
     private const int DefaultSeparation = 0;
 
     /// <summary>

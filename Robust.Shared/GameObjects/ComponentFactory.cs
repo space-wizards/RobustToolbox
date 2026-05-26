@@ -340,8 +340,11 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public string GetComponentName<T>() where T : IComponent, new()
         {
-            return IComponentFactory.ComponentName<T>();
+            return ComponentName<T>();
         }
+
+        [Pure]
+        public static string ComponentName<T>() where T : IComponent, new() => CompIdx.Name<T>();
 
         [Pure]
         public string GetComponentName(ushort netID)

@@ -58,8 +58,6 @@ public sealed class EntProtoIdSerializer<T> : ITypeSerializer<EntProtoId<T>, Val
 
         if (!mapping.TryGet("components", out SequenceDataNode? components))
             return new ErrorNode(node, $"{nameof(EntityPrototype)} {node.Value} doesn't have a {typeof(T).Name}.");
-
-        var compFactory = dependencies.Resolve<IComponentFactory>();
         foreach (var componentNode in components)
         {
             if (componentNode is MappingDataNode component &&

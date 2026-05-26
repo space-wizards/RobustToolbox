@@ -169,8 +169,8 @@ public sealed partial class EntitySerializer : ISerializationContext,
         _log = _logMan.GetSawmill("entity_serializer");
         SerializerProvider.RegisterSerializer(this);
 
-        _metaName = IComponentFactory.ComponentName<MetaDataComponent>();
-        _xformName = IComponentFactory.ComponentName<TransformComponent>();
+        _metaName = ComponentFactory.ComponentName<MetaDataComponent>();
+        _xformName = ComponentFactory.ComponentName<TransformComponent>();
         _emptyMetaNode = _serialization.WriteValueAs<MappingDataNode>(typeof(MetaDataComponent), new MetaDataComponent(), alwaysWrite: true, context: this);
 
         CurrentComponent = _xformName;

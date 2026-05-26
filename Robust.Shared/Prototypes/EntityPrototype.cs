@@ -171,7 +171,7 @@ namespace Robust.Shared.Prototypes
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component)
             where T : IComponent, new()
         {
-            var compName = IComponentFactory.ComponentName<T>();
+            var compName = ComponentFactory.ComponentName<T>();
             return TryGetComponent(compName, out component);
         }
 
@@ -183,7 +183,7 @@ namespace Robust.Shared.Prototypes
 
         public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent, new()
         {
-            DebugTools.AssertEqual(IComponentFactory.ComponentName<T>(), name);
+            DebugTools.AssertEqual(ComponentFactory.ComponentName<T>(), name);
 
             if (!Components.TryGetValue(name, out var componentUnCast))
             {
@@ -428,7 +428,7 @@ namespace Robust.Shared.Prototypes
         ) where TComponent : class, IComponent, new()
         {
             component = null;
-            var componentName = IComponentFactory.ComponentName<TComponent>();
+            var componentName = ComponentFactory.ComponentName<TComponent>();
             if (TryGetComponent(componentName, out var foundComponent))
             {
                 component = (TComponent)foundComponent;

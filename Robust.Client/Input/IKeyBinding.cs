@@ -19,6 +19,8 @@ namespace Robust.Client.Input
         bool CanRepeat { get; }
         bool AllowSubCombs { get; }
 
+        bool Strict { get; }
+
         /// <summary>
         ///     For a <see cref="KeyBindingType.Command"/>-type binding,
         ///     whether the binding should activate if UI is focused.

@@ -33,5 +33,11 @@ namespace Robust.Client.Input
         /// </summary>
         [DataField]
         public bool CommandWhenUIFocused { get; set; } = true;
+
+        /// <summary>
+        /// See <see cref="KeyBinding.Strict"/> 
+        /// </summary>
+        [DataField]
+        public bool Strict = false;
     }
 }

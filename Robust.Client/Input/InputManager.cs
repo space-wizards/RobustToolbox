@@ -7,6 +7,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
+using Avalonia.Data;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
 using Robust.Shared.Collections;
@@ -168,7 +169,8 @@ namespace Robust.Client.Input
                     Type = p.BindingType,
                     CanFocus = p.CanFocus,
                     CanRepeat = p.CanRepeat,
-                    AllowSubCombs = p.AllowSubCombs
+                    AllowSubCombs = p.AllowSubCombs,
+                    Strict = p.Strict
                 }).ToArray();
 
             var leaveEmpty = _modifiedKeyFunctions
@@ -252,7 +254,19 @@ namespace Robust.Client.Input
                         PackedContainsKey(binding.PackedKeyCombo, args.Key))
                     {
                         matchedCombo = binding.PackedKeyCombo;
-
+                        if (binding.Strict)
+                        {
+                            for (Key i=0; i<=Key.CapsLock; i++)
+                            {
+                                if ((i != binding.BaseKey ||
+                                    i != binding.Mod1 ||
+                                    i != binding.Mod2 ||
+                                    i != binding.Mod3) && _keysPressed[(byte)i] == true)
+                                {
+                                    return;
+                                }
+                            }
+                        }
                         bindsDown.Add(binding);
 
                         hasCanFocus |= binding.CanFocus;
@@ -597,7 +611,7 @@ namespace Robust.Client.Input
             Key baseKey, Key? mod1, Key? mod2, Key? mod3)
         {
             var binding = new KeyBinding(this, function.FunctionName, bindingType, baseKey, false, false, false,
-                0, true, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
+                0, true, false, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
 
             RegisterBinding(binding);
 
@@ -608,7 +622,7 @@ namespace Robust.Client.Input
             Key baseKey, Key? mod1, Key? mod2, Key? mod3)
         {
             var binding = new KeyBinding(this, function, bindingType, baseKey, false, false, false,
-                0, true, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
+                0, true, false, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
 
             RegisterBinding(binding);
 
@@ -618,7 +632,7 @@ namespace Robust.Client.Input
         public IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified = true, bool invalid = false)
         {
             var binding = new KeyBinding(this, reg.Function.FunctionName, reg.Type, reg.BaseKey, reg.CanFocus, reg.CanRepeat,
-                reg.AllowSubCombs, reg.Priority, reg.CommandWhenUIFocused, reg.Mod1, reg.Mod2, reg.Mod3);
+                reg.AllowSubCombs, reg.Priority, reg.CommandWhenUIFocused, reg.Strict, reg.Mod1, reg.Mod2, reg.Mod3);
 
             RegisterBinding(binding, markModified);
 
@@ -792,13 +806,19 @@ namespace Robust.Client.Input
 
             [ViewVariables] public int Priority { get; internal set; }
 
+            /// <summary>
+            ///     Whether the Bound Key Combination works when ONLY the specified keys are pressed.
+            /// </summary>
+            [ViewVariables]
+            public bool Strict {get; internal set; }
+
             public KeyBinding(
                 InputManager inputManager,
                 string function,
                 KeyBindingType bindingType,
                 Key baseKey,
                 bool canFocus, bool canRepeat, bool allowSubCombs, int priority,
-                bool commandWhenUIFocused,
+                bool commandWhenUIFocused, bool strict,
                 Key mod1 = Key.Unknown,
                 Key mod2 = Key.Unknown,
                 Key mod3 = Key.Unknown)
@@ -810,6 +830,7 @@ namespace Robust.Client.Input
                 AllowSubCombs = allowSubCombs;
                 Priority = priority;
                 CommandWhenUIFocused = commandWhenUIFocused;
+                Strict = strict;
                 _inputManager = inputManager;
 
                 PackedKeyCombo = new PackedKeyCombo(baseKey, mod1, mod2, mod3);

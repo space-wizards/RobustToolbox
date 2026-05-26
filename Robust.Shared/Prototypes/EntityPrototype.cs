@@ -423,7 +423,6 @@ namespace Robust.Shared.Prototypes
 
         /// <inheritdoc />
         public bool TryGetComponent<TComponent>(
-            IComponentFactory componentFactory,
             [NotNullWhen(true)] out TComponent? component
         ) where TComponent : class, IComponent, new()
         {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -21,8 +22,19 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">Found component or null.</param>
         /// <returns>True if the component was found, false otherwise.</returns>
         /// <seealso cref="TryGetComponent"/>
+        [Obsolete("Use the overload without IComponentFactory.")]
         bool TryGetComponent<TComponent>(
             IComponentFactory componentFactory,
+            [NotNullWhen(true)] out TComponent? component
+        ) where TComponent : class, IComponent, new()
+            => TryGetComponent(out component);
+
+        /// <summary>Tries getting the data of the given component.</summary>
+        /// <typeparam name="TComponent">Type of component to be found.</typeparam>
+        /// <param name="component">Found component or null.</param>
+        /// <returns>True if the component was found, false otherwise.</returns>
+        /// <seealso cref="TryGetComponent"/>
+        bool TryGetComponent<TComponent>(
             [NotNullWhen(true)] out TComponent? component
         ) where TComponent : class, IComponent, new();
 

@@ -199,10 +199,20 @@ public class BoxContainer : Container
         }
     }
 
-    /// <seealso cref="Separation"/>
+    /// <summary>
+    /// Overrides the separation between children.
+    /// </summary>
+    /// <remark>
+    /// Use <see cref="Separation"/> instead.
+    /// </remark>
+    /// <remark>
+    /// Checking the nullability of this value no longer tells if it has been overridden or not, as the value is NotNull.
+    /// </remark>
     [Obsolete("Use BoxContainer.Separation directly instead.")]
+    [NotNull]
     public int? SeparationOverride
     {
+        [Obsolete("This is now NotNull and cannot be used to test for overridden separation. Switch to BoxContainer.Separation.", true)]
         get => Separation;
         set => Separation = value;
     }

@@ -258,10 +258,10 @@ namespace Robust.Client.Input
                             var isStrict = true;
                             foreach (var key in Enum.GetValues<Key>())
                             {
-                                if ((key != binding.BaseKey ||
-                                    key != binding.Mod1 ||
-                                    key != binding.Mod2 ||
-                                    key != binding.Mod3) && _keysPressed[(byte)key] == true)
+                                if (key != binding.BaseKey &&
+                                    key != binding.Mod1 &&
+                                    key != binding.Mod2 &&
+                                    key != binding.Mod3 && _keysPressed[(int)key] == true)
                                 {
                                     isStrict = false;
                                     break;

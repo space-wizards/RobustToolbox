@@ -117,12 +117,14 @@ public sealed class BoxContainerTest : RobustUnitTest
             VerticalExpand = true,
         };
         var control3 = new Control { MinSize = new Vector2(0, 50) };
+        var control4 = new Control { MinSize = new Vector2(0, 50), Visible = false };
 
         root.AddChild(boxContainer);
 
         boxContainer.AddChild(control1);
         boxContainer.AddChild(control3);
         boxContainer.AddChild(control2);
+        boxContainer.AddChild(control4);
 
         root.Arrange(new UIBox2(0, 0, 250, 250));
 
@@ -134,6 +136,8 @@ public sealed class BoxContainerTest : RobustUnitTest
             Assert.That(control3.Size, Is.EqualTo(new Vector2(30, 50)));
             Assert.That(control2.Position, Is.EqualTo(new Vector2(0, 65)));
             Assert.That(control2.Size, Is.EqualTo(new Vector2(30, 15)));
+            Assert.That(control4.Position, Is.EqualTo(new Vector2(0, 0)));
+            Assert.That(control4.Size, Is.EqualTo(new Vector2(0, 0)));
         }
     }
 
@@ -354,7 +358,8 @@ public sealed class BoxContainerTest : RobustUnitTest
             Assert.That(boxContainer.Align, Is.EqualTo((AlignMode)4));
         }
 
-        Assert.Throws<ArgumentOutOfRangeException>( () => boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize)));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize)));
 
         boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
         Assert.That(child.Position, Is.EqualTo(new Vector2(90, 0)));

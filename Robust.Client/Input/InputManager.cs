@@ -256,16 +256,20 @@ namespace Robust.Client.Input
                         matchedCombo = binding.PackedKeyCombo;
                         if (binding.Strict)
                         {
-                            for (Key i=0; i<=Key.CapsLock; i++)
+                            var isStrict = true;
+                            foreach (var key in Enum.GetValues<Key>())
                             {
-                                if ((i != binding.BaseKey ||
-                                    i != binding.Mod1 ||
-                                    i != binding.Mod2 ||
-                                    i != binding.Mod3) && _keysPressed[(byte)i] == true)
+                                if ((key != binding.BaseKey ||
+                                    key != binding.Mod1 ||
+                                    key != binding.Mod2 ||
+                                    key != binding.Mod3) && _keysPressed[(byte)key] == true)
                                 {
-                                    return;
+                                    isStrict = false;
+                                    break;
                                 }
                             }
+                            if (!isStrict)
+                                continue;
                         }
                         bindsDown.Add(binding);
 

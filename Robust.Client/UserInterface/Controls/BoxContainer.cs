@@ -8,7 +8,7 @@ using Robust.Shared.Maths;
 namespace Robust.Client.UserInterface.Controls;
 
 /// <summary>
-/// A container that lays its children out sequentially along a major axis, <see cref="Orientation"/>.
+/// A container that lays its children out sequentially along a main axis, <see cref="Orientation"/>.
 /// </summary>
 /// <example>
 /// <code>
@@ -51,7 +51,7 @@ public class BoxContainer : Container
     public const string StylePropertySeparation = "separation";
 
     /// <summary>
-    /// Style property modifying <see cref="Orientation"/>, which decides the major axis for children to be laid out on.
+    /// Style property modifying <see cref="Orientation"/>, which decides the main axis for children to be laid out on.
     /// </summary>
     /// <example>
     /// <code>
@@ -65,7 +65,7 @@ public class BoxContainer : Container
     public const string StylePropertyOrientation = "orientation";
 
     /// <summary>
-    /// Style property modifying <see cref="Align"/>, which decides how to layout children along the major axis when there is extra space.
+    /// Style property modifying <see cref="Align"/>, which decides how to layout children along the main axis when there is extra space.
     /// </summary>
     /// <example>
     /// If the Orientation is Vertical and Align is Center, it will align children to the center of the vertical axis.
@@ -77,7 +77,7 @@ public class BoxContainer : Container
     /// </code>
     /// </example>
     /// <remarks>
-    /// This is along the major axis, not the cross axis. Yes, this what's commonly called "justify".
+    /// This is along the main axis, not the cross axis. Yes, this what's commonly called "justify".
     /// </remarks>
     /// <remarks>
     /// This is overridden by a non-null <see cref="Align"/> value.
@@ -85,7 +85,7 @@ public class BoxContainer : Container
     public const string StylePropertyAlignMode = "align-mode";
 
     /// <summary>
-    /// The alignment of child controls <b>along the major axis</b>, defined by <see cref="Orientation"/>.
+    /// The alignment of child controls <b>along the main axis</b>, defined by <see cref="Orientation"/>.
     /// </summary>
     /// <example>
     /// If the Orientation is Vertical and Align is Center, it will align children to the center of the vertical axis.
@@ -108,7 +108,7 @@ public class BoxContainer : Container
     /// </code>
     /// </example>
     /// <remarks>
-    /// This is along the major axis, not the cross axis. Yes, this what's commonly called "justify".
+    /// This is along the main axis, not the cross axis. Yes, this what's commonly called "justify".
     /// </remarks>
     /// <param name="value">Overrides <see cref="StylePropertyAlignMode"/> and the default, <see cref="AlignMode.Begin"/>, if non-null.</param>
     [NotNull]
@@ -126,7 +126,7 @@ public class BoxContainer : Container
     }
 
     /// <summary>
-    /// The orientation/direction of the major axis that child controls are laid down along.
+    /// The orientation/direction of the main axis that child controls are laid down along.
     /// </summary>
     /// <example>
     /// <code>
@@ -163,7 +163,7 @@ public class BoxContainer : Container
     }
 
     /// <summary>
-    /// The separation/gap between the child elements along the major axis.
+    /// The separation/gap between the child elements along the main axis.
     /// </summary>
     /// <example>
     /// <code>
@@ -229,7 +229,7 @@ public class BoxContainer : Container
     /// Measures the desired size required to fit all visible children and the separation between them.
     /// </summary>
     /// <param name="availableSize">The available size to measure against.</param>
-    /// <typeparam name="TAxis">The major axis/orientation.</typeparam>
+    /// <typeparam name="TAxis">The main axis/orientation.</typeparam>
     /// <returns>The desired size for the measured children.</returns>
     private Vector2 MeasureItems<TAxis>(Vector2 availableSize) where TAxis : IAxisImplementation
     {
@@ -280,13 +280,13 @@ public class BoxContainer : Container
     /// </summary>
     /// <param name="baseOffset">Initial offset for first child position.</param>
     /// <param name="finalSize">The final available size of the arranged region.</param>
-    /// <param name="align">Mode to align children along the major axis.</param>
+    /// <param name="align">Mode to align children along the main axis.</param>
     /// <param name="children">The children to lay out.</param>
     /// <param name="start">Child index to start from.</param>
     /// <param name="end">Child index to end at.</param>
     /// <param name="separation">Amount of separation between children.</param>
     /// <param name="fixedSize">A fixed size used for each child's size rather than their individual measures.</param>
-    /// <typeparam name="TAxis">The major axis/orientation.</typeparam>
+    /// <typeparam name="TAxis">The main axis/orientation.</typeparam>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="align"/> is outside <see cref="AlignMode"/>.</exception>
     internal static void LayOutItems<TAxis>(
         Vector2 baseOffset,
@@ -415,10 +415,10 @@ public class BoxContainer : Container
     }
 
     /// <summary>
-    /// The alignment of child controls <b>along the major axis</b>, dependent on a <see cref="LayoutOrientation"/>.
+    /// The alignment of child controls <b>along the main axis</b>, dependent on a <see cref="LayoutOrientation"/>.
     /// </summary>
     /// <remarks>
-    /// This is along the major axis, not the cross axis. Yes, this what's commonly called "justify".
+    /// This is along the main axis, not the cross axis. Yes, this what's commonly called "justify".
     /// If the Orientation is Vertical and Align is Center, it will align children to the center of the vertical axis.
     /// </remarks>
     /// <remarks>Defaults to <see cref="AlignMode.Begin"/></remarks>
@@ -454,7 +454,7 @@ public class BoxContainer : Container
     }
 
     /// <summary>
-    /// The orientation of the major axis that child controls are laid out along.
+    /// The orientation of the main axis that child controls are laid out along.
     /// </summary>
     /// <remarks>
     /// <see cref="AlignMode"/>'s meaning changes based on the orientation.

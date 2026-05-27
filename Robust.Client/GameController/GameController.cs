@@ -232,6 +232,7 @@ namespace Robust.Client
             _loadscr.BeginLoadingSection(_prototypeManager);
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
+            _loc.AddPrototypeFunctions();
             _loadscr.EndLoadingSection();
             _loadscr.LoadingStep(_userInterfaceManager.Initialize, "UI init");
             _loadscr.LoadingStep(_eyeManager.Initialize, _eyeManager);

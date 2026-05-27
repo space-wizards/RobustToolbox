@@ -5,6 +5,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 using Robust.UnitTesting;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
+using static Robust.Client.UserInterface.StylesheetHelpers;
 
 namespace Robust.Client.IntegrationTests.UserInterface.Controls;
 
@@ -87,9 +88,11 @@ public sealed class BoxContainerTest : RobustUnitTest
             MinSize = new Vector2(50, 30)
         };
         var control2 = new Control { MinSize = new Vector2(30, 50) };
+        var control3 = new Control { MinSize = new Vector2(30, 50), Visible = false };
 
         boxContainer.AddChild(control1);
         boxContainer.AddChild(control2);
+        boxContainer.AddChild(control3);
 
         boxContainer.Measure(new Vector2(100, 100));
 
@@ -198,5 +201,272 @@ public sealed class BoxContainerTest : RobustUnitTest
             Assert.That(boxContainer.GetChild(0).Width, Is.EqualTo(30));
             Assert.That(boxContainer.GetChild(1).Width, Is.EqualTo(70));
         }
+    }
+
+    [Test]
+    public void TestSeparationOverrides()
+    {
+        var boxContainer = new BoxContainer
+        {
+            SetSize = new Vector2(100, 10),
+        };
+        var child1 = new Control { SetSize = new Vector2(10, 10) };
+        var child2 = new Control { SetSize = new Vector2(10, 10) };
+        boxContainer.AddChild(child1);
+        boxContainer.AddChild(child2);
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+
+        Assert.That(boxContainer.IsArrangeValid, Is.True);
+
+        boxContainer.Stylesheet = new Stylesheet([
+            Element<BoxContainer>()
+                .Prop(StylePropertySeparation, 10)
+        ]);
+        boxContainer.ForceRunStyleUpdate();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Separation, Is.EqualTo(10));
+            Assert.That(boxContainer.IsMeasureValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(child1.Position, Is.EqualTo(new Vector2(0, 0)));
+            Assert.That(child2.Position, Is.EqualTo(new Vector2(20, 0)));
+        }
+
+        boxContainer.Separation = 20;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Separation, Is.EqualTo(20));
+            Assert.That(boxContainer.IsMeasureValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(child1.Position, Is.EqualTo(new Vector2(0, 0)));
+            Assert.That(child2.Position, Is.EqualTo(new Vector2(30, 0)));
+        }
+
+        boxContainer.Separation = 20;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Separation, Is.EqualTo(20));
+            Assert.That(boxContainer.IsMeasureValid, Is.True);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(child1.Position, Is.EqualTo(new Vector2(0, 0)));
+            Assert.That(child2.Position, Is.EqualTo(new Vector2(30, 0)));
+        }
+
+        boxContainer.Separation = null;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Separation, Is.EqualTo(10));
+            Assert.That(boxContainer.IsMeasureValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(child1.Position, Is.EqualTo(new Vector2(0, 0)));
+            Assert.That(child2.Position, Is.EqualTo(new Vector2(20, 0)));
+        }
+
+        boxContainer.Stylesheet = new Stylesheet([]);
+        boxContainer.ForceRunStyleUpdate();
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Separation, Is.Zero);
+            Assert.That(boxContainer.IsMeasureValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(child1.Position, Is.EqualTo(new Vector2(0, 0)));
+            Assert.That(child2.Position, Is.EqualTo(new Vector2(10, 0)));
+        }
+    }
+
+    [Test]
+    public void TestAlignOverrides()
+    {
+        var boxContainer = new BoxContainer
+        {
+            SetSize = new Vector2(100, 10),
+        };
+        var child = new Control { SetSize = new Vector2(10, 10) };
+        boxContainer.AddChild(child);
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+
+        Assert.That(boxContainer.IsArrangeValid, Is.True);
+
+        boxContainer.Stylesheet = new Stylesheet([
+            Element<BoxContainer>()
+                .Prop(StylePropertyAlignMode, AlignMode.Center)
+        ]);
+        boxContainer.ForceRunStyleUpdate();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Align, Is.EqualTo(AlignMode.Center));
+            Assert.That(boxContainer.IsArrangeValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        Assert.That(child.Position, Is.EqualTo(new Vector2(45, 0)));
+
+        boxContainer.Align = AlignMode.End;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Align, Is.EqualTo(AlignMode.End));
+            Assert.That(boxContainer.IsMeasureValid, Is.True);
+            Assert.That(boxContainer.IsArrangeValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        Assert.That(child.Position, Is.EqualTo(new Vector2(90, 0)));
+
+        boxContainer.Align = AlignMode.End;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Align, Is.EqualTo(AlignMode.End));
+            Assert.That(boxContainer.IsMeasureValid, Is.True);
+            Assert.That(boxContainer.IsArrangeValid, Is.True);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        Assert.That(child.Position, Is.EqualTo(new Vector2(90, 0)));
+
+        boxContainer.Align = (AlignMode)4;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Align, Is.EqualTo((AlignMode)4));
+        }
+
+        Assert.Throws<ArgumentOutOfRangeException>( () => boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize)));
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        Assert.That(child.Position, Is.EqualTo(new Vector2(90, 0)));
+
+        boxContainer.Align = null;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Align, Is.EqualTo(AlignMode.Center));
+            Assert.That(boxContainer.IsMeasureValid, Is.True);
+            Assert.That(boxContainer.IsArrangeValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        Assert.That(child.Position, Is.EqualTo(new Vector2(45, 0)));
+
+        boxContainer.Stylesheet = new Stylesheet([]);
+        boxContainer.ForceRunStyleUpdate();
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Align, Is.EqualTo(AlignMode.Begin));
+            Assert.That(boxContainer.IsArrangeValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        Assert.That(child.Position, Is.EqualTo(new Vector2(0, 0)));
+    }
+
+    [Test]
+    public void TestOrientationOverrides()
+    {
+        var boxContainer = new BoxContainer
+        {
+            SetSize = new Vector2(100, 100),
+        };
+        var child = new Control { SetSize = new Vector2(10, 10) };
+        boxContainer.AddChild(child);
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+
+        Assert.That(boxContainer.IsArrangeValid, Is.True);
+
+        boxContainer.Stylesheet = new Stylesheet([
+            Element<BoxContainer>()
+                .Prop(StylePropertyOrientation, LayoutOrientation.Vertical)
+        ]);
+        boxContainer.ForceRunStyleUpdate();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Orientation, Is.EqualTo(LayoutOrientation.Vertical));
+            Assert.That(boxContainer.IsMeasureValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        Assert.That(child.Position, Is.EqualTo(new Vector2(45, 0)));
+
+        boxContainer.Orientation = LayoutOrientation.Horizontal;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Orientation, Is.EqualTo(LayoutOrientation.Horizontal));
+            Assert.That(boxContainer.IsMeasureValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        Assert.That(child.Position, Is.EqualTo(new Vector2(0, 45)));
+
+
+        boxContainer.Orientation = LayoutOrientation.Horizontal;
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Orientation, Is.EqualTo(LayoutOrientation.Horizontal));
+            Assert.That(boxContainer.IsMeasureValid, Is.True);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        Assert.That(child.Position, Is.EqualTo(new Vector2(0, 45)));
+
+        boxContainer.Orientation = null;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Orientation, Is.EqualTo(LayoutOrientation.Vertical));
+            Assert.That(boxContainer.IsMeasureValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        Assert.That(child.Position, Is.EqualTo(new Vector2(45, 0)));
+
+        boxContainer.Stylesheet = new Stylesheet([]);
+        boxContainer.ForceRunStyleUpdate();
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Orientation, Is.EqualTo(LayoutOrientation.Horizontal));
+            Assert.That(boxContainer.IsMeasureValid, Is.False);
+        }
+
+        boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+        Assert.That(child.Position, Is.EqualTo(new Vector2(0, 45)));
+    }
+
+    [Test]
+    public void TestSeparationOverride()
+    {
+        var boxContainer = new BoxContainer
+        {
+            SetSize = new Vector2(100, 10),
+        };
+
+#pragma warning disable CS0618 // Type or member is obsolete
+        boxContainer.SeparationOverride = 10;
+#pragma warning restore CS0618 // Type or member is obsolete
+
+        Assert.That(boxContainer.Separation, Is.EqualTo(10));
     }
 }

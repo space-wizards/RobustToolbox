@@ -7,7 +7,6 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
-using Avalonia.Data;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
 using Robust.Shared.Collections;

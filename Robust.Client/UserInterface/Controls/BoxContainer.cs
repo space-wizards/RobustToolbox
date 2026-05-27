@@ -389,7 +389,7 @@ public class BoxContainer : Container
                     offset = stretchAvail;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(AlignMode), "AlignMode is out of range");
+                    throw new ArgumentOutOfRangeException(nameof(align), align, "Align is out of range.");
             }
         }
 

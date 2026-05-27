@@ -458,15 +458,21 @@ public sealed class BoxContainerTest : RobustUnitTest
     [Test]
     public void TestSeparationOverride()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         var boxContainer = new BoxContainer
         {
             SetSize = new Vector2(100, 10),
         };
 
-#pragma warning disable CS0618 // Type or member is obsolete
         boxContainer.SeparationOverride = 10;
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boxContainer.Separation, Is.EqualTo(10));
+            // Evil
+            Assert.That(
+                typeof(BoxContainer).GetProperty(nameof(boxContainer.SeparationOverride))!.GetValue(boxContainer),
+                Is.EqualTo(10));
+        }
 #pragma warning restore CS0618 // Type or member is obsolete
-
-        Assert.That(boxContainer.Separation, Is.EqualTo(10));
     }
 }

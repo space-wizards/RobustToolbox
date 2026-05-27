@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using NFluidsynth;
 using Robust.Client.Graphics;
@@ -48,6 +49,25 @@ internal sealed partial class MidiRenderer : IMidiRenderer
     private const int Buffers = SampleRate / 2205;
     private readonly object _playerStateLock = new();
     private readonly SequencerClientId _synthRegister;
+
+    // P/Invoke for fluid_synth_set_gen — lets us set SF2 generator values per channel
+    // directly, bypassing MIDI CC limitations.
+    [DllImport("libfluidsynth-3", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int fluid_synth_set_gen(IntPtr synth, int chan, int param, float value);
+
+    private const int GenFilterCutoff = 8; // GEN_FILTERFC in the SF2 spec
+    // P/Invoke for fluid_player_set_tempo — scales MIDI playback BPM by a multiplier.
+    // FLUID_PLAYER_TEMPO_INTERNAL (0) applies the value as a speed multiplier while
+    // still honouring in-file SetTempo events: 1.0 = normal, 2.0 = double, 0.5 = half.
+    [DllImport("libfluidsynth-3", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int fluid_player_set_tempo(IntPtr player, int tempoType, double tempo);
+
+    private const int FluidPlayerTempoInternal = 0; // FLUID_PLAYER_TEMPO_INTERNAL
+    private const int GenCoarseTune = 51;           // GEN_COARSETUNE — semitone pitch offset
+    private const int ReverbCc = 91;                // CC91 (Effects 1 Depth / Reverb Send)
+
+    private double _tempoScale = 1.0;
+
     private readonly SequencerClientId _robustRegister;
     private readonly SequencerClientId _debugRegister;
 
@@ -362,6 +382,8 @@ internal sealed partial class MidiRenderer : IMidiRenderer
             _player.Seek(0);
             _player.Play();
             _player.SetLoop(LoopMidi ? -1 : 1);
+            if (_tempoScale != 1.0)
+                fluid_player_set_tempo(_player.Handle, FluidPlayerTempoInternal, _tempoScale);
         }
 
         return true;
@@ -556,6 +578,53 @@ internal sealed partial class MidiRenderer : IMidiRenderer
     private void SendMidiEvent(RobustMidiEvent midiEvent)
     {
         SendMidiEvent(midiEvent, true);
+    }
+
+    public void SetChannelFilterCutoff(int channel, float cutoffCents)
+    {
+        if (Disposed)
+            return;
+
+        lock (_playerStateLock)
+        {
+            fluid_synth_set_gen(_synth.Handle, channel, GenFilterCutoff, cutoffCents);
+        }
+    }
+
+    public void SetTempoScale(double scale)
+    {
+        if (Disposed)
+            return;
+
+        _tempoScale = scale;
+        lock (_playerStateLock)
+        {
+            if (_player != null)
+                fluid_player_set_tempo(_player.Handle, FluidPlayerTempoInternal, scale);
+        }
+    }
+
+    public void SetChannelPitch(int channel, int semitones)
+    {
+        if (Disposed)
+            return;
+
+        lock (_playerStateLock)
+        {
+            fluid_synth_set_gen(_synth.Handle, channel, GenCoarseTune, (float)semitones);
+        }
+    }
+
+    public void SetChannelReverb(int channel, bool enabled)
+    {
+        if (Disposed)
+            return;
+
+        lock (_playerStateLock)
+        {
+            _rendererState.Controllers.AsSpan[channel].AsSpan[ReverbCc] = (byte) (enabled ? 127 : 0);
+            _synth.CC(channel, ReverbCc, enabled ? 127 : 0);
+        }
     }
 
     public void SendMidiEvent(RobustMidiEvent midiEvent, bool raiseEvent)

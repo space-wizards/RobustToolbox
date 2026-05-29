@@ -247,13 +247,18 @@ cmd-key-info-help = Usage: {$command} <Key>
 
 ## 'bind' command
 cmd-bind-desc = Binds an input key combination to an input command.
-cmd-bind-help = Usage: {$command} { cmd-bind-arg-key } { cmd-bind-arg-mode } { cmd-bind-arg-command }
+cmd-bind-help = Usage: {$command} { cmd-bind-arg-key } { cmd-bind-arg-mode } { cmd-bind-arg-command } { cmd-bind-arg-key-mod } { cmd-bind-arg-key-mod } { cmd-bind-arg-key-mod }
     Note that this DOES NOT automatically save bindings.
     Use the 'svbind' command to save binding configuration.
 
 cmd-bind-arg-key = <KeyName>
 cmd-bind-arg-mode = <BindMode>
 cmd-bind-arg-command = <InputCommand>
+cmd-bind-arg-key-mod = [KeyModifier]
+
+cmd-svbind-desc = Saves current binding configuration to appdata.
+cmd-svbind-help = Usage: {$command}
+    Note that bindings must first be set using the 'bind' command.
 
 cmd-net-draw-interp-desc = Toggles the debug drawing of the network interpolation.
 cmd-net-draw-interp-help = Usage: {$command}

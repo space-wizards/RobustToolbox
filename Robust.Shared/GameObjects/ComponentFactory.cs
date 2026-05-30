@@ -221,8 +221,9 @@ namespace Robust.Shared.GameObjects
 
         public IComponent GetComponent(EntityPrototype.ComponentRegistryEntry entry)
         {
-            var copy = GetComponent(entry.Component.GetType());
-            _serManager.CopyTo(entry.Component, ref copy, notNullableOverride: true);
+            var reg = GetRegistration(entry.Component.GetType());
+            var copy = GetComponent(reg);
+            reg.CopyComponentFromPrototype(entry.Component, ref copy, _serManager);
             return copy;
         }
 

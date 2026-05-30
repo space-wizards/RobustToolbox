@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Profiling;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -207,6 +208,7 @@ namespace Robust.Shared.Prototypes
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
+            ProfManager prof,
             IEntityLoadContext? context) //yeah officer this method right here
         {
             var (entity, meta) = ent;
@@ -222,7 +224,12 @@ namespace Robust.Shared.Prototypes
 
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
                     var compReg = factory.GetRegistration(name);
-                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, ctx);
+                    using (prof.Group(prof.CanDisplay
+                               ? $"LoadPrototype.Component {name}"
+                               : "LoadPrototype.Component"))
+                    {
+                        EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, prof, name, fullData, ctx);
+                    }
 
                     if (!entry.Component.NetSyncEnabled && compReg.NetID is {} netId)
                         meta.NetComponents.Remove(netId);
@@ -248,7 +255,12 @@ namespace Robust.Shared.Prototypes
                     }
 
                     var compReg = factory.GetRegistration(name);
-                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, ctx);
+                    using (prof.Group(prof.CanDisplay
+                               ? $"LoadPrototype.ExtraComponent {name}"
+                               : "LoadPrototype.ExtraComponent"))
+                    {
+                        EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, prof, name, data, ctx);
+                    }
                 }
             }
         }
@@ -258,26 +270,83 @@ namespace Robust.Shared.Prototypes
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
+            ProfManager prof,
             string compName,
             IComponent data,
             ISerializationContext? context)
         {
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                var newComponent = factory.GetComponent(compName);
-                entityManager.AddComponent(entity, newComponent);
+                IComponent newComponent;
+                using (prof.Group("LoadPrototype.NewComponent"))
+                {
+                    newComponent = factory.GetComponent(compName);
+                }
+
+                using (prof.Group("LoadPrototype.AddComponent"))
+                {
+                    entityManager.AddComponent(entity, newComponent);
+                }
+
                 component = newComponent;
             }
 
             if (context is not EntityDeserializer map)
             {
-                serManager.CopyTo(data, ref component, context, notNullableOverride: true);
+                using (prof.Group("LoadPrototype.CopyTo"))
+                {
+                    compReg.CopyComponentFromPrototype(data, ref component, serManager, context);
+                }
+
                 return;
             }
 
             map.CurrentComponent = compName;
-            serManager.CopyTo(data, ref component, context, notNullableOverride: true);
+            using (prof.Group("LoadPrototype.CopyTo"))
+            {
+                serManager.CopyTo(data, ref component, context, notNullableOverride: true);
+            }
+
             map.CurrentComponent = null;
+        }
+
+        internal static void CopyComponentFromPrototype(
+            IComponent source,
+            ref IComponent target,
+            ISerializationManager serManager,
+            ISerializationContext? context = null)
+        {
+            if (context == null && source is IComponentPrototypeCopy generatedCopy)
+            {
+                generatedCopy.CopyPrototypeTo(
+                    ref target,
+                    serManager,
+                    SerializationHookContext.ForSkipHooks(false),
+                    context);
+                return;
+            }
+
+            serManager.CopyTo(source, ref target, context, notNullableOverride: true);
+        }
+
+        internal static void CopyComponentFromPrototype<T>(
+            T source,
+            ref T target,
+            ISerializationManager serManager,
+            ISerializationContext? context = null)
+            where T : IComponent
+        {
+            if (context == null && source is IComponentPrototypeCopy<T> generatedCopy)
+            {
+                generatedCopy.CopyPrototypeTo(
+                    ref target,
+                    serManager,
+                    SerializationHookContext.ForSkipHooks(false),
+                    context);
+                return;
+            }
+
+            serManager.CopyTo(source, ref target, context, notNullableOverride: true);
         }
 
         public override string ToString()

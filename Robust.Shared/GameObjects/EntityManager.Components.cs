@@ -199,7 +199,7 @@ namespace Robust.Shared.GameObjects
                 if (removeExisting)
                 {
                     var comp = _componentFactory.GetComponent(reg);
-                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    reg.CopyComponentFromPrototype(entry.Component, ref comp, _serManager);
                     AddComponentInternal(target, comp, reg, overwrite: true, metadata: metadata);
                 }
                 else
@@ -210,7 +210,7 @@ namespace Robust.Shared.GameObjects
                     }
 
                     var comp = _componentFactory.GetComponent(reg);
-                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    reg.CopyComponentFromPrototype(entry.Component, ref comp, _serManager);
                     AddComponentInternal(target, comp, reg, overwrite: false, metadata: metadata);
                 }
             }

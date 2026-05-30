@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls;
 
@@ -111,7 +112,7 @@ public class BoxContainer : Container
     /// This is along the main axis, not the cross axis. Yes, this what's commonly called "justify".
     /// </remarks>
     /// <param name="value">Overrides <see cref="StylePropertyAlignMode"/> and the default, <see cref="AlignMode.Begin"/>, if non-null.</param>
-    [NotNull]
+    [NotNull, ViewVariables(VVAccess.ReadWrite)]
     public AlignMode? Align
     {
         get => field ?? StylePropertyDefault(StylePropertyAlignMode, AlignMode.Begin);
@@ -148,7 +149,7 @@ public class BoxContainer : Container
     /// </code>
     /// </example>
     /// <param name="value">Overrides <see cref="StylePropertyOrientation"/> and the default, <see cref="LayoutOrientation.Horizontal"/>, if non-null.</param>
-    [NotNull]
+    [NotNull, ViewVariables(VVAccess.ReadWrite)]
     public LayoutOrientation? Orientation
     {
         get => field ?? StylePropertyDefault(StylePropertyOrientation, LayoutOrientation.Horizontal);
@@ -185,7 +186,7 @@ public class BoxContainer : Container
     /// </code>
     /// </example>
     /// <param name="value">Overrides <see cref="StylePropertySeparation"/> and the default, 0, if non-null.</param>
-    [NotNull]
+    [NotNull, ViewVariables(VVAccess.ReadWrite)]
     public int? Separation
     {
         get => field ?? StylePropertyDefault(StylePropertySeparation, 0);

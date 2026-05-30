@@ -113,7 +113,7 @@ internal sealed class DummyChannel(DummySession session) : INetChannel
 
     public void SendMessage(NetMessage message)
     {
-        throw new NotImplementedException();
+        // Do nothing
     }
 
     public void Disconnect(string reason)

@@ -30,7 +30,7 @@ namespace Robust.Client.UserInterface.Controls;
 /// </code>
 /// </example>
 /// <remarks>
-/// Use <see cref="WrapContainer"/> if you need wrapping along a minor axis.
+/// Use <see cref="WrapContainer"/> if you need wrapping along a cross axis.
 /// </remarks>
 [Virtual]
 public class BoxContainer : Container

@@ -100,7 +100,7 @@ public class Generator : IIncrementalGenerator
             return null;
 
         var prototypeCopyInterface = definition.SupportsPrototypeCopy
-            ? $", IComponentPrototypeCopy, IComponentPrototypeCopy<{definition.GenericTypeName}>"
+            ? ", IComponentPrototypeCopy"
             : string.Empty;
 
         builder.AppendLine($$"""
@@ -136,7 +136,13 @@ public class Generator : IIncrementalGenerator
             {{containingTypesEnd}}
             """);
 
-        return ($"{symbolName}.g.cs", builder.ToString());
+        var generatedSource = CSharpSyntaxTree
+            .ParseText(builder.ToString())
+            .GetRoot()
+            .NormalizeWhitespace()
+            .ToFullString();
+
+        return ($"{symbolName}.g.cs", generatedSource);
     }
 
     private static DataDefinition GetDataDefinition(ITypeSymbol definition)

@@ -14,13 +14,3 @@ public interface IComponentPrototypeCopy
         SerializationHookContext hookCtx,
         ISerializationContext? context);
 }
-
-public interface IComponentPrototypeCopy<T>
-    where T : IComponent
-{
-    void CopyPrototypeTo(
-        ref T target,
-        ISerializationManager serialization,
-        SerializationHookContext hookCtx,
-        ISerializationContext? context);
-}

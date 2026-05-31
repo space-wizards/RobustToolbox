@@ -1,13 +1,14 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Profiling;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -28,6 +29,13 @@ namespace Robust.Shared.Prototypes
         private ILocalizationManager _loc = default!;
 
         private static readonly Dictionary<string, string> LocPropertiesDefault = new();
+        private static readonly ConcurrentDictionary<Type, ComponentPrototypeCopyFallbackDelegate> PrototypeCopyFallbacks = new();
+
+        private delegate void ComponentPrototypeCopyFallbackDelegate(
+            IComponent source,
+            ref IComponent target,
+            ISerializationManager serManager,
+            ISerializationContext? context);
 
         // LOCALIZATION NOTE:
         // Localization-related properties in here are manually localized in LocalizationManager.
@@ -208,7 +216,6 @@ namespace Robust.Shared.Prototypes
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
-            ProfManager prof,
             IEntityLoadContext? context) //yeah officer this method right here
         {
             var (entity, meta) = ent;
@@ -224,12 +231,7 @@ namespace Robust.Shared.Prototypes
 
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
                     var compReg = factory.GetRegistration(name);
-                    using (prof.Group(prof.CanDisplay
-                               ? $"LoadPrototype.Component {name}"
-                               : "LoadPrototype.Component"))
-                    {
-                        EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, prof, name, fullData, ctx);
-                    }
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, ctx);
 
                     if (!entry.Component.NetSyncEnabled && compReg.NetID is {} netId)
                         meta.NetComponents.Remove(netId);
@@ -255,12 +257,7 @@ namespace Robust.Shared.Prototypes
                     }
 
                     var compReg = factory.GetRegistration(name);
-                    using (prof.Group(prof.CanDisplay
-                               ? $"LoadPrototype.ExtraComponent {name}"
-                               : "LoadPrototype.ExtraComponent"))
-                    {
-                        EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, prof, name, data, ctx);
-                    }
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, ctx);
                 }
             }
         }
@@ -270,43 +267,25 @@ namespace Robust.Shared.Prototypes
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
-            ProfManager prof,
             string compName,
             IComponent data,
             ISerializationContext? context)
         {
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                IComponent newComponent;
-                using (prof.Group("LoadPrototype.NewComponent"))
-                {
-                    newComponent = factory.GetComponent(compName);
-                }
-
-                using (prof.Group("LoadPrototype.AddComponent"))
-                {
-                    entityManager.AddComponent(entity, newComponent);
-                }
-
+                var newComponent = factory.GetComponent(compName);
+                entityManager.AddComponent(entity, newComponent);
                 component = newComponent;
             }
 
             if (context is not EntityDeserializer map)
             {
-                using (prof.Group("LoadPrototype.CopyTo"))
-                {
-                    compReg.CopyComponentFromPrototype(data, ref component, serManager, context);
-                }
-
+                CopyComponentFromPrototype(data, ref component, serManager, context);
                 return;
             }
 
             map.CurrentComponent = compName;
-            using (prof.Group("LoadPrototype.CopyTo"))
-            {
-                serManager.CopyTo(data, ref component, context, notNullableOverride: true);
-            }
-
+            serManager.CopyTo(data, ref component, context, notNullableOverride: true);
             map.CurrentComponent = null;
         }
 
@@ -323,30 +302,41 @@ namespace Robust.Shared.Prototypes
                     serManager,
                     SerializationHookContext.ForSkipHooks(false),
                     context);
+                RunPrototypeCopyHooks(target);
                 return;
             }
 
-            serManager.CopyTo(source, ref target, context, notNullableOverride: true);
+            var fallback = PrototypeCopyFallbacks.GetOrAdd(source.GetType(), CreatePrototypeCopyFallback);
+            fallback(source, ref target, serManager, context);
+            RunPrototypeCopyHooks(target);
         }
 
-        internal static void CopyComponentFromPrototype<T>(
-            T source,
-            ref T target,
+        private static void RunPrototypeCopyHooks(IComponent target)
+        {
+            if (target is ISerializationHooks hooks)
+                hooks.AfterDeserialization();
+        }
+
+        private static ComponentPrototypeCopyFallbackDelegate CreatePrototypeCopyFallback(Type type)
+        {
+            var method = typeof(EntityPrototype)
+                .GetMethod(nameof(CopyComponentFromPrototypeFallback), BindingFlags.NonPublic | BindingFlags.Static)!
+                .MakeGenericMethod(type);
+
+            return method.CreateDelegate<ComponentPrototypeCopyFallbackDelegate>();
+        }
+
+        private static void CopyComponentFromPrototypeFallback<T>(
+            IComponent source,
+            ref IComponent target,
             ISerializationManager serManager,
-            ISerializationContext? context = null)
+            ISerializationContext? context)
             where T : IComponent
         {
-            if (context == null && source is IComponentPrototypeCopy<T> generatedCopy)
-            {
-                generatedCopy.CopyPrototypeTo(
-                    ref target,
-                    serManager,
-                    SerializationHookContext.ForSkipHooks(false),
-                    context);
-                return;
-            }
-
-            serManager.CopyTo(source, ref target, context, notNullableOverride: true);
+            var typedSource = (T) source;
+            var typedTarget = (T) target;
+            serManager.CopyTo(typedSource, ref typedTarget, context, notNullableOverride: true);
+            target = typedTarget;
         }
 
         public override string ToString()

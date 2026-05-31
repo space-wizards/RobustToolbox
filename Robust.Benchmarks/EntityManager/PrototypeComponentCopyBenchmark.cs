@@ -12,7 +12,6 @@ public partial class PrototypeComponentCopyBenchmark : SerializationBenchmark
 {
     private IComponent[] _sources = default!;
     private IComponent[] _targets = default!;
-    private ComponentRegistration[] _registrations = default!;
 
     [Params(1, 10, 100)]
     public int N;
@@ -77,11 +76,9 @@ public partial class PrototypeComponentCopyBenchmark : SerializationBenchmark
         ];
 
         _targets = new IComponent[_sources.Length];
-        _registrations = new ComponentRegistration[_sources.Length];
         for (var i = 0; i < _sources.Length; i++)
         {
             _targets[i] = (IComponent) Activator.CreateInstance(_sources[i].GetType())!;
-            _registrations[i] = new ComponentRegistration($"PrototypeCopyBench{i}", _sources[i].GetType(), default);
         }
     }
 
@@ -107,7 +104,7 @@ public partial class PrototypeComponentCopyBenchmark : SerializationBenchmark
             for (var i = 0; i < _sources.Length; i++)
             {
                 var target = _targets[i];
-                _registrations[i].CopyComponentFromPrototype(_sources[i], ref target, SerializationManager);
+                EntityPrototype.CopyComponentFromPrototype(_sources[i], ref target, SerializationManager);
                 _targets[i] = target;
             }
         }

@@ -190,8 +190,10 @@ public partial class EntityManager
             return Spawn(protoName, overrides);
 
         var uid = CreateEntityUninitialized(protoName, out var meta, overrides);
+        InitializeAndStartEntity((uid, meta), false);
         _xforms.DropNextTo(uid, target, offset);
-        InitializeAndStartEntity((uid, meta), _mapSystem.IsInitialized(target.Comp.MapUid));
+        if (_mapSystem.IsInitialized(target.Comp.MapUid))
+            RunMapInit(uid, meta);
         return uid;
     }
 

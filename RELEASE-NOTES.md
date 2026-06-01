@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-- SpawnNextToOrDrop no longer initialises entities in nullspace.
+- SpawnNextToOrDrop no longer runs mapinit on entities in nullspace.
 
 ### Other
 

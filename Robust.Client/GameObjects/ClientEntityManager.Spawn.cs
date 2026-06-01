@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -69,9 +70,9 @@ public sealed partial class ClientEntityManager
         return true;
     }
 
-    public override EntityUid PredictedSpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
+    public override EntityUid PredictedSpawnNextToOrDrop(EntProtoId? protoName, Entity<TransformComponent?> target, Vector2 offset = default, ComponentRegistry? overrides = null)
     {
-        var ent = SpawnNextToOrDrop(protoName, target, xform, overrides);
+        var ent = SpawnNextToOrDrop(protoName, target, offset, overrides);
         FlagPredicted(ent);
         return ent;
     }

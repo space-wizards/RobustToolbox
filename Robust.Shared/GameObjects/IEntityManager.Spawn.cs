@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.Collections;
+using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -100,8 +100,8 @@ public partial interface IEntityManager
     /// instead attempt to spawn the entity next to the target's parent.
     /// </summary>
     EntityUid SpawnNextToOrDrop(
-        string? protoName,
-        EntityUid target,
-        TransformComponent? xform = null,
+        EntProtoId? protoName,
+        Entity<TransformComponent?> target,
+        Vector2 offset = default,
         ComponentRegistry? overrides = null);
 }

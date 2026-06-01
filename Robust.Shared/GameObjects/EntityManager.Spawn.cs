@@ -3,11 +3,11 @@ using Robust.Shared.Prototypes;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects;
 
@@ -141,9 +141,9 @@ public partial class EntityManager
         if (!xform.ParentUid.IsValid())
             return false;
 
-        if (!_containers.TryGetContainingContainer(target, out var container))
+        if (!_containers.TryGetContainingContainer((target, xform), out var container))
         {
-            uid = SpawnNextToOrDrop(protoName, target, xform, overrides);
+            uid = SpawnNextToOrDrop(protoName, (target, xform), overrides: overrides);
             return true;
         }
 
@@ -183,15 +183,15 @@ public partial class EntityManager
         return false;
     }
 
-    public EntityUid SpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
+    public EntityUid SpawnNextToOrDrop(EntProtoId? protoName, Entity<TransformComponent?> target, Vector2 offset = default, ComponentRegistry? overrides = null)
     {
-        xform ??= TransformQuery.GetComponent(target);
-        if (!xform.ParentUid.IsValid())
-            return Spawn(protoName);
+        if (!TransformQuery.Resolve(target, ref target.Comp) ||
+            !target.Comp.ParentUid.IsValid())
+            return Spawn(protoName, overrides);
 
-        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
-        var uid = Spawn(protoName, overrides, doMapInit);
-        _xforms.DropNextTo(uid, target);
+        var uid = CreateEntityUninitialized(protoName, out var meta, overrides);
+        _xforms.DropNextTo(uid, target, offset);
+        InitializeAndStartEntity((uid, meta), _mapSystem.IsInitialized(target.Comp.MapUid));
         return uid;
     }
 
@@ -275,9 +275,9 @@ public partial class EntityManager
         return TrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
     }
 
-    public virtual EntityUid PredictedSpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
+    public virtual EntityUid PredictedSpawnNextToOrDrop(EntProtoId? protoName, Entity<TransformComponent?> target, Vector2 offset = default, ComponentRegistry? overrides = null)
     {
-        return SpawnNextToOrDrop(protoName, target, xform, overrides);
+        return SpawnNextToOrDrop(protoName, target, offset, overrides);
     }
 
     public virtual EntityUid PredictedSpawnInContainerOrDrop(

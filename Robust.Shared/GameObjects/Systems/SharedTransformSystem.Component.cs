@@ -1634,7 +1634,7 @@ public abstract partial class SharedTransformSystem
     /// this will attempt to insert that entity into the same container. Otherwise it will attach the entity to the
     /// grid or map at the same world-position as the target entity.
     /// </summary>
-    public void DropNextTo(Entity<TransformComponent?> entity, Entity<TransformComponent?> target)
+    public void DropNextTo(Entity<TransformComponent?> entity, Entity<TransformComponent?> target, Vector2 offset = default)
     {
         var xform = entity.Comp;
         if (!XformQuery.Resolve(entity, ref xform))
@@ -1647,7 +1647,7 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        var coords = targetXform.Coordinates;
+        var coords = new EntityCoordinates(target, offset);
 
         // recursively check for containers.
         var targetUid = target.Owner;

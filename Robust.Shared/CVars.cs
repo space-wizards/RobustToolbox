@@ -280,6 +280,15 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_compress_level", 3, CVar.ARCHIVE);
 
         /// <summary>
+        /// Reuse component state objects and their serialized bytes across players within a single PVS pass.
+        /// For non-session-specific components GetComponentState is a pure function of (component, fromTick),
+        /// so the result and its serialized bytes are identical for every player and can be computed once.
+        /// Off by default; intended for high-population servers where many players see the same entities.
+        /// </summary>
+        public static readonly CVarDef<bool> NetPvsStateReuse =
+            CVarDef.Create("net.pvs_state_reuse", true, CVar.SERVERONLY);
+
+        /// <summary>
         /// Log late input messages from clients.
         /// </summary>
         public static readonly CVarDef<bool> NetLogLateMsg =

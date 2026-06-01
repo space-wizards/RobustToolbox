@@ -24,7 +24,76 @@ internal sealed partial class PvsSystem
         using var _ = Histogram.WithLabels("Serialize States").NewTimer();
         var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
         _oldestAck = GameTick.MaxValue.Value;
+
+        // When state reuse is on, split into two parallel passes: pass 1 builds every session's GameState
+        // (populating the per-component reuse cache and pre-serializing shared component bytes), pass 2 does
+        // the monolithic SerializeDirect. Splitting avoids a thundering herd of sessions racing to compute
+        // the same shared state, and keeps each shared state computed and serialized exactly once. When reuse
+        // is off, use the original combined pass.
+        if (_stateReuse)
+        {
+            Parallel.For(-1, _sessions.Length, opts, ComputeState);
+            Parallel.For(-1, _sessions.Length, opts, WriteState);
+            return;
+        }
+
         Parallel.For(-1, _sessions.Length, opts, SerializeState);
+    }
+
+    /// <summary>
+    /// First reuse pass: build a session's <see cref="GameState"/> (or run the replay, which does its own
+    /// compute and serialize in one shot and is therefore handled entirely here).
+    /// </summary>
+    private void ComputeState(int i)
+    {
+        try
+        {
+            if (i < 0)
+            {
+                _replay.Update();
+                return;
+            }
+
+            var data = _sessions[i];
+            ComputeSessionState(data);
+            InterlockedHelper.Min(ref _oldestAck, data.FromTick.Value);
+        }
+        catch (Exception e)
+        {
+            Log.Log(LogLevel.Error, e, $"Caught exception while computing game state for {(i >= 0 ? _sessions[i].Session.ToString() : "replays")}.");
+#if !EXCEPTION_TOLERANCE
+            throw;
+#endif
+        }
+    }
+
+    /// <summary>
+    /// Second reuse pass: serialize a session's already-built <see cref="GameState"/> into its stream.
+    /// </summary>
+    private void WriteState(int i)
+    {
+        try
+        {
+            if (i < 0)
+                return; // Replay was fully handled in the compute pass.
+
+            var data = _sessions[i];
+            DebugTools.AssertEqual(data.StateStream, null);
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (data.Session.Channel is not DummyChannel)
+            {
+                data.StateStream = RobustMemoryManager.GetMemoryStream();
+                _serializer.SerializeDirect(data.StateStream, data.State);
+            }
+            data.ClearState();
+        }
+        catch (Exception e)
+        {
+            Log.Log(LogLevel.Error, e, $"Caught exception while serializing game state for {(i >= 0 ? _sessions[i].Session.ToString() : "replays")}.");
+#if !EXCEPTION_TOLERANCE
+            throw;
+#endif
+        }
     }
 
     /// <summary>

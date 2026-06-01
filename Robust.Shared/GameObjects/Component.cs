@@ -103,6 +103,11 @@ namespace Robust.Shared.GameObjects
             set => LastModifiedTick = value;
         }
 
+        // Per-component reuse cache for the PVS state pass (net.pvs_state_reuse). A single reference to a
+        // wrapper carrying (tick, fromTick) + pre-serialized bytes, so the whole tuple is published
+        // atomically by one write and a stale read simply misses. Transient, never serialized.
+        [NonSerialized] internal object? PvsReuseState;
+
         /// <inheritdoc />
         [Obsolete]
         public void Dirty(IEntityManager? entManager = null)

@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Player;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -51,7 +54,11 @@ internal sealed partial class PvsSystem
             if (component.SessionSpecific && player != null && !EntityManager.CanGetComponentState(component, player))
                 continue;
 
-            var state = ComponentState(entityUid, component, netId, ref stateEv);
+            IComponentState? state;
+            if (_stateReuse && !component.SessionSpecific)
+                state = GetReusableComponentState(entityUid, component, netId, fromTick, ref stateEv);
+            else
+                state = ComponentState(entityUid, component, netId, ref stateEv);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (state != null)
@@ -74,6 +81,51 @@ internal sealed partial class PvsSystem
         stateEv.State = null;
         _getStateHandlers![netId]?.Invoke(uid, comp, ref Unsafe.As<ComponentGetState, EntityEventBus.Unit>(ref stateEv));
         var state = stateEv.State;
+        return state;
+    }
+
+    [ThreadStatic] private static MemoryStream? _reuseScratch;
+
+    /// <summary>
+    /// Returns a reusable state for a non-session-specific component, computed at most once per
+    /// (tick, fromTick) and cached on the component itself. The serialized bytes are filled lazily on the
+    /// second consumer, so an entity seen by a single player pays nothing extra (no serialize, no array
+    /// copy) — the writer just serializes the inner state inline. Lock-free: a stale read simply misses and
+    /// recomputes; concurrent fills publish equal byte arrays.
+    /// </summary>
+    private IComponentState? GetReusableComponentState(EntityUid uid, IComponent comp, ushort netId, GameTick fromTick, ref ComponentGetState stateEv)
+    {
+        if (comp is not Component concrete)
+            return ComponentState(uid, comp, netId, ref stateEv);
+
+        var cur = _gameTiming.CurTick.Value;
+
+        // Cache hit: single reference read; the wrapper carries its own (tick, fromTick) so it can't tear.
+        if (Volatile.Read(ref concrete.PvsReuseState) is ReusableComponentState cached
+            && cached.Tick == cur
+            && cached.FromTick == fromTick.Value)
+        {
+            // Second (or later) consumer: now reuse pays off — materialize bytes once.
+            if (cached.Bytes == null)
+            {
+                var scratch = _reuseScratch ??= new MemoryStream();
+                cached.SetBytes(ComponentChangeSerializer.SerializeStateBytes(cached.Inner, scratch));
+            }
+            StateReuseHits.Inc();
+            return cached;
+        }
+
+        StateReuseMisses.Inc();
+        var state = ComponentState(uid, comp, netId, ref stateEv);
+
+        // First consumer: wrap without serializing (delta states are left as-is, handled per-player).
+        if (state != null && state is not IComponentDeltaState)
+        {
+            var wrapper = new ReusableComponentState(state, cur, fromTick.Value);
+            Volatile.Write(ref concrete.PvsReuseState, wrapper);
+            return wrapper;
+        }
+
         return state;
     }
 

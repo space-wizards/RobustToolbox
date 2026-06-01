@@ -13,6 +13,8 @@ namespace Robust.Shared.GameObjects
     [RegisterComponent, NetworkedComponent, Access(typeof(SharedUserInterfaceSystem))]
     public sealed partial class UserInterfaceComponent : Component, IComponentDelta
     {
+        public override bool SessionSpecific => true;
+
         /// <inheritdoc />
         public GameTick LastFieldUpdate { get; set; }
 

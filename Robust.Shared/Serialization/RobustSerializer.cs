@@ -112,6 +112,7 @@ namespace Robust.Shared.Serialization
                     new NetBitArraySerializer(),
                     new NetFormattedStringSerializer(),
                     new NetUnsafeFloatSerializer(),
+                    new ComponentChangeSerializer(),
                 }
             };
 
@@ -126,6 +127,8 @@ namespace Robust.Shared.Serialization
             }
 
             _serializer = new Serializer(types, settings);
+            // Give the ComponentChange writer access to the serializer for its inner object writes.
+            ComponentChangeSerializer.SetSerializer(_serializer);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
             LogSzr.Info($"Serializer Types Hash: {_serializer.GetSHA256()}");
         }

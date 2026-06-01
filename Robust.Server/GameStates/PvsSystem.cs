@@ -105,6 +105,9 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private bool _async;
 
+    // Reuse component-state objects and serialized bytes across players within a PVS pass.
+    private bool _stateReuse;
+
     private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
     private EntityEventBus.DirectedEventHandler?[]? _getStateHandlers;
 
@@ -114,6 +117,14 @@ internal sealed partial class PvsSystem : EntitySystem
             LabelNames = new[] {"area"},
             Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
         });
+
+    private static readonly Counter StateReuseHits = Metrics.CreateCounter(
+        "robust_game_state_reuse_hits_total",
+        "Component states served from the per-tick reuse cache instead of being recomputed.");
+
+    private static readonly Counter StateReuseMisses = Metrics.CreateCounter(
+        "robust_game_state_reuse_misses_total",
+        "Component states computed fresh (first viewer this tick, or not reusable).");
 
     public override void Initialize()
     {
@@ -148,6 +159,7 @@ internal sealed partial class PvsSystem : EntitySystem
         Subs.CVar(_configManager, CVars.NetForceAckThreshold, OnForceAckChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsAsync, OnAsyncChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsCompressLevel, ResetParallelism, true);
+        Subs.CVar(_configManager, CVars.NetPvsStateReuse, value => _stateReuse = value, true);
 
         _serverGameStateManager.ClientAck += OnClientAck;
         _serverGameStateManager.ClientRequestFull += OnClientRequestFull;

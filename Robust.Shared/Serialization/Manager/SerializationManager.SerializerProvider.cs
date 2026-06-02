@@ -71,7 +71,7 @@ public sealed partial class SerializationManager
     [Obsolete]
     public bool TryCustomCopy<T>(T source, ref T target, SerializationHookContext hookCtx,  bool hasHooks, ISerializationContext? context = null)
     {
-        if (TryGetCopierOrCreator<T>(out var copier, out var copyCreator))
+        if (TryGetCopierOrCreator<T>(out var copier, out var copyCreator, context))
         {
             if (copier != null)
             {

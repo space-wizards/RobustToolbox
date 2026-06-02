@@ -9,8 +9,14 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.UnitTesting.Shared.Serialization;
 
-internal sealed class PrototypeComponentCopyTest : OurRobustUnitTest
+internal sealed partial class PrototypeComponentCopyTest : OurRobustUnitTest
 {
+    [OneTimeSetUp]
+    public void Setup()
+    {
+        IoCManager.Resolve<ISerializationManager>().Initialize();
+    }
+
     [Test]
     public void CopyComponentFromPrototypeRunsSerializationHooks()
     {
@@ -40,8 +46,19 @@ internal sealed class PrototypeComponentCopyTest : OurRobustUnitTest
         Assert.That(target.Value, Is.EqualTo(4));
     }
 
-    internal sealed class PrototypeCopyIntSerializer : ITypeCopyCreator<int>
+    internal sealed class PrototypeCopyIntSerializer : ITypeCopier<int>, ITypeCopyCreator<int>
     {
+        public void CopyTo(
+            ISerializationManager serializationManager,
+            int source,
+            ref int target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
+        {
+            target = source + 1;
+        }
+
         public int CreateCopy(
             ISerializationManager serializationManager,
             int source,
@@ -54,22 +71,21 @@ internal sealed class PrototypeComponentCopyTest : OurRobustUnitTest
     }
 
     [RegisterComponent]
-     internal sealed partial class PrototypeCopyHookComponent : Component, ISerializationHooks
-     {
-         [DataField]
-         public int Value;
+    internal sealed partial class PrototypeCopyHookComponent : Component, ISerializationHooks
+    {
+        [DataField]
+        public int Value;
 
-         void ISerializationHooks.AfterDeserialization()
-         {
-             Value++;
-         }
-     }
+        void ISerializationHooks.AfterDeserialization()
+        {
+            Value++;
+        }
+    }
 
-     [RegisterComponent]
-     internal sealed partial class PrototypeCopyCustomSerializerComponent : Component
-     {
-         [DataField(customTypeSerializer: typeof(PrototypeComponentCopyTest.PrototypeCopyIntSerializer))]
-         public int Value;
-     }
+    [RegisterComponent]
+    internal sealed partial class PrototypeCopyCustomSerializerComponent : Component
+    {
+        [DataField(customTypeSerializer: typeof(PrototypeCopyIntSerializer))]
+        public int Value;
+    }
 }
-

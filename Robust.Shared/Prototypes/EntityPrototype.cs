@@ -36,7 +36,6 @@ namespace Robust.Shared.Prototypes
             ref IComponent target,
             ISerializationManager serManager,
             ISerializationContext? context);
-
         // LOCALIZATION NOTE:
         // Localization-related properties in here are manually localized in LocalizationManager.
         // As such, they should NOT be inherited to avoid confusing the system.
@@ -295,7 +294,7 @@ namespace Robust.Shared.Prototypes
             ISerializationManager serManager,
             ISerializationContext? context = null)
         {
-            if (context == null && source is IComponentPrototypeCopy generatedCopy)
+            if (context == null && source is IComponentPrototypeCopy generatedCopy && source is not ISerializationHooks)
             {
                 generatedCopy.CopyPrototypeTo(
                     ref target,
@@ -308,7 +307,6 @@ namespace Robust.Shared.Prototypes
 
             var fallback = PrototypeCopyFallbacks.GetOrAdd(source.GetType(), CreatePrototypeCopyFallback);
             fallback(source, ref target, serManager, context);
-            RunPrototypeCopyHooks(target);
         }
 
         private static void RunPrototypeCopyHooks(IComponent target)

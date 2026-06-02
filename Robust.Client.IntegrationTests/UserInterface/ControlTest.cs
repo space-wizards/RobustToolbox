@@ -158,6 +158,7 @@ namespace Robust.UnitTesting.Client.UserInterface
                         Property = nameof(TestControl.Foo),
                         KeyFrames =
                         {
+                            new AnimationTrackProperty.KeyFrame(0f, 0f), // This is the common way to specify the first keyframe.
                             new AnimationTrackProperty.KeyFrame(1f, 1f),
                             new AnimationTrackProperty.KeyFrame(3f, 2f)
                         }

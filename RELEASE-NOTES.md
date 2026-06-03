@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Change `OccluderComponent` access to `ReadExecute`.
 
 ### Internal
 

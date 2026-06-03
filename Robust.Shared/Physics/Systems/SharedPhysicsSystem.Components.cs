@@ -549,11 +549,11 @@ public partial class SharedPhysicsSystem
         if (body.BodyStatus == status)
             return;
 
-        // Include old BodyStatus too
-        var ev = new PhysicsBodyStatusChangedEvent(body, body.BodyStatus, status);
-        RaiseLocalEvent(uid, ref ev);
-
+        var oldStatus = body.BodyStatus;
         body.BodyStatus = status;
+
+        var ev = new PhysicsBodyStatusChangedEvent(body, oldStatus, status);
+        RaiseLocalEvent(uid, ref ev);
 
         if (dirty)
             DirtyField(uid, body, nameof(PhysicsComponent.BodyStatus));

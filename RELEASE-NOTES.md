@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Dispose `AudioStream` when the `AudioResource` is disposed.
 
 ### Other
 

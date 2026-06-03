@@ -1046,7 +1046,8 @@ namespace Robust.Client.Input
             switch (args.Length)
             {
                 case 1: // Main Key
-                    return GetKeyCompletion();
+                    var optionsMain = Enum.GetNames<Key>();
+                    return CompletionResult.FromHintOptions(optionsMain, Loc.GetString("cmd-bind-arg-key"));
 
                 case 2: // Types of bindings
                     var typeOptions = Enum.GetNames<KeyBindingType>().Except(new[] { nameof(KeyBindingType.Unknown) });
@@ -1066,16 +1067,11 @@ namespace Robust.Client.Input
                     return CompletionResult.FromHintOptions(funcOptions, Loc.GetString("cmd-bind-arg-command"));
 
                 case 4 or 5 or 6: // Modifier keys
-                    return GetKeyCompletion();
+                    var optionsMod = Enum.GetNames<Key>();
+                    return CompletionResult.FromHintOptions(optionsMod, Loc.GetString("cmd-bind-arg-key-mod"));
 
                 default:
                     return CompletionResult.Empty;
-            }
-
-            CompletionResult GetKeyCompletion()
-            {
-                var options = Enum.GetNames<Key>();
-                return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-bind-arg-key"));
             }
         }
     }

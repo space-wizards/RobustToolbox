@@ -55,7 +55,8 @@ internal sealed partial class PvsSystem
             }
 
             var data = _sessions[i];
-            ComputeSessionState(data);
+            using (Histogram.WithLabels("Reuse Build").NewTimer())
+                ComputeSessionState(data);
             InterlockedHelper.Min(ref _oldestAck, data.FromTick.Value);
         }
         catch (Exception e)
@@ -83,7 +84,8 @@ internal sealed partial class PvsSystem
             if (data.Session.Channel is not DummyChannel)
             {
                 data.StateStream = RobustMemoryManager.GetMemoryStream();
-                _serializer.SerializeDirect(data.StateStream, data.State);
+                using (Histogram.WithLabels("Reuse Write").NewTimer())
+                    _serializer.SerializeDirect(data.StateStream, data.State);
             }
             data.ClearState();
         }

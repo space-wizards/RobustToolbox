@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.IO;
 using System.Threading;
+using Prometheus;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Player;
@@ -109,7 +110,8 @@ internal sealed partial class PvsSystem
             if (cached.Bytes == null)
             {
                 var scratch = _reuseScratch ??= new MemoryStream();
-                cached.SetBytes(ComponentChangeSerializer.SerializeStateBytes(cached.Inner, scratch));
+                using (Histogram.WithLabels("Reuse Materialize").NewTimer())
+                    cached.SetBytes(ComponentChangeSerializer.SerializeStateBytes(cached.Inner, scratch));
             }
             StateReuseHits.Inc();
             return cached;

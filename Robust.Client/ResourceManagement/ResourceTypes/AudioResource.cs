@@ -72,4 +72,10 @@ public sealed class AudioResource : BaseResource
     {
         return res.AudioStream;
     }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        AudioStream.Dispose();
+    }
 }

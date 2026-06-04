@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added WindowGetMonitor API for getting the current IClydeMonitor.
 
 ### Bugfixes
 

@@ -22,7 +22,9 @@ public sealed partial class ReplayLoadManager
     [SuppressMessage("ReSharper", "UseAwaitUsing")]
     public async Task<ReplayData> LoadReplayAsync(IReplayFileReader fileReader, LoadReplayCallback callback)
     {
-        using var _ = fileReader;
+        // NOTE: fileReader is NOT disposed here. Ownership is transferred to the BufferedReplayDataProvider
+        // below, which keeps reading data blocks lazily during playback and disposes the reader when the
+        // replay is unloaded (ReplayPlaybackManager.StopReplay -> ReplayData.Dispose).
 
         if (_client.RunLevel == ClientRunLevel.Initialize)
             _client.StartSinglePlayer();
@@ -38,12 +40,19 @@ public sealed partial class ReplayLoadManager
 
         var totalData = fileReader.AllFiles.Count(x => x.Filename.StartsWith(DataFilePrefix));
 
+        // Index of which data file backs which range of tick indices, so the provider can re-read blocks
+        // lazily during playback instead of keeping everything resident.
+        var blocks = new List<BufferedReplayDataProvider.BlockMeta>();
+
         var i = 0;
         var intBuf = new byte[4];
         var name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
         while (fileReader.Exists(name))
         {
             await callback(i+1, totalData, LoadingState.ReadingFiles, false);
+
+            var blockStart = states.Count;
+            var blockFile = name;
 
             using var fileStream = fileReader.Open(name);
             using var decompressStream = new ZStdDecompressStream(fileStream, false);
@@ -64,6 +73,10 @@ public sealed partial class ReplayLoadManager
                 messages.Add(msg);
             }
 
+            var blockCount = states.Count - blockStart;
+            if (blockCount > 0)
+                blocks.Add(new BufferedReplayDataProvider.BlockMeta(blockFile, blockStart, blockCount));
+
             name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
         }
 
@@ -83,11 +96,43 @@ public sealed partial class ReplayLoadManager
             callback);
 
         _timing.Paused = false;
+
+        // Capture what we need before dropping the in-memory lists; from here on states/messages are
+        // served lazily by the provider, which re-reads blocks from the (still-open) replay file and
+        // owns its lifetime.
+        var tickOffset = states[0].ToSequence;
+        var lastTick = states[^1].ToSequence;
+        var tickCount = states.Count;
+        var provider = new BufferedReplayDataProvider(
+            fileReader,
+            _serializer,
+            blocks.ToArray(),
+            tickCount,
+            _loadedBlockWindow,
+            _sawmill);
+
+        // Drop the full history. NOTE: nulling the local references is not enough — the async load/checkpoint
+        // call chain keeps other references to these list objects alive, so the elements would stay reachable.
+        // Clear() empties the lists from the inside (releasing every GameState/ReplayMessage) regardless of who
+        // else still holds the container. These objects survived the load into Gen2/LOH, so we then force a
+        // compacting collection to actually return the memory to the OS before playback begins. One-off cost.
+        states.Clear();
+        states.TrimExcess();
+        messages.Clear();
+        messages.TrimExcess();
+        states = null!;
+        messages = null!;
+        GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
+
+        _sawmill.Info($"[BUFFER] History dropped. Managed heap now {GC.GetTotalMemory(false) / 1024.0 / 1024.0:N0} MB " +
+                      $"({blocks.Count} data blocks indexed, window={_loadedBlockWindow}, checkpoints={checkpoints.Length}). " +
+                      $"Remaining growth during playback is the live entity world, not replay history.");
+
         return new ReplayData(
-            states,
-            messages,
+            provider,
             serverTime,
-            states[0].ToSequence,
+            tickOffset,
+            lastTick,
             metaData.StartTime,
             metaData.Duration,
             checkpoints,

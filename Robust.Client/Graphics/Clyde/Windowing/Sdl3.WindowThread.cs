@@ -1,12 +1,12 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 using Robust.Shared;
 using Robust.Shared.Maths;
 using SDL3;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System;
+using System.Runtime.CompilerServices;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -79,6 +79,10 @@ internal partial class Clyde
 
                 case CmdWinSetTitle cmd:
                     WinThreadWinSetTitle(cmd);
+                    break;
+
+                case CmdWinSetTitleBarVisible cmd:
+                    WinThreadWinSetTitleBarVisible(cmd);
                     break;
 
                 case CmdSetClipboard cmd:
@@ -289,6 +293,12 @@ internal partial class Clyde
         {
             public nint Window;
             public required string Title;
+        }
+
+        private sealed class CmdWinSetTitleBarVisible : CmdBase
+        {
+            public nint Window;
+            public required bool Visible;
         }
 
         private sealed class CmdCursorCreate : CmdBase

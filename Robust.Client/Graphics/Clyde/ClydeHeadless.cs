@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Numerics;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Robust.Client.Audio;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
@@ -16,6 +10,11 @@ using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Numerics;
+using System.Threading.Tasks;
 using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.Graphics.Clyde
@@ -47,7 +46,7 @@ namespace Robust.Client.Graphics.Clyde
             SixLabors.ImageSharp.Configuration.Default.PreferContiguousImageBuffers = true;
 
             var mainRt = new DummyRenderWindow(this);
-            var window = new DummyWindow(mainRt) {Id = new WindowId(1)};
+            var window = new DummyWindow(mainRt) { Id = new WindowId(1) };
 
             _windows.Add(window);
             MainWindow = window;
@@ -109,6 +108,10 @@ namespace Robust.Client.Graphics.Clyde
         public void SetWindowTitle(string title)
         {
             // Nada.
+        }
+
+        public void SetWindowTitleBarVisible(bool visible)
+        {
         }
 
         public void SetWindowMonitor(IClydeMonitor monitor)
@@ -283,7 +286,7 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null)
+        public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string, string>? defines = null)
         {
             return default;
         }
@@ -579,6 +582,7 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsFocused => false;
             public bool IsMinimized => false;
             public bool IsVisible { get; set; } = true;
+            public bool IsTitleBarVisible { get; set; } = true;
             public Vector2 ContentScale => Vector2.One;
             public bool DisposeOnClose { get; set; }
             public event Action<WindowRequestClosedEventArgs>? RequestClosed { add { } remove { } }

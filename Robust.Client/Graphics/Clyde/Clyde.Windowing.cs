@@ -1,10 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared;
@@ -14,13 +7,19 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
+using System.Threading;
+using System.Threading.Tasks;
 using TerraFX.Interop.Windows;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using GL = OpenToolkit.Graphics.OpenGL4.GL;
 
 namespace Robust.Client.Graphics.Clyde
 {
-    internal partial class  Clyde
+    internal partial class Clyde
     {
         private readonly List<WindowReg> _windows = new();
         private readonly List<WindowHandle> _windowHandles = new();
@@ -282,6 +281,13 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.WindowSetTitle(_mainWindow!, title);
         }
 
+        private void SetWindowTitleBarVisible(WindowReg reg, bool visible)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.WindowSetTitleBarVisible(reg, visible);
+        }
+
         public void SetWindowMonitor(IClydeMonitor monitor)
         {
             DebugTools.AssertNotNull(_windowing);
@@ -342,6 +348,7 @@ namespace Robust.Client.Graphics.Clyde
                     _mainWindow = reg;
 
                 reg.IsVisible = parameters.Visible;
+                reg.IsTitleBarVisible = parameters.TitleBarVisible;
 
                 _windows.Add(reg);
                 _windowHandles.Add(reg.Handle);
@@ -415,7 +422,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void WindowModeChanged(int mode)
         {
-            _windowMode = (WindowMode) mode;
+            _windowMode = (WindowMode)mode;
             _windowing?.UpdateMainWindowMode();
         }
 
@@ -495,6 +502,7 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsMinimized;
             public string Title = "";
             public bool IsVisible;
+            public bool IsTitleBarVisible;
             public IClydeWindow? Owner;
 
             public bool DisposeOnClose;
@@ -554,6 +562,12 @@ namespace Robust.Client.Graphics.Clyde
                 set => _clyde.SetWindowVisible(Reg, value);
             }
 
+            public bool IsTitleBarVisible
+            {
+                get => Reg.IsTitleBarVisible;
+                set => _clyde.SetWindowTitleBarVisible(Reg, value);
+            }
+
             public Vector2 ContentScale => Reg.WindowScale;
 
             public bool DisposeOnClose
@@ -607,6 +621,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);
+
         }
 
         private sealed class MonitorHandle : IClydeMonitor

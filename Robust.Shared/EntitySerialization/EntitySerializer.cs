@@ -36,7 +36,7 @@ namespace Robust.Shared.EntitySerialization;
 /// document using the various "Write" methods. (e.g., <see cref="WriteEntitySection"/>). After a one has finished using
 /// the generated data, the serializer needs to be reset (<see cref="Reset"/>) using it again to serialize other entities.
 /// </remarks>
-public sealed class EntitySerializer : ISerializationContext,
+public sealed partial class EntitySerializer : ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
     ITypeSerializer<NetEntity, ValueDataNode>,
     ITypeSerializer<MapId, ValueDataNode>
@@ -50,18 +50,19 @@ public sealed class EntitySerializer : ISerializationContext,
 
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
 
-    [Dependency] public readonly EntityManager EntMan = default!;
-    [Dependency] public readonly IGameTiming Timing = default!;
-    [Dependency] private readonly IComponentFactory _factory = default!;
-    [Dependency] private readonly ISerializationManager _serialization = default!;
-    [Dependency] private readonly ITileDefinitionManager _tileDef = default!;
-    [Dependency] private readonly IConfigurationManager _conf = default!;
-    [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
+    [Dependency] public EntityManager EntMan = default!;
+    [Dependency] public IGameTiming Timing = default!;
+    [Dependency] private IComponentFactory _factory = default!;
+    [Dependency] private ISerializationManager _serialization = default!;
+    [Dependency] private ITileDefinitionManager _tileDef = default!;
+    [Dependency] private IConfigurationManager _conf = default!;
+    [Dependency] private ILogManager _logMan = default!;
+    [Dependency] private SharedMapSystem _map = default!;
 
     private readonly ISawmill _log;
     public readonly Dictionary<EntityUid, int> YamlUidMap = new();
     public readonly HashSet<int> YamlIds = new();
+    public readonly ValueDataNode InvalidNode = new("invalid");
 
     public string? CurrentComponent { get; private set; }
     public Entity<MetaDataComponent>? CurrentEntity { get; private set; }
@@ -78,7 +79,7 @@ public sealed class EntitySerializer : ISerializationContext,
 
     /// <summary>
     /// If set, the serializer will refuse to serialize the given entity and will orphan any entity that is parented to
-    /// it. This is useful for serializing things like a grid (or multiple grids & entities) that are parented to a map
+    /// it. This is useful for serializing things like a grid (or multiple grids &amp; entities) that are parented to a map
     /// without actually serializing the map itself.
     /// </summary>
     public EntityUid Truncate { get; private set; }
@@ -222,6 +223,7 @@ public sealed class EntitySerializer : ISerializationContext,
     /// setting of <see cref="SerializationOptions.MissingEntityBehaviour"/> it may auto-include additional entities
     /// aside from the one provided.
     /// </summary>
+    /// <param name="entities">The set of entities to serialize</param>
     public void SerializeEntities(HashSet<EntityUid> entities)
     {
         foreach (var uid in entities)
@@ -329,7 +331,12 @@ public sealed class EntitySerializer : ISerializationContext,
             return true;
         }
 
-        // iterate over all of its children and grab the first grid with a mapping
+        map = null;
+
+        // if this is a map, iterate over all of its children and grab the first grid with a mapping
+        if (!_mapQuery.HasComponent(root))
+            return false;
+
         var xform = _xformQuery.GetComponent(root);
         foreach (var child in xform._children)
         {
@@ -339,7 +346,6 @@ public sealed class EntitySerializer : ISerializationContext,
             return true;
         }
 
-        map = null;
         return false;
     }
 
@@ -979,7 +985,7 @@ public sealed class EntitySerializer : ISerializationContext,
         if (CurrentComponent == _xformName)
         {
             if (value == EntityUid.Invalid)
-                return new ValueDataNode("invalid");
+                return InvalidNode;
 
             DebugTools.Assert(!Orphans.Contains(CurrentEntityYamlUid));
             Orphans.Add(CurrentEntityYamlUid);
@@ -987,13 +993,13 @@ public sealed class EntitySerializer : ISerializationContext,
             if (Options.ErrorOnOrphan && CurrentEntity != null && value != Truncate && !ErroringEntities.Contains(value))
                 _log.Error($"Serializing entity {EntMan.ToPrettyString(CurrentEntity)} without including its parent {EntMan.ToPrettyString(value)}");
 
-            return new ValueDataNode("invalid");
+            return InvalidNode;
         }
 
         if (ErroringEntities.Contains(value))
         {
             // Referenced entity already logged an error, so we just silently fail.
-            return new ValueDataNode("invalid");
+            return InvalidNode;
         }
 
         if (value == EntityUid.Invalid)
@@ -1001,7 +1007,7 @@ public sealed class EntitySerializer : ISerializationContext,
             if (Options.MissingEntityBehaviour != MissingEntityBehaviour.Ignore)
                 _log.Error($"Encountered an invalid entityUid reference.");
 
-            return new ValueDataNode("invalid");
+            return InvalidNode;
         }
 
         if (value == Truncate)
@@ -1016,9 +1022,9 @@ public sealed class EntitySerializer : ISerializationContext,
                 _log.Error(EntMan.Deleted(value)
                     ? $"Encountered a reference to a deleted entity {value} while serializing {EntMan.ToPrettyString(CurrentEntity)}."
                     : $"Encountered a reference to a missing entity: {value} while serializing {EntMan.ToPrettyString(CurrentEntity)}.");
-                return new ValueDataNode("invalid");
+                return InvalidNode;
             case MissingEntityBehaviour.Ignore:
-                return new ValueDataNode("invalid");
+                return InvalidNode;
             case MissingEntityBehaviour.IncludeNullspace:
                 if (!EntMan.TryGetComponent(value, out TransformComponent? xform)
                     || xform.ParentUid != EntityUid.Invalid

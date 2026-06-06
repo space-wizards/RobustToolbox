@@ -50,6 +50,11 @@ internal sealed class CommonSession : ICommonSessionInternal
     [ViewVariables]
     public LoginType AuthType => Channel?.AuthType ?? default;
 
+    [ViewVariables]
+    public bool InitialPlayerListReqDone;
+    [ViewVariables]
+    public bool InitialResourcesDone;
+
     public override string ToString() => Name;
 
     public CommonSession(NetUserId user, string name, SessionData data)

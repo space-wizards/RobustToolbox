@@ -19,12 +19,12 @@ using SixLabors.ImageSharp.Processing;
 
 namespace Robust.Client.Map
 {
-    internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager, IPostInjectInit
+    internal sealed partial class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager, IPostInjectInit
     {
-        [Dependency] private readonly IPrototypeManager _protoManager = default!;
-        [Dependency] private readonly IReloadManager _reload = default!;
-        [Dependency] private readonly IResourceManager _manager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IPrototypeManager _protoManager = default!;
+        [Dependency] private IReloadManager _reload = default!;
+        [Dependency] private IResourceManager _manager = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private ISawmill _sawmill = default!;
 
@@ -107,14 +107,14 @@ namespace Robust.Client.Map
 
             var tileCount = defList.Select(x => x.Variants + x.EdgeSprites.Count).Sum() + 1;
 
-            var dimensionX = (int) Math.Ceiling(Math.Sqrt(tileCount));
-            var dimensionY = (int) Math.Ceiling((float) tileCount / dimensionX);
+            var dimensionX = (int)Math.Ceiling(Math.Sqrt(tileCount));
+            var dimensionY = (int)Math.Ceiling((float)tileCount / dimensionX);
 
             var imgWidth = dimensionX * tileSize;
             var imgHeight = dimensionY * tileSize;
             var sheet = new Image<Rgba32>(imgWidth, imgHeight);
-            var w = (float) sheet.Width;
-            var h = (float) sheet.Height;
+            var w = (float)sheet.Width;
+            var h = (float)sheet.Height;
 
             // Add in the missing tile texture sprite as tile texture 0.
             {
@@ -265,9 +265,9 @@ namespace Robust.Client.Map
         }
     }
 
-    public sealed class ReloadTileTexturesCommand : LocalizedCommands
+    public sealed partial class ReloadTileTexturesCommand : LocalizedCommands
     {
-        [Dependency] private readonly ClydeTileDefinitionManager _tile = default!;
+        [Dependency] private ClydeTileDefinitionManager _tile = default!;
 
         public override string Command => "reloadtiletextures";
 

@@ -28,15 +28,15 @@ namespace Robust.Shared.Prototypes
 {
     public abstract partial class PrototypeManager : IPrototypeManagerInternal
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] protected readonly IResourceManager Resources = default!;
-        [Dependency] protected readonly ITaskManager TaskManager = default!;
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly ILocalizationManager _locMan = default!;
-        [Dependency] private readonly IComponentFactory _factory = default!;
-        [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IRobustRandom _random = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] protected IResourceManager Resources = default!;
+        [Dependency] protected ITaskManager TaskManager = default!;
+        [Dependency] private ISerializationManager _serializationManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private ILocalizationManager _locMan = default!;
+        [Dependency] private IComponentFactory _factory = default!;
+        [Dependency] private IEntityManager _entMan = default!;
+        [Dependency] private IRobustRandom _random = default!;
 
         private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
         private EntityDiffContext _context = new();
@@ -1005,12 +1005,7 @@ namespace Robust.Shared.Prototypes
 
         static string CalculatePrototypeName(Type type)
         {
-            const string prototype = "Prototype";
-            if (!type.Name.EndsWith(prototype))
-                throw new InvalidPrototypeNameException($"Prototype {type} must end with the word Prototype");
-
-            var name = type.Name.AsSpan();
-            return $"{char.ToLowerInvariant(name[0])}{name[1..^prototype.Length]}";
+            return PrototypeUtility.CalculatePrototypeName(type.Name);
         }
 
         /// <inheritdoc />
@@ -1272,13 +1267,6 @@ namespace Robust.Shared.Prototypes
             }
 
             throw new ArgumentOutOfRangeException($"Unable to pick valid prototype for {typeof(T)}?");
-        }
-    }
-
-    public sealed class InvalidPrototypeNameException : Exception
-    {
-        public InvalidPrototypeNameException(string message) : base(message)
-        {
         }
     }
 }

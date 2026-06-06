@@ -6,11 +6,13 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Audio.Sources;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface
 {
+    [NotContentImplementable]
     public partial interface IUserInterfaceManager
     {
         void InitializeTesting();
@@ -157,6 +159,14 @@ namespace Robust.Client.UserInterface
         /// Render a control and all of its children.
         /// </summary>
         void RenderControl(IRenderHandle handle, Control control, Vector2i position);
+
+        /// <summary>
+        /// Sawmill for use by controls.
+        /// </summary>
+        /// <remarks>
+        /// Exists so that control don't have to inject dependencies or otherwise obtain an <see cref="ILogManager"/> instance just to log errors.
+        /// </remarks>
+        ISawmill ControlSawmill { get; }
     }
 
     public readonly struct PostDrawUIRootEventArgs

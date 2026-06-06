@@ -13,9 +13,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-public sealed class ComponentTypeParser : CustomTypeParser<Type>
+public sealed partial class ComponentTypeParser : CustomTypeParser<Type>
 {
-    [Dependency] private readonly IComponentFactory _factory = default!;
+    [Dependency] private IComponentFactory _factory = default!;
 
     public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Type? result)
     {

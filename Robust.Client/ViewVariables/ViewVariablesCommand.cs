@@ -9,11 +9,11 @@ using Robust.Shared.ViewVariables.Commands;
 namespace Robust.Client.ViewVariables
 {
     [UsedImplicitly]
-    public sealed class ViewVariablesCommand : ViewVariablesBaseCommand
+    public sealed partial class ViewVariablesCommand : ViewVariablesBaseCommand
     {
-        [Dependency] private readonly IClientViewVariablesManager _cvvm = default!;
-        [Dependency] private readonly IUserInterfaceManager _ui = default!;
-        [Dependency] private readonly IEntityManager _entities = default!;
+        [Dependency] private IClientViewVariablesManager _cvvm = default!;
+        [Dependency] private IUserInterfaceManager _ui = default!;
+        [Dependency] private IEntityManager _entities = default!;
 
         public override string Command => "vv";
 

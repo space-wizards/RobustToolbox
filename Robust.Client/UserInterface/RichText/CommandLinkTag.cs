@@ -8,9 +8,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class CommandLinkTag : IMarkupTagHandler
+public sealed partial class CommandLinkTag : IMarkupTagHandler
 {
-    [Dependency] private readonly IClientConsoleHost _clientConsoleHost = default!;
+    [Dependency] private IClientConsoleHost _clientConsoleHost = default!;
 
     public string Name => "cmdlink";
 

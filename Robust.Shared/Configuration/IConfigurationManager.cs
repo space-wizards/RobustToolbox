@@ -56,6 +56,7 @@ namespace Robust.Shared.Configuration
     /// so it is not recommended to modify CVars from other threads.
     /// </para>
     /// </remarks>
+    [NotContentImplementable]
     public interface IConfigurationManager
     {
         /// <summary>
@@ -272,5 +273,113 @@ namespace Robust.Shared.Configuration
             where T : notnull;
 
         public event Action<CVarChangeInfo>? OnCVarValueChanged;
+
+        //
+        // Rollback
+        //
+
+        /// <summary>
+        /// Snapshot a CVar to be rolled back later, even in the event of a client crash.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This set of APIs is intended for settings menus that want to show the user a
+        /// "Do these settings look correct?" prompt with timeout,
+        /// so that settings can be rolled back even in the event of alt+F4 or client crash.
+        /// </para>
+        /// <para>
+        /// Rollback is applied on <see cref="ApplyRollback"/> call or client restart,
+        /// unless CVars are unmarked again via <see cref="UnmarkForRollback(Robust.Shared.Configuration.CVarDef[])"/>
+        /// </para>
+        /// <para>
+        /// Rollback is tracked in the config file too, and this command does not save it automatically. Of course,
+        /// not saving the config file before client exit also effectively rolls back CVars.
+        /// </para>
+        /// <para>
+        /// Calling this method if a CVar is already marked for rollback will simply update the snapshot value.
+        /// </para>
+        /// </remarks>
+        /// <param name="cVars">The CVars to roll back.</param>
+        /// <seealso cref="UnmarkForRollback(Robust.Shared.Configuration.CVarDef[])"/>
+        void MarkForRollback(params CVarDef[] cVars);
+
+        /// <summary>
+        /// Snapshot a CVar to be rolled back later, even in the event of a client crash.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This set of APIs is intended for settings menus that want to show the user a
+        /// "Do these settings look correct?" prompt with timeout,
+        /// so that settings can be rolled back even in the event of alt+F4 or client crash.
+        /// </para>
+        /// <para>
+        /// Rollback is applied on <see cref="ApplyRollback"/> call or client restart,
+        /// unless CVars are unmarked again via <see cref="UnmarkForRollback(string[])"/>
+        /// </para>
+        /// <para>
+        /// Rollback is tracked in the config file too, and this command does not save it automatically. Of course,
+        /// not saving the config file before client exit also effectively rolls back CVars.
+        /// </para>
+        /// <para>
+        /// Calling this method if a CVar is already marked for rollback will simply update the snapshot value.
+        /// </para>
+        /// </remarks>
+        /// <param name="cVars">The CVar names to snapshot and (possibly) roll back later.</param>
+        /// <seealso cref="UnmarkForRollback(string[])"/>
+        void MarkForRollback(params string[] cVars);
+
+        /// <summary>
+        /// Unmark a CVar for rollback.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This set of APIs is intended for settings menus that want to show the user a
+        /// "Do these settings look correct?" prompt with timeout,
+        /// so that settings can be rolled back even in the event of alt+F4 or client crash.
+        /// </para>
+        /// <para>
+        /// Rollback is tracked in the config file too, and this command does not save it automatically.
+        /// Users must still call <see cref="SaveToFile"/> manually to avoid rollback happening.
+        /// </para>
+        /// </remarks>
+        /// <param name="cVars">The CVars to unmark for rollback.</param>
+        /// <seealso cref="MarkForRollback(Robust.Shared.Configuration.CVarDef[])"/>
+        /// <seealso cref="ApplyRollback"/>
+        void UnmarkForRollback(params CVarDef[] cVars);
+
+        /// <summary>
+        /// Unmark a CVar for rollback.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This set of APIs is intended for settings menus that want to show the user a
+        /// "Do these settings look correct?" prompt with timeout,
+        /// so that settings can be rolled back even in the event of alt+F4 or client crash.
+        /// </para>
+        /// <para>
+        /// Rollback is tracked in the config file too, and this command does not save it automatically.
+        /// Users must still call <see cref="SaveToFile"/> manually to avoid rollback happening.
+        /// </para>
+        /// </remarks>
+        /// <param name="cVars">The CVars to unmark for rollback.</param>
+        /// <seealso cref="MarkForRollback(string[])"/>
+        /// <seealso cref="ApplyRollback"/>
+        void UnmarkForRollback(params string[] cVars);
+
+        /// <summary>
+        /// Apply all pending CVar rollbacks.
+        /// </summary>
+        /// <para>
+        /// This set of APIs is intended for settings menus that want to show the user a
+        /// "Do these settings look correct?" prompt with timeout,
+        /// so that settings can be rolled back even in the event of alt+F4 or client crash.
+        /// </para>
+        /// <remarks>
+        /// This implicitly saves the config file to ensure the config file does not contain
+        /// rollback data for longer than necessary.
+        /// </remarks>
+        /// <seealso cref="MarkForRollback(Robust.Shared.Configuration.CVarDef[])"/>
+        /// <seealso cref="UnmarkForRollback(Robust.Shared.Configuration.CVarDef[])"/>
+        void ApplyRollback();
     }
 }

@@ -25,6 +25,7 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
@@ -814,6 +815,8 @@ public partial class SharedPhysicsSystem
         return bounds;
     }
 
+    /// <returns>The collision layer and collision mask of all hard fixtures.</returns>
+    [PublicAPI]
     public (int Layer, int Mask) GetHardCollision(EntityUid uid, FixturesComponent? manager = null)
     {
         if (!_fixturesQuery.Resolve(uid, ref manager, false))
@@ -821,6 +824,13 @@ public partial class SharedPhysicsSystem
             return (0, 0);
         }
 
+        return GetHardCollision(manager);
+    }
+
+    /// <inheritdoc cref="GetHardCollision(EntityUid, FixturesComponent?)"/>
+    [PublicAPI]
+    public static (int Layer, int Mask) GetHardCollision(FixturesComponent manager)
+    {
         var layer = 0;
         var mask = 0;
 

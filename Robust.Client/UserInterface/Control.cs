@@ -11,6 +11,7 @@ using Robust.Client.UserInterface.Themes;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -73,6 +74,8 @@ namespace Robust.Client.UserInterface
         //{
         //    _nameScope = nameScope;
         //}
+
+        public virtual ISawmill Log => UserInterfaceManager.ControlSawmill;
 
         public UITheme Theme { get; internal set; }
 
@@ -380,8 +383,6 @@ namespace Robust.Client.UserInterface
         /// custom tooltip controls.
         /// </summary>
         public event EventHandler? OnShowTooltip;
-
-
 
         /// <summary>
         /// If this control is currently showing a tooltip provided via TooltipSupplier,

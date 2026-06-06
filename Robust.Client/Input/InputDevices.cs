@@ -173,6 +173,8 @@ namespace Robust.Client.Input
             F24,
             Pause,
             World1,
+            CapsLock,
+            ScrollLock
         }
 
         public static bool IsMouseKey(this Key key)

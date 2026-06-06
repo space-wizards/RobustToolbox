@@ -7,9 +7,9 @@ namespace Robust.Shared.Player;
 /// <summary>
 ///     System that handles <see cref="ActorComponent"/>.
 /// </summary>
-public sealed class ActorSystem : EntitySystem
+public sealed partial class ActorSystem : EntitySystem
 {
-    [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
+    [Dependency] private ISharedPlayerManager _playerManager = default!;
 
     public override void Initialize()
     {
@@ -22,6 +22,9 @@ public sealed class ActorSystem : EntitySystem
         _playerManager.SetAttachedEntity(component.PlayerSession, null);
     }
 
+    /// <summary>
+    ///     Retrieves the session on a given entity, if one exists.
+    /// </summary>
     [PublicAPI]
     public bool TryGetSession(EntityUid? uid, out ICommonSession? session)
     {
@@ -35,6 +38,9 @@ public sealed class ActorSystem : EntitySystem
         return false;
     }
 
+    /// <summary>
+    ///     Retrieves the session on a given entity, if one exists.
+    /// </summary>
     [PublicAPI]
     [Pure]
     public ICommonSession? GetSession(EntityUid? uid)

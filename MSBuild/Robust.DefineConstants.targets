@@ -13,7 +13,7 @@
     </When>
     <Otherwise>
       <PropertyGroup>
-        <DefineConstants>$(DefineConstants);LINUX;UNIX</DefineConstants>
+        <DefineConstants>$(DefineConstants);LINUX;UNIX;FREEDESKTOP</DefineConstants>
       </PropertyGroup>
     </Otherwise>
   </Choose>

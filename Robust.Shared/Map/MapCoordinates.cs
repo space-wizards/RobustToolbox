@@ -13,7 +13,7 @@ namespace Robust.Shared.Map
     /// </summary>
     [PublicAPI, DataRecord]
     [Serializable, NetSerializable]
-    public readonly record struct MapCoordinates : ISpanFormattable
+    public readonly partial record struct MapCoordinates : ISpanFormattable
     {
         public static readonly MapCoordinates Nullspace = new(Vector2.Zero, MapId.Nullspace);
 

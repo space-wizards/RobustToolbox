@@ -19,7 +19,7 @@ namespace Robust.Shared.Log
         ///     The instance we're using.
         ///     As it's a direct proxy to IoC this will not work if IoC is not functional.
         /// </summary>
-        // TODO: Maybe cache this to improve performance.
+        // TODO: Kill
         private static ILogManager LogManagerSingleton => IoCManager.Resolve<ILogManager>();
 
         /// <summary>

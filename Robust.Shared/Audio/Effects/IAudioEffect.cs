@@ -4,6 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Audio.Effects;
 
+[NotContentImplementable]
 public interface IAudioEffect
 {
     /// <summary>

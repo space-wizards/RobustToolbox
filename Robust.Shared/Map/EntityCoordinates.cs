@@ -14,7 +14,7 @@ namespace Robust.Shared.Map
     ///     A set of coordinates relative to another entity.
     /// </summary>
     [PublicAPI, DataRecord]
-    public readonly record struct EntityCoordinates : ISpanFormattable
+    public readonly partial record struct EntityCoordinates : ISpanFormattable
     {
         public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector2.Zero);
 

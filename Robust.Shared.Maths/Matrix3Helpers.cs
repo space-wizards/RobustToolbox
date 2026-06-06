@@ -3,7 +3,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 
-
 namespace Robust.Shared.Maths;
 
 public static class Matrix3Helpers
@@ -33,38 +32,52 @@ public static class Matrix3Helpers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Box2 TransformBox(this Matrix3x2 refFromBox, Box2Rotated box)
+    public static Box2 TransformBox(this Matrix3x2 refFromBox, in Box2Rotated box)
     {
         return (box.Transform * refFromBox).TransformBox(box.Box);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void TransformBox(
+        this Matrix3x2 refFromBox,
+        in Box2Rotated box,
+        out Vector128<float> x,
+        out Vector128<float> y)
+    {
+        (box.Transform * refFromBox).TransformBox(box.Box, out x, out y);
+    }
+
     public static Box2 TransformBox(this Matrix3x2 refFromBox, in Box2 box)
     {
-        // Do transformation on all 4 corners of the box at once.
-        // Then min/max the results to get the new AABB.
+        TransformBox(refFromBox, box, out var x, out var y);
+        var aabb = SimdHelpers.GetAABB(x, y);
+        return Unsafe.As<Vector128<float>, Box2>(ref aabb);
+    }
 
+    /// <summary>
+    /// Applies a transformation matrix to all of a box's corners and returns their coordinates in two simd vectors.
+    /// </summary>
+    /// <remarks>The corners are ordered clockwise, starting from what was the bottom left corner prior to the transformation.</remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void TransformBox(
+        this Matrix3x2 refFromBox,
+        in Box2 box,
+        out Vector128<float> x,
+        out Vector128<float> y)
+    {
         var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in box));
 
         // Convert box into list of X and Y values for each of the 4 corners
-        var allX = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
-        var allY = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));
+        var boxX = Vector128.Shuffle(boxVec, Vector128.Create(0, 2, 2, 0));
+        var boxY = Vector128.Shuffle(boxVec, Vector128.Create(1, 1, 3, 3));
 
         // Transform coordinates
-        var modX = allX * Vector128.Create(refFromBox.M11);
-        var modY = allX * Vector128.Create(refFromBox.M12);
-        modX += allY * Vector128.Create(refFromBox.M21);
-        modY += allY * Vector128.Create(refFromBox.M22);
-        modX += Vector128.Create(refFromBox.M31);
-        modY += Vector128.Create(refFromBox.M32);
-
-        // Get bounding box by finding the min and max X and Y values.
-        var l = SimdHelpers.MinHorizontal128(modX);
-        var b = SimdHelpers.MinHorizontal128(modY);
-        var r = SimdHelpers.MaxHorizontal128(modX);
-        var t = SimdHelpers.MaxHorizontal128(modY);
-
-        var lbrt = SimdHelpers.MergeRows128(l, b, r, t);
-        return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
+        x = Vector128.Create(refFromBox.M31)
+            + boxX * Vector128.Create(refFromBox.M11)
+            + boxY * Vector128.Create(refFromBox.M21);
+        y = Vector128.Create(refFromBox.M32)
+            + boxX * Vector128.Create(refFromBox.M12)
+            + boxY * Vector128.Create(refFromBox.M22);
     }
 
     /// <summary>
@@ -74,6 +87,23 @@ public static class Matrix3Helpers
     public static Angle Rotation(this Matrix3x2 t)
     {
         return new Angle(Math.Atan2(t.M12, t.M11));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix3x2 CreateTransform(float posX, float posY, double angle)
+    {
+        // returns a matrix that is equivalent to returning CreateRotation(angle) * CreateTranslation(posX, posY)
+        var sin = (float) Math.Sin(angle);
+        var cos = (float) Math.Cos(angle);
+        return new Matrix3x2
+        {
+            M11 = cos,
+            M21 = -sin,
+            M31 = posX,
+            M12 = sin,
+            M22 = cos,
+            M32 = posY,
+        };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

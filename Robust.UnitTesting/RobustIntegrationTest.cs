@@ -36,8 +36,8 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Testing;
 using Robust.Shared.Timing;
-using Robust.UnitTesting.Pool;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -83,6 +83,9 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions? options = null)
         {
+            options ??= new ServerIntegrationOptions();
+            options.TestAssembly = GetType().Assembly;
+
             ServerIntegrationInstance instance;
 
             if (ShouldPool(options))
@@ -132,6 +135,9 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions? options = null)
         {
+            options ??= new ClientIntegrationOptions();
+            options.TestAssembly = GetType().Assembly;
+
             ClientIntegrationInstance instance;
 
             if (ShouldPool(options))
@@ -717,8 +723,8 @@ namespace Robust.UnitTesting
                 //ServerProgram.SetupLogging();
                 ServerProgram.InitReflectionManager(deps);
 
-                if (Options?.LoadTestAssembly != false)
-                    deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
+                if (Options?.LoadTestAssembly != false && Options?.TestAssembly != null)
+                    deps.Resolve<IReflectionManager>().LoadAssemblies(Options.TestAssembly);
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
@@ -747,6 +753,7 @@ namespace Robust.UnitTesting
                 var cfg = deps.Resolve<IConfigurationManagerInternal>();
 
                 cfg.LoadCVarsFromAssembly(typeof(RobustIntegrationTest).Assembly);
+                cfg.LoadCVarsFromAssembly(typeof(RTCVars).Assembly);
 
                 if (Options != null)
                 {
@@ -977,8 +984,8 @@ namespace Robust.UnitTesting
 
                 GameController.RegisterReflection(deps);
 
-                if (Options?.LoadTestAssembly != false)
-                    deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
+                if (Options?.LoadTestAssembly != false && Options?.TestAssembly != null)
+                    deps.Resolve<IReflectionManager>().LoadAssemblies(Options.TestAssembly);
 
                 var client = DependencyCollection.Resolve<GameController>();
 
@@ -1007,6 +1014,7 @@ namespace Robust.UnitTesting
                 var cfg = deps.Resolve<IConfigurationManagerInternal>();
 
                 cfg.LoadCVarsFromAssembly(typeof(RobustIntegrationTest).Assembly);
+                cfg.LoadCVarsFromAssembly(typeof(RTCVars).Assembly);
 
                 if (Options != null)
                 {
@@ -1214,6 +1222,7 @@ namespace Robust.UnitTesting
             public Assembly[]? ContentAssemblies { get; set; }
 
             public bool LoadTestAssembly { get; set; } = true;
+            public Assembly? TestAssembly { get; set; }
 
             /// <summary>
             /// String containing extra prototypes to load. Contents of the string are treated like a yaml file in the

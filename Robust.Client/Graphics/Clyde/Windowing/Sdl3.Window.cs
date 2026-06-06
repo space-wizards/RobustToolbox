@@ -415,6 +415,12 @@ internal partial class Clyde
             });
         }
 
+
+        private static void WinThreadWinSetTitle(CmdWinSetTitle cmd)
+        {
+                SDL.SDL_SetWindowTitle(cmd.Window, cmd.Title);
+        }
+
         public void WindowSetTitleBarVisible(WindowReg window, bool visible)
         {
             window.IsTitleBarVisible = visible;
@@ -423,11 +429,6 @@ internal partial class Clyde
                 Window = WinPtr(window),
                 Visible = visible,
             });
-        }
-
-        private static void WinThreadWinSetTitle(CmdWinSetTitle cmd)
-        {
-            SDL.SDL_SetWindowTitle(cmd.Window, cmd.Title);
         }
 
         private static void WinThreadWinSetTitleBarVisible(CmdWinSetTitleBarVisible cmd)

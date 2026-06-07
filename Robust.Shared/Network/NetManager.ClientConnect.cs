@@ -128,7 +128,14 @@ namespace Robust.Shared.Network
             var authToken = _authManager.Token;
             var pubKey = _authManager.PubKey;
             var authServer = _authManager.Server;
+            var starlightApi = _authManager.StarlightApi; // Starlight-edit
             var userId = _authManager.UserId;
+
+            // Starlight-start
+            var discordToken = _authManager.DiscordToken;
+
+            var useDiscord = string.IsNullOrEmpty(authToken) && !string.IsNullOrEmpty(discordToken);
+            // Starlight-end
 
             var hasPubKey = !string.IsNullOrEmpty(pubKey);
             var authenticate = !string.IsNullOrEmpty(authToken);
@@ -140,7 +147,8 @@ namespace Robust.Shared.Network
                 UserName = userNameRequest,
                 CanAuth = authenticate,
                 NeedPubKey = !hasPubKey,
-                Encrypt = encrypt
+                Encrypt = encrypt,
+                Discord = useDiscord, // Starlight-edit
             };
 
             var outLoginMsg = peer.Peer.CreateMessage();
@@ -200,9 +208,24 @@ namespace Robust.Shared.Network
                 }
 
                 var joinReq = new JoinRequest(authHash, Base64Helpers.ToBase64Nullable(modernHwid));
-                var request = new HttpRequestMessage(HttpMethod.Post, authServer + "api/session/join");
-                request.Content = JsonContent.Create(joinReq);
-                request.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", authToken);
+                // Starlight-start
+                HttpRequestMessage request;
+                if (useDiscord)
+                {
+                    request = new HttpRequestMessage(
+                        HttpMethod.Post,
+                        $"{starlightApi}api/discord-auth/join");
+                    request.Content = JsonContent.Create(joinReq);
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", discordToken);
+                }
+                else
+                {
+                    request = new HttpRequestMessage(HttpMethod.Post, authServer + "api/session/join");
+                    request.Content = JsonContent.Create(joinReq);
+                    request.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", authToken);
+                }
+                // Starlight-end
+
                 var joinResp = await _http.Client.SendAsync(request, cancel);
 
                 joinResp.EnsureSuccessStatusCode();

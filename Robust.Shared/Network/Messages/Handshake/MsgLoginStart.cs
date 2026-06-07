@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Lidgren.Network;
 using Robust.Shared.Serialization;
 
@@ -19,6 +19,7 @@ namespace Robust.Shared.Network.Messages.Handshake
         public bool CanAuth;
         public bool NeedPubKey;
         public bool Encrypt;
+        public bool Discord; // Starlight-edit
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
@@ -26,6 +27,8 @@ namespace Robust.Shared.Network.Messages.Handshake
             CanAuth = buffer.ReadBoolean();
             NeedPubKey = buffer.ReadBoolean();
             Encrypt = buffer.ReadBoolean();
+
+            Discord = buffer.Position < buffer.LengthBits && buffer.ReadBoolean(); // Starlight-edit
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
@@ -34,6 +37,7 @@ namespace Robust.Shared.Network.Messages.Handshake
             buffer.Write(CanAuth);
             buffer.Write(NeedPubKey);
             buffer.Write(Encrypt);
+            buffer.Write(Discord); // Starlight-edit
         }
     }
 }

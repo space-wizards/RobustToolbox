@@ -74,7 +74,7 @@ namespace Robust.Shared.Network
                 LoginType type;
                 var padSuccessMessage = true;
 
-                if (canAuth && Auth != AuthMode.Disabled)
+                if ((canAuth || discord) && Auth != AuthMode.Disabled)
                 {
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: Initiating authentication");
@@ -139,7 +139,7 @@ namespace Robust.Shared.Network
                         $"{connection.RemoteEndPoint}: Checking with session server for auth hash...");
 
                     var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
-                    var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
+                    var authHash = NormalizeHash(Convert.ToBase64String(authHashBytes));
 
                     HasJoinedResponse? joinedRespJson;
                     if (discord)

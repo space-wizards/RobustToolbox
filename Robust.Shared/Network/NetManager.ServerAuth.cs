@@ -49,7 +49,7 @@ namespace Robust.Shared.Network
                 var ip = connection.RemoteEndPoint.Address;
                 var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar(CVars.AuthAllowLocal);
                 var canAuth = msgLogin.CanAuth;
-                var discord = msgLogin.Discord;
+                var discord = msgLogin.Discord; // Starlight-edit
                 var needPk = msgLogin.NeedPubKey;
                 var authServer = _config.GetCVar(CVars.AuthServer);
 
@@ -60,9 +60,9 @@ namespace Robust.Shared.Network
                 _logger.Verbose(
                     $"{connection.RemoteEndPoint}: Connection is specialized local? {isLocal} ");
 
-                if (Auth is AuthMode.Required or AuthMode.RequiredDefault or AuthMode.RequiredDiscord && !isLocal)
+                if (Auth is AuthMode.Required or AuthMode.RequiredDefault or AuthMode.RequiredDiscord && !isLocal) // Starlight-edit
                 {
-                    if ((!canAuth && Auth == AuthMode.RequiredDefault) || (!discord && Auth == AuthMode.RequiredDiscord) || (!canAuth && !discord))
+                    if ((!canAuth && Auth == AuthMode.RequiredDefault) || (!discord && Auth == AuthMode.RequiredDiscord) || (!canAuth && !discord)) // Starlight-edit
                     {
                         connection.Disconnect("Connecting to this server requires authentication");
                         return;
@@ -74,7 +74,7 @@ namespace Robust.Shared.Network
                 LoginType type;
                 var padSuccessMessage = true;
 
-                if ((canAuth || discord) && Auth != AuthMode.Disabled)
+                if ((canAuth || discord) && Auth != AuthMode.Disabled) // Starlight-edit
                 {
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: Initiating authentication");
@@ -141,6 +141,7 @@ namespace Robust.Shared.Network
                     var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
 
+                    // Starlight-start
                     HasJoinedResponse? joinedRespJson;
                     if (discord)
                     {
@@ -158,8 +159,9 @@ namespace Robust.Shared.Network
                             url += $"&serverUrl={Uri.EscapeDataString(serverUrl)}";
                         joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
                     }
+                    // Starlight-end
 
-                    if (joinedRespJson is not { IsValid: true })
+                    if (joinedRespJson is not {IsValid: true})
                     {
                         connection.Disconnect("Failed to validate login");
                         return;

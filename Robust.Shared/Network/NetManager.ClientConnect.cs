@@ -128,9 +128,9 @@ namespace Robust.Shared.Network
             var authToken = _authManager.Token;
             var pubKey = _authManager.PubKey;
             var authServer = _authManager.Server;
-            var starlightApi = _authManager.StarlightApi;
+            var starlightApi = _authManager.StarlightApi; // Starlight-edit
             var userId = _authManager.UserId;
-            var discordToken = _authManager.DiscordToken;
+            var discordToken = _authManager.DiscordToken; // Starlight-edit
 
             var hasPubKey = !string.IsNullOrEmpty(pubKey);
             var authenticate = !string.IsNullOrEmpty(authToken);
@@ -143,7 +143,7 @@ namespace Robust.Shared.Network
                 CanAuth = authenticate,
                 NeedPubKey = !hasPubKey,
                 Encrypt = encrypt,
-                Discord = !string.IsNullOrEmpty(discordToken),
+                Discord = !string.IsNullOrEmpty(discordToken), // Starlight-edit
             };
 
             var outLoginMsg = peer.Peer.CreateMessage();
@@ -203,6 +203,7 @@ namespace Robust.Shared.Network
                 }
 
                 var joinReq = new JoinRequest(authHash, Base64Helpers.ToBase64Nullable(modernHwid));
+                // Starlight-start
                 HttpRequestMessage request;
                 if (!string.IsNullOrEmpty(discordToken))
                 {
@@ -217,6 +218,7 @@ namespace Robust.Shared.Network
                     request.Content = JsonContent.Create(joinReq);
                     request.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", authToken);
                 }
+                // Starlight-end
 
                 var joinResp = await _http.Client.SendAsync(request, cancel);
 

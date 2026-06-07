@@ -32,6 +32,8 @@ namespace Robust.Shared.Network
         /// </remarks>
         Disabled = 2,
 
+        #region Starlight
+
         /// <summary>
         /// Starlight: Required only default, discord auth will be rejected
         /// </summary>
@@ -41,5 +43,7 @@ namespace Robust.Shared.Network
         /// Starlight: Required only discord, default auth will be rejected
         /// </summary>
         RequiredDiscord = 4,
+
+        #endregion
     }
 }

@@ -12,10 +12,10 @@ namespace Robust.Shared.Network
     {
         NetUserId? UserId { get; set; }
         string? Server { get; set; }
-        string? StarlightApi { get; set; }
+        string? StarlightApi { get; set; } // Starlight-edit
         string? Token { get; set; }
         string? PubKey { get; set; }
-        string? DiscordToken { get; set; }
+        string? DiscordToken { get; set; } // Starlight-edit
 
         /// <summary>
         /// If true, the user allows HWID information to be provided to servers.
@@ -28,14 +28,14 @@ namespace Robust.Shared.Network
     internal sealed class AuthManager : IAuthManager
     {
         public const string DefaultAuthServer = "https://auth.spacestation14.com/";
-        public const string DefaultStarlightAPI = "https://starlight.network/";
+        public const string DefaultStarlightAPI = "https://starlight.network/"; // Starlight-edit
 
         public NetUserId? UserId { get; set; }
         public string? Server { get; set; } = DefaultAuthServer;
-        public string? StarlightApi { get; set; } = DefaultStarlightAPI;
+        public string? StarlightApi { get; set; } = DefaultStarlightAPI; // Starlight-edit
         public string? Token { get; set; }
         public string? PubKey { get; set; }
-        public string? DiscordToken { get; set; }
+        public string? DiscordToken { get; set; } // Starlight-edit
         public bool AllowHwid { get; set; } = true;
 
         public void LoadFromEnv()
@@ -55,11 +55,13 @@ namespace Robust.Shared.Network
             if (TryGetVar("ROBUST_AUTH_ALLOW_HWID", out var allowHwid))
                 AllowHwid = allowHwid.Trim() == "1";
 
+            // Starlight-start
             if (TryGetVar("STARLIGHT_API_SERVER", out var starlightApi))
                 StarlightApi = starlightApi;
 
             if (TryGetVar("STARLIGHT_AUTH_TOKEN", out var discordToken))
                 DiscordToken = discordToken;
+            // Starlight-end
 
             static bool TryGetVar(string var, [NotNullWhen(true)] out string? val)
             {

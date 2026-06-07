@@ -1005,12 +1005,16 @@ namespace Robust.Shared
         public static readonly CVarDef<string> AuthServer =
             CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
 
+        #region Starlight
+
         // Only respected on server, client goes through IAuthManager for security.
         /// <summary>
         /// Authentication server address for discord.
         /// </summary>
         public static readonly CVarDef<string> StarlightAPIServer =
             CVarDef.Create("auth.server", AuthManager.DefaultStarlightAPI, CVar.SERVERONLY);
+
+        #endregion
 
         /*
          * RENDERING

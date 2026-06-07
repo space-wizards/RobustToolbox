@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
@@ -49,6 +49,7 @@ namespace Robust.Shared.Network
                 var ip = connection.RemoteEndPoint.Address;
                 var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar(CVars.AuthAllowLocal);
                 var canAuth = msgLogin.CanAuth;
+                var discord = msgLogin.Discord;
                 var needPk = msgLogin.NeedPubKey;
                 var authServer = _config.GetCVar(CVars.AuthServer);
 
@@ -59,9 +60,9 @@ namespace Robust.Shared.Network
                 _logger.Verbose(
                     $"{connection.RemoteEndPoint}: Connection is specialized local? {isLocal} ");
 
-                if (Auth == AuthMode.Required && !isLocal)
+                if (Auth is AuthMode.Required or AuthMode.RequiredDefault or AuthMode.RequiredDiscord && !isLocal)
                 {
-                    if (!canAuth)
+                    if ((!canAuth && Auth == AuthMode.RequiredDefault) || (!discord && Auth == AuthMode.RequiredDiscord) || (!canAuth && !discord))
                     {
                         connection.Disconnect("Connecting to this server requires authentication");
                         return;
@@ -140,15 +141,25 @@ namespace Robust.Shared.Network
                     var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
 
-                    var url = $"{authServer}api/session/hasJoined" +
-                              $"?hash={authHash}&" +
-                              $"userId={msgEncResponse.UserId}";
-                    var serverUrl = _config.GetCVar(CVars.HubServerUrl);
-                    if (!string.IsNullOrWhiteSpace(serverUrl))
-                        url += $"&serverUrl={Uri.EscapeDataString(serverUrl)}";
-                    var joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
+                    HasJoinedResponse? joinedRespJson;
+                    if (discord)
+                    {
+                        var starlightApi = _config.GetCVar(CVars.StarlightAPIServer);
+                        var url = $"{starlightApi}api/discord-auth/hasJoined" +
+                                  $"?hash={authHash}&userId={msgEncResponse.UserId}";
+                        joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
+                    }
+                    else
+                    {
+                        var url = $"{authServer}api/session/hasJoined" +
+                                  $"?hash={authHash}&userId={msgEncResponse.UserId}";
+                        var serverUrl = _config.GetCVar(CVars.HubServerUrl);
+                        if (!string.IsNullOrWhiteSpace(serverUrl))
+                            url += $"&serverUrl={Uri.EscapeDataString(serverUrl)}";
+                        joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
+                    }
 
-                    if (joinedRespJson is not {IsValid: true})
+                    if (joinedRespJson is not { IsValid: true })
                     {
                         connection.Disconnect("Failed to validate login");
                         return;

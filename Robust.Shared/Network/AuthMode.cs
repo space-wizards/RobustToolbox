@@ -1,4 +1,4 @@
-﻿namespace Robust.Shared.Network
+namespace Robust.Shared.Network
 {
     /// <summary>
     /// Possible modes for the authentication support on the server.
@@ -15,6 +15,7 @@
 
         /// <summary>
         /// Authenticated is required to join the server.
+        /// Starlight: Required both, i.e. if discord auth valid - can join, if default auth valid - can join
         /// </summary>
         /// <remarks>
         /// Unauthenticated clients are still allowed for localhost connections,
@@ -29,6 +30,16 @@
         /// This disables any sort of "guest@" or "localhost@" prefix for unauthenticated users.
         /// This may result in confusing mingling of database entries, if actively switched between on the same server.
         /// </remarks>
-        Disabled = 2
+        Disabled = 2,
+
+        /// <summary>
+        /// Starlight: Required only default, discord auth will be rejected
+        /// </summary>
+        RequiredDefault = 3,
+
+        /// <summary>
+        /// Starlight: Required only discord, default auth will be rejected
+        /// </summary>
+        RequiredDiscord = 4,
     }
 }

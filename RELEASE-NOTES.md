@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add batched Box2 / Box2Rotated drawing methods to Clyde WorldHandle.
 
 ### Bugfixes
 

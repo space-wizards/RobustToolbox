@@ -214,8 +214,9 @@ namespace Robust.Shared.Network
                 {
                     request = new HttpRequestMessage(
                         HttpMethod.Post,
-                        $"{starlightApi}api/discord-auth/join?token={Uri.EscapeDataString(discordToken)}");
+                        $"{starlightApi}api/discord-auth/join");
                     request.Content = JsonContent.Create(joinReq);
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", discordToken);
                 }
                 else
                 {

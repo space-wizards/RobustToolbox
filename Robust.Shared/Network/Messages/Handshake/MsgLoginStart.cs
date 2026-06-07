@@ -27,7 +27,8 @@ namespace Robust.Shared.Network.Messages.Handshake
             CanAuth = buffer.ReadBoolean();
             NeedPubKey = buffer.ReadBoolean();
             Encrypt = buffer.ReadBoolean();
-            Discord = buffer.ReadBoolean(); // Starlight-edit
+
+            Discord = buffer.Position < buffer.LengthBits && buffer.ReadBoolean(); // Starlight-edit
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)

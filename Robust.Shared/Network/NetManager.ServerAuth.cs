@@ -139,7 +139,7 @@ namespace Robust.Shared.Network
                         $"{connection.RemoteEndPoint}: Checking with session server for auth hash...");
 
                     var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
-                    var authHash = NormalizeHash(Convert.ToBase64String(authHashBytes));
+                    var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
 
                     HasJoinedResponse? joinedRespJson;
                     if (discord)

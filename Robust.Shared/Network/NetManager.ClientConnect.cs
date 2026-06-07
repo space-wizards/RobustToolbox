@@ -193,7 +193,7 @@ namespace Robust.Shared.Network
                 var sealedData = CryptoBox.Seal(data, keyBytes);
 
                 var authHashBytes = MakeAuthHash(sharedSecret, keyBytes);
-                var authHash = NormalizeHash(Convert.ToBase64String(authHashBytes));
+                var authHash = Convert.ToBase64String(authHashBytes);
 
                 byte[]? modernHwid = null;
                 if (_authManager.AllowHwid && encRequest.WantHwid)
@@ -491,13 +491,6 @@ namespace Robust.Shared.Network
                 Peer.Peer.Shutdown("Disposing unused connection attempt");
                 netManager._toCleanNetPeers.Add(Peer.Peer);
             }
-        }
-
-        public static string NormalizeHash(string hash)
-        {
-            var s = hash.Replace('-', '+').Replace('_', '/');
-            s += (s.Length % 4) switch { 2 => "==", 3 => "=", _ => "" };
-            return Convert.ToBase64String(Convert.FromBase64String(s));
         }
     }
 }

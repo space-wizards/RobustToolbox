@@ -210,7 +210,7 @@ namespace Robust.Shared.Network
                 var joinReq = new JoinRequest(authHash, Base64Helpers.ToBase64Nullable(modernHwid));
                 // Starlight-start
                 HttpRequestMessage request;
-                if (!string.IsNullOrEmpty(discordToken))
+                if (useDiscord)
                 {
                     request = new HttpRequestMessage(
                         HttpMethod.Post,

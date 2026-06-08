@@ -60,6 +60,11 @@ namespace Robust.Client.GameStates
         private readonly List<NetEntity> _created = new();
         private readonly List<NetEntity> _detached = new();
 
+        /// <summary>
+        /// Chunk entities that have been detached and when. Used so we can detach old chunk entities and handle re-attaching them if we receive their state again.
+        /// </summary>
+        private readonly Dictionary<NetEntity, GameTick> _detachedChunkEntities = new();
+
         private readonly record struct StateData(
             EntityUid Uid,
             NetEntity NetEntity,
@@ -219,6 +224,7 @@ namespace Robust.Client.GameStates
             _timing.CurTick = GameTick.Zero;
             _timing.LastRealTick = GameTick.Zero;
             _lastProcessedInput = 0;
+            _detachedChunkEntities.Clear();
         }
 
         private void RunLevelChanged(object? sender, RunLevelChangedEventArgs args)
@@ -283,7 +289,12 @@ namespace Robust.Client.GameStates
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
         {
-            QueuePvsDetach(message.Entities, message.Tick);
+            if (message.Entities.Count != 0)
+                QueuePvsDetach(message.Entities, message.Tick);
+
+            if (message.ChunkEntities.Count != 0)
+                DetachChunkEntities(message.ChunkEntities, message.Tick);
+
             PvsLeave?.Invoke(message);
         }
 
@@ -294,7 +305,11 @@ namespace Robust.Client.GameStates
                 _replayRecording.RecordClientMessage(new ReplayMessage.LeavePvs(entities, tick));
         }
 
-        public void ClearDetachQueue() => _processor.ClearDetachQueue();
+        public void ClearDetachQueue()
+        {
+            _processor.ClearDetachQueue();
+            _detachedChunkEntities.Clear();
+        }
 
         /// <inheritdoc />
         public void ApplyGameState()
@@ -838,11 +853,21 @@ namespace Robust.Client.GameStates
                 var isEnteringPvs = (meta.Flags & MetaDataFlags.Detached) != 0;
                 if (isEnteringPvs)
                 {
+                    if (_detachedChunkEntities.TryGetValue(es.NetEntity, out var detachedTick))
+                    {
+                        if (curState.ToSequence <= detachedTick)
+                            continue;
+
+                        _detachedChunkEntities.Remove(es.NetEntity);
+                        isEnteringPvs = false;
+                    }
+
                     // _toApply already contains newly created entities, but these should never be "entering PVS"
                     DebugTools.Assert(!_toApply.ContainsKey(uid.Value));
 
                     meta.Flags &= ~MetaDataFlags.Detached;
-                    enteringPvs++;
+                    if (isEnteringPvs)
+                        enteringPvs++;
                 }
                 else if (meta.LastStateApplied >= es.EntityLastModified && meta.LastStateApplied != GameTick.Zero)
                 {
@@ -1353,6 +1378,21 @@ namespace Robust.Client.GameStates
                 }
 
                 _detached.Add(netEntity);
+            }
+        }
+
+        private void DetachChunkEntities(List<NetEntity> entities, GameTick tick)
+        {
+            foreach (var netEntity in entities)
+            {
+                if (!_entities.TryGetEntityData(netEntity, out _, out var meta))
+                    continue;
+
+                if (meta.LastStateApplied > tick)
+                    continue;
+
+                meta._flags |= MetaDataFlags.Detached;
+                _detachedChunkEntities[netEntity] = tick;
             }
         }
 

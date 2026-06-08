@@ -134,7 +134,8 @@ internal sealed partial class PvsSystem : EntitySystem
         SubscribeLocalEvent<MapRemovedEvent>(OnMapChanged);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
         SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
-
+        SubscribeLocalEvent<ChunkEntityAddedEvent>(OnChunkEntityAdded);
+        SubscribeLocalEvent<ChunkEntityRemovedEvent>(OnChunkEntityRemoved);
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         _transform.OnBeforeMoveEvent += OnEntityMove;
         EntityManager.EntityAdded += OnEntityAdded;
@@ -387,7 +388,11 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             // not using EyeComponent.Eye.Position, because it's updated only on the client's side
             worldPos += eye.Comp2.Offset;
-            size *= eye.Comp2.PvsScale;
+
+            if (eye.Comp2.PvsScale > 0f)
+            {
+                size *= eye.Comp2.PvsScale;
+            }
         }
 
         size = Math.Max(size, 1);

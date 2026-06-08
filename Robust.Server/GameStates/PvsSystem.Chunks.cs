@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using Prometheus;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
@@ -18,11 +19,16 @@ namespace Robust.Server.GameStates;
 // Partial class for handling PVS chunks.
 internal sealed partial class PvsSystem
 {
-    public const float ChunkSize = 8;
+    public const float ChunkSize = ChunkEntitySystem.ChunkSize;
 
     private readonly Dictionary<PvsChunkLocation, PvsChunk> _chunks = new();
     private readonly List<PvsChunk> _dirtyChunks = new(64);
     private readonly List<PvsChunk> _cleanChunks = new(64);
+
+    /// <summary>
+    /// Lookup of every chunk entity uid to its corresponding pvschunklocation.
+    /// </summary>
+    private readonly Dictionary<EntityUid, PvsChunkLocation> _chunkEntityLocations = new();
 
     // Store chunks grouped by the root node, for when maps/grids get deleted.
     private readonly Dictionary<EntityUid, HashSet<PvsChunkLocation>> _chunkSets = new();
@@ -277,12 +283,93 @@ internal sealed partial class PvsSystem
 
         chunk.MarkDirty();
         chunk.Children.Remove(uid);
-        if (chunk.Children.Count > 0)
+        if (chunk.Children.Count > 0 || chunk.AttachedChunkEntity != null)
             return;
 
         _chunks.Remove(old);
         _chunkPool.Return(chunk);
         _chunkSets[old.Uid].Remove(old);
+    }
+
+    private void OnChunkEntityAdded(ref ChunkEntityAddedEvent ev)
+    {
+        AddChunkEntityToChunk(ev.Entity, ev.Root, ev.Chunk);
+    }
+
+    private void OnChunkEntityRemoved(ref ChunkEntityRemovedEvent ev)
+    {
+        RemoveChunkEntityFromChunk(ev.Entity);
+    }
+
+    private void AddChunkEntityToChunk(EntityUid uid, EntityUid root, Vector2i chunkIndices)
+    {
+        if (!_metaQuery.TryGetComponent(uid, out var meta))
+            throw new ArgumentException($"Chunk entity {uid} does not have metadata.", nameof(uid));
+
+        DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating);
+        DebugTools.Assert(!_chunkEntityLocations.ContainsKey(uid));
+
+        var location = new PvsChunkLocation(root, chunkIndices);
+        AddChunkEntityToPvsChunk(uid, location);
+
+        _chunkEntityLocations[uid] = location;
+        _metadataMemory.GetRef(meta.PvsData.Index).IsChunkEntity = true;
+    }
+
+    private void AddChunkEntityToPvsChunk(EntityUid uid, PvsChunkLocation location)
+    {
+        ref var chunk = ref CollectionsMarshal.GetValueRefOrAddDefault(_chunks, location, out var existing);
+        if (!existing)
+        {
+            chunk = _chunkPool.Get();
+            try
+            {
+                chunk.Initialize(location, _metaQuery, _xformQuery);
+            }
+            catch (Exception)
+            {
+                _chunks.Remove(location);
+                throw;
+            }
+
+            _chunkSets.GetOrNew(location.Uid).Add(location);
+        }
+
+        if (chunk!.AttachedChunkEntity is { } attached && attached != uid)
+            throw new InvalidOperationException($"PVS chunk {location} already has chunk entity {ToPrettyString(attached)} attached while adding {ToPrettyString(uid)}.");
+
+        chunk.MarkDirty();
+        chunk.AttachedChunkEntity = uid;
+    }
+
+    private void RemoveChunkEntityFromChunk(EntityUid uid)
+    {
+        if (!_chunkEntityLocations.Remove(uid, out var location))
+            return;
+
+        if (_metaQuery.TryGetComponent(uid, out var meta) && meta.PvsData != PvsIndex.Invalid)
+            _metadataMemory.GetRef(meta.PvsData.Index).IsChunkEntity = false;
+
+        RemoveChunkEntityFromPvsChunk(uid, location);
+    }
+
+    private void RemoveChunkEntityFromPvsChunk(EntityUid uid, PvsChunkLocation old)
+    {
+        if (!_chunks.TryGetValue(old, out var chunk))
+            return;
+
+        if (chunk.AttachedChunkEntity != uid)
+            return;
+
+        chunk.MarkDirty();
+        chunk.AttachedChunkEntity = null;
+        if (chunk.Children.Count > 0)
+            return;
+
+        _chunks.Remove(old);
+        _chunkPool.Return(chunk);
+        if (_chunkSets.TryGetValue(old.Uid, out var locations))
+            locations.Remove(old);
     }
 
     /// <summary>
@@ -329,7 +416,21 @@ internal sealed partial class PvsSystem
         foreach (var loc in locations)
         {
             if (_chunks.Remove(loc, out var chunk))
+            {
+                if (chunk.AttachedChunkEntity is { } chunkEntity)
+                {
+                    if (_chunkEntityLocations.TryGetValue(chunkEntity, out var chunkLocation) &&
+                        chunkLocation == loc)
+                    {
+                        _chunkEntityLocations.Remove(chunkEntity);
+                    }
+
+                    if (_metaQuery.TryGetComponent(chunkEntity, out var meta) && meta.PvsData != PvsIndex.Invalid)
+                        _metadataMemory.GetRef(meta.PvsData.Index).IsChunkEntity = false;
+                }
+
                 _chunkPool.Return(chunk);
+            }
         }
         DebugTools.Assert(_chunks.Values.All(x => x.Map.Owner != root && x.Root.Owner != root));
     }

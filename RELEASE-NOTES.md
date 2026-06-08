@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add chunk-based entity support to PVS. The API is accessed via ChunkEntitySystem. This can be used instead of manually handling streaming chunk-based data.
 
 ### Bugfixes
 

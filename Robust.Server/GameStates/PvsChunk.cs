@@ -261,6 +261,9 @@ internal sealed class PvsChunk
         set.Add(Map.Owner);
         foreach (var child in Contents)
         {
+            var parent = query.GetComponent(child.Uid).ParentUid;
+            DebugTools.Assert(set.Contains(parent),
+                "A child's parent is not in the chunk, or is not listed first.");
             DebugTools.Assert(set.Add(child.Uid), "Child appears more than once in the chunk.");
         }
     }

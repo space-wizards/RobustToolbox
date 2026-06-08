@@ -17,10 +17,8 @@ public sealed class MissingParentTest : RobustIntegrationTest
     [Test]
     public async Task TestMissingParent()
     {
-        var server = StartServer();
-        var client = StartClient();
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
         var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
@@ -31,7 +29,6 @@ public sealed class MissingParentTest : RobustIntegrationTest
         var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
         var cConfMan = client.ResolveDependency<IConfigurationManager>();
 
-        await ConnectClient(server, client);
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
         await RunTicksSync(server, client, 10);
@@ -138,7 +135,6 @@ public sealed class MissingParentTest : RobustIntegrationTest
         Assert.That(client.Transform(entity).ParentUid, Is.EqualTo(newParent));
         Assert.That(client.MetaData(entity).Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.None));
 
-        await DisconnectClient(server, client);
     }
 }
 

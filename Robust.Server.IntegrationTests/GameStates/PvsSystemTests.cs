@@ -19,10 +19,8 @@ public sealed class PvsSystemTests : RobustIntegrationTest
     [Test]
     public async Task TestMultipleIndexChange()
     {
-        var server = StartServer();
-        var client = StartClient();
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
         var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
@@ -34,7 +32,6 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         var cEntMan = client.ResolveDependency<IEntityManager>();
         var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
 
-        await ConnectClient(server, client);
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
         await RunTicksSync(server, client, 10);
@@ -99,7 +96,6 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         // wait for errors.
         await RunTicksSync(server, client, 10);
 
-        await DisconnectClient(server, client);
     }
 }
 

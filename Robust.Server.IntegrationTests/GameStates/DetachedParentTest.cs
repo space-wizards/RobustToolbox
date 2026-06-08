@@ -21,10 +21,8 @@ public sealed class DetachedParentTest : RobustIntegrationTest
     [Test]
     public async Task TestDetachedParent()
     {
-        var server = StartServer(new() {Pool = false});
-        var client = StartClient(new() {Pool = false});
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair(new() {Pool = false}, new() {Pool = false});
+        var (client, server) = pair;
 
         var mapSys = server.System<SharedMapSystem>();
         var xformSys = server.System<SharedTransformSystem>();
@@ -32,7 +30,6 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
-        await ConnectClient(server, client);
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
         await RunTicksSync(server, client, 10);
@@ -398,7 +395,6 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         Assert.That(cParent4X.MapUid, Is.EqualTo(cMap3));
         Assert.That(cGrid3X.MapUid, Is.EqualTo(cMap3));
 
-        await DisconnectClient(server, client);
     }
 }
 

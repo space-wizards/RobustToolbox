@@ -16,10 +16,8 @@ public sealed class PvsResetTest : RobustIntegrationTest
     [Test]
     public async Task ResetTest()
     {
-        var server = StartServer();
-        var client = StartClient();
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
         var sEntMan = server.EntMan;
         var confMan = server.CfgMan;
@@ -29,7 +27,6 @@ public sealed class PvsResetTest : RobustIntegrationTest
         var cEntMan = client.EntMan;
         var cPlayerMan = client.PlayerMan;
 
-        await ConnectClient(server, client);
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
         await RunTicksSync(server, client, 10);
@@ -114,7 +111,6 @@ public sealed class PvsResetTest : RobustIntegrationTest
         await RunTicksSync(server, client, 10);
         AssertDetached(false);
 
-        await DisconnectClient(server, client);
     }
 }
 

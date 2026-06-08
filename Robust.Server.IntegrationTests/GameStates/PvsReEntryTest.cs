@@ -22,10 +22,8 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
     [Test]
     public async Task TestLossyReEntry()
     {
-        var server = StartServer();
-        var client = StartClient();
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
         var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
@@ -37,7 +35,6 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
         var cEntMan = client.ResolveDependency<IEntityManager>();
         var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
 
-        await ConnectClient(server, client);
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
         await RunTicksSync(server, client, 10);
@@ -169,7 +166,6 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
         // If the test moves the entity instead of the player, then the test doesn't actually work.
         Assert.That(meta.LastModifiedTick, Is.EqualTo(lastDirty));
 
-        await DisconnectClient(server, client);
     }
 #endif
 }

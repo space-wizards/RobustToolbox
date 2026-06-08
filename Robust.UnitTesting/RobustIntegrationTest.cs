@@ -196,6 +196,20 @@ namespace Robust.UnitTesting
         }
 
         /// <summary>
+        ///     Starts a connected client/server pair.
+        /// </summary>
+        protected async Task<ConnectedIntegrationPair> StartConnectedPair(
+            ServerIntegrationOptions? serverOptions = null,
+            ClientIntegrationOptions? clientOptions = null,
+            string? userName = null)
+        {
+            var server = StartServer(serverOptions);
+            var client = StartClient(clientOptions);
+            await ConnectClient(server, client, userName);
+            return new ConnectedIntegrationPair(server, client);
+        }
+
+        /// <summary>
         ///     Runs the server and client in lockstep.
         /// </summary>
         protected static async Task RunTicksSync(
@@ -220,6 +234,35 @@ namespace Robust.UnitTesting
         {
             await client.WaitPost(() => ((IClientNetManager) client.NetMan).ClientDisconnect(reason));
             await RunTicksSync(server, client, 5);
+        }
+
+        protected sealed class ConnectedIntegrationPair : IAsyncDisposable
+        {
+            public ServerIntegrationInstance Server { get; }
+            public ClientIntegrationInstance Client { get; }
+
+            private bool _disposed;
+
+            public ConnectedIntegrationPair(ServerIntegrationInstance server, ClientIntegrationInstance client)
+            {
+                Server = server;
+                Client = client;
+            }
+
+            public void Deconstruct(out ClientIntegrationInstance client, out ServerIntegrationInstance server)
+            {
+                client = Client;
+                server = Server;
+            }
+
+            public async ValueTask DisposeAsync()
+            {
+                if (_disposed)
+                    return;
+
+                _disposed = true;
+                await DisconnectClient(Server, Client);
+            }
         }
 
         private bool ShouldPool(IntegrationOptions? options)

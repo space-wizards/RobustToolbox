@@ -16,10 +16,8 @@ public sealed class PvsChunkTest : RobustIntegrationTest
     [Test]
     public async Task TestGridMapChange()
     {
-        var server = StartServer();
-        var client = StartClient();
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
         var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
@@ -30,7 +28,6 @@ public sealed class PvsChunkTest : RobustIntegrationTest
 
         var cEntMan = client.ResolveDependency<IEntityManager>();
 
-        await ConnectClient(server, client);
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
         await RunTicksSync(server, client, 10);
@@ -123,7 +120,6 @@ public sealed class PvsChunkTest : RobustIntegrationTest
         Assert.That(!cEntMan.TryGetEntity(nMap2, out _));
         Assert.That(cEntMan.TryGetEntity(nGrid, out _));
 
-        await DisconnectClient(server, client);
     }
 }
 

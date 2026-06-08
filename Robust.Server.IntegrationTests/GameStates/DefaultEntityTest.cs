@@ -18,17 +18,14 @@ public sealed class DefaultEntityTest : RobustIntegrationTest
     [Test]
     public async Task TestSpawnDefaultEntity()
     {
-        var server = StartServer();
-        var client = StartClient();
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var cEntMan = client.ResolveDependency<IEntityManager>();
         var playerMan = server.ResolveDependency<IPlayerManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
 
-        await ConnectClient(server, client);
         server.Post(() => confMan.SetCVar(CVars.NetPVS, false));
 
         await RunTicksSync(server, client, 10);
@@ -81,7 +78,6 @@ public sealed class DefaultEntityTest : RobustIntegrationTest
         Assert.That(sEntMan.EntityExists(sEntMan.GetEntity(ent)));
         Assert.That(cEntMan.EntityExists(cEntMan.GetEntity(ent)));
 
-        await DisconnectClient(server, client);
     }
 }
 

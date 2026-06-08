@@ -34,5 +34,7 @@ namespace Robust.Shared.GameObjects
         /// The entity has been deleted.
         /// </summary>
         Deleted,
+
+        // Before you go adding a new one fix the 1 extra bit being used in ChunkEntity PVS code.
     }
 }

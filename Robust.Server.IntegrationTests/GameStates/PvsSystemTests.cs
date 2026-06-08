@@ -7,7 +7,6 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Server.GameStates;
@@ -33,18 +32,12 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         var maps = sEntMan.System<SharedMapSystem>();
 
         var cEntMan = client.ResolveDependency<IEntityManager>();
-        var netMan = client.ResolveDependency<IClientNetManager>();
         var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
 
-        Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-        client.Post(() => netMan.ClientConnect(null!, 0, null!));
+        await ConnectClient(server, client);
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Set up map and grid
         EntityUid grid = default;
@@ -78,11 +71,7 @@ public sealed class PvsSystemTests : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Check player got properly attached
         await client.WaitPost(() =>
@@ -96,35 +85,21 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         xforms.SetCoordinates(other, otherXform, gridCoords);
 
         // Run for a few ticks. The test just checks that no PVS asserts/errors happen.
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Repeat but in the opposite direction ( map -> grid -> map )
         // first move to map and wait a bit.
         xforms.SetCoordinates(other, otherXform, mapCoords);
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Move to and off grid in the same tick
         xforms.SetCoordinates(other, otherXform, gridCoords);
         xforms.SetCoordinates(other, otherXform, mapCoords);
 
         // wait for errors.
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
-        await client.WaitPost(() => netMan.ClientDisconnect(""));
-        await server.WaitRunTicks(5);
-        await client.WaitRunTicks(5);
+        await DisconnectClient(server, client);
     }
 }
 

@@ -182,6 +182,46 @@ namespace Robust.UnitTesting
             return instance;
         }
 
+        /// <summary>
+        ///     Connects a client integration instance to a server integration instance.
+        /// </summary>
+        protected static async Task ConnectClient(
+            ServerIntegrationInstance server,
+            ClientIntegrationInstance client,
+            string? userName = null)
+        {
+            await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+            Assert.DoesNotThrow(() => client.SetConnectTarget(server));
+            await client.WaitPost(() => ((IClientNetManager) client.NetMan).ClientConnect(null!, 0, userName!));
+        }
+
+        /// <summary>
+        ///     Runs the server and client in lockstep.
+        /// </summary>
+        protected static async Task RunTicksSync(
+            ServerIntegrationInstance server,
+            ClientIntegrationInstance client,
+            int ticks)
+        {
+            for (var i = 0; i < ticks; i++)
+            {
+                await server.WaitRunTicks(1);
+                await client.WaitRunTicks(1);
+            }
+        }
+
+        /// <summary>
+        ///     Disconnects a client integration instance from its server and runs both sides long enough to process it.
+        /// </summary>
+        protected static async Task DisconnectClient(
+            ServerIntegrationInstance server,
+            ClientIntegrationInstance client,
+            string reason = "")
+        {
+            await client.WaitPost(() => ((IClientNetManager) client.NetMan).ClientDisconnect(reason));
+            await RunTicksSync(server, client, 5);
+        }
+
         private bool ShouldPool(IntegrationOptions? options)
         {
             // If no options are provided, we assume we should pool

@@ -388,11 +388,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             // not using EyeComponent.Eye.Position, because it's updated only on the client's side
             worldPos += eye.Comp2.Offset;
-
-            if (eye.Comp2.PvsScale > 0f)
-            {
-                size *= eye.Comp2.PvsScale;
-            }
+            size *= eye.Comp2.PvsScale;
         }
 
         size = Math.Max(size, 1);

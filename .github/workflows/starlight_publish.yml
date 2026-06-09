@@ -1,0 +1,78 @@
+# Required repo secrets:  CDN_SFTP_HOST, CDN_SFTP_USER, CDN_SFTP_PASS   (optional: CDN_SFTP_PORT, default 2222)
+name: Publish Starlight Engine
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      rids:
+        description: "Space-separated RIDs to build"
+        default: "win-x64 linux-x64"
+      modules:
+        description: "Also build & upload the WebView module"
+        type: boolean
+        default: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4.1.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve engine version
+        id: ver
+        run: |
+          version=$(grep -oP '<Version>\K[^<]+' MSBuild/Robust.Engine.Version.props)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Engine version: $version"
+
+      - name: Package client engine
+        run: python3 Tools/package_client_build.py -p ${{ github.event.inputs.rids || 'win-x64 linux-x64' }}
+
+      - name: Package WebView module
+        if: ${{ github.event_name == 'push' || github.event.inputs.modules == 'true' }}
+        run: python3 Tools/package_webview.py -p ${{ github.event.inputs.rids || 'win-x64 linux-x64' }}
+
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Upload to engine CDN (SFTP)
+        env:
+          SFTP_HOST: ${{ secrets.CDN_SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.CDN_SFTP_PORT }}
+          SFTP_USER: ${{ secrets.CDN_SFTP_USER }}
+          SFTP_PASS: ${{ secrets.CDN_SFTP_PASS }}
+          VER: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          port="${SFTP_PORT:-2222}"
+          base="sftp://$SFTP_HOST:$port"
+
+          # Engine zips -> builds/<version>/. The Robust.Client_*.zip glob excludes Robust.Client.WebView_*.zip.
+          lftp -u "$SFTP_USER,$SFTP_PASS" "$base" -e "
+            set sftp:auto-confirm yes;
+            mkdir -p engine-cdn/builds/$VER;
+            cd engine-cdn/builds/$VER;
+            mput release/Robust.Client_*.zip;
+            bye"
+
+          # WebView module zips -> modules/<name>/0.0.0/ (0.0.0 = min engine version, always applies).
+          if ls release/Robust.Client.WebView_*.zip >/dev/null 2>&1; then
+            lftp -u "$SFTP_USER,$SFTP_PASS" "$base" -e "
+              set sftp:auto-confirm yes;
+              mkdir -p engine-cdn/modules/Robust.Client.WebView/0.0.0;
+              cd engine-cdn/modules/Robust.Client.WebView/0.0.0;
+              mput release/Robust.Client.WebView_*.zip;
+              bye"
+          fi
+
+          echo "Uploaded engine $VER. The cluster sidecars will regenerate manifest.json / modules.json (~25s)."

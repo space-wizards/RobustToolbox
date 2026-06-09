@@ -418,20 +418,20 @@ internal partial class Clyde
 
         private static void WinThreadWinSetTitle(CmdWinSetTitle cmd)
         {
-                SDL.SDL_SetWindowTitle(cmd.Window, cmd.Title);
+            SDL.SDL_SetWindowTitle(cmd.Window, cmd.Title);
         }
 
-        public void WindowSetTitleBarVisible(WindowReg window, bool visible)
+        public void WindowSetBordered(WindowReg window, bool visible)
         {
-            window.IsTitleBarVisible = visible;
-            SendCmd(new CmdWinSetTitleBarVisible
+            window.IsBordered = visible;
+            SendCmd(new CmdWinSetBordered
             {
                 Window = WinPtr(window),
                 Visible = visible,
             });
         }
 
-        private static void WinThreadWinSetTitleBarVisible(CmdWinSetTitleBarVisible cmd)
+        private static void WinThreadWinSetBordered(CmdWinSetBordered cmd)
         {
             SDL.SDL_SetWindowBordered(cmd.Window, cmd.Visible);
         }

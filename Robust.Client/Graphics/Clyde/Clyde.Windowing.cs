@@ -281,11 +281,11 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.WindowSetTitle(_mainWindow!, title);
         }
 
-        private void SetWindowTitleBarVisible(WindowReg reg, bool visible)
+        private void SetWindowBordered(WindowReg reg, bool visible)
         {
             DebugTools.AssertNotNull(_windowing);
 
-            _windowing!.WindowSetTitleBarVisible(reg, visible);
+            _windowing!.WindowSetBordered(reg, visible);
         }
 
         public void SetWindowMonitor(IClydeMonitor monitor)
@@ -348,7 +348,7 @@ namespace Robust.Client.Graphics.Clyde
                     _mainWindow = reg;
 
                 reg.IsVisible = parameters.Visible;
-                reg.IsTitleBarVisible = parameters.TitleBarVisible;
+                reg.IsBordered = parameters.TitleBarVisible;
 
                 _windows.Add(reg);
                 _windowHandles.Add(reg.Handle);
@@ -502,7 +502,7 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsMinimized;
             public string Title = "";
             public bool IsVisible;
-            public bool IsTitleBarVisible;
+            public bool IsBordered;
             public IClydeWindow? Owner;
 
             public bool DisposeOnClose;
@@ -562,10 +562,10 @@ namespace Robust.Client.Graphics.Clyde
                 set => _clyde.SetWindowVisible(Reg, value);
             }
 
-            public bool IsTitleBarVisible
+            public bool IsBordered
             {
-                get => Reg.IsTitleBarVisible;
-                set => _clyde.SetWindowTitleBarVisible(Reg, value);
+                get => Reg.IsBordered;
+                set => _clyde.SetWindowBordered(Reg, value);
             }
 
             public Vector2 ContentScale => Reg.WindowScale;

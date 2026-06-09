@@ -81,8 +81,8 @@ internal partial class Clyde
                     WinThreadWinSetTitle(cmd);
                     break;
 
-                case CmdWinSetTitleBarVisible cmd:
-                    WinThreadWinSetTitleBarVisible(cmd);
+                case CmdWinSetBordered cmd:
+                    WinThreadWinSetBordered(cmd);
                     break;
 
                 case CmdSetClipboard cmd:
@@ -295,7 +295,7 @@ internal partial class Clyde
             public required string Title;
         }
 
-        private sealed class CmdWinSetTitleBarVisible : CmdBase
+        private sealed class CmdWinSetBordered : CmdBase
         {
             public nint Window;
             public required bool Visible;

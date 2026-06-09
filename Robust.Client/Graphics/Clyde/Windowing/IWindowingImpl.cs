@@ -21,7 +21,7 @@ namespace Robust.Client.Graphics.Clyde
             void TerminateWindowLoop();
 
             // Event pump
-            void ProcessEvents(bool single=false);
+            void ProcessEvents(bool single = false);
             void FlushDispose();
 
             // Cursor
@@ -38,7 +38,13 @@ namespace Robust.Client.Graphics.Clyde
 
             void WindowDestroy(WindowReg reg);
             void WindowSetTitle(WindowReg window, string title);
-            void WindowSetTitleBarVisible(WindowReg window, bool visible);
+            /// <summary>
+            /// Toggles the visibility of the window's border, including the title
+            /// bar.
+            /// </summary>
+            /// <param name="window">The window to affect.</param>
+            /// <param name="visible">The visibility of the border & titlebar to be set.</param>
+            void WindowSetBordered(WindowReg window, bool visible);
             void WindowSetMonitor(WindowReg window, IClydeMonitor monitor);
             void WindowSetSize(WindowReg window, Vector2i size);
             void WindowSetVisible(WindowReg window, bool visible);

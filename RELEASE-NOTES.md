@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed an `InvalidOperationException` that could be thrown when reconnecting, caused by completing an already-finished status-change task.
 
 ### Other
 

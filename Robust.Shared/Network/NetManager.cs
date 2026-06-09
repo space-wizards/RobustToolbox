@@ -792,7 +792,7 @@ namespace Robust.Shared.Network
             {
                 _awaitingStatusChange.Remove(sender);
                 resume.Item1.Dispose();
-                resume.Item2.SetResult(reason);
+                resume.Item2.TrySetResult(reason);
                 return;
             }
 

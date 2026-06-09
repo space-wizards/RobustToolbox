@@ -1,3 +1,9 @@
+using Lidgren.Network;
+using Robust.Shared.AuthLib;
+using Robust.Shared.Log;
+using Robust.Shared.Network.Messages.Handshake;
+using Robust.Shared.Utility;
+using SpaceWizards.Sodium;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
@@ -6,12 +12,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using Lidgren.Network;
-using Robust.Shared.AuthLib;
-using Robust.Shared.Log;
-using Robust.Shared.Network.Messages.Handshake;
-using Robust.Shared.Utility;
-using SpaceWizards.Sodium;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.Network
 {
@@ -151,23 +152,25 @@ namespace Robust.Shared.Network
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
 
                     // Starlight-start
-                    HasJoinedResponse? joinedRespJson;
+                    string url = "";
                     if (discord)
                     {
                         var starlightApi = _config.GetCVar(CVars.StarlightAPIServer);
-                        var url = $"{starlightApi}api/discord-auth/hasJoined" +
-                                  $"?hash={authHash}&userId={msgEncResponse.UserId}";
-                        joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
+                        url = $"{starlightApi}api/discord-auth/hasJoined" +
+                                  $"?hash={authHash}&" +
+                                  $"userId={msgEncResponse.UserId}";
                     }
                     else
                     {
-                        var url = $"{authServer}api/session/hasJoined" +
-                                  $"?hash={authHash}&userId={msgEncResponse.UserId}";
+                        url = $"{authServer}api/session/hasJoined" +
+                                  $"?hash={authHash}&" +
+                                  $"userId={msgEncResponse.UserId}";
                         var serverUrl = _config.GetCVar(CVars.HubServerUrl);
                         if (!string.IsNullOrWhiteSpace(serverUrl))
                             url += $"&serverUrl={Uri.EscapeDataString(serverUrl)}";
-                        joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
                     }
+                    _logger.Info($"Selected auth url: {url}");
+                    var joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
                     // Starlight-end
 
                     if (joinedRespJson is not {IsValid: true})

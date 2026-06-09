@@ -59,7 +59,7 @@ namespace Robust.Shared.Network
             if (TryGetVar("STARLIGHT_API_SERVER", out var starlightApi))
                 StarlightApi = starlightApi;
 
-            if (TryGetVar("STARLIGHT_AUTH_TOKEN", out var discordToken))
+            if (TryGetVar("STARLIGHT_AUTH_DISCORDTOKEN", out var discordToken))
                 DiscordToken = discordToken;
             // Starlight-end
 

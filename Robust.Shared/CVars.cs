@@ -980,7 +980,7 @@ namespace Robust.Shared
         /// See the documentation of the <see cref="Network.AuthMode"/> enum for values.
         /// </summary>
         public static readonly CVarDef<int> AuthMode =
-            CVarDef.Create("auth.mode", (int) Network.AuthMode.Required, CVar.SERVERONLY);
+            CVarDef.Create("auth.mode", (int) Network.AuthMode.RequiredDefault, CVar.SERVERONLY);
 
         #region Starlight
         /// <summary>
@@ -1011,7 +1011,7 @@ namespace Robust.Shared
         /// Authentication server address for discord.
         /// </summary>
         public static readonly CVarDef<string> StarlightAPIServer =
-            CVarDef.Create("auth.server", AuthManager.DefaultStarlightAPI, CVar.SERVERONLY);
+            CVarDef.Create("auth.starlightapiserver", AuthManager.DefaultStarlightAPI, CVar.SERVERONLY);
 
         #endregion
 

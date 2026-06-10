@@ -134,7 +134,7 @@ namespace Robust.Shared.Network
             // Starlight-start
             var discordToken = _authManager.DiscordToken;
 
-            var useDiscord = string.IsNullOrEmpty(authToken) && !string.IsNullOrEmpty(discordToken);
+            var useDiscord = !string.IsNullOrEmpty(discordToken);
             // Starlight-end
 
             var hasPubKey = !string.IsNullOrEmpty(pubKey);
@@ -210,7 +210,7 @@ namespace Robust.Shared.Network
                 var joinReq = new JoinRequest(authHash, Base64Helpers.ToBase64Nullable(modernHwid));
                 // Starlight-start
                 HttpRequestMessage request;
-                if (useDiscord)
+                if (encRequest.WantDiscord && useDiscord)
                 {
                     request = new HttpRequestMessage(
                         HttpMethod.Post,

@@ -86,7 +86,8 @@ namespace Robust.Shared.Network
                     {
                         PublicKey = needPk ? CryptoPublicKey : Array.Empty<byte>(),
                         VerifyToken = verifyToken,
-                        WantHwid = wantHwid
+                        WantHwid = wantHwid,
+                        WantDiscord = Auth is AuthMode.Required or AuthMode.RequiredDiscord // Starlight-edit
                     };
 
                     var outMsgEncReq = peer.Peer.CreateMessage();

@@ -15,13 +15,12 @@ namespace Robust.Shared.Network
 
         /// <summary>
         /// Authenticated is required to join the server.
-        /// Starlight: Required only default, discord auth will be rejected
         /// </summary>
         /// <remarks>
         /// Unauthenticated clients are still allowed for localhost connections,
         /// but only if CVar <c>auth.allowlocal</c> is true.
         /// </remarks>
-        RequiredDefault = 1,
+        Required = 1,
 
         /// <summary>
         /// Authentication is fully disabled, and even clients capable of authenticating will not authenticate.
@@ -31,19 +30,25 @@ namespace Robust.Shared.Network
         /// This may result in confusing mingling of database entries, if actively switched between on the same server.
         /// </remarks>
         Disabled = 2,
-
-        #region Starlight
-
-        /// <summary>
-        /// Starlight: Required both, i.e. if discord auth valid - can join, if default auth valid - can join
-        /// </summary>
-        Required = 3,
-
-        /// <summary>
-        /// Starlight: Required only discord, default auth will be rejected
-        /// </summary>
-        RequiredDiscord = 4,
-
-        #endregion
     }
+
+    #region Starlight
+
+    public enum AdditionalAuthModes : byte
+    {
+        /// <summary>
+        /// Any additional auth mode disabled
+        /// </summary>
+        Disabled = 0,
+        /// <summary>
+        /// Only discord auth allowed
+        /// </summary>
+        DiscordOnly = 1,
+        /// <summary>
+        /// Discord auth is optional
+        /// </summary>
+        DiscordOptional = 2,
+    }
+
+    #endregion
 }

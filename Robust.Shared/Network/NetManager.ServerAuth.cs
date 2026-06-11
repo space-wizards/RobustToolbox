@@ -23,6 +23,7 @@ namespace Robust.Shared.Network
 
         public byte[] CryptoPublicKey { get; } = new byte[CryptoBox.PublicKeyBytes];
         public AuthMode Auth { get; private set; }
+        public AdditionalAuthModes AdditionalAuth { get; private set; } // Starlight-edit
 
         public Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
         public IServerNetManager.NetApprovalDelegate? HandleApprovalCallback { get; set; }
@@ -60,13 +61,25 @@ namespace Robust.Shared.Network
                 _logger.Verbose(
                     $"{connection.RemoteEndPoint}: Connection is specialized local? {isLocal} ");
 
-                if (Auth is AuthMode.Required or AuthMode.RequiredDefault or AuthMode.RequiredDiscord && !isLocal) // Starlight-edit
+                if (Auth == AuthMode.Required && !isLocal)
                 {
-                    if ((!canAuth && Auth == AuthMode.RequiredDefault) || (!discord && Auth == AuthMode.RequiredDiscord) || (!canAuth && !discord)) // Starlight-edit
+                    // Starlight-start
+                    if ((!canAuth && AdditionalAuth == AdditionalAuthModes.Disabled))
                     {
-                        connection.Disconnect("Connecting to this server requires authentication");
+                        connection.Disconnect("Connecting to this server requires normal authentication!");
                         return;
                     }
+                    if (!discord && AdditionalAuth == AdditionalAuthModes.DiscordOnly)
+                    {
+                        connection.Disconnect("Connecting to this server requires discord authentication!");
+                        return;
+                    }
+                    if (!canAuth && !discord && AdditionalAuth == AdditionalAuthModes.DiscordOptional)
+                    {
+                        connection.Disconnect("Connecting to this server requires authentication of any types!");
+                        return;
+                    }
+                    // Starlight-end
                 }
 
                 NetEncryption? encryption = null;
@@ -87,7 +100,7 @@ namespace Robust.Shared.Network
                         PublicKey = needPk ? CryptoPublicKey : Array.Empty<byte>(),
                         VerifyToken = verifyToken,
                         WantHwid = wantHwid,
-                        WantDiscord = Auth is AuthMode.Required or AuthMode.RequiredDiscord // Starlight-edit
+                        WantDiscord = Auth == AuthMode.Required && AdditionalAuth is AdditionalAuthModes.DiscordOnly or AdditionalAuthModes.DiscordOptional // Starlight-edit
                     };
 
                     var outMsgEncReq = peer.Peer.CreateMessage();

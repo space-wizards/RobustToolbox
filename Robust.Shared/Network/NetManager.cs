@@ -275,6 +275,7 @@ namespace Robust.Shared.Network
             if (isServer)
             {
                 _config.OnValueChanged(CVars.AuthMode, OnAuthModeChanged, invokeImmediately: true);
+                _config.OnValueChanged(CVars.AdditionalAuthMode, OnAdditionalAuthModeChanged, invokeImmediately: true); // Starlight-edit
             }
 
             _config.OnValueChanged(CVars.NetFakeLoss, _fakeLossChanged);
@@ -320,6 +321,10 @@ namespace Robust.Shared.Network
         {
             Auth = (AuthMode)mode;
         }
+
+        // Starlight-start
+        private void OnAdditionalAuthModeChanged(int mode) => AdditionalAuth = (AdditionalAuthModes)mode;
+        // Starlight-end
 
         private void OnSerializerOnClientHandshakeComplete()
         {
@@ -481,6 +486,7 @@ namespace Robust.Shared.Network
             if (IsServer)
             {
                 _config.UnsubValueChanged(CVars.AuthMode, OnAuthModeChanged);
+                _config.UnsubValueChanged(CVars.AdditionalAuthMode, OnAdditionalAuthModeChanged); // Starlight-edit
             }
 
             _config.UnsubValueChanged(CVars.NetFakeLoss, _fakeLossChanged);

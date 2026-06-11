@@ -982,6 +982,14 @@ namespace Robust.Shared
         public static readonly CVarDef<int> AuthMode =
             CVarDef.Create("auth.mode", (int) Network.AuthMode.Required, CVar.SERVERONLY);
 
+        #region Starlight
+        /// <summary>
+        /// Mode with which to handle ADDITIONAL authentication on the server.
+        /// </summary>
+        public static readonly CVarDef<int> AdditionalAuthMode =
+            CVarDef.Create("auth.additionalmode", (int)Network.AuthMode.Disabled, CVar.SERVERONLY);
+        #endregion
+
         /// <summary>
         /// Allow unauthenticated localhost connections, even if the auth mode is set to required.
         /// These connections have a "localhost@" prefix as username.

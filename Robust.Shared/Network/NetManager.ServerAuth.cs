@@ -69,12 +69,7 @@ namespace Robust.Shared.Network
                         connection.Disconnect("Connecting to this server requires normal authentication!");
                         return;
                     }
-                    if (!discord && AdditionalAuth == AdditionalAuthModes.DiscordOnly)
-                    {
-                        connection.Disconnect("Connecting to this server requires discord authentication!");
-                        return;
-                    }
-                    if (!canAuth && !discord && AdditionalAuth == AdditionalAuthModes.DiscordOptional)
+                    if (!canAuth && !discord && AdditionalAuth == AdditionalAuthModes.DiscordEnabled)
                     {
                         connection.Disconnect("Connecting to this server requires authentication of any types!");
                         return;
@@ -100,7 +95,7 @@ namespace Robust.Shared.Network
                         PublicKey = needPk ? CryptoPublicKey : Array.Empty<byte>(),
                         VerifyToken = verifyToken,
                         WantHwid = wantHwid,
-                        WantDiscord = Auth == AuthMode.Required && AdditionalAuth is AdditionalAuthModes.DiscordOnly or AdditionalAuthModes.DiscordOptional // Starlight-edit
+                        WantDiscord = Auth == AuthMode.Required && AdditionalAuth == AdditionalAuthModes.DiscordEnabled // Starlight-edit
                     };
 
                     var outMsgEncReq = peer.Peer.CreateMessage();

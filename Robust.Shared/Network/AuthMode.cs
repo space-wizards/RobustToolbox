@@ -41,13 +41,9 @@ namespace Robust.Shared.Network
         /// </summary>
         Disabled = 0,
         /// <summary>
-        /// Only discord auth allowed
+        /// Discord auth enabled
         /// </summary>
-        DiscordOnly = 1,
-        /// <summary>
-        /// Discord auth is optional
-        /// </summary>
-        DiscordOptional = 2,
+        DiscordEnabled = 1,
     }
 
     #endregion

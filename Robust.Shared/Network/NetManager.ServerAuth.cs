@@ -65,14 +65,11 @@ namespace Robust.Shared.Network
                 if (Auth == AuthMode.Required && !isLocal)
                 {
                     // Starlight-start
-                    if ((!canAuth && AdditionalAuth == AdditionalAuthModes.Disabled))
+                    var allowDiscord = AdditionalAuth == AdditionalAuthModes.DiscordEnabled;
+                    var willAuthenticate = canAuth || (discord && allowDiscord);
+                    if (!willAuthenticate)
                     {
-                        connection.Disconnect("Connecting to this server requires normal authentication!");
-                        return;
-                    }
-                    if (!canAuth && !discord && AdditionalAuth == AdditionalAuthModes.DiscordEnabled)
-                    {
-                        connection.Disconnect("Connecting to this server requires authentication of any types!");
+                        connection.Disconnect("This server requires authentication.");
                         return;
                     }
                     // Starlight-end

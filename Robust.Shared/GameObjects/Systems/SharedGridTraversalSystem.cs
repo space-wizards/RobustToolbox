@@ -14,6 +14,7 @@ namespace Robust.Shared.GameObjects;
 public sealed partial class SharedGridTraversalSystem : EntitySystem
 {
     [Dependency] private IMapManagerInternal _mapManager = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private IGameTiming _timing = default!;
 
@@ -89,8 +90,8 @@ public sealed partial class SharedGridTraversalSystem : EntitySystem
     public void CheckTraversal(EntityUid entity, TransformComponent xform, EntityUid map)
     {
         // TODO: This should probably check center of mass.
-        DebugTools.Assert(!HasComp<MapGridComponent>(entity));
-        DebugTools.Assert(!HasComp<MapComponent>(entity));
+        DebugTools.Assert(!_mapSystem.IsGrid(entity, xform));
+        DebugTools.Assert(!_mapSystem.IsMap(entity, xform));
 
         var mapPos = xform.ParentUid == xform.MapUid
             ? xform.LocalPosition

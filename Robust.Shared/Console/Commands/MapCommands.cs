@@ -86,8 +86,10 @@ sealed partial class RemoveMapCommand : LocalizedEntityCommands
     }
 }
 
-sealed class RemoveGridCommand : LocalizedEntityCommands
+sealed partial class RemoveGridCommand : LocalizedEntityCommands
 {
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+
     public override string Command => "rmgrid";
     public override bool RequireServerOrSingleplayer => true;
 
@@ -101,7 +103,7 @@ sealed class RemoveGridCommand : LocalizedEntityCommands
 
         var gridIdNet = NetEntity.Parse(args[0]);
 
-        if (!EntityManager.TryGetEntity(gridIdNet, out var gridId) || !EntityManager.HasComponent<MapGridComponent>(gridId))
+        if (!EntityManager.TryGetEntity(gridIdNet, out var gridId) || !_mapSystem.IsGrid(gridId.Value))
         {
             shell.WriteError($"Grid {gridId} does not exist.");
             return;

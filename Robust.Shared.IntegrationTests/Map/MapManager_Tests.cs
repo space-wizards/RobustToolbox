@@ -70,6 +70,57 @@ namespace Robust.UnitTesting.Shared.Map
         }
 
         [Test]
+        public void MapEntity_HasMapFlag()
+        {
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapSys = entMan.System<SharedMapSystem>();
+
+            var entity = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
+            var xform = entMan.GetComponent<TransformComponent>(entity);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(xform.IsMap, Is.False);
+                Assert.That(xform.IsGrid, Is.False);
+                Assert.That(mapSys.IsMap(entity, xform), Is.False);
+                Assert.That(mapSys.IsGrid(entity, xform), Is.False);
+            });
+
+            var map = mapSys.CreateMap();
+            var mapXform = entMan.GetComponent<TransformComponent>(map);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(mapXform.IsMap, Is.True);
+                Assert.That(mapXform.IsGrid, Is.False);
+                Assert.That(mapSys.IsMap(map, mapXform), Is.True);
+                Assert.That(mapSys.IsGrid(map, mapXform), Is.False);
+            });
+        }
+
+        [Test]
+        public void GridEntity_HasGridFlag()
+        {
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
+            var mapSys = entMan.System<SharedMapSystem>();
+
+            var map = sim.CreateMap();
+            var grid = mapMan.CreateGridEntity(map.MapId);
+            var gridXform = entMan.GetComponent<TransformComponent>(grid);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(gridXform.IsMap, Is.False);
+                Assert.That(gridXform.IsGrid, Is.True);
+                Assert.That(mapSys.IsMap(grid.Owner, gridXform), Is.False);
+                Assert.That(mapSys.IsGrid(grid.Owner, gridXform), Is.True);
+            });
+        }
+
+        [Test]
         public void Restart_MapEntity_IsRemoved()
         {
             var sim = SimulationFactory();

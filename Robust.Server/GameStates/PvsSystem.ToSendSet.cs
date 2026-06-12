@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -17,9 +20,70 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void AddPvsChunks(PvsSession pvsSession)
     {
+        AddVisibleGridRoots(pvsSession);
+
         foreach (var (chunk, distance) in CollectionsMarshal.AsSpan(pvsSession.Chunks))
         {
             AddPvsChunk(chunk, distance, pvsSession);
+        }
+    }
+
+    private void AddVisibleGridRoots(PvsSession session)
+    {
+        var fromTick = session.FromTick;
+        // TODO: ValueList when IList done
+        var grids = new List<Entity<MapGridComponent>>();
+
+        // No overrides so need to do this manually.
+        if (!CullingEnabled || session.DisableCulling)
+        {
+            var mapQuery = AllEntityQuery<MapComponent, MetaDataComponent>();
+            while (mapQuery.MoveNext(out var uid, out _, out var mapMeta))
+            {
+                AddEntity(session, (uid, mapMeta), fromTick);
+            }
+
+            var gridQuery = AllEntityQuery<MapGridComponent, TransformComponent>();
+            while (gridQuery.MoveNext(out var uid, out _, out var xform))
+            {
+                if (!session.VisibleGridRoots.Add(uid) ||
+                    !TryComp(uid, out MetaDataComponent? gridMeta))
+                {
+                    continue;
+                }
+
+                AddEntity(session, (uid, gridMeta), fromTick);
+            }
+
+            return;
+        }
+
+        // PVS for grids in the wide-range.
+        foreach (var viewer in session.Viewers)
+        {
+            var (viewPos, range, mapUid) = CalcGridViewBounds(viewer);
+            if (mapUid is not { } map || !TryComp(map, out MetaDataComponent? mapMeta))
+                continue;
+
+            var rangeVec = new Vector2(range, range);
+            var box = new Box2(viewPos - rangeVec, viewPos + rangeVec);
+            grids.Clear();
+            _mapManager.FindGridsIntersecting(map, box, ref grids, approx: true, includeMap: false);
+
+            foreach (var grid in grids)
+            {
+                // Add visible before doing the addent check just to make sure it passed gridinrange.
+                if (!session.VisibleGridRoots.Add(grid.Owner) ||
+                    !TryComp(grid.Owner, out MetaDataComponent? gridMeta))
+                {
+                    continue;
+                }
+
+                if (!AddEntity(session, (map, mapMeta), fromTick))
+                    continue;
+
+                AddEntity(session, (grid.Owner, gridMeta), fromTick);
+            }
         }
     }
 
@@ -31,17 +95,21 @@ internal sealed partial class PvsSystem
         // Each root nodes should simply be a map or a grid entity.
         DebugTools.Assert(Exists(chunk.Root), $"Chunk root does not exist!");
         DebugTools.Assert(Exists(chunk.Map), $"Map does not exist!.");
-        DebugTools.Assert(HasComp<MapComponent>(chunk.Root) || HasComp<MapGridComponent>(chunk.Root));
+        DebugTools.Assert(_mapSystem.IsMap(chunk.Root) || _mapSystem.IsGrid(chunk.Root));
 
         var fromTick = session.FromTick;
         var mask = session.VisMask;
+        var isGrid = chunk.Map.Owner != chunk.Root.Owner;
+
+        if (isGrid && !IsGridInRange(session, chunk.Root.Owner))
+            return;
 
         // Send the map.
         if (!AddEntity(session, chunk.Map, fromTick))
             return;
 
         // Send the grid
-        if (chunk.Map.Owner != chunk.Root.Owner && !AddEntity(session, chunk.Root, fromTick))
+        if (isGrid && !AddEntity(session, chunk.Root, fromTick))
             return;
 
         // Get the number of entities to send (i.e., basic LOD restrictions)
@@ -61,6 +129,14 @@ internal sealed partial class PvsSystem
             if ((mask & meta.VisMask) == meta.VisMask)
                 AddEntity(session, ref ent, ref meta, fromTick);
         }
+    }
+
+    private bool IsGridInRange(PvsSession session, EntityUid uid)
+    {
+        if (!CullingEnabled || session.DisableCulling)
+            return true;
+
+        return session.VisibleGridRoots.Contains(uid);
     }
 
     /// <summary>

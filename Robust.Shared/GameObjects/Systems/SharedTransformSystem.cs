@@ -177,7 +177,7 @@ namespace Robust.Shared.GameObjects
             if (mapId == parentUid)
                 return coordinates;
 
-            DebugTools.Assert(!HasComp<MapGridComponent>(parentUid) && !HasComp<MapComponent>(parentUid));
+            DebugTools.Assert(!_map.IsGrid(parentUid, parentXform) && !_map.IsMap(parentUid, parentXform));
 
             // Not parented to grid so convert their pos back to the grid.
             var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(parentXform, XformQuery));
@@ -204,7 +204,7 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return (xform.Coordinates, GetWorldRotation(xform, XformQuery));
 
-            DebugTools.Assert(!HasComp<MapComponent>(uid) && !HasComp<MapComponent>(uid));
+            DebugTools.Assert(!_map.IsMap(uid, xform) && !_map.IsGrid(uid, xform));
 
             var (pos, worldRot) = GetWorldPositionRotation(xform, XformQuery);
 

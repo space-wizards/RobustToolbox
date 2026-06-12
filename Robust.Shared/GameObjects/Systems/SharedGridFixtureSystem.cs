@@ -49,7 +49,7 @@ namespace Robust.Shared.GameObjects
 
         protected virtual void OnGridInit(GridInitializeEvent ev)
         {
-            if (HasComp<MapComponent>(ev.EntityUid))
+            if (_map.IsMap(ev.EntityUid))
                 return;
 
             // This will also check for grid splits if applicable.

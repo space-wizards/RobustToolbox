@@ -141,6 +141,8 @@ namespace Robust.Client.GameStates
         private bool _resettingPredictedEntities;
         private readonly List<EntityUid> _brokenEnts = new();
 
+        private SharedMapSystem _maps = default!;
+
         /// <inheritdoc />
         public void Initialize()
         {
@@ -191,6 +193,7 @@ namespace Robust.Client.GameStates
                 throw new InvalidOperationException("TransformComponent does not have a NetId.");
 
             _xformCompNetId = xformId.Value;
+            _maps = _entitySystemManager.GetEntitySystem<SharedMapSystem>();
         }
 
         private void OnComponentAdded(AddedComponentEventArgs args)
@@ -1020,6 +1023,11 @@ namespace Robust.Client.GameStates
             // broadphase update. However, if this entity is parented to some other entity also re-entering PVS,
             // we only need to update it's parent (as it recursively updates children anyways).
             var xform = _entities.TransformQuery.Comp(data.Uid);
+            if (_maps.IsMap(data.Uid, xform) || _maps.IsGrid(data.Uid, xform))
+            {
+                return;
+            }
+
             DebugTools.Assert(xform.Broadphase == BroadphaseData.Invalid);
             xform.Broadphase = null;
             if (!_toApply.TryGetValue(xform.ParentUid, out var parent) || !parent.EnteringPvs)
@@ -1297,6 +1305,8 @@ namespace Robust.Client.GameStates
             ContainerSystem containerSys,
             EntityLookupSystem lookupSys)
         {
+            var map = _entitySystemManager.GetEntitySystem<SharedMapSystem>();
+
             foreach (var netEntity in entities)
             {
                 if (!_entities.TryGetEntityData(netEntity, out var ent, out var meta))
@@ -1323,8 +1333,11 @@ namespace Robust.Client.GameStates
                 // I.e., modifying the metadata flag & pausing the entity should probably happen outside of this block.
                 if (xform.ParentUid.IsValid())
                 {
-                    lookupSys.RemoveFromEntityTree(ent.Value, xform);
-                    xform.Broadphase = BroadphaseData.Invalid;
+                    if (!map.IsMap(ent.Value, xform) && !map.IsGrid(ent.Value, xform))
+                    {
+                        lookupSys.RemoveFromEntityTree(ent.Value, xform);
+                        xform.Broadphase = BroadphaseData.Invalid;
+                    }
 
                     // In some cursed scenarios an entity inside of a container can leave PVS without the container itself leaving PVS.
                     // In those situations, we need to add the entity back to the list of expected entities after detaching.

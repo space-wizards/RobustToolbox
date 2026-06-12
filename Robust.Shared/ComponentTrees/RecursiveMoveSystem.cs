@@ -1,7 +1,5 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ComponentTrees;
@@ -20,8 +18,6 @@ internal sealed partial class RecursiveMoveSystem : EntitySystem
 
     public event TreeRecursiveMoveEventHandler? OnTreeRecursiveMove;
 
-    private EntityQuery<MapComponent> _mapQuery;
-    private EntityQuery<MapGridComponent> _gridQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
     private bool _subscribed = false;
@@ -29,8 +25,6 @@ internal sealed partial class RecursiveMoveSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-        _gridQuery = GetEntityQuery<MapGridComponent>();
-        _mapQuery = GetEntityQuery<MapComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
     }
 
@@ -53,11 +47,8 @@ internal sealed partial class RecursiveMoveSystem : EntitySystem
 
     private void AnythingMoved(ref MoveEvent args)
     {
-        if (args.Component.MapUid == args.Sender || args.Component.GridUid == args.Sender)
+        if (args.Component.IsMap || args.Component.IsGrid)
             return;
-
-        DebugTools.Assert(!_mapQuery.HasComp(args.Sender));
-        DebugTools.Assert(!_gridQuery.HasComp(args.Sender));
 
         AnythingMovedSubHandler(args.Sender, args.Component);
     }

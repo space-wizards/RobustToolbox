@@ -80,6 +80,6 @@ internal partial class MapManager
     /// <inheritdoc />
     public bool IsMap(EntityUid uid)
     {
-        return EntityManager.HasComponent<MapComponent>(uid);
+        return _mapSystem.IsMap(uid);
     }
 }

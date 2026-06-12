@@ -267,7 +267,7 @@ public abstract partial class SharedTransformSystem
         InitializeGridUid(uid, component);
         component.MatricesDirty = true;
 
-        DebugTools.Assert(component._gridUid == uid || !HasComp<MapGridComponent>(uid));
+        DebugTools.Assert(component._gridUid == uid || !_map.IsGrid(uid, component));
         if (!component._anchored)
             return;
 
@@ -373,7 +373,7 @@ public abstract partial class SharedTransformSystem
         if (!ent.Comp1._gridInitialized || ent.Comp1._gridUid == gridId || ent.Comp1.GridUid == ent.Owner)
             return;
 
-        DebugTools.Assert(!HasComp<MapGridComponent>(ent.Owner) || gridId == ent.Owner);
+        DebugTools.Assert(!_map.IsGrid(ent.Owner, ent.Comp1) || gridId == ent.Owner);
 
         // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
         _metaQuery.ResolveInternal(ent.Owner, ref ent.Comp2);
@@ -598,6 +598,9 @@ public abstract partial class SharedTransformSystem
 
                 if (!xform._gridInitialized)
                     InitializeGridUid(uid, xform);
+                // Need to make sure gridid is set on grid state handling before MoveEvent goes out.
+                else if (_map.IsGrid(uid, xform))
+                    SetGridId(entity!, uid);
                 else
                 {
                     if (!newParent._gridInitialized)
@@ -1587,8 +1590,9 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        // Before making any changes to physics or transforms, remove from the current broadphase
-        _lookup.RemoveFromEntityTree(uid, xform);
+        // Grids are never stored in lookup so ignore them.
+        if (!_map.IsMap(uid, xform) && !_map.IsGrid(uid, xform))
+            _lookup.RemoveFromEntityTree(uid, xform);
 
         // Stop any active lerps
         xform.NextPosition = null;

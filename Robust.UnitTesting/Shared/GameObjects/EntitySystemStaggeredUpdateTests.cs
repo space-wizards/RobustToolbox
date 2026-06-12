@@ -28,8 +28,8 @@ internal sealed partial class NegativeIntervalStaggeredUpdateComponent : Compone
     public static TimeSpan UpdateInterval => TimeSpan.FromTicks(-1);
 }
 
-[TestFixture, Parallelizable, TestOf(typeof(EntityManager))]
-public sealed class EntityManagerStaggeredUpdateUnit
+[TestFixture, Parallelizable, TestOf(typeof(EntitySystem))]
+public sealed class EntitySystemStaggeredUpdateUnit
 {
     private const int TickRate = 10;
     private static MapInitEvent _mapInitEventInstance = new();

@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added a DictionaryEquals extension method to check equality between two dictionaries.
+* Added `IStaggeredUpdate` and `EntitySystem.GetStaggeredUpdateTracker<TComp>()` for spreading component updates over time.
 
 ### Bugfixes
 

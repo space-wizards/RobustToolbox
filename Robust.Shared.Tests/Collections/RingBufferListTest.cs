@@ -40,6 +40,41 @@ internal sealed class RingBufferListTest
     }
 
     [Test]
+    public void TestTryPeekFrontEmpty()
+    {
+        var list = new RingBufferList<int>();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(list.TryPeekFront(out var value), Is.False);
+            Assert.That(value, Is.Default);
+        }
+    }
+
+    [Test]
+    public void TestTryPeekFrontAfterWrap()
+    {
+        var list = new RingBufferList<int>(6)
+        {
+            1,
+            2,
+            3
+        };
+        list.RemoveAt(0);
+        list.RemoveAt(0);
+        list.Add(4);
+        list.Add(5);
+        list.Add(6);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(list.TryPeekFront(out var value), Is.True);
+            Assert.That(value, Is.EqualTo(3));
+            Assert.That(list, Is.EquivalentTo([3, 4, 5, 6]));
+        }
+    }
+
+    [Test]
     public void TestMiddleRemoveAtScenario1()
     {
         var list = new RingBufferList<int>(6);

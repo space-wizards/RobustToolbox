@@ -1799,10 +1799,10 @@ namespace Robust.Shared.GameObjects
     /// <seealso cref="M:Robust.Shared.GameObjects.EntityManager.GetEntityQuery``1">EntityManager.GetEntityQuery()</seealso>
     public readonly struct EntityQuery<TComp1> where TComp1 : IComponent
     {
-        private readonly EntityManager _entMan;
+        private readonly EntityManager? _entMan;
         private readonly Dictionary<EntityUid, IComponent> _traitDict;
 
-        internal EntityQuery(EntityManager entMan, Dictionary<EntityUid, IComponent> traitDict)
+        internal EntityQuery(EntityManager? entMan, Dictionary<EntityUid, IComponent> traitDict)
         {
             _entMan = entMan;
             _traitDict = traitDict;
@@ -1957,7 +1957,7 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-                _entMan.ResolveSawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {_entMan.ToPrettyString(uid)}!\n{Environment.StackTrace}");
+                _entMan?.ResolveSawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {_entMan.ToPrettyString(uid)}!\n{Environment.StackTrace}");
 
             return false;
         }
@@ -2076,7 +2076,7 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-                _entMan.ResolveSawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {_entMan.ToPrettyString(uid)}!\n{new StackTrace(1, true)}");
+                _entMan?.ResolveSawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {_entMan.ToPrettyString(uid)}!\n{new StackTrace(1, true)}");
 
             return false;
         }

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `IStaggeredUpdate` and `IEntityManager.GetStaggeredUpdateTracker<TComp>()` for spreading component updates over time.
 
 ### Bugfixes
 

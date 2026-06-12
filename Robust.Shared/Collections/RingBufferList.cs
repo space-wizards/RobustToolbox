@@ -86,6 +86,18 @@ internal sealed class RingBufferList<T> : IList<T>
         return true;
     }
 
+    public bool TryPeekFront(out T value)
+    {
+        if (Count == 0)
+        {
+            value = default!;
+            return false;
+        }
+
+        value = _items[_read];
+        return true;
+    }
+
     public int Count
     {
         get

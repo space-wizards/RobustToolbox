@@ -606,5 +606,19 @@ namespace Robust.Shared.GameObjects
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.
         /// </summary>
         void CullRemovedComponents();
+
+        /// <summary>
+        ///     Creates a tracker for updating entities with <typeparamref name="TComp"/> staggered over time.
+        /// </summary>
+        /// <remarks>
+        ///     Entities are added to the tracker when their component receives <see cref="MapInitEvent"/>.
+        ///     Each tracked entity is returned by the tracker at <see cref="IStaggeredUpdate.UpdateInterval"/>
+        ///     intervals, with the first update randomly offset to spread work across ticks.
+        /// </remarks>
+        /// <param name="mapInit">Optional handler to invoke before the component is added to the tracker.</param>
+        /// <typeparam name="TComp">The component type to track.</typeparam>
+        /// <returns>A tracker that enumerates entities due for their staggered update.</returns>
+        StaggeredUpdateTracker<TComp> GetStaggeredUpdateTracker<TComp>(
+            EntityEventRefHandler<TComp, MapInitEvent>? mapInit) where TComp : IComponent, IStaggeredUpdate;
     }
 }

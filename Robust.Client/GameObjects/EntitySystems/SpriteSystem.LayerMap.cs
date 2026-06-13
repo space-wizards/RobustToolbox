@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using static Robust.Client.GameObjects.SpriteComponent;
@@ -192,6 +193,17 @@ public sealed partial class SpriteSystem
             return -1;
 
         return sprite.Comp.LayerMap[key];
+    }
+
+    public bool LayerMapKeys(Entity<SpriteComponent?> sprite, [NotNullWhen(true)] out List<Object>? keys)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+        {
+            keys = null;
+            return false;
+        }
+        keys = new List<Object>(sprite.Comp.LayerMap.Keys);
+        return true;
     }
 
     public bool LayerExists(Entity<SpriteComponent?> sprite, string key)

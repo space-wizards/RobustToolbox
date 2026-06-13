@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Add Pure attributes to the EntityLookup bounds methods
 
 ### Internal
 

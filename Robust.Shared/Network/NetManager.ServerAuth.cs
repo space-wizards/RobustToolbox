@@ -172,7 +172,17 @@ namespace Robust.Shared.Network
 
                     if (joinedRespJson is not {IsValid: true})
                     {
-                        connection.Disconnect("Failed to validate login");
+                        // Starlight start: structured disconnect carries a help-page URL so the
+                        // launcher shows an "Open in browser" button next to the reason text.
+                        const string authHelpUrl = "https://docs.starlight.network/s/3e09297d-1b39-4fc3-8cdc-2e23ff10aa8f/doc/launcher-configuration-ipbp6Rx014";
+                        var authFail = new NetDisconnectMessage(
+                            "Authorization error.\n" +
+                            "This server uses the official WizDen authorization.\n" +
+                            "Please go to our wiki page for detailed options on how to resolve this issue.\n" +
+                            authHelpUrl);
+                        authFail.Values["url"] = authHelpUrl;
+                        connection.Disconnect(authFail.Encode());
+                        // Starlight end
                         return;
                     }
 

@@ -1489,6 +1489,7 @@ namespace Robust.Shared
             CVarDef.Create("interface.resolutionAutoScaleEnabled",true , CVar.CLIENTONLY | CVar.ARCHIVE);
 
 
+
         /*
          * DISCORD
          */

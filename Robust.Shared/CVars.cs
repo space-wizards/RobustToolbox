@@ -1488,37 +1488,6 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ResAutoScaleEnabled =
             CVarDef.Create("interface.resolutionAutoScaleEnabled",true , CVar.CLIENTONLY | CVar.ARCHIVE);
 
-        /// <summary>
-        /// Pairs of characters treated as equivalent when searching user-facing text, such as entity
-        /// and tile names in the spawn menus. This lets a search match regardless of which
-        /// interchangeable letter the player typed.
-        /// </summary>
-        /// <remarks>
-        /// The value is a comma-separated list of two-character pairs. The first character of each pair
-        /// is folded to the second before comparing. Both case variants are registered automatically
-        /// (e.g. "ёе" also covers "ЁЕ"). Default pairs cover common cases across several languages:
-        /// Russian ё/е, German umlauts (ü/u, ö/o, ä/a), Scandinavian letters (å/a, ø/o, æ/a),
-        /// Spanish ñ/n, French accented vowels, Turkish dotless-i, and the cedilla ç/c.
-        /// </remarks>
-        public static readonly CVarDef<string> SearchCharEquivalences =
-            CVarDef.Create("interface.search_char_equivalences",
-                // Russian
-                "ёе," +
-                // German
-                "üu,öo,äa," +
-                // Scandinavian
-                "åa,øo,æa," +
-                // Spanish / Portuguese
-                "ñn," +
-                // French accented vowels
-                "ée,èe,êe,ëe,àa,âa,ùu,ûu,îi,ïi,ôo," +
-                // Cedilla
-                "çc," +
-                // Turkish dotless-i
-                "ıi",
-                CVar.CLIENTONLY | CVar.ARCHIVE);
-
-
 
         /*
          * DISCORD

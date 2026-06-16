@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Added several test helpers to avoid boilerplate in integration tests around client connection / disconnection.
 
 
 ## 277.0.0

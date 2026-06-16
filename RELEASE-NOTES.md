@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 277.1.0
+
+### New features
+
 * Added `IsHardCollidable` to `SharedPhysicsSystem`.
 * Added `GetFilledTileCount` to `SharedMapSystem`.
 * Changed the cursors on interactive controls.

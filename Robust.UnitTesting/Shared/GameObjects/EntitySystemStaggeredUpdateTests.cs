@@ -14,18 +14,21 @@ namespace Robust.UnitTesting.Shared.GameObjects;
 internal sealed partial class StaggeredUpdateComponent : Component, IStaggeredUpdate
 {
     public static TimeSpan UpdateInterval => TimeSpan.FromSeconds(1);
+    public static TimeSpan MaxInitialDelay => UpdateInterval;
 }
 
 [Reflect(false)]
 internal sealed partial class ZeroIntervalStaggeredUpdateComponent : Component, IStaggeredUpdate
 {
     public static TimeSpan UpdateInterval => TimeSpan.Zero;
+    public static TimeSpan MaxInitialDelay => UpdateInterval;
 }
 
 [Reflect(false)]
 internal sealed partial class NegativeIntervalStaggeredUpdateComponent : Component, IStaggeredUpdate
 {
     public static TimeSpan UpdateInterval => TimeSpan.FromTicks(-1);
+    public static TimeSpan MaxInitialDelay => UpdateInterval;
 }
 
 [TestFixture, Parallelizable, TestOf(typeof(EntitySystem))]

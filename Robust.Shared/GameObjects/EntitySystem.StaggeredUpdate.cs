@@ -36,6 +36,7 @@ public partial class EntitySystem
 public interface IStaggeredUpdate
 {
     static abstract TimeSpan UpdateInterval { get; }
+    static abstract TimeSpan MaxInitialDelay { get; }
 }
 
 public sealed class StaggeredUpdateTracker<TComp>
@@ -49,7 +50,6 @@ public sealed class StaggeredUpdateTracker<TComp>
     private readonly EntityQuery<MetaDataComponent> _metaQuery;
     private readonly IRobustRandom _rng;
     private readonly IGameTiming _timing;
-    private readonly TimeSpan _updateInterval;
     private readonly EntityEventRefHandler<TComp, MapInitEvent>? _mapInit;
 
     internal StaggeredUpdateTracker(
@@ -68,7 +68,6 @@ public sealed class StaggeredUpdateTracker<TComp>
         }
 
         _mapInit = mapInit;
-        _updateInterval = interval;
         _compQuery = compQuery;
         _metaQuery = metaQuery;
         _rng = rng;
@@ -83,7 +82,7 @@ public sealed class StaggeredUpdateTracker<TComp>
 
         // randomize an offset from the current tick, up to interval
         // we start from current tick + 1 because updates for the current tick may already have been processed
-        var when = _timing.CurTime + _timing.TickPeriod + _rng.Next(TimeSpan.Zero, _updateInterval);
+        var when = _timing.CurTime + _timing.TickPeriod + _rng.Next(TimeSpan.Zero, TComp.MaxInitialDelay);
         _insertQueue.Enqueue(ent.Owner, when);
     }
 
@@ -99,7 +98,7 @@ public sealed class StaggeredUpdateTracker<TComp>
         private readonly HashSet<EntityUid> _tracked = tracker._tracked;
         private readonly EntityQuery<TComp> _compQuery = tracker._compQuery;
         private readonly EntityQuery<MetaDataComponent> _metaQuery = tracker._metaQuery;
-        private readonly TimeSpan _updateInterval = tracker._updateInterval;
+        private readonly TimeSpan _updateInterval = TComp.UpdateInterval;
         private readonly TimeSpan _until = tracker._timing.CurTime;
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp? comp)

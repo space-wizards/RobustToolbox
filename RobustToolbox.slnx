@@ -7,11 +7,8 @@
   </Configurations>
   <Folder Name="/.github/" />
   <Folder Name="/.github/workflows/">
-    <File Path=".github/workflows/benchmarks.yml" />
     <File Path=".github/workflows/build-all-configurations.yml" />
-    <File Path=".github/workflows/build-docfx.yml" />
     <File Path=".github/workflows/build-test.yml" />
-    <File Path=".github/workflows/codeql-analysis.yml" />
     <File Path=".github/workflows/publish-client.yml" />
     <File Path=".github/workflows/test-content.yml" />
   </Folder>

@@ -195,17 +195,11 @@ public sealed partial class SpriteSystem
         return sprite.Comp.LayerMap[key];
     }
 
-    public bool LayerMapKeys(Entity<SpriteComponent?> sprite, [NotNullWhen(true)] out object[] keys)
+    public object[] LayerMapKeys(Entity<SpriteComponent> sprite)
     {
-        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
-        {
-            keys = new object[0];
-            return false;
-        }
-
-        keys = new object[sprite.Comp.LayerMap.Keys.Count];
+        var keys = new object[sprite.Comp.LayerMap.Keys.Count];
         sprite.Comp.LayerMap.Keys.CopyTo(keys, 0);
-        return true;
+        return keys;
     }
 
     public bool LayerExists(Entity<SpriteComponent?> sprite, string key)

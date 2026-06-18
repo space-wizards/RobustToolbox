@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
@@ -173,6 +174,7 @@ namespace Robust.Shared.Prototypes
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : IComponent, new()
             => TryGetComponent(out component, IoCManager.Resolve<IComponentFactory>());
 
+        [Pure]
         [Obsolete("TryComp is shorter, use it instead")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component, IComponentFactory factory) where T : IComponent, new()
@@ -190,6 +192,7 @@ namespace Robust.Shared.Prototypes
         /// Tries to get and cast a component from this prototype with <typeparamref name="T"/>.
         /// Returns false if the component is missing or is not assignable to <typeparamref name="T"/>.
         /// </summary>
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryComp<T>(out T? component, IComponentFactory factory) where T : IComponent, new()
             => TryComp(factory.CompName<T>(), out component);
@@ -198,6 +201,7 @@ namespace Robust.Shared.Prototypes
         /// Tries to get and cast a component from this prototype with a <see cref="CompName"/> associated with it.
         /// Returns false if the component is missing or is not assignable to <typeparamref name="T"/>.
         /// </summary>
+        [Pure]
         public bool TryComp<T>(CompName name, [NotNullWhen(true)] out T? component) where T : IComponent, new()
         {
             if (!Components.TryGetValue(name.Name, out var componentUnCast))
@@ -220,6 +224,7 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// Returns true if this prototype contains a <typeparamref name="T"/>.
         /// </summary>
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComp<T>(IComponentFactory factory) where T : IComponent, new()
             => HasComp(factory.CompName<T>());
@@ -230,6 +235,7 @@ namespace Robust.Shared.Prototypes
         /// This is not caught by a debug assert, so only use it with types from a
         /// component registry, <c>typeof(SomeComponent)</c>, etc.
         /// </summary>
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComp(Type type, IComponentFactory factory)
             => HasComp(factory.CompName(type));
@@ -237,6 +243,7 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// Returns true if this prototype contains a component with a given <see cref="CompName"/>.
         /// </summary>
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComp(CompName name)
             => Components.ContainsKey(name.Name);

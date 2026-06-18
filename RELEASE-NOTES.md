@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Console commands can now be "hidden" by prefixing them with `_`.
 
 ### Bugfixes
 

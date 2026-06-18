@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix empty `ContactEnumerator` enumeration throwing a NullReferenceException
 
 ### Other
 

@@ -19,6 +19,9 @@
     <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="OpenToolkit.Graphics" PrivateAssets="compile" />
     <PackageReference Include="OpenTK.Audio.OpenAL" PrivateAssets="compile" />
+    <PackageReference Include="Concentus" PrivateAssets="compile" />
+    <PackageReference Include="Whisper.net" PrivateAssets="compile" />
+    <PackageReference Include="Whisper.net.Runtime" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.SharpFont" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.Sdl" PrivateAssets="compile" />
     <PackageReference Include="Robust.Natives" />

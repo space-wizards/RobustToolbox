@@ -396,6 +396,20 @@ internal partial class AudioManager
         return new OpusDecoderWrapper(sampleRate, channels);
     }
 
+    /// <inheritdoc/>
+    public ISpeechTranscriber? CreateSpeechTranscriber(string modelPath, string language = "auto")
+    {
+        try
+        {
+            return new WhisperSpeechTranscriber(modelPath, language);
+        }
+        catch (Exception e)
+        {
+            OpenALSawmill.Error("Failed to create speech transcriber from model '{0}': {1}", modelPath, e);
+            return null;
+        }
+    }
+
     private void ApplyDefaultParams(IAudioSource source)
     {
         source.MaxDistance = AudioParams.Default.MaxDistance;

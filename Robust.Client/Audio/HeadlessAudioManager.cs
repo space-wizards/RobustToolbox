@@ -95,6 +95,12 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     }
 
     /// <inheritdoc />
+    public ISpeechTranscriber? CreateSpeechTranscriber(string modelPath, string language = "auto")
+    {
+        return null;
+    }
+
+    /// <inheritdoc />
     public void SetAttenuation(Attenuation attenuation)
     {
     }

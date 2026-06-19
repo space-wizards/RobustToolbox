@@ -60,4 +60,12 @@ public interface IAudioManager
     /// Creates an Opus voice decoder for the given format. Caller must dispose it.
     /// </summary>
     IOpusDecoder CreateOpusDecoder(int sampleRate, int channels);
+
+    /// <summary>
+    /// Creates an offline speech-to-text transcriber from a local model file. Caller must dispose it.
+    /// </summary>
+    /// <param name="modelPath">Path to a Whisper ggml model file.</param>
+    /// <param name="language">Language code to transcribe (e.g. "en"), or "auto" to auto-detect.</param>
+    /// <returns>The transcriber, or null if the model could not be loaded.</returns>
+    ISpeechTranscriber? CreateSpeechTranscriber(string modelPath, string language = "auto");
 }

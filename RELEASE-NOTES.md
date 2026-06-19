@@ -44,6 +44,7 @@ END TEMPLATE-->
 * Added `IAudioManager.GetAudioOutputDevices()` to enumerate audio output devices.
 * Added an Opus codec to `IAudioManager`: `CreateOpusEncoder()` / `CreateOpusDecoder()` return `IOpusEncoder` / `IOpusDecoder` backed by the pure-managed Concentus library. These let sandboxed content do voice-style audio compression without referencing the codec directly.
 * `IBufferedAudioSource` is now public and `IAudioManager.CreateBufferedAudioSource()` is exposed, allowing PCM frames to be queued into a streaming source at runtime (e.g. for real-time/voice audio).
+* Added offline speech-to-text via `IAudioManager.CreateSpeechTranscriber()`, returning an `ISpeechTranscriber` that transcribes 16 kHz mono PCM using a local Whisper model (backed by Whisper.net). Lets sandboxed content transcribe audio without referencing the native model library directly.
 
 ### Bugfixes
 

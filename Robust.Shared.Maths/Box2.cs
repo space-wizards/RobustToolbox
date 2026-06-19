@@ -158,7 +158,7 @@ namespace Robust.Shared.Maths
         public readonly float Height
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _bottom - _top;
+            get => _top - _bottom;
         }
 
         public readonly Vector2 Size

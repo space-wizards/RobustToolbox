@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Threading;
@@ -315,7 +316,7 @@ internal partial class AudioManager
     }
 
     /// <inheritdoc/>
-    IBufferedAudioSource? IAudioInternal.CreateBufferedAudioSource(int buffers, bool floatAudio)
+    public IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio)
     {
         var source = AL.GenSource();
 
@@ -331,6 +332,68 @@ internal partial class AudioManager
         _bufferedAudioSources.Add(source, new WeakReference<BufferedAudioSource>(audioSource));
         ApplyDefaultParams(audioSource);
         return audioSource;
+    }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<string> GetAudioInputDevices()
+    {
+        try
+        {
+            return new List<string>(ALC.GetStringList(GetEnumerationStringList.CaptureDeviceSpecifier));
+        }
+        catch (Exception e)
+        {
+            OpenALSawmill.Warning("Failed to enumerate audio capture devices: {0}", e);
+            return Array.Empty<string>();
+        }
+    }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<string> GetAudioOutputDevices()
+    {
+        try
+        {
+            return new List<string>(ALC.GetStringList(GetEnumerationStringList.DeviceSpecifier));
+        }
+        catch (Exception e)
+        {
+            OpenALSawmill.Warning("Failed to enumerate audio output devices: {0}", e);
+            return Array.Empty<string>();
+        }
+    }
+
+    /// <inheritdoc/>
+    public IAudioInputDevice? OpenAudioInput(string? deviceName, int sampleRate, int internalBufferSamples = 0)
+    {
+        // Default the ring buffer to roughly one second of audio.
+        if (internalBufferSamples <= 0)
+            internalBufferSamples = sampleRate;
+
+        var device = ALC.CaptureOpenDevice(
+            string.IsNullOrEmpty(deviceName) ? null : deviceName,
+            sampleRate,
+            ALFormat.Mono16,
+            internalBufferSamples);
+
+        if (device == ALCaptureDevice.Null)
+        {
+            OpenALSawmill.Error("Failed to open audio capture device '{0}'", deviceName ?? "default");
+            return null;
+        }
+
+        return new OpenAlAudioInput(this, device, sampleRate);
+    }
+
+    /// <inheritdoc/>
+    public IOpusEncoder CreateOpusEncoder(int sampleRate, int channels)
+    {
+        return new OpusEncoderWrapper(sampleRate, channels);
+    }
+
+    /// <inheritdoc/>
+    public IOpusDecoder CreateOpusDecoder(int sampleRate, int channels)
+    {
+        return new OpusDecoderWrapper(sampleRate, channels);
     }
 
     private void ApplyDefaultParams(IAudioSource source)

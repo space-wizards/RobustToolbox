@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using Robust.Shared.Audio;
@@ -60,6 +61,37 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     /// <inheritdoc />
     public void SetMasterGain(float newGain)
     {
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyList<string> GetAudioInputDevices()
+    {
+        return Array.Empty<string>();
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyList<string> GetAudioOutputDevices()
+    {
+        return Array.Empty<string>();
+    }
+
+    /// <inheritdoc />
+    public IOpusEncoder CreateOpusEncoder(int sampleRate, int channels)
+    {
+        // The codec is pure-managed and works without an audio device.
+        return new OpusEncoderWrapper(sampleRate, channels);
+    }
+
+    /// <inheritdoc />
+    public IOpusDecoder CreateOpusDecoder(int sampleRate, int channels)
+    {
+        return new OpusDecoderWrapper(sampleRate, channels);
+    }
+
+    /// <inheritdoc />
+    public IAudioInputDevice? OpenAudioInput(string? deviceName, int sampleRate, int internalBufferSamples = 0)
+    {
+        return null;
     }
 
     /// <inheritdoc />

@@ -40,6 +40,10 @@ END TEMPLATE-->
 ### New features
 
 * Console commands can now be "hidden" by prefixing them with `_`.
+* Added microphone capture support to `IAudioManager`: `GetAudioInputDevices()` enumerates capture devices and `OpenAudioInput()` opens one as an `IAudioInputDevice` that produces mono 16-bit PCM (OpenAL `ALC_EXT_CAPTURE`).
+* Added `IAudioManager.GetAudioOutputDevices()` to enumerate audio output devices.
+* Added an Opus codec to `IAudioManager`: `CreateOpusEncoder()` / `CreateOpusDecoder()` return `IOpusEncoder` / `IOpusDecoder` backed by the pure-managed Concentus library. These let sandboxed content do voice-style audio compression without referencing the codec directly.
+* `IBufferedAudioSource` is now public and `IAudioManager.CreateBufferedAudioSource()` is exposed, allowing PCM frames to be queued into a streaming source at runtime (e.g. for real-time/voice audio).
 
 ### Bugfixes
 

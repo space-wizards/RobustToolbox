@@ -182,6 +182,89 @@ namespace Robust.UnitTesting
             return instance;
         }
 
+        /// <summary>
+        ///     Connects a client integration instance to a server integration instance.
+        /// </summary>
+        protected static async Task ConnectClient(
+            ServerIntegrationInstance server,
+            ClientIntegrationInstance client,
+            string? userName = null)
+        {
+            await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+            Assert.DoesNotThrow(() => client.SetConnectTarget(server));
+            await client.WaitPost(() => ((IClientNetManager) client.NetMan).ClientConnect(null!, 0, userName!));
+        }
+
+        /// <summary>
+        ///     Starts a connected client/server pair.
+        /// </summary>
+        protected async Task<ConnectedIntegrationPair> StartConnectedPair(
+            ServerIntegrationOptions? serverOptions = null,
+            ClientIntegrationOptions? clientOptions = null,
+            string? userName = null)
+        {
+            var server = StartServer(serverOptions);
+            var client = StartClient(clientOptions);
+            await ConnectClient(server, client, userName);
+            return new ConnectedIntegrationPair(server, client);
+        }
+
+        /// <summary>
+        ///     Runs the server and client in lockstep.
+        /// </summary>
+        protected static async Task RunTicksSync(
+            ServerIntegrationInstance server,
+            ClientIntegrationInstance client,
+            int ticks)
+        {
+            for (var i = 0; i < ticks; i++)
+            {
+                await server.WaitRunTicks(1);
+                await client.WaitRunTicks(1);
+            }
+        }
+
+        /// <summary>
+        ///     Disconnects a client integration instance from its server and runs both sides long enough to process it.
+        /// </summary>
+        protected static async Task DisconnectClient(
+            ServerIntegrationInstance server,
+            ClientIntegrationInstance client,
+            string reason = "")
+        {
+            await client.WaitPost(() => ((IClientNetManager) client.NetMan).ClientDisconnect(reason));
+            await RunTicksSync(server, client, 5);
+        }
+
+        protected sealed class ConnectedIntegrationPair : IAsyncDisposable
+        {
+            public ServerIntegrationInstance Server { get; }
+            public ClientIntegrationInstance Client { get; }
+
+            private bool _disposed;
+
+            public ConnectedIntegrationPair(ServerIntegrationInstance server, ClientIntegrationInstance client)
+            {
+                Server = server;
+                Client = client;
+            }
+
+            public void Deconstruct(out ClientIntegrationInstance client, out ServerIntegrationInstance server)
+            {
+                client = Client;
+                server = Server;
+            }
+
+            public async ValueTask DisposeAsync()
+            {
+                if (_disposed)
+                    return;
+
+                _disposed = true;
+                await DisconnectClient(Server, Client);
+            }
+        }
+
         private bool ShouldPool(IntegrationOptions? options)
         {
             // If no options are provided, we assume we should pool

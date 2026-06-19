@@ -81,16 +81,6 @@ namespace Robust.Shared.Maths.Tests
             new TestCaseData(new Box2Rotated(Box2.UnitCentered.Translated(new Vector2(10, 10)), Angle.FromDegrees(45))),
         ];
 
-        private static TestCaseData[] HashCodeIncludesOriginCases =
-        [
-            new TestCaseData(
-                new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(37), Vector2.Zero),
-                new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(37), Vector2.One)),
-            new TestCaseData(
-                new Box2Rotated(new Box2(-1, -2, 3, 4), Angle.FromDegrees(90), new Vector2(1, 2)),
-                new Box2Rotated(new Box2(-1, -2, 3, 4), Angle.FromDegrees(90), new Vector2(2, 1))),
-        ];
-
         /// <summary>
         /// Tests that transforming a Box2Rotated into a Box2 works.
         /// </summary>

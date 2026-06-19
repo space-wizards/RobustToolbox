@@ -13,9 +13,9 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         [Test]
         public void SerializationTest()
         {
-            var left = 1;
+            var left = -3;
             var bottom = -2;
-            var right = -3;
+            var right = 1;
             var top = 4;
             var str = $"{left},{bottom},{right},{top}";
             var box = new Box2(left, bottom, right, top);
@@ -27,9 +27,9 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         [Test]
         public void DeserializationTest()
         {
-            var left = 1;
+            var left = -3;
             var bottom = -2;
-            var right = -3;
+            var right = 1;
             var top = 4;
             var str = $"{left},{bottom},{right},{top}";
             var node = new ValueDataNode(str);

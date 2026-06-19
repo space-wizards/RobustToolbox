@@ -66,7 +66,7 @@ namespace Robust.Client.Graphics.Clyde
                 var clydeTexture = ExtractTexture(texture, in subRegion, out var csr);
 
                 var (w, h) = clydeTexture.Size;
-                var sr = new Box2(csr.Left / w, (h - csr.Top) / h, csr.Right / w, (h - csr.Bottom) / h);
+                var sr = new Box2(csr.Left / w, (h - csr.Bottom) / h, csr.Right / w, (h - csr.Top) / h);
 
                 _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, in modulate, in sr);
             }
@@ -358,8 +358,8 @@ namespace Robust.Client.Graphics.Clyde
                     Color? modulate = null)
                 {
                     var color = (modulate ?? Color.White) * Modulate;
-                    _renderHandle.DrawTextureScreen(texture, rect.TopLeft, rect.TopRight,
-                        rect.BottomLeft, rect.BottomRight, color, subRegion);
+                    _renderHandle.DrawTextureScreen(texture, rect.BottomLeft, rect.BottomRight,
+                        rect.TopLeft, rect.TopRight, color, subRegion);
                 }
 
                 public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null)

@@ -14,8 +14,8 @@ jobs:
       - name: Check out content
         uses: actions/checkout@v4.2.2
         with:
-          repository: space-wizards/space-station-14
-          submodules: recursive
+          repository: Space-Wizards-Federation/space-station-14
+          submodules: true
 
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4.1.0
@@ -34,7 +34,9 @@ jobs:
         run: cp RobustToolbox/global.json .
       - name: Install dependencies
         run: dotnet restore
-      - name: Build
+      - name: Build (Release)
+        run: dotnet build --configuration Release --no-restore /m
+      - name: Build (Debug)
         run: dotnet build --configuration DebugOpt --no-restore /m
       - name: Content.Tests
         shell: pwsh

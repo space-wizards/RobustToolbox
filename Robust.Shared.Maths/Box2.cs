@@ -217,6 +217,19 @@ namespace Robust.Shared.Maths
             _bottom = bottom;
         }
 
+        /// <summary>
+        /// Creates a Box2 with no bounds validation applied, use at your own risk.
+        /// </summary>
+        internal static Box2 DangerousCreate(float left, float bottom, float right, float top)
+        {
+            Unsafe.SkipInit(out Box2 box);
+            box._left = left;
+            box._right = right;
+            box._top = top;
+            box._bottom = bottom;
+            return box;
+        }
+
         private static void Validate(float left, float bottom, float right, float top)
         {
             if (left > right)

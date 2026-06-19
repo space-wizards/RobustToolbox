@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Remove the duplicate serialization copy of components kept on ComponentRegistryEntry; now it only stores the deserialized component. To get the raw MappingDataNode for EntityPrototypes use PrototypeManager. This is expected to significantly reduce memory usage.
+* Remove QuadTree due to lack of maintenance, test coverage, and usage.
 
 ### New features
 

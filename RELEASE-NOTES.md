@@ -55,6 +55,7 @@ END TEMPLATE-->
 * Reduce TryRelativeTo string allocations.
 * Reduce OpenGL logging string allocations on debug for the client.
 * Optimise sprite sorting slightly.
+* Simplify and optimise Box2.Contains(Vector2)
 
 
 ## 277.1.0

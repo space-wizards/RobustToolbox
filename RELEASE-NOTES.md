@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Console commands can now be "hidden" by prefixing them with `_`.
+* Add `ESCAPE()` and `ESCAPE-PARAM()` localization functions, for escaping text for markup formatting.
 
 ### Bugfixes
 

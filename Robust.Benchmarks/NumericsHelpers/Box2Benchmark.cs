@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.Intrinsics;
 using BenchmarkDotNet.Attributes;
 using Robust.Shared.Analyzers;
 using Robust.Shared.Maths;
@@ -27,9 +28,9 @@ public class Box2NanBenchmark
     [Benchmark(Baseline = true)]
     public bool HasNanOldFalse()
     {
-        return System.Runtime.Intrinsics.Vector128.EqualsAny(
-            System.Runtime.Intrinsics.Vector128.AsVector128(Box.AsVector4),
-            System.Runtime.Intrinsics.Vector128.Create(float.NaN));
+        return Vector128.EqualsAny(
+            Box.AsVector4.AsVector128(),
+            Vector128.Create(float.NaN));
     }
 
     [Benchmark]
@@ -41,9 +42,9 @@ public class Box2NanBenchmark
     [Benchmark]
     public bool HasNanOldTrue()
     {
-        return System.Runtime.Intrinsics.Vector128.EqualsAny(
-            System.Runtime.Intrinsics.Vector128.AsVector128(NanBox.AsVector4),
-            System.Runtime.Intrinsics.Vector128.Create(float.NaN));
+        return Vector128.EqualsAny(
+            NanBox.AsVector4.AsVector128(),
+            Vector128.Create(float.NaN));
     }
 
     [Benchmark]

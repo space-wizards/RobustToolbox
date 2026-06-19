@@ -6,6 +6,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.GameState;
 
@@ -265,6 +266,50 @@ internal sealed partial class AutoNetworkingTests : RobustIntegrationTest
         await client.WaitPost(() => netMan.ClientDisconnect(""));
         await server.WaitRunTicks(5);
         await client.WaitRunTicks(5);
+    }
+
+    /// <summary>
+    /// Tests that field-delta generation treats the from-tick as an already acknowledged state boundary.
+    /// A field dirtied exactly on the from-tick should not be included in the next delta mask.
+    /// </summary>
+    [Test]
+    public async Task AutoNetworkingFieldDeltaFromTickBoundaryTest()
+    {
+        var serverOpts = new ServerIntegrationOptions { Pool = false };
+        using var server = StartServer(serverOpts);
+
+        await server.WaitIdleAsync();
+
+        EntityUid entity = default;
+        await server.WaitPost(() =>
+        {
+            entity = server.EntMan.Spawn();
+            server.EntMan.EnsureComponent<AutoNetworkingTestFieldDeltaComponent>(entity);
+        });
+
+        await server.WaitRunTicks(1);
+
+        var acknowledgedTick = GameTick.Zero;
+        await server.WaitPost(() =>
+        {
+            var component = server.EntMan.GetComponent<AutoNetworkingTestFieldDeltaComponent>(entity);
+            component.Field1 = 101;
+            server.EntMan.DirtyField(entity, component, nameof(AutoNetworkingTestFieldDeltaComponent.Field1));
+            acknowledgedTick = server.Timing.CurTick;
+        });
+
+        await server.WaitRunTicks(1);
+
+        IComponentState? state = null;
+        await server.WaitPost(() =>
+        {
+            var component = server.EntMan.GetComponent<AutoNetworkingTestFieldDeltaComponent>(entity);
+            component.Field3 = 303;
+            server.EntMan.DirtyField(entity, component, nameof(AutoNetworkingTestFieldDeltaComponent.Field3));
+            state = server.EntMan.GetComponentState(server.EntMan.EventBus, component, null, acknowledgedTick);
+        });
+
+        Assert.That(state?.GetType().Name, Is.EqualTo("Field3_FieldComponentState"));
     }
 }
 

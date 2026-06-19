@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Windows will stay at relative position not absolute pixel position on window resize.
 
 ### Other
 
@@ -51,7 +51,9 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Reduce TryParseEnum string allocations.
+* Reduce TryRelativeTo string allocations.
+* Reduce OpenGL logging string allocations on debug for the client.
 
 
 ## 277.1.0

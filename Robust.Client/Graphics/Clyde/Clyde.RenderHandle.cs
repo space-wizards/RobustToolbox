@@ -496,10 +496,12 @@ namespace Robust.Client.Graphics.Clyde
                     }
                     else
                     {
-                        DrawLine(rect.TopLeft, rect.TopRight, color);
-                        DrawLine(rect.TopRight, rect.BottomRight, color);
-                        DrawLine(rect.BottomRight, rect.BottomLeft, color);
-                        DrawLine(rect.BottomLeft, rect.TopLeft, color);
+                        rect.GetCorners(out var bottomLeft, out var bottomRight, out var topRight, out var topLeft);
+
+                        DrawLine(topLeft, topRight, color);
+                        DrawLine(topRight, bottomRight, color);
+                        DrawLine(bottomRight, bottomLeft, color);
+                        DrawLine(bottomLeft, topLeft, color);
                     }
                 }
 
@@ -534,9 +536,9 @@ namespace Robust.Client.Graphics.Clyde
                     Color? modulate = null, UIBox2? subRegion = null)
                 {
                     var color = (modulate ?? Color.White) * Modulate;
+                    quad.GetCorners(out var bottomLeft, out var bottomRight, out var topRight, out var topLeft);
 
-                    _renderHandle.DrawTextureWorld(texture, quad.BottomLeft, quad.BottomRight,
-                        quad.TopLeft, quad.TopRight, color, in subRegion);
+                    _renderHandle.DrawTextureWorld(texture, bottomLeft, bottomRight, topLeft, topRight, color, in subRegion);
                 }
 
                 public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,

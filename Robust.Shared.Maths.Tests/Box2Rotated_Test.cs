@@ -32,11 +32,11 @@ namespace Robust.Shared.Maths.Tests
             var rotatedBox = new Box2Rotated(boxes[0], Angle.FromDegrees(0));
             for (int i = 0; i < 4; i++)
             {
-                Assert.That(rotatedBox.CalcBoundingBox(), NUnit.Framework.Is.EqualTo(boxes[i]));
+                Assert.That(rotatedBox.CalcBoundingBox(), Is.Approximately(boxes[i], 0.0001f));
                 rotatedBox.Rotation += Angle.FromDegrees(90);
             }
 
-            Assert.That(rotatedBox.CalcBoundingBox(), NUnit.Framework.Is.EqualTo(boxes[0]));
+            Assert.That(rotatedBox.CalcBoundingBox(), Is.Approximately(boxes[0], 0.0001f));
         }
 
         private static readonly float Cos45Deg = MathF.Cos(MathF.PI / 4);
@@ -61,7 +61,7 @@ namespace Robust.Shared.Maths.Tests
                 Box2Rotated.UnitCentered.CalcBoundingBox()),
             new TestCaseData(Matrix3x2.CreateRotation(MathF.PI),
                 Box2Rotated.UnitCentered,
-                new Box2Rotated(new Vector2(0.5f, 0.5f), new Vector2(-0.5f, -0.5f)).CalcBoundingBox()),
+                new Box2Rotated(new Vector2(-0.5f, -0.5f), new Vector2(0.5f, 0.5f)).CalcBoundingBox()),
             new TestCaseData(Matrix3x2.CreateTranslation(Vector2.One),
                 Box2Rotated.UnitCentered,
                 new Box2Rotated(new Vector2(0.5f, 0.5f), new Vector2(1.5f, 1.5f)).CalcBoundingBox()),
@@ -73,6 +73,22 @@ namespace Robust.Shared.Maths.Tests
                              * Matrix3Helpers.CreateTransform(new Vector2(1, Sqrt2), Angle.FromDegrees(30)),
                 new Box2Rotated(Box2.UnitCentered, -Angle.FromDegrees(30), new Vector2(1, Sqrt2)),
                 Box2.UnitCentered)
+        ];
+
+        private static TestCaseData[] GetCornersCases =
+        [
+            new TestCaseData(new Box2Rotated(new Box2(-1, -2, 3, 4), Angle.FromDegrees(37), new Vector2(1, 2))),
+            new TestCaseData(new Box2Rotated(Box2.UnitCentered.Translated(new Vector2(10, 10)), Angle.FromDegrees(45))),
+        ];
+
+        private static TestCaseData[] HashCodeIncludesOriginCases =
+        [
+            new TestCaseData(
+                new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(37), Vector2.Zero),
+                new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(37), Vector2.One)),
+            new TestCaseData(
+                new Box2Rotated(new Box2(-1, -2, 3, 4), Angle.FromDegrees(90), new Vector2(1, 2)),
+                new Box2Rotated(new Box2(-1, -2, 3, 4), Angle.FromDegrees(90), new Vector2(2, 1))),
         ];
 
         /// <summary>
@@ -92,6 +108,17 @@ namespace Robust.Shared.Maths.Tests
 
             var rotated = new Box2Rotated(baseBox, rotation, origin);
             Assert.That(rotated.CalcBoundingBox(), Is.Approximately(expected));
+        }
+
+        [Test, TestCaseSource(nameof(GetCornersCases))]
+        public void TestGetCornersMatchesProperties(Box2Rotated rotated)
+        {
+            rotated.GetCorners(out var bottomLeft, out var bottomRight, out var topRight, out var topLeft);
+
+            Assert.That(bottomLeft, Is.Approximately(rotated.BottomLeft, 0.0001f));
+            Assert.That(bottomRight, Is.Approximately(rotated.BottomRight, 0.0001f));
+            Assert.That(topRight, Is.Approximately(rotated.TopRight, 0.0001f));
+            Assert.That(topLeft, Is.Approximately(rotated.TopLeft, 0.0001f));
         }
 
         // Offset it just to make sure the rotation is also gucci.

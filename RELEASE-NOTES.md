@@ -57,6 +57,7 @@ END TEMPLATE-->
 * Optimise sprite sorting slightly.
 * Simplify and optimise Box2.Contains(Vector2)
 * Optimise ComponentRegistry deserialization slightly.
+* Optimise Box2Rotated.TransformBox slightly.
 
 
 ## 277.1.0

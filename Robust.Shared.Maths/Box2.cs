@@ -152,13 +152,13 @@ namespace Robust.Shared.Maths
         public readonly float Width
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => MathF.Abs(Right - Left);
+            get => _right - _left;
         }
 
         public readonly float Height
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => MathF.Abs(Bottom - Top);
+            get => _bottom - _top;
         }
 
         public readonly Vector2 Size

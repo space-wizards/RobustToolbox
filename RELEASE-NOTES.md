@@ -54,6 +54,7 @@ END TEMPLATE-->
 * Reduce TryParseEnum string allocations.
 * Reduce TryRelativeTo string allocations.
 * Reduce OpenGL logging string allocations on debug for the client.
+* Optimise sprite sorting slightly.
 
 
 ## 277.1.0

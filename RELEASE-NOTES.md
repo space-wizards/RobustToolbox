@@ -54,6 +54,36 @@ END TEMPLATE-->
 *None yet*
 
 
+## 277.1.0
+
+### New features
+
+* Added `IsHardCollidable` to `SharedPhysicsSystem`.
+* Added `GetFilledTileCount` to `SharedMapSystem`.
+* Changed the cursors on interactive controls.
+* Added new `StyleProperty` `track` to `ScrollBar` that takes a `StyleBox` and displays it as a backing track for the whole height of the `ScrollBar`.
+* Scroll Lock is now a bindable key.
+
+### Bugfixes
+
+* Fixed override properties in `WrapContainer` not actually overriding the Style Properties.
+* Fixed `BoxContainer`'s `SeparationOverride` not overriding the Style Properties.
+* Fixed `SeparationOverride` not invalidating measure.
+* Fixed swapped parameters in `MapManager`'s `FindGridsIntersecting` methods.
+
+### Other
+
+* Added Pure attributes to the `EntityLookup` bounds methods.
+* Improved performance of collision filter test.
+* Removed an outdated xmldoc comment regarding dependency injection.
+* Audio resources now use `AsSpan` when checking signatures.
+
+### Internal
+
+* Added several test helpers to avoid boilerplate in integration tests around client connection / disconnection.
+* Added `.lscache` files to `.gitignore`.
+
+
 ## 277.0.0
 
 ### New features

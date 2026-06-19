@@ -217,6 +217,7 @@ namespace Robust.Shared.Localization
         /// Returns the respective genitive form (pronoun or possessive adjective) for the entity's gender.
         /// This is used in languages with a genitive case to indicate possession or related relationships,
         /// e.g., "у него" (Russian), "seines Vaters" (German).
+        /// </summary>
         private ILocValue FuncGenitive(LocArgs args)
         {
             return new LocValueString(GetString("zzzz-genitive", ("ent", args.Args[0])));

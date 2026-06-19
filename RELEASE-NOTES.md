@@ -43,6 +43,8 @@ END TEMPLATE-->
 * Add `ESCAPE()` and `ESCAPE-PARAM()` localization functions, for escaping text for markup formatting.
 * The `[cmdlink /]` tag can now have a tooltip specified with the optional "title" attribute.
 * Added `CommandParsing.EscapeCommand()` for *formatting* command strings easily.
+* Added `IUserInterfaceManager.GetRootForMouse()`.
+* Added `Popup.OpenAtCursor()`.
 
 ### Bugfixes
 

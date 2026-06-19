@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Remove the duplicate serialization copy of components kept on ComponentRegistryEntry; now it only stores the deserialized component. To get the raw MappingDataNode for EntityPrototypes use PrototypeManager. This is expected to significantly reduce memory usage.
 
 ### New features
 
@@ -56,6 +56,7 @@ END TEMPLATE-->
 * Reduce OpenGL logging string allocations on debug for the client.
 * Optimise sprite sorting slightly.
 * Simplify and optimise Box2.Contains(Vector2)
+* Optimise ComponentRegistry deserialization slightly.
 
 
 ## 277.1.0

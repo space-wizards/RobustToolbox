@@ -35,12 +35,12 @@ internal interface ILoadingScreenManager
 /// <summary>
 /// Manager that creates and displays a basic splash screen and loading bar.
 /// </summary>
-internal sealed class LoadingScreenManager : ILoadingScreenManager
+internal sealed partial class LoadingScreenManager : ILoadingScreenManager
 {
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IClydeInternal _clyde = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IClydeInternal _clyde = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private ILogManager _logManager = default!;
 
     private ISawmill _sawmill = default!;
 
@@ -226,7 +226,7 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
         var drawSize = textureResource.Texture.Size * scale;
 
         handle.DrawingHandleScreen.DrawTextureRect(textureResource.Texture, UIBox2.FromDimensions(startLocation - drawSize / 2, drawSize));
-        startLocation += Vector2i.Up * (int) drawSize.Y / 2;
+        startLocation += Vector2i.Up * (int)drawSize.Y / 2;
     }
 
     private void DrawLoadingBar(IRenderHandle handle, ref Vector2i location, float scale)
@@ -237,7 +237,7 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
 
         // Always do the offsets, it looks a lot better!
         location.X -= barWidth / 2;
-        location += (Vector2i) (LogoLoadingBarOffset * scale);
+        location += (Vector2i)(LogoLoadingBarOffset * scale);
 
         if (!_showLoadingBar)
             return;
@@ -299,9 +299,9 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
     #endregion // Drawing functions
 }
 
-internal sealed class ShowTopLoadingTimesCommand : IConsoleCommand
+internal sealed partial class ShowTopLoadingTimesCommand : IConsoleCommand
 {
-    [Dependency] private readonly LoadingScreenManager _mgr = default!;
+    [Dependency] private LoadingScreenManager _mgr = default!;
 
     public string Command => "loading_top";
     public string Description => "";

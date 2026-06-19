@@ -19,7 +19,7 @@ internal sealed partial class MetricsManager
     private TimeSpan _fixedUpdateInterval;
     private TimeSpan _nextFixedUpdate;
 
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     private void InitializeUpdateMetrics()
     {

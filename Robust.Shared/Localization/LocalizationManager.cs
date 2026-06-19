@@ -29,11 +29,11 @@ namespace Robust.Shared.Localization
         protected static readonly ResPath LocaleDirPath = new("/Locale");
         protected static readonly ResPath UploadedDirPath = new("/Uploaded");
 
-        [Dependency] private readonly IConfigurationManager _configuration = default!;
-        [Dependency] private readonly IResourceManager _res = default!;
-        [Dependency] private readonly ILogManager _log = default!;
-        [Dependency] private readonly IPrototypeManager _prototype = default!;
-        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private IConfigurationManager _configuration = default!;
+        [Dependency] private IResourceManager _res = default!;
+        [Dependency] private ILogManager _log = default!;
+        [Dependency] private IPrototypeManager _prototype = default!;
+        [Dependency] private IEntityManager _entMan = default!;
 
         private ISawmill _logSawmill = default!;
         private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();

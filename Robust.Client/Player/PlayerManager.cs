@@ -17,15 +17,15 @@ namespace Robust.Client.Player
     ///     Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated.
     ///     This class also communicates with the server to let the server control what entity it is attached to.
     /// </summary>
-    internal sealed class PlayerManager : SharedPlayerManager, IPlayerManager
+    internal sealed partial class PlayerManager : SharedPlayerManager, IPlayerManager
     {
-        [Dependency] private readonly IClientNetManager _network = default!;
-        [Dependency] private readonly IBaseClient _client = default!;
+        [Dependency] private IClientNetManager _network = default!;
+        [Dependency] private IBaseClient _client = default!;
 
         /// <summary>
         /// Received player states that had an unknown <see cref="NetEntity"/>.
         /// </summary>
-        private Dictionary<NetUserId, SessionState> _pendingStates = new ();
+        private Dictionary<NetUserId, SessionState> _pendingStates = new();
         private List<SessionState> _pending = new();
 
         /// <inheritdoc />
@@ -34,7 +34,7 @@ namespace Robust.Client.Player
             get
             {
                 return LocalSession != null
-                    ? new [] { LocalSession }
+                    ? new[] { LocalSession }
                     : Array.Empty<ICommonSession>();
             }
         }
@@ -94,7 +94,7 @@ namespace Robust.Client.Player
 
             var old = LocalSession;
 
-            if (old?.AttachedEntity is {} oldUid)
+            if (old?.AttachedEntity is { } oldUid)
             {
                 LocalSession = null;
                 LocalPlayer = null;
@@ -108,7 +108,7 @@ namespace Robust.Client.Player
             Sawmill.Info($"Changing local session from {old?.ToString() ?? "null"} to {session?.ToString() ?? "null"}.");
             LocalSessionChanged?.Invoke((old, LocalSession));
 
-            if (session?.AttachedEntity is {} newUid)
+            if (session?.AttachedEntity is { } newUid)
             {
                 Sawmill.Info($"Attaching local player to {EntManager.ToPrettyString(newUid)}.");
                 EntManager.EventBus.RaiseLocalEvent(newUid, new LocalPlayerAttachedEvent(newUid), true);
@@ -199,7 +199,7 @@ namespace Robust.Client.Player
             if (list.Count == 0)
                 return false;
 
-            DebugTools.Assert(_network.IsConnected ||  _client.RunLevel == ClientRunLevel.SinglePlayerGame // replays use state application.
+            DebugTools.Assert(_network.IsConnected || _client.RunLevel == ClientRunLevel.SinglePlayerGame // replays use state application.
                 , "Received player state without being connected?");
             DebugTools.Assert(LocalSession != null, "Received player state before Session finished setup.");
 
@@ -210,7 +210,7 @@ namespace Robust.Client.Player
             {
                 dirty = true;
                 if (!EntManager.TryGetEntity(state.ControlledEntity, out var uid)
-                    && state.ControlledEntity is { Valid:true } )
+                    && state.ControlledEntity is { Valid: true })
                 {
                     Sawmill.Error($"Received player state for local player with an unknown net entity!");
                     _pendingStates[state.UserId] = state;
@@ -247,7 +247,7 @@ namespace Robust.Client.Player
                 users.Add(state.UserId);
 
                 if (!EntManager.TryGetEntity(state.ControlledEntity, out var controlled)
-                    && state.ControlledEntity is {Valid: true})
+                    && state.ControlledEntity is { Valid: true })
                 {
                     _pendingStates[state.UserId] = state;
                 }

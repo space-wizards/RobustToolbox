@@ -48,5 +48,23 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             Assert.That(deserializedBox.TopLeft, Is.EqualTo(box.TopLeft));
             Assert.That(deserializedBox.TopRight, Is.EqualTo(box.TopRight));
         }
+
+        [Test]
+        public void ValidationRejectsInvalidBox2Bounds()
+        {
+            var node = new ValueDataNode("1,0,0,1");
+            var validation = Serialization.ValidateNode<Box2, ValueDataNode, Box2Serializer>(node);
+
+            Assert.That(validation.GetErrors(), Is.Not.Empty);
+        }
+
+        [Test]
+        public void ValidationRejectsInvalidBox2iBounds()
+        {
+            var node = new ValueDataNode("0,1,1,0");
+            var validation = Serialization.ValidateNode<Box2i, ValueDataNode, Box2Serializer>(node);
+
+            Assert.That(validation.GetErrors(), Is.Not.Empty);
+        }
     }
 }

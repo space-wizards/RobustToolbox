@@ -10,36 +10,164 @@ namespace Robust.Shared.Maths
     [StructLayout(LayoutKind.Explicit)]
     public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
     {
-        [FieldOffset(sizeof(int) * 0)] public int Left;
-        [FieldOffset(sizeof(int) * 1)] public int Top;
-        [FieldOffset(sizeof(int) * 2)] public int Right;
-        [FieldOffset(sizeof(int) * 3)] public int Bottom;
+        [FieldOffset(sizeof(int) * 0)] internal int _left;
+        [FieldOffset(sizeof(int) * 1)] internal int _top;
+        [FieldOffset(sizeof(int) * 2)] internal int _right;
+        [FieldOffset(sizeof(int) * 3)] internal int _bottom;
 
-        [FieldOffset(sizeof(int) * 0)] public Vector2i TopLeft;
-        [FieldOffset(sizeof(int) * 2)] public Vector2i BottomRight;
+        [FieldOffset(sizeof(int) * 0)] internal Vector2i _topLeft;
+        [FieldOffset(sizeof(int) * 2)] internal Vector2i _bottomRight;
 
-        public readonly Vector2i TopRight => new(Right, Top);
-        public readonly Vector2i BottomLeft => new(Left, Bottom);
-        public readonly int Width => Math.Abs(Right - Left);
-        public readonly int Height => Math.Abs(Top - Bottom);
-        public readonly Vector2i Size => new(Width, Height);
-        public readonly Vector2 Center => new Vector2(Left + Right, Top + Bottom) / 2f;
+        public int Left
+        {
+            readonly get => _left;
+            set
+            {
+                if (value > _right)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Left cannot be greater than Right.");
+
+                _left = value;
+            }
+        }
+
+        public int Top
+        {
+            readonly get => _top;
+            set
+            {
+                if (value > _bottom)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Top cannot be greater than Bottom.");
+
+                _top = value;
+            }
+        }
+
+        public int Right
+        {
+            readonly get => _right;
+            set
+            {
+                if (value < _left)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Right cannot be less than Left.");
+
+                _right = value;
+            }
+        }
+
+        public int Bottom
+        {
+            readonly get => _bottom;
+            set
+            {
+                if (value < _top)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Bottom cannot be less than Top.");
+
+                _bottom = value;
+            }
+        }
+
+        public Vector2i TopLeft
+        {
+            readonly get => _topLeft;
+            set
+            {
+                if (value.X > _right)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "TopLeft.X cannot be greater than Right.");
+
+                if (value.Y > _bottom)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "TopLeft.Y cannot be greater than Bottom.");
+
+                _topLeft = value;
+            }
+        }
+
+        public Vector2i BottomRight
+        {
+            readonly get => _bottomRight;
+            set
+            {
+                if (value.X < _left)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "BottomRight.X cannot be less than Left.");
+
+                if (value.Y < _top)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "BottomRight.Y cannot be less than Top.");
+
+                _bottomRight = value;
+            }
+        }
+
+        public readonly Vector2i TopRight
+        {
+            get => new(Right, Top);
+        }
+
+        public readonly Vector2i BottomLeft
+        {
+            get => new(Left, Bottom);
+        }
+
+        public readonly int Width
+        {
+            get => Right - Left;
+        }
+
+        public readonly int Height
+        {
+            get => Bottom - Top;
+        }
+
+        public readonly Vector2i Size
+        {
+            get => new(Width, Height);
+        }
+
+        public readonly Vector2 Center
+        {
+            get => new Vector2(_left + _right, _top + _bottom) / 2f;
+        }
+
+        private static void Validate(int left, int top, int right, int bottom)
+        {
+            if (left > right)
+                throw new ArgumentException("Left cannot be greater than Right.", nameof(left));
+
+            if (top > bottom)
+                throw new ArgumentException("Top cannot be greater than Bottom.", nameof(top));
+        }
+
         public UIBox2i(Vector2i topLeft, Vector2i bottomRight)
         {
             Unsafe.SkipInit(out this);
 
-            TopLeft = topLeft;
-            BottomRight = bottomRight;
+            Validate(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y);
+
+            _topLeft = topLeft;
+            _bottomRight = bottomRight;
         }
 
         public UIBox2i(int left, int top, int right, int bottom)
         {
             Unsafe.SkipInit(out this);
 
-            Left = left;
-            Right = right;
-            Top = top;
-            Bottom = bottom;
+            Validate(left, top, right, bottom);
+
+            _left = left;
+            _right = right;
+            _top = top;
+            _bottom = bottom;
+        }
+
+        /// <summary>
+        /// Creates a UIBox2i with no bounds validation applied, use at your own risk.
+        /// </summary>
+        internal static UIBox2i DangerousCreate(int left, int top, int right, int bottom)
+        {
+            Unsafe.SkipInit(out UIBox2i box);
+            box._left = left;
+            box._right = right;
+            box._top = top;
+            box._bottom = bottom;
+            return box;
         }
 
         public static UIBox2i FromDimensions(int left, int top, int width, int height)
@@ -96,12 +224,14 @@ namespace Robust.Shared.Maths
 
         public readonly bool Intersects(in UIBox2i other)
         {
-            return other.Bottom >= this.Top && other.Top <= this.Bottom && other.Right >= this.Left &&
-                   other.Left <= this.Right;
+            return other._bottom >= _top
+                   && other._top <= _bottom
+                   && other._right >= _left
+                   && other._left <= _right;
         }
 
         // override object.Equals
-        public override readonly bool Equals(object? obj)
+        public readonly override bool Equals(object? obj)
         {
             if (obj is UIBox2i box)
             {
@@ -117,7 +247,7 @@ namespace Robust.Shared.Maths
         }
 
         // override object.GetHashCode
-        public override readonly int GetHashCode()
+        public readonly override int GetHashCode()
         {
             var code = Left.GetHashCode();
             code = (code * 929) ^ Right.GetHashCode();
@@ -136,6 +266,16 @@ namespace Robust.Shared.Maths
             return new(box.Left, box.Top, box.Right, box.Bottom);
         }
 
+        public static bool operator ==(UIBox2i a, UIBox2i b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(UIBox2i a, UIBox2i b)
+        {
+            return !a.Equals(b);
+        }
+
         public static UIBox2i operator +(UIBox2i box, (int lo, int to, int ro, int bo) offsets)
         {
             var (lo, to, ro, bo) = offsets;
@@ -143,7 +283,7 @@ namespace Robust.Shared.Maths
             return new UIBox2i(box.Left + lo, box.Top + to, box.Right + ro, box.Bottom + bo);
         }
 
-        public override readonly string ToString()
+        public readonly override string ToString()
         {
             return $"({Left}, {Top}, {Right}, {Bottom})";
         }

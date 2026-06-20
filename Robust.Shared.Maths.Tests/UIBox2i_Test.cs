@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 
 namespace Robust.Shared.Maths.Tests
 {
@@ -82,6 +83,32 @@ namespace Robust.Shared.Maths.Tests
             Assert.That(box.Top, Is.EqualTo(top));
             Assert.That(box.Right, Is.EqualTo(right));
             Assert.That(box.Bottom, Is.EqualTo(bottom));
+        }
+
+        [Test]
+        public void Box2iValidatesConstruction()
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.Throws<ArgumentException>(() => new UIBox2i(3, 4, -1, -2));
+                Assert.Throws<ArgumentException>(() => new UIBox2i(new Vector2i(3, 4), new Vector2i(-1, -2)));
+            });
+        }
+
+        [Test]
+        public void Box2iValidatesProperties()
+        {
+            var box = new UIBox2i(-1, -2, 3, 4);
+
+            Assert.Multiple(() =>
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.Left = 4);
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.Top = 5);
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.Right = -2);
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.Bottom = -3);
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.TopLeft = new Vector2i(4, 0));
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.BottomRight = new Vector2i(0, -3));
+            });
         }
 
         [Test]

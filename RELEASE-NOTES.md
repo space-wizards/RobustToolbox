@@ -45,6 +45,7 @@ END TEMPLATE-->
 * Added `CommandParsing.EscapeCommand()` for *formatting* command strings easily.
 * Added `IUserInterfaceManager.GetRootForMouse()`.
 * Added `Popup.OpenAtCursor()`.
+* Added `FormattedStringBuilder` for safely constructing markup with code.
 
 ### Bugfixes
 

@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Changed default auth server URL.
 
 ### Internal
 

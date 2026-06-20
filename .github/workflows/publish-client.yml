@@ -36,7 +36,7 @@ jobs:
       - name: Upload files to Suns
         uses: appleboy/scp-action@master
         with:
-          host: suns.spacestation14.com
+          host: dropwig.playss14.com
           username: robust-build-push
           key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
           source: "release/${{ steps.parse_version.outputs.version }}"

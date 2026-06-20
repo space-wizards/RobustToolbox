@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 277.1.0
+
+### New features
+
 * Console commands can now be "hidden" by prefixing them with `_`.
 * Add `ESCAPE()` and `ESCAPE-PARAM()` localization functions, for escaping text for markup formatting.
 * The `[cmdlink /]` tag can now have a tooltip specified with the optional "title" attribute.

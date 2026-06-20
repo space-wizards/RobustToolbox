@@ -55,6 +55,7 @@ END TEMPLATE-->
 ### Other
 
 * Add Pure attributes to the EntityLookup bounds methods
+* Bump `Robust.Natives` to `0.2.5`.
 
 ### Internal
 

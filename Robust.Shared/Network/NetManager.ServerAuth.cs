@@ -179,7 +179,8 @@ namespace Robust.Shared.Network
                         HWId = legacyHwid,
                         ModernHWIds = modernHWIds,
                         Trust = joinedRespJson.ConnectionData!.Trust,
-                        CreatedTime = joinedRespJson.UserData.CreatedTime
+                        CreatedTime = joinedRespJson.UserData.CreatedTime,
+                        IsLocal = isLocal
                     };
                     padSuccessMessage = false;
                     type = LoginType.LoggedIn;
@@ -223,7 +224,8 @@ namespace Robust.Shared.Network
                     userData = new NetUserData(userId, name)
                     {
                         HWId = [],
-                        ModernHWIds = []
+                        ModernHWIds = [],
+                        IsLocal = isLocal
                     };
                 }
 

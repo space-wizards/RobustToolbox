@@ -247,6 +247,9 @@ namespace Robust.Shared
         public static readonly CVarDef<float> NetPvsGridRange =
             CVarDef.Create("net.pvs_grid_range", 2048f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
+        public static readonly CVarDef<bool> NetPvsMapCulling =
+            CVarDef.Create("net.pvs_map_culling", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
         /// <summary>
         /// Maximum allowed delay between the current tick and a client's last acknowledged tick before we send the
         /// next game state reliably and simply force update the acked tick,

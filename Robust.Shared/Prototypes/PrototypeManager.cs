@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -38,9 +38,12 @@ namespace Robust.Shared.Prototypes
         [Dependency] private IEntityManager _entMan = default!;
         [Dependency] private IRobustRandom _random = default!;
 
-        private readonly Dictionary<string, FrozenDictionary<string, MappingDataNode>> _prototypeDataCache = new();
 
         private readonly Dictionary<string, MappingDataNode> _tempMappingData = new();
+        private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
+        private FrozenDictionary<Type, string> _kindNameCache = FrozenDictionary<Type, string>.Empty;
+        private EntityDiffContext _context = new();
+
 
         private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _kindPriorities = new();
@@ -295,6 +298,7 @@ namespace Robust.Shared.Prototypes
         {
             _kindNames.Clear();
             _kinds = FrozenDictionary<Type, KindData>.Empty;
+            _kindNameCache = FrozenDictionary<Type, string>.Empty;
         }
 
         /// <inheritdoc />
@@ -722,11 +726,14 @@ namespace Robust.Shared.Prototypes
         {
             Clear();
             var dict = new Dictionary<Type, KindData>();
+            var nameDict = new Dictionary<Type, string>();
             foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
             {
                 RegisterKind(type, dict);
+                RegisterKindName(type, nameDict);
             }
             Freeze(dict);
+            FreezeNames(nameDict);
         }
 
         /// <inheritdoc />
@@ -984,12 +991,15 @@ namespace Robust.Shared.Prototypes
         public void RegisterKind(params Type[] kinds)
         {
             var dict = _kinds.ToDictionary();
+            var nameDict = _kindNameCache.ToDictionary();
             foreach (var kind in kinds)
             {
                 RegisterKind(kind, dict);
+                RegisterKindName(kind, nameDict);
             }
 
             Freeze(dict);
+            FreezeNames(nameDict);
         }
 
         private void Freeze(Dictionary<Type, KindData> dict)
@@ -1001,6 +1011,13 @@ namespace Robust.Shared.Prototypes
             Sawmill?.Verbose($"Freezing prototype kinds took {st.Elapsed.TotalMilliseconds:f2}ms");
         }
 
+        private void FreezeNames(Dictionary<Type, string> dict)
+        {
+            var st = RStopwatch.StartNew();
+            _kindNameCache = dict.ToFrozenDictionary();
+
+            Sawmill?.Verbose($"Freezing kind names took {st.Elapsed.TotalMilliseconds:f2}ms");
+        }
         private void RegisterKind(Type kind, Dictionary<Type, KindData> kinds)
         {
             if (!(typeof(IPrototype).IsAssignableFrom(kind)))
@@ -1161,6 +1178,11 @@ namespace Robust.Shared.Prototypes
                 UnfrozenInstances = null;
                 _freezeDirectInfo.Invoke(this, null);
             }
+        }
+
+        private void RegisterKindName(Type kind, Dictionary<Type, string> kinds)
+        {
+            kinds[kind] = CalculatePrototypeName(kind);
         }
 
         private void OnReload(PrototypesReloadedEventArgs args)

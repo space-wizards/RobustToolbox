@@ -220,10 +220,14 @@ namespace Robust.Shared.Network
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: Assigned user ID: {userId}");
 
+                    var localTrust = _config.GetCVar(CVars.AuthLocalTrust);
+                    var guestTrust = _config.GetCVar(CVars.AuthGuestTrust);
+
                     userData = new NetUserData(userId, name)
                     {
                         HWId = [],
-                        ModernHWIds = []
+                        ModernHWIds = [],
+                        Trust = isLocal ? localTrust : guestTrust
                     };
                 }
 

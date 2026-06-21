@@ -54,6 +54,44 @@ END TEMPLATE-->
 *None yet*
 
 
+## 277.1.0
+
+### New features
+
+* Console commands can now be "hidden" by prefixing them with `_`.
+* Add `ESCAPE()` and `ESCAPE-PARAM()` localization functions, for escaping text for markup formatting.
+* The `[cmdlink /]` tag can now have a tooltip specified with the optional "title" attribute.
+* Added `CommandParsing.EscapeCommand()` for *formatting* command strings easily.
+* Added `IUserInterfaceManager.GetRootForMouse()`.
+* Added `Popup.OpenAtCursor()`.
+* Added `FormattedStringBuilder` for safely constructing markup with code.
+* Added `VBox` and `HBox` convenience types for more concisely construct `BoxContainer`s.
+* Added `IsLocal` to `NetUserData`.
+* Add `SharedMapSystem.GetFilledTileCount()`
+* Add a `track` style property for scroll bars.
+* Added `ScrollLock` key.
+
+### Bugfixes
+
+* Fixes override properties in `WrapContainer` not being respected properly.
+* Fix `BoxContainer.SeparationOverride` not being respected properly and not invalidating layout.
+* Fixed swapped arguments being passed through in various `FindGridsIntersecting` overloads.
+* Fixed a doc comment in `LocalizationManager`.
+
+### Other
+
+* Add Pure attributes to the EntityLookup bounds methods
+* Bump `Robust.Natives` to `0.2.5`.
+* Minor performance improvement in `IsHardCollidable()`.
+* Remove an outdated paragraph from `[DependencyAttribute]` documentation related to `readonly` fields.
+* More stock controls use alternative cursor shapes where appropriate.
+* Minor performance improvement to audio loading.
+
+### Internal
+
+* Added `.lscache` to `.gitignore`.
+
+
 ## 277.0.0
 
 ### New features

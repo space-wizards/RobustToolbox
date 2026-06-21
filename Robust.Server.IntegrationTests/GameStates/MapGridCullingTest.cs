@@ -1,28 +1,26 @@
-using System.Linq;
 using System.Numerics;
-using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.GameStates;
 using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Player;
+using Robust.UnitTesting;
+using Is = Robust.UnitTesting.Is;
 
-namespace Robust.UnitTesting.Server.GameStates;
+namespace Robust.Server.IntegrationTests.GameStates;
 
-public sealed class PvsChunkTest : RobustIntegrationTest
+public sealed class MapGridCullingTest : RobustIntegrationTest
 {
     [Test]
     public async Task TestForceSentGridIgnoresRange()
     {
-        var (client, server) = await StartConnectedPair();
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
         var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
@@ -33,10 +31,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
         var pvsOverride = sEntMan.System<PvsOverrideSystem>();
 
         var cEntMan = client.ResolveDependency<IEntityManager>();
-        var netMan = client.ResolveDependency<IClientNetManager>();
 
-        Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-        client.Post(() => netMan.ClientConnect(null!, 0, null!));
         server.Post(() =>
         {
             confMan.SetCVar(CVars.NetPVS, true);
@@ -44,16 +39,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             confMan.SetCVar(CVars.NetPvsGridRange, 32f);
         });
 
-        async Task RunTicks()
-        {
-            for (var i = 0; i < 10; i++)
-            {
-                await server.WaitRunTicks(1);
-                await client.WaitRunTicks(1);
-            }
-        }
-
-        await RunTicks();
+        await RunTicksSync(server, client, 5);
 
         // Create a grid outside normal grid PVS range and attach the player near the map origin.
         EntityUid farGrid = default;
@@ -74,29 +60,23 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        await RunTicks();
+        await RunTicksSync(server, client, 5);
 
         var farNetGrid = sEntMan.GetNetEntity(farGrid);
         Assert.That(cEntMan.TryGetEntity(farNetGrid, out _), Is.False);
 
         // Forced PVS entities should bypass grid range checks.
         await server.WaitPost(() => pvsOverride.AddForceSend(farGrid));
-        await RunTicks();
+        await RunTicksSync(server, client, 5);
 
         Assert.That(cEntMan.TryGetEntity(farNetGrid, out _), Is.True);
-
-        await client.WaitPost(() => netMan.ClientDisconnect(""));
-        await server.WaitRunTicks(5);
-        await client.WaitRunTicks(5);
     }
 
     [Test]
     public async Task TestGridRangeCulling()
     {
-        var server = StartServer();
-        var client = StartClient();
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
         var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
@@ -107,10 +87,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
 
         var cEntMan = client.ResolveDependency<IEntityManager>();
         var cMapMan = client.ResolveDependency<IMapManager>();
-        var netMan = client.ResolveDependency<IClientNetManager>();
 
-        Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-        client.Post(() => netMan.ClientConnect(null!, 0, null!));
         server.Post(() =>
         {
             confMan.SetCVar(CVars.NetPVS, true);
@@ -118,16 +95,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             confMan.SetCVar(CVars.NetPvsGridRange, 32f);
         });
 
-        async Task RunTicks()
-        {
-            for (var i = 0; i < 10; i++)
-            {
-                await server.WaitRunTicks(1);
-                await client.WaitRunTicks(1);
-            }
-        }
-
-        await RunTicks();
+        await RunTicksSync(server, client, 5);
 
         // Create one grid in range and one grid far outside the configured grid PVS range.
         EntityUid nearGrid = default;
@@ -154,7 +122,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        await RunTicks();
+        await RunTicksSync(server, client, 5);
 
         var nearNetGrid = sEntMan.GetNetEntity(nearGrid);
         var farNetGrid = sEntMan.GetNetEntity(farGrid);
@@ -165,7 +133,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
         Assert.That(cEntMan.TryGetEntity(farNetGrid, out _), Is.False);
 
         Assert.That(
-            cMapMan.TryFindGridAt(cMap!.Value, new Vector2(0.5f, 0.5f), out var foundGrid, out MapGridComponent? _),
+            cMapMan.TryFindGridAt(cMap!.Value, new Vector2(0.5f, 0.5f), out var foundGrid, out var _),
             Is.True);
         Assert.That(foundGrid, Is.EqualTo(cNearGrid!.Value));
 
@@ -176,10 +144,12 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             xforms.SetCoordinates(player, new EntityCoordinates(map, new Vector2(8f, 0.5f)));
             xforms.SetLocalPosition(nearGrid, new Vector2(2048f, 0f));
         });
-        await RunTicks();
+
+        await RunTicksSync(server, client, 5);
 
         await server.WaitPost(() => xforms.SetCoordinates(player, new EntityCoordinates(map, new Vector2(0.5f, 0.5f))));
-        await RunTicks();
+
+        await RunTicksSync(server, client, 5);
 
         Assert.That(cEntMan.TryGetEntity(farNetGrid, out _), Is.False);
         Assert.That(
@@ -194,7 +164,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
 
         // Moving into the grid's new location should reattach it and make lookup find it there.
         await server.WaitPost(() => xforms.SetCoordinates(player, new EntityCoordinates(map, new Vector2(2048.5f, 0.5f))));
-        await RunTicks();
+        await RunTicksSync(server, client, 5);
 
         Assert.That(cEntMan.TryGetEntity(nearNetGrid, out cNearGrid), Is.True);
         cNearMeta = cEntMan.GetComponent<MetaDataComponent>(cNearGrid!.Value);
@@ -208,19 +178,13 @@ public sealed class PvsChunkTest : RobustIntegrationTest
         Assert.That(foundGrid, Is.EqualTo(cNearGrid.Value));
 
         await server.WaitPost(() => sEntMan.DeleteEntity(nearGrid));
-        await RunTicks();
-
-        await client.WaitPost(() => netMan.ClientDisconnect(""));
-        await server.WaitRunTicks(5);
-        await client.WaitRunTicks(5);
     }
 
     [Test]
     public async Task TestGridRangeZeroDisablesGridCulling()
     {
-        var (client, server) = await StartConnectedPair();
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
         var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
@@ -230,10 +194,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
         var mapSys = sEntMan.System<MapSystem>();
 
         var cEntMan = client.ResolveDependency<IEntityManager>();
-        var netMan = client.ResolveDependency<IClientNetManager>();
 
-        Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-        client.Post(() => netMan.ClientConnect(null!, 0, null!));
         server.Post(() =>
         {
             confMan.SetCVar(CVars.NetPVS, true);
@@ -241,7 +202,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             confMan.SetCVar(CVars.NetPvsGridRange, 0f);
         });
 
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         EntityUid farGrid = default;
         await server.WaitPost(() =>
@@ -259,14 +220,10 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         var farNetGrid = sEntMan.GetNetEntity(farGrid);
         Assert.That(cEntMan.TryGetEntity(farNetGrid, out _), Is.True);
-
-        await client.WaitPost(() => netMan.ClientDisconnect(""));
-        await server.WaitRunTicks(5);
-        await client.WaitRunTicks(5);
     }
 
     [Test]
@@ -289,7 +246,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             confMan.SetCVar(CVars.NetPvsGridRange, 0f);
         });
 
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         EntityUid map1 = default;
         EntityUid map2 = default;
@@ -308,7 +265,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(map1), out _), Is.True);
         Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(map2), out _), Is.False);
@@ -336,7 +293,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             confMan.SetCVar(CVars.NetPvsGridRange, 0f);
         });
 
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         EntityUid farGrid = default;
         EntityUid farEntity = default;
@@ -357,7 +314,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(farGrid), out _), Is.True);
         Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(farEntity), out _), Is.False);
@@ -380,7 +337,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             confMan.SetCVar(CVars.NetPvsMapCulling, false);
         });
 
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         EntityUid map1 = default;
         EntityUid map2 = default;
@@ -395,7 +352,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(map1), out _), Is.True);
         Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(map2), out _), Is.True);
@@ -418,7 +375,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
 
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         // Ensure client & server ticks are synced.
         // Client runs 1 tick ahead
@@ -465,7 +422,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         var nEntity = sEntMan.GetNetEntity(entity);
         var nGrid = sEntMan.GetNetEntity(grid);
@@ -485,7 +442,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
 
         // Teleport the grid to the player's map. Its contents should enter PVS.
         await server.WaitPost(() => xforms.SetCoordinates(grid, mapCoords));
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         Assert.That(xform.ParentUid, Is.EqualTo(grid));
         Assert.That(xform.GridUid, Is.EqualTo(grid));
@@ -498,7 +455,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
 
         // Delete the original map.
         await server.WaitPost(() => sEntMan.DeleteEntity(map2));
-        await RunTicksSync(server, client, 10);
+        await RunTicksSync(server, client, 5);
 
         Assert.That(xform.ParentUid, Is.EqualTo(grid));
         Assert.That(xform.GridUid, Is.EqualTo(grid));

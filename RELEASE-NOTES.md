@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add a `OnlyRotation` property to MoveEvent where the EntityCoordinates remain the same.
 
 ### Bugfixes
 

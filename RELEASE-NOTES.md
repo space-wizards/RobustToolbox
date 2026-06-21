@@ -59,6 +59,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Remove the duplicate serialization copy of components kept on ComponentRegistryEntry; now it only stores the deserialized component. To get the raw MappingDataNode for EntityPrototypes use PrototypeManager. This is expected to significantly reduce memory usage.
+* Obsolete LocalRotation in favor of the system method. The angle is now also normalized to 2PI and no longer grows indefinitely.
 
 ### New features
 

@@ -383,6 +383,21 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetEntities() => Entities;
 
+        #region Dirtying
+
+        private bool DirtyComponent(IComponent component, bool isUnclassifiedChange = true)
+        {
+            var newChange = component.LastModifiedTick != CurrentTick;
+            component.LastModifiedTick = CurrentTick;
+
+            if (isUnclassifiedChange && component is IComponentDelta delta)
+            {
+                delta.LastUnclassifiedDirty = CurrentTick;
+            }
+
+            return newChange;
+        }
+
         /// <inheritdoc />
         public virtual void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null)
         {
@@ -402,14 +417,16 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("use override with an EntityUid or Entity<T>")]
-        public void Dirty(IComponent component, MetaDataComponent? meta = null)
+        public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            Dirty(component.Owner, component, meta);
+            DirtyInternal(uid, component, meta);
         }
 
-        /// <inheritdoc />
-        public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
+        internal void DirtyInternal(
+            EntityUid uid,
+            IComponent component,
+            MetaDataComponent? meta = null,
+            bool isUnclassifiedChange = true)
         {
             DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
                 $"Attempted to dirty a non-networked component: {component.GetType()}");
@@ -418,15 +435,18 @@ namespace Robust.Shared.GameObjects
             if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;
 
-            if (component.LastModifiedTick == CurrentTick)
-                return;
-
-            DirtyEntity(uid, meta);
-            component.LastModifiedTick = CurrentTick;
+            if (DirtyComponent(component, isUnclassifiedChange))
+                DirtyEntity(uid, meta);
         }
 
         /// <inheritdoc />
         public virtual void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
+        {
+            DirtyInternal(ent, meta);
+        }
+
+        internal void DirtyInternal<T>(Entity<T> ent, MetaDataComponent? meta = null, bool isUnclassifiedChange = true)
+            where T : IComponent
         {
             DebugTools.Assert(ent.Comp.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
                 $"Attempted to dirty a non-networked component: {ent.Comp.GetType()}");
@@ -434,11 +454,8 @@ namespace Robust.Shared.GameObjects
             if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
                 return;
 
-            if (ent.Comp.LastModifiedTick == CurrentTick)
-                return;
-
-            DirtyEntity(ent, meta);
-            ent.Comp.LastModifiedTick = CurrentTick;
+            if (DirtyComponent(ent.Comp, isUnclassifiedChange))
+                DirtyEntity(ent, meta);
         }
 
         /// <inheritdoc />
@@ -454,8 +471,8 @@ namespace Robust.Shared.GameObjects
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
             // chances are at least one of these components didn't get net-sync disabled.
             DirtyEntity(ent, meta);
-            ent.Comp1.LastModifiedTick = CurrentTick;
-            ent.Comp2.LastModifiedTick = CurrentTick;
+            DirtyComponent(ent.Comp1);
+            DirtyComponent(ent.Comp2);
         }
 
         /// <inheritdoc />
@@ -474,9 +491,9 @@ namespace Robust.Shared.GameObjects
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
             // chances are at least one of these components didn't get net-sync disabled.
             DirtyEntity(ent, meta);
-            ent.Comp1.LastModifiedTick = CurrentTick;
-            ent.Comp2.LastModifiedTick = CurrentTick;
-            ent.Comp3.LastModifiedTick = CurrentTick;
+            DirtyComponent(ent.Comp1);
+            DirtyComponent(ent.Comp2);
+            DirtyComponent(ent.Comp3);
         }
 
         /// <inheritdoc />
@@ -498,11 +515,13 @@ namespace Robust.Shared.GameObjects
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
             // chances are at least one of these components didn't get net-sync disabled.
             DirtyEntity(ent, meta);
-            ent.Comp1.LastModifiedTick = CurrentTick;
-            ent.Comp2.LastModifiedTick = CurrentTick;
-            ent.Comp3.LastModifiedTick = CurrentTick;
-            ent.Comp4.LastModifiedTick = CurrentTick;
+            DirtyComponent(ent.Comp1);
+            DirtyComponent(ent.Comp2);
+            DirtyComponent(ent.Comp3);
+            DirtyComponent(ent.Comp4);
         }
+
+        #endregion
 
         public bool TryQueueDeleteEntity(EntityUid? uid)
         {

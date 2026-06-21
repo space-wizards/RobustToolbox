@@ -308,32 +308,31 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
     {
-        if (args.FromTick > ent.Comp.CreationTick && ent.Comp.LastFieldUpdate >= args.FromTick)
+        var aspects = EntityManager.GetModifiedAspects(ent.Comp, args.FromTick);
+
+        switch (aspects)
         {
-            var fields = EntityManager.GetModifiedFields(ent.Comp, args.FromTick);
-
-            switch (fields)
+            case >= DeltaAspect.Unclassified:
+                break;
+            case 1 << 0:
             {
-                case 1 << 0:
-                {
-                    var state = new UserInterfaceActorsDeltaState();
-                    AddActors(ent, state.Actors, ref args);
+                var state = new UserInterfaceActorsDeltaState();
+                AddActors(ent, state.Actors, ref args);
 
-                    args.State = state;
-                    return;
-                }
-                case 1 << 2:
-                {
-                    var states = ent.Comp.States;
+                args.State = state;
+                return;
+            }
+            case 1 << 2:
+            {
+                var states = ent.Comp.States;
 
-                    // TODO Game State
-                    // Force the client to serialize & de-serialize implicitly generated component states.
-                    if (_netManager.IsClient)
-                        states = new(states);
+                // TODO Game State
+                // Force the client to serialize & de-serialize implicitly generated component states.
+                if (_netManager.IsClient)
+                    states = new(states);
 
-                    args.State = new UserInterfaceStatesDeltaState {States = states};
-                    return;
-                }
+                args.State = new UserInterfaceStatesDeltaState {States = states};
+                return;
             }
         }
 

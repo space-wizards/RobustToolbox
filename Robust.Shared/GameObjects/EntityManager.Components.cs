@@ -397,6 +397,7 @@ namespace Robust.Shared.GameObjects
             if (component is IComponentDelta delta)
             {
                 var curTick = _gameTiming.CurTick;
+                delta.LastUnclassifiedDirty = curTick;
                 delta.LastModifiedFields = new GameTick[reg.NetworkedFields.Length];
                 Array.Fill(delta.LastModifiedFields, curTick);
             }

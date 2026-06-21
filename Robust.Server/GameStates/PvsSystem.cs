@@ -54,12 +54,18 @@ internal sealed partial class PvsSystem : EntitySystem
     public int ForceAckThreshold { get; private set; }
 
     /// <summary>
-    /// Is view culling enabled, or will we send the whole map?
+    /// Is view culling enabled, or will we send all entities?
     /// </summary>
     public bool CullingEnabled { get; private set; }
 
+    /// <summary>
+    /// Will we cull grids outside of range or on a different map?
+    /// </summary>
     public bool GridCullingEnabled { get; private set; }
 
+    /// <summary>
+    /// Will we cull different maps?
+    /// </summary>
     public bool MapCullingEnabled { get; private set; }
 
     /// <summary>

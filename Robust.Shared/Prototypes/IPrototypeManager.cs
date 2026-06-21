@@ -413,7 +413,10 @@ public interface IPrototypeManager
     // ReSharper restore MethodOverloadWithOptionalParameter
 
     bool HasMapping<T>(string id);
+
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
+
+    bool TryGetMapping<T>(string id, [NotNullWhen(true)] out MappingDataNode? mappings);
 
     /// <summary>
     ///     Returns whether a prototype kind <param name="kind"/> exists.

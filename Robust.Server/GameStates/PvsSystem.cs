@@ -58,6 +58,10 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     public bool CullingEnabled { get; private set; }
 
+    public bool GridCullingEnabled { get; private set; }
+
+    public bool MapCullingEnabled { get; private set; }
+
     /// <summary>
     /// Size of the side of the view bounds square. Related to <see cref="CVars.NetMaxUpdateRange"/>
     /// </summary>
@@ -152,6 +156,7 @@ internal sealed partial class PvsSystem : EntitySystem
         Subs.CVar(_configManager, CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsPriorityRange, OnPriorityRangeChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsGridRange, OnGridRangeChanged, true);
+        Subs.CVar(_configManager, CVars.NetPvsMapCulling, OnMapCullingChanged, true);
         Subs.CVar(_configManager, CVars.NetForceAckThreshold, OnForceAckChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsAsync, OnAsyncChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsCompressLevel, ResetParallelism, true);
@@ -282,7 +287,13 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private void OnGridRangeChanged(float value)
     {
+        GridCullingEnabled = value > 0;
         _gridViewSize = Math.Max(ChunkSize, value);
+    }
+
+    private void OnMapCullingChanged(bool value)
+    {
+        MapCullingEnabled = value;
     }
 
     private void OnForceAckChanged(int value)

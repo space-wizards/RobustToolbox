@@ -141,7 +141,7 @@ namespace Robust.Client.GameStates
         private bool _resettingPredictedEntities;
         private readonly List<EntityUid> _brokenEnts = new();
 
-        private SharedMapSystem _maps = default!;
+        private SharedMapSystem? _maps = null;
 
         /// <inheritdoc />
         public void Initialize()
@@ -181,6 +181,8 @@ namespace Robust.Client.GameStates
             _conHost.RegisterCommand("fullstatereset", Loc.GetString("cmd-full-state-reset-desc"), Loc.GetString("cmd-full-state-reset-help"), (_, _, _) => RequestFullState());
 
             _entities.ComponentAdded += OnComponentAdded;
+            _entities.AfterStartup += OnEntityManagerStartup;
+            _entities.AfterShutdown += OnEntityManagerShutdown;
 
             var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
             if (!metaId.HasValue)
@@ -193,7 +195,17 @@ namespace Robust.Client.GameStates
                 throw new InvalidOperationException("TransformComponent does not have a NetId.");
 
             _xformCompNetId = xformId.Value;
+        }
+
+        // Blursed
+        private void OnEntityManagerStartup()
+        {
             _maps = _entitySystemManager.GetEntitySystem<SharedMapSystem>();
+        }
+
+        private void OnEntityManagerShutdown()
+        {
+            _maps = null;
         }
 
         private void OnComponentAdded(AddedComponentEventArgs args)
@@ -1023,7 +1035,7 @@ namespace Robust.Client.GameStates
             // broadphase update. However, if this entity is parented to some other entity also re-entering PVS,
             // we only need to update it's parent (as it recursively updates children anyways).
             var xform = _entities.TransformQuery.Comp(data.Uid);
-            if (_maps.IsMap(data.Uid, xform) || _maps.IsGrid(data.Uid, xform))
+            if (_maps?.IsMap(data.Uid, xform) == true || _maps?.IsGrid(data.Uid, xform) == true)
             {
                 return;
             }

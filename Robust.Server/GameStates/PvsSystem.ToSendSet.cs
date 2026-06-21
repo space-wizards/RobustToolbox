@@ -33,6 +33,7 @@ internal sealed partial class PvsSystem
         var fromTick = session.FromTick;
         // TODO: ValueList when IList done
         var grids = new List<Entity<MapGridComponent>>();
+        var visibleMaps = new HashSet<EntityUid>();
 
         // No overrides so need to do this manually.
         if (!CullingEnabled || session.DisableCulling)
@@ -58,31 +59,66 @@ internal sealed partial class PvsSystem
             return;
         }
 
-        // PVS for grids in the wide-range.
-        foreach (var viewer in session.Viewers)
+        // Send maps / cull them
+        if (!MapCullingEnabled)
         {
-            var (viewPos, range, mapUid) = CalcGridViewBounds(viewer);
-            if (mapUid is not { } map || !TryComp(map, out MetaDataComponent? mapMeta))
-                continue;
-
-            var rangeVec = new Vector2(range, range);
-            var box = new Box2(viewPos - rangeVec, viewPos + rangeVec);
-            grids.Clear();
-            _mapManager.FindGridsIntersecting(map, box, ref grids, approx: true, includeMap: false);
-
-            foreach (var grid in grids)
+            var mapQuery = AllEntityQuery<MapComponent, MetaDataComponent>();
+            while (mapQuery.MoveNext(out var uid, out _, out var mapMeta))
             {
-                // Add visible before doing the addent check just to make sure it passed gridinrange.
-                if (!session.VisibleGridRoots.Add(grid.Owner) ||
-                    !TryComp(grid.Owner, out MetaDataComponent? gridMeta))
+                visibleMaps.Add(uid);
+                AddEntity(session, (uid, mapMeta), fromTick);
+            }
+        }
+        else
+        {
+            foreach (var viewer in session.Viewers)
+            {
+                if (viewer.Comp1.MapUid is not { } map ||
+                    !visibleMaps.Add(map) ||
+                    !TryComp(map, out MetaDataComponent? mapMeta))
                 {
                     continue;
                 }
 
-                if (!AddEntity(session, (map, mapMeta), fromTick))
+                AddEntity(session, (map, mapMeta), fromTick);
+            }
+        }
+
+        // Send all grids / cull them
+        if (!GridCullingEnabled)
+        {
+            var gridQuery = AllEntityQuery<MapGridComponent, MetaDataComponent>();
+            while (gridQuery.MoveNext(out var uid, out _, out var gridMeta))
+            {
+                if (session.VisibleGridRoots.Add(uid))
+                    AddEntity(session, (uid, gridMeta), fromTick);
+            }
+        }
+        else
+        {
+            // PVS for grids in the wide-range.
+            foreach (var viewer in session.Viewers)
+            {
+                var (viewPos, range, mapUid) = CalcGridViewBounds(viewer);
+                if (mapUid is not { } map || !visibleMaps.Contains(map))
                     continue;
 
-                AddEntity(session, (grid.Owner, gridMeta), fromTick);
+                var rangeVec = new Vector2(range, range);
+                var box = new Box2(viewPos - rangeVec, viewPos + rangeVec);
+                grids.Clear();
+                _mapManager.FindGridsIntersecting(map, box, ref grids, approx: true, includeMap: false);
+
+                foreach (var grid in grids)
+                {
+                    // Add visible before doing the addent check just to make sure it passed gridinrange.
+                    if (!session.VisibleGridRoots.Add(grid.Owner) ||
+                        !EntityManager.MetaQuery.TryComp(grid.Owner, out var gridMeta))
+                    {
+                        continue;
+                    }
+
+                    AddEntity(session, (grid.Owner, gridMeta), fromTick);
+                }
             }
         }
     }
@@ -133,7 +169,7 @@ internal sealed partial class PvsSystem
 
     private bool IsGridInRange(PvsSession session, EntityUid uid)
     {
-        if (!CullingEnabled || session.DisableCulling)
+        if (!CullingEnabled || session.DisableCulling || !GridCullingEnabled)
             return true;
 
         return session.VisibleGridRoots.Contains(uid);

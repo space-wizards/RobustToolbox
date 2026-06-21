@@ -216,6 +216,192 @@ public sealed class PvsChunkTest : RobustIntegrationTest
     }
 
     [Test]
+    public async Task TestGridRangeZeroDisablesGridCulling()
+    {
+        var (client, server) = await StartConnectedPair();
+
+        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+
+        var mapMan = server.ResolveDependency<IMapManager>();
+        var sEntMan = server.ResolveDependency<IEntityManager>();
+        var confMan = server.ResolveDependency<IConfigurationManager>();
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
+        var xforms = sEntMan.System<SharedTransformSystem>();
+        var mapSys = sEntMan.System<MapSystem>();
+
+        var cEntMan = client.ResolveDependency<IEntityManager>();
+        var netMan = client.ResolveDependency<IClientNetManager>();
+
+        Assert.DoesNotThrow(() => client.SetConnectTarget(server));
+        client.Post(() => netMan.ClientConnect(null!, 0, null!));
+        server.Post(() =>
+        {
+            confMan.SetCVar(CVars.NetPVS, true);
+            confMan.SetCVar(CVars.NetMaxUpdateRange, 32f);
+            confMan.SetCVar(CVars.NetPvsGridRange, 0f);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        EntityUid farGrid = default;
+        await server.WaitPost(() =>
+        {
+            var map = server.System<SharedMapSystem>().CreateMap(out var mapId);
+
+            var farGridComp = mapMan.CreateGridEntity(mapId);
+            farGrid = farGridComp.Owner;
+            mapSys.SetTile(farGridComp, Vector2i.Zero, new Tile(1));
+            xforms.SetLocalPosition(farGrid, new Vector2(1024f, 0f));
+
+            var player = sEntMan.SpawnEntity(null, new EntityCoordinates(map, new Vector2(0.5f, 0.5f)));
+            var session = sPlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, player);
+            sPlayerMan.JoinGame(session);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        var farNetGrid = sEntMan.GetNetEntity(farGrid);
+        Assert.That(cEntMan.TryGetEntity(farNetGrid, out _), Is.True);
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
+    }
+
+    [Test]
+    public async Task TestGridRangeZeroSendsGridsOnNonViewerMaps()
+    {
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
+
+        var mapMan = server.ResolveDependency<IMapManager>();
+        var sEntMan = server.ResolveDependency<IEntityManager>();
+        var confMan = server.ResolveDependency<IConfigurationManager>();
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
+        var mapSys = sEntMan.System<MapSystem>();
+        var cEntMan = client.ResolveDependency<IEntityManager>();
+
+        server.Post(() =>
+        {
+            confMan.SetCVar(CVars.NetPVS, true);
+            confMan.SetCVar(CVars.NetPvsMapCulling, true);
+            confMan.SetCVar(CVars.NetPvsGridRange, 0f);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        EntityUid map1 = default;
+        EntityUid map2 = default;
+        EntityUid grid = default;
+        await server.WaitPost(() =>
+        {
+            map1 = server.System<SharedMapSystem>().CreateMap();
+            map2 = server.System<SharedMapSystem>().CreateMap();
+            var gridComp = mapMan.CreateGridEntity(map2);
+            grid = gridComp.Owner;
+            mapSys.SetTile(gridComp, Vector2i.Zero, new Tile(1));
+
+            var player = sEntMan.SpawnEntity(null, new EntityCoordinates(map1, default));
+            var session = sPlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, player);
+            sPlayerMan.JoinGame(session);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(map1), out _), Is.True);
+        Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(map2), out _), Is.False);
+        Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(grid), out _), Is.True);
+    }
+
+    [Test]
+    public async Task TestGridRangeZeroDoesNotSendFarGridContents()
+    {
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
+
+        var mapMan = server.ResolveDependency<IMapManager>();
+        var sEntMan = server.ResolveDependency<IEntityManager>();
+        var confMan = server.ResolveDependency<IConfigurationManager>();
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
+        var xforms = sEntMan.System<SharedTransformSystem>();
+        var mapSys = sEntMan.System<MapSystem>();
+        var cEntMan = client.ResolveDependency<IEntityManager>();
+
+        server.Post(() =>
+        {
+            confMan.SetCVar(CVars.NetPVS, true);
+            confMan.SetCVar(CVars.NetMaxUpdateRange, 32f);
+            confMan.SetCVar(CVars.NetPvsGridRange, 0f);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        EntityUid farGrid = default;
+        EntityUid farEntity = default;
+        await server.WaitPost(() =>
+        {
+            var map = server.System<SharedMapSystem>().CreateMap(out var mapId);
+
+            var farGridComp = mapMan.CreateGridEntity(mapId);
+            farGrid = farGridComp.Owner;
+            mapSys.SetTile(farGridComp, Vector2i.Zero, new Tile(1));
+            xforms.SetLocalPosition(farGrid, new Vector2(1024f, 0f));
+
+            farEntity = sEntMan.SpawnEntity(null, new EntityCoordinates(farGrid, new Vector2(0.5f, 0.5f)));
+
+            var player = sEntMan.SpawnEntity(null, new EntityCoordinates(map, new Vector2(0.5f, 0.5f)));
+            var session = sPlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, player);
+            sPlayerMan.JoinGame(session);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(farGrid), out _), Is.True);
+        Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(farEntity), out _), Is.False);
+    }
+
+    [Test]
+    public async Task TestMapCullingCanBeDisabled()
+    {
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
+
+        var sEntMan = server.ResolveDependency<IEntityManager>();
+        var confMan = server.ResolveDependency<IConfigurationManager>();
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
+        var cEntMan = client.ResolveDependency<IEntityManager>();
+
+        server.Post(() =>
+        {
+            confMan.SetCVar(CVars.NetPVS, true);
+            confMan.SetCVar(CVars.NetPvsMapCulling, false);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        EntityUid map1 = default;
+        EntityUid map2 = default;
+        await server.WaitPost(() =>
+        {
+            map1 = server.System<SharedMapSystem>().CreateMap();
+            map2 = server.System<SharedMapSystem>().CreateMap();
+            var player = sEntMan.SpawnEntity(null, new EntityCoordinates(map1, default));
+
+            var session = sPlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, player);
+            sPlayerMan.JoinGame(session);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(map1), out _), Is.True);
+        Assert.That(cEntMan.TryGetEntity(sEntMan.GetNetEntity(map2), out _), Is.True);
+    }
+
+    [Test]
     public async Task TestGridMapChange()
     {
         await using var pair = await StartConnectedPair();

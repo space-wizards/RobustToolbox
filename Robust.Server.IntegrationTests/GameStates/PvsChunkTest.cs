@@ -10,6 +10,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Server.GameStates;
@@ -19,9 +20,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
     [Test]
     public async Task TestForceSentGridIgnoresRange()
     {
-        // TODO: Update to new test infra
-        var server = StartServer();
-        var client = StartClient();
+        var (client, server) = await StartConnectedPair();
 
         await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
 

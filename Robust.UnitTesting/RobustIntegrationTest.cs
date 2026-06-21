@@ -225,6 +225,29 @@ namespace Robust.UnitTesting
         }
 
         /// <summary>
+        ///     Ensure client & server ticks are synced.
+        ///     Client runs 1 tick ahead.
+        /// </summary>
+        protected static async Task WaitUntilSync(
+            ServerIntegrationInstance server,
+            ClientIntegrationInstance client)
+        {
+            var sTick = (int)server.Timing.CurTick.Value;
+            var cTick = (int)client.Timing.CurTick.Value;
+            var delta = cTick - sTick;
+
+            if (delta > 1)
+                await server.WaitRunTicks(delta - 1);
+            else if (delta < 1)
+                await client.WaitRunTicks(1 - delta);
+
+            sTick = (int)server.Timing.CurTick.Value;
+            cTick = (int)client.Timing.CurTick.Value;
+            delta = cTick - sTick;
+            Assert.That(delta, Is.EqualTo(1));
+        }
+
+        /// <summary>
         ///     Disconnects a client integration instance from its server and runs both sides long enough to process it.
         /// </summary>
         protected static async Task DisconnectClient(

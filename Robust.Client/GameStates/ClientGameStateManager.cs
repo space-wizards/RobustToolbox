@@ -1317,7 +1317,7 @@ namespace Robust.Client.GameStates
             ContainerSystem containerSys,
             EntityLookupSystem lookupSys)
         {
-            var map = _entitySystemManager.GetEntitySystem<SharedMapSystem>();
+            DebugTools.Assert(_maps != null);
 
             foreach (var netEntity in entities)
             {
@@ -1345,7 +1345,7 @@ namespace Robust.Client.GameStates
                 // I.e., modifying the metadata flag & pausing the entity should probably happen outside of this block.
                 if (xform.ParentUid.IsValid())
                 {
-                    if (!map.IsMap(ent.Value, xform) && !map.IsGrid(ent.Value, xform))
+                    if (_maps?.IsMap(ent.Value, xform) != true && _maps?.IsGrid(ent.Value, xform) != true)
                     {
                         lookupSys.RemoveFromEntityTree(ent.Value, xform);
                         xform.Broadphase = BroadphaseData.Invalid;

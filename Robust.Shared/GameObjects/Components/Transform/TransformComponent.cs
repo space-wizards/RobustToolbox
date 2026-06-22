@@ -153,10 +153,13 @@ namespace Robust.Shared.GameObjects
         public Angle LocalRotation
         {
             get => _localRotation;
+            [Obsolete("Use SharedTransformSystem.SetLocalRotation")]
             set
             {
                 if(_noLocalRotation)
                     return;
+
+                value = SharedTransformSystem.NormalizeRotation(value);
 
                 if (_localRotation.EqualsApprox(value))
                     return;

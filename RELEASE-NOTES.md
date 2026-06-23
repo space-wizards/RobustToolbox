@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Optimise Direction and DirectionFlag methods.
 
 ### Internal
 

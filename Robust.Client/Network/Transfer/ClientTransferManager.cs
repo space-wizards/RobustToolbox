@@ -46,6 +46,13 @@ internal sealed class ClientTransferManager : BaseTransferManager, ITransferMana
         _netManager.RegisterNetMessage<MsgTransferInit>(RxTransferInit, NetMessageAccept.Client | NetMessageAccept.Handshake);
         _netManager.RegisterNetMessage<MsgTransferAckInit>();
         _netManager.RegisterNetMessage<MsgTransferData>(RxTransferData, NetMessageAccept.Client | NetMessageAccept.Handshake);
+        _netManager.Disconnect += OnNetDisconnect;
+    }
+
+    private void OnNetDisconnect(object? sender, NetDisconnectedArgs e)
+    {
+        _transferImpl?.Dispose();
+        _transferImpl = null;
     }
 
     private async void RxTransferInit(MsgTransferInit message)

@@ -1757,6 +1757,7 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public sealed class CopyToShaderParameters(object layerKey)
         {
+            /// <inheritdoc cref="PrototypeCopyToShaderParameters.LayerKey"/>
             public object LayerKey = layerKey;
 
             /// <inheritdoc cref="PrototypeCopyToShaderParameters.ParameterTexture"/>

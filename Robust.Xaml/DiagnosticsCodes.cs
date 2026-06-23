@@ -18,7 +18,7 @@ internal static class DiagnosticsCodes
     internal const string EmitError = "RXN0010";
     internal const string Obsolete = "RXN0011";
 
-    internal static string XamlXCodeMappings(object exception)
+    internal static string MapToXamlXErrorCode(object exception)
     {
     	return exception switch
     	{

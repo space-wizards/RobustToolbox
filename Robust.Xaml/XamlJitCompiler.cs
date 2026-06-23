@@ -91,7 +91,7 @@ internal sealed class XamlJitCompiler
         }
     }
 
-    // Taken from https://github.com/AvaloniaUI/Avalonia/blob/01a8042094d741a8ddfcd441b4eabcb04092e988/src/Markup/Avalonia.Markup.Xaml.Loader/AvaloniaXamlIlRuntimeCompiler.cs#L185
+    // Taken from https://github.com/AvaloniaUI/Avalonia/blob/01a8042094d741a8ddfcd441b4eabcb04092e988/src/Markup/Avalonia.Markup.Xaml.Loader/AvaloniaXamlIlRuntimeCompiler.cs#L132
     static Type EmitIgnoresAccessCheckAttributeDefinition(ModuleBuilder builder)
     {
         var tb = builder.DefineType("System.Runtime.CompilerServices.IgnoresAccessChecksToAttribute",
@@ -126,16 +126,13 @@ internal sealed class XamlJitCompiler
             new[] { typeof(AttributeUsageAttribute).GetProperty(nameof(AttributeUsageAttribute.AllowMultiple))! },
             new object[] { true }));
 
-        return tb.CreateTypeInfo()!;
+        return tb.CreateTypeInfo();
     }
 
     // Taken from https://github.com/AvaloniaUI/Avalonia/blob/01a8042094d741a8ddfcd441b4eabcb04092e988/src/Markup/Avalonia.Markup.Xaml.Loader/AvaloniaXamlIlRuntimeCompiler.cs#L185
     static HashSet<Assembly> FindAssembliesGrantingInternalAccess(Assembly assembly)
     {
         var result = new HashSet<Assembly>();
-        if (assembly == null)
-            return result;
-
         var assemblyName = assembly.GetName();
         var publicKey = assemblyName.GetPublicKey();
 

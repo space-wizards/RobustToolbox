@@ -15,7 +15,7 @@ namespace Robust.Client.UserInterface.Controls
         // classes would concatenate with the StyleClassButton instead of overwriting
         // all of them
         [ViewVariables]
-        new public StyleClassCollection StyleClasses
+        public new StyleClassCollection StyleClasses
         {
             get => base.StyleClasses;
             set

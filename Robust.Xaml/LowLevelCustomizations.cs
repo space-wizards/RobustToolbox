@@ -50,12 +50,19 @@ internal sealed class LowLevelCustomizations
     {
         // resolve every type that we look for or substitute in when doing surgery
         // what a mess!
-        _typeSystem = typeSystem!;
-        _asm = typeSystem.TargetAssemblyDefinition!;
+        _typeSystem = typeSystem;
+        if (typeSystem.TargetAssemblyDefinition == null)
+        {
+            throw new ArgumentNullException(nameof(typeSystem),
+                "Provided type system should have a non-null target assembly definition");
+        }
+
+        _asm = typeSystem.TargetAssemblyDefinition;
 
         TypeDefinition ResolveType(string name) =>
-            typeSystem.GetTypeReference(_typeSystem.FindType(name)!).Resolve()
-            ?? throw new NullReferenceException($"type must exist: {name}");
+            typeSystem.GetTypeReference(_typeSystem.FindType(name) ??
+                                        throw new NullReferenceException($"type must exist: {name}"))
+                .Resolve();
 
         _iocManager = ResolveType("Robust.Shared.IoC.IoCManager");
         _iXamlProxyHelper = ResolveType(

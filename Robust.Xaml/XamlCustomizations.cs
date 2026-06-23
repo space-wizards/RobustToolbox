@@ -33,6 +33,7 @@ internal sealed class XamlCustomizations
     ///     (both <see cref="CecilTypeSystem"/> and <see cref="CecilTypeSystem"/> work)
     /// </param>
     /// <param name="defaultAssembly">the default assembly (for unqualified names to be looked up in)</param>
+    /// <param name="handleDiagnostic">Handler for diagnostics as reported by XAML</param>
     public XamlCustomizations(IXamlTypeSystem typeSystem, IXamlAssembly defaultAssembly, Action<XamlDiagnostic>? handleDiagnostic)
     {
         TypeSystem = typeSystem;
@@ -71,7 +72,7 @@ internal sealed class XamlCustomizations
                 handleDiagnostic?.Invoke(diagnostic);
                 return diagnostic.Severity;
             },
-            CodeMappings = DiagnosticsCodes.XamlXCodeMappings
+            CodeMappings = DiagnosticsCodes.MapToXamlXErrorCode
         };
         TransformerConfiguration = new TransformerConfiguration(
             typeSystem,
@@ -88,11 +89,8 @@ internal sealed class XamlCustomizations
     /// Create a field of type NameScope that contains a new NameScope, then
     /// alter the type's constructor to initialize that field.
     /// </summary>
-    /// <param name="typeBuilder">the type to alter</param>
-    /// <param name="constructor">the constructor to alter</param>
-    private void EmitNameScopeField(
-        IXamlILContextDefinition<IXamlILEmitter> xaml
-    )
+    /// <param name="xaml">The IL emitter to output to</param>
+    private void EmitNameScopeField(IXamlILContextDefinition<IXamlILEmitter> xaml)
     {
         var nameScopeType = TypeSystem.FindType("Robust.Client.UserInterface.XAML.NameScope")!;
         var field = xaml.TypeBuilder.DefineField(nameScopeType,
@@ -118,6 +116,7 @@ internal sealed class XamlCustomizations
     /// </remarks>
     /// <param name="context">context object that holds the TransformerConfiguration</param>
     /// <param name="node">the node to consider rewriting</param>
+    /// <param name="customAttributes">A list of custom attributes associated with the value</param>
     /// <param name="type">the type of that node</param>
     /// <param name="result">results get written to here</param>
     /// <returns></returns>

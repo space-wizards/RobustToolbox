@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Add a `OnlyRotation` property to MoveEvent where the EntityCoordinates remain the same.
+* ValueList now implements IList and not just IEnumerable.
 
 ### Bugfixes
 

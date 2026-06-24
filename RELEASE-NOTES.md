@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* Local and guest trust scores are now assigned via the `auth.localtrust` and `auth.guesttrust` CVars.
+*None yet*
 
 ### Bugfixes
 
-* Fixed exceptions related to WebSocket transfer system.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,17 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 277.2.0
+
+### New features
+
+* Local and guest trust scores are now assigned via the `auth.localtrust` and `auth.guesttrust` CVars.
+
+### Bugfixes
+
+* Fixed exceptions related to WebSocket transfer system.
 
 
 ## 277.1.0

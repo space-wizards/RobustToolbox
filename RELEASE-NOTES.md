@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Local and guest trust scores are now assigned via the `auth.localtrust` and `auth.guesttrust` CVars.
 
 ### Bugfixes
 
-*None yet*
+* Fixed exceptions related to WebSocket transfer system.
 
 ### Other
 

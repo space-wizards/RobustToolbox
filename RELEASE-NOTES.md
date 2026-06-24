@@ -44,7 +44,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix ValueList TryPop not clearing element references.
 
 ### Other
 

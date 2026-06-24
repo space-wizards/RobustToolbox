@@ -557,6 +557,7 @@ namespace Robust.Shared.GameObjects
         public TransformComponent Component => Entity.Comp1;
 
         public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
+        public bool OnlyRotation => OldPosition.Equals(NewPosition);
     }
 
     public struct TransformChildrenEnumerator : IDisposable

@@ -27,6 +27,10 @@ namespace Robust.Shared.GameObjects
 
         private bool _enabled;
         private float _fixtureEnlargement;
+        private readonly Dictionary<string, Fixture> _changedFixtures = new();
+        private ValueList<string> _expectedFixtures;
+        private ValueList<string> _fixturesToRemove;
+        private readonly PolygonShape _comparisonPolygon = new();
 
         internal const string ShowGridNodesCommand = "showgridnodes";
 
@@ -87,7 +91,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            var fixtures = new Dictionary<string, Fixture>(mapChunks.Count);
+            _changedFixtures.Clear();
             var anyUpdated = false;
 
             foreach (var (chunk, rectangles) in mapChunks)
@@ -99,7 +103,7 @@ namespace Robust.Shared.GameObjects
 
                 foreach (var id in chunk.Fixtures)
                 {
-                    fixtures[id] = manager.Fixtures[id];
+                    _changedFixtures[id] = manager.Fixtures[id];
                 }
             }
 
@@ -109,7 +113,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            EntityManager.EventBus.RaiseLocalEvent(uid,new GridFixtureChangeEvent {NewFixtures = fixtures}, true);
+            EntityManager.EventBus.RaiseLocalEvent(uid,new GridFixtureChangeEvent {NewFixtures = _changedFixtures}, true);
             _fixtures.FixtureUpdate(uid, manager: manager, body: body);
 
             CheckSplit(uid, mapChunks, removedChunks);
@@ -132,19 +136,20 @@ namespace Robust.Shared.GameObjects
 
             // Additionally, we need to handle map deserialization where content may have stored its own data
             // on the grid (e.g. mass) which we want to preserve.
-            var expectedFixtures = new ValueList<string>(rectangles.Count);
-            var toRemove = new ValueList<string>();
+            _expectedFixtures.Clear();
+            _fixturesToRemove.Clear();
             var updated = false;
 
             foreach (var rectangle in rectangles)
             {
-                var bounds = ((Box2) rectangle.Translated(origin)).Enlarged(_fixtureEnlargement);
-                var key = string.Create(CultureInfo.InvariantCulture, $"grid_chunk-{bounds.Left}-{bounds.Bottom}");
-                expectedFixtures.Add(key);
+                var tileBounds = rectangle.Translated(origin);
+                var bounds = ((Box2) tileBounds).Enlarged(_fixtureEnlargement);
+                var key = string.Create(CultureInfo.InvariantCulture, $"grid_chunk-{tileBounds.Left}-{tileBounds.Bottom}");
+                _expectedFixtures.Add(key);
 
                 if (manager.Fixtures.TryGetValue(key, out var existingFixture) &&
                     existingFixture.Shape is PolygonShape existingPoly &&
-                    PolygonEquals(existingPoly, bounds))
+                    PolygonEquals(existingPoly, bounds, _comparisonPolygon))
                 {
                     continue;
                 }
@@ -162,13 +167,13 @@ namespace Robust.Shared.GameObjects
 
             foreach (var oldId in chunk.Fixtures)
             {
-                if (expectedFixtures.Contains(oldId))
+                if (_expectedFixtures.Contains(oldId))
                     continue;
 
-                toRemove.Add(oldId);
+                _fixturesToRemove.Add(oldId);
             }
 
-            foreach (var oldId in toRemove.Span)
+            foreach (var oldId in _fixturesToRemove.Span)
             {
                 chunk.Fixtures.Remove(oldId);
                 _fixtures.DestroyFixture(uid, oldId, false, body: body, manager: manager, xform: xform);
@@ -178,7 +183,7 @@ namespace Robust.Shared.GameObjects
             return updated;
         }
 
-        private static bool PolygonEquals(PolygonShape poly, Box2 bounds)
+        private static bool PolygonEquals(PolygonShape poly, Box2 bounds, PolygonShape comparison)
         {
             Span<Vector2> vertices = stackalloc Vector2[4];
             vertices[0] = bounds.BottomLeft;
@@ -186,9 +191,8 @@ namespace Robust.Shared.GameObjects
             vertices[2] = bounds.TopRight;
             vertices[3] = bounds.TopLeft;
 
-            var shape = new PolygonShape();
-            shape.Set(vertices, 4);
-            return poly.EqualsApprox(shape);
+            comparison.Set(vertices, 4);
+            return poly.EqualsApprox(comparison);
         }
 
         private static Fixture CreateGridFixture(EntityUid uid, Box2 bounds)

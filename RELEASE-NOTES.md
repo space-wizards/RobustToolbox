@@ -45,6 +45,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix ValueList TryPop not clearing element references.
+* Fix ValueList Peek always throwing by referencing the wrong index.
 
 ### Other
 

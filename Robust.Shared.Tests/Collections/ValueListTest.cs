@@ -10,6 +10,27 @@ namespace Robust.Shared.Tests.Collections;
 internal sealed class ValueListTest
 {
     [Test]
+    public void PeekCorrectReference()
+    {
+        var list = new ValueList<bool>(2)
+        {
+            false,
+            true,
+        };
+
+        Assert.That(list.TryPeek(out var popped), Is.True);
+        Assert.That(popped, Is.True);
+
+        list.TryPop(out _);
+
+        Assert.That(list.TryPeek(out popped), Is.True);
+        Assert.That(popped, Is.False);
+
+        list.TryPop(out _);
+        Assert.That(list.TryPeek(out popped), Is.False);
+    }
+
+    [Test]
     public void TryPopClearsRemovedReference()
     {
         var list = new ValueList<object>(1);

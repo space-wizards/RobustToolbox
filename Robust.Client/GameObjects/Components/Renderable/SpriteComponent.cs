@@ -1333,7 +1333,7 @@ namespace Robust.Client.GameObjects
             }
 
             [Obsolete("Use SpriteSystem.CopyLayer() instead.")]
-            internal Layer(Layer toClone, SpriteComponent parent) : this(parent)
+            public Layer(Layer toClone, SpriteComponent parent) : this(parent)
             {
                 if (toClone.Shader != null)
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;

@@ -34,6 +34,11 @@ namespace Robust.Server.Physics
         [Dependency] private SharedMapSystem _maps = default!;
         [Dependency] private SharedPhysicsSystem _physics = default!;
         [Dependency] private SharedTransformSystem _xformSystem = default!;
+        [Dependency] private EntityQuery<MapGridComponent> _gridQuery = default!;
+        [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
+        [Dependency] private EntityQuery<PhysicsComponent> _bodyQuery = default!;
+        [Dependency] private EntityQuery<GridSplitNodeComponent> _splitNodeQuery = default!;
+        [Dependency] private EntityQuery<TransformComponent> _xformQuery = default!;
 
         /// <summary>
         /// Sessions to receive nodes for debug purposes.
@@ -52,19 +57,10 @@ namespace Robust.Server.Physics
 
         private HashSet<EntityUid> _entSet = new();
 
-        private EntityQuery<MapGridComponent> _gridQuery;
-        private EntityQuery<PhysicsComponent> _bodyQuery;
-        private EntityQuery<GridSplitNodeComponent> _splitNodeQuery;
-        private EntityQuery<TransformComponent> _xformQuery;
-
         public override void Initialize()
         {
             base.Initialize();
 
-            _gridQuery = GetEntityQuery<MapGridComponent>();
-            _bodyQuery = GetEntityQuery<PhysicsComponent>();
-            _splitNodeQuery = GetEntityQuery<GridSplitNodeComponent>();
-            _xformQuery = GetEntityQuery<TransformComponent>();
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
@@ -72,7 +68,46 @@ namespace Robust.Server.Physics
             Subs.CVar(_cfg, CVars.GridSplitting, SetSplitAllowed, true);
         }
 
-        private void SetSplitAllowed(bool value) => SplitAllowed = value;
+        private void SetSplitAllowed(bool value)
+        {
+            if (SplitAllowed == value)
+                return;
+
+            SplitAllowed = value;
+
+            if (!value)
+            {
+                var toRemove = new ValueList<EntityUid>();
+                var splitQuery = EntityQueryEnumerator<GridSplitNodeComponent>();
+                while (splitQuery.MoveNext(out var uid, out _))
+                {
+                    toRemove.Add(uid);
+                }
+
+                foreach (var uid in toRemove)
+                {
+                    RemComp<GridSplitNodeComponent>(uid);
+                }
+
+                return;
+            }
+
+            var grids = new List<Entity<MapGridComponent>>();
+            var gridQuery = EntityQueryEnumerator<MapGridComponent>();
+            while (gridQuery.MoveNext(out var uid, out var grid))
+            {
+                if (!CanHaveSplitNodes(uid))
+                    continue;
+
+                grids.Add((uid, grid));
+            }
+
+            foreach (var (uid, grid) in grids)
+            {
+                GenerateSplitNodes(uid, grid);
+                CheckSplits(uid);
+            }
+        }
 
         public override void Shutdown()
         {
@@ -85,6 +120,9 @@ namespace Robust.Server.Physics
         /// </summary>
         internal void EnsureGrid(EntityUid uid)
         {
+            if (!CanHaveSplitNodes(uid))
+                return;
+
             EnsureComp<GridSplitNodeComponent>(uid);
         }
 
@@ -205,7 +243,8 @@ namespace Robust.Server.Physics
         private void CheckSplits(EntityUid uid, HashSet<ChunkSplitNode> dirtyNodes)
         {
             // TODO: We already have mapgrid elsewhere
-            if (_isSplitting || !SplitAllowed ||
+            if (_isSplitting ||
+               !CanHaveSplitNodes(uid) ||
                !TryComp<MapGridComponent>(uid, out var oldGrid) ||
                !_splitNodeQuery.TryGetComponent(uid, out var splitComp) ||
                !oldGrid.CanSplit)
@@ -250,7 +289,7 @@ namespace Robust.Server.Physics
             // Split time
             if (_splitGroups.Count > 1)
             {
-                Log.Info($"Splitting {ToPrettyString(uid)} into {_splitGroups.Count} grids.");
+                Log.Debug($"Splitting {ToPrettyString(uid)} into {_splitGroups.Count} grids.");
                 var sw = new Stopwatch();
                 sw.Start();
 
@@ -399,6 +438,9 @@ namespace Robust.Server.Physics
 
         private void GenerateSplitNodes(EntityUid gridUid, MapGridComponent grid)
         {
+            if (!CanHaveSplitNodes(gridUid))
+                return;
+
             var splitComp = EnsureComp<GridSplitNodeComponent>(gridUid);
             splitComp.Nodes.Clear();
 
@@ -545,6 +587,9 @@ namespace Robust.Server.Physics
         /// </summary>
         internal override void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles)
         {
+            if (!CanHaveSplitNodes(gridEuid))
+                return;
+
             HashSet<ChunkSplitNode> nodes;
 
             if (chunk.FilledTiles == 0)
@@ -564,6 +609,9 @@ namespace Robust.Server.Physics
         /// </summary>
         internal override void CheckSplit(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks, List<MapChunk> removedChunks)
         {
+            if (!CanHaveSplitNodes(gridEuid))
+                return;
+
             var nodes = new HashSet<ChunkSplitNode>();
 
             foreach (var chunk in removedChunks)
@@ -595,6 +643,11 @@ namespace Robust.Server.Physics
             CheckSplits(gridEuid, nodes);
         }
 
+        private bool CanHaveSplitNodes(EntityUid uid)
+        {
+            return SplitAllowed && !_mapQuery.HasComponent(uid);
+        }
+
         /// <summary>
         /// Removes this chunk from nodes and dirties its neighbours.
         /// </summary>
@@ -602,7 +655,7 @@ namespace Robust.Server.Physics
         {
             var dirtyNodes = new HashSet<ChunkSplitNode>();
 
-            if (_isSplitting) return new HashSet<ChunkSplitNode>();
+            if (_isSplitting) return dirtyNodes;
 
             Cleanup(gridEuid, chunk, dirtyNodes);
             DebugTools.Assert(dirtyNodes.All(o => o.Group.Chunk != chunk));

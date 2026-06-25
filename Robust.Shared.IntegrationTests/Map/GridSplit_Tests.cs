@@ -5,8 +5,10 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
+using Robust.Server.Physics.Components;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Map;
@@ -83,6 +85,7 @@ internal sealed class GridSplit_Tests
     public void CVarDisabledNoSplit()
     {
         var sim = GetSim();
+        var entManager = sim.Resolve<IEntityManager>();
         var config = sim.Resolve<IConfigurationManager>();
         config.SetCVar(CVars.GridSplitting, false);
 
@@ -98,10 +101,9 @@ internal sealed class GridSplit_Tests
 
         mapSystem.SetTile(gridEnt, new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(1));
+        Assert.That(entManager.HasComponent<GridSplitNodeComponent>(gridEnt.Owner), Is.False);
 
         config.SetCVar(CVars.GridSplitting, true);
-        mapSystem.SetTile(gridEnt, new Vector2i(1, 0), new Tile(1));
-        mapSystem.SetTile(gridEnt, new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
 
         mapSystem.DeleteMap(mapId);

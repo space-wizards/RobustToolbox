@@ -24,6 +24,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private FixtureSystem _fixtures = default!;
         [Dependency] private SharedMapSystem _map = default!;
         [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
 
         private bool _enabled;
         private float _fixtureEnlargement;
@@ -53,7 +54,7 @@ namespace Robust.Shared.GameObjects
 
         protected virtual void OnGridInit(GridInitializeEvent ev)
         {
-            if (HasComp<MapComponent>(ev.EntityUid))
+            if (_mapQuery.HasComponent(ev.EntityUid))
                 return;
 
             // This will also check for grid splits if applicable.

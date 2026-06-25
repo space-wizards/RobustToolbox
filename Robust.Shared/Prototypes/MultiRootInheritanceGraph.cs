@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes;
@@ -48,8 +47,11 @@ public sealed class MultiRootInheritanceGraph<T> where T : notnull
             while (queue.TryDequeue(out var parentL1))
             {
                 if (EqualityComparer<T>.Default.Equals(parentL1,id))
+                {
                     throw new InvalidOperationException(
                         $"Circular Inheritance detected for id \"{id}\" and parent \"{parent}\"");
+                }
+
                 var parentsL2 = GetParents(parentL1);
                 if (parentsL2 != null)
                 {

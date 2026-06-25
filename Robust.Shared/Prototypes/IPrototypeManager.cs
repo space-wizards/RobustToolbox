@@ -568,7 +568,7 @@ public interface IPrototypeManager
     /// <summary>
     /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.
     /// </summary>
-    /// <param name="kind">
+    /// <param name="kinds">
     /// The type of the prototype kind that implements <see cref="IPrototype"/>. This type also
     /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.
     /// </param>

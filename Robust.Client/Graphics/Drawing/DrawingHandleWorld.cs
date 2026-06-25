@@ -10,7 +10,7 @@ namespace Robust.Client.Graphics
         {
         }
 
-        private const int Ppm = EyeManager.PixelsPerMeter;
+        private static readonly int Ppm = EyeManager.PixelsPerMeter;
 
         /// <summary>
         /// Draws an untextured colored rectangle to the world.The coordinate system is right handed.

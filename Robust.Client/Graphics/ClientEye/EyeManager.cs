@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using System.Numerics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
@@ -15,12 +17,36 @@ namespace Robust.Client.Graphics
     /// <inheritdoc />
     public sealed partial class EyeManager : IEyeManager
     {
-        // If you modify this make sure to edit the value in the Robust.Shared.Audio.AudioParams struct default too!
-        // No I can't be bothered to make this a shared constant.
         /// <summary>
-        /// Default scaling for the projection matrix.
+        /// Default scaling for the projection matrix: how many texture pixels map to one world meter (tile).
         /// </summary>
-        public const int PixelsPerMeter = 32;
+        /// <remarks>
+        /// Defaults to 32. It can be overridden once, at process startup, via the
+        /// <c>ROBUST_PIXELS_PER_METER</c> environment variable. This is fixed for the lifetime of the
+        /// process and is NOT safe to change at runtime.
+        /// </remarks>
+        public static readonly int PixelsPerMeter = ReadPixelsPerMeter();
+
+        /// <summary>
+        /// Environment variable used to override <see cref="PixelsPerMeter"/> at startup.
+        /// </summary>
+        public const string PixelsPerMeterEnvVar = "ROBUST_PIXELS_PER_METER";
+
+        private const int DefaultPixelsPerMeter = 32;
+
+        private static int ReadPixelsPerMeter()
+        {
+            var raw = Environment.GetEnvironmentVariable(PixelsPerMeterEnvVar);
+
+            if (!string.IsNullOrWhiteSpace(raw)
+                && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
+                && value > 0)
+            {
+                return value;
+            }
+
+            return DefaultPixelsPerMeter;
+        }
 
         [Dependency] private IClyde _displayManager = default!;
         [Dependency] private IEntityManager _entityManager = default!;

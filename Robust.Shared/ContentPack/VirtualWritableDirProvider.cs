@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -31,6 +32,7 @@ namespace Robust.Shared.ContentPack
         public void CreateDir(ResPath path)
         {
             path = GetFullPath(path);
+            LogVfs("Creating virtual directory '{0}'.", path);
 
             var directory = _rootDirectoryNode;
 
@@ -57,6 +59,7 @@ namespace Robust.Shared.ContentPack
         public void Delete(ResPath path)
         {
             path = GetFullPath(path);
+            LogVfs("Deleting virtual node '{0}'.", path);
 
             var pathParent = path.Directory;
 
@@ -95,6 +98,7 @@ namespace Robust.Shared.ContentPack
         public Stream Open(ResPath path, FileMode fileMode, FileAccess access, FileShare share)
         {
             path = GetFullPath(path);
+            LogVfs("Opening virtual file '{0}' with mode {1}, access {2}, share {3}.", path, fileMode, access, share);
 
             var parentPath = path.Directory;
             if (!TryGetNodeAt(parentPath, out var parent) || !(parent is DirectoryNode parentDir))
@@ -195,6 +199,7 @@ namespace Robust.Shared.ContentPack
         {
             oldPath = GetFullPath(oldPath);
             newPath = GetFullPath(newPath);
+            LogVfs("Renaming virtual node '{0}' to '{1}'.", oldPath, newPath);
 
             if (!TryGetNodeAt(oldPath.Directory, out var parent) || parent is not DirectoryNode sourceDir)
                 throw new ArgumentException("Source directory does not exist.");
@@ -268,6 +273,18 @@ namespace Robust.Shared.ContentPack
             }
 
             return path.Clean();
+        }
+
+        private static void LogVfs(string message, params object?[] args)
+        {
+            try
+            {
+                Logger.GetSawmill("res.vfs").Info(message, args);
+            }
+            catch
+            {
+                // VirtualWritableDirProvider is usable in tests and tools without an IoC log manager.
+            }
         }
 
         private interface INode

@@ -93,6 +93,27 @@ public readonly struct ResPath : IEquatable<ResPath>
            && filename != "..";
 
     /// <summary>
+    ///     Converts arbitrary text into a single safe filename segment for use in resource paths.
+    ///     Does NOT validate against traversal, only consider filesystem naming paths.
+    /// </summary>
+    public static string SanitizeFilename(string filename)
+    {
+        var builder = new StringBuilder(filename.Length);
+
+        foreach (var c in filename)
+        {
+            builder.Append(c is '/' or '\\' || Array.IndexOf(Path.GetInvalidFileNameChars(), c) != -1
+                ? '_'
+                : c);
+        }
+
+        var sanitized = builder.ToString();
+        return IsValidFilename(sanitized)
+            ? sanitized
+            : "_";
+    }
+
+    /// <summary>
     ///     Returns true if the path is equal to "."
     /// </summary>
     public bool IsSelf => CanonPath == Self.CanonPath;

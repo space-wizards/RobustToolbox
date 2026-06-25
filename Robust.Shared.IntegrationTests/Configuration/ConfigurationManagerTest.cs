@@ -1,12 +1,14 @@
 using Moq;
 using NUnit.Framework;
-using Robust.Server.Configuration;
+using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.IntegrationTests.Configuration
 {

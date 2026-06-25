@@ -27,7 +27,6 @@ namespace Robust.Shared.Configuration
         ///     The description of this CVar.
         /// </summary>
         public string? Desc { get; }
-
         private protected CVarDef(string name, object defaultValue, CVar flags, string? desc)
         {
             Name = name;

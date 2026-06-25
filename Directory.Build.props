@@ -23,5 +23,10 @@
     We need these unpruneable packages because of transitive dependency pinning.
     -->
     <NoWarn>$(NoWarn);NU1510</NoWarn>
+
+    <!--
+    Lock packages until nuget package move to space-wizard control has been completed for previously hosted packages.
+    -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 </Project>

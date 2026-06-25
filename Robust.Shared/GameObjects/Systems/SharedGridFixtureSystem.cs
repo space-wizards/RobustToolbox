@@ -88,15 +88,25 @@ namespace Robust.Shared.GameObjects
             }
 
             var fixtures = new Dictionary<string, Fixture>(mapChunks.Count);
+            var anyUpdated = false;
 
             foreach (var (chunk, rectangles) in mapChunks)
             {
-                UpdateFixture(uid, chunk, rectangles, body, manager, xform);
+                if (!UpdateFixture(uid, chunk, rectangles, body, manager, xform))
+                    continue;
+
+                anyUpdated = true;
 
                 foreach (var id in chunk.Fixtures)
                 {
                     fixtures[id] = manager.Fixtures[id];
                 }
+            }
+
+            if (!anyUpdated)
+            {
+                CheckSplit(uid, mapChunks, removedChunks);
+                return;
             }
 
             EntityManager.EventBus.RaiseLocalEvent(uid,new GridFixtureChangeEvent {NewFixtures = fixtures}, true);
@@ -122,97 +132,86 @@ namespace Robust.Shared.GameObjects
 
             // Additionally, we need to handle map deserialization where content may have stored its own data
             // on the grid (e.g. mass) which we want to preserve.
-            var newFixtures = new ValueList<(string Id, Fixture Fixture)>();
-
-            Span<Vector2> vertices = stackalloc Vector2[4];
+            var expectedFixtures = new ValueList<string>(rectangles.Count);
+            var toRemove = new ValueList<string>();
+            var updated = false;
 
             foreach (var rectangle in rectangles)
             {
                 var bounds = ((Box2) rectangle.Translated(origin)).Enlarged(_fixtureEnlargement);
-                var poly = new PolygonShape();
-
-                vertices[0] = bounds.BottomLeft;
-                vertices[1] = bounds.BottomRight;
-                vertices[2] = bounds.TopRight;
-                vertices[3] = bounds.TopLeft;
-
-                poly.Set(vertices, 4);
-
-#pragma warning disable CS0618
-                var newFixture = new Fixture(
-                    poly,
-                    MapGridHelpers.CollisionGroup,
-                    MapGridHelpers.CollisionGroup,
-                    true)
-                {
-                    Owner = uid
-                };
-#pragma warning restore CS0618
-
                 var key = string.Create(CultureInfo.InvariantCulture, $"grid_chunk-{bounds.Left}-{bounds.Bottom}");
-                newFixtures.Add((key, newFixture));
-            }
+                expectedFixtures.Add(key);
 
-            // Check if we even need to issue an eventbus event
-            var updated = false;
+                if (manager.Fixtures.TryGetValue(key, out var existingFixture) &&
+                    existingFixture.Shape is PolygonShape existingPoly &&
+                    PolygonEquals(existingPoly, bounds))
+                {
+                    continue;
+                }
+
+                if (existingFixture != null)
+                {
+                    chunk.Fixtures.Remove(key);
+                    _fixtures.DestroyFixture(uid, key, existingFixture, false, body: body, manager: manager, xform: xform);
+                }
+
+                chunk.Fixtures.Add(key);
+                _fixtures.CreateFixture(uid, key, CreateGridFixture(uid, bounds), false, manager, body, xform);
+                updated = true;
+            }
 
             foreach (var oldId in chunk.Fixtures)
             {
-                var oldFixture = manager.Fixtures[oldId];
-                var existing = false;
-
-                // Handle deleted / updated fixtures
-                // (TODO: Check IDs and cross-reference for updates?)
-                for (var i = newFixtures.Count - 1; i >= 0; i--)
-                {
-                    var fixture = newFixtures[i].Fixture;
-
-                    // TODO GRIDS
-                    // Fix this
-                    // This **only** works if we assume the density is always the default (PhysicsConstants.DefaultDensity).
-                    // Hence, this always fails in SS14 because ShuttleSystem.OnGridFixtureChange changes the density.
-                    // So it constantly creats & destroys fixtures unnecessarily
-                    // AAAAA
-                    if (!oldFixture.Equals(fixture))
-                        continue;
-
-                    existing = true;
-                    newFixtures.RemoveSwap(i);
-                    break;
-                }
-
-                if (existing)
+                if (expectedFixtures.Contains(oldId))
                     continue;
 
-                // Doesn't align with any new fixtures so delete
+                toRemove.Add(oldId);
+            }
+
+            foreach (var oldId in toRemove.Span)
+            {
                 chunk.Fixtures.Remove(oldId);
-                _fixtures.DestroyFixture(uid, oldId, oldFixture, false, body: body, manager: manager, xform: xform);
+                _fixtures.DestroyFixture(uid, oldId, false, body: body, manager: manager, xform: xform);
                 updated = true;
-            }
-
-            if (newFixtures.Count > 0)
-            {
-                updated = true;
-            }
-
-            // Anything remaining is a new fixture (or at least, may have not serialized onto the chunk yet).
-            foreach (var (id, fixture) in newFixtures.Span)
-            {
-                chunk.Fixtures.Add(id);
-                var existingFixture = _fixtures.GetFixtureOrNull(uid, id, manager: manager);
-                // Check if it's the same (otherwise remove anyway).
-                // TODO GRIDS
-                // wasn't this already checked?
-                if (existingFixture?.Shape is PolygonShape poly &&
-                    poly.EqualsApprox((PolygonShape) fixture.Shape))
-                {
-                    continue;
-                }
-
-                _fixtures.CreateFixture(uid, id, fixture, false, manager, body, xform);
             }
 
             return updated;
+        }
+
+        private static bool PolygonEquals(PolygonShape poly, Box2 bounds)
+        {
+            Span<Vector2> vertices = stackalloc Vector2[4];
+            vertices[0] = bounds.BottomLeft;
+            vertices[1] = bounds.BottomRight;
+            vertices[2] = bounds.TopRight;
+            vertices[3] = bounds.TopLeft;
+
+            var shape = new PolygonShape();
+            shape.Set(vertices, 4);
+            return poly.EqualsApprox(shape);
+        }
+
+        private static Fixture CreateGridFixture(EntityUid uid, Box2 bounds)
+        {
+            Span<Vector2> vertices = stackalloc Vector2[4];
+            vertices[0] = bounds.BottomLeft;
+            vertices[1] = bounds.BottomRight;
+            vertices[2] = bounds.TopRight;
+            vertices[3] = bounds.TopLeft;
+
+            var poly = new PolygonShape();
+            poly.Set(vertices, 4);
+
+#pragma warning disable CS0618
+            return new Fixture(
+                poly,
+                MapGridHelpers.CollisionGroup,
+                MapGridHelpers.CollisionGroup,
+                true)
+            {
+                Owner = uid
+            };
+#pragma warning restore CS0618
         }
     }
 

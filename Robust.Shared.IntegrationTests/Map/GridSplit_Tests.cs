@@ -6,6 +6,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Map;
@@ -74,6 +75,126 @@ internal sealed class GridSplit_Tests
 
         mapSystem.SetTile(gridEnt, new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
+
+        mapSystem.DeleteMap(mapId);
+    }
+
+    [Test]
+    public void CVarDisabledNoSplit()
+    {
+        var sim = GetSim();
+        var config = sim.Resolve<IConfigurationManager>();
+        config.SetCVar(CVars.GridSplitting, false);
+
+        var mapManager = sim.Resolve<IMapManager>();
+        var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
+        var mapId = sim.CreateMap().MapId;
+        var gridEnt = mapManager.CreateGridEntity(mapId);
+
+        for (var x = 0; x < 3; x++)
+        {
+            mapSystem.SetTile(gridEnt, new Vector2i(x, 0), new Tile(1));
+        }
+
+        mapSystem.SetTile(gridEnt, new Vector2i(1, 0), Tile.Empty);
+        Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(1));
+
+        config.SetCVar(CVars.GridSplitting, true);
+        mapSystem.SetTile(gridEnt, new Vector2i(1, 0), new Tile(1));
+        mapSystem.SetTile(gridEnt, new Vector2i(1, 0), Tile.Empty);
+        Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
+
+        mapSystem.DeleteMap(mapId);
+    }
+
+    [Test]
+    public void SplitAcrossChunks()
+    {
+        var sim = GetSim();
+        var mapManager = sim.Resolve<IMapManager>();
+        var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
+        var mapId = sim.CreateMap().MapId;
+        var gridEnt = mapManager.CreateGridEntity(mapId);
+        var chunkSize = gridEnt.Comp.ChunkSize;
+
+        mapSystem.SetTile(gridEnt, new Vector2i(chunkSize - 1, 0), new Tile(1));
+        mapSystem.SetTile(gridEnt, new Vector2i(chunkSize, 0), new Tile(1));
+        mapSystem.SetTile(gridEnt, new Vector2i(chunkSize + 1, 0), new Tile(1));
+
+        Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(1));
+
+        mapSystem.SetTile(gridEnt, new Vector2i(chunkSize, 0), Tile.Empty);
+        Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
+
+        mapSystem.DeleteMap(mapId);
+    }
+
+    [Test]
+    public void FourWaySplit()
+    {
+        var sim = GetSim();
+        var mapManager = sim.Resolve<IMapManager>();
+        var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
+        var mapId = sim.CreateMap().MapId;
+        var gridEnt = mapManager.CreateGridEntity(mapId);
+        var center = new Vector2i(1, 1);
+
+        mapSystem.SetTile(gridEnt, center, new Tile(1));
+        mapSystem.SetTile(gridEnt, center + new Vector2i(0, 1), new Tile(1));
+        mapSystem.SetTile(gridEnt, center + new Vector2i(1, 0), new Tile(1));
+        mapSystem.SetTile(gridEnt, center + new Vector2i(0, -1), new Tile(1));
+        mapSystem.SetTile(gridEnt, center + new Vector2i(-1, 0), new Tile(1));
+
+        Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(1));
+
+        mapSystem.SetTile(gridEnt, center, Tile.Empty);
+        Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(4));
+
+        foreach (var grid in mapManager.GetAllGrids(mapId))
+        {
+            Assert.That(mapSystem.GetAllTiles(grid.Owner, grid.Comp).Count(), Is.EqualTo(1));
+        }
+
+        mapSystem.DeleteMap(mapId);
+    }
+
+    [Test]
+    public void SplitReCentersNewGridTiles()
+    {
+        var sim = GetSim();
+        var entManager = sim.Resolve<IEntityManager>();
+        var mapManager = sim.Resolve<IMapManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var xformSystem = entManager.System<SharedTransformSystem>();
+        var mapId = sim.CreateMap().MapId;
+        var gridEnt = mapManager.CreateGridEntity(mapId);
+        var oldGrid = gridEnt.Owner;
+        var oldGridXform = entManager.GetComponent<TransformComponent>(oldGrid);
+        var oldGridPos = xformSystem.GetWorldPosition(oldGridXform);
+        var splitTile = new Vector2i(1000, 0);
+        var removedTile = new Vector2i(1001, 0);
+        var retainedTile = new Vector2i(1002, 0);
+        var splitTileWorldPos = oldGridPos + splitTile;
+
+        mapSystem.SetTile(gridEnt, splitTile, new Tile(1));
+        mapSystem.SetTile(gridEnt, removedTile, new Tile(1));
+        mapSystem.SetTile(gridEnt, retainedTile, new Tile(1));
+
+        mapSystem.SetTile(gridEnt, removedTile, Tile.Empty);
+        Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
+
+        var newGrid = mapManager.GetAllGrids(mapId).Single(x => x.Owner != oldGrid);
+        var newGridTiles = mapSystem.GetAllTiles(newGrid.Owner, newGrid.Comp).ToArray();
+        var newGridXform = entManager.GetComponent<TransformComponent>(newGrid.Owner);
+        var newGridBody = entManager.GetComponent<PhysicsComponent>(newGrid.Owner);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(newGridTiles, Has.Length.EqualTo(1));
+            Assert.That(newGridTiles[0].GridIndices, Is.EqualTo(Vector2i.Zero));
+            Assert.That(Vector2.Distance(xformSystem.GetWorldPosition(newGridXform), splitTileWorldPos), Is.LessThan(0.001f));
+            Assert.That(newGridBody.LocalCenter.Length(), Is.LessThan(2f));
+        });
 
         mapSystem.DeleteMap(mapId);
     }

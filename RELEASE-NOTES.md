@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed a bug in Lidgren.Network HandleReleasedFragment that could cause out of memory errors.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 277.2.1
+
+### Bugfixes
+
+* Fixed a bug in Lidgren.Network HandleReleasedFragment that could cause out of memory errors.
 
 
 ## 277.2.0

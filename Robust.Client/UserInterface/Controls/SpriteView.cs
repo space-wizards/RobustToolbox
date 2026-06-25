@@ -187,7 +187,7 @@ namespace Robust.Client.UserInterface.Controls
             
             SpriteSystem ??= EntMan.System<SpriteSystem>();
 
-            var spriteBox = SpriteSystem.CalculateBounds((uid, sprite), default, _worldRotation ?? Angle.Zero, _eyeRotation)//sprite.CalculateRotatedBoundingBox(default,  _worldRotation ?? Angle.Zero, _eyeRotation)
+            var spriteBox = SpriteSystem.CalculateBounds((uid, sprite), default, _worldRotation ?? Angle.Zero, _eyeRotation)
                 .CalcBoundingBox();
 
             if (!SpriteOffset)

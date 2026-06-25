@@ -167,6 +167,25 @@ internal sealed class ResPathTest
     }
 
     [Test]
+    [TestCase("fork", ExpectedResult = "fork")]
+    [TestCase("../bad\\fork", ExpectedResult = ".._bad_fork")]
+    [TestCase("bad/fork", ExpectedResult = "bad_fork")]
+    [TestCase("bad\\fork", ExpectedResult = "bad_fork")]
+    [TestCase("", ExpectedResult = "_")]
+    [TestCase(".", ExpectedResult = "_")]
+    [TestCase("..", ExpectedResult = "_")]
+    public string SanitizeFilenameTest(string input)
+    {
+        var sanitized = ResPath.SanitizeFilename(input);
+
+        Assert.That(ResPath.IsValidFilename(sanitized), Is.True);
+        Assert.That(sanitized, Does.Not.Contain('/'));
+        Assert.That(sanitized, Does.Not.Contain('\\'));
+
+        return sanitized;
+    }
+
+    [Test]
     [TestCase("/a/b", "/a", ExpectedResult = "b")]
     [TestCase("/a", "/", ExpectedResult = "a")]
     [TestCase("/a/b/c", "/", ExpectedResult = "a/b/c")]

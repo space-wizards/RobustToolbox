@@ -207,10 +207,11 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 // Draw the entity.
-                sprite.Render(
+                _entities.System<SpriteSystem>().RenderSprite((entity, sprite),
                     DrawingHandleWorld,
                     eyeRot,
                     worldRot.Value,
+                    default,
                     overrideDirection);
 
                 // Reset to screen space

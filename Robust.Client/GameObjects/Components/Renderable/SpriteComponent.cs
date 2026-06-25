@@ -996,7 +996,7 @@ namespace Robust.Client.GameObjects
         }
 
         // Lobby SpriteView rendering path
-        [Obsolete("Use SpriteSystem.Render() instead.")]
+        [Obsolete("Use SpriteSystem.RenderSprite() instead.")]
         public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null, Vector2 position = default)
         {
             Sys.RenderSprite((Owner, this), drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
@@ -1332,8 +1332,8 @@ namespace Robust.Client.GameObjects
                 Index = index;
             }
 
-            [Obsolete] // This should be internal to SpriteSystem
-            public Layer(Layer toClone, SpriteComponent parent) : this(parent)
+            [Obsolete("Use SpriteSystem.CopyLayer() instead.")]
+            internal Layer(Layer toClone, SpriteComponent parent) : this(parent)
             {
                 if (toClone.Shader != null)
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;

@@ -28,7 +28,7 @@ public sealed partial class SpriteSystem
     /// Get the RSI state being used by the current layer. Note that the return value may be an invalid state. E.g.,
     /// this might be a texture layer that does not use RSIs.
     /// </summary>
-    public StateId LayerGetRsiState(Entity<SpriteComponent?> sprite, string key, StateId state)
+    public StateId LayerGetRsiState(Entity<SpriteComponent?> sprite, string key)
     {
         if (TryGetLayer(sprite, key, out var layer, true))
             return layer.StateId;
@@ -40,7 +40,7 @@ public sealed partial class SpriteSystem
     /// Get the RSI state being used by the current layer. Note that the return value may be an invalid state. E.g.,
     /// this might be a texture layer that does not use RSIs.
     /// </summary>
-    public StateId LayerGetRsiState(Entity<SpriteComponent?> sprite, Enum key, StateId state)
+    public StateId LayerGetRsiState(Entity<SpriteComponent?> sprite, Enum key)
     {
         if (TryGetLayer(sprite, key, out var layer, true))
             return layer.StateId;
@@ -66,7 +66,7 @@ public sealed partial class SpriteSystem
     /// Returns the RSI being used by the layer to resolve it's RSI state. If the layer does not specify an RSI, this
     /// will just be the base RSI of the owning sprite (<see cref="SpriteComponent.BaseRSI"/>).
     /// </summary>
-    public RSI? LayerGetEffectiveRsi(Entity<SpriteComponent?> sprite, string key, StateId state)
+    public RSI? LayerGetEffectiveRsi(Entity<SpriteComponent?> sprite, string key)
     {
         TryGetLayer(sprite, key, out var layer, true);
         return layer?.ActualRsi;
@@ -76,7 +76,7 @@ public sealed partial class SpriteSystem
     /// Returns the RSI being used by the layer to resolve it's RSI state. If the layer does not specify an RSI, this
     /// will just be the base RSI of the owning sprite (<see cref="SpriteComponent.BaseRSI"/>).
     /// </summary>
-    public RSI? LayerGetEffectiveRsi(Entity<SpriteComponent?> sprite, Enum key, StateId state)
+    public RSI? LayerGetEffectiveRsi(Entity<SpriteComponent?> sprite, Enum key)
     {
         TryGetLayer(sprite, key, out var layer, true);
         return layer?.ActualRsi;

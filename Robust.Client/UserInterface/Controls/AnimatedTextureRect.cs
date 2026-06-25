@@ -1,4 +1,5 @@
-﻿using Robust.Client.Graphics;
+﻿using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
@@ -36,7 +37,7 @@ namespace Robust.Client.UserInterface.Controls
         public void SetFromSpriteSpecifier(SpriteSpecifier specifier)
         {
             _curFrame = 0;
-            _state = specifier.RsiStateLike();
+            _state = IoCManager.Resolve<SpriteSystem>().RsiStateLike(specifier);
             _curFrameTime = _state.GetDelay(0);
             DisplayRect.Texture = _state.GetFrame(RsiDirection, 0);
         }

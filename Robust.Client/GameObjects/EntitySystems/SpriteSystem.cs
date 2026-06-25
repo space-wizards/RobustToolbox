@@ -76,7 +76,7 @@ namespace Robust.Client.GameObjects
         private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
         {
             // I'm not 100% this is needed, but I CBF with this ATM. Somebody kill server sprite component please.
-            QueueUpdateInert(uid, component);
+            QueueUpdateIsInert((uid, component));
         }
 
         private void OnBiasChanged(double value)
@@ -220,7 +220,7 @@ namespace Robust.Client.GameObjects
                     sprite ??= Frame0(spriteSpec);
                     break;
                 case SpriteSpecifier.Texture texture:
-                    sprite = texture.GetTexture(_resourceCache);
+                    sprite = GetTexture(texture);
                     break;
                 default:
                     throw new NotImplementedException();

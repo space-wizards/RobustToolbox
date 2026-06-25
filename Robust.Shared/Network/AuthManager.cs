@@ -25,7 +25,7 @@ namespace Robust.Shared.Network
 
     internal sealed class AuthManager : IAuthManager
     {
-        public const string DefaultAuthServer = "https://auth.spacestation14.com/";
+        public const string DefaultAuthServer = "https://auth.playss14.com/";
 
         public NetUserId? UserId { get; set; }
         public string? Server { get; set; } = DefaultAuthServer;

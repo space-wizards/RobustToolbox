@@ -23,7 +23,7 @@ internal sealed class TestBrowseWindowCommand : LocalizedCommands
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        var url = args.Length > 0 ? args[0] : "https://spacestation14.com";
+        var url = args.Length > 0 ? args[0] : "https://playss14.com";
         new TestBrowseWindow(url).Open();
     }
 

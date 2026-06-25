@@ -32,7 +32,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [Dependency] protected IConfigurationManager CfgManager = default!;
     [Dependency] protected IGameTiming Timing = default!;
     [Dependency] private INetManager _netManager = default!;
-    [Dependency] protected IPrototypeManager ProtoMan = default!;
     [Dependency] protected IRobustRandom RandMan = default!;
     [Dependency] protected MetaDataSystem MetadataSys = default!;
     [Dependency] protected SharedTransformSystem XformSystem = default!;

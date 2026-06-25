@@ -1,5 +1,3 @@
-using System;
-using System.Globalization;
 using System.Numerics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
@@ -18,34 +16,24 @@ namespace Robust.Client.Graphics
     public sealed partial class EyeManager : IEyeManager
     {
         /// <summary>
-        /// Default scaling for the projection matrix: how many texture pixels map to one world meter (tile).
+        /// Defaults to 32.
+        /// How many texture pixels map to one world meter (one tile). Driven by the server-authoritative <c>display.pixels_per_meter</c> CVar (default 32).
         /// </summary>
-        /// <remarks>
-        /// Defaults to 32. It can be overridden once, at process startup, via the
-        /// <c>ROBUST_PIXELS_PER_METER</c> environment variable. This is fixed for the lifetime of the
-        /// process and is NOT safe to change at runtime.
-        /// </remarks>
-        public static readonly int PixelsPerMeter = ReadPixelsPerMeter();
+        public static int PixelsPerMeter { get; private set; } = DefaultPixelsPerMeter;
 
         /// <summary>
-        /// Environment variable used to override <see cref="PixelsPerMeter"/> at startup.
+        /// Default for <see cref="PixelsPerMeter"/>, used before the replicated CVar value is applied.
         /// </summary>
-        public const string PixelsPerMeterEnvVar = "ROBUST_PIXELS_PER_METER";
+        public const int DefaultPixelsPerMeter = 32;
 
-        private const int DefaultPixelsPerMeter = 32;
-
-        private static int ReadPixelsPerMeter()
+        /// <summary>
+        /// Applies the <c>display.pixels_per_meter</c> CVar to <see cref="PixelsPerMeter"/>. Invoked with the
+        /// local default at startup and again with the server's value on connect. Non-positive values fall
+        /// back to <see cref="DefaultPixelsPerMeter"/>.
+        /// </summary>
+        internal static void SetPixelsPerMeter(int value)
         {
-            var raw = Environment.GetEnvironmentVariable(PixelsPerMeterEnvVar);
-
-            if (!string.IsNullOrWhiteSpace(raw)
-                && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
-                && value > 0)
-            {
-                return value;
-            }
-
-            return DefaultPixelsPerMeter;
+            PixelsPerMeter = value > 0 ? value : DefaultPixelsPerMeter;
         }
 
         [Dependency] private IClyde _displayManager = default!;

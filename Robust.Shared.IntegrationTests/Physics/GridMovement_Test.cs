@@ -75,4 +75,46 @@ internal sealed class GridMovement_Test : RobustIntegrationTest
             Assert.That(onGridBody.ContactCount, Is.EqualTo(1));
         });
     }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TestMovingGridAttachesMapEntity(bool canCollide)
+    {
+        var server = StartServer();
+
+        await server.WaitIdleAsync();
+
+        var systems = server.ResolveDependency<IEntitySystemManager>();
+        var fixtureSystem = systems.GetEntitySystem<FixtureSystem>();
+        var mapManager = server.ResolveDependency<IMapManager>();
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var physSystem = systems.GetEntitySystem<SharedPhysicsSystem>();
+        var transformSystem = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+        var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            entManager.System<SharedMapSystem>().CreateMap(out var mapId);
+            var grid = mapManager.CreateGridEntity(mapId);
+            mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
+
+            var entity = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10.5f, 10.5f), mapId));
+            var body = entManager.AddComponent<PhysicsComponent>(entity);
+            physSystem.SetBodyType(entity, BodyType.Dynamic, body: body);
+
+            var shape = new PolygonShape();
+            shape.SetAsBox(0.25f, 0.25f);
+            fixtureSystem.CreateFixture(entity, "fix1", new Fixture(shape, 0, 0, false), body: body);
+            physSystem.SetCanCollide(entity, canCollide, body: body);
+
+            var xform = entManager.GetComponent<TransformComponent>(entity);
+            Assert.That(xform.ParentUid, Is.Not.EqualTo(grid.Owner));
+
+            physSystem.Update(0.001f);
+            transformSystem.SetLocalPosition(grid.Owner, new Vector2(10f, 10f));
+            physSystem.Update(0.001f);
+
+            Assert.That(xform.ParentUid, Is.EqualTo(grid.Owner));
+        });
+    }
 }

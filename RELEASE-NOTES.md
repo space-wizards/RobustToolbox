@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed a bug in Lidgren.Network HandleReleasedFragment that could cause out of memory errors.
 
 ### Other
 

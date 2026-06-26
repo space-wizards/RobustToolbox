@@ -235,7 +235,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 if (buttonData.Button == obj.Button)
                 {
-                    OnItemHover?.Invoke(new ItemHoverEventArgs(this, obj.Button));
+                    OnItemHover?.Invoke(new ItemHoverEventArgs(buttonData.Id, this));
                     return;
                 }
             }
@@ -416,21 +416,17 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        /// <summary>
-        /// Events args for a hover event over a child item button.
-        /// </summary>
-        /// <param name="optionButton">Parent option button.</param>
-        /// <param name="itemButton">Child item button that has been hovered over.</param>
-        public sealed class ItemHoverEventArgs(OptionButton optionButton, Button itemButton) : EventArgs
+        public sealed class ItemHoverEventArgs(int id, OptionButton optionButton) : EventArgs
         {
             /// <summary>
             /// Parent option button.
             /// </summary>
             public OptionButton OptionButton { get; } = optionButton;
+
             /// <summary>
-            /// Child item button that has been hovered over.
+            ///     The ID of the item that has been selected.
             /// </summary>
-            public Button ItemButton { get; } = itemButton;
+            public int Id { get; } = id;
         }
 
         private sealed class ButtonData

@@ -47,6 +47,7 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public ICollection<string> OptionStyleClasses { get; }
 
+        public event Action<PopupToggledEventArgs>? OnPopupToggled;
         public event Action<ItemSelectedEventArgs>? OnItemSelected;
         public event Action<ItemHoverEventArgs>? OnItemHover;
 
@@ -110,6 +111,7 @@ namespace Robust.Client.UserInterface.Controls
                 },
                 StyleClasses = { StyleClassPopup }
             };
+            _popup.OnPopupOpen += OnPopupOpen;
             _popup.OnPopupHide += OnPopupHide;
 
             _label = new Label
@@ -207,9 +209,15 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        private void OnPopupOpen()
+        {
+            OnPopupToggled?.Invoke(new PopupToggledEventArgs(this, true));
+        }
+
         private void OnPopupHide()
         {
             _popup.Orphan();
+            OnPopupToggled?.Invoke(new PopupToggledEventArgs(this, false));
         }
 
         private void ButtonOnPressed(ButtonEventArgs obj)
@@ -427,6 +435,19 @@ namespace Robust.Client.UserInterface.Controls
             ///     The ID of the item that has been selected.
             /// </summary>
             public int Id { get; } = id;
+        }
+
+        public sealed class PopupToggledEventArgs(OptionButton optionButton, bool toggle) : EventArgs
+        {
+            /// <summary>
+            /// Option button.
+            /// </summary>
+            public OptionButton OptionButton { get; } = optionButton;
+
+            /// <summary>
+            /// New toggle state.
+            /// </summary>
+            public bool Toggle { get; } = toggle;
         }
 
         private sealed class ButtonData

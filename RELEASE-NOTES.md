@@ -48,6 +48,9 @@ END TEMPLATE-->
 * Changed the cursors on interactive controls.
 * Added new `StyleProperty` `track` to `ScrollBar` that takes a `StyleBox` and displays it as a backing track for the whole height of the `ScrollBar`.
 * Scroll Lock is now a bindable key.
+* The obsoleted TryIndex methods on PrototypeManager have now been removed.
+* Add batched Box2 / Box2Rotated drawing methods to Clyde WorldHandle.
+* Completion filter now works by Contains instead of StartsWith
 
 ### Bugfixes
 

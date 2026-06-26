@@ -1,0 +1,9 @@
+﻿<Project>
+  <!-- Include this .props file from content to get access to the APIs in these projects. -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Shared.Maths.Testing\Robust.Shared.Maths.Testing.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Shared.Testing\Robust.Shared.Testing.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Server.Testing\Robust.Server.Testing.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.UnitTesting\Robust.UnitTesting.csproj" />
+  </ItemGroup>
+</Project>

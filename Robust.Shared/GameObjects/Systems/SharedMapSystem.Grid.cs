@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -792,6 +793,18 @@ public abstract partial class SharedMapSystem
         }
     }
 
+    /// <summary>
+    /// Returns the total number of tiles on a grid.
+    /// by summing the counts of filled tiles in each chunk.
+    /// </summary>
+    /// <param name="ent">The target map grid entity</param>
+    /// <returns>The total number of filled tiles in <paramref name="ent"/>.</returns>
+    [Pure]
+    public int GetFilledTileCount(Entity<MapGridComponent> ent)
+    {
+        return ent.Comp.Chunks.Values.Sum(chunk => chunk.FilledTiles);
+    }
+
     public GridTileEnumerator GetAllTilesEnumerator(EntityUid uid, MapGridComponent grid, bool ignoreEmpty = true)
     {
         return new GridTileEnumerator(uid, grid.Chunks.GetEnumerator(), grid.ChunkSize, ignoreEmpty);
@@ -876,11 +889,11 @@ public abstract partial class SharedMapSystem
             chunk.SuppressCollisionRegeneration = false;
         }
 
-        RegenerateCollision(uid, grid, modified);
-
         // Notify of all tile changes in one event
         var ev = new TileChangedEvent((uid, grid), tileChanges.ToArray());
         RaiseLocalEvent(uid, ref ev, true);
+
+        RegenerateCollision(uid, grid, modified);
 
         // Back to normal
         MapManager.SuppressOnTileChanged = false;
@@ -1692,48 +1705,49 @@ public abstract partial class SharedMapSystem
 
         public bool MoveNext(out TileRef tile)
         {
-            if (_x >= _upperX)
+            while (true)
             {
-                tile = TileRef.Zero;
-                return false;
-            }
-
-            var gridTile = new Vector2i(_x, _y);
-
-            _y++;
-
-            if (_y >= _upperY)
-            {
-                _x++;
-                _y = _lowerY;
-            }
-
-            var gridChunk = _mapSystem.GridTileToChunkIndices(_uid, _grid, gridTile);
-
-            if (_grid.Chunks.TryGetValue(gridChunk, out var chunk))
-            {
-                var chunkTile = chunk.GridTileToChunkTile(gridTile);
-                tile = _mapSystem.GetTileRef(_uid, _grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y);
-
-                if (_ignoreEmpty && tile.Tile.IsEmpty)
-                    return MoveNext(out tile);
-
-                if (_predicate == null || _predicate(tile))
+                if (_x >= _upperX)
                 {
-                    return true;
+                    tile = TileRef.Zero;
+                    return false;
+                }
+
+                var gridTile = new Vector2i(_x, _y);
+
+                _y++;
+
+                if (_y >= _upperY)
+                {
+                    _x++;
+                    _y = _lowerY;
+                }
+
+                var gridChunk = _mapSystem.GridTileToChunkIndices(_uid, _grid, gridTile);
+
+                if (_grid.Chunks.TryGetValue(gridChunk, out var chunk))
+                {
+                    var chunkTile = chunk.GridTileToChunkTile(gridTile);
+                    tile = _mapSystem.GetTileRef(_uid, _grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y);
+
+                    if (_ignoreEmpty && tile.Tile.IsEmpty)
+                        continue;
+
+                    if (_predicate == null || _predicate(tile))
+                    {
+                        return true;
+                    }
+                }
+                else if (!_ignoreEmpty)
+                {
+                    tile = new TileRef(_uid, gridTile.X, gridTile.Y, Tile.Empty);
+
+                    if (_predicate == null || _predicate(tile))
+                    {
+                        return true;
+                    }
                 }
             }
-            else if (!_ignoreEmpty)
-            {
-                tile = new TileRef(_uid, gridTile.X, gridTile.Y, Tile.Empty);
-
-                if (_predicate == null || _predicate(tile))
-                {
-                    return true;
-                }
-            }
-
-            return MoveNext(out tile);
         }
     }
 }

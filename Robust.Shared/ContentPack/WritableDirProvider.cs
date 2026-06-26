@@ -10,17 +10,22 @@ namespace Robust.Shared.ContentPack
     /// <inheritdoc />
     internal sealed class WritableDirProvider : IWritableDirProvider
     {
-        /// <inheritdoc />
+        private readonly bool _hideRootDir;
+
         public string RootDir { get; }
+
+        string? IWritableDirProvider.RootDir => _hideRootDir ? null : RootDir;
 
         /// <summary>
         /// Constructs an instance of <see cref="WritableDirProvider"/>.
         /// </summary>
         /// <param name="rootDir">Root file system directory to allow writing.</param>
-        public WritableDirProvider(DirectoryInfo rootDir)
+        /// <param name="hideRootDir">If true, <see cref="IWritableDirProvider.RootDir"/> is reported as null.</param>
+        public WritableDirProvider(DirectoryInfo rootDir, bool hideRootDir)
         {
             // FullName does not have a trailing separator, and we MUST have a separator.
             RootDir = rootDir.FullName + Path.DirectorySeparatorChar.ToString();
+            _hideRootDir = hideRootDir;
         }
 
         #region File Access
@@ -119,7 +124,7 @@ namespace Robust.Shared.ContentPack
                 throw new FileNotFoundException();
 
             var dirInfo = new DirectoryInfo(GetFullPath(path));
-            return new WritableDirProvider(dirInfo);
+            return new WritableDirProvider(dirInfo, _hideRootDir);
         }
 
         /// <inheritdoc />
@@ -180,20 +185,7 @@ namespace Robust.Shared.ContentPack
 
             path = path.Clean();
 
-            return GetFullPath(RootDir, path);
-        }
-
-        private static string GetFullPath(string root, ResPath path)
-        {
-            var relPath = path.ToRelativeSystemPath();
-            if (relPath.Contains("\\..") || relPath.Contains("/.."))
-            {
-                // Hard cap on any exploit smuggling a .. in there.
-                // Since that could allow leaving sandbox.
-                throw new InvalidOperationException($"This branch should never be reached. Path: {path}");
-            }
-
-            return Path.GetFullPath(Path.Combine(root, relPath));
+            return PathHelpers.SafeGetResourcePath(RootDir, path);
         }
     }
 }

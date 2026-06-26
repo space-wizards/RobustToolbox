@@ -1,6 +1,7 @@
 using System;
 using Robust.Client;
 using Robust.Client.Input;
+using Robust.Shared;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 
@@ -11,6 +12,7 @@ namespace Robust.UnitTesting
         public InitialLaunchState LaunchState { get; } = new(false, null, null, null);
         public GameControllerOptions Options { get; } = new();
         public bool ContentStart { get; set; }
+        public StartType StartTypeValue => ContentStart ? StartType.Content : StartType.Engine;
 
         public event Action<FrameEventArgs>? TickUpdateOverride { add { } remove { } }
 

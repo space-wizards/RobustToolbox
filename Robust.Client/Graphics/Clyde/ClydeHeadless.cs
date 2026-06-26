@@ -27,6 +27,7 @@ namespace Robust.Client.Graphics.Clyde
     internal sealed class ClydeHeadless : IClydeInternal
     {
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
+        public bool IsInitialized { get; private set; }
         public IClydeWindow MainWindow { get; }
         public Vector2i ScreenSize => (1280, 720);
         public IEnumerable<IClydeWindow> AllWindows => _windows;
@@ -34,6 +35,7 @@ namespace Robust.Client.Graphics.Clyde
         public bool IsFocused => true;
         private readonly List<IClydeWindow> _windows = new();
         private int _nextWindowId = 2;
+        private long _nextViewportId = 1;
 
         public ShaderInstance InstanceShader(ShaderSourceResource handle, bool? light = null, ShaderBlendMode? blend = null)
         {
@@ -71,6 +73,11 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public IEnumerable<(Clyde.ClydeTexture, Clyde.LoadedTexture)> GetLoadedTextures()
+        {
+            return [];
+        }
+
+        public IEnumerable<(Clyde.RenderTargetBase, Clyde.LoadedRenderTarget)> GetLoadedRenderTextures()
         {
             return [];
         }
@@ -166,6 +173,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public bool InitializePostWindowing()
         {
+            IsInitialized = true;
             return true;
         }
 
@@ -240,7 +248,7 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeViewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters,
             string? name = null)
         {
-            return new Viewport(size);
+            return new Viewport(_nextViewportId++, size);
         }
 
         public IEnumerable<IClydeMonitor> EnumerateMonitors()
@@ -306,6 +314,19 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public IFileDialogManagerImplementation? FileDialogImpl => null;
+
+        public bool VsyncEnabled { get; set; }
+
+#if TOOLS
+        public void ViewportsClearAllCached()
+        {
+            throw new NotImplementedException();
+        }
+#endif // TOOLS
+
+        public void RenderNow(IRenderTarget renderTarget, Action<IRenderHandle> callback)
+        {
+        }
 
         private sealed class DummyCursor : ICursor
         {
@@ -482,14 +503,18 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class Viewport : IClydeViewport
         {
-            public Viewport(Vector2i size)
+            public Viewport(long id, Vector2i size)
             {
                 Size = size;
+                Id = id;
             }
 
             public void Dispose()
             {
+                ClearCachedResources?.Invoke(new ClearCachedViewportResourcesEvent(Id, null));
             }
+
+            public long Id { get; }
 
             public IRenderTexture RenderTarget { get; } =
                 new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
@@ -499,7 +524,9 @@ namespace Robust.Client.Graphics.Clyde
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
+            public event Action<ClearCachedViewportResourcesEvent>? ClearCachedResources;
             public Color? ClearColor { get; set; } = Color.Black;
+            public bool ClearWhenMissingEye { get; set; }
             public Vector2 RenderScale { get; set; }
             public bool AutomaticRender { get; set; }
 
@@ -557,6 +584,11 @@ namespace Robust.Client.Graphics.Clyde
             public event Action<WindowRequestClosedEventArgs>? RequestClosed { add { } remove { } }
             public event Action<WindowDestroyedEventArgs>? Destroyed;
             public event Action<WindowResizedEventArgs>? Resized { add { } remove { } }
+
+            public void SetWindowProgress(WindowProgressState state, float value)
+            {
+                // Nop.
+            }
 
             public void TextInputSetRect(UIBox2i rect, int cursor)
             {

@@ -14,10 +14,14 @@ namespace Robust.UnitTesting.Shared.Serialization
 
         protected virtual Assembly[] Assemblies => Array.Empty<Assembly>();
 
+        protected override Assembly[] GetContentAssemblies()
+        {
+            return Assemblies;
+        }
+
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
-            Reflection.LoadAssemblies(Assemblies);
             Serialization.Initialize();
         }
     }

@@ -7,6 +7,7 @@ namespace Robust.Shared.Console
     /// The console shell that executes commands. Each shell executes commands in the context of a player
     /// session, or without a session in a local context.
     /// </summary>
+    [NotContentImplementable]
     public interface IConsoleShell
     {
         /// <summary>

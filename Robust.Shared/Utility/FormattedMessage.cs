@@ -6,6 +6,7 @@ using System.Text;
 using JetBrains.Annotations;
 using Nett.Parser;
 using Robust.Shared.Maths;
+using Robust.Shared.RichText;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Utility;
@@ -14,6 +15,7 @@ namespace Robust.Shared.Utility;
 ///     Represents a formatted message in the form of a list of "tags".
 ///     Does not do any concrete formatting, simply useful as an API surface.
 /// </summary>
+/// <seealso cref="FormattedString"/>
 [PublicAPI]
 [Serializable, NetSerializable]
 public sealed partial class FormattedMessage : IEquatable<FormattedMessage>, IReadOnlyList<MarkupNode>
@@ -129,6 +131,14 @@ public sealed partial class FormattedMessage : IEquatable<FormattedMessage>, IRe
     public static string EscapeText(string text)
     {
         return text.Replace("\\", "\\\\").Replace("[", "\\[");
+    }
+
+    /// <summary>
+    ///     Escape a string parameter value to be able to be formatted into markup.
+    /// </summary>
+    public static string EscapeStringParameter(string parameter)
+    {
+        return EscapeText(parameter).Replace("\"", "\\\"");
     }
 
     /// <summary>

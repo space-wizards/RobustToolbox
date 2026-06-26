@@ -72,15 +72,15 @@ public record struct WorldAABBEvent
 
 public sealed partial class EntityLookupSystem : EntitySystem
 {
-    [Dependency] private readonly IManifoldManager _manifoldManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly INetManager _netMan = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly FixtureSystem _fixtures = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private IManifoldManager _manifoldManager = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private INetManager _netMan = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private FixtureSystem _fixtures = default!;
+    [Dependency] private SharedMapSystem _map = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     private EntityQuery<BroadphaseComponent> _broadQuery;
     private EntityQuery<ContainerManagerComponent> _containerQuery;

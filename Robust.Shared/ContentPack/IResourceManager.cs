@@ -11,6 +11,7 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Virtual file system for all disk resources.
     /// </summary>
+    [NotContentImplementable]
     public interface IResourceManager
     {
         /// <summary>
@@ -139,6 +140,7 @@ namespace Robust.Shared.ContentPack
         ///     Returns a list of paths to all top-level content directories
         /// </summary>
         /// <returns></returns>
+        [Obsolete("This API is no longer content-accessible")]
         IEnumerable<ResPath> GetContentRoots();
 
         /// <summary>

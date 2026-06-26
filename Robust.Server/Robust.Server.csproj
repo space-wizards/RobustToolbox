@@ -28,9 +28,14 @@
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
-    <PackageReference Include="SharpZstd.Interop" PrivateAssets="compile" />
+    <PackageReference Include="SharpZstd.Interop" PrivateAssets="compile" ExcludeAssets="native" />
+    <PackageReference Include="Robust.Natives.Zstd" />
     <PackageReference Condition="'$(RobustToolsBuild)' == 'True'" Include="JetBrains.Profiler.Api" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" />
+    <PackageReference Include="YamlDotNet" />
 
     <!-- Needed to pin transitive dependency versions. -->
     <PackageReference Include="System.Text.Json" />
@@ -38,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
+    <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />

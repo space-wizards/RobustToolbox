@@ -14,18 +14,16 @@ using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.EntitySerialization.Components;
-using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Controllers;
-using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
+using Robust.Shared.Testing;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using AppearanceSystem = Robust.Client.GameObjects.AppearanceSystem;
@@ -112,7 +110,7 @@ namespace Robust.UnitTesting
                 configurationManager.LoadCVarsFromAssembly(assembly);
             }
 
-            configurationManager.LoadCVarsFromAssembly(typeof(RobustUnitTest).Assembly);
+            configurationManager.LoadCVarsFromAssembly(typeof(RTCVars).Assembly);
 
             var systems = deps.Resolve<IEntitySystemManager>();
             // Required systems

@@ -15,8 +15,11 @@ namespace Robust.Client.Graphics
 {
     public delegate void CopyPixelsDelegate<T>(Image<T> pixels) where T : unmanaged, IPixel<T>;
 
+    [NotContentImplementable]
     public interface IClyde
     {
+        internal bool IsInitialized { get; }
+
         IClydeWindow MainWindow { get; }
         IRenderTarget MainWindowRenderTarget => MainWindow.RenderTarget;
 

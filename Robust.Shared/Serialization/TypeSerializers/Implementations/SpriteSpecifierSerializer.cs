@@ -112,7 +112,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            return serializationManager.ValidateNode<ResPath>(new ValueDataNode($"{TextureRoot / node.Value}"), context);
+            var path = TextureRoot / node.Value;
+            if (path.ToString().Contains(".rsi/"))
+                return new ErrorNode(node, "Texture paths may not be inside RSI files.");
+
+            return serializationManager.ValidateNode<ResPath>(new ValueDataNode(path.ToString()), context);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, MappingDataNode>.Validate(

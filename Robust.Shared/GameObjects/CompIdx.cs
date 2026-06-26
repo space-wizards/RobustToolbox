@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading;
 using Robust.Shared.Maths;
@@ -33,7 +34,7 @@ public readonly struct CompIdx : IEquatable<CompIdx>
         var curLength = array.Length;
         if (curLength <= idx.Value)
         {
-            var newLength = MathHelper.NextPowerOfTwo(Math.Max(8, idx.Value));
+            var newLength = MathHelper.NextPowerOfTwo(Math.Max(8, idx.Value + 1));
             Array.Resize(ref array, newLength);
         }
 

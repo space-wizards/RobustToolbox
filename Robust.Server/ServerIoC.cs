@@ -5,6 +5,7 @@ using Robust.Server.DataMetrics;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Localization;
+using Robust.Server.Network.Transfer;
 using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
@@ -25,6 +26,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -102,6 +104,8 @@ namespace Robust.Server
             deps.Register<IHWId, DummyHWId>();
             deps.Register<ILocalizationManager, ServerLocalizationManager>();
             deps.Register<ILocalizationManagerInternal, ServerLocalizationManager>();
+            deps.Register<ITransferManager, ServerTransferManager>();
+            deps.Register<ServerTransferTestManager>();
         }
     }
 }

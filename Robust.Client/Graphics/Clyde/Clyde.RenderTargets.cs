@@ -217,6 +217,7 @@ namespace Robust.Client.Graphics.Clyde
             var pressure = estPixSize * size.X * size.Y;
 
             var handle = AllocRid();
+            var renderTarget = new RenderTexture(size, textureObject, this, handle);
             var data = new LoadedRenderTarget
             {
                 IsWindow = false,
@@ -228,10 +229,11 @@ namespace Robust.Client.Graphics.Clyde
                 MemoryPressure = pressure,
                 ColorFormat = format.ColorFormat,
                 SampleParameters = sampleParameters,
+                Instance = new WeakReference<RenderTargetBase>(renderTarget),
+                Name = name,
             };
 
             //GC.AddMemoryPressure(pressure);
-            var renderTarget = new RenderTexture(size, textureObject, this, handle);
             _renderTargets.Add(handle, data);
             return renderTarget;
         }
@@ -381,9 +383,22 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private sealed class LoadedRenderTarget
+        public IEnumerable<(RenderTargetBase, LoadedRenderTarget)> GetLoadedRenderTextures()
+        {
+            foreach (var loaded in _renderTargets.Values)
+            {
+                if (!loaded.Instance.TryGetTarget(out var instance))
+                    continue;
+
+                yield return (instance, loaded);
+            }
+        }
+
+        internal sealed class LoadedRenderTarget
         {
             public bool IsWindow;
             public WindowId WindowId;
+            public string? Name;
 
             public Vector2i Size;
             public bool IsSrgb;
@@ -404,9 +419,11 @@ namespace Robust.Client.Graphics.Clyde
             public long MemoryPressure;
 
             public TextureSampleParameters? SampleParameters;
+
+            public required WeakReference<RenderTargetBase> Instance;
         }
 
-        private abstract class RenderTargetBase : IRenderTarget
+        internal abstract class RenderTargetBase : IRenderTarget
         {
             protected readonly Clyde Clyde;
             private bool _disposed;
@@ -468,7 +485,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class RenderTexture : RenderTargetBase, IRenderTexture
+        internal sealed class RenderTexture : RenderTargetBase, IRenderTexture
         {
             public RenderTexture(Vector2i size, ClydeTexture texture, Clyde clyde, ClydeHandle handle)
                 : base(clyde, handle)

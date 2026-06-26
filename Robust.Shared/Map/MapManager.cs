@@ -13,11 +13,11 @@ namespace Robust.Shared.Map;
 [Virtual]
 internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 {
-    [Dependency] public readonly IGameTiming GameTiming = default!;
-    [Dependency] public readonly IEntityManager EntityManager = default!;
-    [Dependency] private readonly IManifoldManager _manifolds = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly IConsoleHost _conhost = default!;
+    [Dependency] public IGameTiming GameTiming = default!;
+    [Dependency] public IEntityManager EntityManager = default!;
+    [Dependency] private IManifoldManager _manifolds = default!;
+    [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private IConsoleHost _conhost = default!;
 
     private ISawmill _sawmill = default!;
 

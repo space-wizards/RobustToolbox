@@ -594,6 +594,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Shutdown()
         {
+            ClearPostShaderRenderTargetPool();
             _glContext?.Shutdown();
             ShutdownWindowing();
         }

@@ -41,7 +41,7 @@ namespace Robust.Client.Animations
 
             var entity = (EntityUid) context;
             var spriteComp = IoCManager.Resolve<IEntityManager>().GetComponent<SpriteComponent>(entity);
-            var spriteSys = IoCManager.Resolve<SpriteSystem>();
+            var spriteSys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
             var layerKey = (string) LayerKey;
 
             var playingTime = prevPlayingTime + frameTime;

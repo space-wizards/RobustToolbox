@@ -21,6 +21,7 @@ internal sealed partial class UITestControl
 
         private readonly IEntityManager _entMan;
         private readonly IGameTiming _timing;
+        private readonly IEntitySystemManager _sysMan;
         private readonly SpriteSystem _sprite;
         private readonly BoxContainer _box;
 
@@ -33,7 +34,8 @@ internal sealed partial class UITestControl
 
         public TabSpriteView()
         {
-            IoCManager.Resolve(ref _entMan, ref _timing, ref _sprite);
+            IoCManager.Resolve(ref _entMan, ref _timing, ref _sysMan);
+            _sysMan.Resolve(ref _sprite);
             SetValue(TabContainer.TabTitleProperty, nameof(SpriteView));
             _box = new BoxContainer
             {

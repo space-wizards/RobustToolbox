@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Add batched Box2 / Box2Rotated drawing methods to Clyde WorldHandle.
+* Completion filter now works by Contains instead of StartsWith
 
 ### Bugfixes
 

@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The obsoleted TryIndex methods on PrototypeManager have now been removed.
 
 ### New features
 

@@ -48,6 +48,7 @@ namespace Robust.Client.UserInterface.Controls
         public ICollection<string> OptionStyleClasses { get; }
 
         public event Action<ItemSelectedEventArgs>? OnItemSelected;
+        public event Action<ItemHoverEventArgs>? OnItemHover;
 
         public string Prefix { get; set; } = string.Empty;
         public bool PrefixMargin { get; set; } = true;
@@ -164,6 +165,7 @@ namespace Robust.Client.UserInterface.Controls
                 button.AddStyleClass(styleClass);
             }
             button.OnPressed += ButtonOnPressed;
+            button.OnHover += ButtonOnHover;
             var data = new ButtonData(label, button)
             {
                 Id = id.Value,
@@ -219,6 +221,21 @@ namespace Robust.Client.UserInterface.Controls
                 if (buttonData.Button == obj.Button)
                 {
                     OnItemSelected?.Invoke(new ItemSelectedEventArgs(buttonData.Id, this));
+                    return;
+                }
+            }
+
+            // Not reachable.
+            throw new InvalidOperationException();
+        }
+
+        private void ButtonOnHover(ButtonHoverEventArgs obj)
+        {
+            foreach (var buttonData in _buttonData)
+            {
+                if (buttonData.Button == obj.Button)
+                {
+                    OnItemHover?.Invoke(new ItemHoverEventArgs(this, obj.Button));
                     return;
                 }
             }
@@ -397,6 +414,23 @@ namespace Robust.Client.UserInterface.Controls
                 Id = id;
                 Button = button;
             }
+        }
+
+        /// <summary>
+        /// Events args for a hover event over a child item button.
+        /// </summary>
+        /// <param name="optionButton">Parent option button.</param>
+        /// <param name="itemButton">Child item button that has been hovered over.</param>
+        public sealed class ItemHoverEventArgs(OptionButton optionButton, Button itemButton) : EventArgs
+        {
+            /// <summary>
+            /// Parent option button.
+            /// </summary>
+            public OptionButton OptionButton { get; } = optionButton;
+            /// <summary>
+            /// Child item button that has been hovered over.
+            /// </summary>
+            public Button ItemButton { get; } = itemButton;
         }
 
         private sealed class ButtonData

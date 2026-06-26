@@ -1,4 +1,5 @@
-﻿using Robust.Shared.ViewVariables;
+﻿using System;
+using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
@@ -10,6 +11,8 @@ namespace Robust.Client.UserInterface.Controls
     public class Button : ContainerButton
     {
         public Label Label { get; }
+
+        public event Action<ButtonHoverEventArgs>? OnHover;
 
         public Button()
         {
@@ -50,5 +53,17 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         [ViewVariables]
         public string? Text { get => Label.Text; set => Label.Text = value; }
+
+        protected internal override void MouseMove(GUIMouseMoveEventArgs args)
+        {
+            base.MouseMove(args);
+
+            OnHover?.Invoke(new ButtonHoverEventArgs(this));
+        }
+    }
+
+    public sealed class ButtonHoverEventArgs(Button button) : EventArgs
+    {
+        public Button Button { get; } = button;
     }
 }

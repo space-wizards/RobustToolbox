@@ -12,10 +12,6 @@ namespace Robust.Shared.IoC
     /// but it avoids circular references and init order issues due to internal code in the <see cref="IoCManager" />.
     /// </para>
     /// <para>
-    /// The dependency can be injected into read only fields without issues,
-    /// and as a matter of fact it is recommended to use read only fields.
-    /// </para>
-    /// <para>
     /// If you would like to run code after the dependencies have been injected, use <see cref="IPostInjectInit" />
     /// </para>
     /// </remarks>

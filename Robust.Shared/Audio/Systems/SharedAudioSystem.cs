@@ -29,13 +29,13 @@ namespace Robust.Shared.Audio.Systems;
 /// </remarks>
 public abstract partial class SharedAudioSystem : EntitySystem
 {
-    [Dependency] protected readonly IConfigurationManager CfgManager = default!;
-    [Dependency] protected readonly IGameTiming Timing = default!;
-    [Dependency] private   readonly INetManager _netManager = default!;
-    [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
-    [Dependency] protected readonly IRobustRandom RandMan = default!;
-    [Dependency] protected readonly MetaDataSystem MetadataSys = default!;
-    [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
+    [Dependency] protected IConfigurationManager CfgManager = default!;
+    [Dependency] protected IGameTiming Timing = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] protected IPrototypeManager ProtoMan = default!;
+    [Dependency] protected IRobustRandom RandMan = default!;
+    [Dependency] protected MetaDataSystem MetadataSys = default!;
+    [Dependency] protected SharedTransformSystem XformSystem = default!;
 
     public const float AudioDespawnBuffer = 1f;
 

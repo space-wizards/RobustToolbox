@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
@@ -803,18 +804,21 @@ public sealed partial class EntityLookupSystem
 
     #region Bounds
 
+    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize)
     {
         return new Box2(gridIndices * tileSize, (gridIndices + 1) * tileSize);
     }
 
+    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box2 GetLocalBounds(TileRef tileRef, ushort tileSize)
     {
         return GetLocalBounds(tileRef.GridIndices, tileSize);
     }
 
+    [Pure]
     public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3x2? worldMatrix = null, Angle? angle = null)
     {
         var grid = _gridQuery.GetComponent(tileRef.GridUid);

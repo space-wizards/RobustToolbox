@@ -7,9 +7,9 @@ namespace Robust.Shared.Player;
 /// <summary>
 ///     System that handles <see cref="ActorComponent"/>.
 /// </summary>
-public sealed class ActorSystem : EntitySystem
+public sealed partial class ActorSystem : EntitySystem
 {
-    [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
+    [Dependency] private ISharedPlayerManager _playerManager = default!;
 
     public override void Initialize()
     {

@@ -34,25 +34,25 @@ namespace Robust.Client.Graphics.Clyde
     /// </summary>
     internal sealed partial class Clyde : IClydeInternal, IPostInjectInit, IEntityEventSubscriber
     {
-        [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
-        [Dependency] private readonly ILightManager _lightManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly IResourceManager _resManager = default!;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
-        [Dependency] private readonly IDependencyCollection _deps = default!;
-        [Dependency] private readonly ILocalizationManager _loc = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly ClientEntityManager _entityManager = default!;
-        [Dependency] private readonly IPrototypeManager _proto = default!;
-        [Dependency] private readonly IReloadManager _reloads = default!;
-        [Dependency] private readonly LoadingScreenManager _loadingScreenManager = default!;
+        [Dependency] private IClydeTileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private ILightManager _lightManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
+        [Dependency] private IOverlayManager _overlayManager = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private IResourceManager _resManager = default!;
+        [Dependency] private IUserInterfaceManagerInternal _userInterfaceManager = default!;
+        [Dependency] private IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private ProfManager _prof = default!;
+        [Dependency] private IDependencyCollection _deps = default!;
+        [Dependency] private ILocalizationManager _loc = default!;
+        [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private ClientEntityManager _entityManager = default!;
+        [Dependency] private IPrototypeManager _proto = default!;
+        [Dependency] private IReloadManager _reloads = default!;
+        [Dependency] private LoadingScreenManager _loadingScreenManager = default!;
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;

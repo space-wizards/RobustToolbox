@@ -7,7 +7,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class AnimationPlayerSystem : EntitySystem
+    public sealed partial class AnimationPlayerSystem : EntitySystem
     {
         private readonly List<Entity<AnimationPlayerComponent>> _activeAnimations = new();
 
@@ -15,7 +15,7 @@ namespace Robust.Client.GameObjects
         private EntityQuery<MetaDataComponent> _metaQuery;
 
 #if DEBUG
-        [Dependency] private readonly IComponentFactory _compFact = default!;
+        [Dependency] private IComponentFactory _compFact = default!;
 #endif
 
         public override void Initialize()

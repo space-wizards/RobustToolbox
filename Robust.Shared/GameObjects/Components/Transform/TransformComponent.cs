@@ -25,7 +25,7 @@ namespace Robust.Shared.GameObjects
     [RegisterComponent, NetworkedComponent]
     public sealed partial class TransformComponent : Component, IComponentDebug
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private IEntityManager _entMan = default!;
 
         // Currently this field just exists for VV. In future, it might become a real field
         [ViewVariables, PublicAPI]
@@ -103,7 +103,7 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
 
         /// <summary>
         ///     Returns the index of the map which this object is on

@@ -21,16 +21,16 @@ using Robust.Shared.Exceptions;
 
 namespace Robust.Shared.GameObjects
 {
-    public sealed class EntitySystemManager : IEntitySystemManager, IPostInjectInit
+    public sealed partial class EntitySystemManager : IEntitySystemManager, IPostInjectInit
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly ProfManager _profManager = default!;
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private ProfManager _profManager = default!;
+        [Dependency] private IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
 #if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+        [Dependency] private IRuntimeLog _runtimeLog = default!;
 #endif
 
         private ISawmill _sawmill = default!;

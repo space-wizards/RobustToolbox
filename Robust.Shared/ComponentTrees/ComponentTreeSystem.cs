@@ -19,14 +19,14 @@ namespace Robust.Shared.ComponentTrees;
 ///     Keeps track of <see cref="DynamicTree{T}"/>s for various rendering-related components.
 /// </summary>
 [UsedImplicitly]
-public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
+public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     where TTreeComp : Component, IComponentTreeComponent<TComp>, new()
     where TComp : Component, IComponentTreeEntry<TComp>
 {
-    [Dependency] private readonly RecursiveMoveSystem _recursiveMoveSys = default!;
-    [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
+    [Dependency] private RecursiveMoveSystem _recursiveMoveSys = default!;
+    [Dependency] protected SharedTransformSystem XformSystem = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
 
     private readonly Queue<ComponentTreeEntry<TComp>> _updateQueue = new();
     protected EntityQuery<TComp> Query;

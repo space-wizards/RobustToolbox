@@ -28,21 +28,21 @@ namespace Robust.Client.Placement
 {
     public sealed partial class PlacementManager : IPlacementManager, IDisposable, IEntityEventSubscriber
     {
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] internal readonly IPlayerManager PlayerManager = default!;
-        [Dependency] internal readonly IResourceCache ResourceCache = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IGameTiming _time = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] internal readonly IInputManager InputManager = default!;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IBaseClient _baseClient = default!;
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] internal readonly IClyde Clyde = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IClientNetManager _networkManager = default!;
+        [Dependency] internal IPlayerManager PlayerManager = default!;
+        [Dependency] internal IResourceCache ResourceCache = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
+        [Dependency] private IGameTiming _time = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] internal IInputManager InputManager = default!;
+        [Dependency] private IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IBaseClient _baseClient = default!;
+        [Dependency] private IOverlayManager _overlayManager = default!;
+        [Dependency] internal IClyde Clyde = default!;
 
         private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
 

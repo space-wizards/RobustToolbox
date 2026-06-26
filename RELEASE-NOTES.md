@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix DynamicTree.Clear not removing node references.
 
 ### Other
 

@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Replays.Commands;
 
-public sealed class ReplayToggleUiCommand : BaseReplayCommand
+public sealed partial class ReplayToggleUiCommand : BaseReplayCommand
 {
-    [Dependency] private readonly IUserInterfaceManager _userInterfaceManager = default!;
+    [Dependency] private IUserInterfaceManager _userInterfaceManager = default!;
 
     public override string Command => "replay_toggleui";
 

@@ -18,16 +18,16 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
-public abstract class SharedUserInterfaceSystem : EntitySystem
+public abstract partial class SharedUserInterfaceSystem : EntitySystem
 {
-    [Dependency] private   readonly IDynamicTypeFactory _factory = default!;
-    [Dependency] private   readonly IGameTiming _timing = default!;
-    [Dependency] private   readonly INetManager _netManager = default!;
-    [Dependency] private   readonly IParallelManager _parallel = default!;
-    [Dependency] protected readonly IPrototypeManager ProtoManager = default!;
-    [Dependency] private   readonly IReflectionManager _reflection = default!;
-    [Dependency] protected readonly ISharedPlayerManager Player = default!;
-    [Dependency] private   readonly SharedTransformSystem _transforms = default!;
+    [Dependency] private IDynamicTypeFactory _factory = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private IParallelManager _parallel = default!;
+    [Dependency] protected IPrototypeManager ProtoManager = default!;
+    [Dependency] private IReflectionManager _reflection = default!;
+    [Dependency] protected ISharedPlayerManager Player = default!;
+    [Dependency] private SharedTransformSystem _transforms = default!;
 
     private EntityQuery<IgnoreUIRangeComponent> _ignoreUIRangeQuery;
     private EntityQuery<TransformComponent> _xformQuery;
@@ -536,7 +536,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // states. E.g., stripping UI used to throw NREs in some instances while fetching the identity of unknown
         // entities.
         var type = _reflection.LooseGetType(data.ClientType);
-        var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key]);
+        // No dependency injection because the BUI constructor will handle it.
+        var boundUserInterface = (BoundUserInterface) _factory.CreateInstance(type, [entity.Owner, key], inject: false);
         entity.Comp.ClientOpenInterfaces[key] = boundUserInterface;
 
         // This is just so we don't open while applying UI states.

@@ -13,9 +13,9 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.UserInterface.Controls
 {
     [Virtual]
-    public class RichTextLabel : Control
+    public partial class RichTextLabel : Control
     {
-        [Dependency] private readonly MarkupTagManager _tagManager = default!;
+        [Dependency] private MarkupTagManager _tagManager = default!;
 
         private RichTextEntry? _entry;
         private float _lineHeightScale = 1;

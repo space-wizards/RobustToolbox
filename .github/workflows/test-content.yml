@@ -35,8 +35,19 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build --configuration Tools --no-restore
+        run: dotnet build --configuration DebugOpt --no-restore /m
       - name: Content.Tests
-        run: dotnet test --no-build Content.Tests/Content.Tests.csproj -v n
+        shell: pwsh
+        run: dotnet test --no-build --configuration DebugOpt Content.Tests/Content.Tests.csproj -- NUnit.ConsoleOut=0 NUnit.TestOutputXml="$(pwd)/test_results"
       - name: Content.IntegrationTests
-        run: COMPlus_gcServer=1 dotnet test --no-build Content.IntegrationTests/Content.IntegrationTests.csproj -v n
+        shell: pwsh
+        run: |
+          $env:DOTNET_gcServer=1
+          dotnet test --no-build --configuration DebugOpt Content.IntegrationTests/Content.IntegrationTests.csproj -- NUnit.ConsoleOut=0 NUnit.MapWarningTo=Failed NUnit.TestOutputXml="logs" NUnit.WorkDirectory="$(pwd)/test_results"
+      - name: Archive NUnit3 test results.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nunit3-results
+          path: test_results/*
+          retention-days: 7

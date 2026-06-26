@@ -28,18 +28,18 @@ namespace Robust.Client.GameObjects
     [UsedImplicitly]
     public sealed partial class SpriteSystem : EntitySystem
     {
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IEyeManager _eye = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IPrototypeManager _proto = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IComponentFactory _factory = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IEyeManager _eye = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private IPrototypeManager _proto = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IComponentFactory _factory = default!;
 
         // Note that any new system dependencies have to be added to RobustUnitTest.BaseSetup()
-        [Dependency] private readonly SharedTransformSystem _xforms = default!;
-        [Dependency] private readonly SpriteTreeSystem _tree = default!;
-        [Dependency] private readonly AppearanceSystem _appearance = default!;
+        [Dependency] private SharedTransformSystem _xforms = default!;
+        [Dependency] private SpriteTreeSystem _tree = default!;
+        [Dependency] private AppearanceSystem _appearance = default!;
 
         public static readonly ProtoId<ShaderPrototype> UnshadedId = "unshaded";
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();

@@ -28,15 +28,15 @@ namespace Robust.Shared.Prototypes
 {
     public abstract partial class PrototypeManager : IPrototypeManagerInternal
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] protected readonly IResourceManager Resources = default!;
-        [Dependency] protected readonly ITaskManager TaskManager = default!;
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly ILocalizationManager _locMan = default!;
-        [Dependency] private readonly IComponentFactory _factory = default!;
-        [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IRobustRandom _random = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] protected IResourceManager Resources = default!;
+        [Dependency] protected ITaskManager TaskManager = default!;
+        [Dependency] private ISerializationManager _serializationManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private ILocalizationManager _locMan = default!;
+        [Dependency] private IComponentFactory _factory = default!;
+        [Dependency] private IEntityManager _entMan = default!;
+        [Dependency] private IRobustRandom _random = default!;
 
         private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
         private EntityDiffContext _context = new();
@@ -801,14 +801,6 @@ namespace Robust.Shared.Prototypes
             return false;
         }
 
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
-        }
-
         public bool TryIndex([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype)
         {
             return TryIndex(id.Id, out prototype);
@@ -821,15 +813,6 @@ namespace Robust.Shared.Prototypes
 
             Sawmill.Error($"Attempted to resolve invalid ProtoId<{typeof(T).Name}>: {id.Id}\n{Environment.StackTrace}");
             return false;
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-            where T : class, IPrototype
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype)
@@ -847,14 +830,6 @@ namespace Robust.Shared.Prototypes
             }
 
             return Resolve(id.Value, out prototype);
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype)
@@ -877,15 +852,6 @@ namespace Robust.Shared.Prototypes
             }
 
             return Resolve(id.Value, out prototype);
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-            where T : class, IPrototype
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype)

@@ -9,10 +9,10 @@ namespace Robust.Shared.GameObjects;
 /// <summary>
 /// Responsible for applying relevant changes to active entities when prototypes are reloaded.
 /// </summary>
-internal sealed class PrototypeReloadSystem : EntitySystem
+internal sealed partial class PrototypeReloadSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypes = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
+    [Dependency] private IPrototypeManager _prototypes = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
 
     public override void Initialize()
     {

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Completion filter now works by Contains instead of StartsWith
 
 ### Bugfixes
 

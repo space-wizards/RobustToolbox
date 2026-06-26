@@ -176,6 +176,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _orientation = value;
+                _splitDragArea.DefaultCursorShape = Vertical ? CursorShape.VResize : CursorShape.HResize;
                 InvalidateMeasure();
             }
         }
@@ -185,7 +186,7 @@ namespace Robust.Client.UserInterface.Controls
             MouseFilter = MouseFilterMode.Stop;
             AddChild(_splitDragArea);
             _splitDragArea.Visible = _resizeMode != SplitResizeMode.NotResizable;
-            _splitDragArea.DefaultCursorShape =  Vertical ? CursorShape.VResize : CursorShape.HResize;
+            _splitDragArea.DefaultCursorShape = Vertical ? CursorShape.VResize : CursorShape.HResize;
             _splitDragArea.OnMouseUp += StopDragging;
             _splitDragArea.OnMouseDown += StartDragging;
             _splitDragArea.OnMouseMove += OnMove;

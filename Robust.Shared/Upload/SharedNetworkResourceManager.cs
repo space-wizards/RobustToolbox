@@ -21,7 +21,7 @@ namespace Robust.Shared.Upload;
 ///     Manager that allows resources to be added at runtime by admins.
 ///     They will be sent to all clients automatically.
 /// </summary>
-public abstract class SharedNetworkResourceManager : IDisposable, IPostInjectInit
+public abstract partial class SharedNetworkResourceManager : IDisposable, IPostInjectInit
 {
     /// <summary>
     /// Transfer key for client -> server uploads by privileged clients.
@@ -33,12 +33,12 @@ public abstract class SharedNetworkResourceManager : IDisposable, IPostInjectIni
     /// </summary>
     internal const string TransferKeyNetworkDownload = "TransferKeyNetworkDownload";
 
-    [Dependency] private readonly IReplayRecordingManager _replay = default!;
-    [Dependency] protected readonly INetManager NetManager = default!;
-    [Dependency] protected readonly IResourceManager ResourceManager = default!;
-    [Dependency] protected readonly ITransferManager TransferManager = default!;
-    [Dependency] protected readonly ILogManager LogManager = default!;
-    [Dependency] private readonly ITaskManager _taskManager = default!;
+    [Dependency] private IReplayRecordingManager _replay = default!;
+    [Dependency] protected INetManager NetManager = default!;
+    [Dependency] protected IResourceManager ResourceManager = default!;
+    [Dependency] protected ITransferManager TransferManager = default!;
+    [Dependency] protected ILogManager LogManager = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
 
     protected ISawmill Sawmill = default!;
 

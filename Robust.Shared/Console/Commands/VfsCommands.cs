@@ -4,9 +4,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console.Commands;
 
-public sealed class VfsListCommand : LocalizedCommands
+public sealed partial class VfsListCommand : LocalizedCommands
 {
-    [Dependency] private readonly IResourceManager _resourceManager = default!;
+    [Dependency] private IResourceManager _resourceManager = default!;
 
     public override string Command => "vfs_ls";
 

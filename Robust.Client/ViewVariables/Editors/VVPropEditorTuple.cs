@@ -11,9 +11,9 @@ using CS = System.Runtime.CompilerServices;
 
 namespace Robust.Client.ViewVariables.Editors;
 
-internal sealed class VVPropEditorTuple : VVPropEditor
+internal sealed partial class VVPropEditorTuple : VVPropEditor
 {
-    [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariables = default!;
+    [Dependency] private IClientViewVariablesManagerInternal _viewVariables = default!;
 
     private bool _readOnly;
     private readonly List<object?> _tuple = [];
@@ -103,7 +103,7 @@ internal sealed class VVPropEditorTuple : VVPropEditor
     {
         for (var i = 0; i < _editors.Count; i++)
         {
-            object[] chain = [..selectorChain, new ViewVariablesTupleIndexSelector(i)];
+            object[] chain = [.. selectorChain, new ViewVariablesTupleIndexSelector(i)];
             _editors[i].WireNetworkSelector(sessionId, chain);
         }
     }

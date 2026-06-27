@@ -98,7 +98,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 fieldAssigners[i] = InternalReflectionUtils.EmitFieldAssigner(typeof(T), fieldDefinition.BackingField);
                 fieldAccessors[i] = InternalReflectionUtils.EmitFieldAccessor(typeof(T), fieldDefinition);
 
-                if (fieldDefinition.Attribute.CustomTypeSerializer != null)
+                if (fieldDefinition.Attribute.CustomTypeSerializer is { } serializer)
                 {
                     //reader (value, sequence, mapping), writer, copier
                     var reader = (false, false, false);
@@ -106,9 +106,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     var copier = false;
                     var copyCreator = false;
                     var validator = (false, false, false);
-                    foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
+                    foreach (var @interface in serializer.GetInterfaces())
                     {
-                        DebugTools.Assert(@interface.IsGenericType, $"Tried to use a custom type serializer for {GetType()} that isn't generic?");
+                        if (!@interface.IsGenericType)
+                            continue; // IHasDependencies or similar, doesn't matter since it can't possibly be used for serialization
+
                         var genericTypedef = @interface.GetGenericTypeDefinition();
                         if (genericTypedef == typeof(ITypeWriter<>))
                         {

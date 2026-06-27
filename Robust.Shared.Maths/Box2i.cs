@@ -13,56 +13,196 @@ namespace Robust.Shared.Maths
     {
         public static Box2i Empty => new();
 
-        [FieldOffset(sizeof(int) * 0)] public int Left;
-        [FieldOffset(sizeof(int) * 1)] public int Bottom;
-        [FieldOffset(sizeof(int) * 2)] public int Right;
-        [FieldOffset(sizeof(int) * 3)] public int Top;
+        [FieldOffset(sizeof(int) * 0)] internal int _left;
+        [FieldOffset(sizeof(int) * 1)] internal int _bottom;
+        [FieldOffset(sizeof(int) * 2)] internal int _right;
+        [FieldOffset(sizeof(int) * 3)] internal int _top;
 
-        [FieldOffset(sizeof(int) * 0)] public Vector2i BottomLeft;
-        [FieldOffset(sizeof(int) * 2)] public Vector2i TopRight;
+        [FieldOffset(sizeof(int) * 0)] internal Vector2i _bottomLeft;
+        [FieldOffset(sizeof(int) * 2)] internal Vector2i _topRight;
 
-        public readonly Vector2i BottomRight => new(Right, Bottom);
-        public readonly Vector2i TopLeft => new(Left, Top);
-        public readonly int Width => Math.Abs(Right - Left);
-        public readonly int Height => Math.Abs(Top - Bottom);
-        public readonly Vector2i Size => new(Width, Height);
+        public int Left
+        {
+            readonly get => _left;
+            set
+            {
+                if (value > _right)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Left cannot be greater than Right.");
+
+                _left = value;
+            }
+        }
+
+        public int Bottom
+        {
+            readonly get => _bottom;
+            set
+            {
+                if (value > _top)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Bottom cannot be greater than Top.");
+
+                _bottom = value;
+            }
+        }
+
+        public int Right
+        {
+            readonly get => _right;
+            set
+            {
+                if (value < _left)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Right cannot be less than Left.");
+
+                _right = value;
+            }
+        }
+
+        public int Top
+        {
+            readonly get => _top;
+            set
+            {
+                if (value < _bottom)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Top cannot be less than Bottom.");
+
+                _top = value;
+            }
+        }
+
+        public Vector2i BottomLeft
+        {
+            readonly get => _bottomLeft;
+            set
+            {
+                if (value.X > _right)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "BottomLeft.X cannot be greater than Right.");
+
+                if (value.Y > _top)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "BottomLeft.Y cannot be greater than Top.");
+
+                _bottomLeft = value;
+            }
+        }
+
+        public Vector2i TopRight
+        {
+            readonly get => _topRight;
+            set
+            {
+                if (value.X < _left)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "TopRight.X cannot be less than Left.");
+
+                if (value.Y < _bottom)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "TopRight.Y cannot be less than Bottom.");
+
+                _topRight = value;
+            }
+        }
+
+        public readonly Vector2i BottomRight
+        {
+            get => new(Right, Bottom);
+        }
+
+        public readonly Vector2i TopLeft
+        {
+            get => new(Left, Top);
+        }
+
+        public readonly int Width
+        {
+            get => _right - _left;
+        }
+
+        public readonly int Height
+        {
+            get => _top - _bottom;
+        }
+
+        public readonly Vector2i Size
+        {
+            get => new(Width, Height);
+        }
 
         public readonly int Area => Width * Height;
-        public readonly Vector2 Center => Size / 2f + BottomLeft;
+        public readonly Vector2 Center => new Vector2(_left + _right, _bottom + _top) / 2f;
+
+        private static void Validate(int left, int bottom, int right, int top)
+        {
+            if (left > right)
+                throw new ArgumentException("Left cannot be greater than Right.", nameof(left));
+
+            if (bottom > top)
+                throw new ArgumentException("Bottom cannot be greater than Top.", nameof(bottom));
+        }
 
         public Box2i(Vector2i bottomLeft, Vector2i topRight)
         {
             Unsafe.SkipInit(out this);
 
-            BottomLeft = bottomLeft;
-            TopRight = topRight;
+            Validate(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y);
+
+            _bottomLeft = bottomLeft;
+            _topRight = topRight;
         }
 
         public Box2i(int left, int bottom, int right, int top)
         {
             Unsafe.SkipInit(out this);
 
-            Left = left;
-            Right = right;
-            Top = top;
-            Bottom = bottom;
+            Validate(left, bottom, right, top);
+
+            _left = left;
+            _right = right;
+            _top = top;
+            _bottom = bottom;
         }
 
+        /// <summary>
+        /// Creates a Box2i with no bounds validation applied, use at your own risk.
+        /// </summary>
+        internal static Box2i DangerousCreate(int left, int bottom, int right, int top)
+        {
+            Unsafe.SkipInit(out Box2i box);
+            box._left = left;
+            box._right = right;
+            box._top = top;
+            box._bottom = bottom;
+            return box;
+        }
+
+        [Pure]
         public static Box2i FromDimensions(int left, int bottom, int width, int height)
         {
             return new(left, bottom, left + width, bottom + height);
         }
 
+        [Pure]
         public static Box2i FromDimensions(Vector2i position, Vector2i size)
         {
             return FromDimensions(position.X, position.Y, size.X, size.Y);
         }
 
+        [Pure]
+        public static Box2i FromTwoPoints(Vector2i a, Vector2i b)
+        {
+            return new(Vector2i.ComponentMin(a, b), Vector2i.ComponentMax(a, b));
+        }
+
+        [Pure]
         public readonly bool Contains(int x, int y)
         {
             return Contains(new Vector2i(x, y));
         }
 
+        [Pure]
+        public readonly bool Contains(in Box2i inner)
+            => Left <= inner.Left
+               && Bottom <= inner.Bottom
+               && Right >= inner.Right
+               && Top >= inner.Top;
+
+        [Pure]
         public readonly bool Contains(Vector2i point, bool closedRegion = true)
         {
             var xOk = closedRegion
@@ -77,23 +217,31 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Unlike Contains this assumes the Vector2i occupies an entire tile so we need the point to the top-right of it for consideration.
         /// </summary>
+        [Pure]
         public readonly bool ContainsTile(Vector2i tile, bool closedRegion = true)
         {
-            var xOk = closedRegion
-                ? tile.X >= Left ^ tile.X + 1 > Right
-                : tile.X > Left ^ tile.X + 1 >= Right;
-            var yOk = closedRegion
-                ? tile.Y >= Bottom ^ tile.Y + 1 > Top
-                : tile.Y > Bottom ^ tile.Y + 1 >= Top;
-            return xOk && yOk;
+            if (closedRegion)
+            {
+                return tile.X >= Left
+                       && tile.X + 1 <= Right
+                       && tile.Y >= Bottom
+                       && tile.Y + 1 <= Top;
+            }
+
+            return tile.X > Left
+                   && tile.X + 1 < Right
+                   && tile.Y > Bottom
+                   && tile.Y + 1 < Top;
         }
 
+        [Pure]
         public readonly bool IsEmpty()
         {
-            return Bottom == Top || Left == Right;
+            return Bottom >= Top || Left >= Right;
         }
 
         /// <summary>Returns a UIBox2 translated by the given amount.</summary>
+        [Pure]
         public readonly Box2i Translated(Vector2i point)
         {
             return new(Left + point.X, Bottom + point.Y, Right + point.X, Top + point.Y);
@@ -120,6 +268,7 @@ namespace Robust.Shared.Maths
         /// <remarks>
         /// Union treating other as a single point and not an entire tile.
         /// </remarks>
+        [Pure]
         public readonly Box2i Union(in Vector2i other)
         {
             if (Contains(other))
@@ -137,6 +286,7 @@ namespace Robust.Shared.Maths
         /// <remarks>
         /// Union treating other as an entire tile and not a single point.
         /// </remarks>
+        [Pure]
         public readonly Box2i UnionTile(in Vector2i other)
         {
             if (ContainsTile(other))
@@ -189,6 +339,19 @@ namespace Robust.Shared.Maths
             return $"({Left}, {Bottom}, {Right}, {Top})";
         }
 
+        /// <summary>
+        ///     Compares two objects for equality by value.
+        /// </summary>
+        public static bool operator ==(Box2i a, Box2i b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Box2i a, Box2i b)
+        {
+            return !a.Equals(b);
+        }
+
         public readonly string ToString(string? format, IFormatProvider? formatProvider)
         {
             return ToString();
@@ -210,7 +373,7 @@ namespace Robust.Shared.Maths
         /// Multiplies each side of the box by the scalar.
         /// </summary>
         [Pure]
-        public Box2i Scale(int scalar)
+        public readonly Box2i Scale(int scalar)
         {
             return new Box2i(
                 Left * scalar,
@@ -219,19 +382,93 @@ namespace Robust.Shared.Maths
                 Top * scalar);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool Intersects(in Box2i other)
+        public readonly bool Intersects(in Box2i other)
         {
-            return other.Bottom <= this.Top && other.Top >= this.Bottom && other.Right >= this.Left &&
-                   other.Left <= this.Right;
+            return other._bottom <= _top
+                   && other._top >= _bottom
+                   && other._right >= _left
+                   && other._left <= _right;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public readonly Box2i Enlarged(int size)
         {
             return new(Left - size, Bottom - size, Right + size, Top + size);
+        }
+
+        /// <summary>
+        ///     Returns the intersection box created when two boxes overlap.
+        /// </summary>
+        [Pure]
+        public readonly Box2i Intersect(in Box2i other)
+        {
+            var bottomLeft = Vector2i.ComponentMax(BottomLeft, other.BottomLeft);
+            var topRight = Vector2i.ComponentMin(TopRight, other.TopRight);
+
+            if (bottomLeft.X <= topRight.X && bottomLeft.Y <= topRight.Y)
+                return new Box2i(bottomLeft, topRight);
+
+            return new Box2i();
+        }
+
+        [Pure]
+        public readonly bool IsValid()
+        {
+            return Right >= Left && Top >= Bottom;
+        }
+
+        [Pure]
+        public readonly bool Encloses(in Box2i inner)
+        {
+            return Left < inner.Left && Bottom < inner.Bottom && Right > inner.Right && Top > inner.Top;
+        }
+
+        /// <summary>
+        ///     Returns this box enlarged to also contain the specified position.
+        /// </summary>
+        [Pure]
+        public readonly Box2i ExtendToContain(Vector2i vec)
+        {
+            return new(Vector2i.ComponentMin(BottomLeft, vec), Vector2i.ComponentMax(TopRight, vec));
+        }
+
+        /// <summary>
+        /// Given a point, returns the closest point to it inside the box.
+        /// </summary>
+        [Pure]
+        public readonly Vector2i ClosestPoint(in Vector2i position)
+        {
+            return new(
+                MathHelper.Clamp(position.X, Left, Right),
+                MathHelper.Clamp(position.Y, Bottom, Top));
+        }
+
+        public static int Perimeter(in Box2i box)
+            => (box.Width + box.Height) * 2;
+
+        public static int UnionPerimeter(in Box2i a, in Box2i b)
+        {
+            var left = Math.Min(a._left, b._left);
+            var bottom = Math.Min(a._bottom, b._bottom);
+            var right = Math.Max(a._right, b._right);
+            var top = Math.Max(a._top, b._top);
+
+            return 2 * ((right - left) + (top - bottom));
+        }
+
+        [Pure]
+        public static Box2i Union(Box2i a, Box2i b)
+        {
+            return new Box2i(
+                Vector2i.ComponentMin(a.BottomLeft, b.BottomLeft),
+                Vector2i.ComponentMax(a.TopRight, b.TopRight));
+        }
+
+        [Pure]
+        public static Box2i Union(in Vector2i a, in Vector2i b)
+        {
+            return FromTwoPoints(a, b);
         }
     }
 

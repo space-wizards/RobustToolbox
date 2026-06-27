@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 
 namespace Robust.Shared.Maths.Tests
 {
@@ -33,6 +34,89 @@ namespace Robust.Shared.Maths.Tests
 
             box = box.Union(new Vector2i(2, 0));
             Assert.That(box.Right, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Box2iUsesDirectDimensions()
+        {
+            var valid = new Box2i(-1, -2, 3, 4);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(valid.Width, Is.EqualTo(4));
+                Assert.That(valid.Height, Is.EqualTo(6));
+                Assert.That(valid.Size, Is.EqualTo(new Vector2i(4, 6)));
+                Assert.That(valid.IsValid(), Is.True);
+            });
+        }
+
+        [Test]
+        public void Box2iValidatesConstruction()
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.Throws<ArgumentException>(() => new Box2i(3, 4, -1, -2));
+                Assert.Throws<ArgumentException>(() => new Box2i(new Vector2i(3, 4), new Vector2i(-1, -2)));
+            });
+        }
+
+        [Test]
+        public void Box2iValidatesProperties()
+        {
+            var box = new Box2i(-1, -2, 3, 4);
+
+            Assert.Multiple(() =>
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.Left = 4);
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.Bottom = 5);
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.Right = -2);
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.Top = -3);
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.BottomLeft = new Vector2i(4, 0));
+                Assert.Throws<ArgumentOutOfRangeException>(() => box.TopRight = new Vector2i(0, -3));
+            });
+        }
+
+        [Test]
+        public void Box2iFromTwoPointsNormalizes()
+        {
+            var box = Box2i.FromTwoPoints(new Vector2i(3, -2), new Vector2i(-1, 4));
+
+            Assert.That(box, Is.EqualTo(new Box2i(-1, -2, 3, 4)));
+            Assert.That(box.IsValid(), Is.True);
+        }
+
+        [Test]
+        public void Box2iContainsUsesValidBounds()
+        {
+            var box = new Box2i(-1, -1, 1, 1);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(box.Contains(Vector2i.Zero), Is.True);
+                Assert.That(box.Contains(new Vector2i(1, 1)), Is.True);
+                Assert.That(box.Contains(new Vector2i(1, 1), false), Is.False);
+                Assert.That(box.Contains(new Box2i(0, 0, 1, 1)), Is.True);
+                Assert.That(box.Encloses(new Box2i(0, 0, 1, 1)), Is.False);
+            });
+        }
+
+        [Test]
+        public void Box2iIntersect()
+        {
+            var boxOne = new Box2i(-1, -1, 2, 2);
+            var boxTwo = new Box2i(0, 1, 3, 4);
+
+            Assert.That(boxOne.Intersect(boxTwo), Is.EqualTo(new Box2i(0, 1, 2, 2)));
+            Assert.That(boxOne.Intersect(new Box2i(3, 3, 4, 4)), Is.EqualTo(Box2i.Empty));
+        }
+
+        [Test]
+        public void Box2iClosestPoint()
+        {
+            var box = new Box2i(-1, -2, 3, 4);
+
+            Assert.That(box.ClosestPoint(new Vector2i(10, -10)), Is.EqualTo(new Vector2i(3, -2)));
+            Assert.That(box.ClosestPoint(Vector2i.Zero), Is.EqualTo(Vector2i.Zero));
         }
     }
 }

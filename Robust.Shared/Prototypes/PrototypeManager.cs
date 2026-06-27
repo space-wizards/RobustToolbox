@@ -40,7 +40,7 @@ namespace Robust.Shared.Prototypes
 
 
         private readonly Dictionary<string, MappingDataNode> _tempMappingData = new();
-        private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
+        private readonly Dictionary<string, FrozenDictionary<string, MappingDataNode>> _prototypeDataCache = new();
         private FrozenDictionary<Type, string> _kindNameCache = FrozenDictionary<Type, string>.Empty;
         private EntityDiffContext _context = new();
 

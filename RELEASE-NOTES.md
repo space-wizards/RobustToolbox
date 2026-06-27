@@ -35,8 +35,32 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 278.0.0
+
+### Breaking changes
+
 * Remove the duplicate serialization copy of components kept on ComponentRegistryEntry; now it only stores the deserialized component. To get the raw MappingDataNode for EntityPrototypes use PrototypeManager. This is expected to significantly reduce memory usage.
 * Obsolete LocalRotation in favor of the system method. The angle is now also normalized to 2PI and no longer grows indefinitely.
+* Obsoleted IMapManager methods in lieu of SharedMapSystem.
 
 ### New features
 
@@ -52,6 +76,8 @@ END TEMPLATE-->
 * Add batched Box2 / Box2Rotated drawing methods to Clyde WorldHandle.
 * Completion filter now works by Contains instead of StartsWith
 * Add SwitchAudioDevice API to AudioManager.
+* Added a PhysicsBodyStatusChangedEvent (self-descriptive).
+* Allow enumeration on EntityQuery.
 
 ### Bugfixes
 
@@ -62,6 +88,7 @@ END TEMPLATE-->
 * Fixed `BoxContainer`'s `SeparationOverride` not overriding the Style Properties.
 * Fixed `SeparationOverride` not invalidating measure.
 * Fixed swapped parameters in `MapManager`'s `FindGridsIntersecting` methods.
+* Fix DataRecord serialization.
 
 ### Other
 
@@ -81,6 +108,7 @@ END TEMPLATE-->
 * Optimise ComponentRegistry deserialization slightly.
 * Optimise Box2Rotated.TransformBox slightly.
 * Added several test helpers to avoid boilerplate in integration tests around client connection / disconnection.
+* Simplifed AccessAnalyzer check to speed it up.
 
 ## 277.2.1
 

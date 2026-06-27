@@ -41,6 +41,7 @@ END TEMPLATE-->
 
 * Add batched Box2 / Box2Rotated drawing methods to Clyde WorldHandle.
 * Completion filter now works by Contains instead of StartsWith
+* Added a SplitCenterChangingEventArgs to SplitContainer for when it's being moved around.
 
 ### Bugfixes
 

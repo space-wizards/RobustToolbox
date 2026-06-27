@@ -153,7 +153,7 @@ public partial class SharedPhysicsSystem
             SetSleepingAllowed(uid, component, newState.SleepingAllowed, dirty: false);
             SetFixedRotation(uid, newState.FixedRotation, body: component, dirty: false);
             SetCanCollide(uid, newState.CanCollide, body: component, dirty: false);
-            component.BodyStatus = newState.Status;
+            SetBodyStatus(uid, component, newState.Status, dirty: false);
 
             SetLinearVelocity(uid, newState.LinearVelocity, dirty: false, body: component, manager: manager);
             SetAngularVelocity(uid, newState.AngularVelocity, dirty: false, body: component, manager: manager);
@@ -224,7 +224,7 @@ public partial class SharedPhysicsSystem
             return;
         }
 
-        SetLinearVelocity(uid,body.LinearVelocity + impulse * body._invMass, body: body);
+        SetLinearVelocity(uid, body.LinearVelocity + impulse * body._invMass, body: body);
     }
 
     public void ApplyLinearImpulse(EntityUid uid, Vector2 impulse, Vector2 point, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -342,7 +342,7 @@ public partial class SharedPhysicsSystem
         var oldCenter = body._localCenter;
         body._localCenter = localCenter;
 
-        if (((int) body.BodyType & (int) (BodyType.Kinematic | BodyType.Static)) == 0)
+        if (((int)body.BodyType & (int)(BodyType.Kinematic | BodyType.Static)) == 0)
         {
             // Update center of mass velocity.
             var comVelocityDiff = Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
@@ -549,7 +549,12 @@ public partial class SharedPhysicsSystem
         if (body.BodyStatus == status)
             return;
 
+        var oldStatus = body.BodyStatus;
         body.BodyStatus = status;
+
+        var ev = new PhysicsBodyStatusChangedEvent(body, oldStatus, status);
+        RaiseLocalEvent(uid, ref ev);
+
         if (dirty)
             DirtyField(uid, body, nameof(PhysicsComponent.BodyStatus));
     }
@@ -770,7 +775,7 @@ public partial class SharedPhysicsSystem
 
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
 
-        var transform = new Transform(worldPos, (float) worldRot.Theta);
+        var transform = new Transform(worldPos, (float)worldRot.Theta);
 
         var bounds = new Box2(transform.Position, transform.Position);
 
@@ -797,7 +802,7 @@ public partial class SharedPhysicsSystem
 
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
 
-        var transform = new Transform(worldPos, (float) worldRot.Theta);
+        var transform = new Transform(worldPos, (float)worldRot.Theta);
 
         var bounds = new Box2(transform.Position, transform.Position);
 

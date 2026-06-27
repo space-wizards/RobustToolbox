@@ -30,7 +30,7 @@ internal partial class MapManager
     /// <inheritdoc />
     public virtual void DeleteMap(MapId mapId)
     {
-        _mapSystem.DeleteMap(mapId);
+        MapSystem.DeleteMap(mapId);
     }
 
     /// <inheritdoc />
@@ -38,24 +38,24 @@ internal partial class MapManager
     {
         if (mapId != null)
         {
-            _mapSystem.CreateMap(mapId.Value);
+            MapSystem.CreateMap(mapId.Value);
             return mapId.Value;
         }
 
-        _mapSystem.CreateMap(out var map);
+        MapSystem.CreateMap(out var map);
         return map;
     }
 
     /// <inheritdoc />
     public bool MapExists([NotNullWhen(true)] MapId? mapId)
     {
-        return _mapSystem.MapExists(mapId);
+        return MapSystem.MapExists(mapId);
     }
 
     /// <inheritdoc />
     public EntityUid GetMapEntityId(MapId mapId)
     {
-        return _mapSystem.GetMapOrInvalid(mapId);
+        return MapSystem.GetMapOrInvalid(mapId);
     }
 
     /// <summary>
@@ -63,18 +63,18 @@ internal partial class MapManager
     /// </summary>
     public EntityUid GetMapEntityIdOrThrow(MapId mapId)
     {
-        return _mapSystem.GetMap(mapId);
+        return MapSystem.GetMap(mapId);
     }
 
     public bool TryGetMap([NotNullWhen(true)] MapId? mapId, [NotNullWhen(true)] out EntityUid? uid)
     {
-        return _mapSystem.TryGetMap(mapId, out uid);
+        return MapSystem.TryGetMap(mapId, out uid);
     }
 
     /// <inheritdoc />
     public IEnumerable<MapId> GetAllMapIds()
     {
-        return _mapSystem.GetAllMapIds();
+        return MapSystem.GetAllMapIds();
     }
 
     /// <inheritdoc />

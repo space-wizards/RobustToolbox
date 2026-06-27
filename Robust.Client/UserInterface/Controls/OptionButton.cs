@@ -222,13 +222,13 @@ namespace Robust.Client.UserInterface.Controls
 
         private void ButtonOnPressed(ButtonEventArgs obj)
         {
-            obj.Button.Pressed = false;
-            TogglePopup(false);
             foreach (var buttonData in _buttonData)
             {
                 if (buttonData.Button == obj.Button)
                 {
                     OnItemSelected?.Invoke(new ItemSelectedEventArgs(buttonData.Id, this));
+                    obj.Button.Pressed = false;
+                    TogglePopup(false);
                     return;
                 }
             }

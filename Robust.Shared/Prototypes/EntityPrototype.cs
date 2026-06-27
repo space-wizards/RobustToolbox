@@ -193,7 +193,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryComp<T>(out T? component, IComponentFactory factory) where T : IComponent, new()
+        public bool TryComp<T>([NotNullWhen(true)] out T? component, IComponentFactory factory) where T : IComponent, new()
             => TryComp(factory.CompName<T>(), out component);
 
         /// <summary>

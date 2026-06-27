@@ -9,6 +9,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Localization
 {
@@ -42,6 +43,10 @@ namespace Robust.Shared.Localization
             AddCtxFunction(bundle, "ATTRIB", args => FuncAttrib(bundle, args));
             AddCtxFunction(bundle, "CAPITALIZE", FuncCapitalize);
             AddCtxFunction(bundle, "INDEFINITE", FuncIndefinite);
+
+            // Rich text
+            AddCtxFunction(bundle, "ESCAPE", FuncEscape);
+            AddCtxFunction(bundle, "ESCAPE-PARAM", FuncEscapeParam);
         }
 
         /// <summary>
@@ -369,6 +374,24 @@ namespace Robust.Shared.Localization
 
             bundle.AddFunctionOverriding(name, (args, options)
                 => CallFunction(function, bundle, args, options));
+        }
+
+        /// <summary>
+        /// Escape the provided string argument for insertion among rich text markup.
+        /// </summary>
+        private static ILocValue FuncEscape(LocArgs args)
+        {
+            var input = args.Args[0].Format(new LocContext());
+            return new LocValueString(FormattedMessage.EscapeText(input));
+        }
+
+        /// <summary>
+        /// Escape the provided string argument for insertion as a string markup parameter.
+        /// </summary>
+        private static ILocValue FuncEscapeParam(LocArgs args)
+        {
+            var input = args.Args[0].Format(new LocContext());
+            return new LocValueString(FormattedMessage.EscapeStringParameter(input));
         }
     }
 

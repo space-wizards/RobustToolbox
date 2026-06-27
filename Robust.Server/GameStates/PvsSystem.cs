@@ -28,7 +28,6 @@ namespace Robust.Server.GameStates;
 internal sealed partial class PvsSystem : EntitySystem
 {
     [Dependency] private IConfigurationManager _configManager = default!;
-    [Dependency] private INetworkedMapManager _mapManager = default!;
     [Dependency] private IServerEntityNetworkManager _netEntMan = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IParallelManager _parallelManager = default!;
@@ -40,6 +39,7 @@ internal sealed partial class PvsSystem : EntitySystem
     [Dependency] private IParallelManagerInternal _parallelMgr = default!;
     [Dependency] private PvsOverrideSystem _pvsOverride = default!;
     [Dependency] private IServerReplayRecordingManager _replay = default!;
+    [Dependency] private SharedMapSystem _maps = default!;
 
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
     // Main issue is that I CBF figuring out the logic for handling it changing mid-game.
@@ -288,7 +288,7 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         using var _ = Histogram.WithLabels("Cull History").NewTimer();
         CullDeletionHistoryUntil(oldestAck);
-        _mapManager.CullDeletionHistory(oldestAck);
+        _maps.CullDeletionHistory(oldestAck);
     }
 
     private void GetEntityStates(PvsSession session)

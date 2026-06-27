@@ -81,6 +81,11 @@ namespace Robust.Shared.Console
             }
         }
 
+        public bool IsCommandHidden(IConsoleCommand command)
+        {
+            return command.Command.StartsWith('_');
+        }
+
         protected virtual void UpdateAvailableCommands()
         {
         }

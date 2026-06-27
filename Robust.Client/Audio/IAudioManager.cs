@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Robust.Shared.Audio.Sources;
 
@@ -10,6 +11,10 @@ namespace Robust.Client.Audio;
 [NotContentImplementable]
 public interface IAudioManager
 {
+    IReadOnlyList<string> GetAudioDevices();
+
+    string? GetDefaultAudioDevice();
+
     IAudioSource? CreateAudioSource(AudioStream stream);
 
     AudioStream LoadAudioOggVorbis(Stream stream, string? name = null);

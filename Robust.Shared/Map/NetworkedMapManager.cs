@@ -1,23 +1,21 @@
-using Robust.Shared.Map.Components;
+using System;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map;
 
+[Obsolete]
 internal interface INetworkedMapManager : IMapManagerInternal
 {
+    [Obsolete]
     void CullDeletionHistory(GameTick upToTick);
 }
 
+[Obsolete]
 internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 {
+    [Obsolete]
     public void CullDeletionHistory(GameTick upToTick)
     {
-        var query = EntityManager.AllEntityQueryEnumerator<MapGridComponent>();
-
-        while (query.MoveNext(out var grid))
-        {
-            var chunks = grid.ChunkDeletionHistory;
-            chunks.RemoveAll(t => t.tick < upToTick);
-        }
+        MapSystem.CullDeletionHistory(upToTick);
     }
 }

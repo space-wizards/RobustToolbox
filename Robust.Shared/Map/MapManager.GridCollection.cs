@@ -42,7 +42,7 @@ internal partial class MapManager
     [Obsolete("Use SharedMapSystem.IsGrid(uid)")]
     public bool IsGrid(EntityUid uid)
     {
-        return _mapSystem.IsGrid(uid);
+        return MapSystem.IsGrid(uid);
     }
 
     [Obsolete("use SharedMapSystem.GetAllMapGrids")]

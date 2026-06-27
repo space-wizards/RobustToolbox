@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 
@@ -78,8 +79,9 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
+    [Pure]
     public bool IsMap(EntityUid uid)
     {
-        return _mapSystem.IsMap(uid);
+        return MapSystem.IsMap(uid);
     }
 }

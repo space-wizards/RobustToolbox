@@ -96,6 +96,9 @@ namespace Robust.Shared.Configuration
     [MeansImplicitUse]
     public sealed class CVarDefsAttribute : Attribute
     {
-
+        /// <summary>
+        ///     If true, all CVars defined on this class are saved to a fork-specific configuration file.
+        /// </summary>
+        public bool Fork { get; init; }
     }
 }

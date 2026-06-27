@@ -169,9 +169,10 @@ namespace Robust.Shared.IntegrationTests.Configuration
             var forkConfigPath = new ResPath("/Config/test-fork_config.toml");
 
             mgr.RegisterCVar(CVars.BuildForkId.Name, "", CVar.NONE);
+            mgr.LoadCVarsFromType(typeof(TestSharedCVars));
             mgr.LoadCVarsFromType(typeof(TestForkCVars));
             mgr.SetCVar(CVars.BuildForkId.Name, "test-fork");
-            mgr.SetCVar(TestForkCVars.Shared.Name, 5);
+            mgr.SetCVar(TestSharedCVars.Shared.Name, 5);
             mgr.SetCVar(TestForkCVars.ForkSpecific.Name, 7);
             mgr.SetSaveFile(userData, configPath);
             mgr.SetForkSaveFile(userData, forkConfigPath);
@@ -179,6 +180,7 @@ namespace Robust.Shared.IntegrationTests.Configuration
 
             var sharedText = userData.ReadAllText(configPath);
             var forkText = userData.ReadAllText(forkConfigPath);
+            Assert.That(mgr.GetCVarFlags(TestForkCVars.ForkSpecific.Name) & CVar.FORK, Is.EqualTo(CVar.FORK));
             Assert.That(sharedText, Does.Contain("shared = 5"));
             Assert.That(sharedText, Does.Not.Contain("fork_specific"));
             Assert.That(forkText, Does.Contain("fork_specific = 7"));
@@ -242,13 +244,17 @@ namespace Robust.Shared.IntegrationTests.Configuration
         }
 
         [CVarDefs]
-        private static class TestForkCVars
+        private static class TestSharedCVars
         {
             public static readonly CVarDef<int> Shared =
                 CVarDef.Create("test.shared", 0, CVar.ARCHIVE);
+        }
 
+        [CVarDefs(Fork = true)]
+        private static class TestForkCVars
+        {
             public static readonly CVarDef<int> ForkSpecific =
-                CVarDef.Create("test.fork_specific", 0, CVar.ARCHIVE | CVar.FORK);
+                CVarDef.Create("test.fork_specific", 0, CVar.ARCHIVE);
         }
     }
 }

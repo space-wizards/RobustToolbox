@@ -583,6 +583,9 @@ namespace Robust.Shared.Configuration
 
         public void LoadCVarsFromType(Type containingType)
         {
+            var attribute = containingType.GetCustomAttribute<CVarDefsAttribute>();
+            var extraFlags = attribute?.Fork == true ? CVar.FORK : CVar.NONE;
+
             foreach (var defField in containingType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
             {
                 var fieldType = defField.FieldType;
@@ -607,7 +610,7 @@ namespace Robust.Shared.Configuration
                         $"CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' is null.");
                 }
 
-                RegisterCVar(def.Name, type, def.DefaultValue, def.Flags);
+                RegisterCVar(def.Name, type, def.DefaultValue, def.Flags | extraFlags);
             }
         }
 

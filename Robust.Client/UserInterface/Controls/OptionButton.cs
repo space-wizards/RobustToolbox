@@ -47,8 +47,14 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public ICollection<string> OptionStyleClasses { get; }
 
+        /// <summary>
+        /// Invoked when popup is opened or closed.
+        /// </summary>
         public event Action<PopupToggledEventArgs>? OnPopupToggled;
         public event Action<ItemSelectedEventArgs>? OnItemSelected;
+        /// <summary>
+        /// Invoked each time a mouse is moved across the element.
+        /// </summary>
         public event Action<ItemHoverEventArgs>? OnItemHover;
 
         public string Prefix { get; set; } = string.Empty;
@@ -258,6 +264,7 @@ namespace Robust.Client.UserInterface.Controls
             foreach (var buttonDatum in _buttonData)
             {
                 buttonDatum.Button.OnPressed -= ButtonOnPressed;
+                buttonDatum.Button.OnHover -= ButtonOnHover;
             }
             _buttonData.Clear();
             _popupContentsBox.DisposeAllChildren();
@@ -287,6 +294,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             var data = _buttonData[idx];
             data.Button.OnPressed -= ButtonOnPressed;
+            data.Button.OnHover -= ButtonOnHover;
             _idMap.Remove(data.Id);
             _popupContentsBox.RemoveChild(data.Button);
             _buttonData.RemoveAt(idx);
@@ -424,6 +432,11 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        /// <summary>
+        /// Event args for option item hover event.
+        /// </summary>
+        /// <param name="id">ID of the item that is being hovered over.</param>
+        /// <param name="optionButton">Parent option button.</param>
         public sealed class ItemHoverEventArgs(int id, OptionButton optionButton) : EventArgs
         {
             /// <summary>
@@ -432,11 +445,16 @@ namespace Robust.Client.UserInterface.Controls
             public OptionButton OptionButton { get; } = optionButton;
 
             /// <summary>
-            ///     The ID of the item that has been selected.
+            /// ID of the item that is being hovered over.
             /// </summary>
             public int Id { get; } = id;
         }
 
+        /// <summary>
+        ///Events args for the options popup.
+        /// </summary>
+        /// <param name="optionButton">Option button.</param>
+        /// <param name="toggle">New popup toggle state.</param>
         public sealed class PopupToggledEventArgs(OptionButton optionButton, bool toggle) : EventArgs
         {
             /// <summary>
@@ -445,7 +463,7 @@ namespace Robust.Client.UserInterface.Controls
             public OptionButton OptionButton { get; } = optionButton;
 
             /// <summary>
-            /// New toggle state.
+            /// New popup toggle state.
             /// </summary>
             public bool Toggle { get; } = toggle;
         }

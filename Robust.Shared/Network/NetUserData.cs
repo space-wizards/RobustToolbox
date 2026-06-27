@@ -41,6 +41,11 @@ namespace Robust.Shared.Network
         /// </remarks>
         public float Trust { get; init; }
 
+        /// <summary>
+        ///     True if the player is connecting from a local address.
+        /// </summary>
+        public bool IsLocal { get; init; }
+
         public NetUserData(NetUserId userId, string userName)
         {
             UserId = userId;

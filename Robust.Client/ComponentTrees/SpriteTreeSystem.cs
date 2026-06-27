@@ -8,9 +8,9 @@ using Robust.Shared.Physics;
 
 namespace Robust.Client.ComponentTrees;
 
-public sealed class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, SpriteComponent>
+public sealed partial class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, SpriteComponent>
 {
-    [Dependency] private readonly SpriteSystem _sprite = default!;
+    [Dependency] private SpriteSystem _sprite = default!;
 
     #region Component Tree Overrides
     protected override bool DoFrameUpdate => true;

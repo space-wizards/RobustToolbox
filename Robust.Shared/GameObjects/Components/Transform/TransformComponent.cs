@@ -25,7 +25,7 @@ namespace Robust.Shared.GameObjects
     [RegisterComponent, NetworkedComponent]
     public sealed partial class TransformComponent : Component, IComponentDebug
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private IEntityManager _entMan = default!;
 
         // Currently this field just exists for VV. In future, it might become a real field
         [ViewVariables, PublicAPI]
@@ -103,7 +103,7 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
 
         /// <summary>
         ///     Returns the index of the map which this object is on
@@ -153,10 +153,13 @@ namespace Robust.Shared.GameObjects
         public Angle LocalRotation
         {
             get => _localRotation;
+            [Obsolete("Use SharedTransformSystem.SetLocalRotation")]
             set
             {
                 if(_noLocalRotation)
                     return;
+
+                value = SharedTransformSystem.NormalizeRotation(value);
 
                 if (_localRotation.EqualsApprox(value))
                     return;
@@ -554,6 +557,7 @@ namespace Robust.Shared.GameObjects
         public TransformComponent Component => Entity.Comp1;
 
         public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
+        public bool OnlyRotation => OldPosition.Equals(NewPosition);
     }
 
     public struct TransformChildrenEnumerator : IDisposable

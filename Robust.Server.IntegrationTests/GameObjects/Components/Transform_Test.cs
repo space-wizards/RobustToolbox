@@ -439,6 +439,21 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             Assert.That(result, new ApproxEqualityConstraint(Angle.FromDegrees(225)));
         }
 
+        [Test]
+        public void LocalRotationNormalizesTest()
+        {
+            var entity = EntityManager.SpawnEntity(null, InitialPos);
+            var transform = EntityManager.GetComponent<TransformComponent>(entity);
+
+            XformSystem.SetLocalRotation(entity, Angle.FromDegrees(90), transform);
+
+            Assert.That(transform.LocalRotation, NUnit.Framework.Is.EqualTo(Angle.FromDegrees(90)));
+
+            XformSystem.SetWorldRotation(transform, Angle.FromDegrees(810));
+
+            Assert.That(transform.LocalRotation, NUnit.Framework.Is.EqualTo(Angle.FromDegrees(90)));
+        }
+
         /// <summary>
         ///     Test that, in a chain A -> B -> C, if A is moved C's world position correctly updates.
         /// </summary>

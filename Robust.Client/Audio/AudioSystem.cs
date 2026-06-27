@@ -33,16 +33,16 @@ public sealed partial class AudioSystem : SharedAudioSystem
      * but exposing the whole thing in an easy way is a lot of effort.
      */
 
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IParallelManager _parMan = default!;
-    [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-    [Dependency] private readonly IAudioInternal _audio = default!;
-    [Dependency] private readonly SharedMapSystem _maps = default!;
-    [Dependency] private readonly SharedTransformSystem _xformSys = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IReplayRecordingManager _replayRecording = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IParallelManager _parMan = default!;
+    [Dependency] private IRuntimeLog _runtimeLog = default!;
+    [Dependency] private IAudioInternal _audio = default!;
+    [Dependency] private SharedMapSystem _maps = default!;
+    [Dependency] private SharedTransformSystem _xformSys = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
 
     /// <summary>
     /// An optional method that, if provided, will override the behavior of <see cref="ProcessStream"/>.

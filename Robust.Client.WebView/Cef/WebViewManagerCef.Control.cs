@@ -132,8 +132,8 @@ namespace Robust.Client.WebView.Cef
                 [Key.Pause] = VKEY_PAUSE,
             };
 
-            [Dependency] private readonly IClyde _clyde = default!;
-            [Dependency] private readonly IInputManager _inputMgr = default!;
+            [Dependency] private IClyde _clyde = default!;
+            [Dependency] private IInputManager _inputMgr = default!;
 
             private readonly WebViewManagerCef _manager;
             public readonly WebViewControl Owner;

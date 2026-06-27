@@ -408,6 +408,11 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
             data.VBO.Delete();
             data.EBO.Delete();
+
+            DeleteVertexArray(data.EdgeVAO);
+            CheckGlError();
+            data.EdgeVBO.Delete();
+            data.EdgeEBO.Delete();
         }
 
         private void _updateTileMapOnUpdate(ref TileChangedEvent args)

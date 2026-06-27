@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -199,6 +200,31 @@ public partial class TestPair<TServer, TClient>
     public async Task RunSeconds(float seconds)
     {
         await RunTicksSync(SecondsToTicks(seconds));
+    }
+
+
+    /// <summary>
+    ///     Runs the pairs just long enough for PVS to send entities, ensuring the client's current tick is what the
+    ///     server's was at call time.
+    /// </summary>
+    public async Task RunUntilSynced()
+    {
+        if (Client.Session is null)
+        {
+            // Already synced, because the client isn't connected so we have nothing *to* sync.
+            // Run a tick on server.
+            await Server.WaitRunTicks(1);
+            return;
+        }
+
+        var sGameTiming = Server.Timing;
+        var cGameTiming = (IClientGameTiming)Client.Timing;
+        var startTime = sGameTiming.CurTick;
+
+        while (cGameTiming.LastRealTick < startTime)
+        {
+            await RunTicksSync(1);
+        }
     }
 
     /// <summary>

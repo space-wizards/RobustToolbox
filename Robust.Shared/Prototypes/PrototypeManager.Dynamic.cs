@@ -37,7 +37,6 @@ public partial class PrototypeManager
             return false;
         }
         ReloadPrototypes(changed);
-        _locMan.ReloadLocalizations();
         return true;
     }
 

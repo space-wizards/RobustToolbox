@@ -711,6 +711,15 @@ namespace Robust.Shared
          */
 
         /// <summary>
+        /// Name identifying this engine's client distribution.
+        /// Engine forks that change client ABI or behaviour need to change this,
+        /// so smart launchers can download and verify the correct client zip.
+        /// Also gets saved to content bundles so replays can use the correct engine.
+        /// </summary>
+        public static readonly CVarDef<string> BuildEngineType =
+            CVarDef.Create("build.engine_type", "RobustToolbox");
+
+        /// <summary>
         /// Engine version that launcher needs to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildEngineVersion =

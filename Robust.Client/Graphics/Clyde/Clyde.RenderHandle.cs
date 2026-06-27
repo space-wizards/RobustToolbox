@@ -19,6 +19,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Clyde _clyde;
             private readonly IEntityManager _entities;
+            private readonly ClydeTexture _whiteClydeTexture;
+            private readonly Box2 _whiteUv;
 
             public DrawingHandleScreen DrawingHandleScreen { get; }
             public DrawingHandleWorld DrawingHandleWorld { get; }
@@ -29,6 +31,8 @@ namespace Robust.Client.Graphics.Clyde
                 _entities = entities;
 
                 var white = _clyde.GetStockTexture(ClydeStockTexture.White);
+                _whiteClydeTexture = ExtractTexture(white, null, out var whiteBounds);
+                _whiteUv = WorldTextureBoundsToUV(_whiteClydeTexture, whiteBounds);
                 DrawingHandleScreen = new DrawingHandleScreenImpl(white, this);
                 DrawingHandleWorld = new DrawingHandleWorldImpl(white, this);
             }
@@ -91,6 +95,30 @@ namespace Robust.Client.Graphics.Clyde
                 var sr = WorldTextureBoundsToUV(clydeTexture, csr);
 
                 _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, in modulate, in sr);
+            }
+
+            public void DrawTextureWorldBatch(Texture texture, ReadOnlySpan<WorldTextureRect> rects, Color modulate)
+            {
+                var clydeTexture = ExtractTexture(texture, null, out var csr);
+                var sr = WorldTextureBoundsToUV(clydeTexture, csr);
+                _clyde.DrawTextureBatch(clydeTexture.TextureId, rects, modulate, in sr);
+            }
+
+            public void DrawTextureWorldBatchUnmodulated(Texture texture, ReadOnlySpan<WorldTextureRect> rects)
+            {
+                var clydeTexture = ExtractTexture(texture, null, out var csr);
+                var sr = WorldTextureBoundsToUV(clydeTexture, csr);
+                _clyde.DrawTextureBatchUnmodulated(clydeTexture.TextureId, rects, in sr);
+            }
+
+            public void DrawRectWorldBatch(ReadOnlySpan<WorldRect> rects, Color modulate)
+            {
+                _clyde.DrawRectBatch(_whiteClydeTexture.TextureId, rects, modulate, in _whiteUv);
+            }
+
+            public void DrawRectWorldBatchUnmodulated(ReadOnlySpan<WorldRect> rects)
+            {
+                _clyde.DrawRectBatchUnmodulated(_whiteClydeTexture.TextureId, rects, in _whiteUv);
             }
 
             internal static Box2 WorldTextureBoundsToUV(ClydeTexture texture, UIBox2 csr)
@@ -488,6 +516,16 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
+                public override void DrawRects(ReadOnlySpan<WorldRect> rects)
+                {
+                    _renderHandle.DrawRectWorldBatch(rects, Modulate);
+                }
+
+                public override void DrawRectsUnmodulated(ReadOnlySpan<WorldRect> rects)
+                {
+                    _renderHandle.DrawRectWorldBatchUnmodulated(rects);
+                }
+
                 public override void DrawRect(in Box2Rotated rect, Color color, bool filled = true)
                 {
                     if (filled)
@@ -537,6 +575,18 @@ namespace Robust.Client.Graphics.Clyde
 
                     _renderHandle.DrawTextureWorld(texture, quad.BottomLeft, quad.BottomRight,
                         quad.TopLeft, quad.TopRight, color, in subRegion);
+                }
+
+                /// <inheritdoc />
+                public override void DrawTextureRects(Texture texture, ReadOnlySpan<WorldTextureRect> rects)
+                {
+                    _renderHandle.DrawTextureWorldBatch(texture, rects, Modulate);
+                }
+
+                /// <inheritdoc />
+                public override void DrawTextureRectsUnmodulated(Texture texture, ReadOnlySpan<WorldTextureRect> rects)
+                {
+                    _renderHandle.DrawTextureWorldBatchUnmodulated(texture, rects);
                 }
 
                 public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,

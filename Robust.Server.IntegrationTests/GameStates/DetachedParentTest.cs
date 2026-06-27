@@ -7,7 +7,6 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Server.GameStates;
@@ -22,10 +21,8 @@ public sealed class DetachedParentTest : RobustIntegrationTest
     [Test]
     public async Task TestDetachedParent()
     {
-        var server = StartServer(new() {Pool = false});
-        var client = StartClient(new() {Pool = false});
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair(new() {Pool = false}, new() {Pool = false});
+        var (client, server) = pair;
 
         var mapSys = server.System<SharedMapSystem>();
         var xformSys = server.System<SharedTransformSystem>();
@@ -33,17 +30,9 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
-        var netMan = client.ResolveDependency<IClientNetManager>();
-
-        Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-        client.Post(() => netMan.ClientConnect(null!, 0, null!));
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
-        for (var i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Ensure client & server ticks are synced.
         // Client runs 1 tick ahead
@@ -99,11 +88,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        for (var i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Check that transforms are as expected.
         var childX = server.Transform(child);
@@ -160,11 +145,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         // Move the player into pvs range of the child, which will move them outside of the grid & parent's PVS range.
         await server.WaitPost(() => xformSys.SetCoordinates(player, mapCoords));
 
-        for (var i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // the client now knows about the child.
         cChild = client.EntMan.GetEntity(server.EntMan.GetNetEntity(child));
@@ -192,11 +173,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         await server.WaitPost(() => xformSys.SetCoordinates(player, parentCoords));
         await server.WaitPost(() => xformSys.SetCoordinates(child, parentCoords));
 
-        for (var i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Check that server-side transforms are as expected
         Assert.That(childX.ParentUid, Is.EqualTo(parent));
@@ -227,11 +204,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         await server.WaitPost(() => xformSys.SetCoordinates(player, mapCoords));
         await server.WaitPost(() => xformSys.SetCoordinates(child, mapCoords));
 
-        for (var i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Child transform has updated.
         Assert.That(childX.MapID, Is.EqualTo(mapId));
@@ -253,11 +226,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         EntityUid parent2 = default;
         await server.WaitPost(() => parent2 = sEntMan.SpawnEntity(null, gridCoords));
 
-        for (var i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         var parent2X = server.Transform(parent2);
         Assert.That(parent2X.MapID, Is.EqualTo(mapId));
@@ -273,11 +242,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         await server.WaitPost(() => xformSys.SetCoordinates(player, parent2Coords));
         await server.WaitPost(() => xformSys.SetCoordinates(child, parent2Coords));
 
-        for (var i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Check all the transforms
         cParent2 = client.EntMan.GetEntity(server.EntMan.GetNetEntity(parent2));
@@ -310,11 +275,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
             parent3 = sEntMan.SpawnEntity(null, grid2Coords);
         });
 
-        for (var i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Check server-side transforms
         var grid2X = server.Transform(grid2);
@@ -342,11 +303,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         await server.WaitPost(() => xformSys.SetCoordinates(player, parent3Coords));
         await server.WaitPost(() => xformSys.SetCoordinates(child, parent3Coords));
 
-        for (var i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Check all the transforms
         cParent3 = client.EntMan.GetEntity(server.EntMan.GetNetEntity(parent3));
@@ -400,11 +357,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         });
 
 
-        for (var i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Check all the transforms
         var cParent4 = client.EntMan.GetEntity(server.EntMan.GetNetEntity(parent4));
@@ -442,9 +395,6 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         Assert.That(cParent4X.MapUid, Is.EqualTo(cMap3));
         Assert.That(cGrid3X.MapUid, Is.EqualTo(cMap3));
 
-        await client.WaitPost(() => netMan.ClientDisconnect(""));
-        await server.WaitRunTicks(5);
-        await client.WaitRunTicks(5);
     }
 }
 

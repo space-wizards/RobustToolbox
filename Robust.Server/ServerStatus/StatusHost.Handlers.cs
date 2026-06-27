@@ -88,9 +88,12 @@ namespace Robust.Server.ServerStatus
                 buildInfo = GetExternalBuildInfo();
             }
 
+            var authServers = new JsonArray();
+            authServers.Add(_cfg.GetCVar(CVars.AuthServer));
             var authInfo = new JsonObject
             {
                 ["mode"] = _netManager.Auth.ToString(),
+                ["auth_servers"] = authServers,
                 ["public_key"] = _netManager.CryptoPublicKey != null
                     ? Convert.ToBase64String(_netManager.CryptoPublicKey)
                     : null

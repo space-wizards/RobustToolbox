@@ -9,6 +9,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 
 namespace Robust.UnitTesting.Shared.Prototypes
@@ -22,6 +23,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         private const string MountTesterProtoId = "mounttester";
         private const string PlacementInheritanceTesterProtoId = "PlaceInheritTester";
         private const string LoadStringTestDummyId = "LoadStringTestDummy";
+        private const string DynamicFakeWrenchProtoID = "dynamicWrench";
         private IPrototypeManager manager = default!;
 
         protected override Type[] ExtraComponents => new[] {typeof(TestBasicPrototypeComponent), typeof(PointLightComponent)};
@@ -117,6 +119,23 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
             Assert.That(prototype.Name, Is.EqualTo(LoadStringTestDummyId));
         }
+
+        [Test]
+        public void TestDynamicCreateDestroy()
+        {
+            MappingDataNode fakewrench = new();
+            fakewrench.Add("type", "entity");
+            fakewrench.Add("id", DynamicFakeWrenchProtoID);
+            fakewrench.Add("name", "This fake wrench is dynamic.");
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(manager.TryLoadDynamic(fakewrench), Is.True);
+                Assert.That(manager.TryDelete<EntityPrototype>(DynamicFakeWrenchProtoID), Is.True);
+            }
+
+        }
+
 
         [Test]
         public void TestCircleException()

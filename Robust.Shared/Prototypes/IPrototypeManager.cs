@@ -541,7 +541,7 @@ public interface IPrototypeManager
     bool IsIgnored(string name);
 
     /// <summary>
-    /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.
+    /// Loads several prototype kinds into the manager. Note that this will re-build frozen dictionaries and should be avoided if possible.
     /// </summary>
     /// <param name="kind">
     /// The type of the prototype kind that implements <see cref="IPrototype"/>. This type also

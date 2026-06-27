@@ -45,10 +45,16 @@ public partial class PrototypeManager
     public bool TryDelete<T>([ForbidLiteral] string id) where T : class, IPrototype
     {
         Type? kind = default!;
-        var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(typeof(T), typeof(PrototypeAttribute));
-        if (attribute is null)
-            return false;
-        string kindname = attribute.Type ?? CalculatePrototypeName(typeof(T));
+        if (!_kindNameCache.TryGetValue(typeof(T), out var kindname))
+        {
+            var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(typeof(T), typeof(PrototypeAttribute));
+            if (attribute is null)
+                return false;
+            kindname = attribute.Type ?? CalculatePrototypeName(typeof(T));
+            var dict = _kindNameCache.ToDictionary();
+            dict[typeof(T)] = kindname;
+            FreezeNames(dict);
+        }
         try
         {
             if (HasMapping<T>(id))

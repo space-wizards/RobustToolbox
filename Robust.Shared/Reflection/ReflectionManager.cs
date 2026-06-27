@@ -293,10 +293,7 @@ namespace Robust.Shared.Reflection
             {
                 foreach (var type in assembly.DefinedTypes)
                 {
-                    if (!type.IsEnum || !(
-                            type.FullName!.Equals(typeName) ||
-                            type.FullName!.EndsWith("." + typeName) ||
-                            type.FullName!.EndsWith("+" + typeName)))
+                    if (!type.IsEnum || !TypeNameMatchesEnumReference(type.FullName!, typeName))
                     {
                         continue;
                     }
@@ -314,6 +311,21 @@ namespace Robust.Shared.Reflection
             if (shouldThrow)
                 throw new ArgumentException($"Could not resolve enum reference: {reference}.");
             return false;
+        }
+
+        private static bool TypeNameMatchesEnumReference(string fullName, string typeName)
+        {
+            if (fullName.Equals(typeName))
+                return true;
+
+            if (fullName.Length <= typeName.Length)
+                return false;
+
+            var prefixIndex = fullName.Length - typeName.Length - 1;
+            var separator = fullName[prefixIndex];
+
+            return (separator == '.' || separator == '+')
+                   && fullName.AsSpan(prefixIndex + 1).SequenceEqual(typeName);
         }
 
         public Type? YamlTypeTagLookup(Type baseType, string typeName)

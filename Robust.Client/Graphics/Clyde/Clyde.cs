@@ -34,25 +34,25 @@ namespace Robust.Client.Graphics.Clyde
     /// </summary>
     internal sealed partial class Clyde : IClydeInternal, IPostInjectInit, IEntityEventSubscriber
     {
-        [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
-        [Dependency] private readonly ILightManager _lightManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly IResourceManager _resManager = default!;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
-        [Dependency] private readonly IDependencyCollection _deps = default!;
-        [Dependency] private readonly ILocalizationManager _loc = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly ClientEntityManager _entityManager = default!;
-        [Dependency] private readonly IPrototypeManager _proto = default!;
-        [Dependency] private readonly IReloadManager _reloads = default!;
-        [Dependency] private readonly LoadingScreenManager _loadingScreenManager = default!;
+        [Dependency] private IClydeTileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private ILightManager _lightManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
+        [Dependency] private IOverlayManager _overlayManager = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private IResourceManager _resManager = default!;
+        [Dependency] private IUserInterfaceManagerInternal _userInterfaceManager = default!;
+        [Dependency] private IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private ProfManager _prof = default!;
+        [Dependency] private IDependencyCollection _deps = default!;
+        [Dependency] private ILocalizationManager _loc = default!;
+        [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private ClientEntityManager _entityManager = default!;
+        [Dependency] private IPrototypeManager _proto = default!;
+        [Dependency] private IReloadManager _reloads = default!;
+        [Dependency] private LoadingScreenManager _loadingScreenManager = default!;
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
@@ -476,60 +476,38 @@ namespace Robust.Client.Graphics.Clyde
         private void DebugMessageCallback(DebugSource source, DebugType type, int id, DebugSeverity severity,
             int length, IntPtr message, IntPtr userParam)
         {
-            var contents = $"{source}: " + Marshal.PtrToStringAnsi(message, length);
-
-            var category = "ogl.debug";
-            switch (type)
+            var category = type switch
             {
-                case DebugType.DebugTypePerformance:
-                    category += ".performance";
-                    break;
-                case DebugType.DebugTypeOther:
-                    category += ".other";
-                    break;
-                case DebugType.DebugTypeError:
-                    category += ".error";
-                    break;
-                case DebugType.DebugTypeDeprecatedBehavior:
-                    category += ".deprecated";
-                    break;
-                case DebugType.DebugTypeUndefinedBehavior:
-                    category += ".ub";
-                    break;
-                case DebugType.DebugTypePortability:
-                    category += ".portability";
-                    break;
-                case DebugType.DebugTypeMarker:
-                case DebugType.DebugTypePushGroup:
-                case DebugType.DebugTypePopGroup:
+                DebugType.DebugTypePerformance => "ogl.debug.performance",
+                DebugType.DebugTypeOther => "ogl.debug.other",
+                DebugType.DebugTypeError => "ogl.debug.error",
+                DebugType.DebugTypeDeprecatedBehavior => "ogl.debug.deprecated",
+                DebugType.DebugTypeUndefinedBehavior => "ogl.debug.ub",
+                DebugType.DebugTypePortability => "ogl.debug.portability",
+                DebugType.DebugTypeMarker or DebugType.DebugTypePushGroup or DebugType.DebugTypePopGroup =>
                     // These are inserted by our own code so I imagine they're not necessary to log?
-                    return;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
-            }
+                    null,
+                _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+            };
+
+            if (category == null)
+                return;
 
             var sawmill = _logManager.GetSawmill(category);
-
-            switch (severity)
+            var level = severity switch
             {
-                case DebugSeverity.DontCare:
-                    sawmill.Info(contents);
-                    break;
-                case DebugSeverity.DebugSeverityNotification:
-                    sawmill.Info(contents);
-                    break;
-                case DebugSeverity.DebugSeverityHigh:
-                    sawmill.Error(contents);
-                    break;
-                case DebugSeverity.DebugSeverityMedium:
-                    sawmill.Error(contents);
-                    break;
-                case DebugSeverity.DebugSeverityLow:
-                    sawmill.Warning(contents);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(severity), severity, null);
-            }
+                DebugSeverity.DontCare => LogLevel.Info,
+                DebugSeverity.DebugSeverityNotification => LogLevel.Info,
+                DebugSeverity.DebugSeverityHigh => LogLevel.Error,
+                DebugSeverity.DebugSeverityMedium => LogLevel.Error,
+                DebugSeverity.DebugSeverityLow => LogLevel.Warning,
+                _ => throw new ArgumentOutOfRangeException(nameof(severity), severity, null)
+            };
+
+            if (!sawmill.IsLogLevelEnabled(level))
+                return;
+
+            sawmill.Log(level, "{0}: {1}", source, Marshal.PtrToStringAnsi(message, length));
         }
 
         private static DebugProc? _debugMessageCallbackInstance;

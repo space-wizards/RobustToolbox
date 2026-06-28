@@ -9,10 +9,10 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     An abstract class to override to implement bound user interfaces.
     /// </summary>
-    public abstract class BoundUserInterface : IDisposable
+    public abstract partial class BoundUserInterface : IDisposable
     {
-        [Dependency] protected internal readonly IEntityManager EntMan = default!;
-        [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
+        [Dependency] protected internal IEntityManager EntMan = default!;
+        [Dependency] protected ISharedPlayerManager PlayerManager = default!;
         protected readonly SharedUserInterfaceSystem UiSystem;
 
         public bool IsOpened { get; protected set; }

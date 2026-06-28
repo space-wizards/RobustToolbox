@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -11,23 +10,20 @@ using Robust.Shared.Physics.Collision.Shapes;
 
 namespace Robust.Shared.Map
 {
-    public delegate bool GridCallback(EntityUid uid, MapGridComponent grid);
-
-    public delegate bool GridCallback<TState>(EntityUid uid, MapGridComponent grid, ref TState state);
-
     /// <summary>
     ///     This manages all the grids and maps in the world. Largely superseded by <see cref="SharedMapSystem"/>.
     /// </summary>
     [NotContentImplementable]
     public interface IMapManager
     {
-        public const bool Approximate = false;
-        public const bool IncludeMap = true;
+        public const bool Approximate = SharedMapSystem.Approximate;
+        public const bool IncludeMap = SharedMapSystem.IncludeMap;
 
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
         ///     so that you don't spam an event for each of the million station tiles.
         /// </summary>
+        [Obsolete("use SharedMapSystem")]
         bool SuppressOnTileChanged { get; set; }
 
         /// <summary>
@@ -70,41 +66,56 @@ namespace Robust.Shared.Map
         void DeleteMap(MapId mapId);
 
         // ReSharper disable once MethodOverloadWithOptionalParameter
+        [Obsolete("Use MapSystem.CreateGridEntity(...).Comp")]
         MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize = 16);
+        [Obsolete("Use MapSystem.CreateGridEntity(...).Comp")]
         MapGridComponent CreateGrid(MapId currentMapId, in GridCreateOptions options);
+        [Obsolete("Use MapSystem.CreateGridEntity(...).Comp")]
         MapGridComponent CreateGrid(MapId currentMapId);
+        [Obsolete("Use MapSystem")]
         Entity<MapGridComponent> CreateGridEntity(MapId currentMapId, GridCreateOptions? options = null);
+        [Obsolete("Use MapSystem")]
         Entity<MapGridComponent> CreateGridEntity(EntityUid map, GridCreateOptions? options = null);
 
+        [Obsolete("Use MapSystem")]
         IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId);
 
+        [Obsolete("Use MapSystem")]
         IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId);
 
         #region MapId
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform,
             ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform, GridCallback callback,
             bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = Approximate,
             bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state,
             GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, ref List<Entity<MapGridComponent>> grids,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback,
             bool approx = Approximate,
             bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<TState>(MapId mapId, Box2Rotated worldBounds, ref TState state,
             GridCallback<TState> callback,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> grids,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
@@ -112,38 +123,48 @@ namespace Robust.Shared.Map
 
         #region MapEnt
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Transform transform, GridCallback callback,
             bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<T, TState>(EntityUid mapEnt, T shape, Transform transform,
             ref TState state, GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
         /// <summary>
         /// Returns true if any grids overlap the specified shapes.
         /// </summary>
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(EntityUid mapEnt, List<IPhysShape> shapes, Transform transform,
             ref List<Entity<MapGridComponent>> entities, bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Transform transform,
             ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, GridCallback callback,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<TState>(EntityUid mapEnt, Box2 worldAABB, ref TState state,
             GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, ref List<Entity<MapGridComponent>> grids,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(EntityUid mapEnt, Box2Rotated worldBounds, GridCallback callback,
             bool approx = Approximate,
             bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting<TState>(EntityUid mapEnt, Box2Rotated worldBounds, ref TState state,
             GridCallback<TState> callback,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
+        [Obsolete("Use MapSystem")]
         public void FindGridsIntersecting(EntityUid mapEnt, Box2Rotated worldBounds,
             ref List<Entity<MapGridComponent>> grids,
             bool approx = Approximate, bool includeMap = IncludeMap);
@@ -152,6 +173,7 @@ namespace Robust.Shared.Map
 
         #region TryFindGridAt
 
+        [Obsolete("Use MapSystem")]
         public bool TryFindGridAt(
             EntityUid mapEnt,
             Vector2 worldPos,
@@ -161,12 +183,14 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Attempts to find the map grid under the map location.
         /// </summary>
+        [Obsolete("Use MapSystem")]
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, out EntityUid uid,
             [NotNullWhen(true)] out MapGridComponent? grid);
 
         /// <summary>
         /// Attempts to find the map grid under the map location.
         /// </summary>
+        [Obsolete("Use MapSystem")]
         public bool TryFindGridAt(MapCoordinates mapCoordinates, out EntityUid uid,
             [NotNullWhen(true)] out MapGridComponent? grid);
 
@@ -231,16 +255,5 @@ namespace Robust.Shared.Map
 
         [Obsolete("Use MapSystem")]
         bool IsMapInitialized(MapId mapId);
-
-    }
-
-    public struct GridCreateOptions
-    {
-        public static readonly GridCreateOptions Default = new()
-        {
-            ChunkSize = 16
-        };
-
-        public ushort ChunkSize;
     }
 }

@@ -98,6 +98,14 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        private float? _pendingSplitFraction;
+
+        public void SetSplitFractionOnNextArrange(float fraction)
+        {
+            _pendingSplitFraction = fraction;
+            State = SplitState.Manual;
+        }
+
         private SplitState _splitState = SplitState.Auto;
         private SplitOrientation _orientation;
         private SplitStretchDirection _stretchDirection = SplitStretchDirection.BottomRight;
@@ -302,6 +310,12 @@ namespace Robust.Client.UserInterface.Controls
             var secondDesiredSize = Vertical ? second.DesiredSize.Y : second.DesiredSize.X;
 
             var size = Vertical ? finalSize.Y : finalSize.X;
+            if (_pendingSplitFraction is { } pendingSplitFraction && size > 0)
+            {
+                _splitStart = pendingSplitFraction * size - _splitWidth / 2;
+                _pendingSplitFraction = null;
+                OnSplitResized?.Invoke();
+            }
 
             var ratio = first.SizeFlagsStretchRatio / (first.SizeFlagsStretchRatio + second.SizeFlagsStretchRatio);
 

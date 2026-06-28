@@ -1079,13 +1079,37 @@ namespace Robust.Shared
         /// Initial width of the game window when running on windowed mode.
         /// </summary>
         public static readonly CVarDef<int> DisplayWidth =
-            CVarDef.Create("display.width", 1280, CVar.CLIENTONLY);
+            CVarDef.Create("display.width", 1280, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Initial height of the game window when running on windowed mode.
         /// </summary>
         public static readonly CVarDef<int> DisplayHeight =
-            CVarDef.Create("display.height", 720, CVar.CLIENTONLY);
+            CVarDef.Create("display.height", 720, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Whether the game window should start maximized when running in windowed mode.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayWindowMaximized =
+            CVarDef.Create("display.window_maximized", false, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Initial X position of the game window when running in windowed mode.
+        /// </summary>
+        public static readonly CVarDef<int> DisplayWindowPosX =
+            CVarDef.Create("display.window_pos_x", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Initial Y position of the game window when running in windowed mode.
+        /// </summary>
+        public static readonly CVarDef<int> DisplayWindowPosY =
+            CVarDef.Create("display.window_pos_y", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Monitor the saved game window position belongs to.
+        /// </summary>
+        public static readonly CVarDef<string> DisplayWindowMonitor =
+            CVarDef.Create("display.window_monitor", "", CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// UI scale for all UI controls. If zero, this value is automatically calculated from the OS.

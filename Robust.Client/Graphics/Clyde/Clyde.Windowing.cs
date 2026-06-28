@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -140,12 +141,41 @@ namespace Robust.Client.Graphics.Clyde
                 fullscreen = true;
             }
 
+            var savedMonitor = _cfg.GetCVar(CVars.DisplayWindowMonitor);
+            var savedPosition = new Vector2i(
+                _cfg.GetCVar(CVars.DisplayWindowPosX),
+                _cfg.GetCVar(CVars.DisplayWindowPosY));
+            var savedMonitorHandle = _monitorHandles.Values.FirstOrDefault(monitorHandle =>
+                GetMonitorConfigString(monitorHandle) == savedMonitor);
+            var restoreMaximized = !fullscreen && _cfg.GetCVar(CVars.DisplayWindowMaximized);
+            var restorePosition = !fullscreen &&
+                                  savedMonitor.Length > 0 &&
+                                  savedMonitorHandle != null;
+            var restoreWindowPosition = savedPosition;
+            if (restorePosition && restoreMaximized)
+            {
+                var monitorPosition = savedMonitorHandle!.Position;
+                if (!MonitorContains(savedMonitorHandle, restoreWindowPosition))
+                {
+                    restoreWindowPosition = monitorPosition + new Vector2i(50, 50);
+                }
+                else
+                {
+                    restoreWindowPosition = new Vector2i(
+                        Math.Max(restoreWindowPosition.X, monitorPosition.X + 50),
+                        Math.Max(restoreWindowPosition.Y, monitorPosition.Y + 50));
+                }
+            }
+
             var parameters = new WindowCreateParameters
             {
                 Width = width,
                 Height = height,
+                X = restorePosition ? restoreWindowPosition.X : null,
+                Y = restorePosition ? restoreWindowPosition.Y : null,
                 Monitor = monitor,
-                Fullscreen = fullscreen
+                Fullscreen = fullscreen,
+                Maximized = restoreMaximized
             };
 
             var (reg, err) = SharedWindowCreate(glSpec, parameters, null, isMain: true);
@@ -434,6 +464,30 @@ namespace Robust.Client.Graphics.Clyde
             return _monitorHandles.Values;
         }
 
+        private static string GetMonitorConfigString(MonitorHandle monitor)
+        {
+            return $"{monitor.Name};{monitor.Size.X};{monitor.Size.Y};{monitor.RefreshRate}";
+        }
+
+        private MonitorHandle? GetMonitorAtPosition(Vector2i position)
+        {
+            return _monitorHandles.Values.FirstOrDefault(monitor => MonitorContains(monitor, position));
+        }
+
+        private MonitorHandle? GetMonitorForWindow(WindowReg reg)
+        {
+            var center = reg.WindowPos + reg.WindowSize / 2;
+            return GetMonitorAtPosition(center) ?? GetMonitorAtPosition(reg.WindowPos);
+        }
+
+        private static bool MonitorContains(MonitorHandle monitor, Vector2i position)
+        {
+            return position.X >= monitor.Position.X &&
+                   position.Y >= monitor.Position.Y &&
+                   position.X < monitor.Position.X + monitor.Size.X &&
+                   position.Y < monitor.Position.Y + monitor.Size.Y;
+        }
+
         public ICursor GetStandardCursor(StandardCursorShape shape)
         {
             DebugTools.AssertNotNull(_windowing);
@@ -493,6 +547,7 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2 LastMousePos;
             public bool IsFocused;
             public bool IsMinimized;
+            public bool IsMaximized;
             public string Title = "";
             public bool IsVisible;
             public IClydeWindow? Owner;
@@ -611,10 +666,11 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class MonitorHandle : IClydeMonitor
         {
-            public MonitorHandle(int id, string name, Vector2i size, int refreshRate, VideoMode[] videoModes)
+            public MonitorHandle(int id, string name, Vector2i position, Vector2i size, int refreshRate, VideoMode[] videoModes)
             {
                 Id = id;
                 Name = name;
+                Position = position;
                 Size = size;
                 RefreshRate = refreshRate;
                 VideoModes = videoModes;
@@ -622,6 +678,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public int Id { get; }
             public string Name { get; }
+            public Vector2i Position { get; }
             public Vector2i Size { get; }
             public int RefreshRate { get; }
             public IEnumerable<VideoMode> VideoModes { get; }

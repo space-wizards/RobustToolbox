@@ -51,7 +51,10 @@ namespace Robust.Shared.Network.Messages
                 var length = buffer.ReadInt32();
                 using var stream = RobustMemoryManager.GetMemoryStream(length);
                 buffer.ReadAlignedMemory(stream, length);
-                Value = serializer.Deserialize(stream);
+                if (!serializer.TryDeserialize(stream, out var value))
+                    throw new InvalidDataException("Unknown serialized type ID in view variables value.");
+
+                Value = value;
             }
             ReinterpretValue = buffer.ReadBoolean();
         }

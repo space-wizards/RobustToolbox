@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -114,11 +115,13 @@ namespace Robust.Shared.Network
         [Dependency] private HttpClientHolder _http = default!;
         [Dependency] private IHWId _hwId = default!;
         [Dependency] private ITransferManager _transfer = default!;
+        [Dependency] private INetValidationManager _netValidation = default!;
 
         /// <summary>
         ///     Whether we bother to log problematic packets. Set by <see cref="CVars.NetLogging"/>.
         /// </summary>
         private bool _logPacketIssues = false;
+        private int _messageSizeLogThreshold;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
@@ -272,6 +275,8 @@ namespace Robust.Shared.Network
 
             _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
             _config.OnValueChanged(CVars.NetLogging, NetLoggingChanged);
+            _config.OnValueChanged(CVars.NetMessageSizeLogThreshold, NetMessageSizeLogThresholdChanged, true);
+            _config.OnValueChanged(CVars.NetMessageSizeStats, NetMessageSizeStatsChanged, true);
             if (isServer)
             {
                 _config.OnValueChanged(CVars.AuthMode, OnAuthModeChanged, invokeImmediately: true);
@@ -298,6 +303,16 @@ namespace Robust.Shared.Network
         private void NetLoggingChanged(bool obj)
         {
             _logPacketIssues = obj;
+        }
+
+        private void NetMessageSizeLogThresholdChanged(int value)
+        {
+            _messageSizeLogThreshold = value;
+        }
+
+        private void NetMessageSizeStatsChanged(bool value)
+        {
+            NetSizeStats.Enabled = value;
         }
 
         private void LidgrenLogWarningChanged(bool newValue)
@@ -376,6 +391,14 @@ namespace Robust.Shared.Network
             {
                 peer.Peer.Configuration.SetMessageTypeEnabled(NetIncomingMessageType.VerboseDebugMessage, on);
             }
+        }
+
+        private void LogMessageSize(string direction, Type type, int bytes)
+        {
+            if (_messageSizeLogThreshold <= 0 || bytes < _messageSizeLogThreshold)
+                return;
+
+            _loggerPacket.Info($"{direction}: {type.Name} {bytes} bytes");
         }
 
         public void StartServer()
@@ -478,6 +501,8 @@ namespace Robust.Shared.Network
             _messages.Clear();
 
             _config.UnsubValueChanged(CVars.NetVerbose, NetVerboseChanged);
+            _config.UnsubValueChanged(CVars.NetMessageSizeLogThreshold, NetMessageSizeLogThresholdChanged);
+            _config.UnsubValueChanged(CVars.NetMessageSizeStats, NetMessageSizeStatsChanged);
             if (IsServer)
             {
                 _config.UnsubValueChanged(CVars.AuthMode, OnAuthModeChanged);
@@ -978,7 +1003,7 @@ namespace Robust.Shared.Network
             if (entry == null)
             {
                 if (_logPacketIssues)
-                    _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
+                    _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
 
                 channel.Disconnect("Got NetMessage with invalid ID", false);
                 return true;
@@ -997,6 +1022,19 @@ namespace Robust.Shared.Network
 
             var type = entry.Type;
 
+            try
+            {
+                _netValidation.ValidateSerializedSize(type, msg.LengthBytes);
+            }
+            catch (InvalidDataException e)
+            {
+                if (_logPacketIssues)
+                    _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: {e.Message}");
+
+                channel.Disconnect("NetMessage exceeded maximum serialized size", false);
+                return true;
+            }
+
             var instance = (NetMessage) Activator.CreateInstance(type)!;
             instance.MsgChannel = channel;
 
@@ -1010,11 +1048,20 @@ namespace Robust.Shared.Network
             try
             {
                 instance.ReadFromBuffer(msg, _serializer);
+                _netValidation.ValidateObject(instance);
             }
             catch (InvalidCastException ice)
             {
                 if (_logPacketIssues)
                     _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet:\n{ice}");
+                channel.Disconnect("Failed to deserialize packet.", false);
+                return true;
+            }
+            catch (InvalidDataException e)
+            {
+                if (_logPacketIssues)
+                    _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Invalid data in {type.Name} packet: {e.Message}");
+
                 channel.Disconnect("Failed to deserialize packet.", false);
                 return true;
             }
@@ -1028,6 +1075,8 @@ namespace Robust.Shared.Network
 
             if (_loggerPacket.IsLogLevelEnabled(LogLevel.Verbose))
                 _loggerPacket.Verbose($"RECV: {instance.GetType().Name} {msg.LengthBytes}");
+            LogMessageSize("RECV", instance.GetType(), msg.LengthBytes);
+            NetSizeStats.Record(NetSizeStatKind.NetMessage, instance.GetType(), msg.LengthBytes);
 
             try
             {
@@ -1076,6 +1125,7 @@ namespace Robust.Shared.Network
                 IsHandshake = (accept & NetMessageAccept.Handshake) != 0
             };
 
+            _netValidation.RegisterType<T>();
             _messages.Add(name, data);
 
             var thisSide = IsServer ? NetMessageAccept.Server : NetMessageAccept.Client;
@@ -1105,7 +1155,9 @@ namespace Robust.Shared.Network
                     $"[NET] No string in table with name {message.MsgName}. Was it registered?");
 
             packet.Write((byte) msgId);
+            _netValidation.ValidateObject(message);
             message.WriteToBuffer(packet, _serializer);
+            _netValidation.ValidateSerializedSize(message.GetType(), packet.LengthBytes);
             return packet;
         }
 
@@ -1145,6 +1197,8 @@ namespace Robust.Shared.Network
         {
             if (_loggerPacket.IsLogLevelEnabled(LogLevel.Verbose))
                 _loggerPacket.Verbose($"SEND: {message.GetType().Name} {method} {packet.LengthBytes}");
+
+            LogMessageSize("SEND", message.GetType(), packet.LengthBytes);
         }
 
         /// <inheritdoc />

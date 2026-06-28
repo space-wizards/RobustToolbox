@@ -13,19 +13,6 @@ namespace Robust.Shared.Network.Messages
 {
     public sealed class MsgEntity : NetMessage
     {
-        [ThreadStatic]
-        private static Func<Type, bool> _canReceiveNetworkEvent;
-
-        internal static void SetNetworkEventReceiver(IEventBus eventBus)
-        {
-            _canReceiveNetworkEvent = eventBus.CanReceiveNetworkEvent;
-        }
-
-        internal static void ClearNetworkEventReceiver()
-        {
-            _canReceiveNetworkEvent = null;
-        }
-
         public override MsgGroups MsgGroup => MsgGroups.EntityEvent;
 
         public EntityMessageType Type { get; set; }
@@ -81,9 +68,9 @@ namespace Robust.Shared.Network.Messages
                     // Check if there's even any subscribers
                     // If there are none then no point wasting time deserializing and dump it.
                     // This may also be a legitimate content bug.
-                    if (!CanReceiveNetworkEvent(eventType))
+                    if (!serializer.EntityManager.CanReceiveNetworkEvent(eventType))
                     {
-                        Logger.GetSawmill("net").Warning($"{MsgChannel}: dropping unhandled entity event {eventType.Name}.");
+                        Logger.GetSawmill("net").Debug($"{MsgChannel}: dropping unhandled entity event {eventType.Name}.");
                         Type = EntityMessageType.Error;
                         buffer.Position += length * 8;
                         break;
@@ -102,11 +89,6 @@ namespace Robust.Shared.Network.Messages
                     Logger.GetSawmill("net").Error($"{MsgChannel}: dropping {nameof(MsgEntity)} with unknown EntityMessageType.");
                     break;
             }
-        }
-
-        private static bool CanReceiveNetworkEvent(Type eventType)
-        {
-            return _canReceiveNetworkEvent?.Invoke(eventType) == true;
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)

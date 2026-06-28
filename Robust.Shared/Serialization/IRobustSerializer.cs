@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 
@@ -11,6 +12,8 @@ namespace Robust.Shared.Serialization
     [NotContentImplementable]
     public interface IRobustSerializer
     {
+        IEntityManager EntityManager { get; }
+
         /// <summary>
         /// Specifies how the serializer should handle read floating point values.
         /// </summary>

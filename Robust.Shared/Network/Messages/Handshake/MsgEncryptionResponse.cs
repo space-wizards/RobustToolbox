@@ -1,5 +1,6 @@
 ﻿using System;
 using Lidgren.Network;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 
 #nullable disable
@@ -19,9 +20,9 @@ namespace Robust.Shared.Network.Messages.Handshake
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             UserId = buffer.ReadGuid();
-            var keyLength = buffer.ReadVariableInt32();
+            var keyLength = buffer.ReadVariableByteLength(nameof(SealedData));
             SealedData = buffer.ReadBytes(keyLength);
-            var legacyHwidLength = buffer.ReadVariableInt32();
+            var legacyHwidLength = buffer.ReadVariableByteLength(nameof(LegacyHwid));
             LegacyHwid = buffer.ReadBytes(legacyHwidLength);
         }
 

@@ -1,5 +1,6 @@
 using Lidgren.Network;
 using Robust.Shared.Console;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Network.Messages;
@@ -15,7 +16,7 @@ public sealed class MsgConCompletionResp : NetMessage
     {
         Seq = buffer.ReadInt32();
 
-        var len = buffer.ReadVariableInt32();
+        var len = buffer.ValidateElementCount(buffer.ReadVariableInt32(), nameof(Result.Options));
         var options = new CompletionOption[len];
         for (var i = 0; i < len; i++)
         {

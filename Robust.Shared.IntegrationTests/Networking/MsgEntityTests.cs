@@ -65,6 +65,39 @@ internal sealed class MsgEntityTests : RobustIntegrationTest
     }
 
     [Test]
+    public async Task HandledSystemMessageRejectsLengthAfterDeserialization()
+    {
+        LengthLimitedTestEventSystem.LastValue = null;
+
+        var options = new ServerIntegrationOptions {Pool = false};
+        options.BeforeStartServices += deps =>
+        {
+            deps.Resolve<IEntitySystemManager>().LoadExtraSystemType<LengthLimitedTestEventSystem>();
+        };
+
+        await using var pair = await StartConnectedPair(
+            options,
+            new ClientIntegrationOptions {Pool = false});
+
+        await RunTicksSync(pair.Server, pair.Client, 10);
+
+        await pair.Client.WaitPost(() =>
+        {
+            var entMan = pair.Client.Resolve<IEntityManager>();
+            entMan.EntityNetManager.SendSystemNetworkMessage(new LengthLimitedTestEvent {Value = "ABC"});
+        });
+
+        var ex = Assert.ThrowsAsync<InvalidDataException>(async () => await RunTicksSync(pair.Server, pair.Client, 5));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ex, Is.Not.Null);
+            Assert.That(ex!.Message, Does.Contain(nameof(LengthLimitedTestEvent)));
+            Assert.That(LengthLimitedTestEventSystem.LastValue, Is.Null);
+        });
+    }
+
+    [Test]
     public async Task HandledSystemMessageRejectsSerializedSizeBeforeDeserialization()
     {
         SizeLimitedTestEventSystem.Handled = false;

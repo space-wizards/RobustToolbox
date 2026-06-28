@@ -1,6 +1,7 @@
 using System;
 using JetBrains.Annotations;
 using Lidgren.Network;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Network.Messages
@@ -24,7 +25,7 @@ namespace Robust.Shared.Network.Messages
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
-            var size = buffer.ReadVariableInt32();
+            var size = buffer.ReadVariableByteLength(nameof(Package));
             buffer.ReadBytes(Package = new byte[size]);
         }
 

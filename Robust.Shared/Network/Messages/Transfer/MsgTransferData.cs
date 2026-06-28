@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using Lidgren.Network;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Transfer;
 using Robust.Shared.Serialization;
 
@@ -18,9 +19,7 @@ internal sealed class MsgTransferData : NetMessage
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
-        var length = buffer.ReadVariableInt32();
-        if (length > BaseTransferImpl.BufferSize)
-            throw new Exception("Buffer size is too large");
+        var length = buffer.ReadVariableByteLength(nameof(Data), BaseTransferImpl.BufferSize);
 
         var arr = ArrayPool<byte>.Shared.Rent(length);
         buffer.ReadBytes(arr, 0, length);

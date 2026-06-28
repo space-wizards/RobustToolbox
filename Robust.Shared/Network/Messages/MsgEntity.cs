@@ -44,7 +44,7 @@ namespace Robust.Shared.Network.Messages
             {
                 case EntityMessageType.SystemMessage:
                 {
-                    var length = buffer.ReadVariableInt32();
+                    var length = buffer.ReadVariableByteLength(nameof(SystemMessage));
 
                     // Length is bad validation.
                     if ((buffer.Position & 7) != 0)
@@ -53,15 +53,6 @@ namespace Robust.Shared.Network.Messages
                         Logger.GetSawmill("net").Error($"{MsgChannel}: dropping {nameof(MsgEntity)} as read position in message is not byte-aligned.");
                         break;
                     }
-
-                    // Validate the length they told us rather than allocating the memory with hopes and dreams.
-                    if (length < 0 || length > buffer.LengthBytes - buffer.PositionInBytes)
-                    {
-                        Logger.GetSawmill("net").Error($"{MsgChannel}: dropping {nameof(MsgEntity)} with invalid entity event payload length {length}.");
-                        Type = EntityMessageType.Error;
-                        break;
-                    }
-
 
                     var payloadPosition = buffer.PositionInBytes;
                     using var stream = new MemoryStream(buffer.Data, payloadPosition, length, false);
@@ -98,6 +89,8 @@ namespace Robust.Shared.Network.Messages
                         break;
                     }
 
+                    // DeSerialize runs validation separately on the EntityEventArgs.
+                    // We just check the length first before bothering to pass it through.
                     SystemMessage = serializer.Deserialize<EntityEventArgs>(stream);
                     buffer.Position += length * 8;
                     NetSizeStats.Record(NetSizeStatKind.EntityEvent, SystemMessage.GetType(), length);

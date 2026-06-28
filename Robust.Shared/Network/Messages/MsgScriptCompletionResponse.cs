@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Lidgren.Network;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Network.Messages
@@ -15,7 +16,7 @@ namespace Robust.Shared.Network.Messages
         {
             ScriptSession = buffer.ReadInt32()!;
 
-            var n = buffer.ReadInt32()!;
+            var n = buffer.ValidateElementCount(buffer.ReadInt32(), nameof(Results));
             var cli = ImmutableArray.CreateBuilder<LiteResult>();
             for (var i = 0; i < n; i++)
             {
@@ -69,14 +70,14 @@ namespace Robust.Shared.Network.Messages
                 DisplayTextSuffix = buffer.ReadString()!;
                 InlineDescription = buffer.ReadString()!;
 
-                var n = buffer.ReadInt32()!;
+                var n = buffer.ValidateElementCount(buffer.ReadInt32(), nameof(Tags));
                 var iab = ImmutableArray.CreateBuilder<string>();
                 for (var i = 0; i < n; i++)
                     iab.Add(buffer.ReadString()!);
 
                 Tags = iab.ToImmutable()!;
 
-                n = buffer.ReadInt32()!;
+                n = buffer.ValidateElementCount(buffer.ReadInt32(), nameof(Properties));
                 var idb = ImmutableDictionary.CreateBuilder<string, string>();
                 for (var i = 0; i < n; i++)
                     idb.Add(buffer.ReadString()!, buffer.ReadString()!);

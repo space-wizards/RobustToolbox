@@ -2,6 +2,7 @@
 using Lidgren.Network;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 
 #nullable disable
@@ -16,7 +17,7 @@ namespace Robust.Shared.Network.Messages
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
-            var playerCount = buffer.ReadInt32();
+            var playerCount = buffer.ValidateElementCount(buffer.ReadInt32(), nameof(Plyrs));
             Plyrs = new List<SessionState>(playerCount);
             for (var i = 0; i < playerCount; i++)
             {

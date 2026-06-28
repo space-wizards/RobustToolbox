@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Validate Box2i inputs to ensure no negative-sized boxes.
 
 ### New features
 

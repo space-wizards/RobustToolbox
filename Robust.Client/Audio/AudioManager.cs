@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.Audio.Sources;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
@@ -21,6 +22,7 @@ internal sealed partial class AudioManager : IAudioInternal
     [Shared.IoC.Dependency] private ILogManager _logMan = default!;
     [Shared.IoC.Dependency] private IReloadManager _reload = default!;
     [Shared.IoC.Dependency] private IResourceCache _cache = default!;
+    [Shared.IoC.Dependency] private IClydeInternal _clyde = default!;
 
     private Thread? _gameThread;
 
@@ -39,6 +41,8 @@ internal sealed partial class AudioManager : IAudioInternal
     private readonly HashSet<string> _alContextExtensions = new();
     private Attenuation _attenuation;
     private bool _audioInitialized;
+    private bool _focused = true;
+    private bool _muteUnfocused;
 
     public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
     public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -168,13 +172,30 @@ internal sealed partial class AudioManager : IAudioInternal
         IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
         _cfg.OnValueChanged(CVars.AudioMasterVolume, SetMasterGain, true);
+        _cfg.OnValueChanged(CVars.AudioMuteUnfocused, OnMuteUnfocusedChanged, true);
         _cfg.OnValueChanged(CVars.AudioDevice, OnAudioDeviceChanged);
+        _clyde.OnWindowFocused += OnWindowFocused;
 
         _reload.Register("/Audio", "*.ogg");
         _reload.Register("/Audio", "*.wav");
 
         _reload.OnChanged += OnReload;
         _audioInitialized = true;
+    }
+
+    private void OnMuteUnfocusedChanged(bool muteUnfocused)
+    {
+        _muteUnfocused = muteUnfocused;
+        SetMasterGain(_cfg.GetCVar(CVars.AudioMasterVolume));
+    }
+
+    private void OnWindowFocused(WindowFocusedEventArgs args)
+    {
+        if (args.Window != _clyde.MainWindow)
+            return;
+
+        _focused = args.Focused;
+        SetMasterGain(_cfg.GetCVar(CVars.AudioMasterVolume));
     }
 
     private void OnAudioDeviceChanged(string deviceSpecifier)

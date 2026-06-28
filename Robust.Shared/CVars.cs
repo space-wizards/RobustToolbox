@@ -1313,6 +1313,12 @@ namespace Robust.Shared
             CVarDef.Create("audio.mastervolume", 0.50f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// Whether to mute audio while the game window is unfocused.
+        /// </summary>
+        public static readonly CVarDef<bool> AudioMuteUnfocused =
+            CVarDef.Create("audio.mute_unfocused", false, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// Maximum raycast distance for audio occlusion.
         /// </summary>
         public static readonly CVarDef<float> AudioRaycastLength =

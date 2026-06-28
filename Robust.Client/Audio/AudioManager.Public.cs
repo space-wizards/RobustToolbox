@@ -5,6 +5,7 @@ using System.Threading;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
+using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.AudioLoading;
 using Robust.Shared.Audio.Sources;
@@ -45,6 +46,11 @@ internal partial class AudioManager
 
     public void Shutdown()
     {
+        _clyde.OnWindowFocused -= OnWindowFocused;
+        _cfg.UnsubValueChanged(CVars.AudioMasterVolume, SetMasterGain);
+        _cfg.UnsubValueChanged(CVars.AudioMuteUnfocused, OnMuteUnfocusedChanged);
+        _cfg.UnsubValueChanged(CVars.AudioDevice, OnAudioDeviceChanged);
+
         DisposeAllAudio();
 
         if (_openALContext != ALContext.Null)
@@ -229,6 +235,8 @@ internal partial class AudioManager
 
     public void SetMasterGain(float newGain)
     {
+        var effectiveGain = _muteUnfocused && !_focused ? 0f : newGain;
+
         if (newGain < 0f)
         {
             OpenALSawmill.Error("Tried to set master gain below 0, clamping to 0");
@@ -240,7 +248,7 @@ internal partial class AudioManager
         #region Platform hack for MacOS
         // HACK/BUG: Apple's OpenAL implementation has a bug where values of 0f for listener gain don't actually
         // HACK/BUG: prevent sound playback. Workaround is to cap the minimum gain at a value just above 0.
-        if (OperatingSystem.IsMacOS() && newGain == 0f)
+        if (OperatingSystem.IsMacOS() && effectiveGain == 0f)
         {
             OpenALSawmill.Verbose("Not setting gain to 0 because Apple can't write an OpenAL implementation");
             AL.Listener(ALListenerf.Gain, float.Epsilon);
@@ -248,7 +256,7 @@ internal partial class AudioManager
         }
         #endregion Platform hack for MacOS
 
-        AL.Listener(ALListenerf.Gain, newGain);
+        AL.Listener(ALListenerf.Gain, effectiveGain);
     }
 
     public void SetAttenuation(Attenuation attenuation)

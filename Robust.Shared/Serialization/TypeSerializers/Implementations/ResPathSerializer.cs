@@ -24,7 +24,11 @@ public sealed class ResPathSerializer : ITypeSerializer<ResPath, ValueDataNode>,
         {
             path /= "meta.json";
         }
-        path = path.ToRootedPath();
+
+        if (!path.CanonPath.Split('/').First().Equals("Textures", StringComparison.InvariantCultureIgnoreCase))
+        {
+            path = SpriteSpecifierSerializer.TextureRoot / path;
+        }
 
         try
         {

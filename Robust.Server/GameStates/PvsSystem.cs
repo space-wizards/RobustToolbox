@@ -241,9 +241,17 @@ internal sealed partial class PvsSystem : EntitySystem
         var sb = new StringBuilder();
         sb.Append($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}. Curtick: {_gameTiming.CurTick}.");
 
-        if (missingEntity != null && TryGetEntityData(missingEntity.Value, out var uid, out _))
+        if (missingEntity != null)
         {
-            sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(uid)}.");
+            if (TryGetEntityData(missingEntity.Value, out var uid, out _))
+            {
+                sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(uid)}.");
+            }
+            else
+            {
+                sb.Append($" Apparently they received an entity without metadata (No entity found).");
+            }
+
             //sb.Append($" Entity last seen: {meta.PvsData[sessionData.Index].EntityLastAcked}");
         }
 

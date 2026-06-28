@@ -235,7 +235,8 @@ public partial class SharedPhysicsSystem
         }
 
         SetLinearVelocity(uid, body.LinearVelocity + impulse * body._invMass, body: body);
-        SetAngularVelocity(uid, body.AngularVelocity + body.InvI * Vector2Helpers.Cross(point - body._localCenter, impulse), body: body);
+        var matrix = _transform.GetWorldMatrix(uid);
+        SetAngularVelocity(uid, body.AngularVelocity + body.InvI * Vector2Helpers.Cross(Vector2.Transform(point, matrix) - Vector2.Transform(body._localCenter, matrix), impulse), body: body);
     }
 
     #endregion

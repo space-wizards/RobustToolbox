@@ -64,10 +64,50 @@ internal sealed class MsgEntityTests : RobustIntegrationTest
         });
     }
 
+    [Test]
+    public async Task HandledSystemMessageRejectsSerializedSizeBeforeDeserialization()
+    {
+        SizeLimitedTestEventSystem.Handled = false;
+
+        var options = new ServerIntegrationOptions {Pool = false};
+        options.BeforeStartServices += deps =>
+        {
+            deps.Resolve<IEntitySystemManager>().LoadExtraSystemType<SizeLimitedTestEventSystem>();
+        };
+
+        await using var pair = await StartConnectedPair(
+            options,
+            new ClientIntegrationOptions {Pool = false});
+
+        await RunTicksSync(pair.Server, pair.Client, 10);
+
+        await pair.Client.WaitPost(() =>
+        {
+            var entMan = pair.Client.Resolve<IEntityManager>();
+            entMan.EntityNetManager.SendSystemNetworkMessage(new SizeLimitedTestEvent {Value = "ABC"});
+        });
+
+        var ex = Assert.ThrowsAsync<InvalidDataException>(async () => await RunTicksSync(pair.Server, pair.Client, 5));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ex, Is.Not.Null);
+            Assert.That(ex!.Message, Does.Contain(nameof(SizeLimitedTestEvent)));
+            Assert.That(SizeLimitedTestEventSystem.Handled, Is.False);
+        });
+    }
+
     [Serializable, NetSerializable]
     private sealed class LengthLimitedTestEvent : EntityEventArgs
     {
         [NetMaxLength(2)]
+        public string Value = string.Empty;
+    }
+
+    [Serializable, NetSerializable]
+    [NetMaxSize(2)]
+    private sealed class SizeLimitedTestEvent : EntityEventArgs
+    {
         public string Value = string.Empty;
     }
 
@@ -84,6 +124,22 @@ internal sealed class MsgEntityTests : RobustIntegrationTest
         private void OnLengthLimited(LengthLimitedTestEvent ev)
         {
             LastValue = ev.Value;
+        }
+    }
+
+    [Reflect(false)]
+    private sealed class SizeLimitedTestEventSystem : EntitySystem
+    {
+        public static bool Handled;
+
+        public override void Initialize()
+        {
+            SubscribeNetworkEvent<SizeLimitedTestEvent>(OnSizeLimited);
+        }
+
+        private void OnSizeLimited(SizeLimitedTestEvent ev)
+        {
+            Handled = true;
         }
     }
 }

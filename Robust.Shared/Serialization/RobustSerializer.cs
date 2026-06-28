@@ -219,6 +219,11 @@ namespace Robust.Shared.Serialization
             }
         }
 
+        public void ValidateSerializedSize(Type type, int bytes)
+        {
+            _netValidation.ValidateSerializedSize(type, bytes);
+        }
+
         public bool CanSerialize(Type type)
             => _serializableTypes.Contains(type);
 

@@ -45,31 +45,61 @@ namespace Robust.Shared.Network.Messages
                 case EntityMessageType.SystemMessage:
                 {
                     var length = buffer.ReadVariableInt32();
-                    using var stream = RobustMemoryManager.GetMemoryStream(length);
-                    buffer.ReadAlignedMemory(stream, length);
 
+                    // Length is bad validation.
+                    if ((buffer.Position & 7) != 0)
+                    {
+                        Type = EntityMessageType.Error;
+                        Logger.GetSawmill("net").Error($"{MsgChannel}: dropping {nameof(MsgEntity)} as read position in message is not byte-aligned.");
+                        break;
+                    }
+
+                    // Validate the length they told us rather than allocating the memory with hopes and dreams.
+                    if (length < 0 || length > buffer.LengthBytes - buffer.PositionInBytes)
+                    {
+                        Logger.GetSawmill("net").Error($"{MsgChannel}: dropping {nameof(MsgEntity)} with invalid entity event payload length {length}.");
+                        Type = EntityMessageType.Error;
+                        break;
+                    }
+
+
+                    var payloadPosition = buffer.PositionInBytes;
+                    using var stream = new MemoryStream(buffer.Data, payloadPosition, length, false);
+
+                    // Check if we even know the type.
                     if (!serializer.TryGetSerializedType(stream, out var eventType))
                     {
                         Logger.GetSawmill("net").Error($"{MsgChannel}: dropping {nameof(MsgEntity)} with unknown entity event type.");
                         Type = EntityMessageType.Error;
+                        buffer.Position += length * 8;
                         break;
                     }
 
+                    // Only accept EntityEventArgs in MsgEntity (at least that's what eventbus limits it to right now).
                     if (eventType == null || !typeof(EntityEventArgs).IsAssignableFrom(eventType))
                     {
                         Logger.GetSawmill("net").Error($"{MsgChannel}: dropping invalid entity event type {eventType?.Name ?? "<null>"}.");
                         Type = EntityMessageType.Error;
+                        buffer.Position += length * 8;
                         break;
                     }
 
+                    // If EntityEventArgs has the size attribute validate it here
+                    serializer.ValidateSerializedSize(eventType, length);
+
+                    // Check if there's even any subscribers
+                    // If there are none then no point wasting time deserializing and dump it.
+                    // This may also be a legitimate content bug.
                     if (!CanReceiveNetworkEvent(eventType))
                     {
-                        Logger.GetSawmill("net").Debug($"{MsgChannel}: dropping unhandled entity event {eventType.Name}.");
+                        Logger.GetSawmill("net").Warning($"{MsgChannel}: dropping unhandled entity event {eventType.Name}.");
                         Type = EntityMessageType.Error;
+                        buffer.Position += length * 8;
                         break;
                     }
 
                     SystemMessage = serializer.Deserialize<EntityEventArgs>(stream);
+                    buffer.Position += length * 8;
                     NetSizeStats.Record(NetSizeStatKind.EntityEvent, SystemMessage.GetType(), length);
                     NetSizeStats.RecordSerializableMembers(SystemMessage, serializer);
                     break;

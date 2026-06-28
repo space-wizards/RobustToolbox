@@ -46,6 +46,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<IReflectionManager, ServerReflectionManager>();
             container.Register<IRobustSerializer, ServerRobustSerializer>();
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
+            container.Register<INetValidationManager, NetValidationManager>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<IGameTiming, GameTiming>();
             container.Register<ProfManager, ProfManager>();

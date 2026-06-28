@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization;
 /// Rejects serialized network payloads for this type above the specified byte size.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = true)]
-public sealed class NetMaxSerializedSizeAttribute(int bytes) : Attribute
+public sealed class NetMaxSizeAttribute(int bytes) : Attribute
 {
     public int Bytes { get; } = bytes;
 }
@@ -107,7 +107,7 @@ public sealed class NetValidationManager : INetValidationManager
     private static ValidationData BuildValidationData(Type type)
         => new(
             BuildLengthMembers(type),
-            type.GetCustomAttribute<NetMaxSerializedSizeAttribute>(true)?.Bytes);
+            type.GetCustomAttribute<NetMaxSizeAttribute>(true)?.Bytes);
 
     private static LengthMember[] BuildLengthMembers(Type type)
     {

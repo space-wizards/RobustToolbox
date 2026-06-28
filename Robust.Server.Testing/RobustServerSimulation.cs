@@ -204,6 +204,7 @@ namespace Robust.UnitTesting.Server
             container.Register<IServerNetManager, NetManager>();
             container.Register<IStatusHost, StatusHost>();
             container.Register<ITransferManager, ServerTransferManager>();
+            container.Register<INetValidationManager, NetValidationManager>();
 
             var realReflection = new ServerReflectionManager();
             realReflection.LoadAssemblies(new List<Assembly>(2)

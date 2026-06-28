@@ -56,6 +56,7 @@ namespace Robust.Shared.Serialization
         object Deserialize(Stream stream);
         bool TryDeserialize(Stream stream, out object? value);
         bool TryGetSerializedType(Stream stream, out Type? type);
+        void ValidateSerializedSize(Type type, int bytes);
         bool CanSerialize(Type type);
 
         /// <summary>

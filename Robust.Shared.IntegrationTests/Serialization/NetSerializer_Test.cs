@@ -22,7 +22,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         [Serializable]
-        [NetMaxSerializedSize(2)]
+        [NetMaxSize(2)]
         private sealed class SizeLimitedPayload
         {
         }

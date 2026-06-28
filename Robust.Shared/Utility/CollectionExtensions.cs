@@ -56,6 +56,17 @@ namespace Robust.Shared.Utility
             return dict;
         }
 
+        /// <summary>
+        /// Compares the entries inside of 2 dictionaries to check equality.
+        /// </summary>
+        /// <remarks>
+        /// The base Equals implementation checks references hence this.
+        /// </remarks>
+        /// <param name="self"></param>
+        /// <param name="other"></param>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <returns></returns>
         public static bool DictionaryEquals<TKey, TValue>(
             this IReadOnlyDictionary<TKey, TValue> self,
             IReadOnlyDictionary<TKey, TValue> other)
@@ -63,6 +74,10 @@ namespace Robust.Shared.Utility
         {
             if (self.Count != other.Count)
                 return false;
+
+            // Checking itself.
+            if (self.Equals(other))
+                return true;
 
             var valueComparer = EqualityComparer<TValue>.Default;
             foreach (var (key, value) in self)

@@ -4,11 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Audio;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
-using Robust.Shared.Audio;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -31,8 +29,6 @@ namespace Robust.Client.ResourceManagement
         public IFontManager FontManager => _fontManager;
         [Dependency] private ILogManager _logManager = default!;
         [Dependency] private IConfigurationManager _configurationManager = default!;
-        [Dependency] private IAudioInternal _clydeAudio = default!;
-        public IAudioInternal ClydeAudio => _clydeAudio;
 
         public void PreloadTextures()
         {

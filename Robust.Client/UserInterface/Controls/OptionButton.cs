@@ -232,8 +232,8 @@ namespace Robust.Client.UserInterface.Controls
             {
                 if (buttonData.Button == obj.Button)
                 {
-                    OnItemSelected?.Invoke(new ItemSelectedEventArgs(buttonData.Id, this));
                     obj.Button.Pressed = false;
+                    OnItemSelected?.Invoke(new ItemSelectedEventArgs(buttonData.Id, this));
                     TogglePopup(false);
                     return;
                 }

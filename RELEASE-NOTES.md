@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added a DictionaryEquals extension method to check equality between two dictionaries.
 
 ### Bugfixes
 

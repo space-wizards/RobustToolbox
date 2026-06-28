@@ -56,6 +56,24 @@ namespace Robust.Shared.Utility
             return dict;
         }
 
+        public static bool DictionaryEquals<TKey, TValue>(
+            this IReadOnlyDictionary<TKey, TValue> self,
+            IReadOnlyDictionary<TKey, TValue> other)
+            where TKey : notnull
+        {
+            if (self.Count != other.Count)
+                return false;
+
+            var valueComparer = EqualityComparer<TValue>.Default;
+            foreach (var (key, value) in self)
+            {
+                if (!other.TryGetValue(key, out var otherValue) || !valueComparer.Equals(value, otherValue))
+                    return false;
+            }
+
+            return true;
+        }
+
         public static bool TryGetValue<T>(this IList<T> list, int index, out T value)
         {
             if (index >= 0 && list.Count > index)

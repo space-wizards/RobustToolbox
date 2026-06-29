@@ -35,11 +35,13 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Remove QuadTree due to lack of maintenance, test coverage, and usage.
+* Validate Box2i inputs to ensure no negative-sized boxes.
+* Removed QuadTree due to lack of maintenance, test coverage, and usage.
 
 ### New features
 
-*None yet*
+* Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
+* Added a DictionaryEquals extension method to check equality between two dictionaries.
 
 ### Bugfixes
 

@@ -27,6 +27,7 @@ internal sealed partial class PvsSystem
         var sendCompList = meta.LastComponentRemoved > fromTick;
         HashSet<ushort>? netComps = sendCompList ? new() : null;
         var stateEv = new ComponentGetState(player, fromTick);
+        var bus = EntityManager.EventBus;
 
         foreach (var (netId, (component, restriction)) in meta.NetComponents)
         {

@@ -48,8 +48,8 @@ internal sealed partial class PvsSystem
         if (xform.GridUid == uid)
             return;
 
-        DebugTools.Assert(!_mapSystem.IsGrid(uid, xform));
-        DebugTools.Assert(!_mapSystem.IsMap(uid, xform));
+        DebugTools.Assert(!_maps.IsGrid(uid, xform));
+        DebugTools.Assert(!_maps.IsMap(uid, xform));
 
         if (oldParent != xform.ParentUid)
         {

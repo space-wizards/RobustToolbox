@@ -106,7 +106,7 @@ internal sealed partial class PvsSystem
                 var rangeVec = new Vector2(range, range);
                 var box = new Box2(viewPos - rangeVec, viewPos + rangeVec);
                 grids.Clear();
-                _mapManager.FindGridsIntersecting(map, box, ref grids, approx: true, includeMap: false);
+                _maps.FindGridsIntersecting(map, box, ref grids, approx: true, includeMap: false);
 
                 foreach (var grid in grids)
                 {
@@ -131,7 +131,7 @@ internal sealed partial class PvsSystem
         // Each root nodes should simply be a map or a grid entity.
         DebugTools.Assert(Exists(chunk.Root), $"Chunk root does not exist!");
         DebugTools.Assert(Exists(chunk.Map), $"Map does not exist!.");
-        DebugTools.Assert(_mapSystem.IsMap(chunk.Root) || _mapSystem.IsGrid(chunk.Root));
+        DebugTools.Assert(_maps.IsMap(chunk.Root) || _maps.IsGrid(chunk.Root));
 
         var fromTick = session.FromTick;
         var mask = session.VisMask;

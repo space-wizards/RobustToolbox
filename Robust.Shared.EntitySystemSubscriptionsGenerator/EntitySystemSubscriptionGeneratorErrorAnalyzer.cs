@@ -139,7 +139,7 @@ public class EntitySystemSubscriptionGeneratorErrorAnalyzer : DiagnosticAnalyzer
             if (c.Compilation.GetTypeByMetadataName(annotationName) is not { } annotationSymbol)
                 return;
 
-            context.RegisterSymbolStartAction(
+            c.RegisterSymbolStartAction(
                 c =>
                 {
                     // The `symbolKind` arg to `RegisterSymbolStartAction` should make this never fail.

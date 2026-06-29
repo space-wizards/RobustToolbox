@@ -272,28 +272,18 @@ public sealed record PartialTypeInfo(
         public bool Equals(PartialTypeInfo t, PartialTypeInfo other)
         {
             return t.Namespace == other.Namespace &&
-                   t.Name == other.Name &&
-                   t.DisplayName == other.DisplayName &&
-                   t.TypeParameterNames.Equals(other.TypeParameterNames) &&
+                   t.Parts.Equals(other.Parts) &&
                    t.IsValid == other.IsValid &&
-                   t.Accessibility == other.Accessibility &&
-                   t.Kind == other.Kind &&
-                   t.IsRecord == other.IsRecord &&
-                   t.IsAbstract == other.IsAbstract;
+                   t.IsSealed == other.IsSealed;
         }
 
         public int GetHashCode(PartialTypeInfo t)
         {
             var hash = new HashCode();
             hash.Add(t.Namespace);
-            hash.Add(t.Name);
-            hash.Add(t.DisplayName);
-            hash.Add(t.TypeParameterNames);
+            hash.Add(t.Parts);
             hash.Add(t.IsValid);
-            hash.Add(t.Accessibility);
-            hash.Add(t.Kind);
-            hash.Add(t.IsRecord);
-            hash.Add(t.IsAbstract);
+            hash.Add(t.IsSealed);
             return hash.ToHashCode();
         }
     }

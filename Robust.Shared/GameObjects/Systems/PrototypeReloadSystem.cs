@@ -12,6 +12,8 @@ internal sealed partial class PrototypeReloadSystem : EntitySystem
 {
     public override void Initialize()
     {
+        base.Initialize();
+
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
     }
 

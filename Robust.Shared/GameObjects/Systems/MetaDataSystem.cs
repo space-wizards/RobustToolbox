@@ -17,6 +17,8 @@ public abstract partial class MetaDataSystem : EntitySystem
 
     public override void Initialize()
     {
+        base.Initialize();
+
         _metaQuery = GetEntityQuery<MetaDataComponent>();
         SubscribeLocalEvent<MetaDataComponent, ComponentHandleState>(OnMetaDataHandle);
         SubscribeLocalEvent<MetaDataComponent, ComponentGetState>(OnMetaDataGetState);

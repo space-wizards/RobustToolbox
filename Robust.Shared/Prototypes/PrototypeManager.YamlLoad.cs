@@ -26,7 +26,7 @@ public partial class PrototypeManager
     public event Action<DataNodeDocument>? LoadedData;
 
     /// <summary>
-    /// DataNodes with this tag will be replaced with another node using supplied variantization data.
+    /// DataNodes with this tag will be replaced with a new node using data supplied by <see cref="CreateVariants"/>.
     /// </summary>
     private const string CreateVariantsTag = "!type:CreateVariants";
 
@@ -75,7 +75,7 @@ public partial class PrototypeManager
 
                                         extractedList.Add(data);
 
-                                        // If the prototype has variants, we need add add each of these to the extarcted list as well
+                                        // If the prototype has variants, we need to add each of these to the extracted list as well
                                         if (data.VariantData != null)
                                         {
                                             foreach (var (variantId, variantMapping) in data.VariantData)
@@ -189,7 +189,7 @@ public partial class PrototypeManager
 
                         MergeMapping(extracted, overwrite, changed);
 
-                        // If the prototype has variants, we need add add each of these to the extarcted list as well
+                        // If the prototype has variants, we need to add each of these to the extracted list as well
                         if (extracted.VariantData is not null)
                         {
                             foreach (var (variantId, variantMapping) in extracted.VariantData)
@@ -409,7 +409,7 @@ public partial class PrototypeManager
 
                     MergeMapping(extracted, overwrite, changed);
 
-                    // If the prototype has variants, we need add add each of these to the extarcted list as well
+                    // If the prototype has variants, we need to add each of these to the extracted list as well
                     if (extracted.VariantData is not null)
                     {
                         foreach (var (variantId, variantMapping) in extracted.VariantData)

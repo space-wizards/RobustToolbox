@@ -1038,11 +1038,7 @@ namespace Robust.Shared.Network
             var instance = (NetMessage) Activator.CreateInstance(type)!;
             instance.MsgChannel = channel;
 
-            if (!_bandwidthUsage.TryGetValue(type, out var bandwidth))
-            {
-                bandwidth = 0;
-            }
-
+            var bandwidth = _bandwidthUsage.GetValueOrDefault(type, 0);
             _bandwidthUsage[type] = bandwidth + msg.LengthBytes;
 
             try
@@ -1065,7 +1061,7 @@ namespace Robust.Shared.Network
                 channel.Disconnect("Failed to deserialize packet.", false);
                 return true;
             }
-            catch (Exception e) // yes, we want to catch ALL exeptions for security
+            catch (Exception e) // yes, we want to catch ALL exceptions for security
             {
                 if (_logPacketIssues)
                     _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet:\n{e}");

@@ -13,7 +13,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
@@ -143,7 +142,6 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Initialize() called multiple times");
 
             EventBusInternal = new EntityEventBus(this, _reflection);
-            MsgEntity.SetNetworkEventReceiver(EventBusInternal);
 
             InitializeComponents();
             _metaReg = _componentFactory.GetRegistration(typeof(MetaDataComponent));
@@ -266,7 +264,6 @@ namespace Robust.Shared.GameObjects
             _entitySystemManager.Clear();
             EventBusInternal.Dispose();
             EventBusInternal = null!;
-            MsgEntity.ClearNetworkEventReceiver();
             ClearComponents();
 
             ShuttingDown = false;

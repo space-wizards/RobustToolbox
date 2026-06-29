@@ -68,7 +68,7 @@ namespace Robust.Shared.Network.Messages
                     // Check if there's even any subscribers
                     // If there are none then no point wasting time deserializing and dump it.
                     // This may also be a legitimate content bug.
-                    if (!serializer.EntityManager.CanReceiveNetworkEvent(eventType))
+                    if (!serializer.EntityManager.EventBus.CanReceiveNetworkEvent(eventType))
                     {
                         Logger.GetSawmill("net").Debug($"{MsgChannel}: dropping unhandled entity event {eventType.Name}.");
                         Type = EntityMessageType.Error;

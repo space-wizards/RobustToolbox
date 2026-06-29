@@ -7,6 +7,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using Robust.Shared.Configuration;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
@@ -21,6 +22,7 @@ namespace Robust.Shared.Serialization
         [Dependency] protected IRobustMappedStringSerializer MappedStringSerializer = default!;
         [Dependency] private ILogManager _logManager = default!;
         [Dependency] private INetValidationManager _netValidation = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
 
         private readonly Dictionary<Type, Dictionary<string, Type?>> _cachedSerialized = new();
 
@@ -32,6 +34,8 @@ namespace Robust.Shared.Serialization
         private HashSet<Type> _serializableTypes = default!;
         private bool _initialized;
         private SerializerFloatFlags _floatFlags;
+
+        public IEntityManager EntityManager => _entityManager;
 
         private static Type[] AlwaysNetSerializable => new[]
         {

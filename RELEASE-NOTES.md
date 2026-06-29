@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Validate Box2i inputs to ensure no negative-sized boxes.
 
 ### New features
 
-*None yet*
+* Added a DictionaryEquals extension method to check equality between two dictionaries.
 
 ### Bugfixes
 
@@ -53,6 +53,62 @@ END TEMPLATE-->
 
 *None yet*
 
+
+## 278.0.0
+
+### Breaking changes
+
+* Remove the duplicate serialization copy of components kept on ComponentRegistryEntry; now it only stores the deserialized component. To get the raw MappingDataNode for EntityPrototypes use PrototypeManager. This is expected to significantly reduce memory usage.
+* Obsolete LocalRotation in favor of the system method. The angle is now also normalized to 2PI and no longer grows indefinitely.
+* Obsoleted IMapManager methods in lieu of SharedMapSystem.
+
+### New features
+
+* Add a `OnlyRotation` property to MoveEvent where the EntityCoordinates remain the same.
+* ValueList now implements IList and not just IEnumerable.
+* Add a BoundUserInterfaceMessageReceivedEvent that will be raised whenever a BoundUserInterfaceMessage is received regardless of validation.
+* Added `IsHardCollidable` to `SharedPhysicsSystem`.
+* Added `GetFilledTileCount` to `SharedMapSystem`.
+* Changed the cursors on interactive controls.
+* Added new `StyleProperty` `track` to `ScrollBar` that takes a `StyleBox` and displays it as a backing track for the whole height of the `ScrollBar`.
+* Scroll Lock is now a bindable key.
+* The obsoleted TryIndex methods on PrototypeManager have now been removed.
+* Add batched Box2 / Box2Rotated drawing methods to Clyde WorldHandle.
+* Completion filter now works by Contains instead of StartsWith
+* Add SwitchAudioDevice API to AudioManager.
+* Added a PhysicsBodyStatusChangedEvent (self-descriptive).
+* Allow enumeration on EntityQuery.
+
+### Bugfixes
+
+* Fix ValueList TryPop not clearing element references.
+* Fix ValueList Peek always throwing by referencing the wrong index.
+* Windows will stay at relative position not absolute pixel position on window resize.
+* Fixed override properties in `WrapContainer` not actually overriding the Style Properties.
+* Fixed `BoxContainer`'s `SeparationOverride` not overriding the Style Properties.
+* Fixed `SeparationOverride` not invalidating measure.
+* Fixed swapped parameters in `MapManager`'s `FindGridsIntersecting` methods.
+* Fix DataRecord serialization.
+
+### Other
+
+* Optimise Direction and DirectionFlag methods.
+* Added Pure attributes to the `EntityLookup` bounds methods.
+* Improved performance of collision filter test.
+* Removed an outdated xmldoc comment regarding dependency injection.
+* Audio resources now use `AsSpan` when checking signatures.
+
+### Internal
+
+* Reduce TryParseEnum string allocations.
+* Reduce TryRelativeTo string allocations.
+* Reduce OpenGL logging string allocations on debug for the client.
+* Optimise sprite sorting slightly.
+* Simplify and optimise Box2.Contains(Vector2)
+* Optimise ComponentRegistry deserialization slightly.
+* Optimise Box2Rotated.TransformBox slightly.
+* Added several test helpers to avoid boilerplate in integration tests around client connection / disconnection.
+* Simplifed AccessAnalyzer check to speed it up.
 
 ## 277.2.1
 

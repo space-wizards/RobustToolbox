@@ -8,6 +8,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -691,6 +692,49 @@ public partial class EntitySystem
     {
         return EntityManager.HasComponent(uid, type);
     }
+
+    /// <summary>
+    /// Returns true if an entity prototype has a <typeparamref name="T"/>.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp<T>([ForbidLiteral] EntProtoId id) where T : IComponent, new()
+        => HasComp(id, Factory.CompName<T>());
+
+    /// <summary>
+    /// Returns true if an entity prototype has a component with a given type.
+    /// Will throw if the type does not belong to a component.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp([ForbidLiteral] EntProtoId id, Type type)
+        => HasComp(id, Factory.CompName(type));
+
+    /// <summary>
+    /// Returns true if a entity prototype contains a component with a given name.
+    /// Logs errors in case of the prototype not existing.
+    /// If you call this a lot on the same prototype, resolve it first and call the <see cref="EntityPrototype"/>-using <c>HasComp</c> variants.
+    /// </summary>
+    [Pure]
+    protected bool HasComp([ForbidLiteral] EntProtoId id, CompName name)
+        => ProtoMan.Resolve(id, out var proto) && proto.HasComp(name);
+
+    /// <summary>
+    /// Returns true if an already-resolved entity prototype has a component of type <typeparamref name="T"/>.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp<T>(EntityPrototype proto) where T : IComponent, new()
+        => proto.HasComp(Factory.CompName<T>());
+
+    /// <summary>
+    /// Returns true if an already-resolved entity prototype has a component with a given type.
+    /// Will throw if the type does not belong to a component.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp(EntityPrototype proto, Type type)
+        => proto.HasComp(Factory.CompName(type));
 
     #endregion
 

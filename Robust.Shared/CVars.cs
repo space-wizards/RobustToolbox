@@ -1304,7 +1304,7 @@ namespace Robust.Shared
         /// Audio device to try to output audio to by default.
         /// </summary>
         public static readonly CVarDef<string> AudioDevice =
-            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);
+            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Master volume for audio output.

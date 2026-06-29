@@ -22,12 +22,12 @@ internal sealed partial class PvsSystem
     /// <returns>New entity State for the given entity.</returns>
     private EntityState GetEntityState(ICommonSession? player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
     {
+        var bus = EntityManager.EventBusInternal;
         var changed = new List<ComponentChange>();
 
         var sendCompList = meta.LastComponentRemoved > fromTick;
         HashSet<ushort>? netComps = sendCompList ? new() : null;
         var stateEv = new ComponentGetState(player, fromTick);
-        var bus = EntityManager.EventBus;
 
         foreach (var (netId, (component, restriction)) in meta.NetComponents)
         {

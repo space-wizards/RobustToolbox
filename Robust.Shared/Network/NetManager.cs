@@ -411,7 +411,7 @@ namespace Robust.Shared.Network
                 if (UpnpCompatible(config) && upnp)
                     config.EnableUPnP = true;
 
-                var peer = IsServer ? (NetPeer) new NetServer(config) : new NetClient(config);
+                var peer = IsServer ? (NetPeer)new NetServer(config) : new NetClient(config);
                 peer.Start();
                 _netPeers.Add(new NetPeerData(peer));
             }
@@ -684,10 +684,11 @@ namespace Robust.Shared.Network
             {
                 netConfig.SetMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval, true);
                 netConfig.MaximumConnections = _config.GetEffectiveMaxConnections();
+                netConfig.ConnectionTimeout = _config.GetCVar(CVars.ConnectionTimeoutServer);
             }
             else
             {
-                netConfig.ConnectionTimeout = _config.GetCVar(CVars.ConnectionTimeout);
+                netConfig.ConnectionTimeout = _config.GetCVar(CVars.ConnectionTimeoutClient);
                 netConfig.ResendHandshakeInterval = _config.GetCVar(CVars.ResendHandshakeInterval);
                 netConfig.MaximumHandshakeAttempts = _config.GetCVar(CVars.MaximumHandshakeAttempts);
             }
@@ -699,7 +700,7 @@ namespace Robust.Shared.Network
             netConfig.SimulatedRandomLatency = _config.GetCVar(CVars.NetFakeLagRand);
             netConfig.SimulatedDuplicatesChance = _config.GetCVar(CVars.NetFakeDuplicates);
 
-#if DEBUG
+#if TOOLS || DEBUG
             netConfig.ConnectionTimeout = 30000f;
 #endif
 
@@ -783,7 +784,7 @@ namespace Robust.Shared.Network
             var sender = msg.SenderConnection;
             DebugTools.Assert(sender != null);
 
-            var newStatus = (NetConnectionStatus) msg.ReadByte();
+            var newStatus = (NetConnectionStatus)msg.ReadByte();
             var reason = msg.ReadString();
             _logger.Debug("{ConnectionEndpoint}: Status changed to {ConnectionStatus}, reason: {ConnectionStatusReason}",
                 sender.RemoteEndPoint, newStatus, reason);
@@ -881,7 +882,7 @@ namespace Robust.Shared.Network
             try
             {
 #endif
-                OnDisconnected(channel, reason);
+            OnDisconnected(channel, reason);
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -997,7 +998,7 @@ namespace Robust.Shared.Network
 
             var type = entry.Type;
 
-            var instance = (NetMessage) Activator.CreateInstance(type)!;
+            var instance = (NetMessage)Activator.CreateInstance(type)!;
             instance.MsgChannel = channel;
 
             if (!_bandwidthUsage.TryGetValue(type, out var bandwidth))
@@ -1082,7 +1083,7 @@ namespace Robust.Shared.Network
 
             if (rxCallback != null && (accept & thisSide) != 0)
             {
-                data.Callback = msg => rxCallback((T) msg);
+                data.Callback = msg => rxCallback((T)msg);
 
                 if (id != -1)
                     CacheNetMsgIndex(id, name);
@@ -1104,7 +1105,7 @@ namespace Robust.Shared.Network
                 throw new NetManagerException(
                     $"[NET] No string in table with name {message.MsgName}. Was it registered?");
 
-            packet.Write((byte) msgId);
+            packet.Write((byte)msgId);
             message.WriteToBuffer(packet, _serializer);
             return packet;
         }

@@ -11,10 +11,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    [NotContentImplementable]
     public interface IEventBus : IDirectedEventBus, IBroadcastEventBus
     {
     }
 
+    [NotContentImplementable]
     public interface IDirectedEventBus
     {
         void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)

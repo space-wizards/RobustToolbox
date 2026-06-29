@@ -3,6 +3,7 @@
     /// <summary>
     ///     Wraps the system console.
     /// </summary>
+    [NotContentImplementable]
     public interface ISystemConsoleManager
     {
         /// <summary>

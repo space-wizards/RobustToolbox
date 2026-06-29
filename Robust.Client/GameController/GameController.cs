@@ -11,6 +11,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
+using Robust.Client.Network.Transfer;
 using Robust.Client.Placement;
 using Robust.Client.Replays.Loading;
 using Robust.Client.Replays.Playback;
@@ -35,6 +36,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -51,53 +53,55 @@ namespace Robust.Client
 {
     internal sealed partial class GameController : IGameControllerInternal
     {
-        [Dependency] private readonly INetConfigurationManagerInternal _configurationManager = default!;
-        [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
-        [Dependency] private readonly IResourceManagerInternal _resManager = default!;
-        [Dependency] private readonly IRobustSerializer _serializer = default!;
-        [Dependency] private readonly IXamlProxyManager _xamlProxyManager = default!;
-        [Dependency] private readonly IXamlHotReloadManager _xamlHotReloadManager = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IStateManager _stateManager = default!;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
-        [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IClientConsoleHost _console = default!;
-        [Dependency] private readonly ITimerManager _timerManager = default!;
-        [Dependency] private readonly IClientEntityManager _entityManager = default!;
-        [Dependency] private readonly IPlacementManager _placementManager = default!;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
-        [Dependency] private readonly IOverlayManagerInternal _overlayManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly ITaskManager _taskManager = default!;
-        [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariablesManager = default!;
-        [Dependency] private readonly IDiscordRichPresence _discord = default!;
-        [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IAudioInternal _audio = default!;
-        [Dependency] private readonly IFontManagerInternal _fontManager = default!;
-        [Dependency] private readonly IModLoaderInternal _modLoader = default!;
-        [Dependency] private readonly IScriptClient _scriptClient = default!;
-        [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
-        [Dependency] private readonly IAuthManager _authManager = default!;
-        [Dependency] private readonly IMidiManager _midiManager = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
-        [Dependency] private readonly MarkupTagManager _tagManager = default!;
-        [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
-        [Dependency] private readonly NetworkResourceManager _netResMan = default!;
-        [Dependency] private readonly IReplayLoadManager _replayLoader = default!;
-        [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
-        [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IReloadManager _reload = default!;
-        [Dependency] private readonly ILocalizationManager _loc = default!;
-        [Dependency] private readonly ISystemFontManagerInternal _systemFontManager = default!;
-        [Dependency] private readonly LoadingScreenManager _loadscr = default!;
+        [Dependency] private INetConfigurationManagerInternal _configurationManager = default!;
+        [Dependency] private IResourceCacheInternal _resourceCache = default!;
+        [Dependency] private IResourceManagerInternal _resManager = default!;
+        [Dependency] private IRobustSerializer _serializer = default!;
+        [Dependency] private IXamlProxyManager _xamlProxyManager = default!;
+        [Dependency] private IXamlHotReloadManager _xamlHotReloadManager = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IClientNetManager _networkManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
+        [Dependency] private IStateManager _stateManager = default!;
+        [Dependency] private IUserInterfaceManagerInternal _userInterfaceManager = default!;
+        [Dependency] private IBaseClient _client = default!;
+        [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private IClientConsoleHost _console = default!;
+        [Dependency] private ITimerManager _timerManager = default!;
+        [Dependency] private IClientEntityManager _entityManager = default!;
+        [Dependency] private IPlacementManager _placementManager = default!;
+        [Dependency] private IClientGameStateManager _gameStateManager = default!;
+        [Dependency] private IOverlayManagerInternal _overlayManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private ITaskManager _taskManager = default!;
+        [Dependency] private IClientViewVariablesManagerInternal _viewVariablesManager = default!;
+        [Dependency] private IDiscordRichPresence _discord = default!;
+        [Dependency] private IClydeInternal _clyde = default!;
+        [Dependency] private IAudioInternal _audio = default!;
+        [Dependency] private IFontManagerInternal _fontManager = default!;
+        [Dependency] private IModLoaderInternal _modLoader = default!;
+        [Dependency] private IScriptClient _scriptClient = default!;
+        [Dependency] private IRobustMappedStringSerializer _stringSerializer = default!;
+        [Dependency] private IAuthManager _authManager = default!;
+        [Dependency] private IMidiManager _midiManager = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] private IParallelManagerInternal _parallelMgr = default!;
+        [Dependency] private ProfManager _prof = default!;
+        [Dependency] private IRuntimeLog _runtimeLog = default!;
+        [Dependency] private ISerializationManager _serializationManager = default!;
+        [Dependency] private MarkupTagManager _tagManager = default!;
+        [Dependency] private IGamePrototypeLoadManager _protoLoadMan = default!;
+        [Dependency] private NetworkResourceManager _netResMan = default!;
+        [Dependency] private IReplayLoadManager _replayLoader = default!;
+        [Dependency] private IReplayPlaybackManager _replayPlayback = default!;
+        [Dependency] private IReplayRecordingManagerInternal _replayRecording = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IReloadManager _reload = default!;
+        [Dependency] private ILocalizationManager _loc = default!;
+        [Dependency] private ISystemFontManagerInternal _systemFontManager = default!;
+        [Dependency] private LoadingScreenManager _loadscr = default!;
+        [Dependency] private ITransferManager _transfer = default!;
+        [Dependency] private ClientTransferTestManager _transferTest = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -107,6 +111,7 @@ namespace Robust.Client
         private IMainArgs? _loaderArgs;
 
         public bool ContentStart { get; set; } = false;
+        public StartType StartTypeValue { get; private set; }
         public GameControllerOptions Options { get; private set; } = new();
         public InitialLaunchState LaunchState { get; private set; } = default!;
 
@@ -200,7 +205,14 @@ namespace Robust.Client
                 _logManager.GetSawmill("res"));
 
             _loadscr.LoadingStep(_resourceCache.PreloadTextures, "Texture preload");
-            _loadscr.LoadingStep(() => { _networkManager.Initialize(false); }, _networkManager);
+            _loadscr.LoadingStep(() =>
+                {
+                    _networkManager.Initialize(false);
+                    _transfer.Initialize();
+                    _transferTest.Initialize();
+                },
+                _networkManager);
+
             _loadscr.LoadingStep(_configurationManager.SetupNetworking, _configurationManager);
             _loadscr.LoadingStep(_serializer.Initialize, _serializer);
             _loadscr.LoadingStep(_inputManager.Initialize, _inputManager);
@@ -424,9 +436,18 @@ namespace Robust.Client
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions)
                 : Options.MountOptions;
 
+            StartTypeValue = ContentStart ? StartType.Content : StartType.Engine;
+#if FULL_RELEASE
+            if (_loaderArgs != null || Options.ResourceMountDisabled)
+                StartTypeValue = StartType.Loader;
+#else
+            if (StartTypeValue == StartType.Content && Path.GetFileName(PathHelpers.GetExecutableDirectory()) == "MacOS")
+                StartTypeValue = StartType.ContentAppBundle;
+#endif
+
             ProgramShared.DoMounts(_resManager, mountOptions, Options.ContentBuildDirectory,
                 Options.AssemblyDirectory,
-                Options.LoadContentResources, _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
+                Options.LoadContentResources, StartTypeValue);
 
             if (_loaderArgs != null)
             {
@@ -673,6 +694,11 @@ namespace Robust.Client
             using (_prof.Group("Content Post Engine"))
             {
                 _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+            }
+
+            using (_prof.Group("Transfer"))
+            {
+                _transfer.FrameUpdate();
             }
 
             _audio.FlushALDisposeQueues();

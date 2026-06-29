@@ -263,8 +263,10 @@ public abstract partial class SharedPhysicsSystem
         // Broadphase has already done the faster check for collision mask / layers
         // so no point duplicating
 
-        DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB));
-        DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
+        DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB),
+            $"{ToPrettyString(entB)} fixture {fixtureBId} was already in contact with {ToPrettyString(entA)} fixture {fixtureAId}");
+        DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA),
+            $"{ToPrettyString(entA)} fixture {fixtureAId} was already in contact with {ToPrettyString(entB)} fixture {fixtureBId}");
         var xformA = entA.Comp2;
         var xformB = entB.Comp2;
 
@@ -286,12 +288,14 @@ public abstract partial class SharedPhysicsSystem
         _activeContacts.AddLast(contact.MapNode);
 
         // Connect to body A
-        DebugTools.Assert(!fixA.Contacts.ContainsKey(fixB));
+        DebugTools.Assert(!fixA.Contacts.ContainsKey(fixB),
+            $"{ToPrettyString(contact.EntityB)} fixture {contact.FixtureBId} was already added to contacts of {ToPrettyString(contact.EntityA)} fixture {contact.FixtureAId}");
         fixA.Contacts.Add(fixB, contact);
         bodA.Contacts.AddLast(contact.BodyANode);
 
         // Connect to body B
-        DebugTools.Assert(!fixB.Contacts.ContainsKey(fixA));
+        DebugTools.Assert(!fixB.Contacts.ContainsKey(fixA),
+            $"{ToPrettyString(contact.EntityA)} fixture {contact.FixtureAId} was already added to contacts of {ToPrettyString(contact.EntityB)} fixture {contact.FixtureBId}");
         fixB.Contacts.Add(fixA, contact);
         bodB.Contacts.AddLast(contact.BodyBNode);
 

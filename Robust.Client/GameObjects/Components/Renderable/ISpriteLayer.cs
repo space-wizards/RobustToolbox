@@ -5,6 +5,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
 {
+    [NotContentImplementable]
     public interface ISpriteLayer
     {
         SpriteComponent.DirectionOffset DirOffset { get; set; }

@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using Robust.Client.Console;
-using Robust.Client.Utility;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
@@ -23,14 +24,14 @@ namespace Robust.Client.WebView.Cef
 
         private CefApp _app = default!;
 
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IGameControllerInternal _gameController = default!;
-        [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly ILocalizationManager _localization = default!;
+        [Dependency] private IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IGameControllerInternal _gameController = default!;
+        [Dependency] private IResourceManagerInternal _resourceManager = default!;
+        [Dependency] private IClientConsoleHost _consoleHost = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private ILocalizationManager _localization = default!;
 
         private ISawmill _sawmill = default!;
 
@@ -44,10 +45,11 @@ namespace Robust.Client.WebView.Cef
                 _localization.GetString("cmd-flushcookies-help"),
                 (_, _, _) => CefCookieManager.GetGlobal(null).FlushStore(null));
 
+#if !MACOS
             string subProcessName;
             if (OperatingSystem.IsWindows())
                 subProcessName = "Robust.Client.WebView.exe";
-            else if (OperatingSystem.IsLinux())
+            else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                 subProcessName = "Robust.Client.WebView";
             else
                 throw new NotSupportedException("Unsupported platform for CEF!");
@@ -60,19 +62,39 @@ namespace Robust.Client.WebView.Cef
 
             if (cefResourcesPath == null)
                 throw new InvalidOperationException("Unable to locate cef_resources directory!");
+#endif
 
             var remoteDebugPort = _cfg.GetCVar(WCVars.WebRemoteDebugPort);
 
             var cachePath = FindAndLockCacheDirectory();
 
+#if MACOS
+            NativeLibrary.SetDllImportResolver(typeof(CefSettings).Assembly,
+                (name, assembly, path) =>
+                {
+                    if (name == "libcef")
+                    {
+                        var libPath = PathHelpers.ExecutableRelativeFile("../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework");
+                        return NativeLibrary.Load(libPath, assembly, path);
+                    }
+
+                    return 0;
+                });
+
+            // Needed to implement CefAppProtocol on our NSApplication.
+            NativeLibrary.Load("robust_native_webview", typeof(WebViewManagerCef).Assembly, null);
+#endif
+
             var settings = new CefSettings()
             {
                 WindowlessRenderingEnabled = true, // So we can render to our UI controls.
-                ExternalMessagePump = false, // Unsure, honestly. TODO CEF: Research this?
+                ExternalMessagePump = true,
                 NoSandbox = true, // Not disabling the sandbox crashes CEF.
+#if !MACOS
                 BrowserSubprocessPath = subProcessPath,
                 LocalesDirPath = Path.Combine(cefResourcesPath, "locales"),
                 ResourcesDirPath = cefResourcesPath,
+#endif
                 RemoteDebuggingPort = remoteDebugPort,
                 CookieableSchemesList = "usr,res",
                 CachePath = cachePath,
@@ -84,7 +106,7 @@ namespace Robust.Client.WebView.Cef
                 settings.UserAgent = userAgentOverride;
             }
 
-            _sawmill.Info($"CEF Version: {CefRuntime.ChromeVersion}");
+            _sawmill.Info($"CEF Build Version: {CefRuntime.ChromeBuildVersion}");
 
             _app = new RobustCefApp(_sawmill);
 
@@ -96,6 +118,8 @@ namespace Robust.Client.WebView.Cef
             // The first argument is literally nonsense, but it needs to be there as otherwise the second argument doesn't apply
             // The second argument turns off CEF's bullshit error handling, which breaks dotnet's error handling.
             CefRuntime.Initialize(new CefMainArgs(new string[]{"binary","--disable-in-process-stack-traces"}), settings, _app, IntPtr.Zero);
+
+            _sawmill.Info($"CEF Runtime Version: {CefRuntime.ChromeRuntimeVersion}");
 
             if (_cfg.GetCVar(WCVars.WebResProtocol))
             {
@@ -112,7 +136,6 @@ namespace Robust.Client.WebView.Cef
         {
             if (ProbeDir(BasePath, out var path))
                 return path;
-
 
             foreach (var searchDir in NativeDllSearchDirectories())
             {
@@ -147,6 +170,16 @@ namespace Robust.Client.WebView.Cef
 
         public void Shutdown()
         {
+            foreach (var control in _activeControls.ToArray())
+            {
+                control.CloseBrowser();
+            }
+
+            foreach (var window in _browserWindows.ToArray())
+            {
+                window.Dispose();
+            }
+
             CefRuntime.Shutdown();
         }
 

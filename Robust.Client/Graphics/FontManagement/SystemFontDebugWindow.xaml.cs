@@ -16,7 +16,7 @@ internal sealed partial class SystemFontDebugWindow : DefaultWindow
     private static readonly int[] ExampleFontSizes = [8, 12, 16, 24, 36];
     private const string ExampleString = "The quick brown fox jumps over the lazy dog";
 
-    [Dependency] private readonly ISystemFontManager _systemFontManager = default!;
+    [Dependency] private ISystemFontManager _systemFontManager = default!;
 
     public SystemFontDebugWindow()
     {

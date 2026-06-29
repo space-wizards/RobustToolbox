@@ -14,6 +14,8 @@ public sealed class MarkupNode : IComparable<MarkupNode>, IEquatable<MarkupNode>
     public readonly Dictionary<string, MarkupParameter> Attributes;
     public readonly bool Closing;
 
+    public bool IsPlainText => Name == null;
+
     /// <summary>
     /// Creates a nameless tag for plaintext
     /// </summary>
@@ -40,7 +42,7 @@ public sealed class MarkupNode : IComparable<MarkupNode>, IEquatable<MarkupNode>
         var attributesString = "";
         foreach (var (k, v) in Attributes)
         {
-            attributesString += $"{k}{v}";
+            attributesString += $" {k}{v}";
         }
 
         return $"[{(Closing ? "/" : "")}{Name}{Value.ToString().ReplaceLineEndings("\\n")}{attributesString}]";
@@ -137,7 +139,7 @@ public readonly record struct MarkupParameter(string? StringValue = null, long? 
     public override string ToString()
     {
         if (StringValue != null)
-            return $"=\"{StringValue}\"";
+            return $"=\"{FormattedMessage.EscapeStringParameter(StringValue)}\"";
 
         if (LongValue.HasValue)
             return LongValue?.ToString().Insert(0, "=") ?? "";

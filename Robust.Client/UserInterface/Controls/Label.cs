@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
@@ -44,6 +44,7 @@ namespace Robust.Client.UserInterface.Controls
         /// Thrown if <see cref="TextMemory"/> was set directly and there is no backing string instance to fetch.
         /// </exception>
         [ViewVariables]
+        [Animatable]
         public string? Text
         {
             get => _text ?? (_textMemory.Length > 0 ? throw new InvalidOperationException("Label uses TextMemory, cannot fetch string text.") : null);

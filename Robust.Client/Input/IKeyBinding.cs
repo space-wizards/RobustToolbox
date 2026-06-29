@@ -2,6 +2,7 @@ using Robust.Shared.Input;
 
 namespace Robust.Client.Input
 {
+    [NotContentImplementable]
     public interface IKeyBinding
     {
         BoundKeyState State { get; }
@@ -26,7 +27,7 @@ namespace Robust.Client.Input
         int Priority { get; }
 
         /// <summary>
-        ///     Gets a user-presentable, localized & keyboard-adjusted string for which buttons the user has to press.
+        ///     Gets a user-presentable, localized &amp; keyboard-adjusted string for which buttons the user has to press.
         /// </summary>
         string GetKeyString();
     }

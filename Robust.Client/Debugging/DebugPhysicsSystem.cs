@@ -69,7 +69,7 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Client.Debugging
 {
-    public sealed class DebugPhysicsSystem : SharedDebugPhysicsSystem
+    public sealed partial class DebugPhysicsSystem : SharedDebugPhysicsSystem
     {
         /*
          * Used for debugging shapes, controllers, joints, contacts
@@ -78,15 +78,15 @@ namespace Robust.Client.Debugging
         private const int MaxContactPoints = 2048;
         internal int PointCount;
 
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
-        [Dependency] private readonly TransformSystem _transform = default!;
-        [Dependency] private readonly IOverlayManager _overlay = default!;
-        [Dependency] private readonly IEyeManager _eye = default!;
-        [Dependency] private readonly IInputManager _input = default!;
-        [Dependency] private readonly IMapManager _map = default!;
-        [Dependency] private readonly IPlayerManager _player = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private EntityLookupSystem _entityLookup = default!;
+        [Dependency] private TransformSystem _transform = default!;
+        [Dependency] private IOverlayManager _overlay = default!;
+        [Dependency] private IEyeManager _eye = default!;
+        [Dependency] private IInputManager _input = default!;
+        [Dependency] private IMapManager _map = default!;
+        [Dependency] private IPlayerManager _player = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
 
         internal ContactPoint[] Points = new ContactPoint[MaxContactPoints];
 

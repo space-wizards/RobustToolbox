@@ -14,6 +14,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Replays;
 
+[NotContentImplementable]
 public interface IReplayRecordingManager
 {
     /// <summary>
@@ -188,6 +189,7 @@ public record struct ReplayRecordingStats(TimeSpan Time, uint Ticks, long Size, 
 /// </summary>
 /// <seealso cref="ReplayRecordingStopped"/>
 /// <seealso cref="IReplayRecordingManager.RecordingStopped2"/>
+[NotContentImplementable]
 public interface IReplayFileWriter
 {
     /// <summary>

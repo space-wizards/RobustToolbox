@@ -5,9 +5,9 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Input
 {
-    internal sealed class ClydeInputManager : InputManager
+    internal sealed partial class ClydeInputManager : InputManager
     {
-        [Dependency] private readonly IClydeInternal _clyde = default!;
+        [Dependency] private IClydeInternal _clyde = default!;
 
         public override ScreenCoordinates MouseScreenPosition => _clyde.MouseScreenPosition;
 

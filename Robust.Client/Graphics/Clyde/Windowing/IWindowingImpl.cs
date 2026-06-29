@@ -42,6 +42,7 @@ namespace Robust.Client.Graphics.Clyde
             void WindowSetSize(WindowReg window, Vector2i size);
             void WindowSetVisible(WindowReg window, bool visible);
             void WindowRequestAttention(WindowReg window);
+            void WindowSetProgress(WindowReg reg, WindowProgressState state, float value);
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);
             nint? WindowGetX11Display(WindowReg window);

@@ -15,11 +15,11 @@ namespace Robust.Client.UserInterface.Controls
     ///     A control to handle output of message-by-message output panels, like the debug console and chat panel.
     /// </summary>
     [Virtual]
-    public class OutputPanel : Control
+    public partial class OutputPanel : Control
     {
         public const string StyleClassOutputPanelScrollDownButton = "outputPanelScrollDownButton";
 
-        [Dependency] private readonly MarkupTagManager _tagManager = default!;
+        [Dependency] private MarkupTagManager _tagManager = default!;
 
         public const string StylePropertyStyleBox = "stylebox";
 
@@ -136,9 +136,14 @@ namespace Robust.Client.UserInterface.Controls
             AddMessage(msg);
         }
 
-        public void AddMessage(FormattedMessage message)
+        public void AddMessage(FormattedMessage message, Color? defaultColor = null)
         {
-            var entry = new RichTextEntry(message, this, _tagManager);
+            AddMessage(message, RichTextEntry.DefaultTags, defaultColor);
+        }
+
+        public void AddMessage(FormattedMessage message, Type[]? tagsAllowed, Color? defaultColor = null)
+        {
+            var entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
 
             entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
 

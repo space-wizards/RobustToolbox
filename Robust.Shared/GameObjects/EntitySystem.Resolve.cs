@@ -29,7 +29,7 @@ namespace Robust.Shared.GameObjects
 
             if (logMissing && !found)
             {
-                Log.Error($"Can't resolve \"{typeof(TComp)}\" on entity {ToPrettyString(uid)}!\n{Environment.StackTrace}");
+                Log.Warning($"Can't resolve \"{typeof(TComp)}\" on entity {ToPrettyString(uid)}!\n{Environment.StackTrace}");
             }
 
             return found;

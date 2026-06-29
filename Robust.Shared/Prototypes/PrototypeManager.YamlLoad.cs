@@ -330,14 +330,7 @@ public partial class PrototypeManager
     {
         DataNode? newNode = null;
 
-        if (variantNode.TryGet(VariantMapsFieldAttribute.Name, out var mappingNode))
-        {
-            var data = _serializationManager.Read<Dictionary<string, DataNode>[]>(mappingNode, notNullableOverride: true);
-
-            if (variantIndex < data.Length)
-                newNode = new MappingDataNode(data[variantIndex]);
-        }
-        else if (variantNode.TryGet(VariantSequencesFieldAttribute.Name, out var sequenceNode))
+        if (variantNode.TryGet(VariantSequencesFieldAttribute.Name, out var sequenceNode))
         {
             var data = _serializationManager.Read<string[][]>(sequenceNode, notNullableOverride: true);
 

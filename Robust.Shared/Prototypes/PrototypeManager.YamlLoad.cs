@@ -253,7 +253,7 @@ public partial class PrototypeManager
 
                         if (clonedNode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var clonedIdNode))
                             variantData.Add(clonedIdNode.Value, clonedNode);
-                    }
+                        }
 
                     // Recursively search through the original and cloned nodes for any CreateVariants nodes.
                     // Replace these nodes with data appropirate for the current variant index.
@@ -334,27 +334,27 @@ public partial class PrototypeManager
         {
             var data = _serializationManager.Read<Dictionary<string, DataNode>[]>(mappingNode, notNullableOverride: true);
 
-            if (variantIndex <= data.Length)
+            if (variantIndex < data.Length)
                 newNode = new MappingDataNode(data[variantIndex]);
         }
         else if (variantNode.TryGet(VariantSequencesFieldAttribute.Name, out var sequenceNode))
         {
             var data = _serializationManager.Read<string[][]>(sequenceNode, notNullableOverride: true);
 
-            if (variantIndex <= data.Length)
+            if (variantIndex < data.Length)
                 newNode = new SequenceDataNode(data[variantIndex]);
         }
         else if (variantNode.TryGet(VariantValuesFieldAttribute.Name, out var valueNode))
         {
             var data = _serializationManager.Read<string[]>(valueNode, notNullableOverride: true);
 
-            if (variantIndex <= data.Length)
+            if (variantIndex < data.Length)
                 newNode = new ValueDataNode(data[variantIndex]);
         }
 
         if (newNode == null)
         {
-            throw new PrototypeLoadException($"DataNode {variantNodeName} does not contain variantization data for index {variantIndex.ToString()}." +
+            throw new PrototypeLoadException($"DataNode {variantNodeName} does not contain variantization data for index {variantIndex.ToString()}. " +
                 $"Check that all '{CreateVariantsTag}' nodes in the prototype are formatted correctly and their fields all have the same array length.");
         }
 

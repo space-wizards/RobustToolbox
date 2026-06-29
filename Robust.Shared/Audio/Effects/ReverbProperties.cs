@@ -7,6 +7,7 @@
 // of the MIT license. See the LICENSE file for details.
 //
 
+using System.Numerics;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Audio.Effects;

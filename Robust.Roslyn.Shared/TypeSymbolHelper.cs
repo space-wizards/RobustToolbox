@@ -36,4 +36,64 @@ public static class TypeSymbolHelper
 
         return false;
     }
+
+    /// <summary>
+    /// Gets all Members of a symbol, including those that are inherited.
+    /// We need this because sometimes Components have abstract parents with autonetworked datafields.
+    /// </summary>
+    public static IEnumerable<ISymbol> GetAllMembersIncludingInherited(INamedTypeSymbol type)
+    {
+        var current = type;
+        while (current != null)
+        {
+            foreach (var member in current.GetMembers())
+            {
+                yield return member;
+            }
+
+            current = current.BaseType;
+        }
+    }
+
+    /// <summary>
+    /// If <paramref name="type"/> is a Nullable{T}, returns the <see cref="ITypeSymbol"/> of the underlying type.
+    /// Otherwise, returns <paramref name="type"/>.
+    /// </summary>
+    // Modified from https://www.meziantou.net/working-with-types-in-a-roslyn-analyzer.htm
+    public static ITypeSymbol GetNullableUnderlyingTypeOrSelf(ITypeSymbol type)
+    {
+        if (type is INamedTypeSymbol namedType && namedType.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
+        {
+            return namedType.TypeArguments[0];
+        }
+
+        return type;
+    }
+
+    /// <summary>
+    /// Enumerates all base types of the given <paramref name="type"/>.
+    /// </summary>
+    public static IEnumerable<ITypeSymbol> GetBaseTypes(ITypeSymbol type)
+    {
+        var baseType = type.BaseType;
+        while (baseType != null)
+        {
+            yield return baseType;
+            baseType = baseType.BaseType;
+        }
+    }
+
+    /// <summary>
+    /// Checks if the given <paramref name="type"/> inherits from <paramref name="other"/>.
+    /// </summary>
+    /// <returns>True if <paramref name="type"/> inherits from <paramref name="other"/>, otherwise false.</returns>
+    public static bool Inherits(ITypeSymbol type, ITypeSymbol other)
+    {
+        foreach (var baseType in GetBaseTypes(type))
+        {
+            if (SymbolEqualityComparer.Default.Equals(baseType, other))
+                return true;
+        }
+        return false;
+    }
 }

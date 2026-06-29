@@ -1,0 +1,63 @@
+﻿using NUnit.Framework;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Utility;
+
+namespace Robust.Shared.Tests.Resources
+{
+    [TestFixture]
+    [TestOf(typeof(WritableDirProvider))]
+    internal sealed class WritableDirProviderTest
+    {
+        private string _testDirPath = default!;
+        private DirectoryInfo _testDir = default!;
+        private WritableDirProvider _dirProvider = default!;
+
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            var tmpPath = Path.GetTempPath();
+            var guid = Guid.NewGuid();
+            _testDirPath = Path.Combine(tmpPath, guid.ToString());
+
+            _testDir = Directory.CreateDirectory(_testDirPath);
+            var subDir = Path.Combine(_testDirPath, "writable");
+
+            _dirProvider = new WritableDirProvider(Directory.CreateDirectory(subDir), hideRootDir: false);
+        }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            _testDir.Delete(true);
+        }
+
+        [Test]
+        public void TestNoParentAccess()
+        {
+            File.WriteAllText(Path.Combine(_testDirPath, "dummy"), "foobar");
+
+            // No, ../ does not work to read stuff in the parent dir.
+            Assert.That(() => _dirProvider.ReadAllText(new ResPath("/../dummy")),
+                Throws.InstanceOf<FileNotFoundException>());
+        }
+
+        [Test]
+        public void TestNotRooted()
+        {
+            // Path must be rooted.
+            Assert.That(() => _dirProvider.OpenRead(new ResPath("foo.bar")),
+                Throws.InstanceOf<ArgumentException>());
+        }
+
+        [Test]
+        public void TestParentAccessClamped()
+        {
+            File.WriteAllText(Path.Combine(_testDirPath, "dummy"), "foobar");
+
+            _dirProvider.WriteAllText(new ResPath("/dummy"), "pranked");
+
+            // ../ should get clamped to /.
+            Assert.That(_dirProvider.ReadAllText(new ResPath("/../dummy")), Is.EqualTo("pranked"));
+        }
+    }
+}

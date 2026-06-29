@@ -30,7 +30,30 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool CloseOnEscape { get; set; } = true;
 
-        public virtual void Open(UIBox2? box = null, Vector2? altPos = null)
+        private bool _autoOrphan;
+
+        /// <summary>
+        /// Opens the popup at the location of the mouse.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The popup is placed in the modal root, and is automatically sized.
+        /// </para>
+        /// <para>
+        /// The popup *automatically* gets removed from the popup root when it is hidden again.
+        /// Do not remove it manually!
+        /// </para>
+        /// </remarks>
+        public void OpenAtMouse()
+        {
+            _autoOrphan = true;
+            var root = UserInterfaceManager.GetRootForMouse();
+            root.ModalRoot.AddChild(this);
+
+            Open(UIBox2.FromDimensions(UserInterfaceManager.MousePositionScaled.Position, Vector2.One));
+        }
+
+        public virtual void Open(UIBox2? box = null, Vector2? altPos = null, Vector2? altPosUp = null)
         {
             if (Visible)
             {
@@ -44,10 +67,12 @@ namespace Robust.Client.UserInterface.Controls
             if (box != null &&
                 (_desiredSize != box.Value.Size ||
                  PopupContainer.GetPopupOrigin(this) != box.Value.TopLeft ||
-                 PopupContainer.GetAltOrigin(this) != altPos))
+                 PopupContainer.GetAltOrigin(this) != altPos ||
+                 PopupContainer.GetAltOriginUp(this) != altPosUp))
             {
                 PopupContainer.SetPopupOrigin(this, box.Value.TopLeft);
                 PopupContainer.SetAltOrigin(this, altPos);
+                PopupContainer.SetAltOriginUp(this, altPosUp);
 
                 _desiredSize = box.Value.Size;
                 InvalidateMeasure();
@@ -70,6 +95,12 @@ namespace Robust.Client.UserInterface.Controls
 
             Visible = false;
             OnPopupHide?.Invoke();
+
+            if (_autoOrphan)
+            {
+                Orphan();
+                _autoOrphan = false;
+            }
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)

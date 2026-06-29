@@ -34,16 +34,16 @@ public interface ITypeParser
     public virtual bool ShowTypeArgSignature => true;
 }
 
-public abstract class BaseParser<T> : ITypeParser, IPostInjectInit where T : notnull
+public abstract partial class BaseParser<T> : ITypeParser, IPostInjectInit where T : notnull
 {
     public virtual bool EnableValueRef => true;
     public virtual bool ShowTypeArgSignature => true;
 
     // TODO TOOLSHED Localization
     // Ensure that all of the type parser auto-completions actually use localized strings
-    [Dependency] protected readonly ILocalizationManager Loc = default!;
-    [Dependency] private readonly ILogManager _log = default!;
-    [Dependency] protected readonly ToolshedManager Toolshed = default!;
+    [Dependency] protected ILocalizationManager Loc = default!;
+    [Dependency] private ILogManager _log = default!;
+    [Dependency] protected ToolshedManager Toolshed = default!;
 
     protected ISawmill Log = default!;
 

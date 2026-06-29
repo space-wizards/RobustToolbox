@@ -7,6 +7,7 @@ namespace Robust.Server.Configuration;
 /// A networked configuration manager that controls the replication of
 /// console variables between client and server.
 /// </summary>
+[NotContentImplementable]
 public interface IServerNetConfigurationManager : INetConfigurationManager
 {
     /// <summary>

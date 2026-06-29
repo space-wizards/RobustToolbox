@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Analyzers;
+﻿using System.Text;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Collections;
 
 namespace Robust.Packaging.AssetProcessing;
@@ -198,6 +199,17 @@ public class AssetPass
     /// Convenience method to <see cref="InjectFile"/> a <see cref="AssetFileMemory"/>.
     /// </summary>
     public void InjectFileFromMemory(string path, byte[] memory) => InjectFile(new AssetFileMemory(path, memory));
+
+    /// <summary>
+    /// Convenience method to <see cref="InjectFile"/> a <see cref="AssetFileMemory"/>.
+    /// </summary>
+    public void InjectFileFromMemory(string path, ReadOnlySpan<byte> memory) => InjectFile(new AssetFileMemory(path, memory.ToArray()));
+
+    /// <summary>
+    /// Convenience method to <see cref="InjectFile"/> a <see cref="AssetFileMemory"/> made from text.
+    /// </summary>
+    public void InjectFileFromText(string path, string text) =>
+        InjectFile(new AssetFileMemory(path, Encoding.UTF8.GetBytes(text)));
 
     /// <summary>
     /// Called when all depended-on passes have finished processing, meaning no more files will come in.

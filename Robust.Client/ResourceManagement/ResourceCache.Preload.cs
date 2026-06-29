@@ -24,12 +24,13 @@ namespace Robust.Client.ResourceManagement
 {
     internal partial class ResourceCache
     {
-        [field: Dependency] public IClyde Clyde { get; } = default!;
-        [field: Dependency] public IAudioInternal ClydeAudio { get; } = default!;
-        [Dependency] private readonly IResourceManager _manager = default!;
-        [field: Dependency] public IFontManager FontManager { get; } = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private IClyde _clyde = null!;
+        public IClyde Clyde => _clyde;
+        [Dependency] private IResourceManager _manager = default!;
+        [Dependency] private IFontManager _fontManager = null!;
+        public IFontManager FontManager => _fontManager;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IConfigurationManager _configurationManager = default!;
 
         public void PreloadTextures()
         {
@@ -138,9 +139,16 @@ namespace Robust.Client.ResourceManagement
             var sw = Stopwatch.StartNew();
             var resList = GetTypeData<RSIResource>().Resources;
 
-            var rsiList = _manager.ContentFindFiles("/Textures/")
+            var foundRsiList = _manager.ContentFindFiles("/Textures/")
                 .Where(p => p.ToString().EndsWith(".rsi/meta.json"))
-                .Select(c => c.Directory)
+                .Select(c => c.Directory);
+
+            var foundRsicList = _manager.ContentFindFiles("/Textures/")
+                .Where(p => p.Extension == "rsic")
+                .Select(c => c.WithExtension("rsi"));
+
+            var rsiList = foundRsiList
+                .Concat(foundRsicList)
                 .Where(p => !resList.ContainsKey(p))
                 .Select(p => new RSIResource.LoadStepData {Path = p})
                 .ToArray();

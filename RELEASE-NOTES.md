@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Validate Box2i inputs to ensure no negative-sized boxes.
+* Added map and grid culling. By default grids will get culled outside of 2048m range or if they are on another map. Any other maps are culled. If you want backwards compatibility then set `net.pvs_map_culling` to false and `net.pvs_grid_range` to 0.
 
 ### New features
 

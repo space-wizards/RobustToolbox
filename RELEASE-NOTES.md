@@ -35,11 +35,12 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Validate Box2i inputs to ensure no negative-sized boxes.
 
 ### New features
 
-* Add a `OnlyRotation` property to MoveEvent where the EntityCoordinates remain the same.
+* Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
+* Added a DictionaryEquals extension method to check equality between two dictionaries.
 
 ### Bugfixes
 

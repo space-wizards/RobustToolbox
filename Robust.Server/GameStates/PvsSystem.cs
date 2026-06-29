@@ -260,8 +260,15 @@ internal sealed partial class PvsSystem : EntitySystem
 
         if (missingEntity != null)
         {
-            var (entity, meta) = GetEntityData(missingEntity.Value);
-            sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(entity)}.");
+            if (TryGetEntityData(missingEntity.Value, out var uid, out _))
+            {
+                sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(uid)}.");
+            }
+            else
+            {
+                sb.Append($" Apparently they received an entity without metadata (No entity found).");
+            }
+
             //sb.Append($" Entity last seen: {meta.PvsData[sessionData.Index].EntityLastAcked}");
         }
 

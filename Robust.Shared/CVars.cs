@@ -1752,8 +1752,13 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
 
         /// <summary>
-        /// Enables the Tracy profiling system.
+        /// Enables the Tracy profiling system. Tracing will stay enabled for the entire runtime of the program even if
+        /// you turn this cvar off.
         /// </summary>
+        /// <remarks>
+        /// By default, this will listen for Tracy connections on all interfaces! Set the <c>TRACY_ONLY_LOCALHOST</c>
+        /// env var to 1 if you want to restrict to localhost.
+        /// </remarks>
         public static readonly CVarDef<bool> TracyProfEnabled = CVarDef.Create("prof.tracy.enabled", false);
 
         /// <summary>

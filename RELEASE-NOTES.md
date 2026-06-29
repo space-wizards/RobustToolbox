@@ -44,7 +44,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix PredictedQueueDel not rolling back properly on the client.
 
 ### Other
 

@@ -107,6 +107,9 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             return;
         }
 
+        var received = new BoundUserInterfaceMessageReceivedEvent(sender, uid, msg.UiKey);
+        RaiseLocalEvent(ref received);
+
         // If it's not an open message check we're even a subscriber.
         if (msg.Message is not OpenBoundInterfaceMessage &&
             (!uiComp.Actors.TryGetValue(msg.UiKey, out var actors) ||

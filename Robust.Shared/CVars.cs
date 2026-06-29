@@ -996,6 +996,18 @@ namespace Robust.Shared
         public static readonly CVarDef<string> AuthServer =
             CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
 
+        /// <summary>
+        /// Trust score for unauthenticated localhost connections
+        /// </summary>
+        public static readonly CVarDef<float> AuthLocalTrust =
+            CVarDef.Create("auth.localtrust", 1f, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Trust score for guest connections
+        /// </summary>
+        public static readonly CVarDef<float> AuthGuestTrust =
+            CVarDef.Create("auth.guesttrust", 0f, CVar.SERVERONLY);
+
         /*
          * RENDERING
          */
@@ -1292,7 +1304,7 @@ namespace Robust.Shared
         /// Audio device to try to output audio to by default.
         /// </summary>
         public static readonly CVarDef<string> AudioDevice =
-            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);
+            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Master volume for audio output.

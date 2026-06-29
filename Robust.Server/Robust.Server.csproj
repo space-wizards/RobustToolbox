@@ -40,6 +40,7 @@
     <!-- Needed to pin transitive dependency versions. -->
     <PackageReference Include="System.Text.Json" />
     <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Tracy-CSharp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />

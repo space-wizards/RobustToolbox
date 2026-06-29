@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -13,6 +13,8 @@ namespace Robust.Shared.Profiling;
 // No interfaces here, don't want the interface dispatch overhead.
 
 // See ProfData.cs for description of profiling data layout.
+
+// Tracy integration lives in ProfManager.Tracy.cs.
 
 public sealed partial class ProfManager
 {
@@ -62,7 +64,10 @@ public sealed partial class ProfManager
         }, true);
 
         _cfg.OnValueChanged(CVars.ProfEnabled, b => IsEnabled = b, true);
+        InitializeTracyCvars();
     }
+
+    partial void InitializeTracyCvars();
 
     /// <summary>
     /// Write an index covering the region from <paramref name="start"/> to the current write position.
@@ -135,9 +140,13 @@ public sealed partial class ProfManager
     /// <summary>
     /// Make a guarded value for usage with using blocks.
     /// </summary>
-    public ValueGuard Value(string text)
+    public ValueGuard Value(
+        string text,
+        [CallerLineNumber] int lineNumber = 0,
+        [CallerFilePath] string? filePath = null,
+        [CallerMemberName] string? memberName = null)
     {
-        return new ValueGuard(this, text);
+        return new ValueGuard(this, text, lineNumber, filePath, memberName);
     }
 
     /// <summary>
@@ -191,10 +200,23 @@ public sealed partial class ProfManager
     /// <summary>
     /// Make a guarded group for usage with using blocks.
     /// </summary>
-    public GroupGuard Group(string name)
+    public GroupGuard Group(
+        string name,
+        [CallerLineNumber] int lineNumber = 0,
+        [CallerFilePath] string? filePath = null,
+        [CallerMemberName] string? memberName = null)
     {
         var start = WriteGroupStart();
-        return new GroupGuard(this, start, name);
+        return new GroupGuard(this, start, name, lineNumber, filePath, memberName);
+    }
+
+    /// <summary>
+    /// Make a guarded group that emits Tracy frame markers instead of a zone, for usage with using blocks.
+    /// </summary>
+    public FrameGuard Frame(string name)
+    {
+        var start = WriteGroupStart();
+        return new FrameGuard(this, start, name);
     }
 
     /// <summary>
@@ -245,7 +267,40 @@ public sealed partial class ProfManager
         private readonly string _groupName;
         private readonly ProfSampler _sampler;
 
-        public GroupGuard(ProfManager mgr, long startIndex, string groupName)
+        public TracyProfilerZone? TracyZone { get; }
+
+        public GroupGuard(
+            ProfManager mgr,
+            long startIndex,
+            string groupName,
+            int lineNumber,
+            string? filePath,
+            string? memberName)
+        {
+            _mgr = mgr;
+            _startIndex = startIndex;
+            _groupName = groupName;
+            _sampler = ProfSampler.StartNew();
+            if (_mgr.IsTracyEnabled)
+                TracyZone = BeginTracyZone(groupName, lineNumber, filePath, memberName);
+        }
+
+        public void Dispose()
+        {
+            _mgr.WriteGroupEnd(_startIndex, _groupName, _sampler);
+            if (_mgr.IsTracyEnabled)
+                TracyZone?.Dispose();
+        }
+    }
+
+    public readonly struct FrameGuard : IDisposable
+    {
+        private readonly ProfManager _mgr;
+        private readonly long _startIndex;
+        private readonly string _groupName;
+        private readonly ProfSampler _sampler;
+
+        public FrameGuard(ProfManager mgr, long startIndex, string groupName)
         {
             _mgr = mgr;
             _startIndex = startIndex;
@@ -256,6 +311,8 @@ public sealed partial class ProfManager
         public void Dispose()
         {
             _mgr.WriteGroupEnd(_startIndex, _groupName, _sampler);
+            if (_mgr.IsTracyEnabled)
+                EmitFrameMark();
         }
     }
 
@@ -264,17 +321,29 @@ public sealed partial class ProfManager
         private readonly ProfManager _mgr;
         private readonly string _text;
         private readonly ProfSampler _sampler;
+        private readonly TracyProfilerZone? _tracyZone;
 
-        public ValueGuard(ProfManager mgr, string text)
+        public TracyProfilerZone? TracyZone { get; }
+
+        public ValueGuard(
+            ProfManager mgr,
+            string text,
+            int lineNumber,
+            string? filePath,
+            string? memberName)
         {
             _mgr = mgr;
             _text = text;
             _sampler = ProfSampler.StartNew();
+            if (_mgr.IsTracyEnabled)
+                _tracyZone = BeginTracyZone(_text, lineNumber, filePath, memberName);
         }
 
         public void Dispose()
         {
             _mgr.WriteValue(_text, _sampler);
+            if (_mgr.IsTracyEnabled)
+                _tracyZone?.Dispose();
         }
     }
 }

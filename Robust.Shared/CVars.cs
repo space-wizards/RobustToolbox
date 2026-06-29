@@ -1752,6 +1752,11 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
 
         /// <summary>
+        /// Enables the Tracy profiling system.
+        /// </summary>
+        public static readonly CVarDef<bool> TracyProfEnabled = CVarDef.Create("prof.tracy.enabled", false);
+
+        /// <summary>
         /// Event log buffer size for the profiling system.
         /// </summary>
         public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", 8192);

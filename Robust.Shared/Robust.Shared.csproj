@@ -28,6 +28,7 @@
     <PackageReference Include="libsodium" />
     <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
+    <PackageReference Include="Tracy-CSharp" />
 
     <!-- Needed to pin transitive dependency versions. -->
     <PackageReference Include="System.Reflection.Metadata" />

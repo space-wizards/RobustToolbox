@@ -18,7 +18,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
             public virtual IEnumerable<Type> UpdatesBefore => Enumerable.Empty<Type>();
             public bool UpdatesOutsidePrediction => true;
             public void Initialize() { }
-            public void AutoSubscriptions() { }
             public void Shutdown() { }
             public void Update(float frameTime) { }
             public void FrameUpdate(float frameTime) { }

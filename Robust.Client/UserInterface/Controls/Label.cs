@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
@@ -27,6 +27,7 @@ namespace Robust.Client.UserInterface.Controls
         private ReadOnlyMemory<char> _textMemory;
         private bool _clipText;
         private AlignMode _align;
+        private Font? _fontOverride;
 
         public Label()
         {
@@ -43,6 +44,7 @@ namespace Robust.Client.UserInterface.Controls
         /// Thrown if <see cref="TextMemory"/> was set directly and there is no backing string instance to fetch.
         /// </exception>
         [ViewVariables]
+        [Animatable]
         public string? Text
         {
             get => _text ?? (_textMemory.Length > 0 ? throw new InvalidOperationException("Label uses TextMemory, cannot fetch string text.") : null);
@@ -106,7 +108,16 @@ namespace Robust.Client.UserInterface.Controls
 
         [ViewVariables] public VAlignMode VAlign { get; set; }
 
-        public Font? FontOverride { get; set; }
+        public Font? FontOverride
+        {
+            get => _fontOverride;
+            set
+            {
+                _fontOverride = value;
+                _textDimensionCacheValid = false;
+                InvalidateMeasure();
+            }
+        }
 
         private Font ActualFont
         {

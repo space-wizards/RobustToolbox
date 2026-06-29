@@ -9,9 +9,9 @@ namespace Robust.Client.WebView
     /// <summary>
     /// An UI control that presents web content.
     /// </summary>
-    public sealed class WebViewControl : Control, IWebViewControl, IRawInputControl
+    public sealed partial class WebViewControl : Control, IWebViewControl, IRawInputControl
     {
-        [Dependency] private readonly IWebViewManagerInternal _webViewManager = default!;
+        [Dependency] private IWebViewManagerInternal _webViewManager = default!;
 
         private readonly IWebViewControlImpl _controlImpl;
         private bool _alwaysActive;

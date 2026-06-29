@@ -3,6 +3,7 @@ using Robust.Client;
 using Robust.Server;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.Testing;
 
 namespace Robust.UnitTesting
 {

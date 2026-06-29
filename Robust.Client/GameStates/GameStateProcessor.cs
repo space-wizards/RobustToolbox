@@ -220,24 +220,34 @@ Had full state: {LastFullState != null}"
                 {
                     var compState = change.State;
 
-                    if (compState is IComponentDeltaState delta
-                        && compData.TryGetValue(change.NetID, out var old)) // May fail if relying on implicit data
+                    if (compState is not IComponentDeltaState delta)
                     {
-                        DebugTools.Assert(old is not IComponentDeltaState, "last state is not a full state");
-
-                        if (cloneDelta)
-                        {
-                            compState = delta.CreateNewFullState(old!);
-                        }
-                        else
-                        {
-                            delta.ApplyToFullState(old!);
-                            compState = old;
-                        }
-                        DebugTools.Assert(compState is not IComponentDeltaState, "newly constructed state is not a full state");
+                        compData[change.NetID] = compState;
+                        continue;
                     }
 
-                    compData[change.NetID] = compState;
+                    if (!compData.TryGetValue(change.NetID, out var old))
+                    {
+                        // Either the server needs to ensure that the initial state it sends to a client is a full
+                        // state, or the client needs to be able to construct an implicit full state (i.e., get-state
+                        // code needs to be in shared code).
+                        //
+                        // Without this, the client won't be able to reset predicted changes made to this component.
+                        DebugTools.Assert("Received delta state without having received or constructed an implicit full state");
+                        continue;
+                    }
+
+                    DebugTools.Assert(old is not IComponentDeltaState, "last state is not a full state");
+
+                    if (!cloneDelta)
+                    {
+                        delta.ApplyToFullState(old!);
+                        continue;
+                    }
+
+                    var newFull = delta.CreateNewFullState(old!);
+                    compData[change.NetID] = newFull;
+                    DebugTools.Assert(newFull is not IComponentDeltaState, "constructed state is not a full state");
                 }
 
                 if (entityState.NetComponents == null)

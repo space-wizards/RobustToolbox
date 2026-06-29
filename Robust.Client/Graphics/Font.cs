@@ -104,6 +104,12 @@ namespace Robust.Client.Graphics
             Handle = IoCManager.Resolve<IFontManagerInternal>().MakeInstance(res.FontFaceHandle, size);
         }
 
+        internal VectorFont(IFontInstanceHandle handle, int size)
+        {
+            Size = size;
+            Handle = handle;
+        }
+
         public override int GetAscent(float scale) => Handle.GetAscent(scale);
         public override int GetHeight(float scale) => Handle.GetHeight(scale);
         public override int GetDescent(float scale) => Handle.GetDescent(scale);
@@ -221,5 +227,75 @@ namespace Robust.Client.Graphics
             // Nada, it's a dummy after all.
             return null;
         }
+    }
+
+    /// <summary>
+    /// Possible values for font weights. Larger values have thicker font strokes.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// These values are based on the <c>usWeightClass</c> property of the OpenType specification:
+    /// https://learn.microsoft.com/en-us/typography/opentype/spec/os2#usweightclass
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="ISystemFontFace.Weight"/>
+    public enum FontWeight : ushort
+    {
+        Thin = 100,
+        ExtraLight = 200,
+        UltraLight = ExtraLight,
+        Light = 300,
+        SemiLight = 350,
+        Normal = 400,
+        Regular = Normal,
+        Medium = 500,
+        SemiBold = 600,
+        DemiBold = SemiBold,
+        Bold = 700,
+        ExtraBold = 800,
+        UltraBold = ExtraBold,
+        Black = 900,
+        Heavy = Black,
+        ExtraBlack = 950,
+        UltraBlack = ExtraBlack,
+    }
+
+    /// <summary>
+    /// Possible slant values for fonts.
+    /// </summary>
+    /// <seealso cref="ISystemFontFace.Slant"/>
+    public enum FontSlant : byte
+    {
+        // NOTE: Enum values correspond to DWRITE_FONT_STYLE.
+        Normal = 0,
+        Oblique = 1,
+
+        // FUN FACT: they're called "italics" because they look like the Leaning Tower of Pisa.
+        // Don't fact-check that.
+        Italic = 2
+    }
+
+    /// <summary>
+    /// Possible values for font widths. Larger values are proportionally wider.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// These values are based on the <c>usWidthClass</c> property of the OpenType specification:
+    /// https://learn.microsoft.com/en-us/typography/opentype/spec/os2#uswidthclass
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="ISystemFontFace.Width"/>
+    public enum FontWidth : ushort
+    {
+        UltraCondensed = 1,
+        ExtraCondensed = 2,
+        Condensed = 3,
+        SemiCondensed = 4,
+        Normal = 5,
+        Medium =  Normal,
+        SemiExpanded = 6,
+        Expanded = 7,
+        ExtraExpanded = 8,
+        UltraExpanded = 9,
     }
 }

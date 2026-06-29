@@ -87,6 +87,9 @@ internal sealed partial class PvsSystem
             catch (Exception e)
             {
                 _pvs.Log.Log(LogLevel.Error, e, $"Caught exception while processing pvs-leave messages.");
+#if !EXCEPTION_TOLERANCE
+                throw;
+#endif
             }
         }
     }

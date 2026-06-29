@@ -36,8 +36,8 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Testing;
 using Robust.Shared.Timing;
-using Robust.UnitTesting.Pool;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -83,6 +83,9 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions? options = null)
         {
+            options ??= new ServerIntegrationOptions();
+            options.TestAssembly = GetType().Assembly;
+
             ServerIntegrationInstance instance;
 
             if (ShouldPool(options))
@@ -132,6 +135,9 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions? options = null)
         {
+            options ??= new ClientIntegrationOptions();
+            options.TestAssembly = GetType().Assembly;
+
             ClientIntegrationInstance instance;
 
             if (ShouldPool(options))
@@ -174,6 +180,89 @@ namespace Robust.UnitTesting
             instance.TestsRan.Add(currentTest);
 
             return instance;
+        }
+
+        /// <summary>
+        ///     Connects a client integration instance to a server integration instance.
+        /// </summary>
+        protected static async Task ConnectClient(
+            ServerIntegrationInstance server,
+            ClientIntegrationInstance client,
+            string? userName = null)
+        {
+            await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+            Assert.DoesNotThrow(() => client.SetConnectTarget(server));
+            await client.WaitPost(() => ((IClientNetManager) client.NetMan).ClientConnect(null!, 0, userName!));
+        }
+
+        /// <summary>
+        ///     Starts a connected client/server pair.
+        /// </summary>
+        protected async Task<ConnectedIntegrationPair> StartConnectedPair(
+            ServerIntegrationOptions? serverOptions = null,
+            ClientIntegrationOptions? clientOptions = null,
+            string? userName = null)
+        {
+            var server = StartServer(serverOptions);
+            var client = StartClient(clientOptions);
+            await ConnectClient(server, client, userName);
+            return new ConnectedIntegrationPair(server, client);
+        }
+
+        /// <summary>
+        ///     Runs the server and client in lockstep.
+        /// </summary>
+        protected static async Task RunTicksSync(
+            ServerIntegrationInstance server,
+            ClientIntegrationInstance client,
+            int ticks)
+        {
+            for (var i = 0; i < ticks; i++)
+            {
+                await server.WaitRunTicks(1);
+                await client.WaitRunTicks(1);
+            }
+        }
+
+        /// <summary>
+        ///     Disconnects a client integration instance from its server and runs both sides long enough to process it.
+        /// </summary>
+        protected static async Task DisconnectClient(
+            ServerIntegrationInstance server,
+            ClientIntegrationInstance client,
+            string reason = "")
+        {
+            await client.WaitPost(() => ((IClientNetManager) client.NetMan).ClientDisconnect(reason));
+            await RunTicksSync(server, client, 5);
+        }
+
+        protected sealed class ConnectedIntegrationPair : IAsyncDisposable
+        {
+            public ServerIntegrationInstance Server { get; }
+            public ClientIntegrationInstance Client { get; }
+
+            private bool _disposed;
+
+            public ConnectedIntegrationPair(ServerIntegrationInstance server, ClientIntegrationInstance client)
+            {
+                Server = server;
+                Client = client;
+            }
+
+            public void Deconstruct(out ClientIntegrationInstance client, out ServerIntegrationInstance server)
+            {
+                client = Client;
+                server = Server;
+            }
+
+            public async ValueTask DisposeAsync()
+            {
+                if (_disposed)
+                    return;
+
+                _disposed = true;
+                await DisconnectClient(Server, Client);
+            }
         }
 
         private bool ShouldPool(IntegrationOptions? options)
@@ -717,8 +806,8 @@ namespace Robust.UnitTesting
                 //ServerProgram.SetupLogging();
                 ServerProgram.InitReflectionManager(deps);
 
-                if (Options?.LoadTestAssembly != false)
-                    deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
+                if (Options?.LoadTestAssembly != false && Options?.TestAssembly != null)
+                    deps.Resolve<IReflectionManager>().LoadAssemblies(Options.TestAssembly);
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
@@ -747,6 +836,7 @@ namespace Robust.UnitTesting
                 var cfg = deps.Resolve<IConfigurationManagerInternal>();
 
                 cfg.LoadCVarsFromAssembly(typeof(RobustIntegrationTest).Assembly);
+                cfg.LoadCVarsFromAssembly(typeof(RTCVars).Assembly);
 
                 if (Options != null)
                 {
@@ -977,8 +1067,8 @@ namespace Robust.UnitTesting
 
                 GameController.RegisterReflection(deps);
 
-                if (Options?.LoadTestAssembly != false)
-                    deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
+                if (Options?.LoadTestAssembly != false && Options?.TestAssembly != null)
+                    deps.Resolve<IReflectionManager>().LoadAssemblies(Options.TestAssembly);
 
                 var client = DependencyCollection.Resolve<GameController>();
 
@@ -1007,6 +1097,7 @@ namespace Robust.UnitTesting
                 var cfg = deps.Resolve<IConfigurationManagerInternal>();
 
                 cfg.LoadCVarsFromAssembly(typeof(RobustIntegrationTest).Assembly);
+                cfg.LoadCVarsFromAssembly(typeof(RTCVars).Assembly);
 
                 if (Options != null)
                 {
@@ -1214,6 +1305,7 @@ namespace Robust.UnitTesting
             public Assembly[]? ContentAssemblies { get; set; }
 
             public bool LoadTestAssembly { get; set; } = true;
+            public Assembly? TestAssembly { get; set; }
 
             /// <summary>
             /// String containing extra prototypes to load. Contents of the string are treated like a yaml file in the

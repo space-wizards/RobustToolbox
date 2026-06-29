@@ -17,12 +17,15 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
-    ///     Stores the position and orientation of the entity.
+    ///     Stores the relative and global position and orientation of the entity.<br/>
+    ///     This also tracks the overall transform hierarchy, which allows entities to be children of other entities
+    ///     and move when their parent moves cheaply.
     /// </summary>
+    /// <seealso cref="SharedTransformSystem"/>
     [RegisterComponent, NetworkedComponent]
     public sealed partial class TransformComponent : Component, IComponentDebug
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private IEntityManager _entMan = default!;
 
         // Currently this field just exists for VV. In future, it might become a real field
         [ViewVariables, PublicAPI]
@@ -100,7 +103,7 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
 
         /// <summary>
         ///     Returns the index of the map which this object is on
@@ -150,10 +153,13 @@ namespace Robust.Shared.GameObjects
         public Angle LocalRotation
         {
             get => _localRotation;
+            [Obsolete("Use SharedTransformSystem.SetLocalRotation")]
             set
             {
                 if(_noLocalRotation)
                     return;
+
+                value = SharedTransformSystem.NormalizeRotation(value);
 
                 if (_localRotation.EqualsApprox(value))
                     return;
@@ -551,6 +557,7 @@ namespace Robust.Shared.GameObjects
         public TransformComponent Component => Entity.Comp1;
 
         public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
+        public bool OnlyRotation => OldPosition.Equals(NewPosition);
     }
 
     public struct TransformChildrenEnumerator : IDisposable

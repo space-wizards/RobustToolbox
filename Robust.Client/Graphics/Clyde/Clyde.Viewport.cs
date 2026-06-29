@@ -18,7 +18,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private long _nextViewportId = 1;
 
-        private readonly ConcurrentQueue<ViewportDisposeData> _viewportDisposeQueue = new();
+        private readonly ConcurrentQueue<(string? name, ViewportDisposeData data)> _viewportDisposeQueue = new();
 
         private Viewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters = default, string? name = null)
         {
@@ -66,13 +66,14 @@ namespace Robust.Client.Graphics.Clyde
         {
             while (_viewportDisposeQueue.TryDequeue(out var data))
             {
-                DisposeViewport(data);
+                DisposeViewport(data.data, data.name, wasLeaked: true);
             }
         }
 
-        private void DisposeViewport(ViewportDisposeData disposeData)
+        private void DisposeViewport(ViewportDisposeData disposeData, string? name = null, bool wasLeaked = false)
         {
-            _clydeSawmill.Warning($"Viewport {disposeData.Id} got leaked");
+            if (wasLeaked)
+                _clydeSawmill.Warning($"Viewport {disposeData.Id} ({name ?? "null"}) got leaked");
 
             _viewports.Remove(disposeData.Handle);
             if (disposeData.ClearEvent is not { } clearEvent)
@@ -137,6 +138,7 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2i Size { get; set; }
             public event Action<ClearCachedViewportResourcesEvent>? ClearCachedResources;
             public Color? ClearColor { get; set; } = Color.Black;
+            public bool ClearWhenMissingEye { get; set; }
             public Vector2 RenderScale { get; set; } = Vector2.One;
             public bool AutomaticRender { get; set; }
             public long Id { get; }
@@ -211,7 +213,7 @@ namespace Robust.Client.Graphics.Clyde
 
             ~Viewport()
             {
-                _clyde._viewportDisposeQueue.Enqueue(DisposeData(referenceSelf: false));
+                _clyde._viewportDisposeQueue.Enqueue((Name, DisposeData(referenceSelf: false)));
             }
 
             public void Dispose()
@@ -224,7 +226,7 @@ namespace Robust.Client.Graphics.Clyde
                 WallBleedIntermediateRenderTarget1.Dispose();
                 WallBleedIntermediateRenderTarget2.Dispose();
 
-                _clyde.DisposeViewport(DisposeData(referenceSelf: false));
+                _clyde.DisposeViewport(DisposeData(referenceSelf: false), Name);
             }
 
             private ViewportDisposeData DisposeData(bool referenceSelf)

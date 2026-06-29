@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Threading.Tasks;
-using Microsoft.Extensions.ObjectPool;
-using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -18,16 +15,16 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems
 {
-    public abstract class SharedBroadphaseSystem : EntitySystem
+    public abstract partial class SharedBroadphaseSystem : EntitySystem
     {
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
-        [Dependency] private readonly IParallelManager _parallel = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
-        [Dependency] private readonly SharedMapSystem _map = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IMapManagerInternal _mapManager = default!;
+        [Dependency] private IParallelManager _parallel = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private SharedMapSystem _map = default!;
+        [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
 
         private EntityQuery<BroadphaseComponent> _broadphaseQuery;
         private EntityQuery<FixturesComponent> _fixturesQuery;
@@ -35,10 +32,9 @@ namespace Robust.Shared.Physics.Systems
         private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;
 
-        private float _broadphaseExpand;
+        private readonly HashSet<FixtureProxy> _gridMoveBuffer = new();
 
-        private readonly Dictionary<EntityUid, Matrix3x2> _broadMatrices = new();
-        private HashSet<FixtureProxy> _gridMoveBuffer = new();
+        private float _frameTime;
 
         /*
          * Okay so Box2D has its own "MoveProxy" stuff so you can easily find new contacts when required.
@@ -55,9 +51,9 @@ namespace Robust.Shared.Physics.Systems
 
             _contactJob = new()
             {
-                _mapManager = _mapManager,
+                MapManager = _mapManager,
                 System = this,
-                BroadphaseExpand = _broadphaseExpand,
+                TransformSys = EntityManager.System<SharedTransformSystem>(),
                 // TODO: EntityManager one isn't ready yet?
                 XformQuery = GetEntityQuery<TransformComponent>(),
             };
@@ -71,13 +67,13 @@ namespace Robust.Shared.Physics.Systems
             UpdatesOutsidePrediction = true;
             UpdatesAfter.Add(typeof(SharedTransformSystem));
 
-            Subs.CVar(_cfg, CVars.BroadphaseExpand, SetBroadphaseExpand, true);
-        }
-
-        private void SetBroadphaseExpand(float value)
-        {
-            _contactJob.BroadphaseExpand = value;
-            _broadphaseExpand = value;
+            Subs.CVar(_cfg,
+                CVars.TargetMinimumTickrate,
+                val =>
+                {
+                    _frameTime = 1f / val;
+                },
+                true);
         }
 
         public void Rebuild(BroadphaseComponent component, bool fullBuild)
@@ -109,6 +105,7 @@ namespace Robust.Shared.Physics.Systems
             // This is so that if we're on a broadphase that's moving (e.g. a grid) we need to make sure anything
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
             var moveBuffer = _physicsSystem.MoveBuffer;
+            _gridMoveBuffer.Clear();
 
             foreach (var gridUid in movedGrids)
             {
@@ -120,7 +117,7 @@ namespace Robust.Shared.Physics.Systems
                     continue;
 
                 var worldAABB = _transform.GetWorldMatrix(xform).TransformBox(grid.LocalAABB);
-                var enlargedAABB = worldAABB.Enlarged(_broadphaseExpand);
+                var enlargedAABB = worldAABB.Enlarged(GetBroadphaseExpand(_physicsQuery.GetComponent(gridUid), _frameTime));
                 var state = (moveBuffer, _gridMoveBuffer);
 
                 QueryMapBroadphase(mapBroadphase.DynamicTree, ref state, enlargedAABB);
@@ -133,6 +130,11 @@ namespace Robust.Shared.Physics.Systems
                 // If something is in our AABB then try grid traversal for it
                 _traversal.CheckTraverse((proxy.Entity, _xformQuery.GetComponent(proxy.Entity)));
             }
+        }
+
+        private float GetBroadphaseExpand(PhysicsComponent body, float frameTime)
+        {
+            return body.LinearVelocity.Length() * 1.2f * frameTime;
         }
 
         private void QueryMapBroadphase(IBroadPhase broadPhase,
@@ -163,10 +165,11 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         internal void FindNewContacts()
         {
+            _contactJob.FrameTime = _frameTime;
+            _contactJob.Pairs.Clear();
+
             var moveBuffer = _physicsSystem.MoveBuffer;
             var movedGrids = _physicsSystem.MovedGrids;
-
-            _gridMoveBuffer.Clear();
 
             // Find any entities being driven over that might need to be considered
             FindGridContacts(movedGrids);
@@ -195,55 +198,32 @@ namespace Robust.Shared.Physics.Systems
                 _contactJob.MoveBuffer.Add(proxy);
             }
 
-            _broadMatrices.Clear();
-            var broadQuery = AllEntityQuery<BroadphaseComponent>();
-
-            // Cache broadphase matrices up front.
-            // We'll defer the proxy world AABBs until we get contacts rather than doing it on every single move.
-            // This is because contacts are run in parallel so we can spread the work a bit more and also don't duplicate it per tick.
-            while (broadQuery.MoveNext(out var bUid, out _))
-            {
-                _broadMatrices[bUid] = _transform.GetWorldMatrix(bUid);
-            }
-
-            for (var i = _contactJob.ContactBuffer.Count; i < _contactJob.MoveBuffer.Count; i++)
-            {
-                _contactJob.ContactBuffer.Add(new List<FixtureProxy>());
-            }
-
             var count = moveBuffer.Count;
 
             _parallel.ProcessNow(_contactJob, count);
 
-            for (var i = 0; i < count; i++)
+            foreach (var (proxyA, proxyB, flags) in _contactJob.Pairs)
             {
-                var proxies = _contactJob.ContactBuffer[i];
+                var otherBody = proxyB.Body;
+                var contactFlags = ContactFlags.None;
 
-                if (proxies.Count == 0)
-                    continue;
-
-                var proxyA = _contactJob.MoveBuffer[i];
-                var proxyABody = proxyA.Body;
-
-                _fixturesQuery.TryGetComponent(proxyA.Entity, out var manager);
-
-                foreach (var other in proxies)
+                // Because we may be colliding with something asleep (due to the way grid movement works) need
+                // to make sure the contact doesn't fail.
+                // This is because we generate a contact across 2 different broadphases where both bodies aren't
+                // moving locally but are moving in world-terms.
+                if ((flags & PairFlag.Wake) == PairFlag.Wake)
                 {
-                    var otherBody = other.Body;
-
-                    // Because we may be colliding with something asleep (due to the way grid movement works) need
-                    // to make sure the contact doesn't fail.
-                    // This is because we generate a contact across 2 different broadphases where both bodies aren't
-                    // moving locally but are moving in world-terms.
-                    if (proxyA.Fixture.Hard && other.Fixture.Hard &&
-                        (_gridMoveBuffer.Contains(proxyA) || _gridMoveBuffer.Contains(other)))
-                    {
-                        _physicsSystem.WakeBody(proxyA.Entity, force: true, manager: manager, body: proxyABody);
-                        _physicsSystem.WakeBody(other.Entity, force: true, body: otherBody);
-                    }
-
-                    _physicsSystem.AddPair(proxyA.FixtureId, other.FixtureId, proxyA, other);
+                    _physicsSystem.WakeBody(proxyA.Entity, force: true, body: proxyA.Body);
+                    _physicsSystem.WakeBody(proxyB.Entity, force: true, body: otherBody);
                 }
+
+                // TODO: Actually implement this for grids, atm they have their own skrungly fixture handling which prevents this.
+                if ((PairFlag.Grid & flags) == PairFlag.Grid)
+                {
+                    contactFlags |= ContactFlags.Grid;
+                }
+
+                _physicsSystem.AddPair(proxyA.FixtureId, proxyB.FixtureId, proxyA, proxyB, flags: contactFlags);
             }
 
             moveBuffer.Clear();
@@ -252,29 +232,32 @@ namespace Robust.Shared.Physics.Systems
 
         private void HandleGridCollisions(HashSet<EntityUid> movedGrids)
         {
-            foreach (var gridUid in movedGrids)
+            // TODO: Could move this into its own job.
+            // Ideally we'd just have some way to flag an entity as "AABB moves not proxy" into its own movebuffer.
+            foreach (var gridAUid in movedGrids)
             {
-                var grid = _gridQuery.GetComponent(gridUid);
-                var xform = _xformQuery.GetComponent(gridUid);
+                var gridAMapComp = _gridQuery.GetComponent(gridAUid);
+                var xform = _xformQuery.GetComponent(gridAUid);
 
                 if (xform.MapID == MapId.Nullspace)
                     continue;
 
-                var (worldPos, worldRot, worldMatrix, invWorldMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(xform);
+                var (worldPos, worldRot, gridAToWorld, worldToGridA) = _transform.GetWorldPositionRotationMatrixWithInv(xform);
 
-                var aabb = new Box2Rotated(grid.LocalAABB, worldRot).CalcBoundingBox().Translated(worldPos);
+                var aabb = new Box2Rotated(gridAMapComp.LocalAABB, worldRot).CalcBoundingBox().Translated(worldPos);
 
                 // TODO: Need to handle grids colliding with non-grid entities with the same layer
                 // (nothing in SS14 does this yet).
-                var fixture = _fixturesQuery.Comp(gridUid);
-                var physics = _physicsQuery.Comp(gridUid);
+                var fixture = _fixturesQuery.Comp(gridAUid);
+                var physics = _physicsQuery.Comp(gridAUid);
 
-                var transform = _physicsSystem.GetPhysicsTransform(gridUid);
+                // This is just a rigid transform, exactly the same as gridAToWorld //TODO: Really shouldn't need this!
+                var gridAToWorldRigid = _physicsSystem.GetPhysicsTransform(gridAUid);
                 var state = (
-                    new Entity<FixturesComponent, MapGridComponent, PhysicsComponent, TransformComponent>(gridUid, fixture, grid, physics, xform),
-                    transform,
-                    worldMatrix,
-                    invWorldMatrix,
+                    new Entity<FixturesComponent, MapGridComponent, PhysicsComponent, TransformComponent>(gridAUid, fixture, gridAMapComp, physics, xform),
+                    gridAToWorldRigid,
+                    gridAToWorld,
+                    worldToGridA,
                     _map,
                     _physicsSystem,
                     _transform,
@@ -283,11 +266,11 @@ namespace Robust.Shared.Physics.Systems
                     _xformQuery);
 
                 _mapManager.FindGridsIntersecting(xform.MapID, aabb, ref state,
-                    static (EntityUid uid, MapGridComponent component,
-                        ref (Entity<FixturesComponent, MapGridComponent, PhysicsComponent, TransformComponent> grid,
-                            Transform transform,
-                            Matrix3x2 worldMatrix,
-                            Matrix3x2 invWorldMatrix,
+                    static (EntityUid gridBUid, MapGridComponent gridBMapComp,
+                        ref (Entity<FixturesComponent, MapGridComponent, PhysicsComponent, TransformComponent> gridA,
+                            Transform gridAToWorldRigid,
+                            Matrix3x2 gridAToWorld,
+                            Matrix3x2 worldToGridA,
                             SharedMapSystem _map,
                             SharedPhysicsSystem _physicsSystem,
                             SharedTransformSystem xformSystem,
@@ -295,63 +278,82 @@ namespace Robust.Shared.Physics.Systems
                             EntityQuery<PhysicsComponent> physicsQuery,
                             EntityQuery<TransformComponent> xformQuery) tuple) =>
                     {
-                        if (tuple.grid.Owner == uid ||
-                        !tuple.xformQuery.TryGetComponent(uid, out var collidingXform))
+                        if (tuple.gridA.Owner == gridBUid ||
+                        !tuple.xformQuery.TryGetComponent(gridBUid, out var collidingXform))
                         {
                             return true;
                         }
 
-                        var (_, _, otherGridMatrix, otherGridInvMatrix) =  tuple.xformSystem.GetWorldPositionRotationMatrixWithInv(collidingXform);
-                        var otherGridBounds = otherGridMatrix.TransformBox(component.LocalAABB);
-                        var otherTransform = tuple._physicsSystem.GetPhysicsTransform(uid);
+                        // If the other entity is lower ID and also moved then let that handle the collision.
+                        if (tuple.gridA.Owner.Id > gridBUid.Id && tuple._physicsSystem.MovedGrids.Contains(gridBUid))
+                        {
+                            return true;
+                        }
+
+                        var (_, _, gridBToWorld, worldToGridB) =  tuple.xformSystem.GetWorldPositionRotationMatrixWithInv(collidingXform);
+                        var gridBAabbInWorld = gridBToWorld.TransformBox(gridBMapComp.LocalAABB);
+                        // Same as gridBToWorld, just a rigid transform:
+                        var gridBToWorldRigid = tuple._physicsSystem.GetPhysicsTransform(gridBUid);
 
                         // Get Grid2 AABB in grid1 ref
-                        var aabb1 = tuple.grid.Comp2.LocalAABB.Intersect(tuple.invWorldMatrix.TransformBox(otherGridBounds));
+                        var intersectionAabbInGridA = tuple.gridA.Comp2.LocalAABB.Intersect(tuple.worldToGridA.TransformBox(gridBAabbInWorld));
 
                         // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
-                        var ourChunks = tuple._map.GetLocalMapChunks(tuple.grid.Owner, tuple.grid, aabb1);
-                        var physicsA = tuple.grid.Comp3;
-                        var physicsB = tuple.physicsQuery.GetComponent(uid);
-                        var fixturesB = tuple.fixturesQuery.Comp(uid);
+                        var gridAChunks = tuple._map.GetLocalMapChunks(tuple.gridA.Owner, tuple.gridA, intersectionAabbInGridA);
+                        var physicsA = tuple.gridA.Comp3;
+                        var physicsB = tuple.physicsQuery.GetComponent(gridBUid);
+                        var fixturesB = tuple.fixturesQuery.Comp(gridBUid);
 
                         // Only care about chunks on other grid overlapping us.
-                        while (ourChunks.MoveNext(out var ourChunk))
+                        while (gridAChunks.MoveNext(out var curChunkA))
                         {
-                            var ourChunkWorld =
-                                tuple.worldMatrix.TransformBox(
-                                    ourChunk.CachedBounds.Translated(ourChunk.Indices * tuple.grid.Comp2.ChunkSize));
-                            var ourChunkOtherRef = otherGridInvMatrix.TransformBox(ourChunkWorld);
-                            var collidingChunks = tuple._map.GetLocalMapChunks(uid, component, ourChunkOtherRef);
+                            var chunkAAabbInWorld =
+                                tuple.gridAToWorld.TransformBox(
+                                    curChunkA.CachedBounds.Translated(curChunkA.Indices * tuple.gridA.Comp2.ChunkSize));
+                            var chunkAAabbInGridB = worldToGridB.TransformBox(chunkAAabbInWorld);
+                            var gridBOverlaps = tuple._map.GetLocalMapChunks(gridBUid, gridBMapComp, chunkAAabbInGridB);
 
-                            while (collidingChunks.MoveNext(out var collidingChunk))
+                            while (gridBOverlaps.MoveNext(out var curChunkB))
                             {
-                                foreach (var ourId in ourChunk.Fixtures)
+                                foreach (var fixAId in curChunkA.Fixtures)
                                 {
-                                    var fixture = tuple.grid.Comp1.Fixtures[ourId];
+                                    var fixtureA = tuple.gridA.Comp1.Fixtures[fixAId];
 
-                                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                                    foreach (var fixBId in curChunkB.Fixtures)
                                     {
-                                        var fixAABB = fixture.Shape.ComputeAABB(tuple.transform, i);
+                                        var fixtureB = fixturesB.Fixtures[fixBId];
 
-                                        foreach (var otherId in collidingChunk.Fixtures)
+                                        // There's already a contact so ignore it.
+                                        if (fixtureA.Contacts.ContainsKey(fixtureB))
+                                            continue;
+
+                                        bool addedPair = false;
+                                        for (var i = 0; i < fixtureA.Shape.ChildCount && !addedPair; i++)
                                         {
-                                            var otherFixture = fixturesB.Fixtures[otherId];
+                                            var shapeAAabbInWorld = fixtureA.Shape.ComputeAABB(tuple.gridAToWorldRigid, i);
 
-                                            for (var j = 0; j < otherFixture.Shape.ChildCount; j++)
+                                            for (var j = 0; j < fixtureB.Shape.ChildCount && !addedPair; j++)
                                             {
-                                                var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
+                                                var shapeBAabbInWorld = fixtureB.Shape.ComputeAABB(gridBToWorldRigid, j);
 
-                                                if (!fixAABB.Intersects(otherAABB)) continue;
+                                                if (!shapeAAabbInWorld.Intersects(shapeBAabbInWorld)) continue;
 
                                                 tuple._physicsSystem.AddPair(
-                                                    (tuple.grid.Owner, tuple.grid.Comp3, tuple.grid.Comp4),
-                                                    (uid, physicsB, collidingXform),
-                                                    ourId, otherId,
-                                                    fixture, i,
-                                                    otherFixture, j,
-                                                    physicsA, physicsB,
-                                                    ContactFlags.Grid);
-                                                break;
+                                                        (tuple.gridA.Owner, tuple.gridA.Comp3, tuple.gridA.Comp4),
+                                                        (gridBUid, physicsB, collidingXform),
+                                                        fixAId, fixBId,
+                                                        fixtureA, i,
+                                                        fixtureB, j,
+                                                        physicsA, physicsB,
+                                                        ContactFlags.Grid);
+
+                                                // Early out now and ignore every other i/j pair
+                                                addedPair = true;
+                                                // TODO: AddPair only handles a *single* contact between multiple
+                                                // fixtures, even if the contact is added for distinct child shapes i
+                                                // and j. Right now, there is only one child shape per fixture, but
+                                                // this code will fail to detect some collisions if this assumption is
+                                                // ever changed!
                                             }
                                         }
                                     }
@@ -370,7 +372,7 @@ namespace Robust.Shared.Physics.Systems
             FixtureProxy proxy,
             Box2 worldAABB,
             EntityUid broadphase,
-            List<FixtureProxy> pairBuffer)
+            List<(FixtureProxy, FixtureProxy, PairFlag)> pairBuffer)
         {
             DebugTools.Assert(proxy.Body.CanCollide);
 
@@ -401,7 +403,7 @@ namespace Robust.Shared.Physics.Systems
             }
 
             var broadphaseComp = _broadphaseQuery.GetComponent(broadphase);
-            var state = (pairBuffer, proxy);
+            var state = (pairBuffer, _physicsSystem.MoveBuffer, this, _physicsSystem, proxy);
 
             QueryBroadphase(broadphaseComp.DynamicTree, state, aabb);
 
@@ -411,23 +413,57 @@ namespace Robust.Shared.Physics.Systems
             QueryBroadphase(broadphaseComp.StaticTree, state, aabb);
         }
 
-        private void QueryBroadphase(IBroadPhase broadPhase, (List<FixtureProxy>, FixtureProxy) state, Box2 aabb)
+        private void QueryBroadphase(IBroadPhase broadPhase, (List<(FixtureProxy, FixtureProxy, PairFlag)>, HashSet<FixtureProxy> MoveBuffer, SharedBroadphaseSystem Broadphase, SharedPhysicsSystem PhysicsSystem, FixtureProxy) state, Box2 aabb)
         {
             broadPhase.QueryAabb(ref state, static (
-                ref (List<FixtureProxy> pairBuffer, FixtureProxy proxy) tuple,
+                ref (List<(FixtureProxy, FixtureProxy, PairFlag)> pairs, HashSet<FixtureProxy> moveBuffer, SharedBroadphaseSystem broadphase, SharedPhysicsSystem physicsSystem, FixtureProxy proxy) tuple,
                 in FixtureProxy other) =>
             {
                 DebugTools.Assert(other.Body.CanCollide);
                 // Logger.DebugS("physics", $"Checking {proxy.Entity} against {other.Fixture.Body.Owner} at {aabb}");
 
-                if (tuple.proxy == other ||
-                    !SharedPhysicsSystem.ShouldCollide(tuple.proxy.Fixture, other.Fixture) ||
-                    tuple.proxy.Entity == other.Entity)
+                if (tuple.proxy.Entity == other.Entity ||
+                    !SharedPhysicsSystem.ShouldCollide(tuple.proxy.Fixture, other.Fixture))
                 {
                     return true;
                 }
 
-                tuple.pairBuffer.Add(other);
+                // Avoid creating duplicate pairs.
+                // We give priority to whoever has the lower entity ID.
+                if (tuple.proxy.Entity.Id > other.Entity.Id)
+                {
+                    // Let the other fixture handle it.
+                    if (tuple.moveBuffer.Contains(other))
+                        return true;
+                }
+
+                // Check if contact already exists.
+                if (tuple.proxy.Fixture.Contacts.ContainsKey(other.Fixture))
+                    return true;
+
+                // TODO: Add in the slow path check here but turnstiles currently explodes this on content so.
+                if (!tuple.physicsSystem.ShouldCollideJoints(tuple.proxy.Entity, other.Entity))
+                    return true;
+
+                // TODO: Sensors handled elsewhere when we do v3 port.
+                //if (!tuple.proxy.Fixture.Hard || !other.Fixture.Hard)
+                //    return true;
+
+                // TODO: Check if interlocked + array is better here which is what box2d does
+                // It then just heap allocates anything over the array size.
+                var flags = PairFlag.None;
+                if (tuple.proxy.Fixture.Hard &&
+                    other.Fixture.Hard &&
+                    (tuple.broadphase._gridMoveBuffer.Contains(tuple.proxy) || tuple.broadphase._gridMoveBuffer.Contains(other)))
+                {
+                    flags |= PairFlag.Wake;
+                }
+
+                lock (tuple.pairs)
+                {
+                    tuple.pairs.Add((tuple.proxy, other, flags));
+                }
+
                 return true;
             }, aabb, true);
         }
@@ -560,39 +596,42 @@ namespace Robust.Shared.Physics.Systems
         {
             public SharedBroadphaseSystem System = default!;
             public SharedTransformSystem TransformSys = default!;
-            public IMapManager _mapManager = default!;
-
-            public float BroadphaseExpand;
+            public IMapManager MapManager = default!;
 
             public EntityQuery<TransformComponent> XformQuery;
 
-            public List<List<FixtureProxy>> ContactBuffer = new();
-            public List<FixtureProxy> MoveBuffer = new();
+            public readonly List<FixtureProxy> MoveBuffer = new();
 
-            public int BatchSize => 8;
+            public List<(FixtureProxy, FixtureProxy, PairFlag)> Pairs = new(64);
+
+            public float FrameTime;
+
+            // Box2D uses 64 but we have to do grid queries for each fixtureproxy which will add a fair bit of overhead.
+            // Plus we also run events + trycomp for joints on top.
+            public int BatchSize => 16;
 
             public void Execute(int index)
             {
                 var proxy = MoveBuffer[index];
                 var broadphaseUid = XformQuery.GetComponent(proxy.Entity).Broadphase?.Uid;
-                var worldAABB = System._broadMatrices[broadphaseUid!.Value].TransformBox(proxy.AABB);
-                var buffer = ContactBuffer[index];
-                buffer.Clear();
+                var worldAABB = TransformSys.GetWorldMatrix(broadphaseUid!.Value).TransformBox(proxy.AABB);
 
                 var mapUid = XformQuery.GetComponent(proxy.Entity).MapUid ?? EntityUid.Invalid;
+
+                var broadphaseExpand = System.GetBroadphaseExpand(proxy.Body, FrameTime);
 
                 var proxyBody = proxy.Body;
                 DebugTools.Assert(!proxyBody.Deleted);
 
-                var state = (System, proxy, worldAABB, buffer);
+                var state = (System, proxy, worldAABB, Pairs);
 
                 // Get every broadphase we may be intersecting.
-                _mapManager.FindGridsIntersecting(mapUid, worldAABB.Enlarged(BroadphaseExpand), ref state,
+                MapManager.FindGridsIntersecting(mapUid, worldAABB.Enlarged(broadphaseExpand), ref state,
                     static (EntityUid uid, MapGridComponent _, ref (
                         SharedBroadphaseSystem system,
                         FixtureProxy proxy,
                         Box2 worldAABB,
-                        List<FixtureProxy> pairBuffer) tuple) =>
+                        List<(FixtureProxy, FixtureProxy, PairFlag)> pairBuffer) tuple) =>
                     {
                         ref var buffer = ref tuple.pairBuffer;
                         tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, uid, buffer);
@@ -602,9 +641,24 @@ namespace Robust.Shared.Physics.Systems
                     includeMap: false);
 
                 // Struct ref moment, I have no idea what's fastest.
-                buffer = state.buffer;
-                System.FindPairs(proxy, worldAABB, mapUid, buffer);
+                System.FindPairs(proxy, worldAABB, mapUid, Pairs);
             }
+        }
+
+        [Flags]
+        private enum PairFlag : byte
+        {
+            None = 0,
+
+            /// <summary>
+            /// Should we wake the contacting entities.
+            /// </summary>
+            Wake = 1 << 0,
+
+            /// <summary>
+            /// Is it a grid collision.
+            /// </summary>
+            Grid = 1 << 1,
         }
     }
 }

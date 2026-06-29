@@ -52,6 +52,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     // We can't just start playing on audio creation as we don't have the correct position yet.
     // As such we'll wait for FrameUpdate before we start playing to avoid the position being cooked.
+    [Access(Other = AccessPermissions.ReadWriteExecute)]
     public bool Started = false;
 
     [AutoNetworkedField]
@@ -86,12 +87,15 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     #region Source
 
+    [Access(Other = AccessPermissions.Execute)]
     public void Pause() => Source.Pause();
 
     /// <inheritdoc />
+    [Access(Other = AccessPermissions.Execute)]
     public void StartPlaying() => Source.StartPlaying();
 
     /// <inheritdoc />
+    [Access(Other = AccessPermissions.Execute)]
     public void StopPlaying()
     {
         PlaybackPosition = 0f;
@@ -99,6 +103,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     }
 
     /// <inheritdoc />
+    [Access(Other = AccessPermissions.Execute)]
     public void Restart() => Source.Restart();
 
     [DataField, AutoNetworkedField]
@@ -180,6 +185,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// Not replicated as audio always tracks the entity's position.
     /// </remarks>
     [ViewVariables]
+    [Access(Other = AccessPermissions.ReadWriteExecute)]
     public Vector2 Position
     {
         get => Source.Position;
@@ -237,6 +243,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// Not replicated.
     /// </remarks>
     [ViewVariables]
+    [Access(Other = AccessPermissions.ReadWriteExecute)]
     public Vector2 Velocity
     {
         get => Source.Velocity;

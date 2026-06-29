@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
@@ -405,12 +406,11 @@ public sealed partial class EntityLookupSystem
         EntityUid? ignored = null)
     {
         var broadphaseInv = _transform.GetInvWorldMatrix(lookupUid);
+        var polygon = new SlimPolygon(worldBounds, broadphaseInv, out var localAABB);
 
-        var localBounds = broadphaseInv.TransformBounds(worldBounds);
-        var polygon = new SlimPolygon(localBounds);
         var result = AnyEntitiesIntersecting(lookupUid,
             polygon,
-            localBounds.CalcBoundingBox(),
+            localAABB,
             Physics.Transform.Empty,
             flags,
             ignored);
@@ -768,10 +768,8 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.TryGetComponent(gridId, out var lookup))
             return;
 
-        var localBounds = _transform.GetInvWorldMatrix(gridId).TransformBounds(worldBounds);
-        var polygon = new SlimPolygon(localBounds);
-
-        AddEntitiesIntersecting(gridId, intersecting, polygon, localBounds.CalcBoundingBox(), Physics.Transform.Empty, flags, lookup);
+        var polygon = new SlimPolygon(worldBounds, _transform.GetInvWorldMatrix(gridId), out var localAABB);
+        AddEntitiesIntersecting(gridId, intersecting, polygon, localAABB, Physics.Transform.Empty, flags, lookup);
         AddContained(intersecting, flags);
     }
 
@@ -806,18 +804,21 @@ public sealed partial class EntityLookupSystem
 
     #region Bounds
 
+    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize)
     {
         return new Box2(gridIndices * tileSize, (gridIndices + 1) * tileSize);
     }
 
+    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box2 GetLocalBounds(TileRef tileRef, ushort tileSize)
     {
         return GetLocalBounds(tileRef.GridIndices, tileSize);
     }
 
+    [Pure]
     public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3x2? worldMatrix = null, Angle? angle = null)
     {
         var grid = _gridQuery.GetComponent(tileRef.GridUid);

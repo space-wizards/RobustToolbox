@@ -25,6 +25,7 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
@@ -152,7 +153,7 @@ public partial class SharedPhysicsSystem
             SetSleepingAllowed(uid, component, newState.SleepingAllowed, dirty: false);
             SetFixedRotation(uid, newState.FixedRotation, body: component, dirty: false);
             SetCanCollide(uid, newState.CanCollide, body: component, dirty: false);
-            component.BodyStatus = newState.Status;
+            SetBodyStatus(uid, component, newState.Status, dirty: false);
 
             SetLinearVelocity(uid, newState.LinearVelocity, dirty: false, body: component, manager: manager);
             SetAngularVelocity(uid, newState.AngularVelocity, dirty: false, body: component, manager: manager);
@@ -223,7 +224,7 @@ public partial class SharedPhysicsSystem
             return;
         }
 
-        SetLinearVelocity(uid,body.LinearVelocity + impulse * body._invMass, body: body);
+        SetLinearVelocity(uid, body.LinearVelocity + impulse * body._invMass, body: body);
     }
 
     public void ApplyLinearImpulse(EntityUid uid, Vector2 impulse, Vector2 point, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -234,7 +235,8 @@ public partial class SharedPhysicsSystem
         }
 
         SetLinearVelocity(uid, body.LinearVelocity + impulse * body._invMass, body: body);
-        SetAngularVelocity(uid, body.AngularVelocity + body.InvI * Vector2Helpers.Cross(point - body._localCenter, impulse), body: body);
+        var matrix = _transform.GetWorldMatrix(uid);
+        SetAngularVelocity(uid, body.AngularVelocity + body.InvI * Vector2Helpers.Cross(Vector2.Transform(point, matrix) - Vector2.Transform(body._localCenter, matrix), impulse), body: body);
     }
 
     #endregion
@@ -341,7 +343,7 @@ public partial class SharedPhysicsSystem
         var oldCenter = body._localCenter;
         body._localCenter = localCenter;
 
-        if (((int) body.BodyType & (int) (BodyType.Kinematic | BodyType.Static)) == 0)
+        if (((int)body.BodyType & (int)(BodyType.Kinematic | BodyType.Static)) == 0)
         {
             // Update center of mass velocity.
             var comVelocityDiff = Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
@@ -548,7 +550,12 @@ public partial class SharedPhysicsSystem
         if (body.BodyStatus == status)
             return;
 
+        var oldStatus = body.BodyStatus;
         body.BodyStatus = status;
+
+        var ev = new PhysicsBodyStatusChangedEvent(body, oldStatus, status);
+        RaiseLocalEvent(uid, ref ev);
+
         if (dirty)
             DirtyField(uid, body, nameof(PhysicsComponent.BodyStatus));
     }
@@ -769,7 +776,7 @@ public partial class SharedPhysicsSystem
 
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
 
-        var transform = new Transform(worldPos, (float) worldRot.Theta);
+        var transform = new Transform(worldPos, (float)worldRot.Theta);
 
         var bounds = new Box2(transform.Position, transform.Position);
 
@@ -796,7 +803,7 @@ public partial class SharedPhysicsSystem
 
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
 
-        var transform = new Transform(worldPos, (float) worldRot.Theta);
+        var transform = new Transform(worldPos, (float)worldRot.Theta);
 
         var bounds = new Box2(transform.Position, transform.Position);
 
@@ -814,6 +821,8 @@ public partial class SharedPhysicsSystem
         return bounds;
     }
 
+    /// <returns>The collision layer and collision mask of all hard fixtures.</returns>
+    [PublicAPI]
     public (int Layer, int Mask) GetHardCollision(EntityUid uid, FixturesComponent? manager = null)
     {
         if (!_fixturesQuery.Resolve(uid, ref manager, false))
@@ -821,6 +830,13 @@ public partial class SharedPhysicsSystem
             return (0, 0);
         }
 
+        return GetHardCollision(manager);
+    }
+
+    /// <inheritdoc cref="GetHardCollision(EntityUid, FixturesComponent?)"/>
+    [PublicAPI]
+    public static (int Layer, int Mask) GetHardCollision(FixturesComponent manager)
+    {
         var layer = 0;
         var mask = 0;
 

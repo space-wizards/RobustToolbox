@@ -7,6 +7,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     A network server that listens for connections, relays packets, and manages channels.
     /// </summary>
+    [NotContentImplementable]
     public interface INetManager
     {
         /// <summary>

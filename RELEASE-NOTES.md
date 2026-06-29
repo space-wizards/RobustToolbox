@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
 * Added a DictionaryEquals extension method to check equality between two dictionaries.
 
 ### Bugfixes

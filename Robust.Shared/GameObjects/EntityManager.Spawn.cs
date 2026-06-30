@@ -188,8 +188,7 @@ public partial class EntityManager
         EntityUid? mapUid,
         ComponentRegistry? overrides = null)
     {
-        uid = CreateEntityUninitialized(protoName, overrides);
-        var meta = MetaQuery.GetComponent(uid.Value);
+        uid = CreateEntityUninitialized(protoName, out var meta, overrides);
         InitializeAndStartEntity((uid.Value, meta), doMapInit: false);
 
         if (!_containers.Insert(uid.Value, container))
@@ -211,8 +210,7 @@ public partial class EntityManager
         if (!xform.ParentUid.IsValid())
             return Spawn(protoName);
 
-        var uid = CreateEntityUninitialized(protoName, overrides);
-        var meta = MetaQuery.GetComponent(uid);
+        var uid = CreateEntityUninitialized(protoName, out var meta, overrides);
         InitializeAndStartEntity((uid, meta), doMapInit: false);
         _xforms.DropNextTo(uid, target);
 
@@ -244,8 +242,7 @@ public partial class EntityManager
     {
         inserted = true;
         xform ??= TransformQuery.GetComponent(containerUid);
-        var uid = CreateEntityUninitialized(protoName, overrides);
-        var meta = MetaQuery.GetComponent(uid);
+        var uid = CreateEntityUninitialized(protoName, out var meta, overrides);
         InitializeAndStartEntity((uid, meta), doMapInit: false);
 
         if ((containerComp == null && !TryGetComponent(containerUid, out containerComp))
@@ -283,8 +280,7 @@ public partial class EntityManager
     {
         inserted = true;
         xform ??= TransformQuery.GetComponent(container.Owner);
-        var uid = CreateEntityUninitialized(protoName, overrides);
-        var meta = MetaQuery.GetComponent(uid);
+        var uid = CreateEntityUninitialized(protoName, out var meta, overrides);
         InitializeAndStartEntity((uid, meta), doMapInit: false);
 
         if (!_containers.Insert(uid, container))

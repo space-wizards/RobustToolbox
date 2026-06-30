@@ -181,6 +181,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             foreach (var (id, component) in source)
             {
+                // TODO: Delta's PR
                 var copy = context == null
                     ? factory.GetComponent(component)
                     : serializationManager.CreateCopy(component.Component, context, notNullableOverride: true);

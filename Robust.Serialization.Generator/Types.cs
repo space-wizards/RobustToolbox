@@ -12,6 +12,7 @@ internal static class Types
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string CopyByRefNamespace = "Robust.Shared.Serialization.Manager.Attributes.CopyByRefAttribute";
+    private const string CopyByValueNamespace = "Robust.Shared.Serialization.Manager.Attributes.CopyByValueAttribute";
 
     internal static bool IsPartial(TypeDeclarationSyntax type)
     {
@@ -130,6 +131,20 @@ internal static class Types
         if (type.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
             return CanBeCopiedByValue(member, ((INamedTypeSymbol) type).TypeArguments[0]);
 
+        if (CanTypeBeCopiedByValue(type))
+            return true;
+
+        if (HasAttribute(member, CopyByRefNamespace))
+            return true;
+
+        return false;
+    }
+
+    internal static bool CanTypeBeCopiedByValue(ITypeSymbol type)
+    {
+        if (type.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
+            return CanTypeBeCopiedByValue(((INamedTypeSymbol) type).TypeArguments[0]);
+
         if (type.TypeKind == TypeKind.Enum)
             return true;
 
@@ -154,8 +169,18 @@ internal static class Types
                 return true;
         }
 
-        if (HasAttribute(member, CopyByRefNamespace))
+        // No SpecialType here?
+        if (type.ToDisplayString() == "System.Type" ||
+            type.ToDisplayString() == "System.TimeSpan")
+        {
             return true;
+        }
+
+        if (HasAttribute(type, CopyByRefNamespace) ||
+            HasAttribute(type, CopyByValueNamespace))
+        {
+            return true;
+        }
 
         return false;
     }

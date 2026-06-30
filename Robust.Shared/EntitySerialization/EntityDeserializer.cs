@@ -674,7 +674,7 @@ public sealed partial class EntityDeserializer :
                     // I hate this.
                     existing = _factory.GetComponent(compReg);
                     EntMan.AddComponent(uid, existing);
-                    _seriMan.CopyTo(newComponent, ref existing, this, notNullableOverride: true);
+                    EntityPrototype.CopyDeserializedComponentData(newComponent, ref existing, _seriMan, this);
                     continue;
                 }
 
@@ -691,7 +691,7 @@ public sealed partial class EntityDeserializer :
             // I.e., creating "temp" here just unnecessarily slows everything down.
             var temp = (IComponent) _seriMan.Read(compReg.Type, data, this)!;
 
-            _seriMan.CopyTo(temp, ref existing, this, notNullableOverride: true);
+            EntityPrototype.CopyDeserializedComponentData(temp, ref existing, _seriMan, this);
         }
 
         _components.Clear();

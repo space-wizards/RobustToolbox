@@ -354,6 +354,27 @@ namespace Robust.Shared.Prototypes
             fallback(source, ref target, serManager, context);
         }
 
+        internal static void CopyDeserializedComponentData(
+            IComponent source,
+            ref IComponent target,
+            ISerializationManager serManager,
+            ISerializationContext? context = null)
+        {
+            if (source is IComponentPrototypeCopy generatedCopy && source is not ISerializationHooks)
+            {
+                generatedCopy.CopyPrototypeTo(
+                    ref target,
+                    serManager,
+                    SerializationHookContext.ForSkipHooks(false),
+                    context);
+                RunPrototypeCopyHooks(target);
+                return;
+            }
+
+            var fallback = PrototypeCopyFallbacks.GetOrAdd(source.GetType(), CreatePrototypeCopyFallback);
+            fallback(source, ref target, serManager, context);
+        }
+
         private static void RunPrototypeCopyHooks(IComponent target)
         {
             if (target is ISerializationHooks hooks)

@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Toolshed.TypeParsers;
 
@@ -17,6 +18,7 @@ namespace Robust.Shared.Prototypes;
 /// </remarks>
 /// <remarks><seealso cref="ProtoId{T}"/> for a wrapper of other prototype kinds.</remarks>
 [Serializable, NetSerializable]
+[CopyByValue]
 public readonly record struct EntProtoId(string Id) : IEquatable<string>, IComparable<EntProtoId>, IAsType<string>,
     IAsType<ProtoId<EntityPrototype>>
 {
@@ -59,6 +61,7 @@ public readonly record struct EntProtoId(string Id) : IEquatable<string>, ICompa
 
 /// <inheritdoc cref="EntProtoId"/>
 [Serializable]
+[CopyByValue]
 public readonly record struct EntProtoId<T>(string Id) : IEquatable<string>, IComparable<EntProtoId> where T : IComponent, new()
 {
     public static implicit operator string(EntProtoId<T> protoId)

@@ -174,12 +174,17 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public void CopyTo(ISerializationManager serializationManager, ComponentRegistry source, ref ComponentRegistry target,
             IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
+            var factory = dependencies.Resolve<IComponentFactory>();
+
             target.Clear();
             target.EnsureCapacity(source.Count);
 
             foreach (var (id, component) in source)
             {
-                var copy = serializationManager.CreateCopy(component.Component, context, notNullableOverride: true);
+                var copy = context == null
+                    ? factory.GetComponent(component)
+                    : serializationManager.CreateCopy(component.Component, context, notNullableOverride: true);
+
                 target.Add(id, new ComponentRegistryEntry(copy));
             }
         }

@@ -9,4 +9,5 @@ public sealed record DataDefinition(
     List<DataField> Fields,
     bool HasHooks,
     bool InvalidFields,
+    bool SupportsPrototypeDataCopy,
     bool SupportsPrototypeCopy);

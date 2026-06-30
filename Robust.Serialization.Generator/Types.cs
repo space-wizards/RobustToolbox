@@ -13,6 +13,7 @@ internal static class Types
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string CopyByRefNamespace = "Robust.Shared.Serialization.Manager.Attributes.CopyByRefAttribute";
     private const string CopyByValueNamespace = "Robust.Shared.Serialization.Manager.Attributes.CopyByValueAttribute";
+    private const string SerializationHooksNamespace = "Robust.Shared.Serialization.ISerializationHooks";
 
     internal static bool IsPartial(TypeDeclarationSyntax type)
     {
@@ -142,8 +143,13 @@ internal static class Types
 
     internal static bool CanTypeBeCopiedByValue(ITypeSymbol type)
     {
+        return CanTypeBeCopiedByValue(type, new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default));
+    }
+
+    private static bool CanTypeBeCopiedByValue(ITypeSymbol type, HashSet<ITypeSymbol> seen)
+    {
         if (type.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
-            return CanTypeBeCopiedByValue(((INamedTypeSymbol) type).TypeArguments[0]);
+            return CanTypeBeCopiedByValue(((INamedTypeSymbol) type).TypeArguments[0], seen);
 
         if (type.TypeKind == TypeKind.Enum)
             return true;
@@ -182,7 +188,42 @@ internal static class Types
             return true;
         }
 
+        if (CanStructBeInferredCopyByValue(type, seen))
+            return true;
+
         return false;
+    }
+
+    private static bool CanStructBeInferredCopyByValue(ITypeSymbol type, HashSet<ITypeSymbol> seen)
+    {
+        if (type is not INamedTypeSymbol named)
+            return false;
+
+        if (type.TypeKind != TypeKind.Struct ||
+            named.IsGenericType ||
+            IsDataDefinition(type) ||
+            ImplementsInterface(type, SerializationHooksNamespace))
+        {
+            return false;
+        }
+
+        if (!seen.Add(type))
+            return true;
+
+        foreach (var member in named.GetMembers())
+        {
+            if (member is not IFieldSymbol field ||
+                field.IsStatic ||
+                field.IsConst)
+            {
+                continue;
+            }
+
+            if (!CanTypeBeCopiedByValue(field.Type, seen))
+                return false;
+        }
+
+        return true;
     }
 
     internal static string GetGenericTypeName(ITypeSymbol symbol)

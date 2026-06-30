@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -129,6 +130,26 @@ internal sealed partial class PrototypeComponentCopyTest : OurRobustUnitTest
 
         var target = (PrototypeCopyByValueComponent) targetComponent;
         Assert.That(target.Value, Is.EqualTo(new PrototypeCopyReadonlyStruct("direct-value")));
+    }
+
+    [Test]
+    public void CopyComponentFromPrototypeInfersTrivialStructsAsCopyByValue()
+    {
+        var serialization = IoCManager.Resolve<ISerializationManager>();
+
+        IComponent source = new PrototypeCopyInferredStructComponent
+        {
+            Angle = new Angle(1.5),
+            Box = new Box2(1, 2, 3, 4),
+        };
+
+        IComponent targetComponent = new PrototypeCopyInferredStructComponent();
+
+        EntityPrototype.CopyComponentFromPrototype(source, ref targetComponent, serialization);
+
+        var target = (PrototypeCopyInferredStructComponent) targetComponent;
+        Assert.That(target.Angle, Is.EqualTo(new Angle(1.5)));
+        Assert.That(target.Box, Is.EqualTo(new Box2(1, 2, 3, 4)));
     }
 
     [Test]
@@ -296,6 +317,13 @@ internal sealed partial class PrototypeComponentCopyTest : OurRobustUnitTest
     internal sealed partial class PrototypeCopyByValueComponent : Component
     {
         [DataField] public PrototypeCopyReadonlyStruct Value;
+    }
+
+    [RegisterComponent]
+    internal sealed partial class PrototypeCopyInferredStructComponent : Component
+    {
+        [DataField] public Angle Angle;
+        [DataField] public Box2 Box;
     }
 
     [RegisterComponent]

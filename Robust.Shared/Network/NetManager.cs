@@ -882,7 +882,7 @@ namespace Robust.Shared.Network
             try
             {
 #endif
-            OnDisconnected(channel, reason);
+                OnDisconnected(channel, reason);
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)

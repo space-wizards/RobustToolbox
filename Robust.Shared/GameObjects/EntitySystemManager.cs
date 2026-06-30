@@ -231,12 +231,12 @@ namespace Robust.Shared.GameObjects
                 })
                 .ToArray();
 
+            _initialized = true;
+
             foreach (var system in _resolvedSystems)
             {
                 system.PostInitialize();
             }
-
-            _initialized = true;
         }
 
         private static (IEnumerable<IEntitySystem> frameUpd, IEnumerable<IEntitySystem> upd)

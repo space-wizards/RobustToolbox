@@ -37,6 +37,7 @@ END TEMPLATE-->
 
 * Validate Box2i inputs to ensure no negative-sized boxes.
 * Fastpath prototype copying for components to avoid CustomCopy calls where we expect we can get away with it.
+* Removed QuadTree due to lack of maintenance, test coverage, and usage.
 
 ### New features
 

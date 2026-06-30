@@ -28,6 +28,11 @@ namespace Robust.Shared.GameObjects
         void Initialize();
 
         /// <summary>
+        ///     Called once after the system was created to finish initializing its state.
+        /// </summary>
+        void PostInitialize();
+
+        /// <summary>
         ///     Called once before the system is destroyed so that the system can clean up.
         /// </summary>
         void Shutdown();

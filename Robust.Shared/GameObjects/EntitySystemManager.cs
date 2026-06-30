@@ -49,6 +49,7 @@ namespace Robust.Shared.GameObjects
         }
 
         private readonly List<Type> _systemTypes = new();
+        private readonly List<IEntitySystem> _resolvedSystems = new();
 
         private static readonly Histogram _tickUsageHistogram = Metrics.CreateHistogram("robust_entity_systems_update_usage",
             "Amount of time spent processing each entity system", new HistogramConfiguration
@@ -147,6 +148,7 @@ namespace Robust.Shared.GameObjects
             SystemDependencyCollection = new(_dependencyCollection);
             var subTypes = new Dictionary<Type, Type>();
             _systemTypes.Clear();
+            _resolvedSystems.Clear();
             IEnumerable<Type> systems;
 
             if (discover)
@@ -212,6 +214,7 @@ namespace Robust.Shared.GameObjects
             foreach (var systemType in _systemTypes)
             {
                 var system = (IEntitySystem)SystemDependencyCollection.ResolveType(systemType);
+                _resolvedSystems.Add(system);
                 system.Initialize();
                 SystemLoaded?.Invoke(this, new SystemChangedArgs(system));
             }
@@ -227,6 +230,11 @@ namespace Robust.Shared.GameObjects
                     Monitor = _tickUsageHistogram.WithLabels(s.GetType().Name)
                 })
                 .ToArray();
+
+            foreach (var system in _resolvedSystems)
+            {
+                system.PostInitialize();
+            }
 
             _initialized = true;
         }

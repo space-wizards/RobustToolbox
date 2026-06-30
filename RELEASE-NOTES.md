@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Validate Box2i inputs to ensure no negative-sized boxes.
+* The `Component.SendOnlyToOwner` and `Component.SessionSpecific` properties have been removed. This behaviour is now configured via an argument passed to the `NetworkedComponentAttribute`.
 
 ### New features
 

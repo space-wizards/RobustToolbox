@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
+using Robust.Shared.GameStates;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
@@ -417,6 +418,12 @@ namespace Robust.Shared.GameObjects
 
             if (!_eventSubsUnfrozen[compType.Value]!.TryAdd(eventType, reg))
                 throw new InvalidOperationException($"Duplicate Subscriptions for comp={compTypeObj}, event={eventType.Name}");
+
+            // This probably doesn't belong here, but I'm not sure where else to put it.
+            // Putting it in comp-state code would require hooking the check to run whenever subscriptions get locked.
+            DebugTools.Assert(eventType != typeof(ComponentGetStateAttemptEvent)
+                              || _comFac.GetRegistration(compType).Restriction == StateRestriction.SessionSpecific,
+                $"ComponentGetStateAttemptEvent subscription for {compTypeObj.Name} does nothing as the component is not marked as session specific.");
 
             RegisterCommon(eventType, reg.Ordering, out _);
             _eventSubsInv.GetOrNew(eventType).Add(compType);

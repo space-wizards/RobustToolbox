@@ -373,7 +373,7 @@ namespace Robust.Shared.GameObjects
 
                     // This will invalidate the comp ref as it removes the key from the dictionary.
                     // This is inefficient, but component overriding rarely ever happens.
-                    RemoveComponentImmediate(uid, comp!, type, false, metadata);
+                    RemoveComponentImmediate(uid, comp!, reg, false, metadata);
                     dict.Add(uid, component);
                 }
                 else
@@ -391,7 +391,7 @@ namespace Robust.Shared.GameObjects
                 // the main comp grid keeps this in sync
                 var netId = reg.NetID.Value;
                 metadata ??= MetaQuery.GetComponentInternal(uid);
-                metadata.NetComponents.Add(netId, component);
+                metadata.NetComponents.Add(netId, (component, reg.Restriction));
             }
 
             if (component is IComponentDelta delta)
@@ -436,7 +436,8 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, out T? comp))
                 return false;
 
-            RemoveComponentImmediate(uid, comp, CompIdx.Index<T>(), false, meta);
+            var reg = _componentFactory.GetRegistration(CompIdx.Index<T>());
+            RemoveComponentImmediate(uid, comp, reg, false, meta);
             return true;
         }
 
@@ -447,7 +448,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentImmediate(uid, comp, _componentFactory.GetIndex(type), false, meta);
+            RemoveComponentImmediate(uid, comp, _componentFactory.GetRegistration(type), false, meta);
             return true;
         }
 
@@ -461,8 +462,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp, meta))
                 return false;
 
-            var idx = _componentFactory.GetIndex(comp.GetType());
-            RemoveComponentImmediate(uid, comp, idx, false, meta);
+            RemoveComponentImmediate(uid, comp, false, meta);
             return true;
         }
 
@@ -470,8 +470,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            var idx = _componentFactory.GetIndex(component.GetType());
-            RemoveComponentImmediate(uid, component, idx, false, meta);
+            RemoveComponentImmediate(uid, component, false, meta);
         }
 
         /// <inheritdoc />
@@ -541,8 +540,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
-                var idx = _componentFactory.GetIndex(comp.GetType());
-                RemoveComponentImmediate(uid, comp, idx, false, meta);
+                RemoveComponentImmediate(uid, comp, false, meta);
             }
         }
 
@@ -556,8 +554,7 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    var idx = _componentFactory.GetIndex(comp.GetType());
-                    RemoveComponentImmediate(uid, comp, idx, true, meta);
+                    RemoveComponentImmediate(uid, comp, true, meta);
                 }
                 catch (Exception)
                 {
@@ -630,7 +627,17 @@ namespace Robust.Shared.GameObjects
         private void RemoveComponentImmediate(
             EntityUid uid,
             IComponent component,
-            CompIdx idx,
+            bool terminating,
+            MetaDataComponent? meta)
+        {
+            var reg = _componentFactory.GetRegistration(component.GetType());
+            RemoveComponentImmediate(uid, component, reg, terminating, meta);
+        }
+
+        private void RemoveComponentImmediate(
+            EntityUid uid,
+            IComponent component,
+            ComponentRegistration reg,
             bool terminating,
             MetaDataComponent? meta)
         {
@@ -660,10 +667,10 @@ namespace Robust.Shared.GameObjects
             }
 
             if (component.Running)
-                LifeShutdown(uid, component, idx);
+                LifeShutdown(uid, component, reg.Idx);
 
             if (component.LifeStage != ComponentLifeStage.PreAdd)
-                LifeRemoveFromEntity(uid, component, idx); // Sets delete
+                LifeRemoveFromEntity(uid, component, reg.Idx); // Sets delete
 
 #if EXCEPTION_TOLERANCE
             }
@@ -673,7 +680,7 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(RemoveComponentImmediate));
             }
 #endif
-            DeleteComponent(uid, component, idx, terminating, meta);
+            DeleteComponent(uid, component, reg, terminating, meta);
         }
 
         /// <inheritdoc />
@@ -684,7 +691,7 @@ namespace Robust.Shared.GameObjects
                 if (component.Deleted)
                     continue;
                 var uid = component.Owner;
-                var idx = _componentFactory.GetIndex(component.GetType());
+                var reg = _componentFactory.GetRegistration(component.GetType());
 
 #if EXCEPTION_TOLERANCE
             try
@@ -695,11 +702,11 @@ namespace Robust.Shared.GameObjects
                 {
                     // TODO add options to cancel deferred deletion?
                     _sawmill.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(uid)}, type={component.GetType()}");
-                    LifeShutdown(uid, component, idx);
+                    LifeShutdown(uid, component, reg.Idx);
                 }
 
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
-                    LifeRemoveFromEntity(uid, component, idx);
+                    LifeRemoveFromEntity(uid, component, reg.Idx);
 
 #if EXCEPTION_TOLERANCE
             }
@@ -710,7 +717,7 @@ namespace Robust.Shared.GameObjects
             }
 #endif
                 var meta = MetaQuery.GetComponent(uid);
-                DeleteComponent(uid, component, idx, false, meta);
+                DeleteComponent(uid, component, reg, false, meta);
             }
 
             _deleteSet.Clear();
@@ -719,20 +726,19 @@ namespace Robust.Shared.GameObjects
         private void DeleteComponent(
             EntityUid entityUid,
             IComponent component,
-            CompIdx idx,
+            ComponentRegistration reg,
             bool terminating,
             MetaDataComponent? metadata)
         {
             if (!MetaQuery.ResolveInternal(entityUid, ref metadata))
                 return;
 
-            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, entityUid), false, metadata, idx);
+            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, entityUid), false, metadata, reg);
             ComponentRemoved?.Invoke(eventArgs);
             EventBusInternal.OnComponentRemoved(eventArgs);
 
             if (!terminating)
             {
-                var reg = _componentFactory.GetRegistration(component);
                 DebugTools.Assert(component.Networked == (reg.NetID != null));
                 if (reg.NetID != null)
                 {
@@ -747,7 +753,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            _entTraitArray[idx.Value].Remove(entityUid);
+            _entTraitArray[reg.Idx.Value].Remove(entityUid);
 
             // TODO if terminating the entity, maybe defer this?
             // _entCompIndex.Remove(uid) gets called later on anyways.
@@ -936,7 +942,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public IComponent GetComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null)
         {
-            return (meta ?? MetaQuery.GetComponentInternal(uid)).NetComponents[netId];
+            return (meta ?? MetaQuery.GetComponentInternal(uid)).NetComponents[netId].Item1;
         }
 
         /// <inheritdoc />
@@ -1073,7 +1079,7 @@ namespace Robust.Shared.GameObjects
             if (MetaQuery.TryGetComponentInternal(uid, out var metadata)
                 && metadata.NetComponents.TryGetValue(netId, out var comp))
             {
-                component = comp;
+                component = comp.Item1;
                 return true;
             }
 
@@ -1739,18 +1745,18 @@ namespace Robust.Shared.GameObjects
 
     public readonly struct NetComponentEnumerable
     {
-        private readonly Dictionary<ushort, IComponent> _dictionary;
+        private readonly Dictionary<ushort, (IComponent, StateRestriction)> _dictionary;
 
-        public NetComponentEnumerable(Dictionary<ushort, IComponent> dictionary) => _dictionary = dictionary;
+        public NetComponentEnumerable(Dictionary<ushort, (IComponent, StateRestriction)> dictionary) => _dictionary = dictionary;
         public NetComponentEnumerator GetEnumerator() => new(_dictionary);
     }
 
     public struct NetComponentEnumerator
     {
         // DO NOT MAKE THIS READONLY
-        private Dictionary<ushort, IComponent>.Enumerator _dictEnum;
+        private Dictionary<ushort, (IComponent, StateRestriction)>.Enumerator _dictEnum;
 
-        public NetComponentEnumerator(Dictionary<ushort, IComponent> dictionary) =>
+        public NetComponentEnumerator(Dictionary<ushort, (IComponent, StateRestriction)> dictionary) =>
             _dictEnum = dictionary.GetEnumerator();
 
         public bool MoveNext() => _dictEnum.MoveNext();
@@ -1760,7 +1766,7 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var val = _dictEnum.Current;
-                return (val.Key, val.Value);
+                return (val.Key, val.Value.Item1);
             }
         }
     }

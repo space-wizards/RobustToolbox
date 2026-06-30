@@ -48,14 +48,16 @@ namespace Robust.Shared.GameObjects
 
         public readonly MetaDataComponent Meta;
 
-        public readonly CompIdx Idx;
+        public CompIdx Idx => Registration.Idx;
 
-        internal RemovedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating, MetaDataComponent meta, CompIdx idx)
+        public readonly ComponentRegistration Registration;
+
+        internal RemovedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating, MetaDataComponent meta, ComponentRegistration registration)
         {
             BaseArgs = baseArgs;
             Terminating = terminating;
             Meta = meta;
-            Idx = idx;
+            Registration = registration;
         }
     }
 }

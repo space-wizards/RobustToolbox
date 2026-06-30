@@ -189,7 +189,7 @@ public partial class EntityManager
 
     public EntityUid SpawnNextToOrDrop(EntProtoId? protoName, Entity<TransformComponent?> target, Vector2 offset = default, ComponentRegistry? overrides = null)
     {
-        if (!TransformQuery.Resolve(ref target) ||
+        if (!TransformQuery.Resolve(target, ref target.Comp) ||
             !target.Comp.ParentUid.IsValid())
             return Spawn(protoName, overrides);
 

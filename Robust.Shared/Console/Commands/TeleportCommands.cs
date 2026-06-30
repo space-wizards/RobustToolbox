@@ -87,6 +87,7 @@ public sealed partial class TeleportToCommand : LocalizedEntityCommands
 {
     [Dependency] private ISharedPlayerManager _players = default!;
     [Dependency] private IEntityManager _entities = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
 
     public override string Command => "tpto";
@@ -154,7 +155,7 @@ public sealed partial class TeleportToCommand : LocalizedEntityCommands
         if (NetEntity.TryParse(str, out var uidNet)
             && _entities.TryGetEntity(uidNet, out var uid)
             && _entities.TryGetComponent(uid, out transform)
-            && !_entities.HasComponent<MapComponent>(uid))
+            && !_mapSystem.IsMap(uid.Value, transform))
         {
             victimUid = uid;
             return true;
@@ -236,8 +237,8 @@ sealed partial class TpGridCommand : LocalizedEntityCommands
         }
 
         if (!_ent.TryGetEntity(gridIdNet, out var uid)
-            || !_ent.HasComponent<MapGridComponent>(uid)
-            || _ent.HasComponent<MapComponent>(uid))
+            || !_map.IsGrid(uid.Value)
+            || _map.IsMap(uid.Value))
         {
             shell.WriteError(Loc.GetString("cmd-parse-failure-grid", ("arg", args[0])));
             return;

@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
@@ -49,8 +48,8 @@ internal sealed partial class PvsSystem
         if (xform.GridUid == uid)
             return;
 
-        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
-        DebugTools.Assert(!HasComp<MapComponent>(uid));
+        DebugTools.Assert(!_maps.IsGrid(uid, xform));
+        DebugTools.Assert(!_maps.IsMap(uid, xform));
 
         if (oldParent != xform.ParentUid)
         {

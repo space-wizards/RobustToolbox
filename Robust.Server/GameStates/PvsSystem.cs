@@ -53,9 +53,19 @@ internal sealed partial class PvsSystem : EntitySystem
     public int ForceAckThreshold { get; private set; }
 
     /// <summary>
-    /// Is view culling enabled, or will we send the whole map?
+    /// Is view culling enabled, or will we send all entities?
     /// </summary>
     public bool CullingEnabled { get; private set; }
+
+    /// <summary>
+    /// Will we cull grids outside of range or on a different map?
+    /// </summary>
+    public bool GridCullingEnabled { get; private set; }
+
+    /// <summary>
+    /// Will we cull different maps?
+    /// </summary>
+    public bool MapCullingEnabled { get; private set; }
 
     /// <summary>
     /// Size of the side of the view bounds square. Related to <see cref="CVars.NetMaxUpdateRange"/>
@@ -66,6 +76,11 @@ internal sealed partial class PvsSystem : EntitySystem
     /// Size of the side of the priority view bounds square. Related to <see cref="CVars.NetPvsPriorityRange"/>
     /// </summary>
     private float _priorityViewSize;
+
+    /// <summary>
+    /// Size of the side of the grid-root view bounds square. Related to <see cref="CVars.NetPvsGridRange"/>
+    /// </summary>
+    private float _gridViewSize;
 
     /// <summary>
     /// Per-tick ack data to avoid re-allocating.
@@ -145,6 +160,8 @@ internal sealed partial class PvsSystem : EntitySystem
         Subs.CVar(_configManager, CVars.NetPVS, SetPvs, true);
         Subs.CVar(_configManager, CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsPriorityRange, OnPriorityRangeChanged, true);
+        Subs.CVar(_configManager, CVars.NetPvsGridRange, OnGridRangeChanged, true);
+        Subs.CVar(_configManager, CVars.NetPvsMapCulling, OnMapCullingChanged, true);
         Subs.CVar(_configManager, CVars.NetForceAckThreshold, OnForceAckChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsAsync, OnAsyncChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsCompressLevel, ResetParallelism, true);
@@ -280,6 +297,17 @@ internal sealed partial class PvsSystem : EntitySystem
         _priorityViewSize = Math.Max(_viewSize, value);
     }
 
+    private void OnGridRangeChanged(float value)
+    {
+        GridCullingEnabled = value > 0;
+        _gridViewSize = Math.Max(ChunkSize, value);
+    }
+
+    private void OnMapCullingChanged(bool value)
+    {
+        MapCullingEnabled = value;
+    }
+
     private void OnForceAckChanged(int value)
     {
         ForceAckThreshold = value;
@@ -388,6 +416,16 @@ internal sealed partial class PvsSystem : EntitySystem
     private (Vector2 worldPos, float range, EntityUid? map) CalcViewBounds(Entity<TransformComponent, EyeComponent?> eye)
     {
         var size = _priorityViewSize;
+        return CalcViewBounds(eye, size);
+    }
+
+    private (Vector2 worldPos, float range, EntityUid? map) CalcGridViewBounds(Entity<TransformComponent, EyeComponent?> eye)
+    {
+        return CalcViewBounds(eye, _gridViewSize);
+    }
+
+    private (Vector2 worldPos, float range, EntityUid? map) CalcViewBounds(Entity<TransformComponent, EyeComponent?> eye, float size)
+    {
         var worldPos = _transform.GetWorldPosition(eye.Comp1);
 
         if (eye.Comp2 is not null)

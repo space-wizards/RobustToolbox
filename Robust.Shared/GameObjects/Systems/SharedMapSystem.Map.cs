@@ -125,6 +125,7 @@ public abstract partial class SharedMapSystem
 
     private void OnComponentAdd(EntityUid uid, MapComponent component, ComponentAdd args)
     {
+        Transform(uid).IsMap = true;
         // ordered startups when
         EnsureComp<GridTreeComponent>(uid);
     }
@@ -222,6 +223,9 @@ public abstract partial class SharedMapSystem
 
     private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
     {
+        if (TryComp(uid, out TransformComponent? xform))
+            xform.IsMap = false;
+
         DebugTools.Assert(component.MapId != MapId.Nullspace);
         Maps.Remove(component.MapId);
 

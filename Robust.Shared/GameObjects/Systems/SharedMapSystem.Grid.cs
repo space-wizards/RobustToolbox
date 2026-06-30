@@ -265,8 +265,9 @@ public abstract partial class SharedMapSystem
         }
 
         // Make sure we cleanup old map for moved grid stuff.
-        var oldMap = _transform.ToMapCoordinates(args.OldPosition);
-        var oldMapUid = GetMapOrInvalid(oldMap.MapId);
+        var oldMapUid = args.OldPosition.EntityId.IsValid()
+            ? GetMapOrInvalid(_transform.ToMapCoordinates(args.OldPosition).MapId)
+            : EntityUid.Invalid;
         if (component.MapProxy != DynamicTree.Proxy.Free)
         {
             _physics.MovedGrids.Remove(uid);
@@ -276,6 +277,7 @@ public abstract partial class SharedMapSystem
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
         if (xform.MapUid != null)
         {
+            _transform.SetGridId(uid, xform, uid);
             _physics.MovedGrids.Add(uid);
             AddGrid(uid, component);
         }
@@ -547,6 +549,7 @@ public abstract partial class SharedMapSystem
 
     private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
     {
+        Transform(uid).IsGrid = true;
         var msg = new GridAddEvent(uid);
         RaiseLocalEvent(uid, msg, true);
     }
@@ -597,11 +600,15 @@ public abstract partial class SharedMapSystem
 
     private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
     {
-        Log.Info($"Removing grid {ToPrettyString(uid)}");
-        if (TryComp(uid, out TransformComponent? xform) && xform.MapUid != null)
+        if (TryComp(uid, out TransformComponent? xform))
         {
-            RemoveGrid(uid, component, xform.MapUid.Value);
+            xform.IsGrid = false;
+
+            if (xform.MapUid != null)
+                RemoveGrid(uid, component, xform.MapUid.Value);
         }
+
+        Log.Info($"Removing grid {ToPrettyString(uid)}");
 
         component.MapProxy = DynamicTree.Proxy.Free;
         RaiseLocalEvent(uid, new GridRemovalEvent(uid), true);
@@ -682,7 +689,7 @@ public abstract partial class SharedMapSystem
     /// </summary>
     internal void RegenerateCollision(EntityUid uid, MapGridComponent grid, IReadOnlySet<MapChunk> chunks)
     {
-        if (HasComp<MapComponent>(uid))
+        if (IsMap(uid))
         {
             ClearEmptyMapChunks(uid, grid, chunks);
             return;

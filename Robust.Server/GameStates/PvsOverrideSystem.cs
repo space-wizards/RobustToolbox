@@ -30,8 +30,6 @@ public sealed partial class PvsOverrideSystem : SharedPvsOverrideSystem
         EntityManager.EntityDeleted += OnDeleted;
         _player.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MapRemovedEvent>(OnMapRemoved);
-        SubscribeLocalEvent<MapCreatedEvent>(OnMapCreated);
-        SubscribeLocalEvent<GridInitializeEvent>(OnGridCreated);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
 
         // TODO console commands for adding/removing overrides?
@@ -259,23 +257,9 @@ public sealed partial class PvsOverrideSystem : SharedPvsOverrideSystem
         RemoveForceSend(ev.EntityUid);
     }
 
-    private void OnGridCreated(GridInitializeEvent ev)
-    {
-        // TODO PVS remove this requirement.
-        // I think this just required refactoring client game state logic so it doesn't send grids to nullspace?
-        AddForceSend(ev.EntityUid);
-    }
-
     private void OnMapRemoved(MapRemovedEvent ev)
     {
         RemoveForceSend(ev.Uid);
-    }
-
-    private void OnMapCreated(MapCreatedEvent ev)
-    {
-        // TODO PVS remove this requirement.
-        // I think this just required refactoring client game state logic so it doesn't sending maps/grids to nullspace.
-        AddForceSend(ev.Uid);
     }
 
     #endregion

@@ -39,10 +39,10 @@ internal partial class MapManager
         return MapSystem.CreateGridEntity(map, options: options);
     }
 
-    [Obsolete("Use HasComponent<MapGridComponent>(uid)")]
+    [Obsolete("Use SharedMapSystem.IsGrid(uid)")]
     public bool IsGrid(EntityUid uid)
     {
-        return EntityManager.HasComponent<MapGridComponent>(uid);
+        return MapSystem.IsGrid(uid);
     }
 
     [Obsolete("use SharedMapSystem.GetAllMapGrids")]

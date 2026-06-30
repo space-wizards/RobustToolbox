@@ -39,23 +39,7 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
 
         await RunTicksSync(server, client, 10);
 
-        // Ensure client & server ticks are synced.
-        // Client runs 1 tick ahead
-        {
-            var sTick = (int)server.Timing.CurTick.Value;
-            var cTick = (int)client.Timing.CurTick.Value;
-            var delta = cTick - sTick;
-
-            if (delta > 1)
-                await server.WaitRunTicks(delta - 1);
-            else if (delta < 1)
-                await client.WaitRunTicks(1 - delta);
-
-            sTick = (int)server.Timing.CurTick.Value;
-            cTick = (int)client.Timing.CurTick.Value;
-            delta = cTick - sTick;
-            Assert.That(delta, Is.EqualTo(1));
-        }
+        await WaitUntilSync(server, client);
 
         // Set up map and spawn player
         EntityUid map = default;

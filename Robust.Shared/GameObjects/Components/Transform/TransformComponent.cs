@@ -115,6 +115,18 @@ namespace Robust.Shared.GameObjects
         internal bool _gridInitialized;
 
         /// <summary>
+        ///     True if this entity is a map entity.
+        /// </summary>
+        [ViewVariables]
+        public bool IsMap { get; internal set; }
+
+        /// <summary>
+        ///     True if this entity is a grid entity.
+        /// </summary>
+        [ViewVariables]
+        public bool IsGrid { get; internal set; }
+
+        /// <summary>
         ///     The EntityUid of the map which this object is on, if any.
         /// </summary>
         public EntityUid? MapUid { get; internal set; }

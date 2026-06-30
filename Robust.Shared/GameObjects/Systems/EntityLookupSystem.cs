@@ -359,7 +359,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         if (xform.GridUid == uid)
             return;
-        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
+        DebugTools.Assert(!_map.IsGrid(uid, xform));
 
         if (xform.Broadphase is not { Valid: true } old)
             return; // entity is not on any broadphase
@@ -539,9 +539,9 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return;
 
         // We need to recursively update the cached data and remove children from the move buffer
-        DebugTools.Assert(HasComp<MapGridComponent>(args.Sender));
-        DebugTools.Assert(!newMap.IsValid() || HasComp<MapComponent>(newMap));
-        DebugTools.Assert(!oldMap.IsValid() || HasComp<MapComponent>(oldMap));
+        DebugTools.Assert(_map.IsGrid(args.Sender, args.Component));
+        DebugTools.Assert(!newMap.IsValid() || _map.IsMap(newMap));
+        DebugTools.Assert(!oldMap.IsValid() || _map.IsMap(oldMap));
     }
 
     private void UpdateParent(EntityUid uid, TransformComponent xform)
@@ -694,8 +694,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (!TryGetCurrentBroadphase(xform, out var broadphase))
             return;
 
-        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
-        DebugTools.Assert(!HasComp<MapComponent>(uid));
+        DebugTools.Assert(!_map.IsGrid(uid, xform));
+        DebugTools.Assert(!_map.IsMap(uid, xform));
 
         RemoveFromEntityTree(broadphase.Owner, broadphase, uid, xform);
     }

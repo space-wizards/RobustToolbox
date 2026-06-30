@@ -47,6 +47,7 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private SharedContainerSystem _containerSystem = default!;
         [Dependency] private SharedDebugPhysicsSystem _debugPhysics = default!;
         [Dependency] private SharedJointSystem _joints = default!;
+        [Dependency] private SharedMapSystem _mapSystem = default!;
         [Dependency] private SharedTransformSystem _transform = default!;
         [Dependency] private CollisionWakeSystem _wakeSystem = default!;
 
@@ -226,7 +227,7 @@ namespace Robust.Shared.Physics.Systems
             var guid = ev.EntityUid;
 
             // If it's mapgrid then no physics.
-            if (HasComp<MapComponent>(guid))
+            if (_mapSystem.IsMap(guid))
                 return;
 
             var body = EnsureComp<PhysicsComponent>(guid);

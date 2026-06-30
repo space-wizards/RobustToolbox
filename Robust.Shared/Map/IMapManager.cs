@@ -234,10 +234,10 @@ namespace Robust.Shared.Map
         [Obsolete("Just delete the grid entity")]
         void DeleteGrid(EntityUid euid);
 
-        [Obsolete("Use HasComp")]
+        [Obsolete("Use SharedMapSystem.IsGrid")]
         bool IsGrid(EntityUid uid);
 
-        [Obsolete("Use HasComp")]
+        [Obsolete("Use SharedMapSystem.IsMap")]
         bool IsMap(EntityUid uid);
 
         //

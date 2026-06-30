@@ -68,6 +68,11 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     public readonly HashSet<PvsChunk> ChunkSet = new();
 
     /// <summary>
+    /// Visible grid roots already processed for the current game-state send.
+    /// </summary>
+    public readonly HashSet<EntityUid> VisibleGridRoots = new();
+
+    /// <summary>
     /// Squared distance ta all of the visible chunks.
     /// </summary>
     public readonly List<float> ChunkDistanceSq = new();
@@ -140,6 +145,7 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
         PlayerStates.Clear();
         Chunks.Clear();
         ChunkSet.Clear();
+        VisibleGridRoots.Clear();
         States.Clear();
         State = null;
     }

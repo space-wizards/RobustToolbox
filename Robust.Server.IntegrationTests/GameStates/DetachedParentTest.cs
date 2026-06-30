@@ -34,23 +34,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
 
         await RunTicksSync(server, client, 10);
 
-        // Ensure client & server ticks are synced.
-        // Client runs 1 tick ahead
-        {
-            var sTick = (int)server.Timing.CurTick.Value;
-            var cTick = (int)client.Timing.CurTick.Value;
-            var delta = cTick - sTick;
-
-            if (delta > 1)
-                await server.WaitRunTicks(delta - 1);
-            else if (delta < 1)
-                await client.WaitRunTicks(1 - delta);
-
-            sTick = (int)server.Timing.CurTick.Value;
-            cTick = (int)client.Timing.CurTick.Value;
-            delta = cTick - sTick;
-            Assert.That(delta, Is.EqualTo(1));
-        }
+        await WaitUntilSync(server, client);
 
         // Set up map and spawn player
         MapId mapId = default;
@@ -290,12 +274,12 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         Assert.That(parent3X.GridUid, Is.EqualTo(grid2));
         Assert.That(grid2X.GridUid, Is.EqualTo(grid2));
 
-        // Client does not know that parent3 exists, but (at least for now) clients always know about all maps and grids.
+        // Client does not know that parent3 exists, nor the out-of-range map/grid it is on.
         var cParent3 = client.EntMan.GetEntity(server.EntMan.GetNetEntity(parent3));
         var cGrid2 = client.EntMan.GetEntity(server.EntMan.GetNetEntity(grid2));
         var cMap2 = client.EntMan.GetEntity(server.EntMan.GetNetEntity(map2));
-        Assert.That(cMap2, Is.Not.EqualTo(EntityUid.Invalid));
-        Assert.That(cGrid2, Is.Not.EqualTo(EntityUid.Invalid));
+        Assert.That(cMap2, Is.EqualTo(EntityUid.Invalid));
+        Assert.That(cGrid2, Is.EqualTo(EntityUid.Invalid));
         Assert.That(cParent3, Is.EqualTo(EntityUid.Invalid));
 
         // Attach the entities to the parent on the new map.
@@ -307,7 +291,11 @@ public sealed class DetachedParentTest : RobustIntegrationTest
 
         // Check all the transforms
         cParent3 = client.EntMan.GetEntity(server.EntMan.GetNetEntity(parent3));
+        cGrid2 = client.EntMan.GetEntity(server.EntMan.GetNetEntity(grid2));
+        cMap2 = client.EntMan.GetEntity(server.EntMan.GetNetEntity(map2));
         Assert.That(cParent3, Is.Not.EqualTo(EntityUid.Invalid));
+        Assert.That(cGrid2, Is.Not.EqualTo(EntityUid.Invalid));
+        Assert.That(cMap2, Is.Not.EqualTo(EntityUid.Invalid));
 
         var cParent3X = client.Transform(cParent3);
         var cGrid2X = client.Transform(cGrid2);

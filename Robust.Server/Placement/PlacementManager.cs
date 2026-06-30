@@ -250,7 +250,7 @@ namespace Robust.Server.Placement
             foreach (var entity in _lookup.GetEntitiesIntersecting(_xformSystem.GetMapId(start), new Box2(start.Position, start.Position + rectSize)))
             {
                 if (_entityManager.Deleted(entity)
-                    || _entityManager.HasComponent<MapGridComponent>(entity)
+                    || _maps.IsGrid(entity)
                     || _entityManager.HasComponent<ActorComponent>(entity))
                     continue;
 

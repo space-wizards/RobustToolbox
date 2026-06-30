@@ -92,6 +92,18 @@ namespace Robust.Shared.GameObjects
 
             return (flag & bitmask) == flag;
         }
+
+        [Pure]
+        public bool IsMap(EntityUid uid, TransformComponent? xform = null)
+        {
+            return _xformQuery.Resolve(uid, ref xform, false) && xform.IsMap;
+        }
+
+        [Pure]
+        public bool IsGrid(EntityUid uid, TransformComponent? xform = null)
+        {
+            return _xformQuery.Resolve(uid, ref xform, false) && xform.IsGrid;
+        }
     }
 
     /// <summary>

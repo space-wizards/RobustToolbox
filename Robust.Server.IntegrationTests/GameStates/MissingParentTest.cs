@@ -5,7 +5,6 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
 using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Server.GameStates;
@@ -18,10 +17,8 @@ public sealed class MissingParentTest : RobustIntegrationTest
     [Test]
     public async Task TestMissingParent()
     {
-        var server = StartServer();
-        var client = StartClient();
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
         var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
@@ -29,28 +26,17 @@ public sealed class MissingParentTest : RobustIntegrationTest
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
 
         var cEntMan = client.ResolveDependency<IEntityManager>();
-        var netMan = client.ResolveDependency<IClientNetManager>();
         var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
         var cConfMan = client.ResolveDependency<IConfigurationManager>();
 
-        Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-        client.Post(() => netMan.ClientConnect(null!, 0, null!));
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Limit client to receiving at most 1 entity per tick.
         cConfMan.SetCVar(CVars.NetPVSEntityBudget, 1);
 
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Ensure client & server ticks are synced.
         // Client runs 1 tick ahead
@@ -92,11 +78,7 @@ public sealed class MissingParentTest : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         Assert.That(player, Is.Not.EqualTo(NetEntity.Invalid));
         Assert.That(entity, Is.Not.EqualTo(NetEntity.Invalid));
@@ -124,11 +106,7 @@ public sealed class MissingParentTest : RobustIntegrationTest
         });
 
         // Wait for the client to receive some, but not all, of the entities
-        for (int i = 0; i < 8; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 8);
         Assert.That(cEntMan.TryGetEntity(first, out _), Is.True);
         Assert.That(cEntMan.TryGetEntity(last, out _), Is.False);
 
@@ -140,11 +118,7 @@ public sealed class MissingParentTest : RobustIntegrationTest
         });
 
         // Wait a few more ticks
-        for (int i = 0; i < 8; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 8);
 
         // Client should still not have received the new parent, however this shouldn't cause any issues.
         // The already known entity should just have been moved to nullspace.
@@ -153,11 +127,7 @@ public sealed class MissingParentTest : RobustIntegrationTest
         Assert.That(client.MetaData(entity).Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.None));
 
         // Wait untill the client receives the parent entity
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // now that the parent was received the entity should no longer be in nullspace.
         Assert.That(cEntMan.TryGetEntity(last, out var newParent), Is.True);
@@ -165,9 +135,6 @@ public sealed class MissingParentTest : RobustIntegrationTest
         Assert.That(client.Transform(entity).ParentUid, Is.EqualTo(newParent));
         Assert.That(client.MetaData(entity).Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.None));
 
-        await client.WaitPost(() => netMan.ClientDisconnect(""));
-        await server.WaitRunTicks(5);
-        await client.WaitRunTicks(5);
     }
 }
 

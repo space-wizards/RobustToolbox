@@ -48,7 +48,7 @@
     <PackageVersion Include="OpenTK.Audio.OpenAL" Version="4.9.4" />
     <PackageVersion Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
     <PackageVersion Include="Pidgin" Version="3.5.1" />
-    <PackageVersion Include="Robust.Natives" Version="0.2.3" />
+    <PackageVersion Include="Robust.Natives" Version="0.2.5" />
     <PackageVersion Include="Robust.Natives.Zstd" Version="0.1.1-zstd1.5.7" />
     <PackageVersion Include="Robust.Natives.Cef.win-x64" Version="$(CefNativeVersion)" />
     <PackageVersion Include="Robust.Natives.Cef.linux-x64" Version="$(CefNativeVersion)" />

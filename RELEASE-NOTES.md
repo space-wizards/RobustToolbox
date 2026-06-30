@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Validate Box2i inputs to ensure no negative-sized boxes.
+* Removed QuadTree due to lack of maintenance, test coverage, and usage.
 
 ### New features
 

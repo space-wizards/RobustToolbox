@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Validate Box2i inputs to ensure no negative-sized boxes.
+* Removed QuadTree due to lack of maintenance, test coverage, and usage.
 * SpawnNextToOrDrop methods have been changed to take `EntProtoId?, Entity<TransformComponent?>, Vector2 = default` instead of `string?, EntityUid, TransformComponent? null`. Because of this, some `Entity<T>`s will need to first be explicity converted into `EntityUid`s.
 
 ### New features

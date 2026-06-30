@@ -40,6 +40,7 @@ namespace Robust.Client.Placement
         [Dependency] private IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private IEntityManager _entityManager = default!;
         [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IComponentFactory _factory = default!;
         [Dependency] private IBaseClient _baseClient = default!;
         [Dependency] private IOverlayManager _overlayManager = default!;
         [Dependency] internal IClyde Clyde = default!;
@@ -787,7 +788,7 @@ namespace Robust.Client.Placement
 
             sc.Comp.NoRotation = noRot;
 
-            if (prototype != null && prototype.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp))
+            if (prototype != null && prototype.TryComp<SpriteComponent>(out var spriteComp, _factory))
             {
                 Sprite.SetScale(sc.AsNullable(), spriteComp.Scale);
             }

@@ -10,7 +10,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -24,7 +23,6 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private IParallelManager _parallel = default!;
-    [Dependency] protected IPrototypeManager ProtoManager = default!;
     [Dependency] private IReflectionManager _reflection = default!;
     [Dependency] protected ISharedPlayerManager Player = default!;
     [Dependency] private SharedTransformSystem _transforms = default!;

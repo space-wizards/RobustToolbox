@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects;
@@ -11,11 +10,10 @@ namespace Robust.Shared.GameObjects;
 /// </summary>
 internal sealed partial class PrototypeReloadSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypes = default!;
-    [Dependency] private IComponentFactory _componentFactory = default!;
-
     public override void Initialize()
     {
+        base.Initialize();
+
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
     }
 
@@ -31,7 +29,7 @@ internal sealed partial class PrototypeReloadSystem : EntitySystem
             if (id == null || !set.Modified.ContainsKey(id))
                 continue;
 
-            var proto = _prototypes.Index<EntityPrototype>(id);
+            var proto = ProtoMan.Index<EntityPrototype>(id);
             UpdateEntity(uid, metadata, proto);
         }
     }
@@ -42,12 +40,12 @@ internal sealed partial class PrototypeReloadSystem : EntitySystem
 
         var oldPrototypeComponents = oldPrototype?.Components.Keys
             .Where(n => n != "Transform" && n != "MetaData")
-            .Select(name => (name, _componentFactory.GetRegistration(name).Type))
+            .Select(name => (name, Factory.GetRegistration(name).Type))
             .ToList() ?? new List<(string name, Type Type)>();
 
         var newPrototypeComponents = newPrototype.Components.Keys
             .Where(n => n != "Transform" && n != "MetaData")
-            .Select(name => (name, _componentFactory.GetRegistration(name).Type))
+            .Select(name => (name, Factory.GetRegistration(name).Type))
             .ToList();
 
         var ignoredComponents = new List<string>();
@@ -71,7 +69,7 @@ internal sealed partial class PrototypeReloadSystem : EntitySystem
                      .Except(oldPrototypeComponents))
         {
             var data = newPrototype.Components[name];
-            var component = _componentFactory.GetComponent(name);
+            var component = Factory.GetComponent(name);
 
             if (!HasComp(entity, component.GetType()))
                 AddComp(entity, component);

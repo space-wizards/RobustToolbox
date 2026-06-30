@@ -9,9 +9,9 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Replays.Commands;
 
 [UsedImplicitly]
-public sealed class ReplaySkipCommand : BaseReplayCommand
+public sealed partial class ReplaySkipCommand : BaseReplayCommand
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     public override string Command => IReplayPlaybackManager.SkipCommand;
 

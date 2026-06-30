@@ -6,11 +6,11 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Asynchronous
 {
-    internal sealed class TaskManager : ITaskManager
+    internal sealed partial class TaskManager : ITaskManager
     {
         private RobustSynchronizationContext _mainThreadContext = default!;
 
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+        [Dependency] private IRuntimeLog _runtimeLog = default!;
 
         public void Initialize()
         {

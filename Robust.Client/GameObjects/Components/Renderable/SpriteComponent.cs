@@ -39,10 +39,10 @@ namespace Robust.Client.GameObjects
     {
         public const string LogCategory = "go.comp.sprite";
 
-        [Dependency] private readonly IResourceCache resourceCache = default!;
-        [Dependency] private readonly IPrototypeManager prototypes = default!;
-        [Dependency] private readonly EntityManager entities = default!;
-        [Dependency] private readonly IReflectionManager reflection = default!;
+        [Dependency] private IResourceCache resourceCache = default!;
+        [Dependency] private IPrototypeManager prototypes = default!;
+        [Dependency] private EntityManager entities = default!;
+        [Dependency] private IReflectionManager reflection = default!;
 
         /// <summary>
         ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.

@@ -12,9 +12,21 @@ namespace Robust.UnitTesting.Shared.Serialization
 {
     // Tests NetSerializer itself because we have specific modifications.
     // e.g. (at the time of writing) list serialization being more compact.
-    [Parallelizable(ParallelScope.All)]
     internal sealed class NetSerializer_Test
     {
+        [Serializable]
+        private sealed class LengthLimitedPayload
+        {
+            [NetMaxLength(2)]
+            public string Value = string.Empty;
+        }
+
+        [Serializable]
+        [NetMaxSize(2)]
+        private sealed class SizeLimitedPayload
+        {
+        }
+
         public static readonly List<int>?[] ListValues =
         {
             null,
@@ -39,6 +51,23 @@ namespace Robust.UnitTesting.Shared.Serialization
             {
                 Assert.That(deserialized, Is.EquivalentTo(list));
             }
+        }
+
+        [Test]
+        public void TestListDeserializationRejectsTooManyElements()
+        {
+            var serializer = new Serializer(new[] {typeof(List<int>)}, new Settings
+            {
+                MaxCollectionLength = 2
+            });
+
+            var stream = new MemoryStream();
+            Primitives.WritePrimitive(stream, 4u);
+            stream.Position = 0;
+
+            Assert.That(
+                () => serializer.DeserializeDirect<List<int>?>(stream, out _),
+                Throws.TypeOf<InvalidDataException>());
         }
 
         public static readonly Dictionary<string, int>?[] DictionaryValues =
@@ -66,6 +95,30 @@ namespace Robust.UnitTesting.Shared.Serialization
             {
                 Assert.That(deserialized, Is.EquivalentTo(list));
             }
+        }
+
+        [Test]
+        public void TestDictionaryDeserializationRejectsTooManyElements()
+        {
+            var serializer = new Serializer(new[] {typeof(Dictionary<string, int>)}, new Settings
+            {
+                MaxCollectionLength = 2
+            });
+
+            var value = new Dictionary<string, int>
+            {
+                {"A", 1},
+                {"B", 2},
+                {"C", 3}
+            };
+
+            var stream = new MemoryStream();
+            serializer.SerializeDirect(stream, value);
+            stream.Position = 0;
+
+            Assert.That(
+                () => serializer.DeserializeDirect<Dictionary<string, int>?>(stream, out _),
+                Throws.TypeOf<InvalidDataException>());
         }
 
         public static readonly HashSet<int>?[] HashSetValues =
@@ -189,6 +242,90 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             Primitives.ReadPrimitive(stream, out string? deserialized);
             Assert.That(deserialized, Is.EqualTo(str));
+        }
+
+        [Test]
+        public void TestStringDeserializationRejectsTooManyCharacters()
+        {
+            var oldLimit = Primitives.MaxStringLength;
+            Primitives.MaxStringLength = 2;
+
+            try
+            {
+                var stream = new MemoryStream();
+                Primitives.WritePrimitive(stream, "ABC");
+                stream.Position = 0;
+
+                Assert.That(() => Primitives.ReadPrimitive(stream, out string? _), Throws.TypeOf<InvalidDataException>());
+            }
+            finally
+            {
+                Primitives.MaxStringLength = oldLimit;
+            }
+        }
+
+        [Test]
+        public void TestByteArrayDeserializationRejectsTooManyBytes()
+        {
+            var oldLimit = Primitives.MaxByteArrayLength;
+            Primitives.MaxByteArrayLength = 2;
+
+            try
+            {
+                var stream = new MemoryStream();
+                Primitives.WritePrimitive(stream, new byte[] {1, 2, 3});
+                stream.Position = 0;
+
+                Assert.That(() => Primitives.ReadPrimitive(stream, out byte[]? _), Throws.TypeOf<InvalidDataException>());
+            }
+            finally
+            {
+                Primitives.MaxByteArrayLength = oldLimit;
+            }
+        }
+
+        [Test]
+        public void TestInvalidObjectTypeIdThrowsInvalidData()
+        {
+            var serializer = new Serializer([typeof(string)]);
+            var stream = new MemoryStream();
+            Primitives.WritePrimitive(stream, uint.MaxValue);
+            stream.Position = 0;
+
+            Assert.That(() => serializer.Deserialize(stream), Throws.TypeOf<InvalidDataException>());
+        }
+
+        [Test]
+        public void TestInvalidObjectTypeIdTryDeserializeReturnsFalse()
+        {
+            var serializer = new Serializer([typeof(string)]);
+            var stream = new MemoryStream();
+            Primitives.WritePrimitive(stream, uint.MaxValue);
+            stream.Position = 0;
+
+            Assert.That(serializer.TryDeserialize(stream, out var value), Is.False);
+            Assert.That(value, Is.Null);
+        }
+
+        [Test]
+        public void TestNetMaxLengthAttributeRejectsTooManyElements()
+        {
+            var validation = new NetValidationManager();
+            validation.RegisterType(typeof(LengthLimitedPayload));
+            var payload = new LengthLimitedPayload {Value = "ABC"};
+
+            Assert.That(() => validation.ValidateObject(payload), Throws.TypeOf<InvalidDataException>());
+        }
+
+        [Test]
+        public void TestNetMaxSerializedSizeAttributeRejectsTooManyBytes()
+        {
+            var validation = new NetValidationManager();
+            validation.RegisterType(typeof(SizeLimitedPayload));
+
+            Assert.That(
+                () => validation.ValidateSerializedSize(typeof(SizeLimitedPayload), 3),
+                Throws.TypeOf<InvalidDataException>());
         }
 
         [Test]

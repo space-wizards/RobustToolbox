@@ -1,6 +1,7 @@
 using System;
 using JetBrains.Annotations;
 using Lidgren.Network;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Network.Messages
@@ -24,11 +25,7 @@ namespace Robust.Shared.Network.Messages
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
-            var len = buffer.ReadVariableInt32();
-            if (len > 64)
-            {
-                throw new InvalidOperationException("Hash too long.");
-            }
+            var len = buffer.ReadVariableByteLength(nameof(Hash), 64);
 
             buffer.ReadBytes(Hash = new byte[len]);
         }

@@ -2,6 +2,7 @@ using System.IO;
 using Lidgren.Network;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -28,7 +29,7 @@ namespace Robust.Shared.Network.Messages
             if (WasComplete)
             {
                 buffer.ReadPadBits();
-                var length = buffer.ReadVariableInt32();
+                var length = buffer.ReadVariableByteLength(nameof(Response));
                 using var stream = RobustMemoryManager.GetMemoryStream(length);
                 buffer.ReadAlignedMemory(stream, length);
                 serializer.DeserializeDirect(stream, out Echo);

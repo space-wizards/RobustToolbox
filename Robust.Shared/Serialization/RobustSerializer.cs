@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using Robust.Shared.Configuration;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
@@ -16,8 +18,11 @@ namespace Robust.Shared.Serialization
     internal abstract partial class RobustSerializer : IRobustSerializerInternal
     {
         [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IConfigurationManager _configuration = default!;
         [Dependency] protected IRobustMappedStringSerializer MappedStringSerializer = default!;
         [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private INetValidationManager _netValidation = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
 
         private readonly Dictionary<Type, Dictionary<string, Type?>> _cachedSerialized = new();
 
@@ -29,6 +34,8 @@ namespace Robust.Shared.Serialization
         private HashSet<Type> _serializableTypes = default!;
         private bool _initialized;
         private SerializerFloatFlags _floatFlags;
+
+        public IEntityManager EntityManager => _entityManager;
 
         private static Type[] AlwaysNetSerializable => new[]
         {
@@ -105,6 +112,9 @@ namespace Robust.Shared.Serialization
 
             var settings = new Settings
             {
+                MaxCollectionLength = (uint) Math.Max(0, _configuration.GetCVar(CVars.NetSerializerMaxCollectionLength)),
+                MaxByteArrayLength = (uint) Math.Max(0, _configuration.GetCVar(CVars.NetSerializerMaxByteArrayLength)),
+                MaxStringLength = (uint) Math.Max(0, _configuration.GetCVar(CVars.NetSerializerMaxStringLength)),
                 CustomTypeSerializers = new[]
                 {
                     MappedStringSerializer.TypeSerializer,
@@ -127,6 +137,7 @@ namespace Robust.Shared.Serialization
 
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
+            _netValidation.RegisterTypes(_serializableTypes);
             LogSzr.Info($"Serializer Types Hash: {_serializer.GetSHA256()}");
         }
 
@@ -166,6 +177,7 @@ namespace Robust.Shared.Serialization
         {
             var start = StartMeasureStats(stream);
             _serializer.DeserializeDirect(stream, out value);
+            _netValidation.ValidateObject(value);
             EndMeasureDeserialize(stream, start, typeof(T));
         }
 
@@ -173,9 +185,47 @@ namespace Robust.Shared.Serialization
         {
             var start = StartMeasureStats(stream);
             var result = _serializer.Deserialize(stream);
+            _netValidation.ValidateObject(result);
             EndMeasureDeserialize(stream, start, result.GetType());
 
             return result;
+        }
+
+        public bool TryDeserialize(Stream stream, out object? value)
+        {
+            var start = StartMeasureStats(stream);
+            if (!_serializer.TryDeserialize(stream, out var result))
+            {
+                value = null;
+                return false;
+            }
+
+            _netValidation.ValidateObject(result);
+            EndMeasureDeserialize(stream, start, result?.GetType() ?? typeof(object));
+            value = result;
+            return true;
+        }
+
+        public bool TryGetSerializedType(Stream stream, out Type? type)
+        {
+            if (!stream.CanSeek)
+                throw new ArgumentException("Stream must be seekable.", nameof(stream));
+
+            var position = stream.Position;
+
+            try
+            {
+                return _serializer.TryGetTypeFromSerializedObject(stream, out type);
+            }
+            finally
+            {
+                stream.Position = position;
+            }
+        }
+
+        public void ValidateSerializedSize(Type type, int bytes)
+        {
+            _netValidation.ValidateSerializedSize(type, bytes);
         }
 
         public bool CanSerialize(Type type)

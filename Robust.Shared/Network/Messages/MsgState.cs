@@ -40,9 +40,16 @@ namespace Robust.Shared.Network.Messages
             var compressedLength = buffer.ReadVariableInt32();
             MemoryStream finalStream;
 
+            if (uncompressedLength < 0)
+                throw new InvalidDataException($"{nameof(State)} uncompressed length cannot be negative.");
+
+            if (compressedLength < 0)
+                throw new InvalidDataException($"{nameof(State)} compressed length cannot be negative.");
+
             // State is compressed.
             if (compressedLength > 0)
             {
+                buffer.ValidateByteLength(compressedLength, nameof(StateStream));
                 var stream = RobustMemoryManager.GetMemoryStream(compressedLength);
                 buffer.ReadAlignedMemory(stream, compressedLength);
 
@@ -55,6 +62,7 @@ namespace Robust.Shared.Network.Messages
             // State is uncompressed.
             else
             {
+                buffer.ValidateByteLength(uncompressedLength, nameof(StateStream));
                 finalStream = RobustMemoryManager.GetMemoryStream(uncompressedLength);
                 buffer.ReadAlignedMemory(finalStream, uncompressedLength);
             }

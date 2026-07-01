@@ -41,6 +41,7 @@ namespace Robust.Shared
             deps.Register<ProfManager, ProfManager>();
             deps.Register<IRobustRandom, RobustRandom>();
             deps.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
+            deps.Register<INetValidationManager, NetValidationManager>();
             deps.Register<ISandboxHelper, SandboxHelper>();
             deps.Register<IManifoldManager, CollisionManager>();
             deps.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();

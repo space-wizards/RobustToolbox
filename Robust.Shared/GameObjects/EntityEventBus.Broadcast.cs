@@ -68,6 +68,8 @@ namespace Robust.Shared.GameObjects
 
         void RaiseEvent<T>(EventSource source, ref T toRaise) where T : notnull;
 
+        bool CanReceiveNetworkEvent(Type eventType);
+
         /// <summary>
         /// Queues an event to be raised at a later time.
         /// </summary>
@@ -283,6 +285,9 @@ namespace Robust.Shared.GameObjects
 
             ProcessSingleEvent(source, ref Unsafe.As<T, Unit>(ref toRaise), typeof(T));
         }
+
+        public bool CanReceiveNetworkEvent(Type eventType)
+            => _networkReceivableEvents.Contains(eventType);
 
         /// <inheritdoc />
         public void QueueEvent(EventSource source, EntityEventArgs toRaise)

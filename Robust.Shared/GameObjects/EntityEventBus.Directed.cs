@@ -364,6 +364,7 @@ namespace Robust.Shared.GameObjects
         {
             _subscriptionLock = true;
             _eventData = _eventDataUnfrozen.ToFrozenDictionary();
+            _networkReceivableEvents = BuildNetworkReceivableEvents();
 
             _eventSubs = TrimNull(_eventSubsUnfrozen)
                 .Select(dict => dict?.ToFrozenDictionary()!)
@@ -374,6 +375,33 @@ namespace Robust.Shared.GameObjects
                 .ToArray();
 
             CalcOrdering();
+        }
+
+        private FrozenSet<Type> BuildNetworkReceivableEvents()
+        {
+            var receiveTypes = new HashSet<Type>();
+
+            foreach (var (eventType, subs) in _eventDataUnfrozen)
+            {
+                foreach (var handler in subs.BroadcastRegistrations.Span)
+                {
+                    if ((handler.Mask & EventSource.Network) == 0)
+                        continue;
+
+                    receiveTypes.Add(UnwrapSessionEventType(eventType));
+                    break;
+                }
+            }
+
+            return receiveTypes.ToFrozenSet();
+        }
+
+        private static Type UnwrapSessionEventType(Type eventType)
+        {
+            if (eventType.IsGenericType && eventType.GetGenericTypeDefinition() == typeof(EntitySessionMessage<>))
+                return eventType.GetGenericArguments()[0];
+
+            return eventType;
         }
 
         public void OnComponentRemoved(in RemovedComponentEventArgs e)
@@ -615,6 +643,7 @@ namespace Robust.Shared.GameObjects
             _compEventSubs = default!;
             _eventSubs = default!;
             _eventData = FrozenDictionary<Type, EventData>.Empty;
+            _networkReceivableEvents = FrozenSet<Type>.Empty;
             foreach (var sub in _eventSubsUnfrozen)
             {
                 sub?.Clear();

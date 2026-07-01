@@ -99,6 +99,8 @@ namespace Robust.Shared.Network
         /// </exception>
         public static void ReadAlignedMemory(this NetIncomingMessage message, MemoryStream memStream, int length)
         {
+            message.ValidateByteLength(length, nameof(length));
+
             if ((message.Position & 7) != 0)
             {
                 throw new ArgumentException("Read position in message must be byte-aligned", nameof(message));
@@ -108,6 +110,60 @@ namespace Robust.Shared.Network
             memStream.Write(message.Data, message.PositionInBytes, length);
             memStream.Position = 0;
             message.Position += length * 8;
+        }
+
+        public static int ReadVariableByteLength(this NetIncomingMessage message, string name, int maxLength = int.MaxValue)
+        {
+            var length = message.ReadVariableInt32();
+            return message.ValidateByteLength(length, name, maxLength);
+        }
+
+        public static int ReadInt32ByteLength(this NetIncomingMessage message, string name, int maxLength = int.MaxValue)
+        {
+            var length = message.ReadInt32();
+            return message.ValidateByteLength(length, name, maxLength);
+        }
+
+        public static int ValidateByteLength(this NetIncomingMessage message, int length, string name, int maxLength = int.MaxValue)
+        {
+            if (length < 0)
+                throw new InvalidDataException($"{name} length cannot be negative.");
+
+            if (length > maxLength)
+                throw new InvalidDataException($"{name} length {length} exceeds maximum {maxLength}.");
+
+            var remaining = message.LengthBytes - message.PositionInBytes;
+            if (length > remaining)
+                throw new InvalidDataException($"{name} length {length} exceeds remaining packet length {remaining}.");
+
+            return length;
+        }
+
+        public static int ValidateElementCount(
+            this NetIncomingMessage message,
+            int count,
+            string name,
+            int minBytesPerElement = 1,
+            int maxCount = int.MaxValue)
+        {
+            if (count < 0)
+                throw new InvalidDataException($"{name} count cannot be negative.");
+
+            if (minBytesPerElement < 0)
+                throw new ArgumentOutOfRangeException(nameof(minBytesPerElement));
+
+            if (count > maxCount)
+                throw new InvalidDataException($"{name} count {count} exceeds maximum {maxCount}.");
+
+            // Does some level of size guessing for bytes.
+            if (minBytesPerElement > 0)
+            {
+                var remaining = message.LengthBytes - message.PositionInBytes;
+                if (count > remaining / minBytesPerElement)
+                    throw new InvalidDataException($"{name} count {count} exceeds remaining packet length {remaining}.");
+            }
+
+            return count;
         }
 
         public static TimeSpan ReadTimeSpan(this NetIncomingMessage message)

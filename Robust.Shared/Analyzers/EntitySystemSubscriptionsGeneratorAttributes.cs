@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Analyzers;
@@ -20,7 +21,8 @@ namespace Robust.Shared.Analyzers;
 /// <br/>
 /// Note that this is <b>not</b> any different from the normal requirements to use <c>EntitySystem.SubscribeLocalEvent</c>.
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class SubcribeLocalEventAttribute : Attribute;
+[MeansImplicitUse]
+public sealed class SubscribeLocalEventAttribute : Attribute;
 
 /// This attribute indicates that the annotated method is a handler for an event subscription. Methods annotated with
 /// this attribute will have a <c>EntitySystem.SubscribeNetworkEvent</c> call generated, using the method as the handler,
@@ -34,6 +36,7 @@ public sealed class SubcribeLocalEventAttribute : Attribute;
 /// <br/>
 /// Note that this is <b>not</b> any different from the normal requirements to use <c>EntitySystem.SubscribeNetworkEvent</c>.
 [AttributeUsage(AttributeTargets.Method)]
+[MeansImplicitUse]
 public sealed class SubscribeNetworkEventAttribute : Attribute;
 
 /// This attribute indicates that the annotated method is a handler for an event subscription. Methods annotated with
@@ -48,4 +51,5 @@ public sealed class SubscribeNetworkEventAttribute : Attribute;
 /// <br/>
 /// Note that this is <b>not</b> any different from the normal requirements to use <c>EntitySystem.SubscribeAllEvent</c>.
 [AttributeUsage(AttributeTargets.Method)]
+[MeansImplicitUse]
 public sealed class EventSubscriptionAttribute : Attribute;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -353,6 +353,37 @@ public interface IPrototypeManager
 
     // ReSharper restore MethodOverloadWithOptionalParameter
 
+
+    /// <summary>
+    /// This will attempt to create a new prototype using the provided <paramref name="data"/>. <br/>
+    /// You <b>should not</b> use this under normal circumstances.
+    /// </summary>
+    /// <remarks>
+    /// To properly use this, you will need to make <paramref name="data"/> resemble how other prototypes of its kind appear in
+    /// _kinds' KindData.Results or KindData.RawResults. <br/>
+    /// You will need to utilize a debugger and a breakpoint if you want to get a reference of how the prototypes are
+    /// represented in _kinds.
+    /// </remarks>
+    /// <param name="proto"></param>
+    /// <returns><see langword="true"/> if the prototype was successfully created and inserted.
+    /// <see langword="false"/> if it was not.</returns>
+    bool TryLoadDynamic(MappingDataNode data);
+
+    /// <summary>
+    /// This will attempt to remove a prototype <paramref name="id" /> from the kind <typeparamref name="T"/>. <br/>
+    /// This should <b>never</b> be called unless you absolutely know what you are doing!
+    /// </summary>
+    /// <remarks>
+    /// This <b>will</b> cause fatal crashes
+    /// if misused!<br/>
+    /// Exercise even more vigilance if you use this with an <see cref="IInheritingPrototype"/>.<br/>
+    /// </remarks>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="id"></param>
+    /// <returns><see langword="true"/> if the prototype was deleted. <see langword="false"/> if it couldn't be deleted or didn't exist.</returns>
+    bool TryDelete<T>([ForbidLiteral] string id) where T : class, IPrototype;
+
+
     bool HasMapping<T>(string id);
 
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
@@ -510,7 +541,7 @@ public interface IPrototypeManager
     bool IsIgnored(string name);
 
     /// <summary>
-    /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.
+    /// Loads several prototype kinds into the manager. Note that this will re-build frozen dictionaries and should be avoided if possible.
     /// </summary>
     /// <param name="kind">
     /// The type of the prototype kind that implements <see cref="IPrototype"/>. This type also

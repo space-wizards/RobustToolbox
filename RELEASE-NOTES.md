@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added support for Tracy v0.13.1 on both the client and server. Start it by changing the prof.tracy.enabled cvar to true, and connect with a v0.13.1 Tracy client!
 
 ### Bugfixes
 
-* Fix SubscribeLocalEvent name and added `MeansImplicitUse` attribute to the sourcegenned eventbus methods.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 279.0.1
+
+### Bugfixes
+
+* Fix SubscribeLocalEvent name and added `MeansImplicitUse` attribute to the sourcegenned eventbus methods.
 
 
 ## 279.0.0

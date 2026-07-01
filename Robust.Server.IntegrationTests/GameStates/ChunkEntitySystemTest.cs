@@ -307,6 +307,7 @@ public sealed partial class ChunkEntitySystemTest
         return sim;
     }
 
+    // Love it gorgeous
     private static Dictionary<PvsChunkLocation, PvsChunk> GetPvsChunks(PvsSystem pvs)
     {
         var field = typeof(PvsSystem).GetField("_chunks", BindingFlags.Instance | BindingFlags.NonPublic);

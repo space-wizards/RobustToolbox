@@ -35,14 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Validate Box2i inputs to ensure no negative-sized boxes.
-* Removed QuadTree due to lack of maintenance, test coverage, and usage.
+*None yet*
 
 ### New features
 
-* Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
-* Added a DictionaryEquals extension method to check equality between two dictionaries.
-* Added support for uploading .ftl files. Format is: /<your-uploaded-folder>/<language-code>.ftl - Example: /TestUpload/en-US.ftl , you can have multiple files, so long they are on different subfolders, they will all be loaded.
+* Added support for Tracy v0.13.1 on both the client and server. Start it by changing the prof.tracy.enabled cvar to true, and connect with a v0.13.1 Tracy client!
 
 ### Bugfixes
 
@@ -55,6 +52,39 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 279.0.0
+
+### Breaking changes
+
+* Validate Box2i inputs to ensure no negative-sized boxes.
+* Removed QuadTree due to lack of maintenance, test coverage, and usage.
+* Partivally reverted the additional mouse cursors on button hovers.
+* Changed SpawnAtPosition EntityCoordinates overload to use the attached entity's rotation, and also added a rotation override argument.
+* Reduced the default ReallyBeIdle tick count from 25 to 5.
+
+### New features
+
+* Added DictionaryEquals helper method to compare elements to determine if 2 dictionaries are identical.
+* Tracy integration is now supported for profiling.
+* SubscribeLocalEvent and SubscribeNetworkEvent can now be replaced with the similarly named attributes on methods.
+* Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
+* Added a DictionaryEquals extension method to check equality between two dictionaries.
+* Added support for uploading .ftl files. Format is: /<your-uploaded-folder>/<language-code>.ftl - Example: /TestUpload/en-US.ftl , you can have multiple files, so long they are on different subfolders, they will all be loaded.
+
+### Bugfixes
+
+* Fix IsHardCollidable mask check.
+* Fix Robust.Benchmarks not compiling in some instances.
+* Fix ApplyLinearImpulse not correctly using world-space.
+* Fix OnClientRequestFull throwing an error when logging deleted entities.
+
+### Internal
+
+* Unnecessary prototypemanager dependencies were removed from engine systems.
+* Added a 30m timeout to engine test workflows.
+* Cleaned up ContainerSystems and PlayerManagers code-files.
 
 
 ## 278.0.0

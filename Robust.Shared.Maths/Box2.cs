@@ -309,13 +309,18 @@ namespace Robust.Shared.Maths
         [Pure]
         public readonly bool Contains(Vector2 point, bool closedRegion = true)
         {
-            var xOk = closedRegion
-                ? point.X >= Left ^ point.X > Right
-                : point.X > Left ^ point.X >= Right;
-            var yOk = closedRegion
-                ? point.Y >= Bottom ^ point.Y > Top
-                : point.Y > Bottom ^ point.Y >= Top;
-            return xOk && yOk;
+            if (closedRegion)
+            {
+                return point.X >= Left
+                       && point.X <= Right
+                       && point.Y >= Bottom
+                       && point.Y <= Top;
+            }
+
+            return point.X > Left
+                   && point.X < Right
+                   && point.Y > Bottom
+                   && point.Y < Top;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

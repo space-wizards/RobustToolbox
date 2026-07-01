@@ -42,6 +42,7 @@ END TEMPLATE-->
 
 * Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
 * Added a DictionaryEquals extension method to check equality between two dictionaries.
+* Added support for uploading .ftl files. Format is: /<your-uploaded-folder>/<language-code>.ftl - Example: /TestUpload/en-US.ftl , you can have multiple files, so long they are on different subfolders, they will all be loaded.
 
 ### Bugfixes
 

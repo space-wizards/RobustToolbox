@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Validate UIBox2i inputs
 
 ### New features
 

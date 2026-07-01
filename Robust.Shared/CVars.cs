@@ -301,8 +301,14 @@ namespace Robust.Shared
         /// <summary>
         /// How many seconds after the last message from the server before we consider it timed out.
         /// </summary>
-        public static readonly CVarDef<float> ConnectionTimeout =
+        public static readonly CVarDef<float> ConnectionTimeoutClient =
             CVarDef.Create("net.connection_timeout", 25.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// How many seconds after the last message from the client before we consider it timed out.
+        /// </summary>
+        public static readonly CVarDef<float> ConnectionTimeoutServer =
+            CVarDef.Create("net.connection_timeout", 25.0f, CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
         /// When doing the connection handshake, how long to wait before initial connection attempt packets.
@@ -475,7 +481,7 @@ namespace Robust.Shared
         ///     Controls thread priority of the game logic thread.
         /// </summary>
         public static readonly CVarDef<int> SysGameThreadPriority =
-            CVarDef.Create("sys.game_thread_priority", (int) ThreadPriority.AboveNormal);
+            CVarDef.Create("sys.game_thread_priority", (int)ThreadPriority.AboveNormal);
 
         /// <summary>
         /// Whether to run a <see cref="GC.Collect()"/> operation after the engine is finished initializing.
@@ -917,7 +923,7 @@ namespace Robust.Shared
         /// <summary>
         /// Apply a gaussian blur to the final lighting framebuffer to smoothen it out a little.
         /// </summary>
-        public static readonly CVarDef<bool> LightBlur=
+        public static readonly CVarDef<bool> LightBlur =
             CVarDef.Create("light.blur", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
@@ -980,7 +986,7 @@ namespace Robust.Shared
         /// See the documentation of the <see cref="Network.AuthMode"/> enum for values.
         /// </summary>
         public static readonly CVarDef<int> AuthMode =
-            CVarDef.Create("auth.mode", (int) Network.AuthMode.Required, CVar.SERVERONLY);
+            CVarDef.Create("auth.mode", (int)Network.AuthMode.Required, CVar.SERVERONLY);
 
         /// <summary>
         /// Allow unauthenticated localhost connections, even if the auth mode is set to required.
@@ -1288,7 +1294,7 @@ namespace Robust.Shared
             CVarDef.Create("audio.default_concurrent", 16, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<int> AudioAttenuation =
-            CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
+            CVarDef.Create("audio.attenuation", (int)Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Whether to enable HRTF (head-related transfer function) support for positional audio.
@@ -1468,37 +1474,37 @@ namespace Robust.Shared
         ///Minimum resolution to start clamping autoscale to 1
         /// </summary>
         public static readonly CVarDef<int> ResAutoScaleUpperX =
-            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffX",1080 , CVar.CLIENTONLY);
+            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffX", 1080, CVar.CLIENTONLY);
 
         /// <summary>
         ///Minimum resolution to start clamping autoscale to 1
         /// </summary>
         public static readonly CVarDef<int> ResAutoScaleUpperY =
-            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffY",720 , CVar.CLIENTONLY);
+            CVarDef.Create("interface.resolutionAutoScaleUpperCutoffY", 720, CVar.CLIENTONLY);
 
         /// <summary>
         ///Maximum resolution to start clamping autos scale to autoscale minimum
         /// </summary>
         public static readonly CVarDef<int> ResAutoScaleLowX =
-            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffX",520 , CVar.CLIENTONLY);
+            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffX", 520, CVar.CLIENTONLY);
 
         /// <summary>
         ///Maximum resolution to start clamping autos scale to autoscale minimum
         /// </summary>
         public static readonly CVarDef<int> ResAutoScaleLowY =
-            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffY",520 , CVar.CLIENTONLY);
+            CVarDef.Create("interface.resolutionAutoScaleLowerCutoffY", 520, CVar.CLIENTONLY);
 
         /// <summary>
         /// The minimum ui scale value that autoscale will scale to
         /// </summary>
         public static readonly CVarDef<float> ResAutoScaleMin =
-            CVarDef.Create("interface.resolutionAutoScaleMinimum",0.5f , CVar.CLIENTONLY);
+            CVarDef.Create("interface.resolutionAutoScaleMinimum", 0.5f, CVar.CLIENTONLY);
 
         /// <summary>
         ///Enable the UI autoscale system on this control, this will scale down the UI for lower resolutions
         /// </summary>
         public static readonly CVarDef<bool> ResAutoScaleEnabled =
-            CVarDef.Create("interface.resolutionAutoScaleEnabled",true , CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("interface.resolutionAutoScaleEnabled", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
 
 

@@ -175,9 +175,15 @@ namespace Robust.Client.UserInterface.Controls
         public bool IsHovered => _beingHovered;
 
         /// <summary>
+        /// If <c>true</c>, this button is currently being pressed down by the mouse.
+        /// </summary>
+        public bool AttemptingPress => _attemptingPress > 0;
+
+        /// <summary>
         ///     Draw mode used for styling of buttons.
         /// </summary>
         [ViewVariables]
+        [Obsolete("Use BaseButton.{Disabled,Pressed,AttemptingPress,IsHovered} directly instead.")]
         public DrawModeEnum DrawMode
         {
             get
@@ -186,11 +192,11 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     return DrawModeEnum.Disabled;
                 }
-                else if (Pressed || (_attemptingPress > 0 && IsHovered))
+                else if (Pressed || (AttemptingPress && IsHovered))
                 {
                     return DrawModeEnum.Pressed;
                 }
-                else if (IsHovered || _attemptingPress > 0)
+                else if (IsHovered || AttemptingPress)
                 {
                     return DrawModeEnum.Hover;
                 }

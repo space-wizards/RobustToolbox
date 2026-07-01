@@ -142,6 +142,57 @@ internal struct WordWrap
         }
     }
 
+    /// <summary>
+    /// Add an inline object as one unsplittable layout item.
+    /// </summary>
+    public void NextObject(in CharMetrics metrics, out int? breakLine, out bool abort)
+    {
+        BreakIndexCounter = NextBreakIndexCounter;
+        NextBreakIndexCounter += 1;
+
+        breakLine = null;
+        abort = false;
+
+        if (PosX > _maxSizeX && LastRune != new Rune(' '))
+        {
+            DebugTools.Assert(WordStartBreakIndex.HasValue,
+                "wordStartBreakIndex can only be null if the word begins at a new line, in which case this branch shouldn't be reached as the word would be split due to being longer than a single line.");
+
+            if (!WordStartBreakIndex.HasValue)
+                return;
+
+            breakLine = WordStartBreakIndex.Value.index;
+            MaxUsedWidth = Math.Max(MaxUsedWidth, WordStartBreakIndex.Value.lineSize);
+            PosX = WordSizePixels;
+        }
+
+        var objectStart = PosX;
+        WordSizePixels = metrics.Advance;
+        PosX += metrics.Advance;
+
+        if (PosX > _maxSizeX)
+        {
+            if (objectStart != 0)
+            {
+                breakLine = BreakIndexCounter;
+                MaxUsedWidth = Math.Max(MaxUsedWidth, objectStart);
+                PosX = metrics.Advance;
+            }
+
+            if (metrics.Advance > _maxSizeX)
+            {
+                abort = true;
+                return;
+            }
+        }
+
+        MaxUsedWidth = Math.Max(MaxUsedWidth, PosX);
+        WordSizePixels = 0;
+        WordStartBreakIndex = (NextBreakIndexCounter, PosX);
+        ForceSplitData = null;
+        LastRune = new Rune(' ');
+    }
+
     public int FinalizeText(out int? breakLine)
     {
         // This needs to happen because word wrapping doesn't get checked for the last word.

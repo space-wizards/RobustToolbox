@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using Robust.Shared.Random;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
 
 namespace Robust.Shared.Prototypes;
 
@@ -25,6 +24,11 @@ public partial class PrototypeManager
     private readonly List<ResPath> _abstractDirectories = new();
 
     public event Action<DataNodeDocument>? LoadedData;
+
+    /// <summary>
+    /// DataNodes with this tag will be replaced with a new node using data supplied by <see cref="CreateVariants"/>.
+    /// </summary>
+    private const string CreateVariantsTag = "!type:CreateVariants";
 
     /// <inheritdoc />
     public void LoadDirectory(ResPath path, bool overwrite = false,
@@ -70,6 +74,21 @@ public partial class PrototypeManager
                                             AbstractPrototype(data.Data);
 
                                         extractedList.Add(data);
+
+                                        // If the prototype has variants, we need to add each of these to the extracted list as well
+                                        if (data.VariantData != null)
+                                        {
+                                            foreach (var (variantId, variantMapping) in data.VariantData)
+                                            {
+                                                if (variantMapping is null)
+                                                    continue;
+
+                                                if (ignored)
+                                                    AbstractPrototype(variantMapping);
+
+                                                extractedList.Add(new ExtractedMappingData(data.Kind, variantId, data.Parents, variantMapping));
+                                            }
+                                        }
                                     }
                                 }
 
@@ -161,7 +180,7 @@ public partial class PrototypeManager
                     var seq = (SequenceDataNode)document.Root;
                     foreach (var mapping in seq.Sequence)
                     {
-                        var extracted = ExtractMapping((MappingDataNode) mapping);
+                        var extracted = ExtractMapping((MappingDataNode)mapping);
                         if (extracted == null)
                             continue;
 
@@ -169,6 +188,21 @@ public partial class PrototypeManager
                             AbstractPrototype(extracted.Data);
 
                         MergeMapping(extracted, overwrite, changed);
+
+                        // If the prototype has variants, we need to add each of these to the extracted list as well
+                        if (extracted.VariantData is not null)
+                        {
+                            foreach (var (variantId, variantMapping) in extracted.VariantData)
+                            {
+                                if (variantMapping is null)
+                                    continue;
+
+                                if (ignored)
+                                    AbstractPrototype(variantMapping);
+
+                                MergeMapping(new ExtractedMappingData(extracted.Kind, variantId, extracted.Parents, variantMapping), overwrite, changed);
+                            }
+                        }
                     }
                 }
                 catch (Exception e)
@@ -197,9 +231,47 @@ public partial class PrototypeManager
         }
 
         var kindData = _kinds[kind];
+        Dictionary<string, MappingDataNode>? variantData = null;
 
         if (!dataNode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
-            throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
+        {
+            // If the ID node is a CreateVariants node, we will need to clone the mapping data
+            // and replace all CreateVariants nodes with the appropriate variant data for each one.
+            if (dataNode.TryGet<MappingDataNode>(IdDataFieldAttribute.Name, out var mappingNode) &&
+                mappingNode.Tag?.Equals(CreateVariantsTag) == true)
+            {
+                variantData = new Dictionary<string, MappingDataNode>();
+
+                // Extract the variant IDs as a sequence of strings.
+                // The number of extracted strings (minus one) is the number of variants to generate.
+                if (mappingNode.TryGet<SequenceDataNode>(VariantValuesFieldAttribute.Name, out var sequenceNode))
+                {
+                    for (int i = 1; i < sequenceNode.Count(); i++)
+                    {
+                        var clonedNode = dataNode.Copy();
+                        RecursivelySearchForVariantNodes(clonedNode, i);
+
+                        if (clonedNode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var clonedIdNode))
+                            variantData.Add(clonedIdNode.Value, clonedNode);
+                        }
+
+                    // Recursively search through the original and cloned nodes for any CreateVariants nodes.
+                    // Replace these nodes with data appropirate for the current variant index.
+                    RecursivelySearchForVariantNodes(dataNode, 0);
+                }
+
+                // Check that the ID node was replaced with a ValueDataNode after variantization.
+                if (!dataNode.TryGet(IdDataFieldAttribute.Name, out idNode))
+                {
+                    throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
+                }
+            }
+
+            else
+            {
+                throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
+            }
+        }
 
         var id = idNode.Value;
         string[]? parents = null;
@@ -212,7 +284,75 @@ public partial class PrototypeManager
             }
         }
 
-        return new ExtractedMappingData(kind, id, parents, dataNode);
+        return new ExtractedMappingData(kind, id, parents, dataNode, variantData);
+    }
+
+    /// <summary>
+    /// Recursively searches all child nodes in the tree for any nodes with the CreateVariants tag.
+    /// </summary>
+    /// <param name="dataNode">The current data node being searched.</param>
+    /// <param name="variantIndex">The current variantization index.</param>
+    private void RecursivelySearchForVariantNodes(DataNode dataNode, int variantIndex)
+    {
+        switch(dataNode)
+        {
+            case MappingDataNode mappingNode:
+                foreach (var (childName, childNode) in mappingNode.Children.ToDictionary())
+                {
+                    if (childNode is MappingDataNode variantNode
+                        && variantNode.Tag?.Equals(CreateVariantsTag) == true)
+                    {
+                        ReplaceVariantNode(mappingNode, childName, variantNode, variantIndex);
+                        continue;
+                    }
+
+                    RecursivelySearchForVariantNodes(childNode, variantIndex);
+                }
+                break;
+            case SequenceDataNode sequenceNode:
+                foreach (var childNode in sequenceNode.Sequence)
+                {
+                    RecursivelySearchForVariantNodes(childNode, variantIndex);
+                }
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Extracts an array of data from a node with the CreateVariants tag, selecting the element at the current variant index.
+    /// A new DataNode is created to contain this data, which then replaces the original node on its parent.
+    /// </summary>
+    /// <param name="parentNode">The parent of the node being replaced.</param>
+    /// <param name="variantNodeName">The name of the node being replaced.</param>
+    /// <param name="variantNode">The node being replaced.</param>
+    /// <param name="variantIndex">The current variant index.</param>
+    private void ReplaceVariantNode(MappingDataNode parentNode, string variantNodeName, MappingDataNode variantNode, int variantIndex)
+    {
+        DataNode? newNode = null;
+
+        if (variantNode.TryGet(VariantSequencesFieldAttribute.Name, out var sequenceNode))
+        {
+            var data = _serializationManager.Read<string[][]>(sequenceNode, notNullableOverride: true);
+
+            if (variantIndex < data.Length)
+                newNode = new SequenceDataNode(data[variantIndex]);
+        }
+        else if (variantNode.TryGet(VariantValuesFieldAttribute.Name, out var valueNode))
+        {
+            var data = _serializationManager.Read<string[]>(valueNode, notNullableOverride: true);
+
+            if (variantIndex < data.Length)
+                newNode = new ValueDataNode(data[variantIndex]);
+        }
+
+        if (newNode == null)
+        {
+            throw new PrototypeLoadException($"DataNode {variantNodeName} does not contain variantization data for index {variantIndex.ToString()}. " +
+                $"Check that all '{CreateVariantsTag}' nodes in the prototype are formatted correctly and their fields all have the same array length.");
+        }
+
+        parentNode.Remove(variantNodeName);
+        parentNode.Add(variantNodeName, newNode);
     }
 
     private void MergeMapping(
@@ -220,7 +360,7 @@ public partial class PrototypeManager
         bool overwrite,
         Dictionary<Type, HashSet<string>>? changed)
     {
-        var (kind, id, parents, data) = mapping;
+        var (kind, id, parents, data, _) = mapping;
 
         var kindData = _kinds[kind];
 
@@ -268,6 +408,18 @@ public partial class PrototypeManager
                         continue;
 
                     MergeMapping(extracted, overwrite, changed);
+
+                    // If the prototype has variants, we need to add each of these to the extracted list as well
+                    if (extracted.VariantData is not null)
+                    {
+                        foreach (var (variantId, variantMapping) in extracted.VariantData)
+                        {
+                            if (variantMapping is null)
+                                continue;
+
+                            MergeMapping(new ExtractedMappingData(extracted.Kind, variantId, extracted.Parents, variantMapping), overwrite, changed);
+                        }
+                    }
                 }
 
                 i += 1;
@@ -373,5 +525,6 @@ public partial class PrototypeManager
         Type Kind,
         string Id,
         string[]? Parents,
-        MappingDataNode Data);
+        MappingDataNode Data,
+        Dictionary<string, MappingDataNode>? VariantData = null);
 }

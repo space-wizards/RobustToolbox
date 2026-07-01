@@ -3,7 +3,6 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -16,6 +15,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 
 [TypeSerializer]
 public sealed class DictionarySerializer<TKey, TValue> :
+    BaseTypeSerializer,
     ITypeSerializer<Dictionary<TKey, TValue>, MappingDataNode>,
     ITypeSerializer<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>,
     ITypeSerializer<SortedDictionary<TKey, TValue>, MappingDataNode>,
@@ -153,8 +153,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         if (instanceProvider != null)
         {
-            var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
-            sawmill.Warning(
+            Log.Warning(
                 $"Provided value to a Read-call for a {nameof(FrozenDictionary<TKey, TValue>)}. Ignoring...");
         }
 
@@ -181,8 +180,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         if (instanceProvider != null)
         {
-            var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
-            sawmill.Warning(
+            Log.Warning(
                 $"Provided value to a Read-call for a {nameof(IReadOnlyDictionary<TKey, TValue>)}. Ignoring...");
         }
 

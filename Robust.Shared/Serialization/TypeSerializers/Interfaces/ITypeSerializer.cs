@@ -1,3 +1,5 @@
+using Robust.Shared.Log;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -15,3 +17,19 @@ public interface ITypeSerializer<TType, TNode> :
     ITypeReader<TType, TNode>,
     ITypeWriter<TType>
     where TNode : DataNode;
+
+/// <summary>
+/// Base class for type serializers that will have some fields set when created by the manager.
+/// </summary>
+public abstract class BaseTypeSerializer
+{
+    /// <summary>
+    /// The serialization manager.
+    /// </summary>
+    public SerializationManager SerMan { get; internal set; } = default!;
+
+    /// <summary>
+    /// Sawmill that can be used for logging errors specific to type serializers.
+    /// </summary>
+    public ISawmill Log { get; internal set; } = default!;
+}

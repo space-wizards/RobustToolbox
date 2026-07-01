@@ -14,7 +14,7 @@ Don't change the format without looking at the script!
 
 ### New features
 
-* Added support for Tracy v0.13.1 on both the client and server. Start it by changing the prof.tracy.enabled cvar to true, and connect with a v0.13.1 Tracy client!
+*None yet*
 
 ### Bugfixes
 

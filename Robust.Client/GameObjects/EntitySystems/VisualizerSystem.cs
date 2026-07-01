@@ -18,7 +18,16 @@ public abstract partial class VisualizerSystem<T> : EntitySystem
         base.Initialize();
 
         SubscribeLocalEvent<T, AppearanceChangeEvent>(OnAppearanceChange);
+        SubscribeLocalEvent<T, AfterAppearanceChangeEvent>(AfterAppearanceChange);
     }
 
     protected virtual void OnAppearanceChange(EntityUid uid, T component, ref AppearanceChangeEvent args) { }
+
+    /// <summary>
+    /// Called after all EntitySystems/Visualizers have handled AppearanceChangedEvent
+    /// </summary>
+    /// <param name="uid"></param>
+    /// <param name="component"></param>
+    /// <param name="args"></param>
+    protected virtual void AfterAppearanceChange(EntityUid uid, T component, ref AfterAppearanceChangeEvent args) { }
 }

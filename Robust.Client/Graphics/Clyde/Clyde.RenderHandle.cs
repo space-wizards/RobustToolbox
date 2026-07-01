@@ -19,6 +19,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Clyde _clyde;
             private readonly IEntityManager _entities;
+            private readonly SpriteSystem _sprite;
 
             public DrawingHandleScreen DrawingHandleScreen { get; }
             public DrawingHandleWorld DrawingHandleWorld { get; }
@@ -27,6 +28,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _clyde = clyde;
                 _entities = entities;
+                _sprite = _entities.System<SpriteSystem>();
 
                 var white = _clyde.GetStockTexture(ClydeStockTexture.White);
                 DrawingHandleScreen = new DrawingHandleScreenImpl(white, this);
@@ -207,7 +209,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 // Draw the entity.
-                _entities.System<SpriteSystem>().RenderSprite((entity, sprite),
+                _sprite.RenderSprite((entity, sprite),
                     DrawingHandleWorld,
                     eyeRot,
                     worldRot.Value,

@@ -14,7 +14,7 @@ Don't change the format without looking at the script!
 
 ### New features
 
-*None yet*
+Added new public method in SpriteSystem - CopyLayer. It's copy layer to provided entity. Replacement for the obsolete `public Layer(Layer toClone, SpriteComponent parent) : this(parent)`
 
 ### Bugfixes
 
@@ -26,7 +26,7 @@ Don't change the format without looking at the script!
 
 ### Internal
 
-*None yet*
+Replaced obsoleted SpriteComponent methods from other systems to SpriteSystem methods.
 
 
 END TEMPLATE-->

@@ -241,17 +241,17 @@ public sealed partial class EntitySpawningUIController : UIController
         if (string.IsNullOrEmpty(searchStr))
             return true;
 
-        if (prototype.ID.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
+        if (prototype.ID.ContainsSearch(searchStr))
             return true;
 
         if (prototype.EditorSuffix != null &&
-            prototype.EditorSuffix.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
+            prototype.EditorSuffix.ContainsSearch(searchStr))
             return true;
 
         if (string.IsNullOrEmpty(prototype.Name))
             return false;
 
-        if (prototype.Name.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
+        if (prototype.Name.ContainsSearch(searchStr))
             return true;
 
         return false;

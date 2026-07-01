@@ -16,6 +16,7 @@ public class Generator : IIncrementalGenerator
     private const string SerializationHooksNamespace = "Robust.Shared.Serialization.ISerializationHooks";
     private const string AutoStateAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
     private const string ComponentDeltaInterfaceName = "Robust.Shared.GameObjects.IComponentDelta";
+    private const string ComponentInterfaceName = "Robust.Shared.GameObjects.IComponent";
 
     public void Initialize(IncrementalGeneratorInitializationContext initContext)
     {
@@ -98,6 +99,10 @@ public class Generator : IIncrementalGenerator
         if (nonPartial || definition.InvalidFields)
             return null;
 
+        var prototypeCopyInterface = definition.SupportsPrototypeCopy
+            ? ", IComponentPrototypeCopy"
+            : string.Empty;
+
         builder.AppendLine($$"""
             #nullable enable
             using System;
@@ -117,11 +122,13 @@ public class Generator : IIncrementalGenerator
 
             {{containingTypesStart}}
 
-            {{GetPartialTypeDefinitionLine(type)}} : ISerializationGenerated<{{definition.GenericTypeName}}>
+            {{GetPartialTypeDefinitionLine(type)}} : ISerializationGenerated<{{definition.GenericTypeName}}>{{prototypeCopyInterface}}
             {
                 {{GetConstructor(definition)}}
 
                 {{GetCopyMethods(definition)}}
+
+                {{GetPrototypeCopyMethods(definition)}}
 
                 {{GetInstantiators(definition)}}
             }
@@ -129,7 +136,13 @@ public class Generator : IIncrementalGenerator
             {{containingTypesEnd}}
             """);
 
-        return ($"{symbolName}.g.cs", builder.ToString());
+        var generatedSource = CSharpSyntaxTree
+            .ParseText(builder.ToString())
+            .GetRoot()
+            .NormalizeWhitespace()
+            .ToFullString();
+
+        return ($"{symbolName}.g.cs", generatedSource);
     }
 
     private static DataDefinition GetDataDefinition(ITypeSymbol definition)
@@ -151,17 +164,20 @@ public class Generator : IIncrementalGenerator
                 {
                     if (ImplementsInterface(customSerializer, TypeCopierInterfaceNamespace))
                     {
-                        fields.Add(new DataField(member, type, (customSerializer, Copier)));
+                        fields.Add(new DataField(member, type, true, (customSerializer, Copier)));
                         continue;
                     }
                     else if (ImplementsInterface(customSerializer, TypeCopyCreatorInterfaceNamespace))
                     {
-                        fields.Add(new DataField(member, type, (customSerializer, CopyCreator)));
+                        fields.Add(new DataField(member, type, true, (customSerializer, CopyCreator)));
                         continue;
                     }
+
+                    fields.Add(new DataField(member, type, true, null));
+                    continue;
                 }
 
-                fields.Add(new DataField(member, type, null));
+                fields.Add(new DataField(member, type, false, null));
 
                 if (IsReadOnlyMember(definition, type))
                 {
@@ -172,8 +188,24 @@ public class Generator : IIncrementalGenerator
 
         var typeName = GetGenericTypeName(definition);
         var hasHooks = ImplementsInterface(definition, SerializationHooksNamespace);
+        var supportsPrototypeDataCopy = CanGeneratePrototypeDataCopy(definition, hasHooks);
+        var supportsPrototypeCopy = supportsPrototypeDataCopy &&
+                                    ImplementsInterface(definition, ComponentInterfaceName);
 
-        return new DataDefinition(definition, typeName, fields, hasHooks, invalidFields);
+        return new DataDefinition(
+            definition,
+            typeName,
+            fields,
+            hasHooks,
+            invalidFields,
+            supportsPrototypeDataCopy,
+            supportsPrototypeCopy);
+    }
+
+    private static bool CanGeneratePrototypeDataCopy(ITypeSymbol type, bool? hasHooks = null)
+    {
+        return type.TypeKind != TypeKind.Interface &&
+               !(hasHooks ?? ImplementsInterface(type, SerializationHooksNamespace));
     }
 
      private static string GetConstructor(DataDefinition definition)
@@ -304,6 +336,49 @@ public class Generator : IIncrementalGenerator
         }
 
         return builder.ToString();
+    }
+
+    private static string GetPrototypeCopyMethods(DataDefinition definition)
+    {
+        if (!definition.SupportsPrototypeDataCopy)
+            return string.Empty;
+
+        var modifiers = IsVirtualClass(definition.Type) ? "virtual " : string.Empty;
+        var baseCall = string.Empty;
+        var baseType = definition.Type.BaseType;
+
+        if (baseType != null && IsDataDefinition(baseType) && CanGeneratePrototypeDataCopy(baseType))
+        {
+            var baseName = baseType.ToDisplayString();
+            baseCall = $"""
+                        var definitionCast = ({baseName}) target;
+                        base.CopyPrototypeTo(ref definitionCast, serialization, hookCtx, context);
+                        target = ({definition.GenericTypeName}) definitionCast;
+                        """;
+        }
+
+        var componentCopy = definition.SupportsPrototypeCopy
+            ? $$"""
+
+                [RobustAutoGenerated]
+                void IComponentPrototypeCopy.CopyPrototypeTo(ref IComponent target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context)
+                {
+                    var cast = ({{definition.GenericTypeName}}) target;
+                    CopyPrototypeTo(ref cast, serialization, hookCtx, context);
+                    target = cast;
+                }
+                """
+            : string.Empty;
+
+        return $$"""
+                 [RobustAutoGenerated]
+                 public {{modifiers}} void CopyPrototypeTo(ref {{definition.GenericTypeName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                 {
+                     {{baseCall}}
+                     {{CopyPrototypeDataFields(definition)}}
+                 }
+                 {{componentCopy}}
+                 """;
     }
 
     private static string GetInstantiators(DataDefinition definition)
@@ -575,6 +650,408 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
         }
 
         return builder;
+    }
+
+    private static StringBuilder CopyPrototypeDataFields(DataDefinition definition)
+    {
+        var builder = new StringBuilder();
+        var structCopier = new StringBuilder();
+
+        foreach (var field in definition.Fields)
+        {
+            AppendCopyField(builder, structCopier, definition, field, includeCustomCopyCheck: false);
+        }
+
+        if (definition.Type.IsValueType)
+        {
+            builder.AppendLine($$"""
+                                target = target with
+                                {
+                                    {{structCopier}}
+                                };
+                                """);
+        }
+
+        return builder;
+    }
+
+    private static void AppendCopyField(
+        StringBuilder builder,
+        StringBuilder structCopier,
+        DataDefinition definition,
+        DataField field,
+        bool includeCustomCopyCheck)
+    {
+        var type = field.Type;
+        var typeName = type.ToDisplayString();
+        if (IsMultidimensionalArray(type))
+        {
+            typeName = typeName.Replace("*", "");
+        }
+
+        var isNullableValueType = IsNullableValueType(type);
+        var nonNullableTypeName = type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
+        if (isNullableValueType)
+        {
+            nonNullableTypeName = typeName.Substring(0, typeName.Length - 1);
+        }
+
+        var isClass = type.IsReferenceType || type.SpecialType == SpecialType.System_String;
+        var isNullable = type.NullableAnnotation == NullableAnnotation.Annotated;
+        var nullableOverride = isClass && !isNullable ? ", true" : string.Empty;
+        var copyNullableOverride = isClass && !includeCustomCopyCheck ? ", true" : nullableOverride;
+        var name = field.Symbol.Name;
+        var tempVarName = $"{name}Temp";
+        var nullableValue = isNullableValueType ? ".Value" : string.Empty;
+        var nullNotAllowed = isClass && !isNullable;
+
+        if (field.CustomSerializer is { Serializer: var serializer, Type: var serializerType })
+        {
+            if (nullNotAllowed)
+            {
+                builder.AppendLine($$"""
+                                     if ({{name}} == null)
+                                     {
+                                         throw new NullNotAllowedException();
+                                     }
+                                     """);
+            }
+
+            builder.AppendLine($$"""
+                                 {{typeName}} {{tempVarName}} = default!;
+                                 """);
+
+            if (isNullable || isNullableValueType)
+            {
+                builder.AppendLine($$"""
+                                     if ({{name}} == null)
+                                     {
+                                         {{tempVarName}} = null!;
+                                     }
+                                     else
+                                     {
+                                     """);
+            }
+
+            var serializerName = serializer.ToDisplayString();
+            switch (serializerType)
+            {
+                case Copier:
+                    CopyToCustom(
+                        builder,
+                        nonNullableTypeName,
+                        serializerName,
+                        tempVarName,
+                        name,
+                        isNullable,
+                        isClass,
+                        isNullableValueType
+                    );
+                    break;
+                case CopyCreator:
+                    CreateCopyCustom(
+                        builder,
+                        name,
+                        tempVarName,
+                        nonNullableTypeName,
+                        serializerName,
+                        nullableValue,
+                        nullableOverride
+                    );
+                    break;
+            }
+
+            if (isNullable || isNullableValueType)
+            {
+                builder.AppendLine("}");
+            }
+
+            AppendAssignTarget(builder, structCopier, definition, name, tempVarName);
+            return;
+        }
+
+        if (!includeCustomCopyCheck &&
+            !definition.Type.IsValueType &&
+            !field.HasCustomSerializer &&
+            CanBeCopiedByValue(field.Symbol, field.Type))
+        {
+            if (nullNotAllowed)
+            {
+                builder.AppendLine($$"""
+                                     if ({{name}} == null)
+                                     {
+                                         throw new NullNotAllowedException();
+                                     }
+                                     """);
+            }
+
+            builder.AppendLine($"target.{name} = {name};");
+            return;
+        }
+
+        if (!includeCustomCopyCheck &&
+            !definition.Type.IsValueType &&
+            !field.HasCustomSerializer)
+        {
+            var collectionBuilder = new StringBuilder();
+            if (TryAppendFastPrototypeCollectionCopy(collectionBuilder, type, nonNullableTypeName, $"target.{name}", name, isNullable))
+            {
+                if (nullNotAllowed)
+                {
+                    builder.AppendLine($$"""
+                                         if ({{name}} == null)
+                                         {
+                                             throw new NullNotAllowedException();
+                                         }
+                                         """);
+                }
+
+                builder.Append(collectionBuilder);
+                return;
+            }
+        }
+
+        builder.AppendLine($$"""
+                             {{typeName}} {{tempVarName}} = default!;
+                             """);
+
+        if (nullNotAllowed)
+        {
+            builder.AppendLine($$"""
+                                 if ({{name}} == null)
+                                 {
+                                     throw new NullNotAllowedException();
+                                 }
+                                 """);
+        }
+
+        if (includeCustomCopyCheck)
+        {
+            var hasHooks = ImplementsInterface(type, SerializationHooksNamespace) || !type.IsSealed;
+            builder.AppendLine($$"""
+                                 if (!serialization.TryCustomCopy(this.{{name}}, ref {{tempVarName}}, hookCtx, {{hasHooks.ToString().ToLower()}}, context))
+                                 {
+                                 """);
+        }
+
+        if (!field.HasCustomSerializer &&
+            CanBeCopiedByValue(field.Symbol, field.Type))
+        {
+            builder.AppendLine($"{tempVarName} = {name};");
+        }
+        else if (!field.HasCustomSerializer &&
+                 !includeCustomCopyCheck &&
+                 TryAppendFastPrototypeCollectionCopy(builder, type, nonNullableTypeName, tempVarName, name, isNullable))
+        {
+        }
+        else if (!field.HasCustomSerializer &&
+                 !includeCustomCopyCheck &&
+                 TryAppendFastPrototypeDataDefinitionCopy(builder, type, tempVarName, name, isNullable))
+        {
+        }
+        else if (IsDataDefinition(type) && !type.IsAbstract &&
+                 type is not INamedTypeSymbol { TypeKind: TypeKind.Interface })
+        {
+            var nullable = isNullable || IsNullableType(type);
+
+            if (nullable)
+            {
+                builder.AppendLine($$"""
+                                   if ({{name}} == null)
+                                   {
+                                       {{tempVarName}} = null!;
+                                   }
+                                   else
+                                   {
+                                   """);
+            }
+
+            builder.AppendLine($$"""
+                                 serialization.CopyTo({{name}}, ref {{tempVarName}}, hookCtx, context{{copyNullableOverride}});
+                                 """);
+
+            if (nullable)
+            {
+                builder.AppendLine("}");
+            }
+        }
+        else
+        {
+            var nullable = isNullable || IsNullableType(type);
+
+            if (nullable)
+            {
+                builder.AppendLine($$"""
+                                   if ({{name}} == null)
+                                   {
+                                       {{tempVarName}} = null!;
+                                   }
+                                   else
+                                   {
+                                   """);
+            }
+
+            builder.AppendLine($"{tempVarName} = serialization.CreateCopy({name}, hookCtx, context{copyNullableOverride});");
+
+            if (nullable)
+            {
+                builder.AppendLine("}");
+            }
+        }
+
+        if (includeCustomCopyCheck)
+        {
+            builder.AppendLine("}");
+        }
+
+        AppendAssignTarget(builder, structCopier, definition, name, tempVarName);
+    }
+
+    private static bool TryAppendFastPrototypeDataDefinitionCopy(
+        StringBuilder builder,
+        ITypeSymbol type,
+        string tempVarName,
+        string name,
+        bool isNullable)
+    {
+        if (!IsDataDefinition(type) ||
+            type.IsAbstract ||
+            type is INamedTypeSymbol { TypeKind: TypeKind.Interface } ||
+            IsVirtualClass(type) ||
+            !CanGeneratePrototypeDataCopy(type))
+        {
+            return false;
+        }
+
+        AppendNullablePrototypeCopyWrapper(
+            builder,
+            tempVarName,
+            name,
+            isNullable,
+            $"{tempVarName} = {name}.Instantiate();\n" +
+            $"{name}.CopyPrototypeTo(ref {tempVarName}, serialization, hookCtx, context);");
+        return true;
+    }
+
+    private static bool TryAppendFastPrototypeCollectionCopy(
+        StringBuilder builder,
+        ITypeSymbol type,
+        string nonNullableTypeName,
+        string tempVarName,
+        string name,
+        bool isNullable)
+    {
+        if (type is IArrayTypeSymbol { Rank: 1 } arrayType &&
+            CanTypeBeCopiedByValue(arrayType.ElementType))
+        {
+            AppendNullablePrototypeCopyWrapper(
+                builder,
+                tempVarName,
+                name,
+                isNullable,
+                $"{tempVarName} = new {arrayType.ElementType.ToDisplayString()}[{name}.Length];\n" +
+                $"System.Array.Copy({name}, {tempVarName}, {name}.Length);");
+            return true;
+        }
+
+        if (type is not INamedTypeSymbol namedType)
+            return false;
+
+        var originalDefinition = namedType.OriginalDefinition.ToDisplayString();
+        var typeArguments = namedType.TypeArguments;
+
+        if (originalDefinition == "System.Collections.Generic.List<T>" &&
+            CanTypeBeCopiedByValue(typeArguments[0]))
+        {
+            AppendNullablePrototypeCopyWrapper(
+                builder,
+                tempVarName,
+                name,
+                isNullable,
+                $"{tempVarName} = new {nonNullableTypeName}({name}.Count);\n" +
+                $"{tempVarName}.AddRange({name});");
+            return true;
+        }
+
+        if (originalDefinition == "System.Collections.Generic.HashSet<T>" &&
+            CanTypeBeCopiedByValue(typeArguments[0]))
+        {
+            AppendNullablePrototypeCopyWrapper(
+                builder,
+                tempVarName,
+                name,
+                isNullable,
+                $"{tempVarName} = new {nonNullableTypeName}({name}.Count);\n" +
+                $"{tempVarName}.UnionWith({name});");
+            return true;
+        }
+
+        if (originalDefinition == "System.Collections.Generic.Dictionary<TKey, TValue>" &&
+            CanTypeBeCopiedByValue(typeArguments[0]) &&
+            CanTypeBeCopiedByValue(typeArguments[1]))
+        {
+            AppendNullablePrototypeCopyWrapper(
+                builder,
+                tempVarName,
+                name,
+                isNullable,
+                $"{tempVarName} = new {nonNullableTypeName}({name}.Count);\n" +
+                $"foreach (var (key, value) in {name})\n" +
+                "{\n" +
+                $"    {tempVarName}.Add(key, value);\n" +
+                "}");
+            return true;
+        }
+
+        return false;
+    }
+
+    private static void AppendNullablePrototypeCopyWrapper(
+        StringBuilder builder,
+        string tempVarName,
+        string name,
+        bool isNullable,
+        string copyBody)
+    {
+        if (!isNullable)
+        {
+            builder.AppendLine(copyBody);
+            return;
+        }
+
+        builder.AppendLine($$"""
+                             if ({{name}} == null)
+                             {
+                                 {{tempVarName}} = null!;
+                             }
+                             else
+                             {
+                             {{Indent(copyBody, 4)}}
+                             }
+                             """);
+    }
+
+    private static string Indent(string text, int spaces)
+    {
+        var indentation = new string(' ', spaces);
+        return indentation + text.Replace("\n", "\n" + indentation);
+    }
+
+    private static void AppendAssignTarget(
+        StringBuilder builder,
+        StringBuilder structCopier,
+        DataDefinition definition,
+        string name,
+        string tempVarName)
+    {
+        if (definition.Type.IsValueType)
+        {
+            structCopier.AppendLine($"{name} = {tempVarName}!,");
+        }
+        else
+        {
+            builder.AppendLine($"target.{name} = {tempVarName}!;");
+        }
     }
 
     private static void CopyToCustom(

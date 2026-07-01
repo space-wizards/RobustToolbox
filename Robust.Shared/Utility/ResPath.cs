@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using Robust.Shared.Collections;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using ArgumentException = System.ArgumentException;
 
 namespace Robust.Shared.Utility;
@@ -15,6 +16,7 @@ namespace Robust.Shared.Utility;
 ///     ResPath are immutable, and separator is always `/`
 /// </summary>
 [PublicAPI, Serializable, NetSerializable]
+[CopyByValue]
 public readonly struct ResPath : IEquatable<ResPath>
 {
     /// <summary>

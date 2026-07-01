@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
 
 namespace Robust.Shared.Localization;
@@ -12,6 +13,7 @@ namespace Robust.Shared.Localization;
 ///     This will be automatically validated by <see cref="LocIdSerializer"/> if used in data fields.</remarks>
 /// <seealso cref="Loc.GetString(string)"/>
 [Serializable, NetSerializable]
+[CopyByValue]
 public readonly record struct LocId(string Id) : IEquatable<string>, IComparable<LocId>
 {
     public static implicit operator string(LocId locId)

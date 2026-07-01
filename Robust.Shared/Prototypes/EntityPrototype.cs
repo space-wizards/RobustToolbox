@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
+using System.Reflection;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -28,7 +30,13 @@ namespace Robust.Shared.Prototypes
         private ILocalizationManager _loc = default!;
 
         private static readonly Dictionary<string, string> LocPropertiesDefault = new();
+        private static readonly ConcurrentDictionary<Type, ComponentPrototypeCopyFallbackDelegate> PrototypeCopyFallbacks = new();
 
+        private delegate void ComponentPrototypeCopyFallbackDelegate(
+            IComponent source,
+            ref IComponent target,
+            ISerializationManager serManager,
+            ISerializationContext? context);
         // LOCALIZATION NOTE:
         // Localization-related properties in here are manually localized in LocalizationManager.
         // As such, they should NOT be inherited to avoid confusing the system.
@@ -316,13 +324,83 @@ namespace Robust.Shared.Prototypes
 
             if (context is not EntityDeserializer map)
             {
-                serManager.CopyTo(data, ref component, context, notNullableOverride: true);
+                CopyComponentFromPrototype(data, ref component, serManager, context);
                 return;
             }
 
             map.CurrentComponent = compName;
             serManager.CopyTo(data, ref component, context, notNullableOverride: true);
             map.CurrentComponent = null;
+        }
+
+        internal static void CopyComponentFromPrototype(
+            IComponent source,
+            ref IComponent target,
+            ISerializationManager serManager,
+            ISerializationContext? context = null)
+        {
+            if (context == null && source is IComponentPrototypeCopy generatedCopy && source is not ISerializationHooks)
+            {
+                generatedCopy.CopyPrototypeTo(
+                    ref target,
+                    serManager,
+                    SerializationHookContext.ForSkipHooks(false),
+                    context);
+                RunPrototypeCopyHooks(target);
+                return;
+            }
+
+            var fallback = PrototypeCopyFallbacks.GetOrAdd(source.GetType(), CreatePrototypeCopyFallback);
+            fallback(source, ref target, serManager, context);
+        }
+
+        internal static void CopyDeserializedComponentData(
+            IComponent source,
+            ref IComponent target,
+            ISerializationManager serManager,
+            ISerializationContext? context = null)
+        {
+            if (source is IComponentPrototypeCopy generatedCopy && source is not ISerializationHooks)
+            {
+                generatedCopy.CopyPrototypeTo(
+                    ref target,
+                    serManager,
+                    SerializationHookContext.ForSkipHooks(false),
+                    context);
+                RunPrototypeCopyHooks(target);
+                return;
+            }
+
+            var fallback = PrototypeCopyFallbacks.GetOrAdd(source.GetType(), CreatePrototypeCopyFallback);
+            fallback(source, ref target, serManager, context);
+        }
+
+        private static void RunPrototypeCopyHooks(IComponent target)
+        {
+            if (target is ISerializationHooks hooks)
+                hooks.AfterDeserialization();
+        }
+
+        private static ComponentPrototypeCopyFallbackDelegate CreatePrototypeCopyFallback(Type type)
+        {
+            var method = typeof(EntityPrototype)
+                .GetMethod(nameof(CopyComponentFromPrototypeFallback), BindingFlags.NonPublic | BindingFlags.Static)!
+                .MakeGenericMethod(type);
+
+            return method.CreateDelegate<ComponentPrototypeCopyFallbackDelegate>();
+        }
+
+        private static void CopyComponentFromPrototypeFallback<T>(
+            IComponent source,
+            ref IComponent target,
+            ISerializationManager serManager,
+            ISerializationContext? context)
+            where T : IComponent
+        {
+            var typedSource = (T) source;
+            var typedTarget = (T) target;
+            serManager.CopyTo(typedSource, ref typedTarget, context, notNullableOverride: true);
+            target = typedTarget;
         }
 
         public override string ToString()

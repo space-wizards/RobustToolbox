@@ -996,6 +996,18 @@ namespace Robust.Shared
         public static readonly CVarDef<string> AuthServer =
             CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
 
+        /// <summary>
+        /// Trust score for unauthenticated localhost connections
+        /// </summary>
+        public static readonly CVarDef<float> AuthLocalTrust =
+            CVarDef.Create("auth.localtrust", 1f, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Trust score for guest connections
+        /// </summary>
+        public static readonly CVarDef<float> AuthGuestTrust =
+            CVarDef.Create("auth.guesttrust", 0f, CVar.SERVERONLY);
+
         /*
          * RENDERING
          */
@@ -1292,7 +1304,7 @@ namespace Robust.Shared
         /// Audio device to try to output audio to by default.
         /// </summary>
         public static readonly CVarDef<string> AudioDevice =
-            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);
+            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Master volume for audio output.
@@ -1613,7 +1625,7 @@ namespace Robust.Shared
         /// Comma-separated list of URLs of hub servers to advertise to.
         /// </summary>
         public static readonly CVarDef<string> HubUrls =
-            CVarDef.Create("hub.hub_urls", "https://hub.playss14.com/", CVar.SERVERONLY);
+            CVarDef.Create("hub.hub_urls", "https://hub.spacestation14.com/", CVar.SERVERONLY);
 
         /// <summary>
         /// URL of this server to advertise.
@@ -1738,6 +1750,16 @@ namespace Robust.Shared
         /// Enabled the profiling system.
         /// </summary>
         public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
+
+        /// <summary>
+        /// Enables the Tracy profiling system. Tracing will stay enabled for the entire runtime of the program even if
+        /// you turn this cvar off.
+        /// </summary>
+        /// <remarks>
+        /// By default, this will listen for Tracy connections on all interfaces! Set the <c>TRACY_ONLY_LOCALHOST</c>
+        /// env var to 1 if you want to restrict to localhost.
+        /// </remarks>
+        public static readonly CVarDef<bool> TracyProfEnabled = CVarDef.Create("prof.tracy.enabled", false);
 
         /// <summary>
         /// Event log buffer size for the profiling system.

@@ -526,13 +526,15 @@ namespace Robust.Shared.CompNetworkGenerator
                 deltaNetRegister = $@"EntityManager.ComponentFactory.RegisterNetworkedFields<{classSymbol}>({fieldsStr});";
 
                 deltaGetState = @$"// Delta state
-            if (component is IComponentDelta delta && args.FromTick > component.CreationTick && delta.LastFieldUpdate >= args.FromTick)
+            if (component is IComponentDelta delta)
             {{
-                var fields = EntityManager.GetModifiedFields(component, args.FromTick);
+                var aspects = EntityManager.GetModifiedAspects(component, args.FromTick);
 
                 // Try and get a matching delta state for the relevant dirty fields, otherwise fall back to full state.
-                switch (fields)
-                {{{deltaGetFields}
+                switch (aspects)
+                {{
+                    case >= DeltaAspect.Unclassified:
+                        break;{deltaGetFields}
                     default:
                         break;
                 }}
@@ -541,10 +543,9 @@ namespace Robust.Shared.CompNetworkGenerator
                 deltaInterface = " : IComponentDelta";
 
                 deltaCompFields = @$"/// <inheritdoc />
-    public GameTick LastFieldUpdate {{ get; set; }} = GameTick.Zero;
-
+    public GameTick LastUnclassifiedDirty {{ get; set; }}
     /// <inheritdoc />
-    public GameTick[] LastModifiedFields {{ get; set; }} = Array.Empty<GameTick>();";
+    public GameTick[] LastModifiedFields {{ get; set; }}";
             }
 
             string handleState;

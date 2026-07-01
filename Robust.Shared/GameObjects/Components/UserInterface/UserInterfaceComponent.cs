@@ -13,8 +13,8 @@ namespace Robust.Shared.GameObjects
     [RegisterComponent, NetworkedComponent, Access(typeof(SharedUserInterfaceSystem))]
     public sealed partial class UserInterfaceComponent : Component, IComponentDelta
     {
-        /// <inheritdoc />
-        public GameTick LastFieldUpdate { get; set; }
+        /// <inheritdoc/>
+        public GameTick LastUnclassifiedDirty { get; set; }
 
         /// <inheritdoc />
         public GameTick[] LastModifiedFields { get; set; }

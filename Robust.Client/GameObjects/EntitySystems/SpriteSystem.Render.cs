@@ -126,13 +126,14 @@ public sealed partial class SpriteSystem
         dir = dir.OffsetRsiDir(layer.DirOffset);
 
         var texture = state?.GetFrame(dir, layer.AnimationFrame) ?? layer.Texture ?? GetFallbackTexture();
+        var layerColor = layer.Owner.Comp.color * layer.Color;
 
         // TODO SPRITE
         // Refactor shader-param-layers to a separate layer type after layers are split into types & collections.
         // I.e., separate Layer -> RsiLayer, TextureLayer, LayerCollection, SpriteLayer, and ShaderLayer
         if (layer.CopyToShaderParameters != null)
         {
-            HandleShaderLayer(layer, texture, layer.CopyToShaderParameters);
+            HandleShaderLayer(layer, texture, layer.CopyToShaderParameters, layerColor);
             return;
         }
 
@@ -143,7 +144,6 @@ public sealed partial class SpriteSystem
         if (layer.Shader != null)
             drawingHandle.UseShader(layer.Shader);
 
-        var layerColor = layer.Owner.Comp.color * layer.Color;
         var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
         var quad = Box2.FromDimensions(textureSize / -2, textureSize);
 
@@ -168,7 +168,7 @@ public sealed partial class SpriteSystem
     /// Handle a a "fake layer" that just exists to modify the parameters of a shader being used by some other
     /// layer.
     /// </summary>
-    private void HandleShaderLayer(Layer layer, Texture texture, CopyToShaderParameters @params)
+    private void HandleShaderLayer(Layer layer, Texture texture, CopyToShaderParameters @params, Color layerColor)
     {
         // Multiple atrocities to god being committed right here.
         var otherLayerIdx = layer._parent.LayerMap[@params.LayerKey!];
@@ -183,6 +183,9 @@ public sealed partial class SpriteSystem
 
         if (@params.ParameterTexture is { } paramTexture)
             shader.SetParameter(paramTexture, clydeTexture);
+
+        if (@params.ParameterColor is { } paramColor)
+            shader.SetParameter(paramColor, layerColor);
 
         if (@params.ParameterUV is not { } paramUV)
             return;

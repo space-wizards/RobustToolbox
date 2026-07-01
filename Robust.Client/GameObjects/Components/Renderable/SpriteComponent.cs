@@ -1757,14 +1757,23 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public sealed class CopyToShaderParameters(object layerKey)
         {
+            /// <inheritdoc cref="PrototypeCopyToShaderParameters.LayerKey"/>
             public object LayerKey = layerKey;
+
+            /// <inheritdoc cref="PrototypeCopyToShaderParameters.ParameterTexture"/>
             public string? ParameterTexture;
+
+            /// <inheritdoc cref="PrototypeCopyToShaderParameters.ParameterUV"/>
             public string? ParameterUV;
+
+            /// <inheritdoc cref="PrototypeCopyToShaderParameters.ParameterColor"/>
+            public string? ParameterColor;
 
             public CopyToShaderParameters(CopyToShaderParameters toClone) : this(toClone.LayerKey)
             {
                 ParameterTexture = toClone.ParameterTexture;
                 ParameterUV = toClone.ParameterUV;
+                ParameterColor = toClone.ParameterColor;
             }
         }
 

@@ -1304,7 +1304,7 @@ namespace Robust.Shared
         /// Audio device to try to output audio to by default.
         /// </summary>
         public static readonly CVarDef<string> AudioDevice =
-            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);
+            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Master volume for audio output.
@@ -1750,6 +1750,16 @@ namespace Robust.Shared
         /// Enabled the profiling system.
         /// </summary>
         public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
+
+        /// <summary>
+        /// Enables the Tracy profiling system. Tracing will stay enabled for the entire runtime of the program even if
+        /// you turn this cvar off.
+        /// </summary>
+        /// <remarks>
+        /// By default, this will listen for Tracy connections on all interfaces! Set the <c>TRACY_ONLY_LOCALHOST</c>
+        /// env var to 1 if you want to restrict to localhost.
+        /// </remarks>
+        public static readonly CVarDef<bool> TracyProfEnabled = CVarDef.Create("prof.tracy.enabled", false);
 
         /// <summary>
         /// Event log buffer size for the profiling system.

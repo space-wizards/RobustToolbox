@@ -14,7 +14,9 @@ Don't change the format without looking at the script!
 
 ### New features
 
-Added new public method in SpriteSystem - CopyLayer. It's copy layer to provided entity. Replacement for the obsolete `public Layer(Layer toClone, SpriteComponent parent) : this(parent)`
+* Added support for Tracy v0.13.1 on both the client and server. Start it by changing the prof.tracy.enabled cvar to true, and connect with a v0.13.1 Tracy client!
+
+* Added new public method in SpriteSystem - CopyLayer. It's copy layer to provided entity. Replacement for the obsolete `public Layer(Layer toClone, SpriteComponent parent) : this(parent)`
 
 ### Bugfixes
 
@@ -39,7 +41,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added support for Tracy v0.13.1 on both the client and server. Start it by changing the prof.tracy.enabled cvar to true, and connect with a v0.13.1 Tracy client!
 
 ### Bugfixes
 
@@ -52,6 +54,109 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 279.0.1
+
+### Bugfixes
+
+* Fix SubscribeLocalEvent name and added `MeansImplicitUse` attribute to the sourcegenned eventbus methods.
+
+
+## 279.0.0
+
+### Breaking changes
+
+* Validate Box2i inputs to ensure no negative-sized boxes.
+* Removed QuadTree due to lack of maintenance, test coverage, and usage.
+* Partivally reverted the additional mouse cursors on button hovers.
+* Changed SpawnAtPosition EntityCoordinates overload to use the attached entity's rotation, and also added a rotation override argument.
+* Reduced the default ReallyBeIdle tick count from 25 to 5.
+
+### New features
+
+* Added DictionaryEquals helper method to compare elements to determine if 2 dictionaries are identical.
+* Tracy integration is now supported for profiling.
+* SubscribeLocalEvent and SubscribeNetworkEvent can now be replaced with the similarly named attributes on methods.
+* Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
+* Added a DictionaryEquals extension method to check equality between two dictionaries.
+* Added support for uploading .ftl files. Format is: /<your-uploaded-folder>/<language-code>.ftl - Example: /TestUpload/en-US.ftl , you can have multiple files, so long they are on different subfolders, they will all be loaded.
+
+### Bugfixes
+
+* Fix IsHardCollidable mask check.
+* Fix Robust.Benchmarks not compiling in some instances.
+* Fix ApplyLinearImpulse not correctly using world-space.
+* Fix OnClientRequestFull throwing an error when logging deleted entities.
+
+### Internal
+
+* Unnecessary prototypemanager dependencies were removed from engine systems.
+* Added a 30m timeout to engine test workflows.
+* Cleaned up ContainerSystems and PlayerManagers code-files.
+
+
+## 278.0.0
+
+### Breaking changes
+
+* Remove the duplicate serialization copy of components kept on ComponentRegistryEntry; now it only stores the deserialized component. To get the raw MappingDataNode for EntityPrototypes use PrototypeManager. This is expected to significantly reduce memory usage.
+* Obsolete LocalRotation in favor of the system method. The angle is now also normalized to 2PI and no longer grows indefinitely.
+* Obsoleted IMapManager methods in lieu of SharedMapSystem.
+
+### New features
+
+* Add a `OnlyRotation` property to MoveEvent where the EntityCoordinates remain the same.
+* ValueList now implements IList and not just IEnumerable.
+* Add a BoundUserInterfaceMessageReceivedEvent that will be raised whenever a BoundUserInterfaceMessage is received regardless of validation.
+* Added `IsHardCollidable` to `SharedPhysicsSystem`.
+* Added `GetFilledTileCount` to `SharedMapSystem`.
+* Changed the cursors on interactive controls.
+* Added new `StyleProperty` `track` to `ScrollBar` that takes a `StyleBox` and displays it as a backing track for the whole height of the `ScrollBar`.
+* Scroll Lock is now a bindable key.
+* The obsoleted TryIndex methods on PrototypeManager have now been removed.
+* Add batched Box2 / Box2Rotated drawing methods to Clyde WorldHandle.
+* Completion filter now works by Contains instead of StartsWith
+* Add SwitchAudioDevice API to AudioManager.
+* Added a PhysicsBodyStatusChangedEvent (self-descriptive).
+* Allow enumeration on EntityQuery.
+
+### Bugfixes
+
+* Fix ValueList TryPop not clearing element references.
+* Fix ValueList Peek always throwing by referencing the wrong index.
+* Windows will stay at relative position not absolute pixel position on window resize.
+* Fixed override properties in `WrapContainer` not actually overriding the Style Properties.
+* Fixed `BoxContainer`'s `SeparationOverride` not overriding the Style Properties.
+* Fixed `SeparationOverride` not invalidating measure.
+* Fixed swapped parameters in `MapManager`'s `FindGridsIntersecting` methods.
+* Fix DataRecord serialization.
+
+### Other
+
+* Optimise Direction and DirectionFlag methods.
+* Added Pure attributes to the `EntityLookup` bounds methods.
+* Improved performance of collision filter test.
+* Removed an outdated xmldoc comment regarding dependency injection.
+* Audio resources now use `AsSpan` when checking signatures.
+
+### Internal
+
+* Reduce TryParseEnum string allocations.
+* Reduce TryRelativeTo string allocations.
+* Reduce OpenGL logging string allocations on debug for the client.
+* Optimise sprite sorting slightly.
+* Simplify and optimise Box2.Contains(Vector2)
+* Optimise ComponentRegistry deserialization slightly.
+* Optimise Box2Rotated.TransformBox slightly.
+* Added several test helpers to avoid boilerplate in integration tests around client connection / disconnection.
+* Simplifed AccessAnalyzer check to speed it up.
+
+## 277.2.1
+
+### Bugfixes
+
+* Fixed a bug in Lidgren.Network HandleReleasedFragment that could cause out of memory errors.
 
 
 ## 277.2.0

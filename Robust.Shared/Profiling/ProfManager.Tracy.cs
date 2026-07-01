@@ -1,5 +1,6 @@
 using System;
 using bottlenoselabs.C2CS.Runtime;
+using Robust.Shared.Maths;
 using static Tracy.PInvoke;
 
 namespace Robust.Shared.Profiling;
@@ -27,7 +28,7 @@ public sealed partial class ProfManager
     private CString _tracyPlotGen2;
     private CString _tracyEntityCount;
 
-    public unsafe void EmitFrameImage(void* image, ushort width, ushort height, byte offset, bool flip)
+    internal unsafe void EmitFrameImage(void* image, ushort width, ushort height, byte offset, bool flip)
     {
         if (!IsTracyEnabled)
             return;
@@ -35,7 +36,7 @@ public sealed partial class ProfManager
         TracyEmitFrameImage(image, width, height, offset, flip ? 1 : 0);
     }
 
-    public void EmitMemoryPlots(int gcGen0, int gcGen1, int gcGen2)
+    internal void EmitMemoryPlots(int gcGen0, int gcGen1, int gcGen2)
     {
         if (!IsTracyEnabled)
             return;
@@ -55,7 +56,7 @@ public sealed partial class ProfManager
 
     }
 
-    public void EmitEntities(int entityCount)
+    internal void EmitEntities(int entityCount)
     {
         if (!IsTracyEnabled)
             return;
@@ -101,7 +102,7 @@ public sealed partial class ProfManager
     /// Creates a <seealso cref="CString"/> for use by Tracy. Also returns the
     /// length of the string for interop convenience.
     /// </summary>
-    public static CString GetCString(string? fromString, out ulong cLength)
+    internal static CString GetCString(string? fromString, out ulong cLength)
     {
         if (fromString == null)
         {
@@ -113,49 +114,38 @@ public sealed partial class ProfManager
         return CString.FromString(fromString);
     }
 
-    private static TracyProfilerZone BeginTracyZone(string name, int lineNumber, string? filePath, string? memberName)
+    private static TracyProfilerZone BeginTracyZone(string name, int lineNumber, Color? color, string? filePath, string? memberName)
     {
         using var fileStr = GetCString(filePath, out var fileLn);
         using var memberStr = GetCString(memberName, out var memberLn);
         using var nameStr = GetCString(name, out var nameLn);
-        var srcLocId = TracyAllocSrclocName((uint)lineNumber, fileStr, fileLn, memberStr, memberLn, nameStr, nameLn, 0);
+        var srcLocId = TracyAllocSrclocName((uint)lineNumber, fileStr, fileLn, memberStr, memberLn, nameStr, nameLn, (uint) (color?.ToArgb() ?? 0));
         var context = TracyEmitZoneBeginAlloc(srcLocId, 1);
         return new TracyProfilerZone(context);
     }
 }
 
-public readonly struct TracyProfilerZone : IDisposable
+internal readonly struct TracyProfilerZone : IDisposable
 {
-    public readonly TracyCZoneCtx Context;
+    private readonly TracyCZoneCtx _context;
 
-    public uint Id => Context.Data.Id;
+    private uint Id => _context.Data.Id;
 
-    public int Active => Context.Data.Active;
+    private int Active => _context.Data.Active;
 
     internal TracyProfilerZone(TracyCZoneCtx context)
     {
-        Context = context;
+        _context = context;
     }
 
-    public void EmitName(string name)
-    {
-        using var nameStr = ProfManager.GetCString(name, out var nameLn);
-        TracyEmitZoneName(Context, nameStr, nameLn);
-    }
-
-    public void EmitColor(uint color)
-    {
-        TracyEmitZoneColor(Context, color);
-    }
-
-    public void EmitText(string text)
+    internal void EmitText(string text)
     {
         using var textStr = ProfManager.GetCString(text, out var textLn);
-        TracyEmitZoneText(Context, textStr, textLn);
+        TracyEmitZoneText(_context, textStr, textLn);
     }
 
     public void Dispose()
     {
-        TracyEmitZoneEnd(Context);
+        TracyEmitZoneEnd(_context);
     }
 }

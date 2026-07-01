@@ -40,6 +40,9 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
     }
 
+    /// <summary>
+    /// Will return the relevant chunk for the specified position. Assumes normalized chunk origin i.e. position divided by ChunkSize.
+    /// </summary>
     public Entity<ChunkEntityComponent> GetOrCreateChunk(EntityUid root, Vector2i chunk)
     {
         if (_chunks.TryGetValue((root, chunk), out var existing) &&
@@ -65,6 +68,9 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         return (uid, comp);
     }
 
+    /// <summary>
+    /// Returns a chunk for the specified position if one exists. Assumes normalized chunk origin i.e. position divided by ChunkSize.
+    /// </summary>
     public bool TryGetChunk(EntityUid root, Vector2i chunk, [NotNullWhen(true)] out Entity<ChunkEntityComponent>? entity)
     {
         if (_chunks.TryGetValue((root, chunk), out var existing) &&
@@ -80,6 +86,10 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         return false;
     }
 
+    /// <summary>
+    /// Flags a chunk that it should try to be deleted. Will fail if any other components exist on it.
+    /// </summary>
+    /// <param name="chunk"></param>
     public bool TryRemoveChunk(Entity<ChunkEntityComponent, MetaDataComponent?> chunk)
     {
         var meta = chunk.Comp2;

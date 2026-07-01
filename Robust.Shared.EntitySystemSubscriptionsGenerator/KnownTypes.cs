@@ -9,10 +9,10 @@ public static class KnownTypes
     public const string IComponentTypeName = "Robust.Shared.GameObjects.IComponent";
 
     public const string LocalSubscriptionMemberAttributeName =
-        "Robust.Shared.Analyzers.LocalEventSubscriptionAttribute";
+        "Robust.Shared.Analyzers.SubscribeLocalEventAttribute";
 
     public const string NetworkSubscriptionMemberAttributeName =
-        "Robust.Shared.Analyzers.NetworkEventSubscriptionAttribute";
+        "Robust.Shared.Analyzers.SubscribeNetworkEventAttribute";
 
     public const string AllSubscriptionMemberAttributeName = "Robust.Shared.Analyzers.EventSubscriptionAttribute";
 

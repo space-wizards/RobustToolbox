@@ -136,7 +136,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         _audioFrameTimeRemaining = MathF.Min(_audioFrameTimeRemaining, _audioFrameTime);
     }
 
-    [LocalEventSubscription]
+    [SubcribeLocalEvent]
     private void OnAudioState(Entity<AudioComponent> entity, ref AfterAutoHandleStateEvent args)
     {
         var component = entity.Comp;
@@ -202,7 +202,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         _audio.SetMasterGain(value);
     }
 
-    [LocalEventSubscription]
+    [SubcribeLocalEvent]
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)
     {
         component.Pause();
@@ -214,7 +214,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.StartPlaying();
     }
 
-    [LocalEventSubscription]
+    [SubcribeLocalEvent]
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
     {
         if (!Timing.ApplyingState && !Timing.IsFirstTimePredicted)
@@ -286,7 +286,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
     }
 
-    [LocalEventSubscription]
+    [SubcribeLocalEvent]
     private void OnAudioShutdown(EntityUid uid, AudioComponent component, ComponentShutdown args)
     {
         // Breaks with prediction?
@@ -769,19 +769,19 @@ public sealed partial class AudioSystem : SharedAudioSystem
         source.Looping = audioParams.Loop;
     }
 
-    [NetworkEventSubscription]
+    [SubscribeNetworkEvent]
     private void OnEntityCoordinates(PlayAudioPositionalMessage ev)
     {
         PlayStatic(ev.Specifier, GetCoordinates(ev.Coordinates), ev.AudioParams, false);
     }
 
-    [NetworkEventSubscription]
+    [SubscribeNetworkEvent]
     private void OnEntityAudio(PlayAudioEntityMessage ev)
     {
         PlayEntity(ev.Specifier, GetEntity(ev.NetEntity), ev.AudioParams, false);
     }
 
-    [NetworkEventSubscription]
+    [SubscribeNetworkEvent]
     private void OnGlobalAudio(PlayAudioGlobalMessage ev)
     {
         PlayGlobal(ev.Specifier, ev.AudioParams, false);

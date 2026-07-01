@@ -20,7 +20,7 @@ namespace Robust.Shared.Analyzers;
 /// <br/>
 /// Note that this is <b>not</b> any different from the normal requirements to use <c>EntitySystem.SubscribeLocalEvent</c>.
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class LocalEventSubscriptionAttribute : Attribute;
+public sealed class SubcribeLocalEventAttribute : Attribute;
 
 /// This attribute indicates that the annotated method is a handler for an event subscription. Methods annotated with
 /// this attribute will have a <c>EntitySystem.SubscribeNetworkEvent</c> call generated, using the method as the handler,
@@ -34,7 +34,7 @@ public sealed class LocalEventSubscriptionAttribute : Attribute;
 /// <br/>
 /// Note that this is <b>not</b> any different from the normal requirements to use <c>EntitySystem.SubscribeNetworkEvent</c>.
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class NetworkEventSubscriptionAttribute : Attribute;
+public sealed class SubscribeNetworkEventAttribute : Attribute;
 
 /// This attribute indicates that the annotated method is a handler for an event subscription. Methods annotated with
 /// this attribute will have a <c>EntitySystem.SubscribeAllEvent</c> call generated, using the method as the handler,

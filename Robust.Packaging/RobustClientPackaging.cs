@@ -1,4 +1,5 @@
 ﻿using Robust.Packaging.AssetProcessing;
+using Robust.Shared.ContentPack;
 
 namespace Robust.Packaging;
 
@@ -34,5 +35,6 @@ public sealed class RobustClientPackaging
             .ToHashSet();
 
         await RobustSharedPackaging.DoResourceCopy(Path.Combine(contentDir, "Resources"), pass, ignoreSet, cancel: cancel);
+        await RobustSharedPackaging.DoModularResourceCopy(contentDir, pass, ignoreSet);
     }
 }

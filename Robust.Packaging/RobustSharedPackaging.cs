@@ -1,4 +1,5 @@
 ﻿using Robust.Packaging.AssetProcessing;
+using Robust.Shared.ContentPack;
 
 namespace Robust.Packaging;
 
@@ -82,10 +83,37 @@ public sealed class RobustSharedPackaging
         return Task.CompletedTask;
     }
 
-    private static void CopyDirIntoZip(string directory, string basePath, AssetPass pass)
+    public static Task DoModularResourceCopy(string contentDir, AssetPass pass, HashSet<string> ignoreSet)
+    {
+        var manifestPath = Path.Combine(contentDir, "Resources", "manifest.yml");
+        var manifest = ResourceManifestData.LoadFromFile(manifestPath);
+        if (manifest.ModularResources == null) return Task.CompletedTask;
+
+        foreach (var (vfsPath, diskName) in manifest.ModularResources)
+        {
+            var modPath = Path.Combine(contentDir, diskName);
+            if (!Directory.Exists(modPath))
+                continue;
+
+            var zipRoot = vfsPath.TrimStart('/');
+            CopyDirIntoZip(modPath, zipRoot, pass, ignoreSet);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private static void CopyDirIntoZip(
+        string directory,
+        string basePath,
+        AssetPass pass,
+        IReadOnlySet<string>? ignoreSet = null)
     {
         foreach (var file in Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories))
         {
+            var filename = Path.GetFileName(file);
+            if (ignoreSet != null && ignoreSet.Contains(filename))
+                continue;
+
             var relPath = Path.GetRelativePath(directory, file);
             var zipPath = $"{basePath}/{relPath}";
 

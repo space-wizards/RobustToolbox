@@ -27,9 +27,17 @@ public sealed partial class TileSpawningUIController : UIController
     private TileSpawnWindow? _window;
     private bool _init;
 
-    private readonly List<ITileDefinition> _shownTiles = new();
-    private bool _clearingTileSelections;
-    private bool _eraseTile;
+    private readonly List<ITileDefinition> _shownTiles = [];
+
+    private int? _currentTileType;
+
+    /// <summary>
+    /// Indicates whether _placement was modified in this UI
+    /// When true, PlacementChanged event should not modify any UI
+    /// And any select/deselect events should not modify placement
+    /// </summary>
+    private bool _placementLock;
+
     private bool _mirrorableTile; // Tracks if the chosen tile even can be mirrored.
     private bool _mirroredTile;
 
@@ -37,13 +45,16 @@ public sealed partial class TileSpawningUIController : UIController
     {
         DebugTools.Assert(_init == false);
         _init = true;
-        _placement.PlacementChanged += ClearTileSelection;
+        _placement.PlacementChanged += OnPlacementChanged;
         _placement.DirectionChanged += OnDirectionChanged;
         _placement.MirroredChanged += OnMirroredChanged;
     }
 
     private void StartTilePlacement(int tileType)
     {
+        if (_window == null || _window.Disposed)
+            return;
+
         var newObjInfo = new PlacementInformation
         {
             PlacementOption = nameof(AlignTileAny),
@@ -52,25 +63,37 @@ public sealed partial class TileSpawningUIController : UIController
             IsTile = true
         };
 
+        _currentTileType = tileType;
+        _placementLock = true;
         _placement.BeginPlacing(newObjInfo);
+        if (tileType == 0)
+        {
+            _window.TileList.ClearSelected();
+        }
+        else
+        {
+            _window.EraseButton.Pressed = false;
+        }
+        _placementLock = false;
+    }
+
+    private void StopTilePlacement()
+    {
+        if (_currentTileType == null) return;
+        _currentTileType = null;
+        _placement.Clear();
     }
 
     private void OnTileEraseToggled(ButtonToggledEventArgs args)
     {
-        if (_window == null || _window.Disposed)
-            return;
-
-        _placement.Clear();
-
         if (args.Pressed)
         {
-            _eraseTile = true;
             StartTilePlacement(0);
         }
         else
-            _eraseTile = false;
-
-        args.Button.Pressed = args.Pressed;
+        {
+            StopTilePlacement();
+        }
     }
 
     private void OnTileMirroredToggled(ButtonToggledEventArgs args)
@@ -107,11 +130,12 @@ public sealed partial class TileSpawningUIController : UIController
             return;
         _window = UIManager.CreateWindow<TileSpawnWindow>();
         LayoutContainer.SetAnchorPreset(_window, LayoutContainer.LayoutPreset.CenterLeft);
+        _window.OnClose += WindowClosed;
         _window.ClearButton.OnPressed += OnTileClearPressed;
         _window.SearchBar.OnTextChanged += OnTileSearchChanged;
         _window.TileList.OnItemSelected += OnTileItemSelected;
         _window.TileList.OnItemDeselected += OnTileItemDeselected;
-        _window.EraseButton.Pressed = _eraseTile;
+        _window.EraseButton.Pressed = _currentTileType == 0;
         _window.EraseButton.OnToggled += OnTileEraseToggled;
         _window.MirroredButton.Disabled = !_mirrorableTile;
         _window.RotationLabel.FontColorOverride = _mirrorableTile ? Color.White : Color.Gray;
@@ -127,12 +151,22 @@ public sealed partial class TileSpawningUIController : UIController
         _window?.Close();
     }
 
-    private void ClearTileSelection(object? sender, EventArgs e)
+    private void WindowClosed()
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        StopTilePlacement();
+    }
+
+    private void OnPlacementChanged(object? sender, EventArgs e)
     {
         if (_window == null || _window.Disposed) return;
-        _clearingTileSelections = true;
+        if (_placementLock) return;
+        _currentTileType = null;
+        _placementLock = true;
         _window.TileList.ClearSelected();
-        _clearingTileSelections = false;
+        _placementLock = false;
         _window.EraseButton.Pressed = false;
         _window.MirroredButton.Pressed = _placement.Mirrored;
     }
@@ -142,24 +176,19 @@ public sealed partial class TileSpawningUIController : UIController
         if (_window == null || _window.Disposed) return;
 
         _window.TileList.ClearSelected();
-        _placement.Clear();
         _window.SearchBar.Clear();
         BuildTileList(string.Empty);
-        _window.ClearButton.Disabled = true;
     }
 
     private void OnTileSearchChanged(LineEdit.LineEditEventArgs args)
     {
-        if (_window == null || _window.Disposed) return;
-
-        _window.TileList.ClearSelected();
-        _placement.Clear();
+        if (_placementLock) return;
         BuildTileList(args.Text);
-        _window.ClearButton.Disabled = string.IsNullOrEmpty(args.Text);
     }
 
     private void OnTileItemSelected(ItemList.ItemListSelectedEventArgs args)
     {
+        if (_placementLock) return;
         var definition = _shownTiles[args.ItemIndex];
         StartTilePlacement(definition.TileId);
         UpdateMirroredButton();
@@ -167,12 +196,15 @@ public sealed partial class TileSpawningUIController : UIController
 
     private void OnTileItemDeselected(ItemList.ItemListDeselectedEventArgs args)
     {
-        if (_clearingTileSelections)
-        {
-            return;
-        }
+        if (_placementLock) return;
 
-        _placement.Clear();
+        /* Need to turn on placement lock here to avoid running OnPlacementChanged
+           Because if ClearSelected is called when the user is selecting another item,
+           the selection will not be visible
+        */
+        _placementLock = true;
+        StopTilePlacement();
+        _placementLock = false;
     }
 
     private void OnDirectionChanged(object? sender, EventArgs e)
@@ -214,6 +246,8 @@ public sealed partial class TileSpawningUIController : UIController
     {
         if (_window == null || _window.Disposed) return;
 
+        _placementLock = true;
+
         _window.TileList.Clear();
 
         IEnumerable<ITileDefinition> tileDefs = _tiles.Where(def => !def.EditorHidden);
@@ -239,7 +273,13 @@ public sealed partial class TileSpawningUIController : UIController
             {
                 texture = _resources.GetResource<TextureResource>(path);
             }
-            _window.TileList.AddItem(Loc.GetString(entry.Name), texture);
+            var item = _window.TileList.AddItem(Loc.GetString(entry.Name), texture);
+            if (entry.TileId == _currentTileType)
+            {
+                item.Selected = true;
+            }
         }
+
+        _placementLock = false;
     }
 }

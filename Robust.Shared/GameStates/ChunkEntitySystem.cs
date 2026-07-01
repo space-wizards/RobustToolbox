@@ -110,16 +110,21 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         return true;
     }
 
+    // Returns chunk entities in range of the position, assumes non-normalized inputs.
     public ChunkEntityEnumerator GetChunksInRange(EntityUid root, Vector2 localPosition, float range)
     {
         return new ChunkEntityEnumerator(this, root, new ChunkIndicesEnumerator(localPosition, range, ChunkSize));
     }
 
+    // Returns chunk entities intersecting a local bounding box, assumes non-normalized inputs.
     public ChunkEntityEnumerator GetChunksIntersecting(EntityUid root, Box2 localAabb)
     {
         return new ChunkEntityEnumerator(this, root, new ChunkIndicesEnumerator(localAabb, ChunkSize));
     }
 
+    /// <summary>
+    /// <see cref="GetChunksInRange"/> but with component overload.
+    /// </summary>
     public ChunkEntityComponentEnumerator<T> GetChunksInRange<T>(
         EntityUid root,
         Vector2 localPosition,
@@ -130,6 +135,9 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         return new ChunkEntityComponentEnumerator<T>(GetChunksInRange(root, localPosition, range), query);
     }
 
+    /// <summary>
+    /// <see cref="GetChunksIntersecting"/> but with component overload.
+    /// </summary>
     public ChunkEntityComponentEnumerator<T> GetChunksIntersecting<T>(
         EntityUid root,
         Box2 localAabb,

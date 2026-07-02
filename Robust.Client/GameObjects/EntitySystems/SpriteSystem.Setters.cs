@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
@@ -91,12 +92,16 @@ public sealed partial class SpriteSystem
         sprite.Comp.color = value;
     }
 
+    public void SetBaseRsi(Entity<SpriteComponent?> sprite, RSI? value)
+    {
+        SetBaseRsi(sprite, value, true);
+    }
+
     /// <summary>
     /// Modify a sprites base RSI. This is the RSI that is used by any RSI layers that do not specify their own.
-    /// Note that changing the base RSI may result in existing layers having an invalid state. This will not log errors
-    /// under the assumption that the states of each layers will be updated after the base RSI has changed.
+    /// Note that changing the base RSI may result in existing layers having an invalid state.
     /// </summary>
-    public void SetBaseRsi(Entity<SpriteComponent?> sprite, RSI? value)
+    private void SetBaseRsi(Entity<SpriteComponent?> sprite, RSI? value, bool logMissing)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return;
@@ -123,9 +128,28 @@ public sealed partial class SpriteSystem
             }
             else
             {
-                Log.Error($"Layer {i} no longer has state '{layer.State}' due to base RSI change. Trace:\n{Environment.StackTrace}");
+                if (logMissing)
+                    Log.Error($"Layer {i} no longer has state '{layer.State}' due to base RSI change. Trace:\n{Environment.StackTrace}");
                 layer.Texture = null;
             }
+        }
+    }
+
+    /// <summary>
+    /// Modify a sprites base RSI. This is the RSI that is used by any RSI layers that do not specify their own.
+    /// Lets you set the layers at the same time. This will not log errors
+    /// under the assumption that the passed states of each layer are correct.
+    /// </summary>
+    /// <param name="sprite">Sprite to be modified</param>
+    /// <param name="path">Rooted resource path to the new RSI</param>
+    /// <param name="layers">Dictionary of layers and their new states</param>
+    public void SetBaseRsiWithLayers(Entity<SpriteComponent?> sprite, RSI? path, ref Dictionary<Enum, string> layers)
+    {
+        SetBaseRsi(sprite, path, false);
+
+        foreach(var (layer, value) in layers)
+        {
+            LayerSetRsiState(sprite, layer, value);
         }
     }
 

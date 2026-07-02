@@ -40,7 +40,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Lidgren now rate-limits logging.
+* Lidgren now rate-limits logging. You can control this via the `net.lidgren_log_rate_...` CVars.
 
 ### Bugfixes
 

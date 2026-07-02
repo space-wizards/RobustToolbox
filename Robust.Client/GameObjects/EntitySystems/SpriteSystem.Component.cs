@@ -74,10 +74,7 @@ public sealed partial class SpriteSystem
         target.Comp.Layers = new List<SpriteComponent.Layer>(source.Comp.Layers.Count);
         foreach (var otherLayer in source.Comp.Layers)
         {
-            var layer = new SpriteComponent.Layer(otherLayer, target.Comp);
-            layer.Index = target.Comp.Layers.Count;
-            layer.Owner = target!;
-            target.Comp.Layers.Add(layer);
+            CopyLayer(target, otherLayer);
         }
 
         target.Comp.IsInert = source.Comp.IsInert;

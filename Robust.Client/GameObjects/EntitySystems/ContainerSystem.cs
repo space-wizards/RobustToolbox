@@ -18,6 +18,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private IRobustSerializer _serializer = default!;
         [Dependency] private IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private PointLightSystem _lightSys = default!;
+        [Dependency] private SpriteSystem _sprite = default!;
 
         private EntityQuery<PointLightComponent> _pointLightQuery;
         private EntityQuery<SpriteComponent> _spriteQuery;
@@ -327,7 +328,7 @@ namespace Robust.Client.GameObjects
         {
             if (_spriteQuery.TryGetComponent(entity, out var sprite))
             {
-                sprite.ContainerOccluded = spriteOccluded;
+                _sprite.SetContainerOccluded((entity, sprite), spriteOccluded);
             }
 
             if (_pointLightQuery.TryGetComponent(entity, out var light))

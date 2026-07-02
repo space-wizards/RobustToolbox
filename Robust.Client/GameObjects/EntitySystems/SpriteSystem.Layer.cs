@@ -97,6 +97,42 @@ public sealed partial class SpriteSystem
         return true;
     }
 
+    public void CopyLayer(Entity<SpriteComponent?> target, Layer source)
+    {
+        if (!_query.Resolve(target.Owner, ref target.Comp))
+            return;
+
+        var layer = new Layer();
+
+        if (source.Shader != null)
+            layer.Shader = source.Shader.Mutable ? source.Shader.Duplicate() : source.Shader;
+
+        layer.UnShaded = source.UnShaded;
+        layer.ShaderPrototype = source.ShaderPrototype;
+        layer.Texture = source.Texture;
+        layer._rsi = source.RSI;
+        layer.StateId = source.State;
+        layer.AnimationTimeLeft = source.AnimationTimeLeft;
+        layer.AnimationTime = source.AnimationTime;
+        layer.AnimationFrame = source.AnimationFrame;
+        layer._offset = source.Offset;
+        layer._rotation = source.Rotation;
+        layer._scale = source.Scale;
+        layer.UpdateLocalMatrix();
+        layer._visible = source._visible;
+        layer.Color = source.Color;
+        layer.DirOffset = source.DirOffset;
+        layer._autoAnimated = source._autoAnimated;
+        layer.RenderingStrategy = source.RenderingStrategy;
+        layer.Cycle = source.Cycle;
+        layer.Loop = source.Loop;
+
+        if (source.CopyToShaderParameters is { } copyToShaderParameters)
+            layer.CopyToShaderParameters = new CopyToShaderParameters(copyToShaderParameters);
+
+        AddLayer(target, layer);
+    }
+
     #region AddLayer
 
     /// <summary>

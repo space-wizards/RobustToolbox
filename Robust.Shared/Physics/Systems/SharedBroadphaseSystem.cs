@@ -18,7 +18,6 @@ namespace Robust.Shared.Physics.Systems
     public abstract partial class SharedBroadphaseSystem : EntitySystem
     {
         [Dependency] private IConfigurationManager _cfg = default!;
-        [Dependency] private IMapManagerInternal _mapManager = default!;
         [Dependency] private IParallelManager _parallel = default!;
         [Dependency] private EntityLookupSystem _lookup = default!;
         [Dependency] private SharedGridTraversalSystem _traversal = default!;
@@ -51,9 +50,9 @@ namespace Robust.Shared.Physics.Systems
 
             _contactJob = new()
             {
-                MapManager = _mapManager,
                 System = this,
                 TransformSys = EntityManager.System<SharedTransformSystem>(),
+                MapSys = _map,
                 // TODO: EntityManager one isn't ready yet?
                 XformQuery = GetEntityQuery<TransformComponent>(),
             };
@@ -265,7 +264,7 @@ namespace Robust.Shared.Physics.Systems
                     _physicsQuery,
                     _xformQuery);
 
-                _mapManager.FindGridsIntersecting(xform.MapID, aabb, ref state,
+                _map.FindGridsIntersecting(xform.MapID, aabb, ref state,
                     static (EntityUid gridBUid, MapGridComponent gridBMapComp,
                         ref (Entity<FixturesComponent, MapGridComponent, PhysicsComponent, TransformComponent> gridA,
                             Transform gridAToWorldRigid,
@@ -541,7 +540,7 @@ namespace Robust.Shared.Physics.Systems
             if (_broadphaseQuery.TryGetComponent(map.Value, out var mapBroadphase))
                 callback((map.Value, mapBroadphase));
 
-            _mapManager.FindGridsIntersecting(map.Value,
+            _map.FindGridsIntersecting(map.Value,
                 aabb,
                 ref internalState,
                 static (
@@ -569,7 +568,7 @@ namespace Robust.Shared.Physics.Systems
             if (_broadphaseQuery.TryGetComponent(map.Value, out var mapBroadphase))
                 callback((map.Value, mapBroadphase), ref state);
 
-            _mapManager.FindGridsIntersecting(map.Value,
+            _map.FindGridsIntersecting(map.Value,
                 aabb,
                 ref internalState,
                 static (
@@ -596,7 +595,7 @@ namespace Robust.Shared.Physics.Systems
         {
             public SharedBroadphaseSystem System = default!;
             public SharedTransformSystem TransformSys = default!;
-            public IMapManager MapManager = default!;
+            public SharedMapSystem MapSys = default!;
 
             public EntityQuery<TransformComponent> XformQuery;
 
@@ -626,7 +625,7 @@ namespace Robust.Shared.Physics.Systems
                 var state = (System, proxy, worldAABB, Pairs);
 
                 // Get every broadphase we may be intersecting.
-                MapManager.FindGridsIntersecting(mapUid, worldAABB.Enlarged(broadphaseExpand), ref state,
+                MapSys.FindGridsIntersecting(mapUid, worldAABB.Enlarged(broadphaseExpand), ref state,
                     static (EntityUid uid, MapGridComponent _, ref (
                         SharedBroadphaseSystem system,
                         FixtureProxy proxy,

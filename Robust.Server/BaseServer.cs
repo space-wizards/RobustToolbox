@@ -80,7 +80,6 @@ namespace Robust.Server
         [Dependency] private IRobustSerializer _serializer = default!;
         [Dependency] private IGameTiming _time = default!;
         [Dependency] private IResourceManagerInternal _resources = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private ITimerManager _timerManager = default!;
         [Dependency] private IServerGameStateManager _stateManager = default!;
         [Dependency] private IServerNetManager _network = default!;
@@ -379,7 +378,6 @@ namespace Robust.Server
                 _log.GetSawmill("res"));
 
             _entityManager.Initialize();
-            _mapManager.Initialize();
 
             _serialization.Initialize();
 
@@ -397,7 +395,6 @@ namespace Robust.Server
             IoCManager.Resolve<ToolshedManager>().Initialize();
             _consoleHost.Initialize();
             _entityManager.Startup();
-            _mapManager.Startup();
             _stateManager.Initialize();
             _replay.Initialize();
 

@@ -14,7 +14,7 @@ Don't change the format without looking at the script!
 
 ### New features
 
-* Added support for Tracy v0.13.1 on both the client and server. Start it by changing the prof.tracy.enabled cvar to true, and connect with a v0.13.1 Tracy client!
+*None yet*
 
 ### Bugfixes
 
@@ -35,6 +35,8 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+* Validate UIBox2i inputs
+* IMapManager has been completely nuked from the codebase. Almost all of its content-facing functionality was ported to `SharedMapSystem` in https://github.com/space-wizards/RobustToolbox/pull/6579 beforehand.
 * SpawnNextToOrDrop methods have been changed to take `EntProtoId?, Entity<TransformComponent?>, Vector2 = default` instead of `string?, EntityUid, TransformComponent? null`. Because of this, some `Entity<T>`s will need to first be explicity converted into `EntityUid`s.
 
 ### New features

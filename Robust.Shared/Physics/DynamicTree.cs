@@ -103,8 +103,11 @@ namespace Robust.Shared.Physics
         {
             foreach (var proxy in _nodeLookup.Values)
             {
-                _b2Tree.DestroyProxy(proxy);
+                if (proxy != DynamicTree.Proxy.Free)
+                    _b2Tree.DestroyProxy(proxy);
             }
+
+            _nodeLookup.Clear();
         }
 
         public bool Contains(T item)

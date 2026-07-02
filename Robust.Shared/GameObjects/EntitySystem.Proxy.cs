@@ -866,6 +866,14 @@ public partial class EntitySystem
         EntityManager.DeleteEntity(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid, MetaDataComponent, TransformComponent)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.DeleteEntity))]
+    protected void Del(EntityUid uid, MetaDataComponent meta)
+    {
+        EntityManager.DeleteEntity(uid, meta);
+    }
+
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager), nameof(EntityManager.QueueDeleteEntity))]

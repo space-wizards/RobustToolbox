@@ -1218,6 +1218,7 @@ namespace Robust.Shared.GameObjects
         internal IReadOnlyCollection<IComponent> GetComponentsInternal(EntityUid uid) => _entCompIndex[uid];
 
         /// <inheritdoc />
+        [Pure]
         public int ComponentCount(EntityUid uid)
         {
             var comps = _entCompIndex[uid];

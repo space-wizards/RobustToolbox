@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added support for Tracy v0.13.1 on both the client and server. Start it by changing the prof.tracy.enabled cvar to true, and connect with a v0.13.1 Tracy client!
+* Add chunk-based entity support to PVS. The API is accessed via ChunkEntitySystem. This can be used instead of manually handling streaming chunk-based data.
 
 ### Bugfixes
 

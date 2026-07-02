@@ -52,10 +52,20 @@ public sealed class AutoGenerateComponentStateAttribute : Attribute
     /// </summary>
     public readonly bool FieldDeltas;
 
-    public AutoGenerateComponentStateAttribute(bool raiseAfterAutoHandleState = false, bool fieldDeltas = false)
+    /// <summary>
+    ///     Only generate <see cref="IComponentDelta"/> fields and networked field registration.
+    ///     Used by components with custom state handlers.
+    /// </summary>
+    public readonly bool DeltaFieldsOnly;
+
+    public AutoGenerateComponentStateAttribute(
+        bool raiseAfterAutoHandleState = false,
+        bool fieldDeltas = false,
+        bool deltaFieldsOnly = false)
     {
         RaiseAfterAutoHandleState = raiseAfterAutoHandleState;
         FieldDeltas = fieldDeltas;
+        DeltaFieldsOnly = deltaFieldsOnly;
     }
 }
 

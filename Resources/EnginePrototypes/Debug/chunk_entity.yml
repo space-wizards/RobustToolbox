@@ -1,0 +1,9 @@
+- type: entity
+  id: ChunkEntity
+  name: Chunk Entity
+  description: Nullspace entity used to store chunk-level data.
+  save: false
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+    gridTraversal: false

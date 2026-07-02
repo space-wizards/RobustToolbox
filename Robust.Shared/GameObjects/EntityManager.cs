@@ -541,6 +541,14 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>
+        public void DeleteEntity(EntityUid e, MetaDataComponent meta)
+        {
+            DeleteEntity(e, meta, TransformQuery.GetComponent(e));
+        }
+
+        /// <summary>
+        /// Shuts-down and removes given Entity. This is also broadcast to all clients.
+        /// </summary>
         public void DeleteEntity(EntityUid e, MetaDataComponent meta, TransformComponent xform)
         {
             // Some UIs get disposed after entity-manager has shut down and already deleted all entities.

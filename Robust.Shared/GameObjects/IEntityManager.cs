@@ -202,6 +202,11 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.
         /// </summary>
+        void DeleteEntity(EntityUid uid, MetaDataComponent meta);
+
+        /// <summary>
+        /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.
+        /// </summary>
         void DeleteEntity(EntityUid uid, MetaDataComponent meta, TransformComponent xform);
 
         /// <summary>

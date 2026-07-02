@@ -634,6 +634,14 @@ namespace Robust.Shared
         public static readonly CVarDef<string> MetricsRuntimeSocket =
             CVarDef.Create("metrics.runtime_socket", "Counters", CVar.SERVERONLY);
 
+        #region Starlight
+        /// <summary>
+        /// Whether to enable granular metrics in the <see cref="SharedUserInterfaceSystem"/>.
+        /// </summary>
+        public static readonly CVarDef<bool> MetricsGranularUiSystem =
+            CVarDef.Create("metrics.granular_ui_system", false, CVar.SERVERONLY);
+        #endregion
+
         /*
          * STATUS
          */

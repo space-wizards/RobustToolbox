@@ -16,10 +16,17 @@ using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
+#region Starlight
+using Prometheus;
+using Robust.Shared.Configuration;
+using Stopwatch = System.Diagnostics.Stopwatch;
+#endregion
+
 namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedUserInterfaceSystem : EntitySystem
 {
+    [Dependency] private IConfigurationManager _cfg = default!; // Starlight
     [Dependency] private IDynamicTypeFactory _factory = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private INetManager _netManager = default!;
@@ -36,6 +43,51 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
 
     private ActorRangeCheckJob _rangeJob;
 
+    #region Starlight
+    private static readonly Histogram UpdateHistogram = Metrics.CreateHistogram(
+        "robust_bui_update_usage",
+        "Time spent in Update per phase",
+        new HistogramConfiguration
+        {
+            LabelNames = new[] { "phase" },
+            Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
+        });
+
+    private static readonly Histogram SetStateHistogram = Metrics.CreateHistogram(
+        "robust_bui_set_state_usage",
+        "Time spent in SetUiState per BUI type",
+        new HistogramConfiguration
+        {
+            LabelNames = new[] { "bui" },
+            Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
+        });
+
+    private static readonly Histogram RangeCheckHistogram = Metrics.CreateHistogram(
+        "robust_bui_range_check_usage",
+        "Time spent in range checks per BUI key type",
+        new HistogramConfiguration
+        {
+            LabelNames = new[] { "bui" },
+            Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
+        });
+
+    // The three 'phases' of the Update method.
+    private static readonly Histogram.Child MonitorRangeQuery = UpdateHistogram.WithLabels("RangeQuery");
+    private static readonly Histogram.Child MonitorRangeParallel = UpdateHistogram.WithLabels("RangeParallel");
+    private static readonly Histogram.Child MonitorRangeClose = UpdateHistogram.WithLabels("RangeClose");
+
+    // Reused histogram children per BUI / BUI key type.
+    private readonly Dictionary<Type, Histogram.Child> _setStateMonitors = new();
+    private readonly Dictionary<Type, Histogram.Child> _rangeCheckMonitors = new();
+
+    private readonly Stopwatch _stopwatch = new();
+
+    private bool _globalMetricsEnabled;
+    private bool _granularUiSystemMetricsEnabled;
+    private bool MetricsEnabled => _globalMetricsEnabled && _granularUiSystemMetricsEnabled;
+
+    #endregion Starlight
+
     /// <summary>
     /// Defer BUIs during state handling so client doesn't spam a BUI constantly during prediction.
     /// </summary>
@@ -44,6 +96,14 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
+
+        // Starlight BEGIN
+        if (_netManager.IsServer)
+        {
+            Subs.CVar(_cfg, CVars.MetricsEnabled, v => _globalMetricsEnabled = v, true);
+            Subs.CVar(_cfg, CVars.MetricsGranularUiSystem, v => _granularUiSystemMetricsEnabled = v, true);
+        }
+        // Starlight END
 
         EntityManager.ComponentFactory.RegisterNetworkedFields<UserInterfaceComponent>(
             nameof(UserInterfaceComponent.Actors),
@@ -733,6 +793,17 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         if (!entity.Comp.Interfaces.ContainsKey(key))
             return;
 
+        // Starlight BEGIN
+        Histogram.Child? monitor = null;
+        if (MetricsEnabled && state != null)
+        {
+            var type = state.GetType();
+            if (!_setStateMonitors.TryGetValue(type, out monitor))
+                _setStateMonitors[type] = monitor = SetStateHistogram.WithLabels(type.Name);
+            _stopwatch.Restart();
+        }
+        // Starlight END
+
         // Null state
         if (state == null)
         {
@@ -763,6 +834,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         }
 
         DirtyField(entity, nameof(UserInterfaceComponent.States));
+        monitor?.Observe(_stopwatch.Elapsed.TotalSeconds); // Starlight
     }
 
     /// <summary>
@@ -1161,6 +1233,11 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             _queuedBuis.Clear();
         }
 
+        // Starlight BEGIN
+        if (MetricsEnabled)
+            _stopwatch.Restart();
+        // Starlight END
+
         var query = AllEntityQuery<ActiveUserInterfaceComponent, UserInterfaceComponent>();
         // Run these in parallel because it's expensive.
         _rangeJob.ActorRanges.Clear();
@@ -1185,12 +1262,38 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                     if (_netManager.IsClient && !actor.IsValid())
                         continue; // Client might not have received the entity. Server should log errors.
 
+                    // Starlight BEGIN
+                    if (MetricsEnabled)
+                    {
+                        var keyType = key.GetType();
+                        if (!_rangeCheckMonitors.ContainsKey(keyType))
+                            _rangeCheckMonitors[keyType] = RangeCheckHistogram.WithLabels(keyType.Name);
+                    }
+                    // Starlight END
+
                     _rangeJob.ActorRanges.Add((uid, key, data, actor, false));
                 }
             }
         }
 
+        // Starlight BEGIN
+        _rangeJob.RangeMonitors = MetricsEnabled ? _rangeCheckMonitors : null;
+        if (MetricsEnabled)
+        {
+            MonitorRangeQuery.Observe(_stopwatch.Elapsed.TotalSeconds);
+            _stopwatch.Restart();
+        }
+        // Starlight END
+
         _parallel.ProcessNow(_rangeJob, _rangeJob.ActorRanges.Count);
+
+        // Starlight BEGIN
+        if (MetricsEnabled)
+        {
+            MonitorRangeParallel.Observe(_stopwatch.Elapsed.TotalSeconds);
+            _stopwatch.Restart();
+        }
+        // Starlight END
 
         foreach (var data in _rangeJob.ActorRanges)
         {
@@ -1203,6 +1306,11 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
 
             CloseUi((uid, uiComp), key, actor);
         }
+
+        // Starlight BEGIN
+        if (MetricsEnabled)
+            MonitorRangeClose.Observe(_stopwatch.Elapsed.TotalSeconds);
+        // Starlight END
     }
 
     /// <summary>
@@ -1268,6 +1376,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     {
         public required EntityQuery<TransformComponent> XformQuery;
         public required SharedUserInterfaceSystem System;
+        public Dictionary<Type, Histogram.Child>? RangeMonitors; // Starlight: Monitoring
         public readonly List<(EntityUid Ui, Enum Key, InterfaceData Data, EntityUid Actor, bool Result)> ActorRanges = new();
 
         public void Execute(int index)
@@ -1281,7 +1390,10 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             }
             else
             {
+                var start = Stopwatch.GetTimestamp(); // Starlight
                 data.Result = System.CheckRange((data.Ui, uiXform), data.Key, data.Data, (data.Actor, actorXform));
+                if (RangeMonitors != null && RangeMonitors.TryGetValue(data.Key.GetType(), out var monitor)) // Starlight
+                    monitor.Observe(Stopwatch.GetElapsedTime(start).TotalSeconds); // Starlight
             }
 
             ActorRanges[index] = data;

@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Validate UIBox2i inputs
+* IMapManager has been completely nuked from the codebase. Almost all of its content-facing functionality was ported to `SharedMapSystem` in https://github.com/space-wizards/RobustToolbox/pull/6579 beforehand.
 
 ### New features
 

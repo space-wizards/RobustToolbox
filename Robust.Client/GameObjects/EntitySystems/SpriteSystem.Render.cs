@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
@@ -63,52 +64,128 @@ public sealed partial class SpriteSystem
         // Fast path for when all sprites use the same transform matrix
         if (!sprite.Comp.GranularLayersRendering)
         {
+            var renderingStrategies = new LayerRenderingStrategyMatrices(spriteMatrix);
+            RenderLayersWithOverride(sprite, drawingHandle, in renderingStrategies, angle, overrideDirection);
+        }
+        else
+        {
+            //Default rendering (NoRotation = false)
+            entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation);
+            var transformDefault = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
+
+            //Snap to cardinals
+            entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation - angle.RoundToCardinalAngle());
+            var transformSnap = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
+
+            //No rotation
+            entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, -eyeRotation);
+            var transformNoRot = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
+
+            var renderingStrategies = new LayerRenderingStrategyMatrices(spriteMatrix, transformDefault, transformSnap, transformNoRot);
+            RenderLayersWithOverride(sprite, drawingHandle, in renderingStrategies, angle, overrideDirection);
+        }
+    }
+
+    /// <summary>
+    /// Pre-step before rendering a sprite's layers, ensuring the order is overriden if <see cref="SpriteComponent.LayersOrderOverride"/> is set.
+    /// Layers with parents are skipped here, as they are assumed to be rendered as child layers instead.
+    /// </summary>
+    private void RenderLayersWithOverride(Entity<SpriteComponent> sprite, DrawingHandleWorld drawingHandle, ref readonly LayerRenderingStrategyMatrices matrices, Angle angle, Direction? overrideDirection)
+    {
+        if (sprite.Comp.LayersOrderOverride != null)
+        {
+            var highestIndex = 0;
+            foreach (var index in sprite.Comp.LayersOrderOverride)
+            {
+                if (index >= sprite.Comp.Layers.Count || index < 0)
+                {
+                    Log.Error($"Tried to override the layer render order with an index '{index}' outside the bounds of the layer list for {ToPrettyString(sprite)}");
+                    continue;
+                }
+
+                if (highestIndex < index)
+                    highestIndex = index + 1;
+
+                var layer = sprite.Comp.Layers[index];
+
+                if (layer.ParentLayer != null)
+                    continue;
+
+                RenderLayerWithChildren(sprite, layer, drawingHandle, in matrices, angle, overrideDirection);
+            }
+
+            if (highestIndex == sprite.Comp.Layers.Count)
+                return;
+
+            // Render any remaining layers beyond the override
+            foreach (var layer in sprite.Comp.Layers[highestIndex..])
+            {
+                if (layer.ParentLayer != null)
+                    continue;
+
+                RenderLayerWithChildren(sprite, layer, drawingHandle, in matrices, angle, overrideDirection);
+            }
+        }
+        else
+        {
             foreach (var layer in sprite.Comp.Layers)
             {
-                RenderLayer(layer, drawingHandle, ref spriteMatrix, angle, overrideDirection);
+                if (layer.ParentLayer != null)
+                    continue;
+
+                RenderLayerWithChildren(sprite, layer, drawingHandle, in matrices, angle, overrideDirection);
             }
-            return;
         }
+    }
 
-        //Default rendering (NoRotation = false)
-        entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation);
-        var transformDefault = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
-
-        //Snap to cardinals
-        entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation - angle.RoundToCardinalAngle());
-        var transformSnap = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
-
-        //No rotation
-        entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, -eyeRotation);
-        var transformNoRot = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
-
-        foreach (var layer in sprite.Comp.Layers)
+    /// <summary>
+    /// Pre-step before rendering a sprite's layer, first rendering the given layer using the set rendering strategy and then recursively rendering any child layers after.
+    /// </summary>
+    private void RenderLayerWithChildren(Entity<SpriteComponent> sprite, Layer layer, DrawingHandleWorld drawingHandle, ref readonly LayerRenderingStrategyMatrices matrices, Angle angle, Direction? overrideDirection)
+    {
+        if (sprite.Comp.GranularLayersRendering || layer.RenderingStrategy == LayerRenderingStrategy.UseSpriteStrategy)
+        {
+            RenderLayer(layer, drawingHandle, in matrices.UseSpriteStrategy, angle, overrideDirection);
+        }
+        else
         {
             switch (layer.RenderingStrategy)
             {
                 case LayerRenderingStrategy.UseSpriteStrategy:
-                    RenderLayer(layer, drawingHandle, ref spriteMatrix, angle, overrideDirection);
+                case var _ when sprite.Comp.GranularLayersRendering:
+                    RenderLayer(layer, drawingHandle, in matrices.UseSpriteStrategy, angle, overrideDirection);
                     break;
                 case LayerRenderingStrategy.Default:
-                    RenderLayer(layer, drawingHandle, ref transformDefault, angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, in matrices.Default, angle, overrideDirection);
                     break;
                 case LayerRenderingStrategy.NoRotation:
-                    RenderLayer(layer, drawingHandle, ref transformNoRot, angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, in matrices.NoRotation, angle, overrideDirection);
                     break;
                 case LayerRenderingStrategy.SnapToCardinals:
-                    RenderLayer(layer, drawingHandle, ref transformSnap, angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, in matrices.SnapToCardinals, angle, overrideDirection);
                     break;
                 default:
                     Log.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
                     break;
             }
         }
+
+        foreach (var childIndex in layer.ChildLayers)
+        {
+            if (childIndex >= sprite.Comp.Layers.Count || childIndex < 0)
+            {
+                Log.Error($"Tried to access a child layer with an index '{childIndex}' outside the bounds of the layer list for entity {ToPrettyString(sprite)}");
+                continue;
+            }
+
+            RenderLayerWithChildren(sprite, sprite.Comp.Layers[childIndex], drawingHandle, in matrices, angle, overrideDirection); // Recursion scares me.
+        }
     }
 
     /// <summary>
     /// Render a layer. This assumes that the input angle is between 0 and 2pi.
     /// </summary>
-    private void RenderLayer(Layer layer, DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection)
+    private void RenderLayer(Layer layer, DrawingHandleWorld drawingHandle, ref readonly Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection)
     {
         if (!layer.Visible || layer.Blank)
             return;
@@ -190,5 +267,29 @@ public sealed partial class SpriteSystem
         var sr = Clyde.RenderHandle.WorldTextureBoundsToUV(clydeTexture, csr);
         var uv = new Vector4(sr.Left, sr.Bottom, sr.Right, sr.Top);
         shader.SetParameter(paramUV, uv);
+    }
+}
+
+/// <summary>
+/// Stores the rendering matrices used for a sprite's layers.
+/// </summary>
+public readonly struct LayerRenderingStrategyMatrices
+{
+    public readonly Matrix3x2 UseSpriteStrategy;
+    public readonly Matrix3x2 Default;
+    public readonly Matrix3x2 SnapToCardinals;
+    public readonly Matrix3x2 NoRotation;
+
+    public LayerRenderingStrategyMatrices(Matrix3x2 useSpriteStrategy)
+    {
+        UseSpriteStrategy = useSpriteStrategy;
+    }
+
+    public LayerRenderingStrategyMatrices(Matrix3x2 useSpriteStrategy, Matrix3x2 defaultMatrix, Matrix3x2 snapToCardinals, Matrix3x2 noRotation)
+    {
+        UseSpriteStrategy = useSpriteStrategy;
+        Default = defaultMatrix;
+        SnapToCardinals = snapToCardinals;
+        NoRotation = noRotation;
     }
 }

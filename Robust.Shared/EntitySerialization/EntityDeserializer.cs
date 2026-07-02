@@ -617,8 +617,9 @@ public sealed partial class EntityDeserializer :
                 }
 
                 var datanode = compData;
-                if (proto != null && proto.Components.TryGetValue(name, out var protoData))
-                    datanode = _seriMan.CombineMappings(compData, protoData.Mapping);
+
+                if (proto != null && _proto.GetPrototypeData(proto).TryGetValue(name, out var protoData))
+                    datanode = _seriMan.CombineMappings(compData, protoData);
 
                 _components.Add(name, datanode);
             }

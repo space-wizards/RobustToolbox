@@ -382,7 +382,7 @@ namespace Robust.Shared.Physics
             float areaBase = Box2.Perimeter(rootBox);
 
             // Area of inflated node
-            float directCost = Box2.Perimeter(rootBox.Union(boxD));
+            float directCost = Box2.UnionPerimeter(rootBox, boxD);
             float inheritedCost = 0.0f;
 
             Proxy bestSibling = rootIndex;
@@ -415,7 +415,7 @@ namespace Robust.Shared.Physics
                 // Cost of descending into child 1
                 float lowerCost1 = float.MaxValue;
                 var box1 = nodes[child1].Aabb;
-                float directCost1 = Box2.Perimeter(box1.Union(boxD));
+                float directCost1 = Box2.UnionPerimeter(box1, boxD);
                 float area1 = 0.0f;
                 if (leaf1)
                 {
@@ -442,7 +442,7 @@ namespace Robust.Shared.Physics
                 // Cost of descending into child 2
                 float lowerCost2 = float.MaxValue;
                 var box2 = nodes[child2].Aabb;
-                float directCost2 = Box2.Perimeter(box2.Union(boxD));
+                float directCost2 = Box2.UnionPerimeter(box2, boxD);
                 float area2 = 0.0f;
                 if (leaf2)
                 {
@@ -1059,9 +1059,7 @@ namespace Robust.Shared.Physics
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float EstimateCost(in Box2 baseAabb, in Node node)
         {
-            var cost = Box2.Perimeter(
-                baseAabb.Union(node.Aabb)
-            );
+            var cost = Box2.UnionPerimeter(baseAabb, node.Aabb);
 
             if (!node.IsLeaf)
             {
@@ -1557,8 +1555,8 @@ namespace Robust.Shared.Physics
 	        for (var i = 1; i < count; ++i)
 	        {
 		        center = boxes[i].Center;
-		        centroidAABB.BottomLeft = Vector2.Min(centroidAABB.BottomLeft, center);
-		        centroidAABB.TopRight = Vector2.Max(centroidAABB.TopRight, center);
+		        centroidAABB._bottomLeft = Vector2.Min(centroidAABB.BottomLeft, center);
+		        centroidAABB._topRight = Vector2.Max(centroidAABB.TopRight, center);
 	        }
 
 	        var d = Vector2.Subtract(centroidAABB.TopRight, centroidAABB.BottomLeft);
@@ -1582,8 +1580,8 @@ namespace Robust.Shared.Physics
 	        // Initialize bin bounds and count
 	        for (int i = 0; i < B2_Bin_Count; ++i)
 	        {
-		        bins[i].aabb.BottomLeft = new Vector2(float.MaxValue, float.MaxValue);
-		        bins[i].aabb.TopRight = new Vector2(float.MinValue, float.MinValue);
+		        bins[i].aabb._bottomLeft = new Vector2(float.MaxValue, float.MaxValue);
+		        bins[i].aabb._topRight = new Vector2(float.MinValue, float.MinValue);
 		        bins[i].count = 0;
 	        }
 
@@ -2135,8 +2133,8 @@ namespace Robust.Shared.Physics
 				        // Update segment bounding box.
 				        maxFraction = value;
 				        p2 = Vector2.Add(p1, maxFraction * d);
-				        segmentAABB.BottomLeft = Vector2.Min( p1, p2 );
-				        segmentAABB.TopRight = Vector2.Max( p1, p2 );
+				        segmentAABB._bottomLeft = Vector2.Min( p1, p2 );
+				        segmentAABB._topRight = Vector2.Max( p1, p2 );
 			        }
 		        }
 		        else
@@ -2172,14 +2170,14 @@ namespace Robust.Shared.Physics
 
 	        for (var i = 1; i < input.Count; ++i)
 	        {
-		        originAABB.BottomLeft = Vector2.Min(originAABB.BottomLeft, input.Points[i]);
-		        originAABB.TopRight = Vector2.Max(originAABB.TopRight, input.Points[i]);
+		        originAABB._bottomLeft = Vector2.Min(originAABB.BottomLeft, input.Points[i]);
+		        originAABB._topRight = Vector2.Max(originAABB.TopRight, input.Points[i]);
 	        }
 
 	        var radius = new Vector2(input.Radius, input.Radius);
 
-	        originAABB.BottomLeft = Vector2.Subtract(originAABB.BottomLeft, radius);
-	        originAABB.TopRight = Vector2.Add(originAABB.TopRight, radius );
+	        originAABB._bottomLeft = Vector2.Subtract(originAABB.BottomLeft, radius);
+	        originAABB._topRight = Vector2.Add(originAABB.TopRight, radius );
 
 	        var p1 = originAABB.Center;
 	        var extension = originAABB.Extents;
@@ -2252,8 +2250,8 @@ namespace Robust.Shared.Physics
 				        // Update segment bounding box.
 				        maxFraction = value;
 				        t = Vector2.Multiply(maxFraction, input.Translation);
-				        totalAABB.BottomLeft = Vector2.Min( originAABB.BottomLeft, Vector2.Add(originAABB.BottomLeft, t));
-				        totalAABB.TopRight = Vector2.Max( originAABB.TopRight, Vector2.Add( originAABB.TopRight, t));
+				        totalAABB._bottomLeft = Vector2.Min( originAABB.BottomLeft, Vector2.Add(originAABB.BottomLeft, t));
+				        totalAABB._topRight = Vector2.Max( originAABB.TopRight, Vector2.Add( originAABB.TopRight, t));
 			        }
 		        }
 		        else

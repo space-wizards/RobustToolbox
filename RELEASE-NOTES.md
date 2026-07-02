@@ -35,23 +35,24 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Box2 and Box2Rotated now validate their inputs and no longer accepts negative sizes.
 
 ### New features
 
-*None yet*
+* `Thickness` is now serializable.
 
 ### Bugfixes
 
-*None yet*
+* Fix Box2.EnlargeAabb's top bounds check.
+* Fix the NaN check for Box2.
 
 ### Other
 
-*None yet*
+* Added Box2Rotated's Origin to its Hashcode.
 
 ### Internal
 
-*None yet*
+* Speedup many hotpaths on Box2 and Box2Rotated.
 
 
 ## 280.0.0

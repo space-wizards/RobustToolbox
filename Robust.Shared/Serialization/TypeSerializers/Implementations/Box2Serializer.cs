@@ -1,5 +1,7 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -68,12 +70,18 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 return new ErrorNode(node, "Invalid amount of args for Box2.");
             }
 
-            return Parse.TryFloat(args[0], out _) &&
-                   Parse.TryFloat(args[1], out _) &&
-                   Parse.TryFloat(args[2], out _) &&
-                   Parse.TryFloat(args[3], out _)
-                ? new ValidatedValueNode(node)
-                : new ErrorNode(node, "Failed parsing values of Box2.");
+            if (!Parse.TryFloat(args[0], out var left) ||
+                !Parse.TryFloat(args[1], out var bottom) ||
+                !Parse.TryFloat(args[2], out var right) ||
+                !Parse.TryFloat(args[3], out var top))
+            {
+                return new ErrorNode(node, "Failed parsing values of Box2.");
+            }
+
+            if (!ValidateBounds(left, bottom, right, top, out var error))
+                return new ErrorNode(node, error);
+
+            return new ValidatedValueNode(node);
         }
 
         [MustUseReturnValue]
@@ -129,12 +137,18 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 return new ErrorNode(node, "Invalid amount of args for Box2i.");
             }
 
-            return Parse.TryInt32(args[0], out _) &&
-                   Parse.TryInt32(args[1], out _) &&
-                   Parse.TryInt32(args[2], out _) &&
-                   Parse.TryInt32(args[3], out _)
-                ? new ValidatedValueNode(node)
-                : new ErrorNode(node, "Failed parsing values of Box2i.");
+            if (!Parse.TryInt32(args[0], out var left) ||
+                !Parse.TryInt32(args[1], out var bottom) ||
+                !Parse.TryInt32(args[2], out var right) ||
+                !Parse.TryInt32(args[3], out var top))
+            {
+                return new ErrorNode(node, "Failed parsing values of Box2i.");
+            }
+
+            if (!ValidateBounds(left, bottom, right, top, out var error))
+                return new ErrorNode(node, error);
+
+            return new ValidatedValueNode(node);
         }
 
         public Box2i CreateCopy(ISerializationManager serializationManager, Box2i source,
@@ -152,6 +166,25 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         {
             if (!SpanSplitExtensions.SplitFindNext(ref source, ',', out splitValue))
                 throw new InvalidMappingException($"Could not parse {nameof(Box2)}: '{errValue}'");
+        }
+
+        private static bool ValidateBounds<T>(T left, T bottom, T right, T top, [NotNullWhen(false)] out string? error)
+            where T : IComparisonOperators<T, T, bool>
+        {
+            if (!(right <= left))
+            {
+                error = "Left cannot be greater than Right.";
+                return false;
+            }
+
+            if (!(top <= bottom))
+            {
+                error = "Bottom cannot be greater than Top.";
+                return false;
+            }
+
+            error = null;
+            return true;
         }
     }
 }

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Static + StaticSundries will now also be considered for grid-traversal when a grid moves over these entities.
 
 ### Other
 

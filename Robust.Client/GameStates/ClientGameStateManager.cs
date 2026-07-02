@@ -600,14 +600,19 @@ namespace Robust.Client.GameStates
                     !_processor.TryGetLastServerStates(meta.NetEntity, out var last))
                 {
                     // Entity was probably deleted on the server so do nothing.
+                    _entities.ClearPredictedDeletion(entity);
                     continue;
                 }
 
                 countReset += 1;
+                var predictedDetached = _entities.IsPredictedDetached(entity);
 
                 try
                 {
                     _resettingPredictedEntities = true;
+
+                    if (predictedDetached)
+                        meta.Flags &= ~MetaDataFlags.Detached;
 
                     foreach (var (netId, comp) in meta.NetComponents)
                     {
@@ -632,7 +637,9 @@ namespace Robust.Client.GameStates
                             }
                         }
 
-                        if (comp.LastModifiedTick <= _timing.LastRealTick ||
+                        // If the entity wasn't modified OR if we predicted it detached (e.g. deletion)
+                        // but have no state to rollback to
+                        if ((!predictedDetached && comp.LastModifiedTick <= _timing.LastRealTick) ||
                             !last.TryGetValue(netId, out var compState))
                         {
                             continue;
@@ -691,6 +698,7 @@ namespace Robust.Client.GameStates
 
                 DebugTools.Assert(meta.EntityLastModifiedTick > _timing.LastRealTick);
                 meta.EntityLastModifiedTick = _timing.LastRealTick;
+                _entities.ClearPredictedDeletion(entity);
             }
 
             _entities.System<PhysicsSystem>().ResetContacts();

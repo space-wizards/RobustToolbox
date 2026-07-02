@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 280.0.0
+
+### Breaking changes
+
 * Validate UIBox2i inputs
 * IMapManager has been completely nuked from the codebase. Almost all of its content-facing functionality was ported to `SharedMapSystem` in https://github.com/space-wizards/RobustToolbox/pull/6579 beforehand.
 
@@ -46,14 +69,6 @@ END TEMPLATE-->
 
 * Fixed Lidgren.ChatClient/ChatServer not building properly.
 * Fixed multiple sources of memory exhaustion/DOS attack surfaces in Lidgren.
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
 
 
 ## 279.0.1

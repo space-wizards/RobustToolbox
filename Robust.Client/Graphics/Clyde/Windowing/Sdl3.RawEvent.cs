@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Robust.Shared.Maths;
 using SDL3;
 using ET = SDL3.SDL.SDL_EventType;
 
@@ -35,6 +36,7 @@ internal partial class Clyde
                 case ET.SDL_EVENT_WINDOW_MOUSE_ENTER:
                 case ET.SDL_EVENT_WINDOW_MOUSE_LEAVE:
                 case ET.SDL_EVENT_WINDOW_MINIMIZED:
+                case ET.SDL_EVENT_WINDOW_MAXIMIZED:
                 case ET.SDL_EVENT_WINDOW_RESTORED:
                 case ET.SDL_EVENT_WINDOW_FOCUS_GAINED:
                 case ET.SDL_EVENT_WINDOW_FOCUS_LOST:
@@ -268,6 +270,7 @@ internal partial class Clyde
             public int Id;
             public uint DisplayId;
             public required string Name;
+            public Vector2i Position;
             public VideoMode CurrentMode;
             public required VideoMode[] AllModes;
         }

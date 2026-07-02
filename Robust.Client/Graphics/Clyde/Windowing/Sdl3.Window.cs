@@ -136,7 +136,7 @@ internal partial class Clyde
             // * it'd not be synchronized to other incoming window events correctly which might be icky.
             // So we send the TCS back to the game thread
             // which processes events in the correct order and has better control of stuff during init.
-            var reg = WinThreadSetupWindow(window, context);
+            var reg = WinThreadSetupWindow(window, context, cmd.Parameters);
 
             SendEvent(new EventWindowCreate
             {
@@ -240,6 +240,12 @@ internal partial class Clyde
                 }
             }
 
+            if (parameters.X is { } x)
+                SDL.SDL_SetNumberProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_X_NUMBER, x);
+
+            if (parameters.Y is { } y)
+                SDL.SDL_SetNumberProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_Y_NUMBER, y);
+
             SDL.SDL_SetNumberProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, parameters.Width);
             SDL.SDL_SetNumberProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, parameters.Height);
             SDL.SDL_SetStringProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_TITLE_STRING, parameters.Title);
@@ -251,6 +257,10 @@ internal partial class Clyde
 
             if (window == 0)
                 return default;
+
+            // Sanity check me
+            if (parameters.X is { } postCreateX && parameters.Y is { } postCreateY)
+                SDL.SDL_SetWindowPosition(window, postCreateX, postCreateY);
 
             nint glContext = SDL.SDL_GL_CreateContext(window);
             if (glContext == 0)
@@ -294,25 +304,28 @@ internal partial class Clyde
                 }
             }
 
-            // TODO: Monitors, window maximize.
-
             // Make sure window thread doesn't keep hold of the GL context.
             SDL.SDL_GL_MakeCurrent(IntPtr.Zero, IntPtr.Zero);
 
             if (parameters.Visible)
                 SDL.SDL_ShowWindow(window);
 
+            // Some window managers ignore maximize requests before the window is visible.
+            if (parameters.Maximized && !parameters.Fullscreen)
+                SDL.SDL_MaximizeWindow(window);
+
             return (window, glContext);
         }
 
-        private Sdl3WindowReg WinThreadSetupWindow(nint window, nint context)
+        private Sdl3WindowReg WinThreadSetupWindow(nint window, nint context, WindowCreateParameters parameters)
         {
             var reg = new Sdl3WindowReg
             {
                 Sdl3Window = window,
                 GlContext = context,
                 WindowId = SDL.SDL_GetWindowID(window),
-                Id = new WindowId(_nextWindowId++)
+                Id = new WindowId(_nextWindowId++),
+                IsMaximized = parameters.Maximized && !parameters.Fullscreen
             };
             var handle = new WindowHandle(_clyde, reg);
             reg.Handle = handle;

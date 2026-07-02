@@ -35,6 +35,7 @@ internal partial class Clyde
             var id = _nextMonitorId++;
 
             var name = SDL.SDL_GetDisplayName(displayId);
+            SDL.SDL_GetDisplayBounds(displayId, out var bounds);
             var modePtr = (SDL.SDL_DisplayMode**)SDL.SDL_GetFullscreenDisplayModes(displayId, out var modeCount);
             var curMode = (SDL.SDL_DisplayMode*)SDL.SDL_GetCurrentDisplayMode(displayId);
             var modes = new VideoMode[modeCount];
@@ -55,6 +56,7 @@ internal partial class Clyde
                 Id = id,
                 DisplayId = displayId,
                 Name = name,
+                Position = (bounds.x, bounds.y),
                 AllModes = modes,
                 CurrentMode = ConvertVideoMode(in *curMode),
             });
@@ -79,6 +81,7 @@ internal partial class Clyde
             var impl = new MonitorHandle(
                 ev.Id,
                 ev.Name,
+                ev.Position,
                 (ev.CurrentMode.Width, ev.CurrentMode.Height),
                 ev.CurrentMode.RefreshRate,
                 ev.AllModes);

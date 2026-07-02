@@ -407,8 +407,8 @@ namespace Robust.Shared.Physics.Systems
 
             QueryBroadphase(broadphaseComp.DynamicTree, state, aabb);
 
-            if ((proxy.Body.BodyType & BodyType.Static) != 0x0)
-                return;
+            // Static proxies still need to query the static tree so anchored/static bodies can
+            // rediscover sensor contacts after RegenerateContacts.
 
             QueryBroadphase(broadphaseComp.StaticTree, state, aabb);
         }

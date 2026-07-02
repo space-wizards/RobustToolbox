@@ -40,11 +40,12 @@ END TEMPLATE-->
 
 ### New features
 
-* Added support for Tracy v0.13.1 on both the client and server. Start it by changing the prof.tracy.enabled cvar to true, and connect with a v0.13.1 Tracy client!
+* Lidgren now rate-limits logging.
 
 ### Bugfixes
 
-*None yet*
+* Fixed Lidgren.ChatClient/ChatServer not building properly.
+* Fixed multiple sources of memory exhaustion/DOS attack surfaces in Lidgren.
 
 ### Other
 

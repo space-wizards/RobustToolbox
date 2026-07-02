@@ -43,7 +43,15 @@ public sealed partial class ReplayLoadCommand : BaseReplayCommand
             return;
         }
 
-        var file = new ResPath(_cfg.GetCVar(CVars.ReplayDirectory)) / args[0];
+        var replayFile = new ResPath(args[0]);
+        var file = new ResPath(_cfg.GetCVar(CVars.ReplayDirectory)) / replayFile;
+
+        if (!file.IsValidFilePath(rooted: false))
+        {
+            shell.WriteError(Loc.GetString("cmd-error-file-not-found", ("file", args[0])));
+            return;
+        }
+
         if (!_resMan.UserData.Exists(file))
         {
             shell.WriteError(Loc.GetString("cmd-error-file-not-found", ("file", file)));

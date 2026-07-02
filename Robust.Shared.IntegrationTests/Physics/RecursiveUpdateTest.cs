@@ -21,13 +21,12 @@ internal sealed class RecursiveUpdateTest
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var xforms = entManager.System<SharedTransformSystem>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var containers = entManager.System<ContainerSystem>();
 
         var mapId = sim.CreateMap().MapId;
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSystem.CreateGridEntity(mapId);
         var guid = grid.Owner;
         mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
         Assert.That(entManager.HasComponent<BroadphaseComponent>(guid));
@@ -161,7 +160,6 @@ internal sealed class RecursiveUpdateTest
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
         var transforms = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
         var lookup = entManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
@@ -216,7 +214,7 @@ internal sealed class RecursiveUpdateTest
         Assert.That(ents, Does.Contain(child));
 
         // Try again, but this time with a parent change.
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSystem.CreateGridEntity(mapId);
         var guid = grid.Owner;
         mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(guid);

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added a SplitCenterChangingEventArgs to SplitContainer for when it's being moved around.
 
 ### Bugfixes
 

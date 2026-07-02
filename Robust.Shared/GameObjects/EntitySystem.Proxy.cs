@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Containers;
@@ -1013,12 +1014,12 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
     protected EntityUid SpawnNextToOrDrop(
-        string? protoName,
-        EntityUid target,
-        TransformComponent? xform = null,
+        EntProtoId? protoName,
+        Entity<TransformComponent?> target,
+        Vector2 offset = default,
         ComponentRegistry? overrides = null)
     {
-        return EntityManager.SpawnNextToOrDrop(protoName, target, xform, overrides);
+        return EntityManager.SpawnNextToOrDrop(protoName, target, offset, overrides);
     }
 
     /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
@@ -1088,12 +1089,12 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
     protected EntityUid PredictedSpawnNextToOrDrop(
-        string? protoName,
-        EntityUid target,
-        TransformComponent? xform = null,
+        EntProtoId? protoName,
+        Entity<TransformComponent?> target,
+        Vector2 offset = default,
         ComponentRegistry? overrides = null)
     {
-        return EntityManager.PredictedSpawnNextToOrDrop(protoName, target, xform, overrides);
+        return EntityManager.PredictedSpawnNextToOrDrop(protoName, target, offset, overrides);
     }
 
     /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />

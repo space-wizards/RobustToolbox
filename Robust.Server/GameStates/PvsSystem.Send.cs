@@ -44,7 +44,7 @@ internal sealed partial class PvsSystem
 
     private void SendSessionState(PvsSession data, ZStdCompressionContext ctx)
     {
-        using var _tz = _prof.BeginThreadZone("Send Session");
+        using var _tz = _prof.Group("Send Session");
         DebugTools.AssertEqual(data.State, null);
 
         // PVS benchmarks use dummy sessions.

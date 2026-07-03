@@ -40,14 +40,14 @@ internal sealed partial class PvsSystem
 
             if (i >= 0)
             {
-                using (_prof.BeginThreadZone("Serialize Session"))
+                using (_prof.Group("Serialize Session"))
                 {
                     SerializeSessionState(_sessions[i]);
                 }
             }
             else
             {
-                using (_prof.BeginThreadZone("Serialize Replay"))
+                using (_prof.Group("Serialize Replay"))
                 {
                     _replay.Update();
                 }
@@ -70,7 +70,7 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void SerializeSessionState(PvsSession data)
     {
-        using (_prof.BeginThreadZone("Compute State"))
+        using (_prof.Group("Compute State"))
         {
             ComputeSessionState(data);
         }
@@ -82,7 +82,7 @@ internal sealed partial class PvsSystem
         if (data.Session.Channel is not DummyChannel)
         {
             data.StateStream = RobustMemoryManager.GetMemoryStream();
-            using (_prof.BeginThreadZone("Write State"))
+            using (_prof.Group("Write State"))
             {
                 _serializer.SerializeDirect(data.StateStream, data.State);
             }

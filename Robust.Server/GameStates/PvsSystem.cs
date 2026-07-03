@@ -306,7 +306,7 @@ internal sealed partial class PvsSystem : EntitySystem
     private void GetEntityStates(PvsSession session)
     {
         // First, we send the client's own viewers. we want to ALWAYS send these, regardless of any pvs budget.
-        using (_prof.BeginThreadZone("Forced"))
+        using (_prof.Group("Forced"))
         {
             AddForcedEntities(session);
         }
@@ -325,13 +325,13 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         // Process all PVS overrides.
-        using (_prof.BeginThreadZone("Overrides"))
+        using (_prof.Group("Overrides"))
         {
             AddAllOverrides(session);
         }
 
         // Process all entities in visible PVS chunks
-        using (_prof.BeginThreadZone("Chunks"))
+        using (_prof.Group("Chunks"))
         {
             AddPvsChunks(session);
         }

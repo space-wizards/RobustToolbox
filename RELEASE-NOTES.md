@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Added profiling zones splitting entity rendering into sprite gathering and drawing.
 
 
 ## 280.0.0

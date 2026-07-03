@@ -408,16 +408,15 @@ namespace Robust.Client
             if (Options.LoadConfigAndUserData)
             {
                 var configPath = Options.ConfigFileName.ToRootedPath();
-                var configFile = userDataProvider.GetFullPath(configPath);
                 if (userDataProvider.Exists(configPath))
                 {
                     // Load config from user data if available.
-                    _configurationManager.LoadFromFile(configFile);
+                    _configurationManager.LoadFromFile(userDataProvider, configPath);
                 }
                 else
                 {
                     // Else we just use code-defined defaults and let it save to file when the user changes things.
-                    _configurationManager.SetSaveFile(configFile);
+                    _configurationManager.SetSaveFile(userDataProvider, configPath);
                 }
             }
 

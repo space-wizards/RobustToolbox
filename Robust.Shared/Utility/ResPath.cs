@@ -685,4 +685,31 @@ public static class ResPathUtil
             ? path.CanonPath[1..].Split(ResPath.Separator)
             : path.CanonPath.Split(ResPath.Separator);
     }
+
+    /// <summary>
+    /// Checks whether this path points to a file and does not contain relative traversal.
+    /// </summary>
+    /// <param name="path">Path to validate.</param>
+    /// <param name="rooted">If true, the path must be rooted. If false, the path must be relative.</param>
+    public static bool IsValidFilePath(this ResPath path, bool rooted)
+    {
+        if (rooted != path.IsRooted)
+            return false;
+
+        if (path == ResPath.Root || path == ResPath.Self || path == ResPath.Empty)
+            return false;
+
+        if (path.Clean() != path)
+            return false;
+
+        // Clean() intentionally preserves base-level relative traversal like "../foo".
+        // Those paths are normalized, but still not safe file paths.
+        foreach (var segment in path.EnumerateSegments())
+        {
+            if (segment == "..")
+                return false;
+        }
+
+        return path.Filename is not ("." or "..");
+    }
 }

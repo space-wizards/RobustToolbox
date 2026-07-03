@@ -83,7 +83,8 @@ namespace Robust.Client.Utility
             ResPath path,
             bool hideRootDir)
         {
-            return new WritableDirProvider(Directory.CreateDirectory(provider.GetFullPath(path)), hideRootDir);
+            provider.CreateDir(path);
+            return provider.OpenSubdirectory(path);
         }
     }
 }

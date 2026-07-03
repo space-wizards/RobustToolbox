@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
@@ -28,8 +27,11 @@ public sealed partial class ProfManager
     /// </summary>
     public bool IsEnabled { get; private set; }
 
-    // The profiling buffer is not thread-safe; only the thread we were initialized on writes to it.
-    private Thread? _owningThread;
+    // The profiling buffer is not thread-safe, so only the thread driving the frame writes to it.
+    // Stamped each frame by the game loop rather than at init, since ProfManager can be resolved from
+    // other dependency collections or used with no game loop at all. 0 means unset (no game loop), which
+    // allows writes from any thread so standalone usage keeps working.
+    private int _owningThreadId;
 
     // I don't care that this isn't a tree I will call upon the string tree just like in BYOND.
     private readonly Dictionary<string, int> _stringTreeIndices = new();
@@ -41,7 +43,6 @@ public sealed partial class ProfManager
 
     internal void Initialize()
     {
-        _owningThread = Thread.CurrentThread;
         _sawmill = _logManager.GetSawmill("prof");
 
         _cfg.OnValueChanged(CVars.ProfIndexSize, i =>
@@ -74,6 +75,16 @@ public sealed partial class ProfManager
     }
 
     partial void InitializeTracyCvars();
+
+    /// <summary>
+    /// Records the calling thread as the one driving the profiling buffer, so that <see cref="Group"/>
+    /// calls from any other thread (e.g. parallel job bodies) skip the buffer and only emit a Tracy zone.
+    /// Called once per frame by the game loop.
+    /// </summary>
+    internal void MarkFrameThread()
+    {
+        _owningThreadId = Environment.CurrentManagedThreadId;
+    }
 
     /// <summary>
     /// Write an index covering the region from <paramref name="start"/> to the current write position.
@@ -220,7 +231,8 @@ public sealed partial class ProfManager
         [CallerFilePath] string? filePath = null,
         [CallerMemberName] string? memberName = null)
     {
-        var writeBuffer = Thread.CurrentThread == _owningThread;
+        // 0 == no game loop has stamped an owner, so allow the write (single-threaded / standalone use).
+        var writeBuffer = _owningThreadId == 0 || Environment.CurrentManagedThreadId == _owningThreadId;
         var start = writeBuffer ? WriteGroupStart() : 0;
         return new GroupGuard(this, start, name, color ?? Color.Black, lineNumber, filePath, memberName, writeBuffer);
     }

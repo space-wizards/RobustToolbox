@@ -93,6 +93,10 @@ namespace Robust.Client.Graphics.Clyde
                         WinThreadWinSetVisible(cmd);
                         break;
 
+                    case CmdWinSetRelativeMouseMode cmd:
+                        WinThreadWinSetRelativeMouseMode(cmd);
+                        break;
+
                     case CmdWinRequestAttention cmd:
                         WinThreadWinRequestAttention(cmd);
                         break;
@@ -246,6 +250,11 @@ namespace Robust.Client.Graphics.Clyde
             private sealed record CmdWinSetVisible(
                 nint Window,
                 bool Visible
+            ) : CmdBase;
+
+            private sealed record CmdWinSetRelativeMouseMode(
+                nint Window,
+                bool Enabled
             ) : CmdBase;
 
             private sealed record CmdWinRequestAttention(

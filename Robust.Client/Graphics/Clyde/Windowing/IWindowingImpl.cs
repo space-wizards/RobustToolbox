@@ -41,6 +41,7 @@ namespace Robust.Client.Graphics.Clyde
             void WindowSetMonitor(WindowReg window, IClydeMonitor monitor);
             void WindowSetSize(WindowReg window, Vector2i size);
             void WindowSetVisible(WindowReg window, bool visible);
+            void WindowSetRelativeMouseMode(WindowReg window, bool enabled);
             void WindowRequestAttention(WindowReg window);
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);

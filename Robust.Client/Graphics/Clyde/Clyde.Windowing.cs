@@ -66,6 +66,23 @@ namespace Robust.Client.Graphics.Clyde
         public bool IsFocused => _mainWindow?.IsFocused ??
                                  throw new InvalidOperationException("Windowing is not initialized");
 
+        private bool _relativeMouseMode;
+
+        public bool RelativeMouseMode
+        {
+            get => _relativeMouseMode;
+            set
+            {
+                if (_relativeMouseMode == value)
+                    return;
+
+                _relativeMouseMode = value;
+
+                if (_mainWindow != null)
+                    _windowing?.WindowSetRelativeMouseMode(_mainWindow, value);
+            }
+        }
+
         public IEnumerable<IClydeWindow> AllWindows => _windowHandles;
 
         public Vector2 DefaultWindowScale => _mainWindow?.WindowScale ??

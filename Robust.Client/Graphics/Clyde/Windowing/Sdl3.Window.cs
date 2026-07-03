@@ -431,6 +431,16 @@ internal partial class Clyde
             SendCmd(new CmdWinSetVisible { Window = WinPtr(window), Visible = visible });
         }
 
+        public void WindowSetRelativeMouseMode(WindowReg window, bool enabled)
+        {
+            SendCmd(new CmdWinSetRelativeMouseMode { Window = WinPtr(window), Enabled = enabled });
+        }
+
+        private static void WinThreadWinSetRelativeMouseMode(CmdWinSetRelativeMouseMode cmd)
+        {
+            SDL.SDL_SetWindowRelativeMouseMode(cmd.Window, cmd.Enabled);
+        }
+
         private static void WinThreadWinSetSize(CmdWinSetSize cmd)
         {
             SDL.SDL_SetWindowSize(cmd.Window, cmd.W, cmd.H);

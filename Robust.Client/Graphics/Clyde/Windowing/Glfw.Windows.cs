@@ -99,6 +99,22 @@ namespace Robust.Client.Graphics.Clyde
                 SendCmd(new CmdWinSetVisible((nint) reg.GlfwWindow, visible));
             }
 
+            public void WindowSetRelativeMouseMode(WindowReg window, bool enabled)
+            {
+                var reg = (GlfwWindowReg) window;
+
+                SendCmd(new CmdWinSetRelativeMouseMode((nint) reg.GlfwWindow, enabled));
+            }
+
+            private void WinThreadWinSetRelativeMouseMode(CmdWinSetRelativeMouseMode cmd)
+            {
+                var win = (Window*) cmd.Window;
+
+                GLFW.SetInputMode(win,
+                    CursorStateAttribute.Cursor,
+                    cmd.Enabled ? CursorModeValue.CursorDisabled : CursorModeValue.CursorNormal);
+            }
+
             private void WinThreadWinSetSize(CmdWinSetSize cmd)
             {
                 var win = (Window*) cmd.Window;

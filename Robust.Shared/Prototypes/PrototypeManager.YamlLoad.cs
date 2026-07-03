@@ -241,29 +241,44 @@ public partial class PrototypeManager
                 mappingNode.Tag?.Equals(CreateVariantsTag) == true)
             {
                 variantData = new Dictionary<string, MappingDataNode>();
+                var variantCollection = new List<string>();
 
                 // Extract the variant IDs as a sequence of strings.
-                // The number of extracted strings (minus one) is the number of variants to generate.
+                // The number of extracted strings (minus one) is the number of clones to generate.
                 if (mappingNode.TryGet<SequenceDataNode>(VariantValuesFieldAttribute.Name, out var sequenceNode))
                 {
+                    // Recursively search through the original and cloned nodes for any CreateVariants nodes.
+                    // Replace these nodes with data appropriate for the current variant index.
+                    RecursivelySearchForVariantNodes(dataNode, 0);
+
+                    // Check that the ID node was replaced with a ValueDataNode after variantization.
+                    if (!dataNode.TryGet(IdDataFieldAttribute.Name, out idNode))
+                    {
+                        throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
+                    }
+
+                    variantCollection.Add(idNode.Value);
+
                     for (int i = 1; i < sequenceNode.Count(); i++)
                     {
                         var clonedNode = dataNode.Copy();
                         RecursivelySearchForVariantNodes(clonedNode, i);
 
-                        if (clonedNode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var clonedIdNode))
-                            variantData.Add(clonedIdNode.Value, clonedNode);
+                        if (!clonedNode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var clonedIdNode))
+                        {
+                            throw new PrototypeLoadException($"A prototype variant cloned from {type} is missing an 'id' datafield.");
                         }
 
-                    // Recursively search through the original and cloned nodes for any CreateVariants nodes.
-                    // Replace these nodes with data appropirate for the current variant index.
-                    RecursivelySearchForVariantNodes(dataNode, 0);
-                }
+                        variantData.Add(clonedIdNode.Value, clonedNode);
+                        variantCollection.Add(idNode.Value);
+                    }
 
-                // Check that the ID node was replaced with a ValueDataNode after variantization.
-                if (!dataNode.TryGet(IdDataFieldAttribute.Name, out idNode))
+                    // Register all variants of the source prototype as a collection for later reference.
+                    RegisterVariantCollection(variantCollection);
+                }
+                else
                 {
-                    throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
+                    throw new PrototypeLoadException($"The 'id' datafield of prototype type {type} has an invalid value assigned.");
                 }
             }
 
@@ -285,74 +300,6 @@ public partial class PrototypeManager
         }
 
         return new ExtractedMappingData(kind, id, parents, dataNode, variantData);
-    }
-
-    /// <summary>
-    /// Recursively searches all child nodes in the tree for any nodes with the CreateVariants tag.
-    /// </summary>
-    /// <param name="dataNode">The current data node being searched.</param>
-    /// <param name="variantIndex">The current variantization index.</param>
-    private void RecursivelySearchForVariantNodes(DataNode dataNode, int variantIndex)
-    {
-        switch(dataNode)
-        {
-            case MappingDataNode mappingNode:
-                foreach (var (childName, childNode) in mappingNode.Children.ToDictionary())
-                {
-                    if (childNode is MappingDataNode variantNode
-                        && variantNode.Tag?.Equals(CreateVariantsTag) == true)
-                    {
-                        ReplaceVariantNode(mappingNode, childName, variantNode, variantIndex);
-                        continue;
-                    }
-
-                    RecursivelySearchForVariantNodes(childNode, variantIndex);
-                }
-                break;
-            case SequenceDataNode sequenceNode:
-                foreach (var childNode in sequenceNode.Sequence)
-                {
-                    RecursivelySearchForVariantNodes(childNode, variantIndex);
-                }
-                break;
-        }
-    }
-
-    /// <summary>
-    /// Extracts an array of data from a node with the CreateVariants tag, selecting the element at the current variant index.
-    /// A new DataNode is created to contain this data, which then replaces the original node on its parent.
-    /// </summary>
-    /// <param name="parentNode">The parent of the node being replaced.</param>
-    /// <param name="variantNodeName">The name of the node being replaced.</param>
-    /// <param name="variantNode">The node being replaced.</param>
-    /// <param name="variantIndex">The current variant index.</param>
-    private void ReplaceVariantNode(MappingDataNode parentNode, string variantNodeName, MappingDataNode variantNode, int variantIndex)
-    {
-        DataNode? newNode = null;
-
-        if (variantNode.TryGet(VariantSequencesFieldAttribute.Name, out var sequenceNode))
-        {
-            var data = _serializationManager.Read<string[][]>(sequenceNode, notNullableOverride: true);
-
-            if (variantIndex < data.Length)
-                newNode = new SequenceDataNode(data[variantIndex]);
-        }
-        else if (variantNode.TryGet(VariantValuesFieldAttribute.Name, out var valueNode))
-        {
-            var data = _serializationManager.Read<string[]>(valueNode, notNullableOverride: true);
-
-            if (variantIndex < data.Length)
-                newNode = new ValueDataNode(data[variantIndex]);
-        }
-
-        if (newNode == null)
-        {
-            throw new PrototypeLoadException($"DataNode {variantNodeName} does not contain variantization data for index {variantIndex.ToString()}. " +
-                $"Check that all '{CreateVariantsTag}' nodes in the prototype are formatted correctly and their fields all have the same array length.");
-        }
-
-        parentNode.Remove(variantNodeName);
-        parentNode.Add(variantNodeName, newNode);
     }
 
     private void MergeMapping(

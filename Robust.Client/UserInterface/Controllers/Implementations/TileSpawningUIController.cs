@@ -174,15 +174,13 @@ public sealed partial class TileSpawningUIController : UIController
     private void OnTileClearPressed(ButtonEventArgs args)
     {
         if (_window == null || _window.Disposed) return;
-
-        _window.TileList.ClearSelected();
+        StopTilePlacement();
         _window.SearchBar.Clear();
         BuildTileList(string.Empty);
     }
 
     private void OnTileSearchChanged(LineEdit.LineEditEventArgs args)
     {
-        if (_placementLock) return;
         BuildTileList(args.Text);
     }
 

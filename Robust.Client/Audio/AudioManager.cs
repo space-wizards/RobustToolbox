@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using OpenTK.Audio.OpenAL;
-using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio.Sources;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
@@ -16,10 +17,10 @@ namespace Robust.Client.Audio;
 
 internal sealed partial class AudioManager : IAudioInternal
 {
-    [Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;
-    [Shared.IoC.Dependency] private readonly IReloadManager _reload = default!;
-    [Shared.IoC.Dependency] private readonly IResourceCache _cache = default!;
+    [Shared.IoC.Dependency] private IConfigurationManager _cfg = default!;
+    [Shared.IoC.Dependency] private ILogManager _logMan = default!;
+    [Shared.IoC.Dependency] private IReloadManager _reload = default!;
+    [Shared.IoC.Dependency] private IResourceCache _cache = default!;
 
     private Thread? _gameThread;
 
@@ -37,6 +38,7 @@ internal sealed partial class AudioManager : IAudioInternal
     private readonly HashSet<string> _alcDeviceExtensions = new();
     private readonly HashSet<string> _alContextExtensions = new();
     private Attenuation _attenuation;
+    private bool _audioInitialized;
 
     public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
     public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -47,14 +49,7 @@ internal sealed partial class AudioManager : IAudioInternal
 
     private void _audioCreateContext()
     {
-        unsafe
-        {
-            _openALContext = ALC.CreateContext(_openALDevice, (int*) 0);
-        }
-
-        ALC.MakeContextCurrent(_openALContext);
-        _checkAlcError(_openALDevice);
-        _checkAlError();
+        var useHrtf = _cfg.GetCVar(CVars.AudioHrtf);
 
         // Load up AL context extensions.
         var s = ALC.GetString(_openALDevice, AlcGetString.Extensions) ?? "";
@@ -63,9 +58,63 @@ internal sealed partial class AudioManager : IAudioInternal
             _alContextExtensions.Add(extension);
         }
 
+        var supportsHrtf = HasAlContextExtension("ALC_SOFT_HRTF");
+        var attributeList = new [] { 0 };
+        if (useHrtf && supportsHrtf)
+        {
+            var hrtfCount = ALC.GetInteger(_openALDevice, (AlcGetInteger)AlcSoftGetInteger.NumHrtfSpecifiers);
+            OpenALSawmill.Debug("HRTF specifier count: {0}", hrtfCount);
+
+            if (hrtfCount > 0)
+            {
+                attributeList =
+                [
+                    (int) AlcSoftGetInteger.Hrtf, 1,
+                    // default to the first specifier, im not even really sure in what contexts more than one of these
+                    // exists and i dont think its super valuable to expose another cvar for changing the index
+                    (int) AlcSoftGetInteger.HrtfId, 0,
+                    0
+                ];
+            }
+            else
+            {
+                OpenALSawmill.Warning("HRTF support enabled but no supported specifiers, HRTF will be disabled");
+            }
+        }
+
+        _openALContext = ALC.CreateContext(_openALDevice, attributeList);
+
+        ALC.MakeContextCurrent(_openALContext);
+        _checkAlcError(_openALDevice);
+        _checkAlError();
+
+        var hrtfEnabled = supportsHrtf ? ALC.GetInteger(_openALDevice, (AlcGetInteger)AlcSoftGetInteger.HrtfStatus) : 0;
         OpenALSawmill.Debug("OpenAL Vendor: {0}", AL.Get(ALGetString.Vendor));
         OpenALSawmill.Debug("OpenAL Renderer: {0}", AL.Get(ALGetString.Renderer));
         OpenALSawmill.Debug("OpenAL Version: {0}", AL.Get(ALGetString.Version));
+        OpenALSawmill.Debug("HRTF status: {0}", hrtfEnabled == 1 ? "Enabled" : "Disabled");
+    }
+
+    public IReadOnlyList<string> GetAudioDevices()
+    {
+        if (ALC.EnumerateAll.IsExtensionPresent())
+            return ALC.EnumerateAll.GetStringList(GetEnumerateAllContextStringList.AllDevicesSpecifier).ToList();
+
+        if (ALC.IsExtensionPresent(ALDevice.Null, "ALC_ENUMERATION_EXT"))
+            return ALC.GetStringList(GetEnumerationStringList.DeviceSpecifier).ToList();
+
+        return Array.Empty<string>();
+    }
+
+    public string? GetDefaultAudioDevice()
+    {
+        if (ALC.EnumerateAll.IsExtensionPresent())
+            return ALC.EnumerateAll.GetString(ALDevice.Null, GetEnumerateAllContextString.DefaultAllDevicesSpecifier);
+
+        if (ALC.IsExtensionPresent(ALDevice.Null, "ALC_ENUMERATION_EXT"))
+            return ALC.GetString(ALDevice.Null, AlcGetString.DefaultDeviceSpecifier);
+
+        return null;
     }
 
     private bool _audioOpenDevice()
@@ -119,11 +168,81 @@ internal sealed partial class AudioManager : IAudioInternal
         IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
         _cfg.OnValueChanged(CVars.AudioMasterVolume, SetMasterGain, true);
+        _cfg.OnValueChanged(CVars.AudioDevice, OnAudioDeviceChanged);
 
         _reload.Register("/Audio", "*.ogg");
         _reload.Register("/Audio", "*.wav");
 
         _reload.OnChanged += OnReload;
+        _audioInitialized = true;
+    }
+
+    private void OnAudioDeviceChanged(string deviceSpecifier)
+    {
+        if (!_audioInitialized)
+            return;
+
+        SwitchAudioDevice(deviceSpecifier);
+    }
+
+    private void SwitchAudioDevice(string requestedDevice)
+    {
+        OpenALSawmill.Info("Switching OpenAL output device to {0}.",
+            string.IsNullOrEmpty(requestedDevice) ? "<default>" : requestedDevice);
+
+        if (TryReopenAudioDevice(requestedDevice))
+        {
+            ReloadDeviceExtensions();
+            IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
+            SetMasterGain(_cfg.GetCVar(CVars.AudioMasterVolume));
+            return;
+        }
+
+        // The skrunkly path that's hopefully never needed.
+        OpenALSawmill.Warning(
+            "ALC_SOFT_reopen_device is unavailable or failed. Falling back to full audio device rebuild.");
+
+        DisposeAllAudio();
+        FlushALDisposeQueues();
+
+        if (!_audioOpenDevice())
+        {
+            OpenALSawmill.Error("Failed to reopen OpenAL device after device switch.");
+            return;
+        }
+
+        _audioCreateContext();
+        IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
+        SetMasterGain(_cfg.GetCVar(CVars.AudioMasterVolume));
+    }
+
+    private bool TryReopenAudioDevice(string requestedDevice)
+    {
+        if (_openALDevice == ALDevice.Null ||
+            !ALC.IsExtensionPresent(_openALDevice, "ALC_SOFT_reopen_device"))
+        {
+            return false;
+        }
+
+        var reopen = LoadAlcDelegate<AlcReopenDeviceSoftDelegate>("alcReopenDeviceSOFT");
+        if (reopen == null)
+            return false;
+
+        var reopenTarget = string.IsNullOrEmpty(requestedDevice) ? null : requestedDevice;
+        var reopened = reopen(_openALDevice, reopenTarget, IntPtr.Zero);
+        _checkAlcError(_openALDevice);
+        return reopened;
+    }
+
+    private void ReloadDeviceExtensions()
+    {
+        _alcDeviceExtensions.Clear();
+
+        var s = ALC.GetString(_openALDevice, AlcGetString.Extensions) ?? "";
+        foreach (var extension in s.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            _alcDeviceExtensions.Add(extension);
+        }
     }
 
     private void OnReload(ResPath args)
@@ -145,7 +264,7 @@ internal sealed partial class AudioManager : IAudioInternal
     private static void RemoveEfx((int sourceHandle, int filterHandle) handles)
     {
         if (handles.filterHandle != 0)
-            EFX.DeleteFilter(handles.filterHandle);
+            ALC.EFX.DeleteFilter(handles.filterHandle);
     }
 
     private void _checkAlcError(ALDevice device,
@@ -162,6 +281,31 @@ internal sealed partial class AudioManager : IAudioInternal
     internal void LogError(string message)
     {
         OpenALSawmill.Error(message);
+    }
+
+    /*
+     * Evil hack because OpenTK doesn't expose the device switch call.
+     */
+
+    private delegate bool AlcReopenDeviceSoftDelegate(ALDevice device, string? deviceName, IntPtr attribs);
+
+    private static TDelegate? LoadAlcDelegate<TDelegate>(string name)
+        where TDelegate : Delegate
+    {
+        var type = typeof(ALC);
+        while (type != null)
+        {
+            var method = type.GetMethod(
+                "LoadDelegate",
+                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+
+            if (method != null)
+                return (TDelegate?) method.MakeGenericMethod(typeof(TDelegate)).Invoke(null, [name]);
+
+            type = type.BaseType;
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -182,6 +326,19 @@ internal sealed partial class AudioManager : IAudioInternal
         {
             OpenALSawmill.Error("[{0}:{1}] AL error: {2}", callerMember, callerLineNumber, error);
         }
+    }
+
+    /// <summary>
+    ///     OpenAL Soft specific enum. OpenTK packages the regular OpenAL ones, but we use OpenAL Soft on most platforms,
+    ///     and these are used at the moment for HRTF support specifically.
+    /// </summary>
+    // https://github.com/kcat/openal-soft/blob/e9c479eb4190101bc51179afae56fc6dd5d26066/include/AL/alext.h#L471
+    public enum AlcSoftGetInteger
+    {
+        Hrtf = 0x1992,
+        HrtfStatus = 0x1993,
+        NumHrtfSpecifiers = 0x1994,
+        HrtfId = 0x1996
     }
 
     private sealed class LoadedAudioSample

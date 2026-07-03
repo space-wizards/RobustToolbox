@@ -9,6 +9,7 @@ namespace Robust.Client.Graphics
     /// <remarks>
     ///     Unstable API. Likely to break hard during renderer rewrite if you rely on it.
     /// </remarks>
+    [NotContentImplementable]
     public interface IRenderHandle
     {
         DrawingHandleScreen DrawingHandleScreen { get; }

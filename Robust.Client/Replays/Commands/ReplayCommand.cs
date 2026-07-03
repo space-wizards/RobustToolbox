@@ -8,14 +8,13 @@ using Robust.Shared.Replays;
 
 namespace Robust.Client.Replays.Commands;
 
-public abstract class BaseReplayCommand : LocalizedCommands
+public abstract partial class BaseReplayCommand : LocalizedCommands
 {
-    [Dependency] protected readonly IReplayPlaybackManager PlaybackManager = default!;
-    protected ILocalizationManager Loc => LocalizationManager;
+    [Dependency] protected IReplayPlaybackManager PlaybackManager = default!;
 
-    public override string Description => Loc.GetString($"cmd-{Command.Replace('_','-')}-desc");
+    public override string Description => Loc.GetString($"cmd-{Command.Replace('_', '-')}-desc");
 
-    public override string Help => Loc.GetString($"cmd-{Command.Replace('_','-')}-help");
+    public override string Help => Loc.GetString($"cmd-{Command.Replace('_', '-')}-help");
 
     protected bool AssertPlaying(IConsoleShell shell, [NotNullWhen(true)] out ReplayData? replay)
     {

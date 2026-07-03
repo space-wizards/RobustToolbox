@@ -17,6 +17,7 @@ internal static class RuntimeInformationPrinter
             $".NET Runtime: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.RuntimeIdentifier}",
             $"Server GC: {GCSettings.IsServerGC}",
             $"Processor: {Environment.ProcessorCount}x {SystemInformation.GetProcessorModel()}",
+            $"Available Memory: {ByteHelpers.FormatBytes(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes)}",
             $"Architecture: {RuntimeInformation.ProcessArchitecture}",
             $"Robust Version: {version}",
             $"Compile Options: {string.Join(';', GetCompileOptions())}",

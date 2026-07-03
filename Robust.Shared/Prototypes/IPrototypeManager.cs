@@ -16,13 +16,19 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Prototypes;
 
 /// <summary>
-/// Handle storage and loading of YAML prototypes.
+///     Handle storage and loading of YAML prototypes. These are defined in code using <see cref="PrototypeAttribute"/>
+///     and <see cref="PrototypeRecordAttribute"/> on classes that implement <see cref="IPrototype"/> or
+///     <see cref="IInheritingPrototype"/>.
 /// </summary>
 /// <remarks>
-/// Terminology:
-/// "Kinds" are the types of prototypes there are, like <see cref="EntityPrototype"/>.
-/// "Prototypes" are simply filled-in prototypes from YAML.
+///     Terminology:<br/>
+///     "Kinds" are the types of prototypes there are, like <see cref="EntityPrototype"/>.<br/>
+///     "Prototypes" are simply filled-in prototypes from YAML.<br/>
 /// </remarks>
+/// <seealso cref="IPrototype"/>
+/// <seealso cref="IInheritingPrototype"/>
+/// <seealso cref="PrototypeAttribute"/>
+[NotContentImplementable]
 public interface IPrototypeManager
 {
     void Initialize();
@@ -170,19 +176,6 @@ public interface IPrototypeManager
     bool Resolve([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
 
     /// <summary>
-    /// Retrieve an <see cref="EntityPrototype"/> by ID, optionally logging an error if it does not exist.
-    /// </summary>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if it does not.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex(
-        [ForbidLiteral] EntProtoId id,
-        [NotNullWhen(true)] out EntityPrototype? prototype,
-        bool logError = true);
-
-    /// <summary>
     /// Resolve an <see cref="EntityPrototype"/> by ID.
     /// </summary>
     /// <remarks>
@@ -229,17 +222,6 @@ public interface IPrototypeManager
     /// <returns>True if the prototype exists, false if it does not.</returns>
     /// <seealso cref="TryIndex{T}(ProtoId{T},out T?)"/>
     bool Resolve<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
-
-    /// <summary>
-    /// Retrieve a prototype by ID, optionally logging an error if it does not exist.
-    /// </summary>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if it does not.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-        where T : class, IPrototype;
 
     /// <summary>
     /// Resolve a prototype by ID.
@@ -294,25 +276,6 @@ public interface IPrototypeManager
     bool Resolve([ForbidLiteral] EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
 
     /// <summary>
-    /// Retrieve an <see cref="EntityPrototype"/> by ID, gracefully handling null,
-    /// and optionally logging an error if it does not exist.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// No error is logged if <paramref name="id"/> is null.
-    /// </para>
-    /// </remarks>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex(
-        [ForbidLiteral] EntProtoId? id,
-        [NotNullWhen(true)] out EntityPrototype? prototype,
-        bool logError = true);
-
-    /// <summary>
     /// Resolve an <see cref="EntityPrototype"/> by ID, gracefully handling null.
     /// </summary>
     /// <remarks>
@@ -364,22 +327,6 @@ public interface IPrototypeManager
     bool Resolve<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
 
     /// <summary>
-    /// Retrieve a prototype by ID, gracefully handling null,
-    /// and optionally logging an error if it does not exist.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// No error is logged if <paramref name="id"/> is null.
-    /// </para>
-    /// </remarks>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype;
-
-    /// <summary>
     /// Resolve a prototype by ID, gracefully handling null.
     /// </summary>
     /// <remarks>
@@ -407,7 +354,10 @@ public interface IPrototypeManager
     // ReSharper restore MethodOverloadWithOptionalParameter
 
     bool HasMapping<T>(string id);
+
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
+
+    bool TryGetMapping<T>(string id, [NotNullWhen(true)] out MappingDataNode? mappings);
 
     /// <summary>
     ///     Returns whether a prototype kind <param name="kind"/> exists.

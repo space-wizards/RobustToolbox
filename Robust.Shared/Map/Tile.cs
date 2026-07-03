@@ -23,12 +23,12 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     public readonly byte Flags;
 
     /// <summary>
-    /// Variant of this tile to render.
+    ///     Variant of this tile to render.
     /// </summary>
     public readonly byte Variant;
 
     /// <summary>
-    /// Rotation and mirroring of this tile to render. 0-3 is normal, 4-7 is mirrored.
+    ///     Rotation and mirroring of this tile to render. 0-3 is normal, 4-7 is mirrored.
     /// </summary>
     public readonly byte RotationMirroring;
 

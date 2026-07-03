@@ -8,31 +8,43 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    /// <summary>
+    ///     Manages all the grids and maps in the ECS, providing methods to create and modify them.
+    /// </summary>
     public abstract partial class SharedMapSystem : EntitySystem
     {
-        [Dependency] private readonly ITileDefinitionManager _tileMan = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] protected readonly IMapManager MapManager = default!;
-        [Dependency] private readonly IMapManagerInternal _mapInternal = default!;
-        [Dependency] private readonly INetManager _netManager = default!;
-        [Dependency] private readonly FixtureSystem _fixtures = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly MetaDataSystem _meta = default!;
+        [Dependency] private ITileDefinitionManager _tileMan = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private IManifoldManager _manifolds = default!;
+        [Dependency] private INetManager _netManager = default!;
+        [Dependency] private FixtureSystem _fixtures = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private MetaDataSystem _meta = default!;
 
         private EntityQuery<FixturesComponent> _fixturesQuery;
         private EntityQuery<MapComponent> _mapQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
         private EntityQuery<TransformComponent> _xformQuery;
+        [Dependency] EntityQuery<GridTreeComponent> _gridTreeQuery;
 
         internal Dictionary<MapId, EntityUid> Maps { get; } = new();
+
+        /// <summary>
+        /// If set, this prevents the <see cref="TileChangedEvent"/> from being raised when modifying grids.
+        /// </summary>
+        /// <remarks>
+        /// Useful if you want to create a new grid, delete an existing grid, or bulk-modify tiles and don't want to spam ten billion individual tile-changed events.
+        /// </remarks>
+        internal bool SuppressOnTileChanged { get; set; }
 
         /// <summary>
         /// This hashset is used to try prevent MapId re-use. This is mainly for auto-assigned map ids.

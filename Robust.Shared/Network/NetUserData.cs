@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Text;
 using Robust.Shared.ViewVariables;
@@ -18,6 +19,9 @@ namespace Robust.Shared.Network
         [ViewVariables]
         public string? PatronTier { get; init; }
 
+        [ViewVariables]
+        public DateTime? CreatedTime {  get; init; }
+
         public ImmutableArray<byte> HWId { get; init; }
 
         /// <summary>
@@ -36,6 +40,11 @@ namespace Robust.Shared.Network
         /// A value of 0.5 can be considered "neutral", 1 being "fully trusted".
         /// </remarks>
         public float Trust { get; init; }
+
+        /// <summary>
+        ///     True if the player is connecting from a local address.
+        /// </summary>
+        public bool IsLocal { get; init; }
 
         public NetUserData(NetUserId userId, string userName)
         {

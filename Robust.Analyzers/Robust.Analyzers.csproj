@@ -33,6 +33,11 @@
     <Compile Include="..\Robust.Shared\Serialization\NetSerializableAttribute.cs" LinkBase="Implementations" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Needed for PrototypeAnalyzer. -->
+    <Compile Include="..\Robust.Shared\Prototypes\PrototypeUtility.cs" LinkBase="Implementations" />
+  </ItemGroup>
+
   <Import Project="../Robust.Roslyn.Shared/Robust.Roslyn.Shared.props" />
 
   <PropertyGroup>

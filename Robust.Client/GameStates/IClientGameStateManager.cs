@@ -12,6 +12,7 @@ namespace Robust.Client.GameStates
     /// <summary>
     ///     Engine service that provides processing and management of game states.
     /// </summary>
+    [NotContentImplementable]
     public interface IClientGameStateManager
     {
         /// <summary>

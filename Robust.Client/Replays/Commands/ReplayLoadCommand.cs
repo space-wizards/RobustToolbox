@@ -14,12 +14,12 @@ using Robust.Shared.Utility;
 namespace Robust.Client.Replays.Commands;
 
 [UsedImplicitly]
-public sealed class ReplayLoadCommand : BaseReplayCommand
+public sealed partial class ReplayLoadCommand : BaseReplayCommand
 {
-    [Dependency] private readonly IResourceManager _resMan = default!;
-    [Dependency] private readonly IReplayLoadManager _loadMan = default!;
-    [Dependency] private readonly IBaseClient _client = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IResourceManager _resMan = default!;
+    [Dependency] private IReplayLoadManager _loadMan = default!;
+    [Dependency] private IBaseClient _client = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     public override string Command => IReplayPlaybackManager.LoadCommand;
 

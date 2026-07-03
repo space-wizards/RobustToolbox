@@ -53,6 +53,7 @@ namespace Robust.Client.Graphics
 
         Texture GetStockTexture(ClydeStockTexture stockTexture);
         IEnumerable<(Clyde.Clyde.ClydeTexture, Clyde.Clyde.LoadedTexture)> GetLoadedTextures();
+        IEnumerable<(Clyde.Clyde.RenderTargetBase, Clyde.Clyde.LoadedRenderTarget)> GetLoadedRenderTextures();
 
         ClydeDebugLayers DebugLayers { get; set; }
 
@@ -70,5 +71,20 @@ namespace Robust.Client.Graphics
         void RunOnWindowThread(Action action);
 
         IFileDialogManagerImplementation? FileDialogImpl { get; }
+
+        bool VsyncEnabled { get; set; }
+
+        // Viewports
+
+#if TOOLS
+
+        /// <summary>
+        /// Fires <see cref="IClydeViewport.ClearCachedResources"/> on all viewports. For debugging.
+        /// </summary>
+        void ViewportsClearAllCached();
+
+#endif // TOOLS
+
+        void RenderNow(IRenderTarget renderTarget, Action<IRenderHandle> callback);
     }
 }

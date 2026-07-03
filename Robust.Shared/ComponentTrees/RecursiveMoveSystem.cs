@@ -12,9 +12,9 @@ namespace Robust.Shared.ComponentTrees;
 /// <remarks>
 ///     This is used by some client-side systems (e.g., sprites, lights, etc). However this can be quite expensive and if possible should not be used by the server.
 /// </remarks>
-internal sealed class RecursiveMoveSystem : EntitySystem
+internal sealed partial class RecursiveMoveSystem : EntitySystem
 {
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     public delegate void TreeRecursiveMoveEventHandler(EntityUid uid, TransformComponent xform);
 

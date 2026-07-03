@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Added profiling zones to the physics update, splitting it into broadphase, collision, solver (island build/solve) and per-controller pre/post-solve phases.
 
 
 ## 280.0.0

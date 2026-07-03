@@ -305,6 +305,24 @@ public abstract partial class SharedPhysicsSystem
 
     private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
     {
+        List<IslandData> islands;
+        using (_prof.Group("Build Islands"))
+        {
+            islands = BuildIslands(prediction);
+        }
+
+        SolveIslands(islands, frameTime, dtRatio, invDt, prediction);
+
+        foreach (var island in islands)
+        {
+            ReturnIsland(island);
+        }
+
+        Cleanup(frameTime);
+    }
+
+    private List<IslandData> BuildIslands(bool prediction)
+    {
         // Build and simulated islands from awake bodies.
         _bodyStack.EnsureCapacity(AwakeBodies.Count);
         _islandSet.EnsureCapacity(AwakeBodies.Count);
@@ -548,14 +566,7 @@ public abstract partial class SharedPhysicsSystem
             ReturnIsland(loneIsland);
         }
 
-        SolveIslands(islands, frameTime, dtRatio, invDt, prediction);
-
-        foreach (var island in islands)
-        {
-            ReturnIsland(island);
-        }
-
-        Cleanup(frameTime);
+        return islands;
     }
 
     private void ReturnIsland(in IslandData island)
@@ -651,6 +662,7 @@ public abstract partial class SharedPhysicsSystem
         }
 
         // Actual solver here; cache the data for later.
+        using var solveZone = _prof.Group("Solve Islands");
         var solvedPositions = ArrayPool<Vector2>.Shared.Rent(totalBodies);
         var solvedAngles = ArrayPool<float>.Shared.Rent(totalBodies);
         var linearVelocities = ArrayPool<Vector2>.Shared.Rent(totalBodies);

@@ -22,6 +22,7 @@ internal sealed partial class PvsSystem
     private void SerializeStates()
     {
         using var _ = Histogram.WithLabels("Serialize States").NewTimer();
+        using var _pz = _prof.Group("Serialize States");
         var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
         _oldestAck = GameTick.MaxValue.Value;
         Parallel.For(-1, _sessions.Length, opts, SerializeState);
@@ -38,9 +39,19 @@ internal sealed partial class PvsSystem
             ServerGameStateManager.PvsEventSource.Log.WorkStart(_gameTiming.CurTick.Value, i, guid);
 
             if (i >= 0)
-                SerializeSessionState(_sessions[i]);
+            {
+                using (_prof.BeginThreadZone("Serialize Session"))
+                {
+                    SerializeSessionState(_sessions[i]);
+                }
+            }
             else
-                _replay.Update();
+            {
+                using (_prof.BeginThreadZone("Serialize Replay"))
+                {
+                    _replay.Update();
+                }
+            }
 
             ServerGameStateManager.PvsEventSource.Log.WorkStop(_gameTiming.CurTick.Value, i, guid);
         }
@@ -59,7 +70,10 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void SerializeSessionState(PvsSession data)
     {
-        ComputeSessionState(data);
+        using (_prof.BeginThreadZone("Compute State"))
+        {
+            ComputeSessionState(data);
+        }
         InterlockedHelper.Min(ref _oldestAck, data.FromTick.Value);
         DebugTools.AssertEqual(data.StateStream, null);
 
@@ -68,7 +82,10 @@ internal sealed partial class PvsSystem
         if (data.Session.Channel is not DummyChannel)
         {
             data.StateStream = RobustMemoryManager.GetMemoryStream();
-            _serializer.SerializeDirect(data.StateStream, data.State);
+            using (_prof.BeginThreadZone("Write State"))
+            {
+                _serializer.SerializeDirect(data.StateStream, data.State);
+            }
         }
 
         data.ClearState();

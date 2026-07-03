@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using bottlenoselabs.C2CS.Runtime;
 using Robust.Shared.Maths;
 using static Tracy.PInvoke;
@@ -122,6 +123,25 @@ public sealed partial class ProfManager
         var srcLocId = TracyAllocSrclocName((uint)lineNumber, fileStr, fileLn, memberStr, memberLn, nameStr, nameLn, (uint) (color?.ToArgb() ?? 0));
         var context = TracyEmitZoneBeginAlloc(srcLocId, 1);
         return new TracyProfilerZone(context);
+    }
+
+    /// <summary>
+    /// Begins a Tracy-only zone that is safe to call from any thread. Unlike <see cref="Group"/> this does NOT
+    /// write to the profiling buffer, so it will only show up in Tracy and not the in-game profiler. Use it
+    /// inside parallel regions (e.g. parallel job bodies) where the single-threaded prof buffer would
+    /// otherwise be corrupted. Returns null when Tracy is disabled.
+    /// </summary>
+    internal TracyProfilerZone? BeginThreadZone(
+        string name,
+        Color? color = null,
+        [CallerLineNumber] int lineNumber = 0,
+        [CallerFilePath] string? filePath = null,
+        [CallerMemberName] string? memberName = null)
+    {
+        if (!IsTracyEnabled)
+            return null;
+
+        return BeginTracyZone(name, lineNumber, color ?? Color.Black, filePath, memberName);
     }
 }
 

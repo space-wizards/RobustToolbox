@@ -83,6 +83,7 @@ internal sealed partial class PvsSystem
     internal void GetVisibleChunks()
     {
         using var _= Histogram.WithLabels("Get Chunks").NewTimer();
+        using var _pz = _prof.Group("Get Chunks");
 
         DebugTools.Assert(!_chunks.Values.Any(x=> x.UpdateQueued));
         _dirtyChunks.Clear();
@@ -213,6 +214,7 @@ internal sealed partial class PvsSystem
     private void ProcessVisibleChunks()
     {
         using var _= Histogram.WithLabels("Update Chunks & Overrides").NewTimer();
+        using var _pz = _prof.Group("Update Chunks & Overrides");
         var task = _parallelMgr.Process(_chunkJob, _chunkJob.Count);
 
         UpdateCleanChunks();

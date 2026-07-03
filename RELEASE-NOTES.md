@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Added profiling zones covering the PVS game-state send pipeline (chunks, serialization and sending), including a thread-safe Tracy-only zone helper for the parallel per-session work.
 
 
 ## 280.0.0

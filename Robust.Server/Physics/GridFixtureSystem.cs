@@ -52,6 +52,14 @@ namespace Robust.Server.Physics
 
         private readonly Queue<ChunkSplitNode> _splitFrontier = new(4);
         private readonly List<HashSet<ChunkSplitNode>> _splitGrids = new(1);
+        private readonly Dictionary<HashSet<ChunkSplitNode>, int> _splitGridSizes = new();
+        private readonly HashSet<Vector2i> _splitTilePositions = new();
+        private readonly Comparison<HashSet<ChunkSplitNode>> _splitGridSizeComparison;
+
+        public GridFixtureSystem()
+        {
+            _splitGridSizeComparison = (x, y) => _splitGridSizes[x].CompareTo(_splitGridSizes[y]);
+        }
 
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<PhysicsComponent> _bodyQuery;
@@ -252,15 +260,15 @@ namespace Robust.Server.Physics
 
                 // We'll leave the biggest group as the original grid
                 // anything smaller gets split off.
-                var gridSizes = new Dictionary<HashSet<ChunkSplitNode>, int>(grids.Count);
+                _splitGridSizes.Clear();
                 foreach (var sizeGroup in grids)
                 {
                     var tileCount = 0;
                     foreach (var sizeNode in sizeGroup)
                         tileCount += sizeNode.Indices.Count;
-                    gridSizes[sizeGroup] = tileCount;
+                    _splitGridSizes[sizeGroup] = tileCount;
                 }
-                grids.Sort((x, y) => gridSizes[x].CompareTo(gridSizes[y]));
+                grids.Sort(_splitGridSizeComparison);
 
                 var oldGridXform = _xformQuery.GetComponent(oldGridUid);
                 var (gridPos, gridRot) = _xformSystem.GetWorldPositionRotation(oldGridXform);
@@ -284,7 +292,7 @@ namespace Robust.Server.Physics
                     _physics.SetAngularVelocity(newGridUid, mapBody.AngularVelocity, body: splitBody);
 
                     var gridComp = _gridQuery.GetComponent(newGridUid);
-                    var tileData = new List<(Vector2i GridIndices, Tile Tile)>(gridSizes[group]);
+                    var tileData = new List<(Vector2i GridIndices, Tile Tile)>(_splitGridSizes[group]);
 
                     // Gather all tiles up front and set once to minimise fixture change events
                     foreach (var node in group)
@@ -331,14 +339,14 @@ namespace Robust.Server.Physics
                         // Update lookup ents
                         // Needs to be done before setting old tiles as they will be re-parented to the map.
                         // Build tile positions and union bounds so we can query once per node.
-                        var tilePositions = new HashSet<Vector2i>(node.Indices.Count);
+                        _splitTilePositions.Clear();
                         var nodeBounds = new Box2();
                         var first = true;
 
                         foreach (var tile in node.Indices)
                         {
                             var tilePos = offset + tile;
-                            tilePositions.Add(tilePos);
+                            _splitTilePositions.Add(tilePos);
                             var tileBounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
                             nodeBounds = first ? tileBounds : nodeBounds.Union(tileBounds);
                             first = false;
@@ -354,11 +362,9 @@ namespace Robust.Server.Physics
                             if (entXform.ParentUid != oldGridUid)
                                 continue;
 
-                            var entTile = new Vector2i(
-                                (int) Math.Floor(entXform.LocalPosition.X / oldGrid.TileSize),
-                                (int) Math.Floor(entXform.LocalPosition.Y / oldGrid.TileSize));
+                            var entTile = _maps.LocalToTile(oldGridUid, oldGrid, entXform.Coordinates);
 
-                            if (!tilePositions.Contains(entTile))
+                            if (!_splitTilePositions.Contains(entTile))
                                 continue;
 
                             _xformSystem.SetParent(ent, entXform, newGridUid, _xformQuery, newGridXform);

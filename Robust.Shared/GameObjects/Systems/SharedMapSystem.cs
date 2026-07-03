@@ -154,9 +154,9 @@ namespace Robust.Shared.GameObjects
     public sealed class GridInitializeEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
-        public MapGridComponent? Grid { get; }
+        public MapGridComponent Grid { get; }
 
-        public GridInitializeEvent(EntityUid uid, MapGridComponent? grid = null)
+        public GridInitializeEvent(EntityUid uid, MapGridComponent grid)
         {
             EntityUid = uid;
             Grid = grid;

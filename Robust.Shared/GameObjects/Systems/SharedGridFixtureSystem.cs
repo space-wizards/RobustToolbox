@@ -28,6 +28,8 @@ namespace Robust.Shared.GameObjects
         private bool _enabled;
         private float _fixtureEnlargement;
 
+        private readonly Dictionary<string, Fixture> _newFixtures = new();
+
         internal const string ShowGridNodesCommand = "showgridnodes";
 
         public override void Initialize()
@@ -53,7 +55,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             // This will also check for grid splits if applicable.
-            var grid = ev.Grid ?? Comp<MapGridComponent>(ev.EntityUid);
+            var grid = ev.Grid;
             _map.RegenerateCollision(ev.EntityUid, grid, _map.GetMapChunks(ev.EntityUid, grid).Values.ToHashSet());
         }
 
@@ -119,7 +121,7 @@ namespace Robust.Shared.GameObjects
             // to the client hence we diff it.
             // Additionally, we need to handle map deserialization where content may have stored its own data
             // on the grid (e.g. mass) which we want to preserve.
-            var newFixtures = new Dictionary<string, Fixture>(rectangles.Count);
+            _newFixtures.Clear();
 
             Span<Vector2> vertices = stackalloc Vector2[4];
 
@@ -147,7 +149,7 @@ namespace Robust.Shared.GameObjects
 #pragma warning restore CS0618
 
                 var key = string.Create(CultureInfo.InvariantCulture, $"grid_chunk-{bounds.Left}-{bounds.Bottom}");
-                newFixtures[key] = newFixture;
+                _newFixtures.Add(key, newFixture);
             }
 
             var updated = false;
@@ -157,12 +159,12 @@ namespace Robust.Shared.GameObjects
             // to preserve any properties set by content (e.g. density from ShuttleSystem).
             foreach (var oldId in chunk.Fixtures)
             {
-                if (newFixtures.TryGetValue(oldId, out var newFixture) &&
+                if (_newFixtures.TryGetValue(oldId, out var newFixture) &&
                     manager.Fixtures[oldId].Shape is PolygonShape oldPoly &&
                     newFixture.Shape is PolygonShape newPoly &&
                     oldPoly.EqualsApprox(newPoly))
                 {
-                    newFixtures.Remove(oldId);
+                    _newFixtures.Remove(oldId);
                     continue;
                 }
 
@@ -177,7 +179,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Anything remaining is a new fixture (or at least, may have not serialized onto the chunk yet).
-            foreach (var (id, fixture) in newFixtures)
+            foreach (var (id, fixture) in _newFixtures)
             {
                 chunk.Fixtures.Add(id);
 

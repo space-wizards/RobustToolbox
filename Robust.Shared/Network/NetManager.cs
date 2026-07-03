@@ -269,6 +269,10 @@ namespace Robust.Shared.Network
 
             _config.OnValueChanged(CVars.NetLidgrenLogWarning, LidgrenLogWarningChanged);
             _config.OnValueChanged(CVars.NetLidgrenLogError, LidgrenLogErrorChanged);
+            _config.OnValueChanged(CVars.NetLidgrenLogRateLimit, LidgrenLogRateLimitChanged);
+            _config.OnValueChanged(CVars.NetLidgrenLogRateLimitTargets, LidgrenLogRateLimitTargetsChanged);
+            _config.OnValueChanged(CVars.NetLidgrenLogRateLimitBurst, LidgrenLogRateLimitBurstChanged);
+            _config.OnValueChanged(CVars.NetLidgrenLogRateLimitWindow, LidgrenLogRateLimitWindowChanged);
 
             _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
             _config.OnValueChanged(CVars.NetLogging, NetLoggingChanged);
@@ -313,6 +317,38 @@ namespace Robust.Shared.Network
             foreach (var netPeer in _netPeers)
             {
                 netPeer.Peer.Configuration.SetMessageTypeEnabled(NetIncomingMessageType.ErrorMessage, newValue);
+            }
+        }
+
+        private void LidgrenLogRateLimitChanged(bool newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.LogRateLimiterEnabled = newValue;
+            }
+        }
+
+        private void LidgrenLogRateLimitTargetsChanged(int newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.LogRateLimitTargets = (NetLogRateLimitTarget) newValue;
+            }
+        }
+
+        private void LidgrenLogRateLimitBurstChanged(int newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.LogRateLimitBurst = newValue;
+            }
+        }
+
+        private void LidgrenLogRateLimitWindowChanged(float newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.LogRateLimitWindow = newValue;
             }
         }
 
@@ -489,6 +525,10 @@ namespace Robust.Shared.Network
             _config.UnsubValueChanged(CVars.NetFakeDuplicates, FakeDuplicatesChanged);
             _config.UnsubValueChanged(CVars.NetLidgrenLogWarning, LidgrenLogWarningChanged);
             _config.UnsubValueChanged(CVars.NetLidgrenLogError, LidgrenLogErrorChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogRateLimit, LidgrenLogRateLimitChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogRateLimitTargets, LidgrenLogRateLimitTargetsChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogRateLimitBurst, LidgrenLogRateLimitBurstChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogRateLimitWindow, LidgrenLogRateLimitWindowChanged);
 
             _serializer.ClientHandshakeComplete -= OnSerializerOnClientHandshakeComplete;
 
@@ -661,6 +701,11 @@ namespace Robust.Shared.Network
             netConfig.SetMessageTypeEnabled(
                 NetIncomingMessageType.ErrorMessage,
                 _config.GetCVar(CVars.NetLidgrenLogError));
+
+            netConfig.LogRateLimiterEnabled = _config.GetCVar(CVars.NetLidgrenLogRateLimit);
+            netConfig.LogRateLimitTargets = (NetLogRateLimitTarget) _config.GetCVar(CVars.NetLidgrenLogRateLimitTargets);
+            netConfig.LogRateLimitBurst = _config.GetCVar(CVars.NetLidgrenLogRateLimitBurst);
+            netConfig.LogRateLimitWindow = _config.GetCVar(CVars.NetLidgrenLogRateLimitWindow);
 
             var poolSize = _config.GetCVar(CVars.NetPoolSize);
 

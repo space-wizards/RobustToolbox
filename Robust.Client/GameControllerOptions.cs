@@ -1,5 +1,7 @@
 using Robust.Shared;
 using Robust.Shared.Utility;
+using System;
+using System.IO;
 
 namespace Robust.Client
 {
@@ -19,12 +21,12 @@ namespace Robust.Client
         /// <summary>
         ///     Name the userdata directory will have.
         /// </summary>
-        public string UserDataDirectoryName { get; init; } = "Space Station 14";
+        public ResPath UserDataDirectoryName { get; init; } = new("Space Station 14");
 
         /// <summary>
         ///     Name of the configuration file in the user data directory.
         /// </summary>
-        public string ConfigFileName { get; init; } = "client_config.toml";
+        public ResPath ConfigFileName { get; init; } = new("client_config.toml");
 
         // TODO: Define engine branding from json file in resources.
         /// <summary>

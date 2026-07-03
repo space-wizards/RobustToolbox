@@ -59,5 +59,18 @@ namespace Robust.Shared.Tests.Resources
             // ../ should get clamped to /.
             Assert.That(_dirProvider.ReadAllText(new ResPath("/../dummy")), Is.EqualTo("pranked"));
         }
+
+        [Test]
+        public void TestVirtualFullPath()
+        {
+            IWritableDirProvider provider = new VirtualWritableDirProvider();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(provider.GetFullPath(ResPath.Root), Is.EqualTo("/"));
+                Assert.That(provider.GetFullPath(new ResPath("/../dummy")), Is.EqualTo("/dummy"));
+                Assert.That(() => provider.GetFullPath(new ResPath("dummy")), Throws.InstanceOf<ArgumentException>());
+            });
+        }
     }
 }

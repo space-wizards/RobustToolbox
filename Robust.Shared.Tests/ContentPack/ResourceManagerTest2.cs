@@ -14,6 +14,50 @@ namespace Robust.Shared.Tests.ContentPack;
 internal sealed class ResourceManagerTest2
 {
     [Test]
+    public void TestInitializePhysicalUserData()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"RobustResourceUserData-{Guid.NewGuid()}");
+
+        try
+        {
+            var (_, res) = CreateRes();
+            res.Initialize(tempDir, true);
+
+            var path = new ResPath("/test.txt");
+            res.UserData.WriteAllText(path, "test");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(res.UserData.RootDir, Is.Null);
+                Assert.That(res.UserData.ReadAllText(path), Is.EqualTo("test"));
+                Assert.That(File.ReadAllText(Path.Combine(tempDir, "test.txt")), Is.EqualTo("test"));
+            });
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Test]
+    public void TestInitializeVirtualUserData()
+    {
+        var (_, res) = CreateRes();
+        res.Initialize(null, true);
+
+        var path = new ResPath("/test.txt");
+        res.UserData.WriteAllText(path, "test");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(res.UserData, Is.TypeOf<VirtualWritableDirProvider>());
+            Assert.That(res.UserData.RootDir, Is.Null);
+            Assert.That(res.UserData.ReadAllText(path), Is.EqualTo("test"));
+        });
+    }
+
+    [Test]
     public void TestMemoryRootReadFiles()
     {
         var (_, res) = CreateRes();
@@ -101,11 +145,17 @@ internal sealed class ResourceManagerTest2
         var deps = new DependencyCollection();
         deps.Register<IResourceManager, ResourceManager>();
         deps.Register<IResourceManagerInternal, ResourceManager>();
-        deps.Register<IConfigurationManager, ConfigurationManager>();
+        var configurationManager = new ConfigurationManager();
+        deps.RegisterInstance<IConfigurationManager>(configurationManager);
+        deps.RegisterInstance<IConfigurationManagerInternal>(configurationManager);
         deps.Register<ILogManager, LogManager>();
         deps.Register<IGameTiming, GameTiming>();
 
         deps.BuildGraph();
+
+        configurationManager.Initialize(false);
+        configurationManager.LoadCVarsFromAssembly(typeof(CVars).Assembly);
+
         return (deps, deps.Resolve<IResourceManagerInternal>());
     }
 }

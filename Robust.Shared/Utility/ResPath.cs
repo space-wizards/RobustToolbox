@@ -78,6 +78,18 @@ public readonly struct ResPath : IEquatable<ResPath>
     }
 
     /// <summary>
+    ///     Creates a resource path from user-facing input.
+    ///     Do not assume it is a safe path, use IWritableDirProvider.GetFullPath for that.
+    /// </summary>
+    /// <remarks>
+    ///     This will sanitize (but not make sandbox safe) user input unlike the normal ctor.
+    /// </remarks>
+    public static ResPath FromUncleanPath(string path)
+    {
+        return new ResPath(path.Replace('\\', Separator)).Clean();
+    }
+
+    /// <summary>
     /// Check whether the given string paths contains any non-standard directory separators.
     /// </summary>
     public static bool IsValidPath(string path) => !path.Contains('\\');

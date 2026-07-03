@@ -28,6 +28,17 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public string? RootDir => null;
 
+        /// <inheritdoc />
+        public string GetFullPath(ResPath path)
+        {
+            if (!path.IsRooted)
+            {
+                throw new ArgumentException("Path must be rooted", nameof(path));
+            }
+
+            return path.Clean().ToString();
+        }
+
         public void CreateDir(ResPath path)
         {
             if (!path.IsRooted)

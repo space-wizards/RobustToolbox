@@ -79,14 +79,21 @@ namespace Robust.Shared.ContentPack
 
             var retPath = Path.GetFullPath(Path.Join(baseDir, relSysPath));
             // better safe than sorry check
-            if (!retPath.StartsWith(baseDir))
+            if (!retPath.StartsWith(baseDir, GetPathComparison()))
             {
                 // Allow path to match if it's just missing the directory separator at the end.
-                if (retPath != baseDir.TrimEnd(Path.DirectorySeparatorChar))
+                if (!retPath.Equals(Path.TrimEndingDirectorySeparator(baseDir), GetPathComparison()))
                     throw new InvalidOperationException($"This branch should never be reached. Path: {path}");
             }
 
             return retPath;
+        }
+
+        private static StringComparison GetPathComparison()
+        {
+            return IsFileSystemCaseSensitive()
+                ? StringComparison.Ordinal
+                : StringComparison.OrdinalIgnoreCase;
         }
     }
 }

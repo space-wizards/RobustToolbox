@@ -244,4 +244,13 @@ internal sealed class ResPathTest
         Assert.That(systemPath, Is.EqualTo(canonPath));
         Assert.That(systemPath.ToRelativeSystemPath(), Is.EqualTo(canonPath.ToRelativeSystemPath()));
     }
+
+    [Test]
+    [TestCase(@"foo\bar\..\baz", "foo/baz")]
+    [TestCase(@"..\..\foo", "../../foo")]
+    [TestCase(@"\..\foo", "/foo")]
+    public void FromUncleanPathTest(string input, string expected)
+    {
+        Assert.That(ResPath.FromUncleanPath(input), Is.EqualTo(new ResPath(expected)));
+    }
 }

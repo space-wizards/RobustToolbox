@@ -395,6 +395,9 @@ namespace Robust.Client
 
             // Figure out user data directory.
             var userDataDir = GetUserDataDir();
+            var userDataProvider = _commandLineArgs?.SelfContained == true
+                ? new WritableDirProvider(Directory.CreateDirectory(userDataDir), false)
+                : UserDataDir.GetUserDataDirProvider(this, false);
 
             _configurationManager.Initialize(false);
             _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
@@ -404,8 +407,9 @@ namespace Robust.Client
 
             if (Options.LoadConfigAndUserData)
             {
-                var configFile = Path.Combine(userDataDir, Options.ConfigFileName);
-                if (File.Exists(configFile))
+                var configPath = Options.ConfigFileName.ToRootedPath();
+                var configFile = userDataProvider.GetFullPath(configPath);
+                if (userDataProvider.Exists(configPath))
                 {
                     // Load config from user data if available.
                     _configurationManager.LoadFromFile(configFile);
@@ -428,7 +432,8 @@ namespace Robust.Client
 
             _prof.Initialize();
 
-            _resManager.Initialize(Options.LoadConfigAndUserData ? userDataDir : null, hideUserDataDir: true);
+            var useVirtualUserData = _configurationManager.GetCVar(CVars.ResUserDataVirtual);
+            _resManager.Initialize(Options.LoadConfigAndUserData && !useVirtualUserData ? userDataDir : null, hideUserDataDir: true);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions)

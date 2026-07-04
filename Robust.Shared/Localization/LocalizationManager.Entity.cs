@@ -54,11 +54,21 @@ namespace Robust.Shared.Localization
             string? name = null;
             string? desc = null;
             string? suffix = null;
+
+            string? fallbackName = null;
+            string? fallbackDesc = null;
+            string? fallbackSuffix = null;
+
             Dictionary<string, string>? attributes = null;
 
-            foreach (var prototype in _prototype.EnumerateParents<EntityPrototype>(prototypeId, true))
+            // A child can have a locale entry just to override its suffix, while
+            // still inheriting the description from a parent. Hold these errors
+            // until we know no parent supplied a description either.
+            List<(string locId, List<FluentError> errs)>? deferredDescErrors = null;
+
+            foreach (var (id, prototype) in _prototype.EnumerateAllParents<EntityPrototype>(prototypeId, true))
             {
-                var locId = prototype?.CustomLocalizationID ?? $"ent-{prototypeId}";
+                var locId = prototype?.CustomLocalizationID ?? $"ent-{id}";
 
                 if (TryGetMessage(locId, out var bundle, out var msg))
                 {
@@ -91,12 +101,13 @@ namespace Robust.Shared.Localization
                             }
                         }
 
-                        var allErrors = new List<FluentError>();
                         if (desc == null
                             && !bundle.TryGetMessage(locId, "desc", null, out var err1, out desc))
                         {
                             desc = null;
-                            allErrors.AddRange(err1);
+                            // Defer: a parent prototype may still provide .desc.
+                            deferredDescErrors ??= new List<(string, List<FluentError>)>();
+                            deferredDescErrors.Add((locId, err1.ToList()));
                         }
 
                         if (suffix == null
@@ -104,16 +115,17 @@ namespace Robust.Shared.Localization
                         {
                             suffix = null;
                         }
-
-                        WriteWarningForErrs(allErrors, locId);
                     }
                 }
 
-                name ??= prototype?.SetName;
-                desc ??= prototype?.SetDesc;
-                suffix ??= prototype?.SetSuffix;
+                if (prototype == null)
+                    continue;
 
-                if (prototype?.LocProperties != null && prototype.LocProperties.Count != 0)
+                fallbackName ??= prototype.SetName;
+                fallbackDesc ??= prototype.SetDesc;
+                fallbackSuffix ??= prototype.SetSuffix;
+
+                if (prototype.LocProperties.Count != 0)
                 {
                     foreach (var (attrib, value) in prototype.LocProperties)
                     {
@@ -122,6 +134,24 @@ namespace Robust.Shared.Localization
                         {
                             attributes[attrib] = value;
                         }
+                    }
+                }
+            }
+
+            name ??= fallbackName;
+            desc ??= fallbackDesc;
+            suffix ??= fallbackSuffix;
+
+            // Plenty of prototypes have no description at all, such as spawners,
+            // markers, and debug/admin entities. Keep the missing .desc warning
+            // visible for debugging, but don't treat it as a real localization issue.
+            if (desc == null && deferredDescErrors != null)
+            {
+                foreach (var (locId, errs) in deferredDescErrors)
+                {
+                    foreach (var err in errs)
+                    {
+                        _logSawmill.Debug("Missing .desc for `{locId}`\n{e1}", locId, err);
                     }
                 }
             }

@@ -161,7 +161,7 @@ namespace Robust.Shared.Localization
             }
 
             return new EntityLocData(
-                name ?? "",
+                name ?? prototypeId,
                 desc ?? "",
                 suffix,
                 attributes?.ToImmutableDictionary() ?? ImmutableDictionary<string, string>.Empty);

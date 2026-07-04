@@ -121,8 +121,6 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
     {
         Unsafe.SkipInit(out this);
 
-        Validate(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y);
-
         _topLeft = topLeft;
         _bottomRight = bottomRight;
     }
@@ -131,25 +129,10 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
     {
         Unsafe.SkipInit(out this);
 
-        Validate(left, top, right, bottom);
-
         _left = left;
         _right = right;
         _top = top;
         _bottom = bottom;
-    }
-
-    /// <summary>
-    /// Creates a UIBox2i with no bounds validation applied, use at your own risk.
-    /// </summary>
-    internal static UIBox2i DangerousCreate(int left, int top, int right, int bottom)
-    {
-        Unsafe.SkipInit(out UIBox2i box);
-        box._left = left;
-        box._right = right;
-        box._top = top;
-        box._bottom = bottom;
-        return box;
     }
 
     public static UIBox2i FromDimensions(int left, int top, int width, int height)

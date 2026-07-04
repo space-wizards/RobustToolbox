@@ -90,16 +90,6 @@ internal sealed class UIBox2i_Test
     }
 
     [Test]
-    public void Box2iValidatesConstruction()
-    {
-        Assert.Multiple(() =>
-        {
-            Assert.Throws<ArgumentException>(() => new UIBox2i(3, 4, -1, -2));
-            Assert.Throws<ArgumentException>(() => new UIBox2i(new Vector2i(3, 4), new Vector2i(-1, -2)));
-        });
-    }
-
-    [Test]
     public void Box2iValidatesProperties()
     {
         var box = new UIBox2i(-1, -2, 3, 4);

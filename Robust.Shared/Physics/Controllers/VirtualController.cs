@@ -20,7 +20,6 @@ namespace Robust.Shared.Physics.Controllers
 
         private static readonly Stopwatch Stopwatch = new();
 
-        // Cached alongside the histogram labels to skip the virtual GetType() call on the hot path.
         private string _zoneName = string.Empty;
 
         public Histogram.Child BeforeMonitor = default!;

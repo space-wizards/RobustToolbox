@@ -311,7 +311,10 @@ public abstract partial class SharedPhysicsSystem
             islands = BuildIslands(prediction);
         }
 
-        SolveIslands(islands, frameTime, dtRatio, invDt, prediction);
+        using (_prof.Group("Solve Islands"))
+        {
+            SolveIslands(islands, frameTime, dtRatio, invDt, prediction);
+        }
 
         foreach (var island in islands)
         {
@@ -662,7 +665,6 @@ public abstract partial class SharedPhysicsSystem
         }
 
         // Actual solver here; cache the data for later.
-        using var solveZone = _prof.Group("Solve Islands");
         var solvedPositions = ArrayPool<Vector2>.Shared.Rent(totalBodies);
         var solvedAngles = ArrayPool<float>.Shared.Rent(totalBodies);
         var linearVelocities = ArrayPool<Vector2>.Shared.Rent(totalBodies);

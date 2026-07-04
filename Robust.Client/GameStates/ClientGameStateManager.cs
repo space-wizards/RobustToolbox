@@ -854,7 +854,8 @@ namespace Robust.Client.GameStates
                 var isEnteringPvs = (meta.Flags & MetaDataFlags.Detached) != 0;
                 if (isEnteringPvs)
                 {
-                    if (_detachedChunkEntities.TryGetValue(es.NetEntity, out var detachedTick))
+                    if ((meta.Flags & MetaDataFlags.ChunkEntity) != 0 &&
+                        _detachedChunkEntities.TryGetValue(es.NetEntity, out var detachedTick))
                     {
                         if (curState.ToSequence <= detachedTick)
                             continue;

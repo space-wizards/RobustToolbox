@@ -280,8 +280,9 @@ public sealed partial class ChunkEntitySystemTest
     {
         var sim = Simulation();
         var entMan = sim.Resolve<IEntityManager>();
-        var map = entMan.System<SharedMapSystem>().CreateMap();
-        var grid = sim.Resolve<IMapManager>().CreateGridEntity(map);
+        var maps = entMan.System<SharedMapSystem>();
+        var map = maps.CreateMap();
+        var grid = maps.CreateGridEntity(map);
         return (sim, grid);
     }
 

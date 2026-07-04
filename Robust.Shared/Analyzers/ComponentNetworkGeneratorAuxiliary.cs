@@ -54,7 +54,8 @@ public sealed class AutoGenerateComponentStateAttribute : Attribute
 
     /// <summary>
     ///     Only generate <see cref="IComponentDelta"/> fields and networked field registration.
-    ///     Used by components with custom state handlers.
+    ///     Used by components with custom state objects or custom state handlers that still want generated
+    ///     <c>DirtyField</c> bookkeeping.
     /// </summary>
     public readonly bool DeltaFieldsOnly;
 

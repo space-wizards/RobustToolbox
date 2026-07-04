@@ -21,9 +21,9 @@ public sealed partial class ChunkEntitySystem : EntitySystem
     public const int ChunkSize = MapGridComponent.DefaultChunkSize;
     private static readonly EntProtoId ChunkEntityPrototype = "ChunkEntity";
 
-    [Dependency] private EntityQuery<MetaDataComponent> _metaQuery = default!;
-    [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
-    [Dependency] private EntityQuery<MapGridComponent> _gridQuery = default!;
+    [Dependency] private EntityQuery<MetaDataComponent> _metaQuery;
+    [Dependency] private EntityQuery<MapComponent> _mapQuery;
+    [Dependency] private EntityQuery<MapGridComponent> _gridQuery;
 
     private readonly Dictionary<(EntityUid Root, Vector2i Chunk), Entity<ChunkEntityComponent, MetaDataComponent>> _chunks = new();
     private readonly Dictionary<EntityUid, HashSet<Vector2i>> _chunksByRoot = new();
@@ -185,15 +185,18 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         Log.Error($"Chunk entity {ToPrettyString(ent.Owner)} had its parent changed. Root: {ToPrettyString(ent.Comp.Root)}, chunk: {ent.Comp.Chunk}, old parent: {args.OldParent}, new parent: {args.Transform.ParentUid}, map: {args.Transform.MapID}");
     }
 
-    private void AddChunk(Entity<ChunkEntityComponent> ent)
+    private void AddChunk(Entity<ChunkEntityComponent, MetaDataComponent?> ent)
     {
-        var (uid, comp) = ent;
+        var (uid, comp, meta) = ent;
         var key = (comp.Root, comp.Chunk);
+        meta ??= MetaData(uid);
 
         if (_chunkKeysByEntity.TryGetValue(uid, out var oldKey) && oldKey != key)
             RemoveChunk(uid, oldKey);
 
-        _chunks[key] = (uid, comp, MetaData(uid));
+        meta.Flags |= MetaDataFlags.ChunkEntity;
+
+        _chunks[key] = (uid, comp, meta);
         _chunkKeysByEntity[uid] = key;
         _chunksByRoot.GetOrNew(comp.Root).Add(comp.Chunk);
 
@@ -226,6 +229,9 @@ public sealed partial class ChunkEntitySystem : EntitySystem
 
         var ev = new ChunkEntityRemovedEvent(uid, key.Root, key.Chunk);
         RaiseLocalEvent(ref ev);
+
+        if (_metaQuery.TryGetComponent(uid, out var meta))
+            meta.Flags &= ~MetaDataFlags.ChunkEntity;
     }
 
     private void DeleteRootChunks(EntityUid root)

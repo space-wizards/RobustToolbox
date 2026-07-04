@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
+using Robust.Shared.Map.Events;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
@@ -15,27 +16,40 @@ namespace Robust.Shared.GameStates;
 
 /// <summary>
 /// Manages nullspace entities that are treated as members of map/grid PVS chunks.
+/// This allows you to store data at a chunk-level on maps / grids and have them streamed in/out without
+/// manually handling it. These chunks will also never be returned by EntityLookupSystem.
 /// </summary>
+/// <remarks>
+/// You will need to handle <see cref="PostGridSplitEvent"/> yourself.
+/// </remarks>
 public sealed partial class ChunkEntitySystem : EntitySystem
 {
     public const int ChunkSize = MapGridComponent.DefaultChunkSize;
     private static readonly EntProtoId ChunkEntityPrototype = "ChunkEntity";
 
+    [Dependency] private EntityQuery<ChunkEntityComponent> _chentQuery;
     [Dependency] private EntityQuery<MetaDataComponent> _metaQuery;
     [Dependency] private EntityQuery<MapComponent> _mapQuery;
     [Dependency] private EntityQuery<MapGridComponent> _gridQuery;
+    [Dependency] private EntityQuery<PvsChunkContainerComponent> _containerQuery;
 
-    private readonly Dictionary<(EntityUid Root, Vector2i Chunk), Entity<ChunkEntityComponent, MetaDataComponent>> _chunks = new();
-    private readonly Dictionary<EntityUid, HashSet<Vector2i>> _chunksByRoot = new();
-    private readonly Dictionary<EntityUid, (EntityUid Root, Vector2i Chunk)> _chunkKeysByEntity = new();
+    /// <summary>
+    /// Temporary list for serialization.
+    /// </summary>
+    private readonly List<PvsChunkContainerComponent> _serializationContainers = new();
+
+    private readonly List<EntityUid> _tempUids = new();
 
     public override void Initialize()
     {
-        SubscribeLocalEvent<ChunkEntityComponent, ComponentAdd>(OnChunkStartup);
+        base.Initialize();
+        SubscribeLocalEvent<MapCreatedEvent>(OnMapCreated);
+        SubscribeLocalEvent<GridInitializeEvent>(OnGridInitialize);
+        SubscribeLocalEvent<ChunkEntityComponent, ComponentStartup>(OnChunkStartup);
         SubscribeLocalEvent<ChunkEntityComponent, ComponentRemove>(OnChunkShutdown);
         SubscribeLocalEvent<ChunkEntityComponent, EntityTerminatingEvent>(OnChunkTerminating);
         SubscribeLocalEvent<ChunkEntityComponent, AfterAutoHandleStateEvent>(OnChunkHandleState);
-        SubscribeLocalEvent<ChunkEntityComponent, EntParentChangedMessage>(OnChunkParentChanged);
+        SubscribeLocalEvent<BeforeSerializationEvent>(OnBeforeSerialization);
         SubscribeLocalEvent<MapRemovedEvent>(OnMapRemoved);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
     }
@@ -45,11 +59,9 @@ public sealed partial class ChunkEntitySystem : EntitySystem
     /// </summary>
     public Entity<ChunkEntityComponent> GetOrCreateChunk(EntityUid root, Vector2i chunk)
     {
-        if (_chunks.TryGetValue((root, chunk), out var existing) &&
-            !Deleted(existing.Owner, existing.Comp2) &&
-            !existing.Comp1.Deleted)
+        if (TryGetChunk(root, chunk, out var existing))
         {
-            return (existing.Owner, existing.Comp1);
+            return existing.Value;
         }
 
         if (!_mapQuery.HasComp(root) && !_gridQuery.HasComp(root))
@@ -73,17 +85,25 @@ public sealed partial class ChunkEntitySystem : EntitySystem
     /// </summary>
     public bool TryGetChunk(EntityUid root, Vector2i chunk, [NotNullWhen(true)] out Entity<ChunkEntityComponent>? entity)
     {
-        if (_chunks.TryGetValue((root, chunk), out var existing) &&
-            !Deleted(existing.Owner, existing.Comp2) &&
-            !existing.Comp1.Deleted &&
-            (existing.Comp2.Flags & MetaDataFlags.Detached) == 0)
+        if (_containerQuery.TryGetComponent(root, out var container) &&
+            container.Chunks.TryGetValue(chunk, out var existing) &&
+            IsAvailable(existing))
         {
-            entity = (existing.Owner, existing.Comp1);
+            entity = (existing.Owner, existing.Comp);
             return true;
         }
 
         entity = null;
         return false;
+    }
+
+    /// <summary>
+    /// Returns all known, attached chunk entities for the specified root.
+    /// </summary>
+    public ChunkEntityRootEnumerator GetChunks(EntityUid root)
+    {
+        _containerQuery.TryGetComponent(root, out var container);
+        return new ChunkEntityRootEnumerator(this, container);
     }
 
     /// <summary>
@@ -147,7 +167,17 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         return new ChunkEntityComponentEnumerator<T>(GetChunksIntersecting(root, localAabb), query);
     }
 
-    private void OnChunkStartup(Entity<ChunkEntityComponent> ent, ref ComponentAdd args)
+    private void OnMapCreated(MapCreatedEvent ev)
+    {
+        EnsureComp<PvsChunkContainerComponent>(ev.Uid);
+    }
+
+    private void OnGridInitialize(GridInitializeEvent ev)
+    {
+        EnsureComp<PvsChunkContainerComponent>(ev.EntityUid);
+    }
+
+    private void OnChunkStartup(Entity<ChunkEntityComponent> ent, ref ComponentStartup args)
     {
         AddChunk(ent);
     }
@@ -177,12 +207,36 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         DeleteRootChunks(ev.EntityUid);
     }
 
-    private void OnChunkParentChanged(Entity<ChunkEntityComponent> ent, ref EntParentChangedMessage args)
+    private void OnBeforeSerialization(BeforeSerializationEvent ev)
     {
-        if (args.Transform.ParentUid == EntityUid.Invalid && args.Transform.MapID == MapId.Nullspace)
+        if (ev.Category != FileCategory.Map && ev.Category != FileCategory.Grid)
             return;
 
-        Log.Error($"Chunk entity {ToPrettyString(ent.Owner)} had its parent changed. Root: {ToPrettyString(ent.Comp.Root)}, chunk: {ent.Comp.Chunk}, old parent: {args.OldParent}, new parent: {args.Transform.ParentUid}, map: {args.Transform.MapID}");
+        // Chunk entities are nullspace entities referenced by the saved root container (i.e. grid or map),
+        // so we need to ensure they are included to serialize properly (e.g. in case grid-only serialization excludes them).
+        // This assumption may change at some point but for now we need to do this.
+        DebugTools.Assert(_serializationContainers.Count == 0);
+        foreach (var root in ev.Entities)
+        {
+            if (_containerQuery.TryGetComponent(root, out var container))
+                _serializationContainers.Add(container);
+        }
+
+        foreach (var container in _serializationContainers)
+        {
+            AddRootChunks(container, ev.Entities);
+        }
+
+        _serializationContainers.Clear();
+    }
+
+    private void AddRootChunks(PvsChunkContainerComponent container, HashSet<EntityUid> entities)
+    {
+        foreach (var chunk in container.ChunkEntities)
+        {
+            DebugTools.Assert(!Deleted(chunk));
+            entities.Add(chunk);
+        }
     }
 
     private void AddChunk(Entity<ChunkEntityComponent, MetaDataComponent?> ent)
@@ -191,43 +245,60 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         var key = (comp.Root, comp.Chunk);
         meta ??= MetaData(uid);
 
-        if (_chunkKeysByEntity.TryGetValue(uid, out var oldKey) && oldKey != key)
-            RemoveChunk(uid, oldKey);
+        if (!_mapQuery.HasComp(comp.Root) && !_gridQuery.HasComp(comp.Root))
+        {
+            Del(uid, meta);
+            return;
+        }
+
+        if (!_containerQuery.TryGetComponent(comp.Root, out var container))
+        {
+            DebugTools.Assert($"{nameof(PvsChunkContainerComponent)} missing on chunk root {ToPrettyString(comp.Root)}.");
+            container = EnsureComp<PvsChunkContainerComponent>(comp.Root);
+        }
+
+        if (container.Chunks.TryGetValue(comp.Chunk, out var oldChunk))
+        {
+            if (oldChunk.Owner == uid)
+            {
+                DebugTools.Assert(container.ChunkEntities.Contains(uid));
+                meta.Flags |= MetaDataFlags.ChunkEntity;
+                return;
+            }
+
+            DebugTools.Assert($"Duplicate chunk entity for root {ToPrettyString(comp.Root)} and chunk {comp.Chunk}.");
+        }
 
         meta.Flags |= MetaDataFlags.ChunkEntity;
 
-        _chunks[key] = (uid, comp, meta);
-        _chunkKeysByEntity[uid] = key;
-        _chunksByRoot.GetOrNew(comp.Root).Add(comp.Chunk);
+        container.Chunks[comp.Chunk] = (uid, comp);
+        container.ChunkEntities.Add(uid);
 
-        var ev = new ChunkEntityAddedEvent(uid, comp.Root, comp.Chunk);
+        var ev = new ChunkEntityAddedEvent(uid, key.Root, key.Chunk);
         RaiseLocalEvent(ref ev);
+    }
+
+    private bool IsAvailable(Entity<ChunkEntityComponent> chunk)
+    {
+        return _metaQuery.TryGetComponent(chunk.Owner, out var meta) &&
+               !Deleted(chunk.Owner, meta) &&
+               !chunk.Comp.Deleted &&
+               (meta.Flags & MetaDataFlags.Detached) == 0;
     }
 
     private void RemoveChunk(Entity<ChunkEntityComponent> ent)
     {
-        var (uid, _) = ent;
-        var key = _chunkKeysByEntity.GetValueOrDefault(uid, (ent.Comp.Root, ent.Comp.Chunk));
-
-        RemoveChunk(uid, key);
-    }
-
-    private void RemoveChunk(EntityUid uid, (EntityUid Root, Vector2i Chunk) key)
-    {
-        if (_chunks.TryGetValue(key, out var existing) && existing.Owner != uid)
-            return;
-
-        _chunks.Remove(key);
-        _chunkKeysByEntity.Remove(uid);
-
-        if (_chunksByRoot.TryGetValue(key.Root, out var chunks))
+        var (uid, comp) = ent;
+        if (_containerQuery.TryGetComponent(comp.Root, out var container) &&
+            container.Chunks.TryGetValue(comp.Chunk, out var existing) &&
+            existing.Owner == uid)
         {
-            chunks.Remove(key.Chunk);
-            if (chunks.Count == 0)
-                _chunksByRoot.Remove(key.Root);
+            container.Chunks.Remove(comp.Chunk);
         }
 
-        var ev = new ChunkEntityRemovedEvent(uid, key.Root, key.Chunk);
+        container?.ChunkEntities.Remove(uid);
+
+        var ev = new ChunkEntityRemovedEvent(uid, comp.Root, comp.Chunk);
         RaiseLocalEvent(ref ev);
 
         if (_metaQuery.TryGetComponent(uid, out var meta))
@@ -236,22 +307,28 @@ public sealed partial class ChunkEntitySystem : EntitySystem
 
     private void DeleteRootChunks(EntityUid root)
     {
-        if (!_chunksByRoot.Remove(root, out var chunks))
+        if (!_containerQuery.TryGetComponent(root, out var container))
             return;
 
-        foreach (var chunk in chunks)
+        _tempUids.Clear();
+        _tempUids.AddRange(container.ChunkEntities);
+
+        foreach (var uid in _tempUids)
         {
-            if (!_chunks.Remove((root, chunk), out var uid))
-                continue;
-
-            DebugTools.Assert(_chunkKeysByEntity.ContainsKey(uid.Owner));
-            _chunkKeysByEntity.Remove(uid.Owner);
-
-            if (!Deleted(uid.Owner, uid.Comp2))
+            if (!_chentQuery.TryComp(uid, out var chent))
             {
-                var ev = new ChunkEntityRemovedEvent(uid.Owner, root, chunk);
+                continue;
+            }
+
+            container.Chunks.Remove(chent.Chunk);
+            container.ChunkEntities.Remove(uid);
+
+            if (_metaQuery.TryGetComponent(uid, out var meta) && !Deleted(uid, meta))
+            {
+                var ev = new ChunkEntityRemovedEvent(uid, root, chent.Chunk);
                 RaiseLocalEvent(ref ev);
-                Del(uid.Owner, uid.Comp2);
+
+                Del(uid, meta);
             }
         }
     }
@@ -275,6 +352,36 @@ public sealed partial class ChunkEntitySystem : EntitySystem
             {
                 if (_system.TryGetChunk(_root, chunk.Value, out entity))
                     return true;
+            }
+
+            entity = null;
+            return false;
+        }
+    }
+
+    public struct ChunkEntityRootEnumerator
+    {
+        private readonly ChunkEntitySystem _system;
+        private Dictionary<Vector2i, Entity<ChunkEntityComponent>>.Enumerator _enumerator;
+        private readonly bool _valid;
+
+        internal ChunkEntityRootEnumerator(ChunkEntitySystem system, PvsChunkContainerComponent? container)
+        {
+            _system = system;
+            _valid = container != null;
+            _enumerator = container?.Chunks.GetEnumerator() ?? default;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out Entity<ChunkEntityComponent>? entity)
+        {
+            while (_valid && _enumerator.MoveNext())
+            {
+                var chunk = _enumerator.Current.Value;
+                if (_system.IsAvailable(chunk))
+                {
+                    entity = (chunk.Owner, chunk.Comp);
+                    return true;
+                }
             }
 
             entity = null;

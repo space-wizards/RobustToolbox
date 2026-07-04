@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -109,53 +108,30 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
 
     public readonly Vector2 Center => new Vector2(_left + _right, _top + _bottom) / 2f;
 
-    /// <summary>
-    /// Validates the bounds of a box.
-    /// </summary>
-    /// <remarks>
-    /// Negative width or height is not allowed,
-    /// and will be clamped to zero-delta if necessary.</remarks>
-    private static void Validate(ref int left, ref int top, ref int right, ref int bottom)
+    private static void Validate(int left, int top, int right, int bottom)
     {
         if (left > right)
-        {
-            Debug.Fail($"Left cannot be greater than Right. Left: {left}, Right: {right}.");
-            left = right;
-        }
+            throw new ArgumentException("Left cannot be greater than Right.", nameof(left));
+
         if (top > bottom)
-        {
-            Debug.Fail($"Top cannot be greater than Bottom. Top: {top}, Bottom: {bottom}.");
-            top = bottom;
-        }
+            throw new ArgumentException("Top cannot be greater than Bottom.", nameof(top));
     }
 
-    /// <summary>
-    /// Creates a <see cref="UIBox2i"/>.
-    /// </summary>
-    /// <remarks>The ctor performs validation
-    /// to ensure that the box is non-negiatve, and will clamp these values
-    /// to be zero-delta if necessary.</remarks>
     public UIBox2i(Vector2i topLeft, Vector2i bottomRight)
     {
         Unsafe.SkipInit(out this);
 
-        Validate(ref topLeft.X, ref topLeft.Y, ref bottomRight.X, ref bottomRight.Y);
+        Validate(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y);
 
         _topLeft = topLeft;
         _bottomRight = bottomRight;
     }
 
-    /// <summary>
-    /// Creates a <see cref="UIBox2i"/>.
-    /// </summary>
-    /// <remarks>The ctor performs validation
-    /// to ensure that the box is non-negiatve, and will clamp these values
-    /// to be zero-delta if necessary.</remarks>
     public UIBox2i(int left, int top, int right, int bottom)
     {
         Unsafe.SkipInit(out this);
 
-        Validate(ref left, ref top, ref right, ref bottom);
+        Validate(left, top, right, bottom);
 
         _left = left;
         _right = right;

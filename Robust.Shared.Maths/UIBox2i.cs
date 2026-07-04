@@ -132,8 +132,8 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
     /// <summary>
     /// Creates a <see cref="UIBox2i"/>.
     /// </summary>
-    /// <remarks>The ctor performs validation
-    /// to ensure that the box is non-negiatve, and will clamp these values
+    /// <remarks>This ctor performs validation
+    /// to ensure that the box is non-negative, and will clamp these values
     /// to be zero-delta if necessary.</remarks>
     public UIBox2i(Vector2i topLeft, Vector2i bottomRight)
     {
@@ -148,8 +148,8 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
     /// <summary>
     /// Creates a <see cref="UIBox2i"/>.
     /// </summary>
-    /// <remarks>The ctor performs validation
-    /// to ensure that the box is non-negiatve, and will clamp these values
+    /// <remarks>This ctor performs validation
+    /// to ensure that the box is non-negative, and will clamp these values
     /// to be zero-delta if necessary.</remarks>
     public UIBox2i(int left, int top, int right, int bottom)
     {

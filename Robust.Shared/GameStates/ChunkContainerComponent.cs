@@ -9,19 +9,19 @@ namespace Robust.Shared.GameStates;
 /// <summary>
 /// Runtime index of chunk entities owned by a map or grid root.
 /// </summary>
-[RegisterComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 [Access(typeof(ChunkEntitySystem), typeof(ChunkEntitySystem.ChunkEntityRootEnumerator))]
 public sealed partial class ChunkContainerComponent : Component
 {
     [ViewVariables]
-    internal int ChunkCount => Chunks.Count;
+    public int ChunkCount => Chunks.Count;
 
     [ViewVariables]
-    internal int SavedChunkCount => ChunkEntities.Count;
+    public int SavedChunkCount => ChunkEntities.Count;
 
-    [DataField]
-    internal HashSet<EntityUid> ChunkEntities = new();
+    [DataField, AutoNetworkedField]
+    public HashSet<EntityUid> ChunkEntities = new();
 
     [ViewVariables(VVAccess.ReadOnly)]
-    internal readonly Dictionary<Vector2i, Entity<ChunkEntityComponent>> Chunks = new();
+    public readonly Dictionary<Vector2i, Entity<ChunkEntityComponent>> Chunks = new();
 }

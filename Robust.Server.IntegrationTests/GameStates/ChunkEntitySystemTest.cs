@@ -304,7 +304,11 @@ public sealed partial class ChunkEntitySystemTest
         var ev = new BeforeSerializationEvent(entities, [mapId], FileCategory.Save);
         entMan.EventBus.RaiseEvent(EventSource.Local, ev);
 
-        Assert.That(entMan.GetComponent<MetaDataComponent>(chunk).EntityLifeStage, Is.LessThan(EntityLifeStage.MapInitialized));
+        Assert.Multiple(() =>
+        {
+            Assert.That(entMan.GetComponent<MetaDataComponent>(chunk).EntityLifeStage, Is.LessThan(EntityLifeStage.MapInitialized));
+            Assert.That(entities, Does.Contain(chunk));
+        });
 
         entMan.DeleteEntity(map);
     }

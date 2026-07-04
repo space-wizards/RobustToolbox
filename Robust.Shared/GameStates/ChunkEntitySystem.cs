@@ -47,7 +47,7 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         SubscribeLocalEvent<MapCreatedEvent>(OnMapCreated);
         SubscribeLocalEvent<GridInitializeEvent>(OnGridInitialize);
         SubscribeLocalEvent<ChunkEntityComponent, ComponentStartup>(OnChunkStartup);
-        SubscribeLocalEvent<ChunkEntityComponent, ComponentRemove>(OnChunkShutdown);
+        SubscribeLocalEvent<ChunkEntityComponent, ComponentShutdown>(OnChunkShutdown);
         SubscribeLocalEvent<ChunkEntityComponent, EntityTerminatingEvent>(OnChunkTerminating);
         SubscribeLocalEvent<ChunkEntityComponent, AfterAutoHandleStateEvent>(OnChunkHandleState);
         SubscribeLocalEvent<ChunkContainerComponent, MapInitEvent>(OnContainerMapInit);
@@ -194,7 +194,7 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         AddChunk(ent);
     }
 
-    private void OnChunkShutdown(Entity<ChunkEntityComponent> ent, ref ComponentRemove args)
+    private void OnChunkShutdown(Entity<ChunkEntityComponent> ent, ref ComponentShutdown args)
     {
         RemoveChunk(ent);
     }

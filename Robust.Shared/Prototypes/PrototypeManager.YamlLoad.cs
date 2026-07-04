@@ -5,6 +5,7 @@ using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -78,15 +79,15 @@ public partial class PrototypeManager
                                         // If the prototype has variants, we need to add each of these to the extracted list as well
                                         if (data.VariantData != null)
                                         {
-                                            foreach (var (variantId, variantMapping) in data.VariantData)
+                                            foreach (var (variantId, variantExtracted) in data.VariantData)
                                             {
-                                                if (variantMapping is null)
+                                                if (variantExtracted is null)
                                                     continue;
 
                                                 if (ignored)
-                                                    AbstractPrototype(variantMapping);
+                                                    AbstractPrototype(variantExtracted.Data);
 
-                                                extractedList.Add(new ExtractedMappingData(data.Kind, variantId, data.Parents, variantMapping));
+                                                extractedList.Add(variantExtracted);
                                             }
                                         }
                                     }
@@ -192,15 +193,15 @@ public partial class PrototypeManager
                         // If the prototype has variants, we need to add each of these to the extracted list as well
                         if (extracted.VariantData is not null)
                         {
-                            foreach (var (variantId, variantMapping) in extracted.VariantData)
+                            foreach (var (variantId, variantExtracted) in extracted.VariantData)
                             {
-                                if (variantMapping is null)
+                                if (variantExtracted is null)
                                     continue;
 
                                 if (ignored)
-                                    AbstractPrototype(variantMapping);
+                                    AbstractPrototype(variantExtracted.Data);
 
-                                MergeMapping(new ExtractedMappingData(extracted.Kind, variantId, extracted.Parents, variantMapping), overwrite, changed);
+                                MergeMapping(variantExtracted, overwrite, changed);
                             }
                         }
                     }
@@ -231,7 +232,7 @@ public partial class PrototypeManager
         }
 
         var kindData = _kinds[kind];
-        Dictionary<string, MappingDataNode>? variantData = null;
+        Dictionary<string, ExtractedMappingData>? variantData = null;
 
         if (!dataNode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
         {
@@ -239,7 +240,7 @@ public partial class PrototypeManager
             if (dataNode.TryGet<MappingDataNode>(IdDataFieldAttribute.Name, out var mappingNode) &&
                 mappingNode.Tag?.Equals(CreateVariantsTag) == true)
             {
-                variantData = new Dictionary<string, MappingDataNode>();
+                variantData = new Dictionary<string, ExtractedMappingData>();
                 var variantCollection = new List<string>();
                 
                 // We need to generate a collection of prototype variants.
@@ -261,7 +262,8 @@ public partial class PrototypeManager
                         }
 
                         // Gather the outputs.
-                        variantData.Add(clonedIdNode.Value, clonedNode);
+                        TryGetParents(kindData, clonedNode, out var clonedNodeParents);
+                        variantData.Add(clonedIdNode.Value, new ExtractedMappingData(kind, clonedIdNode.Value, clonedNodeParents, clonedNode));
                         variantCollection.Add(clonedIdNode.Value);
                     }
 
@@ -292,18 +294,21 @@ public partial class PrototypeManager
             }
         }
 
-        var id = idNode.Value;
-        string[]? parents = null;
+        TryGetParents(kindData, dataNode, out var parents);
+        return new ExtractedMappingData(kind, idNode.Value, parents, dataNode, variantData);
+    }
 
-        if (kindData.Inheritance != null)
-        {
-            if (dataNode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
-            {
-                parents = _serializationManager.Read<string[]>(parentNode, notNullableOverride: true);
-            }
-        }
+    private bool TryGetParents(KindData kindData, MappingDataNode mappingDataNode, [NotNullWhen(true)] out string[]? parents)
+    {
+        parents = null;
 
-        return new ExtractedMappingData(kind, id, parents, dataNode, variantData);
+        if (kindData.Inheritance is null
+            || !mappingDataNode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
+            return false;
+
+        parents = _serializationManager.Read<string[]>(parentNode, notNullableOverride: true);
+
+        return true;
     }
 
     private void MergeMapping(
@@ -363,12 +368,12 @@ public partial class PrototypeManager
                     // If the prototype has variants, we need to add each of these to the extracted list as well
                     if (extracted.VariantData is not null)
                     {
-                        foreach (var (variantId, variantMapping) in extracted.VariantData)
+                        foreach (var (variantId, variantExtracted) in extracted.VariantData)
                         {
-                            if (variantMapping is null)
+                            if (variantExtracted is null)
                                 continue;
 
-                            MergeMapping(new ExtractedMappingData(extracted.Kind, variantId, extracted.Parents, variantMapping), overwrite, changed);
+                            MergeMapping(variantExtracted, overwrite, changed);
                         }
                     }
                 }
@@ -477,5 +482,5 @@ public partial class PrototypeManager
         string Id,
         string[]? Parents,
         MappingDataNode Data,
-        Dictionary<string, MappingDataNode>? VariantData = null);
+        Dictionary<string, ExtractedMappingData>? VariantData = null);
 }

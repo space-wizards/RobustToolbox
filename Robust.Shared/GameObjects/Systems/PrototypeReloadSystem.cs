@@ -12,6 +12,7 @@ namespace Robust.Shared.GameObjects;
 internal sealed partial class PrototypeReloadSystem : EntitySystem
 {
     [Dependency] private MetaDataSystem _meta = default!;
+
     public override void Initialize()
     {
         base.Initialize();

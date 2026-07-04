@@ -38,14 +38,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
                 })
                 .InitializeInstance();
 
-            var mapManager = sim.Resolve<IMapManager>();
+            var mapSystem = sim.System<SharedMapSystem>();
 
             var testMapId = sim.CreateMap().MapId;
             var coords = new MapCoordinates(new Vector2(7, 7), testMapId);
             // Add grid 1, as the default grid to anchor things to.
-            var grid = mapManager.CreateGridEntity(testMapId);
+            var grid = mapSystem.CreateGridEntity(testMapId);
 
-            return (sim, grid, coords, sim.System<SharedTransformSystem>(), sim.System<SharedMapSystem>());
+            return (sim, grid, coords, sim.System<SharedTransformSystem>(), mapSystem);
         }
 
         // An entity is anchored to the tile it is over on the target grid.
@@ -160,9 +160,8 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var mapSys = sim.System<SharedMapSystem>();
 
             var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGridEntity(mapId);
+            var grid = mapSys.CreateGridEntity(mapId);
             var coordinates = new MapCoordinates(new Vector2(7, 7), mapId);
             var pos = mapSys.TileIndicesFor(grid, coordinates);
             mapSys.SetTile(grid, pos, new Tile(1));

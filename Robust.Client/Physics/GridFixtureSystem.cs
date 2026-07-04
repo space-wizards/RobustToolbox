@@ -13,7 +13,6 @@ namespace Robust.Client.Physics
     internal sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private IOverlayManager _overlay = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private SharedTransformSystem _transform = default!;
         [Dependency] private SharedMapSystem _map = default!;
 
@@ -29,7 +28,7 @@ namespace Robust.Client.Physics
 
                 if (_enableDebug)
                 {
-                    var overlay = new GridSplitNodeOverlay(_mapManager, this, _transform, _map);
+                    var overlay = new GridSplitNodeOverlay(this, _transform, _map);
                     _overlay.AddOverlay(overlay);
                     RaiseNetworkEvent(new RequestGridNodesMessage());
                 }
@@ -72,14 +71,12 @@ namespace Robust.Client.Physics
         {
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            private readonly IMapManager _mapManager;
             private readonly GridFixtureSystem _system;
             private readonly SharedTransformSystem _transform;
             private readonly SharedMapSystem _map;
 
-            public GridSplitNodeOverlay(IMapManager mapManager, GridFixtureSystem system, SharedTransformSystem transform, SharedMapSystem map)
+            public GridSplitNodeOverlay(GridFixtureSystem system, SharedTransformSystem transform, SharedMapSystem map)
             {
-                _mapManager = mapManager;
                 _system = system;
                 _transform = transform;
                 _map = map;
@@ -91,7 +88,7 @@ namespace Robust.Client.Physics
 
                 var state = (_system, _transform, args.WorldBounds, worldHandle);
 
-                _mapManager.FindGridsIntersecting(args.MapId, args.WorldBounds, ref state,
+                _map.FindGridsIntersecting(args.MapId, args.WorldBounds, ref state,
                     (EntityUid uid, MapGridComponent grid,
                         ref (GridFixtureSystem system, SharedTransformSystem transform, Box2Rotated worldBounds, DrawingHandleWorld worldHandle) tuple) =>
                     {

@@ -65,9 +65,9 @@ namespace Robust.UnitTesting.Shared
             return ent;
         }
 
-        private Entity<MapGridComponent> SetupGrid(MapId mapId, SharedMapSystem mapSystem, IEntityManager entManager, IMapManager mapManager)
+        private Entity<MapGridComponent> SetupGrid(MapId mapId, SharedMapSystem mapSystem, IEntityManager entManager)
         {
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
             entManager.System<SharedTransformSystem>().SetLocalPosition(grid.Owner, new Vector2(10f, 10f));
             mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
             return grid;
@@ -88,11 +88,10 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
             mapSystem.CreateMap(spawnPos.MapId);
-            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager);
 
             if (physics)
                 GetPhysicsEntity(entManager, spawnPos);
@@ -113,11 +112,10 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
             mapSystem.CreateMap(spawnPos.MapId);
-            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager);
 
             if (physics)
                 GetPhysicsEntity(entManager, spawnPos);
@@ -141,11 +139,10 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
             mapSystem.CreateMap(spawnPos.MapId);
-            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager);
 
             if (physics)
                 GetPhysicsEntity(entManager, spawnPos);
@@ -170,11 +167,10 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
             mapSystem.CreateMap(spawnPos.MapId);
-            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager);
 
             if (physics)
                 GetPhysicsEntity(entManager, spawnPos);
@@ -221,11 +217,10 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
             mapSystem.CreateMap(spawnPos.MapId);
-            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager);
 
             if (physics)
                 GetPhysicsEntity(entManager, spawnPos);
@@ -247,11 +242,10 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
             mapSystem.CreateMap(spawnPos.MapId);
-            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager);
 
             if (physics)
                 GetPhysicsEntity(entManager, spawnPos);
@@ -295,11 +289,10 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
             mapSystem.CreateMap(spawnPos.MapId);
-            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager);
 
             if (physics)
                 GetPhysicsEntity(entManager, spawnPos);
@@ -323,11 +316,10 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
             mapSystem.CreateMap(spawnPos.MapId);
-            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager);
 
             if (physics)
                 GetPhysicsEntity(entManager, spawnPos);
@@ -354,12 +346,11 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
             var transformSystem = entManager.System<SharedTransformSystem>();
 
             var mapId = server.CreateMap().MapId;
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
 
             var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);
             mapSystem.SetTile(grid, new Vector2i(), new Tile(1));

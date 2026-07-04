@@ -278,7 +278,7 @@ public partial class PrototypeManager
                     variantCollection.Insert(0, idNode.Value);
 
                     // Register all variants of the source prototype as a collection for later reference.
-                    RegisterVariantCollection(variantCollection);
+                    RegisterVariantCollection(kind, variantCollection);
                 }
                 else
                 {

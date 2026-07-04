@@ -2,6 +2,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -13,7 +14,7 @@ public partial class PrototypeManager
     /// <summary>
     /// A dictionary that maps a prototype to a list of all variants of that prototype.
     /// </summary>
-    private readonly Dictionary<string, List<string>> _variantCollections = new();
+    private readonly Dictionary<Type, Dictionary<string, List<string>>> _variantCollections = new();
 
     /// <summary>
     /// Recursively searches all child nodes in the tree for any nodes with the CreateVariants tag.
@@ -86,13 +87,21 @@ public partial class PrototypeManager
     /// <summary>
     /// Registers a collection of prototype variants for later reference.
     /// </summary>
+    /// <param name="kind">The prototype kind.</param>
     /// <param name="collectionVariants">A list of prototype variants derived from the same source prototype.</param>
-    private void RegisterVariantCollection(List<string> collectionVariants)
+    private void RegisterVariantCollection(Type kind, List<string> collectionVariants)
     {
+        if (!_variantCollections.TryGetValue(kind, out var kindCollection))
+        {
+            kindCollection = new();
+        }
+
         foreach (var collectionMember in collectionVariants)
         {
-            _variantCollections[collectionMember] = collectionVariants;
+            kindCollection[collectionMember] = collectionVariants;
         }
+
+        _variantCollections[kind] = kindCollection;
     }
 
     /// <summary>
@@ -105,7 +114,10 @@ public partial class PrototypeManager
     {
         collectionVariants = null;
 
-        if (!_variantCollections.TryGetValue(collectionMember, out var collectionVariantNames))
+        if (!_variantCollections.TryGetValue(typeof(T), out var collectionKind))
+            return false;
+
+        if (!collectionKind.TryGetValue(collectionMember, out var collectionVariantNames))
             return false;
 
         collectionVariants = new();

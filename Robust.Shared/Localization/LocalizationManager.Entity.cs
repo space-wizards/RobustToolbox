@@ -55,10 +55,6 @@ namespace Robust.Shared.Localization
             string? desc = null;
             string? suffix = null;
 
-            string? fallbackName = null;
-            string? fallbackDesc = null;
-            string? fallbackSuffix = null;
-
             Dictionary<string, string>? attributes = null;
 
             // A child can have a locale entry just to override its suffix, while
@@ -121,9 +117,9 @@ namespace Robust.Shared.Localization
                 if (prototype == null)
                     continue;
 
-                fallbackName ??= prototype.SetName;
-                fallbackDesc ??= prototype.SetDesc;
-                fallbackSuffix ??= prototype.SetSuffix;
+                name ??= prototype.SetName;
+                desc ??= prototype.SetDesc;
+                suffix ??= prototype.SetSuffix;
 
                 if (prototype.LocProperties.Count != 0)
                 {
@@ -137,10 +133,6 @@ namespace Robust.Shared.Localization
                     }
                 }
             }
-
-            name ??= fallbackName;
-            desc ??= fallbackDesc;
-            suffix ??= fallbackSuffix;
 
             // Plenty of prototypes have no description at all, such as spawners,
             // markers, and debug/admin entities. Keep the missing .desc warning

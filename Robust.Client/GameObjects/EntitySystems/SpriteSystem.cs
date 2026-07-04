@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
@@ -13,7 +12,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Timing;
@@ -31,10 +29,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private IConfigurationManager _cfg = default!;
         [Dependency] private IEyeManager _eye = default!;
         [Dependency] private IGameTiming _timing = default!;
-        [Dependency] private IPrototypeManager _proto = default!;
         [Dependency] private IResourceCache _resourceCache = default!;
-        [Dependency] private ILogManager _logManager = default!;
-        [Dependency] private IComponentFactory _factory = default!;
 
         // Note that any new system dependencies have to be added to RobustUnitTest.BaseSetup()
         [Dependency] private SharedTransformSystem _xforms = default!;
@@ -64,7 +59,7 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
-            _sawmill = _logManager.GetSawmill("sprite");
+            _sawmill = LogManager.GetSawmill("sprite");
             _query = GetEntityQuery<SpriteComponent>();
         }
 

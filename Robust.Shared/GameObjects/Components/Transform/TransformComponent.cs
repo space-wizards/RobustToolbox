@@ -103,8 +103,6 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
-        [Dependency] private IMapManager _mapManager = default!;
-
         /// <summary>
         ///     Returns the index of the map which this object is on
         /// </summary>
@@ -378,7 +376,7 @@ namespace Robust.Shared.GameObjects
                 {
                     _anchored = value;
                 }
-                else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out _, out var grid))
+                else if (value && !_anchored && _entMan.EntitySysManager.GetEntitySystem<SharedMapSystem>().TryFindGridAt(MapPosition, out _, out var grid))
                 {
                     _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(Owner, this, grid);
                 }

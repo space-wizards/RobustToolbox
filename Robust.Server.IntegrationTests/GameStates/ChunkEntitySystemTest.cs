@@ -4,9 +4,11 @@ using System.Numerics;
 using System.Reflection;
 using NUnit.Framework;
 using Robust.Server.GameStates;
+using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
@@ -275,6 +277,36 @@ public sealed partial class ChunkEntitySystemTest
         entMan.DeleteEntity(map);
 
         Assert.That(entMan.Deleted(chunk.Owner), Is.True);
+    }
+
+    /// <summary>
+    /// Ensures full-save serialization syncs chunk entity lifecycle to its root, matching map/grid saves.
+    /// </summary>
+    [Test]
+    public void FullSaveSyncsChunkEntityLifestageToRoot()
+    {
+        var sim = Simulation();
+        var entMan = sim.Resolve<IEntityManager>();
+        var maps = entMan.System<SharedMapSystem>();
+        var chunks = entMan.System<ChunkEntitySystem>();
+
+        var map = maps.CreateMap(out var mapId, runMapInit: false);
+        var grid = maps.CreateGridEntity(mapId);
+        var chunk = chunks.GetOrCreateChunk(grid, new Vector2i(1, 2)).Owner;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(entMan.GetComponent<MetaDataComponent>(grid).EntityLifeStage, Is.LessThan(EntityLifeStage.MapInitialized));
+            Assert.That(entMan.GetComponent<MetaDataComponent>(chunk).EntityLifeStage, Is.EqualTo(EntityLifeStage.MapInitialized));
+        });
+
+        var entities = entMan.GetEntities().ToHashSet();
+        var ev = new BeforeSerializationEvent(entities, [mapId], FileCategory.Save);
+        entMan.EventBus.RaiseEvent(EventSource.Local, ev);
+
+        Assert.That(entMan.GetComponent<MetaDataComponent>(chunk).EntityLifeStage, Is.LessThan(EntityLifeStage.MapInitialized));
+
+        entMan.DeleteEntity(map);
     }
 
     private static (ISimulation Simulation, EntityUid Grid) SimulationWithGrid()

@@ -240,8 +240,12 @@ public sealed partial class ChunkEntitySystem : EntitySystem
 
     private void OnBeforeSerialization(BeforeSerializationEvent ev)
     {
-        if (ev.Category != FileCategory.Map && ev.Category != FileCategory.Grid)
+        if (ev.Category != FileCategory.Map &&
+            ev.Category != FileCategory.Grid &&
+            ev.Category != FileCategory.Save)
+        {
             return;
+        }
 
         // Chunk entities are nullspace entities referenced by the saved root container (i.e. grid or map),
         // so we need to ensure they are included to serialize properly (e.g. in case grid-only serialization excludes them).

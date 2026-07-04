@@ -31,12 +31,13 @@ public sealed partial class ChunkEntitySystem : EntitySystem
     [Dependency] private EntityQuery<MetaDataComponent> _metaQuery;
     [Dependency] private EntityQuery<MapComponent> _mapQuery;
     [Dependency] private EntityQuery<MapGridComponent> _gridQuery;
-    [Dependency] private EntityQuery<PvsChunkContainerComponent> _containerQuery;
+    [Dependency] private EntityQuery<ChunkContainerComponent> _containerQuery;
+    [Dependency] private MetaDataSystem _metaData = default!;
 
     /// <summary>
     /// Temporary list for serialization.
     /// </summary>
-    private readonly List<PvsChunkContainerComponent> _serializationContainers = new();
+    private readonly List<ChunkContainerComponent> _serializationContainers = new();
 
     private readonly List<EntityUid> _tempUids = new();
 
@@ -49,9 +50,20 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         SubscribeLocalEvent<ChunkEntityComponent, ComponentRemove>(OnChunkShutdown);
         SubscribeLocalEvent<ChunkEntityComponent, EntityTerminatingEvent>(OnChunkTerminating);
         SubscribeLocalEvent<ChunkEntityComponent, AfterAutoHandleStateEvent>(OnChunkHandleState);
+        SubscribeLocalEvent<ChunkContainerComponent, MapInitEvent>(OnContainerMapInit);
         SubscribeLocalEvent<BeforeSerializationEvent>(OnBeforeSerialization);
         SubscribeLocalEvent<MapRemovedEvent>(OnMapRemoved);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
+    }
+
+    /// <summary>
+    /// Converts local map/grid coordinates to the chunk index used by chunk entities.
+    /// </summary>
+    public static Vector2i GetChunkIndices(Vector2 coordinates)
+    {
+        return new Vector2i(
+            (int) Math.Floor(coordinates.X / ChunkSize),
+            (int) Math.Floor(coordinates.Y / ChunkSize));
     }
 
     /// <summary>
@@ -169,12 +181,12 @@ public sealed partial class ChunkEntitySystem : EntitySystem
 
     private void OnMapCreated(MapCreatedEvent ev)
     {
-        EnsureComp<PvsChunkContainerComponent>(ev.Uid);
+        EnsureComp<ChunkContainerComponent>(ev.Uid);
     }
 
     private void OnGridInitialize(GridInitializeEvent ev)
     {
-        EnsureComp<PvsChunkContainerComponent>(ev.EntityUid);
+        EnsureComp<ChunkContainerComponent>(ev.EntityUid);
     }
 
     private void OnChunkStartup(Entity<ChunkEntityComponent> ent, ref ComponentStartup args)
@@ -195,6 +207,25 @@ public sealed partial class ChunkEntitySystem : EntitySystem
     private void OnChunkHandleState(Entity<ChunkEntityComponent> ent, ref AfterAutoHandleStateEvent args)
     {
         AddChunk(ent);
+    }
+
+    private void OnContainerMapInit(Entity<ChunkContainerComponent> ent, ref MapInitEvent args)
+    {
+        _tempUids.Clear();
+        _tempUids.AddRange(ent.Comp.ChunkEntities);
+
+        foreach (var chunk in _tempUids)
+        {
+            if (!_chentQuery.TryComp(chunk, out var chunkComp) ||
+                !_metaQuery.TryComp(chunk, out var chunkMeta))
+            {
+                continue;
+            }
+
+            SyncChunkToRoot((chunk, chunkComp, chunkMeta), ent.Owner);
+        }
+
+        _tempUids.Clear();
     }
 
     private void OnMapRemoved(MapRemovedEvent ev)
@@ -224,13 +255,54 @@ public sealed partial class ChunkEntitySystem : EntitySystem
 
         foreach (var container in _serializationContainers)
         {
+            SyncRootChunks(container);
             AddRootChunks(container, ev.Entities);
         }
 
         _serializationContainers.Clear();
     }
 
-    private void AddRootChunks(PvsChunkContainerComponent container, HashSet<EntityUid> entities)
+    private void SyncRootChunks(ChunkContainerComponent container)
+    {
+        foreach (var chunk in container.ChunkEntities)
+        {
+            if (!_chentQuery.TryComp(chunk, out var chunkComp) ||
+                !_metaQuery.TryComp(chunkComp.Root, out var rootMeta) ||
+                !_metaQuery.TryComp(chunk, out var chunkMeta))
+            {
+                continue;
+            }
+
+            SyncChunkToRoot((chunk, chunkComp, chunkMeta), rootMeta);
+
+            if (rootMeta.EntityLifeStage != EntityLifeStage.MapInitialized &&
+                chunkMeta.EntityLifeStage == EntityLifeStage.MapInitialized)
+            {
+                EntityManager.SetLifeStage(chunkMeta, EntityLifeStage.Initialized);
+            }
+        }
+    }
+
+    private void SyncChunkToRoot(Entity<ChunkEntityComponent, MetaDataComponent> chunk, EntityUid root)
+    {
+        if (!_metaQuery.TryComp(root, out var rootMeta))
+            return;
+
+        SyncChunkToRoot(chunk, rootMeta);
+    }
+
+    private void SyncChunkToRoot(Entity<ChunkEntityComponent, MetaDataComponent> chunk, MetaDataComponent rootMeta)
+    {
+        if (rootMeta.EntityLifeStage == EntityLifeStage.MapInitialized &&
+            chunk.Comp2.EntityLifeStage == EntityLifeStage.Initialized)
+        {
+            EntityManager.RunMapInit(chunk.Owner, chunk.Comp2);
+        }
+
+        _metaData.SetEntityPaused(chunk.Owner, rootMeta.EntityPaused, chunk.Comp2);
+    }
+
+    private void AddRootChunks(ChunkContainerComponent container, HashSet<EntityUid> entities)
     {
         foreach (var chunk in container.ChunkEntities)
         {
@@ -253,8 +325,8 @@ public sealed partial class ChunkEntitySystem : EntitySystem
 
         if (!_containerQuery.TryGetComponent(comp.Root, out var container))
         {
-            DebugTools.Assert($"{nameof(PvsChunkContainerComponent)} missing on chunk root {ToPrettyString(comp.Root)}.");
-            container = EnsureComp<PvsChunkContainerComponent>(comp.Root);
+            DebugTools.Assert($"{nameof(ChunkContainerComponent)} missing on chunk root {ToPrettyString(comp.Root)}.");
+            container = EnsureComp<ChunkContainerComponent>(comp.Root);
         }
 
         if (container.Chunks.TryGetValue(comp.Chunk, out var oldChunk))
@@ -263,6 +335,7 @@ public sealed partial class ChunkEntitySystem : EntitySystem
             {
                 DebugTools.Assert(container.ChunkEntities.Contains(uid));
                 meta.Flags |= MetaDataFlags.ChunkEntity;
+                SyncChunkToRoot((uid, comp, meta), comp.Root);
                 return;
             }
 
@@ -273,6 +346,8 @@ public sealed partial class ChunkEntitySystem : EntitySystem
 
         container.Chunks[comp.Chunk] = (uid, comp);
         container.ChunkEntities.Add(uid);
+
+        SyncChunkToRoot((uid, comp, meta), comp.Root);
 
         var ev = new ChunkEntityAddedEvent(uid, key.Root, key.Chunk);
         RaiseLocalEvent(ref ev);
@@ -386,7 +461,7 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         private readonly bool _valid;
         private Entity<ChunkEntityComponent> _current;
 
-        internal ChunkEntityRootEnumerator(ChunkEntitySystem system, PvsChunkContainerComponent? container)
+        internal ChunkEntityRootEnumerator(ChunkEntitySystem system, ChunkContainerComponent? container)
         {
             _system = system;
             _valid = container != null;

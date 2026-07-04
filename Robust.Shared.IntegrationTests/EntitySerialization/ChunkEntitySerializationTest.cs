@@ -159,7 +159,7 @@ internal sealed partial class ChunkEntitySerializationTest : RobustIntegrationTe
         var marker = entMan.GetComponent<EntitySaveTestComponent>(loadedChunk.Value.Owner);
         Assert.That(marker.Id, Is.EqualTo(id));
 
-        var container = entMan.GetComponent<PvsChunkContainerComponent>(root);
+        var container = entMan.GetComponent<ChunkContainerComponent>(root);
         Assert.That(container.ChunkEntities, Does.Contain(loadedChunk.Value.Owner));
 
         var xform = entMan.GetComponent<TransformComponent>(loadedChunk.Value.Owner);

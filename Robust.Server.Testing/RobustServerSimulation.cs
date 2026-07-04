@@ -310,6 +310,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<CollideOnAnchorComponent>();
             compFactory.RegisterClass<ActorComponent>();
             compFactory.RegisterClass<ChunkEntityComponent>();
+            compFactory.RegisterClass<ChunkContainerComponent>();
 
             _regDelegate?.Invoke(compFactory);
 

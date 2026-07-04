@@ -7,11 +7,11 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameStates;
 
 /// <summary>
-/// Runtime index of PVS chunk entities owned by a map or grid root.
+/// Runtime index of chunk entities owned by a map or grid root.
 /// </summary>
 [RegisterComponent]
 [Access(typeof(ChunkEntitySystem), typeof(ChunkEntitySystem.ChunkEntityRootEnumerator))]
-public sealed partial class PvsChunkContainerComponent : Component
+public sealed partial class ChunkContainerComponent : Component
 {
     [ViewVariables]
     internal int ChunkCount => Chunks.Count;

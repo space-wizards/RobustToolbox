@@ -9,6 +9,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Server.GameStates;
@@ -88,7 +89,7 @@ public sealed partial class ChunkEntitySystemTest
             Chunk = Vector2i.Zero,
         };
 
-        Assert.Throws<InvalidOperationException>(() => entMan.AddComponent(second, comp));
+        Assert.Throws<DebugAssertException>(() => entMan.AddComponent(second, comp));
     }
 
     /// <summary>

@@ -33,13 +33,13 @@ namespace Robust.Client.Placement
         [Dependency] internal IPlayerManager PlayerManager = default!;
         [Dependency] internal IResourceCache ResourceCache = default!;
         [Dependency] private IReflectionManager _reflectionManager = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private IGameTiming _time = default!;
         [Dependency] private IEyeManager _eyeManager = default!;
         [Dependency] internal IInputManager InputManager = default!;
         [Dependency] private IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private IEntityManager _entityManager = default!;
         [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IComponentFactory _factory = default!;
         [Dependency] private IBaseClient _baseClient = default!;
         [Dependency] private IOverlayManager _overlayManager = default!;
         [Dependency] internal IClyde Clyde = default!;
@@ -48,7 +48,6 @@ namespace Robust.Client.Placement
 
         public IEntityManager EntityManager => _entityManager;
         public IEyeManager EyeManager => _eyeManager;
-        public IMapManager MapManager => _mapManager;
 
         private ISawmill _sawmill = default!;
 
@@ -787,7 +786,7 @@ namespace Robust.Client.Placement
 
             sc.Comp.NoRotation = noRot;
 
-            if (prototype != null && prototype.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp))
+            if (prototype != null && prototype.TryComp<SpriteComponent>(out var spriteComp, _factory))
             {
                 Sprite.SetScale(sc.AsNullable(), spriteComp.Scale);
             }

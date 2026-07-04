@@ -28,7 +28,6 @@ internal sealed class GridDeleteSingleTileRemoveTestTest : RobustIntegrationTest
 
         await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
 
-        var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
@@ -74,7 +73,7 @@ internal sealed class GridDeleteSingleTileRemoveTestTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             sMap = sys.CreateMap(out var mapId);
-            var comp = mapMan.CreateGridEntity(mapId);
+            var comp = sys.CreateGridEntity(mapId);
             grid = (comp.Owner, comp);
             sys.SetTile(grid, grid, new Vector2i(0, 0), new Tile(typeId: 1, flags: 1, variant: 1));
             var coords = new EntityCoordinates(grid, 0.5f, 0.5f);

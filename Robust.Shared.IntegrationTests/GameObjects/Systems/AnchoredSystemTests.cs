@@ -260,7 +260,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             mapSys.SetTile(grid, mapSys.TileIndicesFor(grid, coordinates), new Tile(1));
 
             var ent1 = sim.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
-            xformSys.AnchorEntity(ent1);
+            sim.Transform(ent1).Anchored = true;
             sim.System<MoveEventTestSystem>().FailOnMove = true;
 
             // Act

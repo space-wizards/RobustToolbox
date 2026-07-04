@@ -338,20 +338,40 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         private readonly ChunkEntitySystem _system;
         private readonly EntityUid _root;
         private ChunkIndicesEnumerator _indices;
+        private Entity<ChunkEntityComponent> _current;
 
         internal ChunkEntityEnumerator(ChunkEntitySystem system, EntityUid root, ChunkIndicesEnumerator indices)
         {
             _system = system;
             _root = root;
             _indices = indices;
+            _current = default;
+        }
+
+        public readonly ChunkEntityEnumerator GetEnumerator() => this;
+
+        public readonly Entity<ChunkEntityComponent> Current => _current;
+
+        public bool MoveNext()
+        {
+            while (_indices.MoveNext(out var chunk))
+            {
+                if (_system.TryGetChunk(_root, chunk.Value, out var entity))
+                {
+                    _current = entity.Value;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public bool MoveNext([NotNullWhen(true)] out Entity<ChunkEntityComponent>? entity)
         {
-            while (_indices.MoveNext(out var chunk))
+            if (MoveNext())
             {
-                if (_system.TryGetChunk(_root, chunk.Value, out entity))
-                    return true;
+                entity = _current;
+                return true;
             }
 
             entity = null;
@@ -364,24 +384,41 @@ public sealed partial class ChunkEntitySystem : EntitySystem
         private readonly ChunkEntitySystem _system;
         private Dictionary<Vector2i, Entity<ChunkEntityComponent>>.Enumerator _enumerator;
         private readonly bool _valid;
+        private Entity<ChunkEntityComponent> _current;
 
         internal ChunkEntityRootEnumerator(ChunkEntitySystem system, PvsChunkContainerComponent? container)
         {
             _system = system;
             _valid = container != null;
             _enumerator = container?.Chunks.GetEnumerator() ?? default;
+            _current = default;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out Entity<ChunkEntityComponent>? entity)
+        public readonly ChunkEntityRootEnumerator GetEnumerator() => this;
+
+        public readonly Entity<ChunkEntityComponent> Current => _current;
+
+        public bool MoveNext()
         {
             while (_valid && _enumerator.MoveNext())
             {
                 var chunk = _enumerator.Current.Value;
                 if (_system.IsAvailable(chunk))
                 {
-                    entity = (chunk.Owner, chunk.Comp);
+                    _current = (chunk.Owner, chunk.Comp);
                     return true;
                 }
+            }
+
+            return false;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out Entity<ChunkEntityComponent>? entity)
+        {
+            if (MoveNext())
+            {
+                entity = _current;
+                return true;
             }
 
             entity = null;
@@ -393,22 +430,39 @@ public sealed partial class ChunkEntitySystem : EntitySystem
     {
         private ChunkEntityEnumerator _enumerator;
         private readonly EntityQuery<T> _query;
+        private Entity<ChunkEntityComponent, T> _current;
 
         internal ChunkEntityComponentEnumerator(ChunkEntityEnumerator enumerator, EntityQuery<T> query)
         {
             _enumerator = enumerator;
             _query = query;
+            _current = default;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out Entity<ChunkEntityComponent, T>? entity)
+        public readonly ChunkEntityComponentEnumerator<T> GetEnumerator() => this;
+
+        public readonly Entity<ChunkEntityComponent, T> Current => _current;
+
+        public bool MoveNext()
         {
             while (_enumerator.MoveNext(out var chunk))
             {
                 if (_query.TryComp(chunk.Value.Owner, out var comp))
                 {
-                    entity = (chunk.Value.Owner, chunk.Value.Comp, comp);
+                    _current = (chunk.Value.Owner, chunk.Value.Comp, comp);
                     return true;
                 }
+            }
+
+            return false;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out Entity<ChunkEntityComponent, T>? entity)
+        {
+            if (MoveNext())
+            {
+                entity = _current;
+                return true;
             }
 
             entity = null;

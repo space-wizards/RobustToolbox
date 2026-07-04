@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Reverted validation for `UiBox2i` `ctor`s as it was causing regressions in debug UIs.
 
 ### Other
 

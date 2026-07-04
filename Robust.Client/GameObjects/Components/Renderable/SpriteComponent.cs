@@ -202,34 +202,10 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)] internal bool _inertUpdateQueued;
 
         /// <summary>
-        ///     Shader instance to use when drawing the final sprite to the world.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public ShaderInstance? PostShader
-        {
-            get;
-            // This will get obsoleted, but I only want to mark it as obsolete when multi-shader support is added, so
-            // that people can use the appropriate method and don't migrate to an incorrect new method that wont
-            // be obsoleted.
-            set;
-        }
-
-        /// <summary>
-        ///     Whether to pass the screen texture to the <see cref="PostShader"/>.
-        /// </summary>
-        /// <remarks>
-        ///     Should be false unless you really need it.
-        /// </remarks>
-        [DataField]
-        public bool GetScreenTexture;
-
-        /// <summary>
-        ///     If true, this raise a entity system event before rendering this sprite, allowing systems to modify the
-        ///     shader parameters. Usually this can just be done via a frame-update, but some shaders require
-        ///     information about the viewport / eye.
+        ///     Shaders to use when drawing the final sprite to the world.
         /// </summary>
         [DataField]
-        public bool RaiseShaderEvent;
+        public SortedDictionary<SpriteShaderKey, SpriteShaderData> PostShaders = new();
 
         [ViewVariables] internal Dictionary<object, int> LayerMap { get; set; } = new();
         [ViewVariables] internal List<Layer> Layers = new();

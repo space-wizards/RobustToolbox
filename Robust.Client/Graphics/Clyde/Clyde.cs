@@ -582,6 +582,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             _glContext?.Shutdown();
             ShutdownWindowing();
+            ShutdownHLR();
         }
 
         private bool IsMainThread()

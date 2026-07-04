@@ -62,6 +62,9 @@ namespace Robust.Client.Graphics.Clyde
         // For DrawPrimitives OTOH the model matrix is passed along with the render command so is applied in the shader.
         private Matrix3x2 _currentMatrixModel = Matrix3x2.Identity;
 
+        // FRACOORD offset for fragment shaders
+        private Vector2 _currentFragCoordOffset = Vector2.Zero;
+
         // Buffers and data for the batching system. Written into during (queue) and processed during (submit).
         private readonly Vertex2D[] BatchVertexData = new Vertex2D[MaxBatchQuads * 4];
 
@@ -298,6 +301,8 @@ namespace Robust.Client.Graphics.Clyde
             program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
 
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
+
+            program.SetUniformMaybe(UniIFragCoordOffset, command.FragCoordOffset);
 
             SetBlendFunc(loaded.BlendMode);
 
@@ -582,6 +587,16 @@ namespace Robust.Client.Graphics.Clyde
             return _currentMatrixModel;
         }
 
+        private void DrawSetFragCoordOffset(Vector2 offset)
+        {
+            _currentFragCoordOffset = offset;
+        }
+
+        private Vector2 DrawGetFragCoordOffset()
+        {
+            return _currentFragCoordOffset;
+        }
+
         private void DrawSetProjViewTransform(in Matrix3x2 proj, in Matrix3x2 view)
         {
             BreakBatch();
@@ -841,6 +856,7 @@ namespace Robust.Client.Graphics.Clyde
 
             command.DrawBatch.Count = indices.Length;
             command.DrawBatch.ModelMatrix = _currentMatrixModel;
+            command.DrawBatch.FragCoordOffset = _currentFragCoordOffset;
 
             _debugStats.LastBatches += 1;
             _debugStats.LastClydeDrawCalls += 1;
@@ -867,6 +883,7 @@ namespace Robust.Client.Graphics.Clyde
 
             command.DrawBatch.Count = vertices.Length;
             command.DrawBatch.ModelMatrix = _currentMatrixModel;
+            command.DrawBatch.FragCoordOffset = _currentFragCoordOffset;
 
             _debugStats.LastBatches += 1;
             _debugStats.LastClydeDrawCalls += 1;
@@ -1025,6 +1042,7 @@ namespace Robust.Client.Graphics.Clyde
 
             command.DrawBatch.Count = currentIndex - metaData.StartIndex;
             command.DrawBatch.ModelMatrix = Matrix3x2.Identity;
+            command.DrawBatch.FragCoordOffset = _currentFragCoordOffset;
 
             _debugStats.LastBatches += 1;
         }
@@ -1196,6 +1214,8 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO: this makes the render commands so much more large please remove.
             public Matrix3x2 ModelMatrix;
+
+            public Vector2 FragCoordOffset;
         }
 
         private struct RenderCommandProjViewMatrix

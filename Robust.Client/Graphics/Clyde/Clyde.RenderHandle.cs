@@ -47,6 +47,16 @@ namespace Robust.Client.Graphics.Clyde
                 return _clyde.DrawGetModelTransform();
             }
 
+            public void SetFragCoordOffset(Vector2 offset)
+            {
+                _clyde.DrawSetFragCoordOffset(offset);
+            }
+
+            public Vector2 GetFragCoordOffset()
+            {
+                return _clyde.DrawGetFragCoordOffset();
+            }
+
             public void SetProjView(in Matrix3x2 proj, in Matrix3x2 view)
             {
                 _clyde.DrawSetProjViewTransform(proj, view);

@@ -15,13 +15,15 @@ namespace Robust.Client.Graphics.Clyde
         private const int UniITexturePixelSize = 2;
         private const int UniIMainTexture = 3;
         private const int UniILightTexture = 4;
-        private const int UniCount = 5;
+        private const int UniIFragCoordOffset = 5;
+        private const int UniCount = 6;
 
         private const string UniModUV = "modifyUV";
         private const string UniModelMatrix = "modelMatrix";
         private const string UniTexturePixelSize = "TEXTURE_PIXEL_SIZE";
         private const string UniMainTexture = "TEXTURE";
         private const string UniLightTexture = "lightMap"; // TODO CLYDE consistent shader variable naming
+        private const string UniFragCoordOffset = "FragCoordOffset";
         private const string UniProjViewMatrices = "projectionViewMatrices";
         private const string UniUniformConstants = "uniformConstants";
 

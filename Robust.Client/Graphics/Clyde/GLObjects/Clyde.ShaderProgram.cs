@@ -191,6 +191,9 @@ namespace Robust.Client.Graphics.Clyde
                     case UniITexturePixelSize:
                         name = UniTexturePixelSize;
                         break;
+                    case UniIFragCoordOffset:
+                        name = UniFragCoordOffset;
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

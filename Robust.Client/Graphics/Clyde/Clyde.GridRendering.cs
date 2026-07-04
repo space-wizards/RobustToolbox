@@ -83,6 +83,7 @@ namespace Robust.Client.Graphics.Clyde
                     gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                     gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
                     gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
+                    gridProgram.SetUniformMaybe(UniIFragCoordOffset, new Vector2(0, 0));
                 }
 
                 gridProgram.SetUniform(UniIModelMatrix, _transformSystem.GetWorldMatrix(mapGrid));

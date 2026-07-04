@@ -70,6 +70,24 @@ namespace Robust.Client.Graphics.Clyde
             };
         }
 
+        private void BlitRenderTarget(RenderTexture src, RenderTexture dst)
+        {
+            var srcLoaded = RtToLoaded(src);
+            var dstLoaded = RtToLoaded(dst);
+
+            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, srcLoaded.FramebufferHandle.Handle);
+            CheckGlError();
+            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, dstLoaded.FramebufferHandle.Handle);
+            CheckGlError();
+            GL.BlitFramebuffer(
+                0, 0, src.Size.X, src.Size.Y,
+                0, 0, dst.Size.X, dst.Size.Y,
+                ClearBufferMask.ColorBufferBit,
+                BlitFramebufferFilter.Nearest);
+            CheckGlError();
+        }
+
+
         // Sets up uniforms (It'd be nice to move this, or make some contextual stuff implicit, but things got complicated.)
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupGlobalUniformsImmediate(GLShaderProgram program, ClydeTexture? tex)

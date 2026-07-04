@@ -19,11 +19,14 @@ varying highp vec4 VtxModulate;
 // TODO CLYDE consistent shader variable naming
 uniform sampler2D lightMap;
 
+// Offset to FRAGCOORD.xy
+uniform highp vec2 FragCoordOffset;
+
 // [SHADER_HEADER_CODE]
 
 void main()
 {
-    highp vec4 FRAGCOORD = gl_FragCoord;
+    highp vec4 FRAGCOORD = gl_FragCoord + vec4(FragCoordOffset, 0.0, 0.0);
 
     // The output colour. This should get set by the shader code block.
     // This will get modified by the LIGHT and MODULATE vectors.

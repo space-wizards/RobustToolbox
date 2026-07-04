@@ -230,18 +230,14 @@ namespace Robust.Client.GameObjects
         }
     }
 
+
     /// <summary>
     ///     This event gets raised before a sprite gets drawn using it's post-shader.
     /// </summary>
-    public sealed class BeforePostShaderRenderEvent : EntityEventArgs
-    {
-        public readonly SpriteComponent Sprite;
-        public readonly IClydeViewport Viewport;
-
-        public BeforePostShaderRenderEvent(SpriteComponent sprite, IClydeViewport viewport)
-        {
-            Sprite = sprite;
-            Viewport = viewport;
-        }
-    }
+    [ByRefEvent]
+    public readonly record struct BeforePostShaderRenderEvent(
+        ProtoId<ShaderPrototype> Shader,
+        ShaderInstance Instance,
+        SpriteComponent Sprite,
+        IClydeViewport Viewport);
 }

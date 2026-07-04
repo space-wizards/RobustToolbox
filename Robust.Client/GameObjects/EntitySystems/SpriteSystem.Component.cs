@@ -82,9 +82,6 @@ public sealed partial class SpriteSystem
 
         target.Comp.IsInert = source.Comp.IsInert;
         target.Comp.LayerMap = source.Comp.LayerMap.ShallowClone();
-        target.Comp.PostShader = source.Comp.PostShader is {Mutable: true}
-            ? source.Comp.PostShader.Duplicate()
-            : source.Comp.PostShader;
 
         target.Comp.RenderOrder = source.Comp.RenderOrder;
         target.Comp.GranularLayersRendering = source.Comp.GranularLayersRendering;

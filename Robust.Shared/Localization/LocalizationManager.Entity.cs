@@ -75,8 +75,11 @@ namespace Robust.Shared.Localization
                     {
                         // Only set name if the value isn't empty.
                         // So that you can override *only* a desc/suffix.
-                        name = bundle.FormatPattern(msg.Value, null, out var fmtErr);
+                        var locName = bundle.FormatPattern(msg.Value, null, out var fmtErr);
                         WriteWarningForErrs(fmtErr, locId);
+
+                        if (!string.IsNullOrEmpty(locName))
+                            name = locName;
                     }
 
                     if (msgAttrs.Count != 0)

@@ -273,6 +273,11 @@ namespace Robust.Shared.Network
             _config.OnValueChanged(CVars.NetLidgrenLogRateLimitTargets, LidgrenLogRateLimitTargetsChanged);
             _config.OnValueChanged(CVars.NetLidgrenLogRateLimitBurst, LidgrenLogRateLimitBurstChanged);
             _config.OnValueChanged(CVars.NetLidgrenLogRateLimitWindow, LidgrenLogRateLimitWindowChanged);
+            _config.OnValueChanged(CVars.NetConnectionTimeout, ConnectionTimeoutChanged);
+            _config.OnValueChanged(CVars.NetMaxIpConnections, MaxIpConnectionsChanged);
+            _config.OnValueChanged(CVars.NetMaxRapidConnections, MaxRapidConnectionsChanged);
+            _config.OnValueChanged(CVars.NetRapidConnectionWindow, RapidConnectionWindowChanged);
+            _config.OnValueChanged(CVars.NetRapidConnectionDecay, RapidConnectionDecayChanged);
 
             _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
             _config.OnValueChanged(CVars.NetLogging, NetLoggingChanged);
@@ -349,6 +354,46 @@ namespace Robust.Shared.Network
             foreach (var netPeer in _netPeers)
             {
                 netPeer.Peer.Configuration.LogRateLimitWindow = newValue;
+            }
+        }
+
+        private void ConnectionTimeoutChanged(float timeout)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.ConnectionTimeout = timeout;
+            }
+        }
+
+        private void MaxIpConnectionsChanged(int limit)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.MaximumIpConnections = limit;
+            }
+        }
+
+        private void MaxRapidConnectionsChanged(int limit)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.MaximumRapidConnections = limit;
+            }
+        }
+
+        private void RapidConnectionWindowChanged(double time)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.RapidConnectionWindow = time;
+            }
+        }
+
+        private void RapidConnectionDecayChanged(int decay)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.RapidConnectionDecay = decay;
             }
         }
 
@@ -529,6 +574,11 @@ namespace Robust.Shared.Network
             _config.UnsubValueChanged(CVars.NetLidgrenLogRateLimitTargets, LidgrenLogRateLimitTargetsChanged);
             _config.UnsubValueChanged(CVars.NetLidgrenLogRateLimitBurst, LidgrenLogRateLimitBurstChanged);
             _config.UnsubValueChanged(CVars.NetLidgrenLogRateLimitWindow, LidgrenLogRateLimitWindowChanged);
+            _config.UnsubValueChanged(CVars.NetConnectionTimeout, ConnectionTimeoutChanged);
+            _config.UnsubValueChanged(CVars.NetMaxIpConnections, MaxIpConnectionsChanged);
+            _config.UnsubValueChanged(CVars.NetMaxRapidConnections, MaxRapidConnectionsChanged);
+            _config.UnsubValueChanged(CVars.NetRapidConnectionWindow, RapidConnectionWindowChanged);
+            _config.UnsubValueChanged(CVars.NetRapidConnectionDecay, RapidConnectionDecayChanged);
 
             _serializer.ClientHandshakeComplete -= OnSerializerOnClientHandshakeComplete;
 
@@ -732,11 +782,14 @@ namespace Robust.Shared.Network
             }
             else
             {
-                netConfig.ConnectionTimeout = _config.GetCVar(CVars.ConnectionTimeout);
                 netConfig.ResendHandshakeInterval = _config.GetCVar(CVars.ResendHandshakeInterval);
                 netConfig.MaximumHandshakeAttempts = _config.GetCVar(CVars.MaximumHandshakeAttempts);
             }
-
+            netConfig.ConnectionTimeout = _config.GetCVar(CVars.NetConnectionTimeout);
+            netConfig.MaximumIpConnections = _config.GetCVar(CVars.NetMaxIpConnections);
+            netConfig.MaximumRapidConnections = _config.GetCVar(CVars.NetMaxRapidConnections);
+            netConfig.RapidConnectionWindow = _config.GetCVar(CVars.NetRapidConnectionWindow);
+            netConfig.RapidConnectionDecay = _config.GetCVar(CVars.NetRapidConnectionDecay);
 
             //Simulate Latency
             netConfig.SimulatedLoss = _config.GetCVar(CVars.NetFakeLoss);

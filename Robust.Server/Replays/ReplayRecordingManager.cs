@@ -9,9 +9,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.Replays;
 
-internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, IServerReplayRecordingManager
+internal sealed partial class ReplayRecordingManager : SharedReplayRecordingManager, IServerReplayRecordingManager
 {
-    [Dependency] private readonly IEntitySystemManager _sysMan = default!;
+    [Dependency] private IEntitySystemManager _sysMan = default!;
 
     private PvsSystem _pvs = default!;
     private PvsSession _pvsSession = new(default!, new ResizableMemoryRegion<PvsData>(1)) { DisableCulling = true };

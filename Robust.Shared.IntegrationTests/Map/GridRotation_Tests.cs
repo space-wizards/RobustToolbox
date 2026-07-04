@@ -24,14 +24,13 @@ namespace Robust.UnitTesting.Shared.Map
             await server.WaitIdleAsync();
 
             var entMan = server.ResolveDependency<IEntityManager>();
-            var mapMan = server.ResolveDependency<IMapManager>();
             var mapSystem = entMan.System<SharedMapSystem>();
             var transformSystem = entMan.System<SharedTransformSystem>();
 
             await server.WaitAssertion(() =>
             {
                 mapSystem.CreateMap(out var mapId);
-                var grid = mapMan.CreateGridEntity(mapId);
+                var grid = mapSystem.CreateGridEntity(mapId);
                 var gridEnt = grid.Owner;
                 var coordinates = new EntityCoordinates(gridEnt, new Vector2(10, 0));
 
@@ -65,13 +64,12 @@ namespace Robust.UnitTesting.Shared.Map
             await server.WaitIdleAsync();
 
             var entMan = server.ResolveDependency<IEntityManager>();
-            var mapMan = server.ResolveDependency<IMapManager>();
             var mapSystem = entMan.System<SharedMapSystem>();
 
             await server.WaitAssertion(() =>
             {
                 mapSystem.CreateMap(out var mapId);
-                var grid = mapMan.CreateGridEntity(mapId);
+                var grid = mapSystem.CreateGridEntity(mapId);
                 var gridEnt = grid.Owner;
 
                 /* Test for map chunk rotations */

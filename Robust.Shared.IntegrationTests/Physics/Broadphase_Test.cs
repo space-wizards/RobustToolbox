@@ -77,12 +77,11 @@ internal sealed class Broadphase_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var mapSys = entManager.System<SharedMapSystem>();
         var xformSys = entManager.System<SharedTransformSystem>();
 
         var (mapEnt, mapId) = sim.CreateMap();
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSys.CreateGridEntity(mapId);
 
         mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
         Assert.That(entManager.HasComponent<BroadphaseComponent>(grid));
@@ -111,14 +110,13 @@ internal sealed class Broadphase_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var fixturesSystem = entManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = entManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
         var mapSys = entManager.System<SharedMapSystem>();
         var xformSys = entManager.System<SharedTransformSystem>();
 
         var (mapEnt, mapId) = sim.CreateMap();
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSys.CreateGridEntity(mapId);
         var gridUid = grid.Owner;
 
         mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
@@ -163,13 +161,12 @@ internal sealed class Broadphase_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var mapSys = entManager.System<SharedMapSystem>();
         var xformSys = entManager.System<SharedTransformSystem>();
 
         var (map1, mapId1) = sim.CreateMap();
         var (map2, _) = sim.CreateMap();
-        var grid = mapManager.CreateGridEntity(mapId1);
+        var grid = mapSys.CreateGridEntity(mapId1);
 
         mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
         var mapBroadphase1 = entManager.GetComponent<BroadphaseComponent>(map1);
@@ -194,14 +191,13 @@ internal sealed class Broadphase_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var system = entManager.EntitySysManager;
         var physicsSystem = system.GetEntitySystem<SharedPhysicsSystem>();
         var lookup = system.GetEntitySystem<EntityLookupSystem>();
         var mapSys = entManager.System<SharedMapSystem>();
 
         var (map, mapId) = sim.CreateMap();
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSys.CreateGridEntity(mapId);
 
         mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid);
@@ -244,7 +240,6 @@ internal sealed class Broadphase_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var system = entManager.EntitySysManager;
         var lookup = system.GetEntitySystem<EntityLookupSystem>();
         var xforms = system.GetEntitySystem<SharedTransformSystem>();
@@ -257,9 +252,9 @@ internal sealed class Broadphase_Test
         var (mapB, mapBId) = sim.CreateMap();
 
         // setup grids
-        var gridAComp = mapManager.CreateGridEntity(mapAId);
-        var gridBComp = mapManager.CreateGridEntity(mapBId);
-        var gridCComp = mapManager.CreateGridEntity(mapAId);
+        var gridAComp = mapSys.CreateGridEntity(mapAId);
+        var gridBComp = mapSys.CreateGridEntity(mapBId);
+        var gridCComp = mapSys.CreateGridEntity(mapAId);
         var gridA = gridAComp.Owner;
         var gridB = gridBComp.Owner;
         var gridC = gridCComp.Owner;

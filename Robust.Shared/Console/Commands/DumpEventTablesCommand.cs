@@ -4,10 +4,10 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class DumpEventTablesCommand : LocalizedCommands
+internal sealed partial class DumpEventTablesCommand : LocalizedCommands
 {
-    [Dependency] private readonly EntityManager _entities = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
+    [Dependency] private EntityManager _entities = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
 
     public override string Command => "dump_event_tables";
 

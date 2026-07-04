@@ -10,7 +10,6 @@ namespace Robust.Shared.ViewVariables;
 /// <summary>
 ///     Represents a ViewVariables path. Allows you to "Get", "Set" or "Invoke" the path.
 /// </summary>
-[Virtual]
 public abstract class ViewVariablesPath
 {
     /// <summary>

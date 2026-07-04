@@ -9,11 +9,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Upload.Commands;
 
-public sealed class UploadFileCommand : IConsoleCommand
+public sealed partial class UploadFileCommand : IConsoleCommand
 {
-    [Dependency] private readonly IConfigurationManager _cfgManager = default!;
-    [Dependency] private readonly IFileDialogManager _dialog = default!;
-    [Dependency] private readonly NetworkResourceManager _netRes = default!;
+    [Dependency] private IConfigurationManager _cfgManager = default!;
+    [Dependency] private IFileDialogManager _dialog = default!;
+    [Dependency] private NetworkResourceManager _netRes = default!;
 
     public string Command => "uploadfile";
     public string Description => "Uploads a resource to the server.";

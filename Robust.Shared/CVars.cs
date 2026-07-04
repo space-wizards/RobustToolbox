@@ -384,6 +384,31 @@ namespace Robust.Shared
             CVarDef.Create("net.lidgren_log_error", true);
 
         /// <summary>
+        /// Controls whether repeated malformed network input logs from Lidgren are rate limited.
+        /// </summary>
+        public static readonly CVarDef<bool> NetLidgrenLogRateLimit =
+            CVarDef.Create("net.lidgren_log_rate_limit", true);
+
+        /// <summary>
+        /// Bitmask of malformed network input log categories that Lidgren should rate limit.
+        /// </summary>
+        /// <seealso cref="NetLogRateLimitTarget"/>
+        public static readonly CVarDef<int> NetLidgrenLogRateLimitTargets =
+            CVarDef.Create("net.lidgren_log_rate_limit_targets", (int) NetLogRateLimitTarget.All);
+
+        /// <summary>
+        /// How many matching Lidgren logs are emitted per endpoint and category before suppression starts.
+        /// </summary>
+        public static readonly CVarDef<int> NetLidgrenLogRateLimitBurst =
+            CVarDef.Create("net.lidgren_log_rate_limit_burst", 5);
+
+        /// <summary>
+        /// Window in seconds used by Lidgren's malformed network input log rate limiter.
+        /// </summary>
+        public static readonly CVarDef<float> NetLidgrenLogRateLimitWindow =
+            CVarDef.Create("net.lidgren_log_rate_limit_window", 10.0f);
+
+        /// <summary>
         /// If true, run network message encryption on another thread.
         /// </summary>
         public static readonly CVarDef<bool> NetEncryptionThread =
@@ -996,6 +1021,18 @@ namespace Robust.Shared
         public static readonly CVarDef<string> AuthServer =
             CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
 
+        /// <summary>
+        /// Trust score for unauthenticated localhost connections
+        /// </summary>
+        public static readonly CVarDef<float> AuthLocalTrust =
+            CVarDef.Create("auth.localtrust", 1f, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Trust score for guest connections
+        /// </summary>
+        public static readonly CVarDef<float> AuthGuestTrust =
+            CVarDef.Create("auth.guesttrust", 0f, CVar.SERVERONLY);
+
         /*
          * RENDERING
          */
@@ -1279,10 +1316,20 @@ namespace Robust.Shared
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
+        /// Whether to enable HRTF (head-related transfer function) support for positional audio.
+        /// </summary>
+        /// <remarks>
+        /// This CVar being true isn't necessarily enough to actually use HRTF. Your platform must be using openal-soft,
+        /// and your device needs to actually support it (although it almost certainly does).
+        /// </remarks>
+        public static readonly CVarDef<bool> AudioHrtf =
+            CVarDef.Create("audio.hrtf", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
         /// Audio device to try to output audio to by default.
         /// </summary>
         public static readonly CVarDef<string> AudioDevice =
-            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);
+            CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Master volume for audio output.
@@ -1730,6 +1777,16 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ProfEnabled = CVarDef.Create("prof.enabled", false);
 
         /// <summary>
+        /// Enables the Tracy profiling system. Tracing will stay enabled for the entire runtime of the program even if
+        /// you turn this cvar off.
+        /// </summary>
+        /// <remarks>
+        /// By default, this will listen for Tracy connections on all interfaces! Set the <c>TRACY_ONLY_LOCALHOST</c>
+        /// env var to 1 if you want to restrict to localhost.
+        /// </remarks>
+        public static readonly CVarDef<bool> TracyProfEnabled = CVarDef.Create("prof.tracy.enabled", false);
+
+        /// <summary>
         /// Event log buffer size for the profiling system.
         /// </summary>
         public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", 8192);
@@ -1971,6 +2028,13 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> UIXamlJitPreload =
             CVarDef.Create("ui.xaml_jit_preload", false, CVar.CLIENTONLY);
 
+        /// <summary>
+        ///     If false, the UI engine will not ever sleep updating controls.
+        ///     This should <b>never</b> be set outside of test frameworks, doing so worsens user experience by allowing
+        ///     the game to do excessive amounts of work in one frame, causing extra lag.
+        /// </summary>
+        public static readonly CVarDef<bool> UIObeyUpdateLimits =
+            CVarDef.Create("ui.obey_update_limits", true, CVar.CLIENTONLY);
         /*
          * FONT
          */

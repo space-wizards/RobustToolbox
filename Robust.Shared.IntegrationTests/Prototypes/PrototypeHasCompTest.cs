@@ -31,6 +31,8 @@ internal sealed class PrototypeHasCompTest : OurRobustUnitTest
     const string TestEntity = "TestEntity";
     // expected to have TestCompNameComponent
     const string TestInception = "TestInception";
+    // A bogus component name.
+    const string TestFail = "TestFail";
 
     [OneTimeSetUp]
     public void Setup()
@@ -107,7 +109,7 @@ internal sealed class PrototypeHasCompTest : OurRobustUnitTest
         Assert.That(_factory.HasRegistration(name));
 
         // gibberish component should prevent it from loading
-        Assert.That(!_proto.HasIndex<EntityPrototype>("TestFail"));
+        Assert.That(!_proto.HasIndex<EntityPrototype>(TestFail));
     }
 
     const string TestPrototypes = $@"

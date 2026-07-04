@@ -592,7 +592,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Generates a list of triadic complementary colors
         /// </summary>
-        public static List<Color> GetTriadicComplementaries(Color color)
+        public static Color[] GetTriadicComplementaries(Color color)
         {
             return GetComplementaryColors(color, 0.120f);
         }
@@ -600,7 +600,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Generates a list of split complementary colors
         /// </summary>
-        public static List<Color> GetSplitComplementaries(Color color)
+        public static Color[] GetSplitComplementaries(Color color)
         {
             return GetComplementaryColors(color, 0.150f);
         }
@@ -608,7 +608,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Generates a list containing the base color and two copies of a single complementary color
         /// </summary>
-        public static List<Color> GetOneComplementary(Color color)
+        public static Color[] GetOneComplementary(Color color)
         {
             return GetComplementaryColors(color, 0.180f);
         }
@@ -622,7 +622,7 @@ namespace Robust.Shared.Maths
         /// <returns>
         ///     A list of 3 colors.
         /// </returns>
-        private static List<Color> GetComplementaryColors(Color color, float angle)
+        private static Color[] GetComplementaryColors(Color color, float angle)
         {
             var hsl = ToHsl(color);
             var random = new Random();
@@ -648,7 +648,7 @@ namespace Robust.Shared.Maths
             var c0 = FromHsl(positiveHSL);
             var c1 = FromHsl(negativeHSL);
 
-            var palette = new List<Color> { color, c0, c1 };
+            var palette = new Color[] { color, c0, c1 };
             return palette;
         }
 

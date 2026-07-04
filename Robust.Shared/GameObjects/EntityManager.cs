@@ -350,7 +350,9 @@ namespace Robust.Shared.GameObjects
             if (coordinates.MapId == MapId.Nullspace)
             {
                 transform._parent = EntityUid.Invalid;
+#pragma warning disable CS0618 // AnchorEntity/Unanchor only work on initialized entities
                 transform.Anchored = false;
+#pragma warning restore CS0618
                 return newEntity;
             }
 

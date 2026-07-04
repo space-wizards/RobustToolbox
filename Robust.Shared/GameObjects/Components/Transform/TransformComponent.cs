@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
@@ -8,7 +7,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -135,8 +133,10 @@ namespace Robust.Shared.GameObjects
             get => _noLocalRotation;
             set
             {
+#pragma warning disable CS0618
                 if (value)
                     LocalRotation = Angle.Zero;
+#pragma warning restore CS0618
 
                 _noLocalRotation = value;
                 _entMan.Dirty(Owner, this);
@@ -528,7 +528,9 @@ namespace Robust.Shared.GameObjects
 
         public string GetDebugString()
         {
+#pragma warning disable CS0618 // Accessing world coords in debug function.
             return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
+#pragma warning restore CS0618
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects;
@@ -10,6 +11,7 @@ namespace Robust.Shared.GameObjects;
 /// </summary>
 internal sealed partial class PrototypeReloadSystem : EntitySystem
 {
+    [Dependency] private MetaDataSystem _meta = default!;
     public override void Initialize()
     {
         base.Initialize();
@@ -76,6 +78,6 @@ internal sealed partial class PrototypeReloadSystem : EntitySystem
         }
 
         // Update entity metadata
-        metaData.EntityPrototype = newPrototype;
+        _meta.SetEntityPrototype(entity, newPrototype, metaData);
     }
 }

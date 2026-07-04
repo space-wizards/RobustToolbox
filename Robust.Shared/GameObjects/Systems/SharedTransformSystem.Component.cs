@@ -447,7 +447,9 @@ public abstract partial class SharedTransformSystem
         if (!XformQuery.Resolve(uid, ref xform))
             return;
 
+#pragma warning disable CS0618
         xform.LocalRotation = value;
+#pragma warning restore CS0618
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -887,7 +889,9 @@ public abstract partial class SharedTransformSystem
             }
             else
             {
+#pragma warning disable CS0618 // AnchorEntity/Unanchored can't be used from uninitialized states.
                 xform.Anchored = newState.Anchored;
+#pragma warning restore CS0618
             }
 
             if (oldAnchored != newState.Anchored && xform.Initialized)

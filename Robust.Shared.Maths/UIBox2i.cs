@@ -108,15 +108,6 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
 
     public readonly Vector2 Center => new Vector2(_left + _right, _top + _bottom) / 2f;
 
-    private static void Validate(int left, int top, int right, int bottom)
-    {
-        if (left > right)
-            throw new ArgumentException("Left cannot be greater than Right.", nameof(left));
-
-        if (top > bottom)
-            throw new ArgumentException("Top cannot be greater than Bottom.", nameof(top));
-    }
-
     public UIBox2i(Vector2i topLeft, Vector2i bottomRight)
     {
         Unsafe.SkipInit(out this);

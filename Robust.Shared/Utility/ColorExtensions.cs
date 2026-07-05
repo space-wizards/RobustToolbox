@@ -3,7 +3,7 @@ using System.Numerics;
 using Robust.Shared.Random;
 using Robust.Shared.Maths;
 
-namespace Robust.Shared.ColorExtensions;
+namespace Robust.Shared.Utility;
 
 public static class ColorExtensions
 {
@@ -11,7 +11,7 @@ public static class ColorExtensions
     /// <summary>
     ///     Generates a list of triadic complementary colors
     /// </summary>
-    public static Color[] GetTriadicComplementaries(Color color)
+    public static Color[] GetTriadicComplementaries(this Color color)
     {
         return GetComplementaryColors(color, 0.120f);
     }
@@ -19,7 +19,7 @@ public static class ColorExtensions
     /// <summary>
     ///     Generates a list of split complementary colors
     /// </summary>
-    public static Color[] GetSplitComplementaries(Color color)
+    public static Color[] GetSplitComplementaries(this Color color)
     {
         return GetComplementaryColors(color, 0.150f);
     }
@@ -27,7 +27,7 @@ public static class ColorExtensions
     /// <summary>
     ///     Generates a list containing the base color and two copies of a single complementary color
     /// </summary>
-    public static Color[] GetOneComplementary(Color color)
+    public static Color[] GetOneComplementary(this Color color)
     {
         return GetComplementaryColors(color, 0.180f);
     }
@@ -41,7 +41,7 @@ public static class ColorExtensions
     /// <returns>
     ///     A list of 3 colors.
     /// </returns>
-    private static Color[] GetComplementaryColors(Color color, float angle)
+    public static Color[] GetComplementaryColors(Color color, float angle)
     {
         var hsl = Color.ToHsl(color);
         var random = new RobustRandom();

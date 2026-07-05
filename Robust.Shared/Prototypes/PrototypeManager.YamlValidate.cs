@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
@@ -48,6 +48,8 @@ public partial class PrototypeManager
                 throw new PrototypeLoadException($"Error loading file: '{resourcePath}'\n{e}");
             }
 
+            var extractedNodes = new List<(Type, MappingDataNode)>();
+
             foreach (var doc in yamlStream.Documents)
             {
                 var rootNode = (YamlSequenceNode)doc.RootNode;
@@ -63,24 +65,41 @@ public partial class PrototypeManager
                     }
 
                     var mapping = node.ToDataNodeCast<MappingDataNode>();
-                    var id = mapping.Get<ValueDataNode>("id").Value;
+                    var extracted = ExtractMapping(mapping);
 
-                    var data = new PrototypeValidationData(id, mapping, resourcePath.ToString());
-                    mapping.Remove("type");
-
-                    if (DisallowedIdChars.TryFirstOrNull(c => id.Contains(c), out var letter))
+                    if (extracted is not null)
                     {
-                        dict.GetOrNew(data.File)
-                            .Add(new ErrorNode(mapping, $"Prototype '{id}' ({type}) contains disallowed "
-                                                        + $"character '{letter}'."));
+                        extractedNodes.Add((type, extracted.Data));
+
+                        if (extracted.VariantData is not null)
+                        {
+                            foreach (var (variantId, variantExtracted) in extracted.VariantData)
+                            {
+                                extractedNodes.Add((type, variantExtracted.Data));
+                            }
+                        }
                     }
-
-                    if (prototypes.GetOrNew(type).TryAdd(id, data))
-                        continue;
-
-                    var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
-                    dict.GetOrNew(data.File).Add(error);
                 }
+            }
+
+            foreach (var (type, mapping) in extractedNodes)
+            {
+                var id = mapping.Get<ValueDataNode>("id").Value;
+                var data = new PrototypeValidationData(id, mapping, resourcePath.ToString());
+                mapping.Remove("type");
+
+                if (DisallowedIdChars.TryFirstOrNull(c => id.Contains(c), out var letter))
+                {
+                    dict.GetOrNew(data.File)
+                        .Add(new ErrorNode(mapping, $"Prototype '{id}' ({type}) contains disallowed "
+                                                    + $"character '{letter}'."));
+                }
+
+                if (prototypes.GetOrNew(type).TryAdd(id, data))
+                    continue;
+
+                var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
+                dict.GetOrNew(data.File).Add(error);
             }
         }
 

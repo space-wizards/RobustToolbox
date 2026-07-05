@@ -23,6 +23,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public const string StylePropertyStyleBox = "stylebox";
 
+        public float LineSpacing { get; set; }
+
         public bool ShowScrollDownButton
         {
             get => _showScrollDownButton;
@@ -42,6 +44,8 @@ namespace Robust.Client.UserInterface.Controls
         private StyleBox? _styleBoxOverride;
         private VScrollBar _scrollBar;
         private Button _scrollDownButton;
+
+
 
         public bool ScrollFollowing { get; set; } = true;
 
@@ -229,7 +233,7 @@ namespace Robust.Client.UserInterface.Controls
                     // run, and then setting RectClipContent = true to use scissor box testing to handle the controls
                     // visibility
                     entry.HideControls();
-                    entryOffset += entry.Height + lineSeparation;
+                    entryOffset += entry.Height + lineSeparation + LineSpacing;
                     continue;
                 }
 
@@ -244,7 +248,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 entry.Draw(_tagManager, handle, font, contentBox, entryOffset, context, UIScale);
 
-                entryOffset += entry.Height + lineSeparation;
+                entryOffset += entry.Height + lineSeparation + LineSpacing;
             }
         }
 

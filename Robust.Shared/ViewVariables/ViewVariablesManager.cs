@@ -15,13 +15,13 @@ namespace Robust.Shared.ViewVariables;
 
 internal abstract partial class ViewVariablesManager : IViewVariablesManager, IPostInjectInit
 {
-    [Dependency] private readonly ISerializationManager _serMan = default!;
-    [Dependency] private readonly IEntityManager _entMan = default!;
-    [Dependency] private readonly IComponentFactory _compFact = default!;
-    [Dependency] private readonly IPrototypeManager _protoMan = default!;
-    [Dependency] private readonly IReflectionManager _reflectionMan = default!;
-    [Dependency] private readonly INetManager _netMan = default!;
-    [Dependency] private readonly ILogManager _logMan = default!;
+    [Dependency] private ISerializationManager _serMan = default!;
+    [Dependency] private IEntityManager _entMan = default!;
+    [Dependency] private IComponentFactory _compFact = default!;
+    [Dependency] private IPrototypeManager _protoMan = default!;
+    [Dependency] private IReflectionManager _reflectionMan = default!;
+    [Dependency] private INetManager _netMan = default!;
+    [Dependency] private ILogManager _logMan = default!;
 
     private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
 

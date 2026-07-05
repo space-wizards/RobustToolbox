@@ -47,7 +47,7 @@ internal partial class Clyde
 
                 var cursor = SDL.SDL_CreateColorCursor(surface, cmd.Hotspot.X, cmd.Hotspot.Y);
                 if (cursor == 0)
-                    throw new InvalidOperationException("SDL_CreateColorCursor failed");
+                    throw new InvalidOperationException($"SDL_CreateColorCursor failed: {SDL.SDL_GetError()}");
 
                 _winThreadCursors.Add(cmd.Cursor, new WinThreadCursorReg { Ptr = cursor });
 

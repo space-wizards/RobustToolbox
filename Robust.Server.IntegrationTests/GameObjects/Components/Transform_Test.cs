@@ -19,7 +19,6 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
         public override UnitTestProject Project => UnitTestProject.Server;
 
         private IEntityManager EntityManager = default!;
-        private IMapManager MapManager = default!;
         private SharedTransformSystem XformSystem => EntityManager.System<SharedTransformSystem>();
 
         const string Prototypes = @"
@@ -47,7 +46,6 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             IoCManager.Resolve<IComponentFactory>().GenerateNetIds();
 
             EntityManager = IoCManager.Resolve<IEntityManager>();
-            MapManager = IoCManager.Resolve<IMapManager>();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
@@ -60,8 +58,8 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             mapSys.CreateMap(out MapA);
             mapSys.CreateMap(out MapB);
 
-            GridA = MapManager.CreateGridEntity(MapA);
-            GridB = MapManager.CreateGridEntity(MapB);
+            GridA = mapSys.CreateGridEntity(MapA);
+            GridB = mapSys.CreateGridEntity(MapB);
 
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the test
         }
@@ -437,6 +435,21 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             // Assert (135 + 45 + 45 = 225)
             var result = XformSystem.GetWorldRotation(node3Trans);
             Assert.That(result, new ApproxEqualityConstraint(Angle.FromDegrees(225)));
+        }
+
+        [Test]
+        public void LocalRotationNormalizesTest()
+        {
+            var entity = EntityManager.SpawnEntity(null, InitialPos);
+            var transform = EntityManager.GetComponent<TransformComponent>(entity);
+
+            XformSystem.SetLocalRotation(entity, Angle.FromDegrees(90), transform);
+
+            Assert.That(transform.LocalRotation, NUnit.Framework.Is.EqualTo(Angle.FromDegrees(90)));
+
+            XformSystem.SetWorldRotation(transform, Angle.FromDegrees(810));
+
+            Assert.That(transform.LocalRotation, NUnit.Framework.Is.EqualTo(Angle.FromDegrees(90)));
         }
 
         /// <summary>

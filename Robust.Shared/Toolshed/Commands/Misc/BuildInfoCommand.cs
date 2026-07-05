@@ -6,9 +6,9 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
-internal sealed class BuildInfoCommand : ToolshedCommand
+internal sealed partial class BuildInfoCommand : ToolshedCommand
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     private static readonly string Gold = Color.Gold.ToHex();
 

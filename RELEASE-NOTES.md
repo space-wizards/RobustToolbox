@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Update Lidgren.Network to 04678d057cc503f14f49801a725e61cfe27790a0 with additional fixes around MTU handling, NAT handling, and malformed packets.
 
 ### New features
 

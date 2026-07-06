@@ -35,13 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Validate UIBox2i inputs
-* IMapManager has been completely nuked from the codebase. Almost all of its content-facing functionality was ported to `SharedMapSystem` in https://github.com/space-wizards/RobustToolbox/pull/6579 beforehand.
+* Update Lidgren.Network to 04678d057cc503f14f49801a725e61cfe27790a0 with additional fixes around MTU handling, NAT handling, and malformed packets.
 * SpawnNextToOrDrop methods have been changed to take `EntProtoId?, Entity<TransformComponent?>, Vector2 = default` instead of `string?, EntityUid, TransformComponent? null`. Because of this, some `Entity<T>`s will need to first be explicity converted into `EntityUid`s.
 
 ### New features
 
-* Added support for Tracy v0.13.1 on both the client and server. Start it by changing the prof.tracy.enabled cvar to true, and connect with a v0.13.1 Tracy client!
 * SpawnNextToOrDrop methods can now offset their spawns by passing in a Vector2. This offset is always relative to the target.
 
 ### Bugfixes
@@ -55,6 +53,37 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 280.0.1
+
+### Bugfixes
+
+* Fix DynamicTree.Clear not removing node references.
+* Reverted validation for `UiBox2i` `ctor`s as it was causing regressions in debug UIs.
+* Fix command completions not being ordered. The list will still populate by any commands that contain the supplied arg.
+* Lidgren rate-limit settings were tweaked to make it less likely that players will unintentionally trigger it
+
+### Other
+
+* `EyeComponent.DrawLight` is now serialized.
+
+
+## 280.0.0
+
+### Breaking changes
+
+* Validate UIBox2i inputs
+* IMapManager has been completely nuked from the codebase. Almost all of its content-facing functionality was ported to `SharedMapSystem` in https://github.com/space-wizards/RobustToolbox/pull/6579 beforehand.
+
+### New features
+
+* Lidgren now rate-limits logging. You can control this via the `net.lidgren_log_rate_...` CVars.
+
+### Bugfixes
+
+* Fixed Lidgren.ChatClient/ChatServer not building properly.
+* Fixed multiple sources of memory exhaustion/DOS attack surfaces in Lidgren.
 
 
 ## 279.0.1

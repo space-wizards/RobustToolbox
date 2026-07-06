@@ -19,8 +19,9 @@ internal sealed class ColorExtensionsTest
             Assert.That(palette, Has.Length.EqualTo(3));
             Assert.That(MathHelper.CloseToPercent(palette[0], Color.Red));
 
-            Assert.That(Color.ToHsl(palette[1]).X, Is.EqualTo(0.33333f));
-            Assert.That(Color.ToHsl(palette[2]).X, Is.EqualTo(0.66667f));
+            Assert.That(Color.ToHsl(palette[0]).X, Is.Zero);
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, ColorExtensions.TriadicHueDelta));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - ColorExtensions.TriadicHueDelta));
         }
     }
 
@@ -34,8 +35,9 @@ internal sealed class ColorExtensionsTest
             Assert.That(palette, Has.Length.EqualTo(3));
             Assert.That(MathHelper.CloseToPercent(palette[0], Color.Red));
 
-            Assert.That(Color.ToHsl(palette[1]).X, Is.EqualTo(0.41667f));
-            Assert.That(Color.ToHsl(palette[2]).X, Is.InRange(0.58333f, 0.58334f)); // TODO FIX THIS
+            Assert.That(Color.ToHsl(palette[0]).X, Is.Zero);
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, ColorExtensions.SplitComplementaryHueDelta));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - ColorExtensions.SplitComplementaryHueDelta));
         }
     }
 
@@ -49,8 +51,9 @@ internal sealed class ColorExtensionsTest
             Assert.That(palette, Has.Length.EqualTo(3));
             Assert.That(MathHelper.CloseToPercent(palette[0], Color.Red));
 
-            Assert.That(Color.ToHsl(palette[1]).X, Is.EqualTo(0.5f));
-            Assert.That(Color.ToHsl(palette[2]).X, Is.EqualTo(0.5f));
+            Assert.That(Color.ToHsl(palette[0]).X, Is.Zero);
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, ColorExtensions.ComplementaryHueDelta));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - ColorExtensions.ComplementaryHueDelta));
         }
     }
 }

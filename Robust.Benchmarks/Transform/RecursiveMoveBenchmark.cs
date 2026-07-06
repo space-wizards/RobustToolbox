@@ -47,7 +47,6 @@ public class RecursiveMoveBenchmark : RobustIntegrationTest
 
         Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync()).Wait();
 
-        var mapMan = server.ResolveDependency<IMapManager>();
         _entMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
@@ -92,7 +91,7 @@ public class RecursiveMoveBenchmark : RobustIntegrationTest
         server.WaitPost(() =>
         {
             var map = server.ResolveDependency<SharedMapSystem>().CreateMap(out var mapId);
-            var gridComp = mapMan.CreateGridEntity(mapId);
+            var gridComp = mapSys.CreateGridEntity(mapId);
             var grid = gridComp.Owner;
             mapSys.SetTile(grid, gridComp, Vector2i.Zero, new Tile(1));
             _gridCoords = new EntityCoordinates(grid, .5f, .5f);

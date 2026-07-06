@@ -33,16 +33,16 @@ public sealed partial class AudioSystem : SharedAudioSystem
      * but exposing the whole thing in an easy way is a lot of effort.
      */
 
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IParallelManager _parMan = default!;
-    [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-    [Dependency] private readonly IAudioInternal _audio = default!;
-    [Dependency] private readonly SharedMapSystem _maps = default!;
-    [Dependency] private readonly SharedTransformSystem _xformSys = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IReplayRecordingManager _replayRecording = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IParallelManager _parMan = default!;
+    [Dependency] private IRuntimeLog _runtimeLog = default!;
+    [Dependency] private IAudioInternal _audio = default!;
+    [Dependency] private SharedMapSystem _maps = default!;
+    [Dependency] private SharedTransformSystem _xformSys = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
 
     /// <summary>
     /// An optional method that, if provided, will override the behavior of <see cref="ProcessStream"/>.
@@ -118,16 +118,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
 
-        SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
-        SubscribeLocalEvent<AudioComponent, ComponentShutdown>(OnAudioShutdown);
-        SubscribeLocalEvent<AudioComponent, EntityPausedEvent>(OnAudioPaused);
-        SubscribeLocalEvent<AudioComponent, AfterAutoHandleStateEvent>(OnAudioState);
-
-        // Replay stuff
-        SubscribeNetworkEvent<PlayAudioGlobalMessage>(OnGlobalAudio);
-        SubscribeNetworkEvent<PlayAudioEntityMessage>(OnEntityAudio);
-        SubscribeNetworkEvent<PlayAudioPositionalMessage>(OnEntityCoordinates);
-
         Subs.CVar(CfgManager, CVars.AudioEndBuffer, OnAudioBuffer, true);
         Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
         Subs.CVar(CfgManager, CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
@@ -146,6 +136,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         _audioFrameTimeRemaining = MathF.Min(_audioFrameTimeRemaining, _audioFrameTime);
     }
 
+    [SubscribeLocalEvent]
     private void OnAudioState(Entity<AudioComponent> entity, ref AfterAutoHandleStateEvent args)
     {
         var component = entity.Comp;
@@ -211,6 +202,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         _audio.SetMasterGain(value);
     }
 
+    [SubscribeLocalEvent]
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)
     {
         component.Pause();
@@ -222,6 +214,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.StartPlaying();
     }
 
+    [SubscribeLocalEvent]
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
     {
         if (!Timing.ApplyingState && !Timing.IsFirstTimePredicted)
@@ -293,6 +286,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnAudioShutdown(EntityUid uid, AudioComponent component, ComponentShutdown args)
     {
         // Breaks with prediction?
@@ -775,16 +769,19 @@ public sealed partial class AudioSystem : SharedAudioSystem
         source.Looping = audioParams.Loop;
     }
 
+    [SubscribeNetworkEvent]
     private void OnEntityCoordinates(PlayAudioPositionalMessage ev)
     {
         PlayStatic(ev.Specifier, GetCoordinates(ev.Coordinates), ev.AudioParams, false);
     }
 
+    [SubscribeNetworkEvent]
     private void OnEntityAudio(PlayAudioEntityMessage ev)
     {
         PlayEntity(ev.Specifier, GetEntity(ev.NetEntity), ev.AudioParams, false);
     }
 
+    [SubscribeNetworkEvent]
     private void OnGlobalAudio(PlayAudioGlobalMessage ev)
     {
         PlayGlobal(ev.Specifier, ev.AudioParams, false);

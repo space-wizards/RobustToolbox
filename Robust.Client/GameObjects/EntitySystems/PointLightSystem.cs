@@ -7,9 +7,10 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class PointLightSystem : SharedPointLightSystem
+    public sealed partial class PointLightSystem : SharedPointLightSystem
     {
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private LightTreeSystem _lightTree = default!;
         [Dependency] private readonly IPrototypeManager _proto = default!;
 
         public override void Initialize()

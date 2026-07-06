@@ -14,14 +14,14 @@ using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.Utility;
 
-internal sealed class ReloadManager : IReloadManager
+internal sealed partial class ReloadManager : IReloadManager
 {
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly IResourceManagerInternal _res = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private ILogManager _logMan = default!;
+    [Dependency] private IResourceManagerInternal _res = default!;
 #if TOOLS
-    [Dependency] private readonly ITaskManager _tasks = default!;
+    [Dependency] private ITaskManager _tasks = default!;
 #endif
 
     private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);

@@ -25,7 +25,6 @@ internal sealed class GridMovement_Test : RobustIntegrationTest
         // Checks that FindGridContacts succesfully overlaps a grid + map broadphase physics body
         var systems = server.ResolveDependency<IEntitySystemManager>();
         var fixtureSystem = systems.GetEntitySystem<FixtureSystem>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var entManager = server.ResolveDependency<IEntityManager>();
         var physSystem = systems.GetEntitySystem<SharedPhysicsSystem>();
         var transformSystem = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
@@ -34,7 +33,7 @@ internal sealed class GridMovement_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             entManager.System<SharedMapSystem>().CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
 
             // Setup 1 body on grid, 1 body off grid, and assert that it's all gucci.
             mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));

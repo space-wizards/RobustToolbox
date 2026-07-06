@@ -6,10 +6,10 @@ using Robust.Shared.IoC;
 
 namespace Robust.Server.GameObjects;
 
-public sealed class PointLightSystem : SharedPointLightSystem
+public sealed partial class PointLightSystem : SharedPointLightSystem
 {
     [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly MetaDataSystem _metadata = default!;
+    [Dependency] private MetaDataSystem _metadata = default!;
 
     public override void Initialize()
     {

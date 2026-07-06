@@ -105,15 +105,15 @@ namespace Robust.Shared.Network
 
         private readonly Dictionary<Type, long> _bandwidthUsage = new();
 
-        [Dependency] private readonly IRobustSerializer _serializer = default!;
-        [Dependency] private readonly IConfigurationManagerInternal _config = default!;
-        [Dependency] private readonly IAuthManager _authManager = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
-        [Dependency] private readonly HttpClientHolder _http = default!;
-        [Dependency] private readonly IHWId _hwId = default!;
-        [Dependency] private readonly ITransferManager _transfer = default!;
+        [Dependency] private IRobustSerializer _serializer = default!;
+        [Dependency] private IConfigurationManagerInternal _config = default!;
+        [Dependency] private IAuthManager _authManager = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private ILogManager _logMan = default!;
+        [Dependency] private ProfManager _prof = default!;
+        [Dependency] private HttpClientHolder _http = default!;
+        [Dependency] private IHWId _hwId = default!;
+        [Dependency] private ITransferManager _transfer = default!;
 
         /// <summary>
         ///     Whether we bother to log problematic packets. Set by <see cref="CVars.NetLogging"/>.
@@ -269,6 +269,15 @@ namespace Robust.Shared.Network
 
             _config.OnValueChanged(CVars.NetLidgrenLogWarning, LidgrenLogWarningChanged);
             _config.OnValueChanged(CVars.NetLidgrenLogError, LidgrenLogErrorChanged);
+            _config.OnValueChanged(CVars.NetLidgrenLogRateLimit, LidgrenLogRateLimitChanged);
+            _config.OnValueChanged(CVars.NetLidgrenLogRateLimitTargets, LidgrenLogRateLimitTargetsChanged);
+            _config.OnValueChanged(CVars.NetLidgrenLogRateLimitBurst, LidgrenLogRateLimitBurstChanged);
+            _config.OnValueChanged(CVars.NetLidgrenLogRateLimitWindow, LidgrenLogRateLimitWindowChanged);
+            _config.OnValueChanged(CVars.NetConnectionTimeout, ConnectionTimeoutChanged);
+            _config.OnValueChanged(CVars.NetMaxIpConnections, MaxIpConnectionsChanged);
+            _config.OnValueChanged(CVars.NetMaxRapidConnections, MaxRapidConnectionsChanged);
+            _config.OnValueChanged(CVars.NetRapidConnectionWindow, RapidConnectionWindowChanged);
+            _config.OnValueChanged(CVars.NetRapidConnectionDecay, RapidConnectionDecayChanged);
 
             _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
             _config.OnValueChanged(CVars.NetLogging, NetLoggingChanged);
@@ -313,6 +322,78 @@ namespace Robust.Shared.Network
             foreach (var netPeer in _netPeers)
             {
                 netPeer.Peer.Configuration.SetMessageTypeEnabled(NetIncomingMessageType.ErrorMessage, newValue);
+            }
+        }
+
+        private void LidgrenLogRateLimitChanged(bool newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.LogRateLimiterEnabled = newValue;
+            }
+        }
+
+        private void LidgrenLogRateLimitTargetsChanged(int newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.LogRateLimitTargets = (NetLogRateLimitTarget) newValue;
+            }
+        }
+
+        private void LidgrenLogRateLimitBurstChanged(int newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.LogRateLimitBurst = newValue;
+            }
+        }
+
+        private void LidgrenLogRateLimitWindowChanged(float newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.LogRateLimitWindow = newValue;
+            }
+        }
+
+        private void ConnectionTimeoutChanged(float timeout)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.ConnectionTimeout = timeout;
+            }
+        }
+
+        private void MaxIpConnectionsChanged(int limit)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.MaximumIpConnections = limit;
+            }
+        }
+
+        private void MaxRapidConnectionsChanged(int limit)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.MaximumRapidConnections = limit;
+            }
+        }
+
+        private void RapidConnectionWindowChanged(double time)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.RapidConnectionWindow = time;
+            }
+        }
+
+        private void RapidConnectionDecayChanged(int decay)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.RapidConnectionDecay = decay;
             }
         }
 
@@ -489,6 +570,15 @@ namespace Robust.Shared.Network
             _config.UnsubValueChanged(CVars.NetFakeDuplicates, FakeDuplicatesChanged);
             _config.UnsubValueChanged(CVars.NetLidgrenLogWarning, LidgrenLogWarningChanged);
             _config.UnsubValueChanged(CVars.NetLidgrenLogError, LidgrenLogErrorChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogRateLimit, LidgrenLogRateLimitChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogRateLimitTargets, LidgrenLogRateLimitTargetsChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogRateLimitBurst, LidgrenLogRateLimitBurstChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogRateLimitWindow, LidgrenLogRateLimitWindowChanged);
+            _config.UnsubValueChanged(CVars.NetConnectionTimeout, ConnectionTimeoutChanged);
+            _config.UnsubValueChanged(CVars.NetMaxIpConnections, MaxIpConnectionsChanged);
+            _config.UnsubValueChanged(CVars.NetMaxRapidConnections, MaxRapidConnectionsChanged);
+            _config.UnsubValueChanged(CVars.NetRapidConnectionWindow, RapidConnectionWindowChanged);
+            _config.UnsubValueChanged(CVars.NetRapidConnectionDecay, RapidConnectionDecayChanged);
 
             _serializer.ClientHandshakeComplete -= OnSerializerOnClientHandshakeComplete;
 
@@ -662,6 +752,11 @@ namespace Robust.Shared.Network
                 NetIncomingMessageType.ErrorMessage,
                 _config.GetCVar(CVars.NetLidgrenLogError));
 
+            netConfig.LogRateLimiterEnabled = _config.GetCVar(CVars.NetLidgrenLogRateLimit);
+            netConfig.LogRateLimitTargets = (NetLogRateLimitTarget) _config.GetCVar(CVars.NetLidgrenLogRateLimitTargets);
+            netConfig.LogRateLimitBurst = _config.GetCVar(CVars.NetLidgrenLogRateLimitBurst);
+            netConfig.LogRateLimitWindow = _config.GetCVar(CVars.NetLidgrenLogRateLimitWindow);
+
             var poolSize = _config.GetCVar(CVars.NetPoolSize);
 
             if (poolSize <= 0)
@@ -687,11 +782,14 @@ namespace Robust.Shared.Network
             }
             else
             {
-                netConfig.ConnectionTimeout = _config.GetCVar(CVars.ConnectionTimeout);
                 netConfig.ResendHandshakeInterval = _config.GetCVar(CVars.ResendHandshakeInterval);
                 netConfig.MaximumHandshakeAttempts = _config.GetCVar(CVars.MaximumHandshakeAttempts);
             }
-
+            netConfig.ConnectionTimeout = _config.GetCVar(CVars.NetConnectionTimeout);
+            netConfig.MaximumIpConnections = _config.GetCVar(CVars.NetMaxIpConnections);
+            netConfig.MaximumRapidConnections = _config.GetCVar(CVars.NetMaxRapidConnections);
+            netConfig.RapidConnectionWindow = _config.GetCVar(CVars.NetRapidConnectionWindow);
+            netConfig.RapidConnectionDecay = _config.GetCVar(CVars.NetRapidConnectionDecay);
 
             //Simulate Latency
             netConfig.SimulatedLoss = _config.GetCVar(CVars.NetFakeLoss);
@@ -1000,16 +1098,12 @@ namespace Robust.Shared.Network
             var instance = (NetMessage) Activator.CreateInstance(type)!;
             instance.MsgChannel = channel;
 
-#if DEBUG
-
             if (!_bandwidthUsage.TryGetValue(type, out var bandwidth))
             {
                 bandwidth = 0;
             }
 
             _bandwidthUsage[type] = bandwidth + msg.LengthBytes;
-
-#endif
 
             try
             {

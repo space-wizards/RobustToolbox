@@ -29,8 +29,8 @@ internal sealed class GridFixtures_Tests : RobustIntegrationTest
         var server = RobustServerSimulation.NewSimulation().InitializeInstance();
         var map = server.CreateMap();
         var entManager = server.Resolve<IEntityManager>();
-        var grid = server.Resolve<IMapManager>().CreateGridEntity(map.MapId);
         var mapSystem = entManager.System<SharedMapSystem>();
+        var grid = mapSystem.CreateGridEntity(map.MapId);
         var fixtures = entManager.GetComponent<FixturesComponent>(grid);
 
         mapSystem.SetTiles(grid, new List<(Vector2i GridIndices, Tile Tile)>()
@@ -57,14 +57,13 @@ internal sealed class GridFixtures_Tests : RobustIntegrationTest
         await server.WaitIdleAsync();
 
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
         var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
         await server.WaitAssertion(() =>
         {
             entManager.System<SharedMapSystem>().CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
 
             // Should be nothing if grid empty
             Assert.That(entManager.TryGetComponent(grid, out PhysicsComponent? gridBody));

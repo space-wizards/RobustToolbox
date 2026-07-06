@@ -1312,12 +1312,11 @@ public class Generator : IIncrementalGenerator
         if (type is not INamedTypeSymbol { IsGenericType: true } namedType)
             return false;
 
-        var genericType = namedType.ConstructedFrom.ToDisplayString();
         var nonNullableTypeName = type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
         var typeArgs = namedType.TypeArguments;
         var targetAccess = $"{targetName}!";
 
-        if (genericType == "System.Collections.Generic.List<T>" &&
+        if (IsGenericCollectionType(namedType, "List", 1) &&
             CanTypeBeCopiedByValue(typeArgs[0]))
         {
             builder.Append(nullPrefix);
@@ -1337,7 +1336,7 @@ public class Generator : IIncrementalGenerator
             return true;
         }
 
-        if (genericType == "System.Collections.Generic.HashSet<T>" &&
+        if (IsGenericCollectionType(namedType, "HashSet", 1) &&
             CanTypeBeCopiedByValue(typeArgs[0]))
         {
             builder.Append(nullPrefix);
@@ -1358,7 +1357,7 @@ public class Generator : IIncrementalGenerator
             return true;
         }
 
-        if (genericType == "System.Collections.Generic.Dictionary<TKey, TValue>" &&
+        if (IsGenericCollectionType(namedType, "Dictionary", 2) &&
             CanTypeBeCopiedByValue(typeArgs[0]) &&
             CanTypeBeCopiedByValue(typeArgs[1]))
         {
@@ -1380,7 +1379,7 @@ public class Generator : IIncrementalGenerator
             return true;
         }
 
-        if (genericType == "System.Collections.Generic.SortedDictionary<TKey, TValue>" &&
+        if (IsGenericCollectionType(namedType, "SortedDictionary", 2) &&
             CanTypeBeCopiedByValue(typeArgs[0]) &&
             CanTypeBeCopiedByValue(typeArgs[1]))
         {
@@ -1400,5 +1399,14 @@ public class Generator : IIncrementalGenerator
         }
 
         return false;
+    }
+
+    private static bool IsGenericCollectionType(INamedTypeSymbol type, string name, int typeArgumentCount)
+    {
+        var definition = type.ConstructedFrom;
+
+        return definition.Name == name &&
+               definition.TypeArguments.Length == typeArgumentCount &&
+               definition.ContainingNamespace.ToDisplayString() == "System.Collections.Generic";
     }
 }

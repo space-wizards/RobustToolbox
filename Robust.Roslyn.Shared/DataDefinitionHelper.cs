@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Robust.Roslyn.Shared.Helpers;
 
 namespace Robust.Roslyn.Shared;
@@ -144,7 +145,7 @@ public sealed class DataDefinitionHelper
 
         string? name = null;
         var readOnly = false;
-        var priorityIndex = 0;
+        var priority = 1;
         var include = false;
         var isDataFieldAttribute = false;
         var required = false;
@@ -153,32 +154,32 @@ public sealed class DataDefinitionHelper
         // (string? tag = null, bool readOnly = false, int priority = 1, bool required = false, bool serverOnly = false, Type? customTypeSerializer = null)
         if (data.AttributeClass.ToDisplayString().Contains(DataFieldAttributeName))
         {
-            name = (string?) data.ConstructorArguments[0].Value;
-            readOnly = (bool) data.ConstructorArguments[1].Value!;
-            priorityIndex = 2;
+            name = GetAttributeArgument(data, 0, "tag", name);
+            readOnly = GetAttributeArgument(data, 1, "readOnly", readOnly);
+            priority = GetAttributeArgument(data, 2, "priority", priority);
             isDataFieldAttribute = true;
-            required = (bool) data.ConstructorArguments[3].Value!;
-            serverOnly = (bool) data.ConstructorArguments[4].Value!;
+            required = GetAttributeArgument(data, 3, "required", required);
+            serverOnly = GetAttributeArgument(data, 4, "serverOnly", serverOnly);
         }
         // (int priority = 1, Type? customTypeSerializer = null)
         else if (data.AttributeClass.ToDisplayString().Contains(IdDataFieldAttributeName))
         {
             name = "id";
-            priorityIndex = 0;
+            priority = GetAttributeArgument(data, 0, "priority", priority);
             isDataFieldAttribute = true;
         }
         // (Type prototypeIdSerializer, int priority = 1)
         else if (data.AttributeClass.ToDisplayString().Contains(ParentDataFieldAttributeName))
         {
             name = "parent";
-            priorityIndex = 1;
+            priority = GetAttributeArgument(data, 1, "priority", priority);
             isDataFieldAttribute = true;
         }
         // (int priority = 1)
         else if (data.AttributeClass.ToDisplayString().Contains(AbstractDataFieldAttributeName))
         {
             name = "abstract";
-            priorityIndex = 0;
+            priority = GetAttributeArgument(data, 0, "priority", priority);
             isDataFieldAttribute = true;
         }
         // (bool readOnly = false, int priority = 1, bool serverOnly = false, Type? customTypeSerializer = null)
@@ -186,10 +187,10 @@ public sealed class DataDefinitionHelper
         {
             var span = fieldName.AsSpan();
             name = $"{char.ToLowerInvariant(span[0])}{span.Slice(1).ToString()}";
-            readOnly = (bool) data.ConstructorArguments[0].Value!;
-            priorityIndex = 1;
+            readOnly = GetAttributeArgument(data, 0, "readOnly", readOnly);
+            priority = GetAttributeArgument(data, 1, "priority", priority);
             include = true;
-            serverOnly = (bool) data.ConstructorArguments[2].Value!;
+            serverOnly = GetAttributeArgument(data, 2, "serverOnly", serverOnly);
         }
 
         var camelCasedName = ToCamelCase(fieldName);
@@ -200,13 +201,31 @@ public sealed class DataDefinitionHelper
             data,
             name!,
             readOnly,
-            (int) data.ConstructorArguments[priorityIndex].Value!,
+            priority,
             include,
             isDataFieldAttribute,
             required,
             serverOnly,
             camelCasedName
         );
+    }
+
+    private static T GetAttributeArgument<T>(AttributeData data, int constructorIndex, string namedArgument, T defaultValue)
+    {
+        if (constructorIndex < data.ConstructorArguments.Length)
+        {
+            var argument = data.ConstructorArguments[constructorIndex];
+            if (!argument.IsNull && argument.Value is T value)
+                return value;
+        }
+
+        foreach (var named in data.NamedArguments)
+        {
+            if (named.Key == namedArgument && !named.Value.IsNull && named.Value.Value is T value)
+                return value;
+        }
+
+        return defaultValue;
     }
 
     public static bool IsDataField(
@@ -222,9 +241,6 @@ public sealed class DataDefinitionHelper
         attribute = null;
         inheritanceBehavior = 0;
         if (isStatic)
-            return false;
-
-        if (isImplicitlyDeclared && isRecord)
             return false;
 
         foreach (var attr in attributes)
@@ -278,9 +294,17 @@ public sealed class DataDefinitionHelper
         {
             case IFieldSymbol field:
             {
+                var associatedProperty = field.AssociatedSymbol as IPropertySymbol;
+                var isDataRecordBackingField = isDataRecord &&
+                                               field.IsImplicitlyDeclared &&
+                                               associatedProperty != null;
+                var fieldName = isDataRecordBackingField
+                    ? associatedProperty!.Name
+                    : field.Name;
+
                 if (IsDataField(field.GetAttributes(),
-                        field.Name,
-                        field.IsImplicitlyDeclared,
+                        fieldName,
+                        isDataRecordBackingField ? false : field.IsImplicitlyDeclared,
                         field.IsStatic,
                         true,
                         isDataRecord,
@@ -292,11 +316,12 @@ public sealed class DataDefinitionHelper
             }
             case IPropertySymbol property:
             {
+                var hasSetter = property.SetMethod != null;
                 if (IsDataField(property.GetAttributes(),
                         property.Name,
                         property.IsImplicitlyDeclared,
                         property.IsStatic,
-                        property.SetMethod != null,
+                        hasSetter,
                         isDataRecord,
                         out attribute,
                         out inheritanceBehavior))
@@ -312,8 +337,33 @@ public sealed class DataDefinitionHelper
         return attribute != null;
     }
 
+    private static bool IsAutoProperty(IPropertySymbol property)
+    {
+        foreach (var reference in property.DeclaringSyntaxReferences)
+        {
+            if (reference.GetSyntax() is not PropertyDeclarationSyntax syntax)
+                continue;
+
+            if (syntax.ExpressionBody != null)
+                return false;
+
+            if (syntax.AccessorList == null)
+                return false;
+
+            return syntax.AccessorList.Accessors.All(accessor =>
+                accessor.Body == null &&
+                accessor.ExpressionBody == null &&
+                accessor.SemicolonToken.RawKind != 0);
+        }
+
+        return false;
+    }
+
     public static string ToCamelCase(string name)
     {
+        if (name == "ID")
+            return "id";
+
         var span = name.AsSpan();
         return $"{char.ToLowerInvariant(span[0])}{span.Slice(1).ToString()}";
     }

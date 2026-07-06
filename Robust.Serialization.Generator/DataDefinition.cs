@@ -2,4 +2,10 @@
 
 namespace Robust.Serialization.Generator;
 
-public sealed record DataDefinition(ITypeSymbol Type, string GenericTypeName, List<DataField> Fields, bool HasHooks, bool InvalidFields);
+public sealed record DataDefinition(
+    ITypeSymbol Type,
+    string GenericTypeName,
+    List<DataField> Fields,
+    bool HasHooks,
+    bool InvalidFields,
+    bool IsRecord);

@@ -100,7 +100,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.That(propertyInfo.GetAttribute<NeverPushInheritanceAttribute>(true), Is.Not.Null);
 
             propertyDefinition =
-                dataDefinition!.BaseFieldDefinitions.Single(e => (e.Tag ?? e.CamelCasedName).Equals(GetOnlyPropertyWithOtherAttributeFieldTargetedName));
+                dataDefinition!.BaseFieldDefinitions.Single(e => (e.Tag ?? e.CamelCasedName).Equals(GetOnlyPropertyFieldTargetedAndOtherAttributeName));
             inheritanceBehaviour = propertyDefinition.InheritanceBehavior;
             dataDefinition = ((SerializationManager) Serialization).GetDefinition(property!.DeclaringType!);
             Assert.That(dataDefinition, Is.Not.Null);

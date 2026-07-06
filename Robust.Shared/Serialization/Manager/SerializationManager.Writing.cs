@@ -147,7 +147,7 @@ public sealed partial class SerializationManager
                     Type.EmptyTypes,
                     Expression.Convert(objParam, typeof(ISelfSerialize)));
             }
-            else
+            else if (actualType.IsAssignableTo(typeof(ISerializationGenerated<>).MakeGenericType(actualType)))
             {
                 call = Expression.Call(
                     instanceParam,
@@ -167,6 +167,14 @@ public sealed partial class SerializationManager
                         Expression.Assign(Expression.Field(nodeVar, "Tag"), Expression.Constant($"!type:{actualType.Name}")),
                         nodeVar);
                 }
+            }
+            else
+            {
+                call = Expression.Call(
+                    instanceParam,
+                    nameof(WriteNoSerializer),
+                    Type.EmptyTypes,
+                    Expression.Constant(actualType, typeof(Type)));
             }
 
             // check for customtypeserializer before anything
@@ -220,6 +228,11 @@ public sealed partial class SerializationManager
     private DataNode WriteSelfSerializable(ISelfSerialize obj)
     {
         return new ValueDataNode(obj.Serialize());
+    }
+
+    private DataNode WriteNoSerializer(Type type)
+    {
+        throw new ArgumentException($"No type serializer or data definition found for type {type} when writing");
     }
 
     private DataNode WriteArray<TElement>(TElement[] obj, bool alwaysWrite, ISerializationContext? context)

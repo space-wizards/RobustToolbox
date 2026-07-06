@@ -326,6 +326,9 @@ namespace Robust.Shared.Prototypes
                 serManager.CopyTo(data, ref component, context, notNullableOverride: true);
                 map.CurrentComponent = null;
             }
+
+            if (!existed)
+                entityManager.AddComponent(entity, component);
         }
 
         public override string ToString()

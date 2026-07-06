@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -12,6 +13,7 @@ namespace Robust.Serialization.Generator;
 internal static class Types
 {
     private const string CopyByRefNamespace = "Robust.Shared.Serialization.Manager.Attributes.CopyByRefAttribute";
+    private const string SerializationHooksNamespace = "Robust.Shared.Serialization.ISerializationHooks";
 
     internal static bool IsPartial(TypeDeclarationSyntax type)
     {
@@ -54,6 +56,28 @@ internal static class Types
         if (type.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
             return CanBeCopiedByValue(member, ((INamedTypeSymbol) type).TypeArguments[0]);
 
+        if (CanTypeBeCopiedByValue(type))
+            return true;
+
+        if (HasAttribute(member, CopyByRefNamespace))
+            return true;
+
+        return false;
+    }
+
+    internal static bool CanTypeBeCopiedByValue(ITypeSymbol type)
+    {
+        return CanTypeBeCopiedByValue(type, []);
+    }
+
+    private static bool CanTypeBeCopiedByValue(ITypeSymbol type, HashSet<string> visited)
+    {
+        if (type.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
+            return CanTypeBeCopiedByValue(((INamedTypeSymbol) type).TypeArguments[0], visited);
+
+        if (HasAttribute(type, CopyByRefNamespace))
+            return true;
+
         if (type.TypeKind == TypeKind.Enum)
             return true;
 
@@ -73,15 +97,39 @@ internal static class Types
             case SpecialType.System_Decimal:
             case SpecialType.System_Single:
             case SpecialType.System_Double:
+            case SpecialType.System_IntPtr:
+            case SpecialType.System_UIntPtr:
             case SpecialType.System_String:
             case SpecialType.System_DateTime:
                 return true;
         }
 
-        if (HasAttribute(member, CopyByRefNamespace))
+        if (type is not INamedTypeSymbol { TypeKind: TypeKind.Struct } namedType)
+            return false;
+
+        if (namedType.IsGenericType || namedType.IsUnboundGenericType)
+            return false;
+
+        if (IsDataDefinition(namedType, out _) &&
+            ImplementsInterface(namedType, SerializationHooksNamespace))
+        {
+            return false;
+        }
+
+        var typeName = namedType.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
+        if (!visited.Add(typeName))
             return true;
 
-        return false;
+        foreach (var member in namedType.GetMembers())
+        {
+            if (member is not IFieldSymbol field || field.IsStatic)
+                continue;
+
+            if (!CanTypeBeCopiedByValue(field.Type, visited))
+                return false;
+        }
+
+        return true;
     }
 
     internal static string GetGenericTypeName(ITypeSymbol symbol)
@@ -373,10 +421,50 @@ internal static class Types
                 if (member.IsStatic)
                     continue;
 
+                if (member is IPropertySymbol dataRecordProperty && isDataRecord)
+                {
+                    var backingField = definition.GetMembers()
+                        .OfType<IFieldSymbol>()
+                        .FirstOrDefault(field =>
+                            field.IsImplicitlyDeclared &&
+                            (SymbolEqualityComparer.Default.Equals(field.AssociatedSymbol, dataRecordProperty) ||
+                             field.Name == $"<{dataRecordProperty.Name}>k__BackingField"));
+
+                    if (backingField != null &&
+                        IsDataField(backingField.GetAttributes(),
+                            dataRecordProperty.Name,
+                            false,
+                            false,
+                            true,
+                            true,
+                            out var backingAttribute,
+                            out _))
+                    {
+                        yield return (dataRecordProperty, dataRecordProperty.Type, backingAttribute!);
+                        continue;
+                    }
+                }
+
                 if (!IsDataField(member, isDataRecord, out var type, out var attribute))
                     continue;
 
-                yield return (member, type, attribute);
+                var outputMember = member;
+                if (member is IFieldSymbol { IsImplicitlyDeclared: true } implicitField)
+                {
+                    var property = implicitField.AssociatedSymbol as IPropertySymbol ??
+                                   definition.GetMembers()
+                                       .OfType<IPropertySymbol>()
+                                       .FirstOrDefault(propertySymbol =>
+                                           implicitField.Name == $"<{propertySymbol.Name}>k__BackingField");
+
+                    if (property != null)
+                    {
+                        outputMember = property;
+                        type = property.Type;
+                    }
+                }
+
+                yield return (outputMember, type, attribute);
             }
 
             definition = definition.BaseType;

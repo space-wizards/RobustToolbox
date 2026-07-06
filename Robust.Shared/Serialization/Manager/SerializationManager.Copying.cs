@@ -109,11 +109,17 @@ public sealed partial class SerializationManager
                         Expression.Constant(false)),
                     Expression.Constant(true));
             }
-            else
+            else if (actualType.IsAssignableTo(typeof(ISerializationGenerated<>).MakeGenericType(actualType)))
             {
                 call = Expression.Call(instanceParam, nameof(CopyToInternal), new[] { actualType }, sourceVar, targetVar,
                     Expression.Constant(manager.GetDefinition(actualType), typeof(DataDefinition<>).MakeGenericType(actualType)),
                     instanceParam, hookCtxParam, contextParam);
+            }
+            else
+            {
+                call = Expression.Block(
+                    Expression.Assign(targetVar, sourceVar),
+                    Expression.Constant(true));
             }
 
             if (!sameType)
@@ -288,6 +294,8 @@ public sealed partial class SerializationManager
         {
             var commonTarget = target;
             copier.CopyTo(this, source, ref commonTarget, DependencyCollection, hookCtx, context);
+            target = commonTarget;
+            return true;
         }
 
         if (ShouldReturnSource(typeof(TCommon))) //todo paul can be precomputed
@@ -386,7 +394,7 @@ public sealed partial class SerializationManager
             return (T)(object)node.Copy();
 
         ref readonly var information = ref SerializedType<T>.Information;
-        if (information.ReturnSource)
+        if (information.ReturnSource || typeof(T).IsValueType)
         {
             return source;
         }
@@ -427,13 +435,6 @@ public sealed partial class SerializationManager
             return;
         }
 
-        if (source is ISerializationGenerated generated)
-        {
-            generated.Copy(ref target!, this, hookCtx, context);
-            RunAfterHook(target, hookCtx);
-            return;
-        }
-
         if (target == null)
         {
             target = CreateCopy(source, hookCtx, context);
@@ -468,7 +469,7 @@ public sealed partial class SerializationManager
         }
 
         ref readonly var information = ref SerializedType<T>.Information;
-        if (information.SerializationGenerated)
+        if (information.SerializationGenerated && !typeof(T).IsAbstract && !typeof(T).IsInterface)
         {
             var generated = Unsafe.As<ISerializationGenerated<T>>(source);
             target ??= generated.Instantiate();

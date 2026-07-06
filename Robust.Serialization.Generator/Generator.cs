@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -170,7 +171,14 @@ public class Generator : IIncrementalGenerator
             {{containingTypesEnd}}
             """);
 
-        return ($"{symbolName}.g.cs", builder.ToString());
+        return ($"{symbolName}.g.cs", NormalizeSource(builder.ToString()));
+    }
+
+    private static string NormalizeSource(string source)
+    {
+        return SyntaxFactory.ParseCompilationUnit(source)
+            .NormalizeWhitespace()
+            .ToFullString();
     }
 
     private static void GetDataFields(
@@ -182,6 +190,16 @@ public class Generator : IIncrementalGenerator
     {
         foreach (var (field, fieldType, attribute) in GetAllDataFields(definition, isDataRecord))
         {
+            var existingIndex = fields.FindIndex(existing =>
+                SymbolEqualityComparer.Default.Equals(existing.Symbol, field));
+            if (existingIndex != -1)
+            {
+                if (fields[existingIndex].Attribute.Data != null || attribute.Data == null)
+                    continue;
+
+                fields.RemoveAt(existingIndex);
+            }
+
             if (!IsDataDefinition(field.ContainingType, out _))
                 invalidFields = true;
 
@@ -272,7 +290,7 @@ public class Generator : IIncrementalGenerator
             return string.Compare(b.Symbol.Name, a.Symbol.Name, StringComparison.OrdinalIgnoreCase);
         });
 
-        return new DataDefinition(definition, typeName, fields, hasHooks, invalidFields);
+        return new DataDefinition(definition, typeName, fields, hasHooks, invalidFields, isDataRecord);
     }
 
     private static string GetConstructors(DataDefinition definition)
@@ -288,7 +306,7 @@ public class Generator : IIncrementalGenerator
             thisCall.Append(" : this(");
             foreach (var parameter in mustCall.Parameters)
             {
-                thisCall.Append($"({parameter.Type.ToDisplayString()}) default!,");
+                thisCall.Append($"{GetParameterDefaultExpression(parameter)},");
             }
 
             if (thisCall[thisCall.Length - 1] == ',')
@@ -364,7 +382,41 @@ public class Generator : IIncrementalGenerator
         return builder.ToString();
     }
 
-    private static string GetReadBody(DataDefinition definition)
+    private static string GetParameterDefaultExpression(IParameterSymbol parameter)
+    {
+        var typeName = parameter.Type.ToDisplayString();
+        if (!parameter.HasExplicitDefaultValue)
+            return $"({typeName}) default!";
+
+        var value = parameter.ExplicitDefaultValue;
+        if (value == null)
+            return "null!";
+
+        var literal = parameter.Type.SpecialType switch
+        {
+            SpecialType.System_Boolean => (bool)value ? "true" : "false",
+            SpecialType.System_Char => SyntaxFactory.LiteralExpression(
+                SyntaxKind.CharacterLiteralExpression,
+                SyntaxFactory.Literal((char)value)).ToFullString(),
+            SpecialType.System_String => SyntaxFactory.LiteralExpression(
+                SyntaxKind.StringLiteralExpression,
+                SyntaxFactory.Literal((string)value)).ToFullString(),
+            SpecialType.System_Single => Convert.ToString(value, CultureInfo.InvariantCulture) + "f",
+            SpecialType.System_Double => Convert.ToString(value, CultureInfo.InvariantCulture) + "d",
+            SpecialType.System_Decimal => Convert.ToString(value, CultureInfo.InvariantCulture) + "m",
+            SpecialType.System_UInt32 => Convert.ToString(value, CultureInfo.InvariantCulture) + "U",
+            SpecialType.System_Int64 => Convert.ToString(value, CultureInfo.InvariantCulture) + "L",
+            SpecialType.System_UInt64 => Convert.ToString(value, CultureInfo.InvariantCulture) + "UL",
+            _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? "default!"
+        };
+
+        if (literal.StartsWith("-", StringComparison.Ordinal))
+            literal = $"({literal})";
+
+        return $"({typeName}) {literal}";
+    }
+
+    private static string GetReadBody(DataDefinition definition, string targetPrefix = "this")
     {
         var builder = new StringBuilder();
         for (var i = 0; i < definition.Fields.Count; i++)
@@ -382,6 +434,7 @@ public class Generator : IIncrementalGenerator
             }
 
             var fieldName = field.Symbol.Name;
+            var targetName = $"{targetPrefix}.{fieldName}";
             if (field.Attribute.IsDataFieldAttribute)
             {
                 builder.AppendLine($$"""
@@ -413,9 +466,9 @@ public class Generator : IIncrementalGenerator
 
             var nullExpression =
                 field.Type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString().Equals(EntityUidName)
-                    ? $"this.{fieldName} = EntityUid.Invalid;"
+                    ? $"{targetName} = EntityUid.Invalid;"
                     : nullable
-                        ? $"this.{fieldName} = default!;"
+                        ? $"{targetName} = default!;"
                         : "throw new NullNotAllowedException();";
 
             builder.AppendLine($$"""
@@ -472,7 +525,7 @@ public class Generator : IIncrementalGenerator
                 {
                     builder.AppendLine($"""
                         case MappingDataNode mapping:
-                            this.{fieldName} = serialization.Read<{nonNullableFieldTypeName}, MappingDataNode, {readerName}>(mapping, hookCtx, context, null{nullableString});
+                            {targetName} = serialization.Read<{nonNullableFieldTypeName}, MappingDataNode, {readerName}>(mapping, hookCtx, context, null{nullableString});
                             break;
                         """);
                 }
@@ -481,7 +534,7 @@ public class Generator : IIncrementalGenerator
                 {
                     builder.AppendLine($"""
                         case SequenceDataNode sequence:
-                            this.{fieldName} = serialization.Read<{nonNullableFieldTypeName}, SequenceDataNode, {readerName}>(sequence, hookCtx, context, null{nullableString});
+                            {targetName} = serialization.Read<{nonNullableFieldTypeName}, SequenceDataNode, {readerName}>(sequence, hookCtx, context, null{nullableString});
                             break;
                         """);
                 }
@@ -490,7 +543,7 @@ public class Generator : IIncrementalGenerator
                 {
                     builder.AppendLine($"""
                         case ValueDataNode value:
-                            this.{fieldName} = serialization.Read<{nonNullableFieldTypeName}, ValueDataNode, {readerName}>(value, hookCtx, context, null{nullableString});
+                            {targetName} = serialization.Read<{nonNullableFieldTypeName}, ValueDataNode, {readerName}>(value, hookCtx, context, null{nullableString});
                             break;
                         """);
                 }
@@ -505,7 +558,7 @@ public class Generator : IIncrementalGenerator
             else
             {
                 builder.AppendLine(
-                    $"this.{fieldName} = serialization.{method}(node{i}, hookCtx, context, null{nullableString});");
+                    $"{targetName} = serialization.{method}(node{i}, hookCtx, context, null{nullableString});");
             }
 
             builder.AppendLine("}");
@@ -692,22 +745,28 @@ public class Generator : IIncrementalGenerator
         if (!IsDataDefinition(type, out _))
             return;
 
-        var sameType = definition.Type.Equals(type, SymbolEqualityComparer.Default);
+        var sameType = definition.Type.Equals(type, SymbolEqualityComparer.Default) &&
+                       targetType == definition.GenericTypeName &&
+                       targetType != "object";
         var isSealedOrStruct = definition.Type.IsSealed || definition.Type.IsValueType;
         var isAbstract = definition.Type.IsAbstract;
         var isInterface = definition.Type.TypeKind == TypeKind.Interface;
-        var modifier = (sameType, isSealedOrStruct, isAbstract, isInterface) switch
+        var modifier = (sameType, targetType == "object", isSealedOrStruct, isInterface) switch
         {
-            (true, true, _, _) => string.Empty,
-            (true, false, false, _) => "virtual ",
-            (false, _, _, true) => string.Empty,
-            (false, _, false, false) => "override ",
-            (_, _, true, _) => "abstract ",
+            (true, _, true, _) => string.Empty,
+            (true, _, false, _) => "virtual ",
+            (false, true, true, _) => string.Empty,
+            (false, true, false, _) => "virtual ",
+            (false, false, _, true) => string.Empty,
+            (false, false, _, false) => "override ",
         };
 
-        if (forceOverride && modifier is "" or "abstract " or "virtual ")
+        if (!sameType && targetType == "object" && forceOverride)
+            modifier = "override ";
+
+        if (forceOverride && modifier is "" or "virtual ")
         {
-            if (modifier is "" or "abstract ")
+            if (modifier is "")
                 modifier += "override ";
             else if (modifier == "virtual ")
                 modifier = "override ";
@@ -721,17 +780,20 @@ public class Generator : IIncrementalGenerator
                 ISerializationContext? context = null)
             """);
 
-        if (isAbstract)
-        {
-            builder.Append(";");
-        }
-        else
+        if (!sameType)
         {
             builder.AppendLine($$"""
                 {
-                    if (serialization.TryCustomCopy(this, ref target, hookCtx, {{definition.HasHooks.ToString().ToLower()}}, context))
-                        return;
-
+                    var def = ({{definition.GenericTypeName}})target;
+                    Copy(ref def, serialization, hookCtx, context);
+                    target = def;
+                }
+                """);
+        }
+        else if (definition.Type.IsValueType || definition.IsRecord)
+        {
+            builder.AppendLine($$"""
+                {
                     target = new {{definition.GenericTypeName}}(
                         ISerializationGeneratedCopy.Default,
                         this,
@@ -742,14 +804,110 @@ public class Generator : IIncrementalGenerator
                 }
                 """);
         }
+        else
+        {
+            var baseCopy = IsDataDefinition(definition.Type.BaseType, out _)
+                ? $$"""
+                      var definitionCast = ({{definition.Type.BaseType!.ToDisplayString()}})target;
+                      base.Copy(ref definitionCast, serialization, hookCtx, context);
+                      target = ({{definition.GenericTypeName}})definitionCast;
+                  """
+                : string.Empty;
+
+            var instantiate = isAbstract
+                ? $$"""
+                      if (target is null)
+                          throw new NullReferenceException("Cannot copy into a null abstract data definition target.");
+                  """
+                : $$"""
+                      if (target is null)
+                      {
+                          target = new {{definition.GenericTypeName}}(
+                              ISerializationGeneratedCopy.Default,
+                              this,
+                              serialization,
+                              hookCtx,
+                              context
+                          ){{requiredFields}};
+                          return;
+                      }
+                  """;
+
+            builder.AppendLine($$"""
+                {
+                    {{instantiate}}
+                    var source = this;
+                    {{baseCopy}}
+                    if (serialization.TryCustomCopy(this, ref target, hookCtx, {{definition.HasHooks.ToString().ToLower()}}, context))
+                        return;
+
+                    {{GetCopyBody(definition, "target")}}
+                }
+                """);
+        }
     }
 
     private static string GetReader(DataDefinition definition)
     {
+        string body;
         if (definition.Type.IsAbstract)
-            return string.Empty;
+        {
+            var baseRead = IsDataDefinition(definition.Type.BaseType, out _)
+                ? $$"""
+                      var definitionCast = ({{definition.Type.BaseType!.ToDisplayString()}})target;
+                      {{definition.Type.BaseType!.ToDisplayString()}}.Read(ref definitionCast, mappingDataNode, serialization, hookCtx, context);
+                      target = ({{definition.GenericTypeName}})definitionCast;
+                  """
+                : string.Empty;
 
-        var requiredFields = GetRequiredFieldsPropertiesAssigners(definition.Type, "target.");
+            body = $$"""
+                if (target is null)
+                    throw new NullReferenceException("Cannot read into a null abstract data definition target.");
+
+                {{baseRead}}
+                {{GetReadBody(definition, "target")}}
+                """;
+        }
+        else if (definition.Type.IsValueType || definition.IsRecord)
+        {
+            body = $$"""
+                target = new {{definition.GenericTypeName}}(
+                    ISerializationGeneratedRead.Default,
+                    mappingDataNode,
+                    serialization,
+                    hookCtx,
+                    context
+                );
+                """;
+        }
+        else
+        {
+            var baseRead = IsDataDefinition(definition.Type.BaseType, out _)
+                ? $$"""
+                      var definitionCast = ({{definition.Type.BaseType!.ToDisplayString()}})target;
+                      {{definition.Type.BaseType!.ToDisplayString()}}.Read(ref definitionCast, mappingDataNode, serialization, hookCtx, context);
+                      target = ({{definition.GenericTypeName}})definitionCast;
+                  """
+                : string.Empty;
+
+            body = $$"""
+                if (target is null)
+                {
+                    target = new {{definition.GenericTypeName}}(
+                        ISerializationGeneratedRead.Default,
+                        mappingDataNode,
+                        serialization,
+                        hookCtx,
+                        context
+                    );
+                    return;
+                }
+
+                {{baseRead}}
+                {{GetReadBody(definition, "target")}}
+                """;
+        }
+
         return $$"""
             public static void Read(
                 ref {{definition.GenericTypeName}} target,
@@ -758,13 +916,7 @@ public class Generator : IIncrementalGenerator
                 SerializationHookContext hookCtx,
                 ISerializationContext? context)
             {
-                target = new {{definition.GenericTypeName}}(
-                    ISerializationGeneratedRead.Default,
-                    mappingDataNode,
-                    serialization,
-                    hookCtx,
-                    context
-                ){{requiredFields}};
+                {{body}}
             }
             """;
     }
@@ -848,9 +1000,9 @@ public class Generator : IIncrementalGenerator
                 var nullableValueTypeString = nullableValueType ? ".Value" : string.Empty;
                 var writerName = serializer.Serializer.ToDisplayString();
                 builder.AppendLine($"""
-                    #pragma warning disable RA0008 notNullableOverride
+                    #pragma warning disable RA0008
                     node{i} = serialization.WriteValue<{nonNullableFieldType}, {writerName}>(obj.{field.Symbol.Name}{nullableValueTypeString}!, alwaysWrite, context{nullableString});
-                    #pragma warning enable RA0008
+                    #pragma warning restore RA0008
                     """);
 
                 if (nullableValueType)
@@ -889,12 +1041,13 @@ public class Generator : IIncrementalGenerator
             if (field.Attribute.ServerOnly)
                 builder.AppendLine("}");
 
-            if (GetFirstDataDefinitionBaseType(definition.Type) is { } baseType)
-            {
-                var baseTypeName = baseType.ToDisplayString();
-                builder.AppendLine(
-                    $"{baseTypeName}.Write(obj, mapping, serialization, context, alwaysWrite, defaultValues);");
-            }
+        }
+
+        if (GetFirstDataDefinitionBaseType(definition.Type) is { } baseType)
+        {
+            var baseTypeName = baseType.ToDisplayString();
+            builder.AppendLine(
+                $"{baseTypeName}.Write(obj, mapping, serialization, context, alwaysWrite, defaultValues);");
         }
 
         return $$"""
@@ -968,7 +1121,7 @@ public class Generator : IIncrementalGenerator
     }
 
     // TODO serveronly? do we care? who knows!!
-    private static StringBuilder GetCopyBody(DataDefinition definition)
+    private static StringBuilder GetCopyBody(DataDefinition definition, string targetPrefix = "")
     {
         var builder = new StringBuilder();
         foreach (var field in definition.Fields)
@@ -984,10 +1137,25 @@ public class Generator : IIncrementalGenerator
                              field.Type.ToDisplayString().EndsWith("?");
             var nullableOverride = isClass && !isNullable ? ", true" : string.Empty;
             var name = field.Symbol.Name;
+            var targetName = string.IsNullOrEmpty(targetPrefix) ? name : $"{targetPrefix}.{name}";
             var nullableValue = isNullableValueType ? ".Value" : string.Empty;
             var nullNotAllowed = isClass && !isNullable;
 
-            if (field.CustomSerializer is { Serializer: var serializer, Type: var serializerType } &&
+            if (CanBeCopiedByValue(field.Symbol, field.Type))
+            {
+                if (nullNotAllowed)
+                {
+                    builder.AppendLine($$"""
+                        if (source.{{name}} == null)
+                        {
+                            throw new NullNotAllowedException();
+                        }
+                        """);
+                }
+
+                builder.AppendLine($"{targetName} = source.{name};");
+            }
+            else if (field.CustomSerializer is { Serializer: var serializer, Type: var serializerType } &&
                 ((serializerType & Copier) != 0 || (serializerType & CopyCreator) != 0))
             {
                 if (nullNotAllowed)
@@ -1005,7 +1173,7 @@ public class Generator : IIncrementalGenerator
                     builder.AppendLine($$"""
                         if (source.{{name}} == null)
                         {
-                            {{name}} = null!;
+                            {{targetName}} = null!;
                         }
                         else
                         {
@@ -1018,17 +1186,17 @@ public class Generator : IIncrementalGenerator
                 if ((serializerType & Copier) != 0)
                 {
                     builder.AppendLine($"""
-                        #pragma warning disable RA0008 notNullableOverride
+                        #pragma warning disable RA0008
                         {nonNullableTypeName} {name}GeneratedTemp = default!;
                         serialization.CopyTo<{nonNullableTypeName}, {serializerName}>(source.{name}{nullableValue}, ref {name}GeneratedTemp, hookCtx, context{nullableOverride});
-                        #pragma warning enable RA0008
-                        {name} = {name}GeneratedTemp;
+                        #pragma warning restore RA0008
+                        {targetName} = {name}GeneratedTemp;
                         """);
                 }
                 else if ((serializerType & CopyCreator) != 0)
                 {
                     builder.AppendLine(
-                        $"{name} = serialization.CreateCopy<{nonNullableTypeName}, {serializerName}>(source.{name}{nullableValue}, hookCtx, context{nullableOverride});");
+                        $"{targetName} = serialization.CreateCopy<{nonNullableTypeName}, {serializerName}>(source.{name}{nullableValue}, hookCtx, context{nullableOverride});");
                 }
 
                 if (isNullable || isNullableValueType)
@@ -1046,55 +1214,192 @@ public class Generator : IIncrementalGenerator
                         """);
                 }
 
-                var hasHooks = ImplementsInterface(type, SerializationHooksNamespace) || !type.IsSealed;
-                builder.AppendLine($$"""
-                    {{typeName}} {{name}}GeneratedTemp = default!;
-                    if (serialization.TryCustomCopy(source.{{name}}, ref {{name}}GeneratedTemp, hookCtx, {{hasHooks.ToString().ToLower()}}, context))
-                    {
-                        {{name}} = {{name}}GeneratedTemp;
-                    }
-                    else
-                    {
-                    """);
-
-                if (CanBeCopiedByValue(field.Symbol, field.Type))
+                if (TryGetFastCollectionCopy(field.Type, $"source.{name}", targetName, isNullable, out var collectionCopy))
                 {
-                    builder.AppendLine($"{name} = source.{name};");
-                }
-                else if (IsDataDefinition(type, out _) && !type.IsAbstract &&
-                         type is not INamedTypeSymbol { TypeKind: TypeKind.Interface })
-                {
-                    var nullable = !type.IsValueType || IsNullableType(type);
-
-                    if (nullable)
-                    {
-                        builder.AppendLine($$"""
-                            if (source.{{name}} == null)
-                            {
-                                {{name}} = null!;
-                            }
-                            else
-                            {
-                            """);
-                    }
-
-                    builder.AppendLine($"""
-                        serialization.CopyTo(source.{name}, ref {name}GeneratedTemp, hookCtx, context{nullableOverride});
-                        {name} = {name}GeneratedTemp;
-                        """);
-
-                    if (nullable)
-                        builder.AppendLine("}");
+                    builder.Append(collectionCopy);
                 }
                 else
                 {
-                    builder.AppendLine($"{name} = serialization.CreateCopy(source.{name}, hookCtx, context);");
-                }
+                    var hasHooks = ImplementsInterface(type, SerializationHooksNamespace) || !type.IsSealed;
+                    builder.AppendLine($$"""
+                        {{typeName}} {{name}}GeneratedTemp = default!;
+                        if (serialization.TryCustomCopy(source.{{name}}, ref {{name}}GeneratedTemp, hookCtx, {{hasHooks.ToString().ToLower()}}, context))
+                        {
+                            {{targetName}} = {{name}}GeneratedTemp;
+                        }
+                        else
+                        {
+                        """);
 
-                builder.AppendLine("}");
+                    if (IsDataDefinition(type, out _) && !type.IsAbstract &&
+                        type is not INamedTypeSymbol { TypeKind: TypeKind.Interface })
+                    {
+                        var nullable = !type.IsValueType || IsNullableType(type);
+
+                        if (nullable)
+                        {
+                            builder.AppendLine($$"""
+                                if (source.{{name}} == null)
+                                {
+                                    {{targetName}} = null!;
+                                }
+                                else
+                                {
+                                """);
+                        }
+
+                        builder.AppendLine($"""
+                            serialization.CopyTo(source.{name}, ref {name}GeneratedTemp, hookCtx, context{nullableOverride});
+                            {targetName} = {name}GeneratedTemp;
+                            """);
+
+                        if (nullable)
+                            builder.AppendLine("}");
+                    }
+                    else
+                    {
+                        builder.AppendLine($"{targetName} = serialization.CreateCopy(source.{name}, hookCtx, context);");
+                    }
+
+                    builder.AppendLine("}");
+                }
             }
         }
 
         return builder;
+    }
+
+    private static bool TryGetFastCollectionCopy(
+        ITypeSymbol type,
+        string sourceName,
+        string targetName,
+        bool nullable,
+        [NotNullWhen(true)] out string? copy)
+    {
+        copy = null;
+        var builder = new StringBuilder();
+        var nullPrefix = string.Empty;
+        var nullSuffix = string.Empty;
+
+        if (!type.IsValueType)
+        {
+            if (nullable)
+            {
+                nullPrefix = $$"""
+                    if ({{sourceName}} == null)
+                    {
+                        {{targetName}} = null!;
+                    }
+                    else
+                    {
+                    """;
+                nullSuffix = "}\n";
+            }
+        }
+
+        var sourceAccess = nullable ? $"{sourceName}!" : sourceName;
+
+        if (type is IArrayTypeSymbol { Rank: 1 } arrayType &&
+            CanTypeBeCopiedByValue(arrayType.ElementType))
+        {
+            var arrayTypeName = type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
+            builder.Append(nullPrefix);
+            builder.AppendLine($"{targetName} = ({arrayTypeName}) {sourceAccess}.Clone();");
+            builder.Append(nullSuffix);
+            copy = builder.ToString();
+            return true;
+        }
+
+        if (type is not INamedTypeSymbol { IsGenericType: true } namedType)
+            return false;
+
+        var genericType = namedType.ConstructedFrom.ToDisplayString();
+        var nonNullableTypeName = type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
+        var typeArgs = namedType.TypeArguments;
+        var targetAccess = $"{targetName}!";
+
+        if (genericType == "System.Collections.Generic.List<T>" &&
+            CanTypeBeCopiedByValue(typeArgs[0]))
+        {
+            builder.Append(nullPrefix);
+            builder.AppendLine($$"""
+                if ({{targetName}} == null)
+                    {{targetName}} = new {{nonNullableTypeName}}({{sourceAccess}}.Count);
+                else
+                {
+                    {{targetAccess}}.Clear();
+                    {{targetAccess}}.EnsureCapacity({{sourceAccess}}.Count);
+                }
+
+                {{targetAccess}}.AddRange({{sourceAccess}});
+                """);
+            builder.Append(nullSuffix);
+            copy = builder.ToString();
+            return true;
+        }
+
+        if (genericType == "System.Collections.Generic.HashSet<T>" &&
+            CanTypeBeCopiedByValue(typeArgs[0]))
+        {
+            builder.Append(nullPrefix);
+            builder.AppendLine($$"""
+                if ({{targetName}} == null)
+                    {{targetName}} = new {{nonNullableTypeName}}({{sourceAccess}}.Count, {{sourceAccess}}.Comparer);
+                else
+                {
+                    {{targetAccess}}.Clear();
+                    {{targetAccess}}.EnsureCapacity({{sourceAccess}}.Count);
+                }
+
+                foreach (var value in {{sourceAccess}})
+                    {{targetAccess}}.Add(value);
+                """);
+            builder.Append(nullSuffix);
+            copy = builder.ToString();
+            return true;
+        }
+
+        if (genericType == "System.Collections.Generic.Dictionary<TKey, TValue>" &&
+            CanTypeBeCopiedByValue(typeArgs[0]) &&
+            CanTypeBeCopiedByValue(typeArgs[1]))
+        {
+            builder.Append(nullPrefix);
+            builder.AppendLine($$"""
+                if ({{targetName}} == null)
+                    {{targetName}} = new {{nonNullableTypeName}}({{sourceAccess}}.Count, {{sourceAccess}}.Comparer);
+                else
+                {
+                    {{targetAccess}}.Clear();
+                    {{targetAccess}}.EnsureCapacity({{sourceAccess}}.Count);
+                }
+
+                foreach (var (key, value) in {{sourceAccess}})
+                    {{targetAccess}}.Add(key, value);
+                """);
+            builder.Append(nullSuffix);
+            copy = builder.ToString();
+            return true;
+        }
+
+        if (genericType == "System.Collections.Generic.SortedDictionary<TKey, TValue>" &&
+            CanTypeBeCopiedByValue(typeArgs[0]) &&
+            CanTypeBeCopiedByValue(typeArgs[1]))
+        {
+            builder.Append(nullPrefix);
+            builder.AppendLine($$"""
+                if ({{targetName}} == null)
+                    {{targetName}} = new {{nonNullableTypeName}}({{sourceAccess}}.Comparer);
+                else
+                    {{targetAccess}}.Clear();
+
+                foreach (var (key, value) in {{sourceAccess}})
+                    {{targetAccess}}.Add(key, value);
+                """);
+            builder.Append(nullSuffix);
+            copy = builder.ToString();
+            return true;
+        }
+
+        return false;
     }
 }

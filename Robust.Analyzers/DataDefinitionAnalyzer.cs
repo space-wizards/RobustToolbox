@@ -224,6 +224,19 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             return;
 
         var isDataDefinition = DataDefinitionHelper.IsDataDefinition(type, out var isDataRecord);
+        if (isDataDefinition &&
+            !isDataRecord &&
+            propertySymbol.SetMethod == null &&
+            HasDataFieldAttribute(propertySymbol))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                DataFieldPropertyWritableRule,
+                property.AccessorList?.GetLocation() ?? property.GetLocation(),
+                propertySymbol.Name,
+                type.Name));
+            return;
+        }
+
         if (!DataDefinitionHelper.IsDataField(propertySymbol, isDataRecord, out _, out var datafieldAttribute))
             return;
 
@@ -259,6 +272,18 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
                 propertyTypeSymbol.Name
             ));
         }
+    }
+
+    private static bool HasDataFieldAttribute(ISymbol symbol)
+    {
+        foreach (var attribute in symbol.GetAttributes())
+        {
+            if (attribute.AttributeClass is { } attributeClass &&
+                Inherits(attributeClass, DataFieldBaseNamespace))
+                return true;
+        }
+
+        return false;
     }
 
     private static bool IsPartial(TypeDeclarationSyntax type)

@@ -1247,18 +1247,29 @@ namespace Robust.Shared.Serialization.Manager
                 }
                 else if (nodeType == typeof(MappingDataNode))
                 {
-                    var definition = manager.GetDefinition(actualType);
-                    var definitionConst = Expression.Constant(definition, typeof(DataDefinition<>).MakeGenericType(actualType));
+                    if (actualType.IsAssignableTo(typeof(ISerializationGenerated<>).MakeGenericType(actualType)))
+                    {
+                        var definition = manager.GetDefinition(actualType);
+                        var definitionConst = Expression.Constant(definition, typeof(DataDefinition<>).MakeGenericType(actualType));
 
-                    call = Expression.Call(
-                        managerConst,
-                        nameof(ReadGenericMapping),
-                        new[] { actualType },
-                        Expression.Convert(nodeParam, typeof(MappingDataNode)),
-                        definitionConst,
-                        hookCtxParam,
-                        contextParam,
-                        instantiatorVariable);
+                        call = Expression.Call(
+                            managerConst,
+                            nameof(ReadGenericMapping),
+                            new[] { actualType },
+                            Expression.Convert(nodeParam, typeof(MappingDataNode)),
+                            definitionConst,
+                            hookCtxParam,
+                            contextParam,
+                            instantiatorVariable);
+                    }
+                    else
+                    {
+                        call = Expression.Call(
+                            managerConst,
+                            nameof(ReadNoSerializer),
+                            new[] { actualType },
+                            nodeParam);
+                    }
                 }
                 else
                 {
@@ -1439,6 +1450,11 @@ namespace Robust.Shared.Serialization.Manager
             RunAfterHook(instance, hookCtx);
 
             return instance;
+        }
+
+        private TValue ReadNoSerializer<TValue>(DataNode node)
+        {
+            throw new ArgumentException($"No type serializer or data definition found for type {typeof(TValue)} with node type {node.GetType()} when reading");
         }
     }
 }

@@ -8,7 +8,7 @@ namespace Robust.Shared.GameObjects;
 
 public abstract class SharedPointLightSystem : EntitySystem
 {
-    [Dependency] protected readonly SharedLightTreeSystem LightTree = default!;
+    [Dependency] protected SharedLightTreeSystem _lightTree = default!;
 
     public abstract SharedPointLightComponent EnsureLight(EntityUid uid);
 
@@ -56,7 +56,7 @@ public abstract class SharedPointLightSystem : EntitySystem
         comp.ContainerOccluded = occluded;
         Dirty(uid, comp);
         if (comp.Enabled)
-            LightTree.QueueTreeUpdate(uid, comp);
+            _lightTree.QueueTreeUpdate(uid, comp);
     }
 
     public void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
@@ -72,7 +72,7 @@ public abstract class SharedPointLightSystem : EntitySystem
 
         comp.Enabled = enabled;
         if (!comp.ContainerOccluded)
-            LightTree.QueueTreeUpdate(uid, comp);
+            _lightTree.QueueTreeUpdate(uid, comp);
 
         RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
         if (!Resolve(uid, ref meta))
@@ -98,7 +98,7 @@ public abstract class SharedPointLightSystem : EntitySystem
 
         comp.Radius = radius;
         if (comp.AddToTree)
-            LightTree.QueueTreeUpdate(uid, comp);
+            _lightTree.QueueTreeUpdate(uid, comp);
 
         if (!Resolve(uid, ref meta))
             return;

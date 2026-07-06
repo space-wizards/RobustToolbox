@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Robust.Client.ComponentTrees;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -10,8 +11,7 @@ namespace Robust.Client.GameObjects
     public sealed partial class PointLightSystem : SharedPointLightSystem
     {
         [Dependency] private IResourceCache _resourceCache = default!;
-        [Dependency] private LightTreeSystem _lightTree = default!;
-        [Dependency] private readonly IPrototypeManager _proto = default!;
+        [Dependency] private IPrototypeManager _proto = default!;
 
         public override void Initialize()
         {
@@ -37,7 +37,7 @@ namespace Robust.Client.GameObjects
             component.Color = state.Color;
             component.ContainerOccluded = state.ContainerOccluded;
 
-            LightTree.QueueTreeUpdate(uid, component);
+            _lightTree.QueueTreeUpdate(uid, component);
         }
 
         public override SharedPointLightComponent EnsureLight(EntityUid uid)

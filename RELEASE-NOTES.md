@@ -43,6 +43,21 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 280.0.1
+
+### Bugfixes
+
 * Fix DynamicTree.Clear not removing node references.
 * Reverted validation for `UiBox2i` `ctor`s as it was causing regressions in debug UIs.
 * Fix command completions not being ordered. The list will still populate by any commands that contain the supplied arg.
@@ -51,10 +66,6 @@ END TEMPLATE-->
 ### Other
 
 * `EyeComponent.DrawLight` is now serialized.
-
-### Internal
-
-*None yet*
 
 
 ## 280.0.0

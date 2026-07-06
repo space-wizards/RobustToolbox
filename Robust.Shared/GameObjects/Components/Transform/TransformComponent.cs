@@ -131,7 +131,7 @@ namespace Robust.Shared.GameObjects
         public bool NoLocalRotation
         {
             get => _noLocalRotation;
-            [Obsolete("Use SharedTransformSystem.SetNoLocalRotation")]
+            [Obsolete("Use SharedTransformSystem.SetNoLocalRotation() instead")]
             set
             {
                 if (value)
@@ -150,7 +150,7 @@ namespace Robust.Shared.GameObjects
         public Angle LocalRotation
         {
             get => _localRotation;
-            [Obsolete("Use SharedTransformSystem.SetLocalRotation")]
+            [Obsolete("Use SharedTransformSystem.SetLocalRotation() instead")]
             set
             {
                 if(_noLocalRotation)
@@ -178,7 +178,7 @@ namespace Robust.Shared.GameObjects
         ///     Current world rotation of the entity.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.Get/SetWorldRotation() instead")]
         public Angle WorldRotation
         {
             get
@@ -219,7 +219,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Matrix for transforming points from local to world space.
         /// </summary>
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.GetWorldMatrix() instead")]
         public Matrix3x2 WorldMatrix
         {
             get
@@ -245,7 +245,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Matrix for transforming points from world to local space.
         /// </summary>
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.GetInvWorldMatrix() instead")]
         public Matrix3x2 InvWorldMatrix
         {
             get
@@ -274,7 +274,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.Get/SetWorldPosition() instead")]
         public Vector2 WorldPosition
         {
             get
@@ -315,7 +315,7 @@ namespace Robust.Shared.GameObjects
                 var valid = _parent.IsValid();
                 return new EntityCoordinates(valid ? _parent : Owner, valid ? LocalPosition : Vector2.Zero);
             }
-            [Obsolete("Use the system's setter method instead.")]
+            [Obsolete("Use SharedTransformSystem.SetCoordinates() instead")]
             set => _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(Owner, this, value);
         }
 
@@ -324,7 +324,7 @@ namespace Robust.Shared.GameObjects
         ///     This is effectively a more complete version of <see cref="WorldPosition"/>
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        [Obsolete("Use TransformSystem.GetMapCoordinates")]
+        [Obsolete("Use SharedTransformSystem.GetMapCoordinates() instead")]
         public MapCoordinates MapPosition => new(WorldPosition, MapID);
 
         /// <summary>
@@ -336,7 +336,7 @@ namespace Robust.Shared.GameObjects
         public Vector2 LocalPosition
         {
             get => _localPosition;
-            [Obsolete("Use the system method instead")]
+            [Obsolete("Use SharedTransformSystem.SetLocalPosition() instead")]
             set
             {
                 if(Anchored)
@@ -399,7 +399,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
-        [Obsolete("Use the system's method instead.")]
+        [Obsolete("Use SharedTransformSystem.AttachToGridOrMap() instead")]
         public void AttachToGridOrMap()
         {
             _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AttachToGridOrMap(Owner, this);
@@ -414,7 +414,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition and WorldRotation of this entity faster than each individually.
         /// </summary>
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.GetWorldPositionRotation() instead")]
         public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation()
         {
             // Worldmatrix needs calculating anyway for worldpos so we'll just drop it.
@@ -425,7 +425,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.GetWorldPositionRotationMatrix() instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix) GetWorldPositionRotationMatrix(EntityQuery<TransformComponent> xforms)
         {
             var parent = _parent;
@@ -451,7 +451,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.GetWorldPositionRotationMatrix() instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix) GetWorldPositionRotationMatrix()
         {
             var xforms = _entMan.GetEntityQuery<TransformComponent>();
@@ -461,7 +461,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.WorldPositionRotationInvMatrix() instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityQuery<TransformComponent> xformQuery)
         {
             var (worldPos, worldRot, _, invWorldMatrix) = GetWorldPositionRotationMatrixWithInv(xformQuery);
@@ -471,7 +471,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.GetWorldPositionRotationMatrixWithInv() instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv()
         {
             var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
@@ -481,7 +481,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.GetWorldPositionRotationMatrixWithInv() instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv(EntityQuery<TransformComponent> xformQuery)
         {
             var parent = _parent;
@@ -525,7 +525,7 @@ namespace Robust.Shared.GameObjects
             _invLocalMatrix = Matrix3Helpers.CreateInverseTransform(_localPosition, _localRotation);
         }
 
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.GetDebugString() instead")]
         public string GetDebugString()
         {
             return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{WorldPosition}/{WorldRotation}";

@@ -7,9 +7,9 @@ namespace Robust.Shared.Utility;
 
 public static class ColorExtensions
 {
-    private static readonly float TriadicHueDelta = 120 / 360; // +/- 1/3. 120 degrees, 0.333 over hue
-    private static readonly float SplitComplementaryHueDelta = 150 / 360; // +/- 5/12. 150 degrees, 0.4166... over hue
-    private static readonly float ComplementaryHueDelta = 180 / 360; // +/- 1/2. 180 degrees
+    private static readonly float TriadicHueDelta = 0.33333f; // +/- 1/3. 120 degrees, 0.333 over hue
+    private static readonly float SplitComplementaryHueDelta = 0.41667f; // +/- 5/12. 150 degrees, 0.4166... over hue
+    private static readonly float ComplementaryHueDelta = 0.5f; // +/- 1/2. 180 degrees
 
     /// <summary>
     ///     Generates a list of triadic complementary colors
@@ -65,7 +65,7 @@ public static class ColorExtensions
             hsl.W);
 
         var hVal1 = hsl.X - hueDelta;
-        hVal1 += hVal1 <= 0f ? hVal1 + 1f : hVal1;
+        hVal1 += hVal1 <= 0f ? 1f : 0f;
         var negativeHSL = new Vector4(
             hVal1,
             MathHelper.Clamp01(hsl.Y + random.Next(-20 / 100, 0)),

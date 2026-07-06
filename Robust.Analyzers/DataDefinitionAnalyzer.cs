@@ -16,9 +16,6 @@ namespace Robust.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 {
-    private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
-    private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
-    private const string MeansDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.MeansDataDefinitionAttribute";
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string ViewVariablesNamespace = "Robust.Shared.ViewVariables.ViewVariablesAttribute";
     private const string NotYamlSerializableName = "Robust.Shared.Serialization.Manager.Attributes.NotYamlSerializableAttribute";
@@ -279,7 +276,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         foreach (var attribute in symbol.GetAttributes())
         {
             if (attribute.AttributeClass is { } attributeClass &&
-                Inherits(attributeClass, DataFieldBaseNamespace))
+                TypeSymbolHelper.Inherits(attributeClass, DataFieldBaseNamespace))
                 return true;
         }
 
@@ -296,20 +293,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (type == null)
             return false;
 
-        return HasAttribute(type, DataDefinitionNamespace) ||
-               MeansDataDefinition(type) ||
-               IsImplicitDataDefinition(type);
-    }
-
-    private static bool Inherits(ITypeSymbol type, string parent)
-    {
-        foreach (var baseType in GetBaseTypes(type))
-        {
-            if (baseType.ToDisplayString() == parent)
-                return true;
-        }
-
-        return false;
+        return DataDefinitionHelper.IsDataDefinition(type, out _);
     }
 
     private static bool TryGetAttributeLocation(MemberDeclarationSyntax syntax, string attributeName, out Location location)
@@ -420,65 +404,8 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         return (VVAccess)accessByte == VVAccess.ReadWrite;
     }
 
-    private static bool MeansDataDefinition(ITypeSymbol type)
-    {
-        foreach (var attribute in type.GetAttributes())
-        {
-            if (attribute.AttributeClass is null)
-                continue;
-
-            if (HasAttribute(attribute.AttributeClass, MeansDataDefinitionNamespace))
-                return true;
-        }
-        return false;
-    }
-
     private static bool IsNotYamlSerializable(ISymbol field, ITypeSymbol type)
     {
         return HasAttribute(type, NotYamlSerializableName);
-    }
-
-    private static bool IsImplicitDataDefinition(ITypeSymbol type)
-    {
-        if (HasAttribute(type, ImplicitDataDefinitionNamespace))
-            return true;
-
-        foreach (var baseType in GetBaseTypes(type))
-        {
-            if (HasAttribute(baseType, ImplicitDataDefinitionNamespace))
-                return true;
-        }
-
-        foreach (var @interface in type.AllInterfaces)
-        {
-            if (IsImplicitDataDefinitionInterface(@interface))
-                return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsImplicitDataDefinitionInterface(ITypeSymbol @interface)
-    {
-        if (HasAttribute(@interface, ImplicitDataDefinitionNamespace))
-            return true;
-
-        foreach (var subInterface in @interface.AllInterfaces)
-        {
-            if (HasAttribute(subInterface, ImplicitDataDefinitionNamespace))
-                return true;
-        }
-
-        return false;
-    }
-
-    private static IEnumerable<ITypeSymbol> GetBaseTypes(ITypeSymbol type)
-    {
-        var baseType = type.BaseType;
-        while (baseType != null)
-        {
-            yield return baseType;
-            baseType = baseType.BaseType;
-        }
     }
 }

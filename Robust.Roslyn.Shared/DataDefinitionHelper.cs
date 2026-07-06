@@ -25,27 +25,6 @@ public sealed class DataDefinitionHelper
     private const string AlwaysPushInheritanceAttributeName = "Robust.Shared.Serialization.Manager.Attributes.AlwaysPushInheritanceAttribute";
     private const string NeverPushInheritanceAttributeName = "Robust.Shared.Serialization.Manager.Attributes.NeverPushInheritanceAttribute";
 
-    public static bool Inherits(ITypeSymbol type, string parent)
-    {
-        foreach (var baseType in GetBaseTypes(type))
-        {
-            if (baseType.ToDisplayString() == parent)
-                return true;
-        }
-
-        return false;
-    }
-
-    public static IEnumerable<ITypeSymbol> GetBaseTypes(ITypeSymbol type)
-    {
-        var baseType = type.BaseType;
-        while (baseType != null)
-        {
-            yield return baseType;
-            baseType = baseType.BaseType;
-        }
-    }
-
     public static (bool Definition, bool Record) IsImplicitDataDefinitionInterface(ITypeSymbol @interface)
     {
         if (AttributeHelper.HasAttribute(@interface, ImplicitDataRecordNamespace))
@@ -96,7 +75,7 @@ public sealed class DataDefinitionHelper
             }
         }
 
-        foreach (var baseType in GetBaseTypes(type))
+        foreach (var baseType in TypeSymbolHelper.GetBaseTypes(type))
         {
             if (AttributeHelper.HasAttribute(baseType, ImplicitDataRecordNamespace))
                 return (true, true);
@@ -248,7 +227,7 @@ public sealed class DataDefinitionHelper
             if (attr.AttributeClass is not { } attributeClass)
                 continue;
 
-            if (Inherits(attributeClass, DataFieldBaseNamespace))
+            if (TypeSymbolHelper.Inherits(attributeClass, DataFieldBaseNamespace))
                 attribute = GetDataFieldAttribute(attr, name);
 
             if (attributeClass.ToDisplayString() == AlwaysPushInheritanceAttributeName)

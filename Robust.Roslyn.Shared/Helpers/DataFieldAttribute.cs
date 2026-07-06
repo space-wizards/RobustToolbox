@@ -1,5 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 
+#nullable enable
+
 namespace Robust.Roslyn.Shared.Helpers;
 
 public sealed record DataFieldAttribute(

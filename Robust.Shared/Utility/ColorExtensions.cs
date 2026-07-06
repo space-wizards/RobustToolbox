@@ -7,13 +7,16 @@ namespace Robust.Shared.Utility;
 
 public static class ColorExtensions
 {
+    private static readonly float TriadicHueDelta = 120 / 360; // +/- 1/3. 120 degrees, 0.333 over hue
+    private static readonly float SplitComplementaryHueDelta = 150 / 360; // +/- 5/12. 150 degrees, 0.4166... over hue
+    private static readonly float ComplementaryHueDelta = 180 / 360; // +/- 1/2. 180 degrees
 
     /// <summary>
     ///     Generates a list of triadic complementary colors
     /// </summary>
     public static Color[] GetTriadicComplementaries(this Color color)
     {
-        return GetComplementaryColors(color, 0.120f);
+        return GetComplementaryColors(color, TriadicHueDelta);
     }
 
     /// <summary>
@@ -21,7 +24,7 @@ public static class ColorExtensions
     /// </summary>
     public static Color[] GetSplitComplementaries(this Color color)
     {
-        return GetComplementaryColors(color, 0.150f);
+        return GetComplementaryColors(color, SplitComplementaryHueDelta);
     }
 
     /// <summary>
@@ -29,35 +32,40 @@ public static class ColorExtensions
     /// </summary>
     public static Color[] GetOneComplementary(this Color color)
     {
-        return GetComplementaryColors(color, 0.180f);
+        return GetComplementaryColors(color, ComplementaryHueDelta);
     }
 
     /// <summary>
-    ///    Generates a complementary colour palette for a provided
-    ///    colour by rotating a set amount of degrees around the
-    ///    colour wheel, and then varying the value and saturation
+    ///    Generates a complementary color palette for a provided
+    ///    color by rotating a set amount of degrees around the
+    ///    color wheel, and then varying the value and saturation
     ///    slightly.
     /// </summary>
     /// <returns>
     ///     A list of 3 colors.
     /// </returns>
-    public static Color[] GetComplementaryColors(Color color, float angle)
+    public static Color[] GetComplementaryColors(Color color, float hueDelta)
     {
         var hsl = Color.ToHsl(color);
         var random = new RobustRandom();
+
         // sorry about how messy these are, but to get all random values we need to reroll for positive and negative HSL.
         // since we want to rotate x degrees around the colour wheel, we need to do so in both directions- doing x + x degrees will give us the wrong hue!
 
-        var hVal = hsl.X + angle;
+        // also varying the saturation and lightness just a little to add some contrast.
+        // since 'color' is our main color, we are desaturating our secondary colors.
+        // this means our main color will always stand out the most.
+
+        var hVal = hsl.X + hueDelta;
         hVal -= MathF.Floor(hVal);
         var positiveHSL = new Vector4(
             hVal,
             MathHelper.Clamp01(hsl.Y + random.Next(-20 / 100, 0)),
-            MathHelper.Clamp01(hsl.Z + random.Next(-15 / 100, 16/ 100)),
+            MathHelper.Clamp01(hsl.Z + random.Next(-15 / 100, 16 / 100)),
             hsl.W);
 
-        var hVal1 = hsl.X - angle;
-        hVal1 += hVal1 <= 0f ? hVal1 + 0.360f : hVal1;
+        var hVal1 = hsl.X - hueDelta;
+        hVal1 += hVal1 <= 0f ? hVal1 + 1f : hVal1;
         var negativeHSL = new Vector4(
             hVal1,
             MathHelper.Clamp01(hsl.Y + random.Next(-20 / 100, 0)),

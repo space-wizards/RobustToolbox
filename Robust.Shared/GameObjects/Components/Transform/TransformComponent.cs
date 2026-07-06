@@ -131,12 +131,11 @@ namespace Robust.Shared.GameObjects
         public bool NoLocalRotation
         {
             get => _noLocalRotation;
+            [Obsolete("Use SharedTransformSystem.SetNoLocalRotation")]
             set
             {
-#pragma warning disable CS0618
                 if (value)
                     LocalRotation = Angle.Zero;
-#pragma warning restore CS0618
 
                 _noLocalRotation = value;
                 _entMan.Dirty(Owner, this);
@@ -526,11 +525,10 @@ namespace Robust.Shared.GameObjects
             _invLocalMatrix = Matrix3Helpers.CreateInverseTransform(_localPosition, _localRotation);
         }
 
+        [Obsolete("Use the system method instead")]
         public string GetDebugString()
         {
-#pragma warning disable CS0618 // Accessing world coords in debug function.
             return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
-#pragma warning restore CS0618
         }
     }
 

@@ -551,7 +551,6 @@ public class Generator : IIncrementalGenerator
                 builder.AppendLine($$"""
                     default:
                         throw new InvalidOperationException($"Unable to read node for {{field.Symbol.Name}}({{field.Attribute.Data?.AttributeClass?.Name}}) as valid.");
-                        break;
                     }
                     """);
             }

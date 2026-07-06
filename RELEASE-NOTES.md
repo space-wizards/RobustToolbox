@@ -45,6 +45,7 @@ END TEMPLATE-->
 
 * Fix DynamicTree.Clear not removing node references.
 * Reverted validation for `UiBox2i` `ctor`s as it was causing regressions in debug UIs.
+* Fix windows Robust.Packaging not using correct path separators for zip archives.
 
 ### Other
 

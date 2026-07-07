@@ -11,11 +11,11 @@ namespace Robust.Shared.Player;
 
 internal abstract partial class SharedPlayerManager : ISharedPlayerManager
 {
-    [Dependency] protected readonly IEntityManager EntManager = default!;
-    [Dependency] protected readonly IComponentFactory Factory = default!;
-    [Dependency] protected readonly ILogManager LogMan = default!;
-    [Dependency] protected readonly IGameTiming Timing = default!;
-    [Dependency] private readonly INetManager _netMan = default!;
+    [Dependency] protected IEntityManager EntManager = default!;
+    [Dependency] protected IComponentFactory Factory = default!;
+    [Dependency] protected ILogManager LogMan = default!;
+    [Dependency] protected IGameTiming Timing = default!;
+    [Dependency] private INetManager _netMan = default!;
 
     protected ISawmill Sawmill = default!;
 

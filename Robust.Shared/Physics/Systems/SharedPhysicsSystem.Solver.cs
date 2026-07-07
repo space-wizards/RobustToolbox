@@ -331,7 +331,8 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void SolveVelocityConstraints(IslandData island,
+    private static void SolveVelocityConstraints(
+        in IslandData island,
         ParallelOptions? options,
         ContactVelocityConstraint[] velocityConstraints,
         Vector2[] linearVelocities,
@@ -341,23 +342,40 @@ public abstract partial class SharedPhysicsSystem
 
         if (options != null && contactCount > VelocityConstraintsPerThread * 2)
         {
-            var batches = (int) Math.Ceiling((float) contactCount / VelocityConstraintsPerThread);
-
-            Parallel.For(0, batches, options, i =>
+            static void ProcessParallelInternal(
+                IslandData island,
+                int contactCount,
+                ParallelOptions options,
+                ContactVelocityConstraint[] velocityConstraints,
+                Vector2[] linearVelocities,
+                float[] angularVelocities)
             {
-                var start = i * VelocityConstraintsPerThread;
-                var end = Math.Min(start + VelocityConstraintsPerThread, contactCount);
-                SolveVelocityConstraints(island, start, end, velocityConstraints, linearVelocities, angularVelocities);
-            });
+                var batches = (int) Math.Ceiling((float) contactCount / VelocityConstraintsPerThread);
+
+                Parallel.For(0, batches, options, i =>
+                {
+                    var start = i * VelocityConstraintsPerThread;
+                    var end = Math.Min(start + VelocityConstraintsPerThread, contactCount);
+                    SolveVelocityConstraints(island, start, end, velocityConstraints, linearVelocities, angularVelocities);
+                });
+            }
+
+            ProcessParallelInternal(
+                island,
+                contactCount,
+                options,
+                velocityConstraints,
+                linearVelocities,
+                angularVelocities);
         }
         else
         {
-            SolveVelocityConstraints(island, 0, contactCount, velocityConstraints, linearVelocities, angularVelocities);
+            SolveVelocityConstraints(in island, 0, contactCount, velocityConstraints, linearVelocities, angularVelocities);
         }
     }
 
-    private void SolveVelocityConstraints(
-        IslandData island,
+    private static void SolveVelocityConstraints(
+        in IslandData island,
         int start,
         int end,
         ContactVelocityConstraint[] velocityConstraints,
@@ -647,7 +665,7 @@ public abstract partial class SharedPhysicsSystem
     {
         for (var i = 0; i < island.Contacts.Count; ++i)
         {
-            var velocityConstraint = velocityConstraints[i];
+            ref var velocityConstraint = ref velocityConstraints[i];
             ref var manifold = ref island.Contacts[velocityConstraint.ContactIndex].Manifold;
             var manPoints = manifold.Points.AsSpan;
             var velPoints = velocityConstraint.Points.AsSpan;
@@ -661,8 +679,8 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private bool SolvePositionConstraints(
-        SolverData data,
+    private static bool SolvePositionConstraints(
+        in SolverData data,
         in IslandData island,
         ParallelOptions? options,
         ContactPositionConstraint[] positionConstraints,
@@ -674,19 +692,30 @@ public abstract partial class SharedPhysicsSystem
         // Parallel
         if (options != null && contactCount > PositionConstraintsPerThread * 2)
         {
-            var unsolved = 0;
-            var batches = (int) Math.Ceiling((float) contactCount / PositionConstraintsPerThread);
-
-            Parallel.For(0, batches, options, i =>
+            static bool ProcessParallelInternal(
+                int contactCount,
+                SolverData data,
+                ParallelOptions options,
+                ContactPositionConstraint[] positionConstraints,
+                Vector2[] positions,
+                float[] angles)
             {
-                var start = i * PositionConstraintsPerThread;
-                var end = Math.Min(start + PositionConstraintsPerThread, contactCount);
+                var unsolved = 0;
+                var batches = (int) Math.Ceiling((float) contactCount / PositionConstraintsPerThread);
 
-                if (!SolvePositionConstraints(data, start, end, positionConstraints, positions, angles))
-                    Interlocked.Increment(ref unsolved);
-            });
+                Parallel.For(0, batches, options, i =>
+                {
+                    var start = i * PositionConstraintsPerThread;
+                    var end = Math.Min(start + PositionConstraintsPerThread, contactCount);
 
-            return unsolved == 0;
+                    if (!SolvePositionConstraints(data, start, end, positionConstraints, positions, angles))
+                        Interlocked.Increment(ref unsolved);
+                });
+
+                return unsolved == 0;
+            }
+
+            return ProcessParallelInternal(contactCount, data, options, positionConstraints, positions, angles);
         }
 
         // No parallel
@@ -697,8 +726,8 @@ public abstract partial class SharedPhysicsSystem
     ///     Tries to solve positions for all contacts specified.
     /// </summary>
     /// <returns>true if all positions solved</returns>
-    private bool SolvePositionConstraints(
-        SolverData data,
+    private static bool SolvePositionConstraints(
+        in SolverData data,
         int start,
         int end,
         ContactPositionConstraint[] positionConstraints,
@@ -747,7 +776,7 @@ public abstract partial class SharedPhysicsSystem
                 minSeparation = Math.Min(minSeparation, separation);
 
                 // Prevent large corrections and allow slop.
-                float C = Math.Clamp(data.Baumgarte * (separation + PhysicsConstants.LinearSlop), -_maxLinearCorrection, 0.0f);
+                float C = Math.Clamp(data.Baumgarte * (separation + PhysicsConstants.LinearSlop), -data.MaxLinearCorrection, 0.0f);
 
                 // Compute the effective mass.
                 float rnA = Vector2Helpers.Cross(rA, normal);

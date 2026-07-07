@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Utility;
-using Robust.Shared.Graphics;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SharpFont;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Client.Graphics
 {
@@ -20,6 +20,7 @@ namespace Robust.Client.Graphics
         private const int SheetHeight = 256;
 
         private readonly IClyde _clyde;
+        private readonly ISawmill _sawmill;
 
         private uint _baseFontDpi = 96;
 
@@ -28,20 +29,54 @@ namespace Robust.Client.Graphics
         private readonly Dictionary<(FontFaceHandle, int fontSize), FontInstanceHandle> _loadedInstances =
             new();
 
-        public FontManager(IClyde clyde)
+        public FontManager(IClyde clyde, ILogManager logManager)
         {
             _clyde = clyde;
             _library = new Library();
+            _sawmill = logManager.GetSawmill("font");
         }
 
-        public IFontFaceHandle Load(Stream stream)
+        public IFontFaceHandle Load(Stream stream, int index = 0)
         {
             // Freetype directly operates on the font memory managed by us.
             // As such, the font data should be pinned in POH.
             var fontData = stream.CopyToPinnedArray();
-            var face = new Face(_library, fontData, 0);
-            var handle = new FontFaceHandle(face);
+            return Load(new ArrayMemoryHandle(fontData), index);
+        }
+
+        public IFontFaceHandle Load(IFontMemoryHandle memory, int index = 0)
+        {
+            var face = FaceLoad(memory, index);
+            var handle = new FontFaceHandle(face, memory);
             return handle;
+        }
+
+        public IFontFaceHandle LoadWithPostscriptName(IFontMemoryHandle memory, string postscriptName)
+        {
+            var numFaces = 1;
+
+            for (var i = 0; i < numFaces; i++)
+            {
+                var face = FaceLoad(memory, i);
+                numFaces = face.FaceCount;
+
+                if (face.GetPostscriptName() == postscriptName)
+                    return new FontFaceHandle(face, memory);
+
+                face.Dispose();
+            }
+
+            // Fallback, load SOMETHING.
+            _sawmill.Warning($"Failed to load correct font via postscript name! {postscriptName}");
+            return new FontFaceHandle(FaceLoad(memory, 0), memory);
+        }
+
+        private unsafe Face FaceLoad(IFontMemoryHandle memory, int index)
+        {
+            return new Face(_library,
+                (nint)memory.GetData(),
+                checked((int)memory.GetDataSize()),
+                index);
         }
 
         void IFontManagerInternal.SetFontDpi(uint fontDpi)
@@ -235,10 +270,13 @@ namespace Robust.Client.Graphics
 
         private sealed class FontFaceHandle : IFontFaceHandle
         {
+            // Keep this alive to avoid it being GC'd.
+            private readonly IFontMemoryHandle _memoryHandle;
             public Face Face { get; }
 
-            public FontFaceHandle(Face face)
+            public FontFaceHandle(Face face, IFontMemoryHandle memoryHandle)
             {
+                _memoryHandle = memoryHandle;
                 Face = face;
             }
         }
@@ -376,6 +414,33 @@ namespace Robust.Client.Graphics
         {
             public CharMetrics Metrics;
             public AtlasTexture? Texture;
+        }
+
+        private sealed class ArrayMemoryHandle(byte[] array) : IFontMemoryHandle
+        {
+            private GCHandle _gcHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
+
+            public unsafe byte* GetData()
+            {
+                return (byte*) _gcHandle.AddrOfPinnedObject();
+            }
+
+            public IntPtr GetDataSize()
+            {
+                return array.Length;
+            }
+
+            public void Dispose()
+            {
+                _gcHandle.Free();
+                _gcHandle = default;
+                GC.SuppressFinalize(this);
+            }
+
+            ~ArrayMemoryHandle()
+            {
+                Dispose();
+            }
         }
     }
 }

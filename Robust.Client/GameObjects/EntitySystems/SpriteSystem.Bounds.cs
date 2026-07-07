@@ -32,7 +32,7 @@ public sealed partial class SpriteSystem
                 bounds = bounds.Union(GetLocalBounds(layer));
         }
 
-        sprite.Comp._bounds = bounds;
+        sprite.Comp._bounds = bounds.Scale(sprite.Comp.Scale);
         sprite.Comp.BoundsDirty = false;
         return sprite.Comp._bounds;
     }

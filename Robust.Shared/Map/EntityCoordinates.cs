@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
@@ -12,8 +13,8 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     A set of coordinates relative to another entity.
     /// </summary>
-    [PublicAPI]
-    public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>, ISpanFormattable
+    [PublicAPI, DataRecord]
+    public readonly partial record struct EntityCoordinates : ISpanFormattable
     {
         public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector2.Zero);
 
@@ -94,18 +95,11 @@ namespace Robust.Shared.Map
             return transformSystem.ToCoordinates(entity, coordinates);
         }
 
-        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
-        public static EntityCoordinates FromMap(IMapManager mapManager, MapCoordinates coordinates)
-        {
-            return IoCManager.Resolve<IEntityManager>().System<SharedTransformSystem>().ToCoordinates(coordinates);
-        }
-
         /// <summary>
         ///     Converts this set of coordinates to Vector2i.
         /// </summary>
         public Vector2i ToVector2i(
             IEntityManager entityManager,
-            IMapManager mapManager,
             SharedTransformSystem transformSystem)
         {
             if(!IsValid(entityManager))
@@ -312,44 +306,6 @@ namespace Robust.Shared.Map
             delta = mapCoordinates.Position - otherMapCoordinates.Position;
             return true;
         }
-
-        #region IEquatable
-
-        /// <inheritdoc />
-        public bool Equals(EntityCoordinates other)
-        {
-            return EntityId.Equals(other.EntityId) && Position.Equals(other.Position);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return obj is EntityCoordinates other && Equals(other);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(EntityId, Position);
-        }
-
-        /// <summary>
-        ///     Check for equality by value between two objects.
-        /// </summary>
-        public static bool operator ==(EntityCoordinates left, EntityCoordinates right)
-        {
-            return left.Equals(right);
-        }
-
-        /// <summary>
-        ///     Check for inequality by value between two objects.
-        /// </summary>
-        public static bool operator !=(EntityCoordinates left, EntityCoordinates right)
-        {
-            return !left.Equals(right);
-        }
-
-        #endregion
 
         #region Operators
 

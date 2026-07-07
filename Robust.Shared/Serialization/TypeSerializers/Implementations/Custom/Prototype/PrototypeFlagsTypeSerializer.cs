@@ -45,8 +45,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<PrototypeFlags<T>>? instanceProvider = null)
         {
-            if(instanceProvider != null)
-                Logger.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
+            if (instanceProvider != null)
+            {
+                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
+                sawmill.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
+            }
 
             var flags = new List<string>(node.Sequence.Count);
 
@@ -78,8 +81,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<PrototypeFlags<T>>? instanceProvider = null)
         {
-            if(instanceProvider != null)
-                Logger.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
+            if (instanceProvider != null)
+            {
+                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
+                sawmill.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
+            }
 
             return new PrototypeFlags<T>(node.Value);
         }

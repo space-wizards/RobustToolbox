@@ -73,30 +73,10 @@ namespace Robust.Client.ViewVariables
         public VVPropEditor SetProperty(ViewVariablesBlobMembers.MemberData member)
         {
             NameLabel.Text = member.Name;
-            var type = Type.GetType(member.Type);
+            var type = member.Value?.GetType();
 
             _bottomLabel.Text = $"Type: {member.TypePretty}";
-            VVPropEditor editor;
-            if (type == null || !_robustSerializer.CanSerialize(type))
-            {
-                // Type is server-side only.
-                // Info whether it's reference or value type can be figured out from the sent value.
-                if (type?.IsValueType == true || member.Value is ViewVariablesBlobMembers.ServerValueTypeToken)
-                {
-                    // Value type, just display it stringified read-only.
-                    editor = new VVPropEditorDummy();
-                }
-                else
-                {
-                    // Has to be a reference type at this point.
-                    DebugTools.Assert(member.Value is ViewVariablesBlobMembers.ReferenceToken || member.Value == null || type?.IsClass == true || type?.IsInterface == true);
-                    editor = _viewVariablesManager.PropertyFor(type ?? typeof(object));
-                }
-            }
-            else
-            {
-                editor = _viewVariablesManager.PropertyFor(type);
-            }
+            var editor = _viewVariablesManager.PropertyFor(type);
 
             var view = editor.Initialize(member.Value, !member.Editable);
             if (!view.HorizontalExpand)

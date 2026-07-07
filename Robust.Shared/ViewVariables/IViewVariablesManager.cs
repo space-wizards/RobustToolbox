@@ -5,6 +5,7 @@ using Robust.Shared.Player;
 
 namespace Robust.Shared.ViewVariables;
 
+[NotContentImplementable]
 public interface IViewVariablesManager
 {
     /// <summary>

@@ -173,6 +173,8 @@ namespace Robust.Client.Input
             F24,
             Pause,
             World1,
+            CapsLock,
+            ScrollLock
         }
 
         public static bool IsMouseKey(this Key key)
@@ -196,6 +198,13 @@ namespace Robust.Client.Input
                 else
                     locId += "-linux";
             }
+
+#if MACOS
+            if (key == Key.Alt)
+            {
+                locId += "-mac";
+            }
+#endif
 
             if (loc.TryGetString(locId, out var name))
                 return name;

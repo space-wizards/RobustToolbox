@@ -153,7 +153,8 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         if (instanceProvider != null)
         {
-            Logger.Warning(
+            var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
+            sawmill.Warning(
                 $"Provided value to a Read-call for a {nameof(FrozenDictionary<TKey, TValue>)}. Ignoring...");
         }
 
@@ -180,7 +181,8 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         if (instanceProvider != null)
         {
-            Logger.Warning(
+            var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
+            sawmill.Warning(
                 $"Provided value to a Read-call for a {nameof(IReadOnlyDictionary<TKey, TValue>)}. Ignoring...");
         }
 

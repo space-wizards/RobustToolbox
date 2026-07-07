@@ -231,7 +231,10 @@ public sealed partial class ToolshedManager
     /// <returns>Success.</returns>
     public bool TryParse<T>(ParserContext parserContext, [NotNullWhen(true)] out T? parsed)
     {
-        var res = TryParse(parserContext, typeof(T), out var p);
+        var t = typeof(T);
+        t = Nullable.GetUnderlyingType(t) ?? t;
+        var res = TryParse(parserContext, t, out var p);
+
         if (p is not null)
             parsed = (T?) p;
         else

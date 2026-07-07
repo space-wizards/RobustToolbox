@@ -5,8 +5,8 @@
     MinSize="300 200">
     <BoxContainer Orientation="Vertical">
         <BoxContainer Orientation="Horizontal">
-            <LineEdit Name="SearchBar" Access="Public" HorizontalExpand="True" PlaceHolder="Search"/>
-            <Button Name="ClearButton" Access="Public" Text="Clear"/>
+            <LineEdit Name="SearchBar" Access="Public" HorizontalExpand="True" PlaceHolder="{Loc window-search-bar-placeholder}"/>
+            <Button Name="ClearButton" Access="Public" Text="{Loc window-clear-button}"/>
         </BoxContainer>
         <ItemList Name="TileList" Access="Public" VerticalExpand="True"/>
         <BoxContainer Orientation="Horizontal">

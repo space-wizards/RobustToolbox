@@ -11,8 +11,11 @@ internal sealed class TpCommand : ToolshedCommand
 {
     private SharedTransformSystem? _xform;
 
+    // TODO TOOLSHED
+    // add EntityCoordinates parser
+
     [CommandImplementation("coords")]
-    public EntityUid TpCoords([PipedArgument] EntityUid teleporter, EntityCoordinates target)
+    public EntityUid TpCoords([PipedArgument] EntityUid teleporter, [CommandArgument(unparseable:true)] EntityCoordinates target)
     {
         _xform ??= GetSys<SharedTransformSystem>();
         _xform.SetCoordinates(teleporter, target);
@@ -20,7 +23,7 @@ internal sealed class TpCommand : ToolshedCommand
     }
 
     [CommandImplementation("coords")]
-    public IEnumerable<EntityUid> TpCoords([PipedArgument] IEnumerable<EntityUid> teleporters, EntityCoordinates target)
+    public IEnumerable<EntityUid> TpCoords([PipedArgument] IEnumerable<EntityUid> teleporters, [CommandArgument(unparseable:true)] EntityCoordinates target)
         => teleporters.Select(x => TpCoords(x, target));
 
     [CommandImplementation("to")]

@@ -20,7 +20,7 @@ public sealed class ViewSubscriberSystem : SharedViewSubscriberSystem
     public override void AddViewSubscriber(EntityUid uid, ICommonSession session)
     {
         // If the entity doesn't have the component, it will be added.
-        var viewSubscriber = EntityManager.EnsureComponent<Shared.GameObjects.ViewSubscriberComponent>(uid);
+        var viewSubscriber = EnsureComp<Shared.GameObjects.ViewSubscriberComponent>(uid);
 
         if (viewSubscriber.SubscribedSessions.Contains(session))
             return; // Already subscribed, do nothing else.
@@ -36,7 +36,7 @@ public sealed class ViewSubscriberSystem : SharedViewSubscriberSystem
     /// </summary>
     public override void RemoveViewSubscriber(EntityUid uid, ICommonSession session)
     {
-        if(!EntityManager.TryGetComponent(uid, out Shared.GameObjects.ViewSubscriberComponent? viewSubscriber))
+        if(!TryComp(uid, out Shared.GameObjects.ViewSubscriberComponent? viewSubscriber))
             return; // Entity didn't have any subscriptions, do nothing.
 
         if (!viewSubscriber.SubscribedSessions.Remove(session))

@@ -37,7 +37,7 @@ using FNLfloat = System.Single;
 //using FNLfloat = System.Double;
 
 [DataDefinition, Serializable, NetSerializable]
-public sealed partial class FastNoiseLite
+public sealed partial class FastNoiseLite : ISerializationHooks
 {
     private const short INLINE = 256; // MethodImplOptions.AggressiveInlining;
     private const short OPTIMISE = 512; // MethodImplOptions.AggressiveOptimization;
@@ -136,7 +136,6 @@ public sealed partial class FastNoiseLite
     [DataField("pingPongStrength")]
     private float mPingPongStrength = 2.0f;
 
-    [DataField("fractalBounding")]
     private float mFractalBounding = 1 / 1.75f;
 
     [DataField("cellularDistanceFunction")]
@@ -168,6 +167,11 @@ public sealed partial class FastNoiseLite
     public FastNoiseLite()
     {
         SetSeed(1337);
+    }
+
+    void ISerializationHooks.AfterDeserialization()
+    {
+        CalculateFractalBounding();
     }
 
     public int GetSeed() => mSeed;

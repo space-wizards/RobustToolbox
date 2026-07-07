@@ -80,6 +80,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public PhysicsComponent? BodyA;
         public PhysicsComponent? BodyB;
 
+        public TransformComponent? XformA;
+        public TransformComponent? XformB;
+
         public Manifold Manifold;
 
         internal ContactType Type;
@@ -238,22 +241,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
 
             IsTouching = touching;
-            var status = ContactStatus.NoContact;
-
-            if (!wasTouching)
-            {
-                if (touching)
-                {
-                    status = ContactStatus.StartTouching;
-                }
-            }
-            else
-            {
-                if (!touching)
-                {
-                    status = ContactStatus.EndTouching;
-                }
-            }
+            var status = GetContactStatus(this, wasTouching);
 
 #if DEBUG
             if (!sensor)
@@ -263,6 +251,32 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 #endif
 
             return status;
+        }
+
+        [Pure]
+        internal static ContactStatus GetContactStatus(Contact contact, bool wasTouching)
+        {
+            if (!wasTouching)
+            {
+                if (contact.IsTouching)
+                {
+                    return ContactStatus.StartTouching;
+                }
+            }
+            else
+            {
+                if (!contact.IsTouching)
+                {
+                    return ContactStatus.EndTouching;
+                }
+                // Still touching
+                else
+                {
+                    return ContactStatus.Touching;
+                }
+            }
+
+            return ContactStatus.NoContact;
         }
 
         /// <summary>
@@ -439,6 +453,17 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 return BodyB!;
             else if (uid == EntityB)
                 return BodyA!;
+
+            throw new InvalidOperationException();
+        }
+
+		[Pure]
+        public TransformComponent OtherTransform(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return XformB!;
+            else if (uid == EntityB)
+                return XformA!;
 
             throw new InvalidOperationException();
         }

@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\MSBuild\Robust.Engine.props"/>
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations"/>
+    <PackageReference Include="Moq" />
+    <PackageReference Include="NUnit"/>
+    <PackageReference Include="NUnit.Analyzers"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Robust.Server\Robust.Server.csproj"/>
+    <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj"/>
+    <ProjectReference Include="..\Robust.Shared.Maths.Testing\Robust.Shared.Maths.Testing.csproj"/>
+    <ProjectReference Include="..\Robust.Shared.Testing\Robust.Shared.Testing.csproj" />
+    <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj"/>
+  </ItemGroup>
+
+  <Import Project="..\MSBuild\Robust.Properties.targets"/>
+</Project>

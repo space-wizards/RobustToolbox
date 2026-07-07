@@ -1,19 +1,19 @@
+using System.IO;
 using Robust.Client.UserInterface;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Network;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Upload.Commands;
 
-public sealed class UploadFileCommand : IConsoleCommand
+public sealed partial class UploadFileCommand : IConsoleCommand
 {
-    [Dependency] private readonly IConfigurationManager _cfgManager = default!;
-    [Dependency] private readonly IFileDialogManager _dialog = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private IConfigurationManager _cfgManager = default!;
+    [Dependency] private IFileDialogManager _dialog = default!;
+    [Dependency] private NetworkResourceManager _netRes = default!;
 
     public string Command => "uploadfile";
     public string Description => "Uploads a resource to the server.";
@@ -36,7 +36,7 @@ public sealed class UploadFileCommand : IConsoleCommand
         var path = new ResPath(args[0]).ToRelativePath();
 
         var filters = new FileDialogFilters(new FileDialogFilters.Group(path.Extension));
-        await using var file = await _dialog.OpenFile(filters);
+        await using var file = await _dialog.OpenFile(filters, FileAccess.Read);
 
         if (file == null)
         {
@@ -54,12 +54,6 @@ public sealed class UploadFileCommand : IConsoleCommand
 
         var data = file.CopyToArray();
 
-        var msg = new NetworkResourceUploadMessage
-        {
-            RelativePath = path,
-            Data = data
-        };
-
-        _netManager.ClientSendMessage(msg);
+        _netRes.UploadResources([(path, data)]);
     }
 }

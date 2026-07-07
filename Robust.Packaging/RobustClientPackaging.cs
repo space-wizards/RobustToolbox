@@ -19,7 +19,19 @@ public sealed class RobustClientPackaging
         AssetPass pass,
         CancellationToken cancel = default)
     {
-        var ignoreSet = ClientIgnoredResources.Union(RobustSharedPackaging.SharedIgnoredResources).ToHashSet();
+        await WriteClientResources(contentDir, pass, new HashSet<string>(), cancel);
+    }
+
+    public static async Task WriteClientResources(
+        string contentDir,
+        AssetPass pass,
+        IReadOnlySet<string> additionalIgnoredResources,
+        CancellationToken cancel = default)
+    {
+        var ignoreSet = ClientIgnoredResources
+            .Union(RobustSharedPackaging.SharedIgnoredResources)
+            .Union(additionalIgnoredResources)
+            .ToHashSet();
 
         await RobustSharedPackaging.DoResourceCopy(Path.Combine(contentDir, "Resources"), pass, ignoreSet, cancel: cancel);
     }

@@ -43,9 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix DynamicTree.Clear not removing node references.
-* Reverted validation for `UiBox2i` `ctor`s as it was causing regressions in debug UIs.
-* Fix command completions not being ordered. The list will still populate by any commands that contain the supplied arg.
+*None yet*
 
 ### Other
 
@@ -54,6 +52,35 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 281.0.0
+
+### Breaking changes
+
+* Updated Lidgren.Network to `04678d057cc503f14f49801a725e61cfe27790a0` with additional fixes around MTU handling, NAT handling, and malformed packets.
+
+### New features
+
+* Exposed new Lidgren properties/CVARs for the above-mentioned fixes and previous updates around rate-limit settings.
+
+### Bugfixes
+
+* Fixed `EntitySystemSubscriptionsGenerator` not targeting server-side `SubscribeLocalEvent`/`SubscribeNetworkEvent` attributes.
+
+
+## 280.0.1
+
+### Bugfixes
+
+* Fix DynamicTree.Clear not removing node references.
+* Reverted validation for `UiBox2i` `ctor`s as it was causing regressions in debug UIs.
+* Fix command completions not being ordered. The list will still populate by any commands that contain the supplied arg.
+* Lidgren rate-limit settings were tweaked to make it less likely that players will unintentionally trigger it
+
+### Other
+
+* `EyeComponent.DrawLight` is now serialized.
 
 
 ## 280.0.0

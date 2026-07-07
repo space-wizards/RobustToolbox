@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Animus.States;
+using Robust.Client.Animus.Triggers;
 using Robust.Client.GameObjects;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
@@ -13,7 +14,7 @@ using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Client.Animus;
 
-internal sealed class AnimusSystem : EntitySystem
+public sealed class AnimusSystem : EntitySystem
 {
     private const float UpdateInterval = 0.1f;
 
@@ -92,7 +93,7 @@ internal sealed class AnimusSystem : EntitySystem
         }
     }
 
-    internal void Trigger(AnimusStateBase state, Entity<AnimusComponent> entity)
+    internal void TriggerInternal(AnimusStateBase state, Entity<AnimusComponent> entity)
     {
         foreach (var cond in state.Conditions)
         {
@@ -146,6 +147,13 @@ internal sealed class AnimusSystem : EntitySystem
 
         foreach (var state in proto.States)
         {
+            // TODO: Add more info to error message.
+            if (state.Conditions.Length == 0)
+            {
+                _sawmill.Error("Every AnimusState must have at least one condition. (Except DefaultState)");
+                continue;
+            }
+
             states.Add(CopyInitializeState(entity, state, animusInstance));
         }
 
@@ -155,26 +163,8 @@ internal sealed class AnimusSystem : EntitySystem
         entity.Comp.ActiveStateMachines.Add(animusInstance);
     }
 
-    private void RegisterTriggerSubscriptions()
-    {
-        // Find all AnimusTriggerEventSubscription used in animus prototypes.
-        var prototypes = _prototypeManager.GetInstances<AnimusPrototype>();
-        foreach (var proto in prototypes)
-        {
-
-        }
-
-        // Read ComponentName and EventName for each
-
-        // Subscribe using reflection
-    }
-
     private AnimusStateBase CopyInitializeState(Entity<AnimusComponent> entity, AnimusStateBase state, AnimusInstance animusInstance)
     {
-        // TODO: Add more info to error message.
-        if (state.Conditions.Length == 0)
-            _sawmill.Error("Every AnimusState must have at least one condition. (Except DefaultState)");
-
         var stateCopy = _serializationManager.CreateCopy(state, null, false, false);
         stateCopy.Initialize(entity.Owner, EntityManager, animusInstance);
 
@@ -285,5 +275,26 @@ internal sealed class AnimusSystem : EntitySystem
         newState.Instance.ActiveState.Exit(entity.Owner);
         newState.Enter(entity.Owner, switchedByTrigger);
         newState.Instance.ActiveState = newState;
+    }
+
+    public void TriggerFor<TEvent>(Entity<AnimusComponent> entity) where TEvent : EntityEventArgs
+    {
+        if (!TryComp<AnimusComponent>(entity, out var comp))
+            return;
+
+        // Good thing this isn't called on a per-frame basis...
+        foreach (var animusInstance in comp.ActiveStateMachines)
+        {
+            foreach (var state in animusInstance.States)
+            {
+                foreach (var trigger in state.Triggers)
+                {
+                    if (trigger is AnimusTriggerEvents eventsTrigger && eventsTrigger.Events.Contains(typeof(TEvent).Name))
+                    {
+                        TriggerInternal(state, entity);
+                    }
+                }
+            }
+        }
     }
 }

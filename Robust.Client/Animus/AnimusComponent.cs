@@ -9,7 +9,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.Client.Animus;
 
 [RegisterComponent]
-internal sealed partial class AnimusComponent : Component
+public sealed partial class AnimusComponent : Component
 {
     [DataField]
     internal List<ProtoId<AnimusPrototype>> StateMachines;
@@ -19,7 +19,6 @@ internal sealed partial class AnimusComponent : Component
 
 /// <summary>
 /// Prototypes are global instances but conditions and other objects may require per-instance data.
-/// Because of this, conditions
 /// </summary>
 internal sealed class AnimusInstance
 {

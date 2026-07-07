@@ -27,7 +27,7 @@ public abstract partial class AnimusTriggerBase
     protected void Trigger()
     {
         _triggered = true;
-        _animationStateMachineSystem.Trigger(_parentState, _entity);
+        _animationStateMachineSystem.TriggerInternal(_parentState, _entity);
     }
 
     internal void InitializeInternal(

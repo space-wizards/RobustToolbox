@@ -12,7 +12,7 @@ public abstract partial class AnimusConditionBase
     internal bool LastResult = false;
 
     /// <summary>
-    /// I couldn't get IoCManager.InjectDependencies to work, use this method to initialize them manually.
+    /// IoCManager.InjectDependencies doesn't work, override this method to initialize dependencies manually.
     /// </summary>
     /// <param name="entityManager"></param>
     public virtual void Initialize(EntityManager entityManager)

@@ -15,8 +15,6 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
-//TODO:ERRANT go through all Loc-s, replace with loc provided by the call
-
 namespace Robust.Server.Console.Commands
 {
     public sealed partial class SaveGridCommand : LocalizedCommands
@@ -40,15 +38,15 @@ namespace Robust.Server.Console.Commands
 
             // Grid target can be omitted to automatically choose the grid currently under the player
             if (args.Length == 1)
-                SaveGridCurrent(shell, path);
+                SaveGridCurrent(shell, path, Loc);
             else
-                SaveGridSpecified(args[1], shell, path);
+                SaveGridSpecified(args[1], shell, path, Loc);
         }
 
         /// <summary>
         /// Save the grid currently under the player's attachedEntity
         /// </summary>
-        private void SaveGridCurrent(IConsoleShell shell, ResPath path)
+        private void SaveGridCurrent(IConsoleShell shell, ResPath path, ILocalizationManager loc)
         {
             // Get the player's controlled entity
             var ent = shell.Player?.AttachedEntity;
@@ -56,7 +54,7 @@ namespace Robust.Server.Console.Commands
             {
                 // We can't continue with just the first parameter without a player entity.
                 // For example, if a server system ran this command.
-                shell.WriteError(Loc.GetString("cmd-failure-no-attached-entity"));
+                shell.WriteError(loc.GetString("cmd-failure-no-attached-entity"));
                 return;
             }
 
@@ -66,50 +64,50 @@ namespace Robust.Server.Console.Commands
             if (gridEnt is null)
             {
                 shell.WriteLine(Help);
-                shell.WriteError(Loc.GetString("cmd-savegrid-no-player-grid"));
+                shell.WriteError(loc.GetString("cmd-savegrid-no-player-grid"));
                 return;
             }
 
-            SaveGrid(gridEnt.Value, gridEnt.Value.ToString(), shell, path);
+            SaveGrid(gridEnt.Value, gridEnt.Value.ToString(), shell, path, loc);
         }
 
         /// <summary>
         /// Save a specific grid
         /// </summary>
-        private void SaveGridSpecified(string targetGrid, IConsoleShell shell, ResPath path )
+        private void SaveGridSpecified(string targetGrid, IConsoleShell shell, ResPath path, ILocalizationManager loc)
         {
             // Validate the mapId parameter's type
             if (!NetEntity.TryParse(targetGrid, out var gridNet))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-grid",("arg",targetGrid)));
+                shell.WriteError(loc.GetString("cmd-parse-failure-grid",("arg",targetGrid)));
                 return;
             }
 
             var uid = _ent.GetEntity(gridNet);
-            SaveGrid(uid, targetGrid, shell, path);
+            SaveGrid(uid, targetGrid, shell, path, loc);
         }
 
-        private void SaveGrid(EntityUid uid, string targetGrid, IConsoleShell shell, ResPath path)
+        private void SaveGrid(EntityUid uid, string targetGrid, IConsoleShell shell, ResPath path, ILocalizationManager loc)
         {
             // Validate if the entity being saved actually exists
             if (!_ent.EntityExists(uid))
             {
-                shell.WriteError(Loc.GetString("cmd-savegrid-existnt",("uid",targetGrid)));
+                shell.WriteError(loc.GetString("cmd-savegrid-existnt",("uid",targetGrid)));
                 return;
             }
 
             //  Validate if the targeted entity is a grid
             if (!_ent.HasComponent<MapGridComponent>(uid))
             {
-                shell.WriteError(Loc.GetString("cmd-savegrid-not-grid",("uid", uid.ToString()),("ent", uid)));
+                shell.WriteError(loc.GetString("cmd-savegrid-not-grid",("uid", uid.ToString()),("ent", uid)));
                 return;
             }
 
-            shell.WriteLine(Loc.GetString("cmd-savegrid-attempt",("uid", uid.ToString())));
+            shell.WriteLine(loc.GetString("cmd-savegrid-attempt",("uid", uid.ToString())));
             var saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, path);
             shell.WriteLine(saveSuccess
-                ? Loc.GetString("cmd-savegrid-success")
-                : Loc.GetString("cmd-savegrid-fail"));
+                ? loc.GetString("cmd-savegrid-success")
+                : loc.GetString("cmd-savegrid-fail"));
         }
 
         // Parameter autocomplete and hints
@@ -151,21 +149,21 @@ namespace Robust.Server.Console.Commands
 
             // Target location parameters can be omitted to place the grid directly under the player
             if (args.Length == 1)
-                LoadGridCurrent(shell, path);
+                LoadGridCurrent(shell, path, Loc);
             else
-                LoadGriSpecific(args, shell, path);
+                LoadGriSpecific(args, shell, path, Loc);
         }
 
         /// <summary>
         /// Loads a saved grid from a path. It will appear under the player's current position
         /// </summary>
-        private void LoadGridCurrent(IConsoleShell shell, ResPath path)
+        private void LoadGridCurrent(IConsoleShell shell, ResPath path, ILocalizationManager loc)
         {
             if (shell.Player?.AttachedEntity is null)
             {
                 // We can't continue with just the first parameter without a player entity.
                 // For example, if a server system ran this command.
-                shell.WriteError(Loc.GetString("cmd-failure-no-attached-entity"));
+                shell.WriteError(loc.GetString("cmd-failure-no-attached-entity"));
                 return;
             }
 
@@ -176,20 +174,20 @@ namespace Robust.Server.Console.Commands
             var rot = _system.GetEntitySystem<TransformSystem>().GetWorldRotation(ent);
             var opts = DeserializationOptions.Default;
 
-            LoadGrid(mapId, shell, path, opts, offset, rot, true);
+            LoadGrid(mapId, shell, path, opts, offset, rot, true, loc);
         }
 
         /// <summary>
         /// Loads a saved grid from a path, to a specific map and position
         /// </summary>
-        private void LoadGriSpecific(string[] args, IConsoleShell shell, ResPath path)
+        private void LoadGriSpecific(string[] args, IConsoleShell shell, ResPath path, ILocalizationManager loc)
         {
             var opts = DeserializationOptions.Default;
 
             // Validate the mapId parameter's type
             if (!int.TryParse(args[1], out var intMapId))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-mapid", ("arg", args[1])));
+                shell.WriteError(loc.GetString("cmd-parse-failure-mapid", ("arg", args[1])));
                 return;
             }
 
@@ -197,7 +195,7 @@ namespace Robust.Server.Console.Commands
             // no loading into null space
             if (mapId == MapId.Nullspace)
             {
-                shell.WriteError(Loc.GetString("cmd-loadgrid-nullspace-map"));
+                shell.WriteError(loc.GetString("cmd-loadgrid-nullspace-map"));
                 return;
             }
 
@@ -205,7 +203,7 @@ namespace Robust.Server.Console.Commands
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (!sys.MapExists(mapId))
             {
-                shell.WriteError(Loc.GetString("cmd-loadgrid-missing-map", ("mapId", mapId)));
+                shell.WriteError(loc.GetString("cmd-loadgrid-missing-map", ("mapId", mapId)));
                 sys.CreateMap(mapId, false); // doesnt runmapinit to be conservative.
             }
 
@@ -213,7 +211,7 @@ namespace Robust.Server.Console.Commands
             var x = 0f;
             if (args.Length >= 3 && !float.TryParse(args[2], out x))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
+                shell.WriteError(loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
                 return;
             }
 
@@ -221,7 +219,7 @@ namespace Robust.Server.Console.Commands
             var y = 0f;
             if (args.Length >= 4 && !float.TryParse(args[3], out y))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[3])));
+                shell.WriteError(loc.GetString("cmd-parse-failure-float", ("arg", args[3])));
                 return;
             }
             var offset = new Vector2(x, y);
@@ -230,7 +228,7 @@ namespace Robust.Server.Console.Commands
             var rotation = 0f;
             if (args.Length >= 5 && !float.TryParse(args[4], out rotation))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[4])));
+                shell.WriteError(loc.GetString("cmd-parse-failure-float", ("arg", args[4])));
                 return;
             }
             var rot = Angle.FromDegrees(rotation);
@@ -240,14 +238,14 @@ namespace Robust.Server.Console.Commands
             {
                 if (!bool.TryParse(args[5], out var storeUids))
                 {
-                    shell.WriteError(Loc.GetString("cmd-parse-failure-bool", ("arg", args[5])));
+                    shell.WriteError(loc.GetString("cmd-parse-failure-bool", ("arg", args[5])));
                     return;
                 }
 
                 opts.StoreYamlUids = storeUids;
             }
 
-            LoadGrid(mapId, shell, path, opts, offset, rot, false);
+            LoadGrid(mapId, shell, path, opts, offset, rot, false, loc);
         }
         private void LoadGrid(
             MapId mapId,
@@ -256,17 +254,18 @@ namespace Robust.Server.Console.Commands
             DeserializationOptions opts,
             Vector2 offset,
             Angle rot,
-            bool currentPos)
+            bool currentPos,
+            ILocalizationManager loc)
         {
             shell.WriteLine(currentPos
-                    ? Loc.GetString("cmd-loadgrid-attempt-current")
-                    : Loc.GetString("cmd-loadgrid-attempt", ("mapId", mapId)));
+                    ? loc.GetString("cmd-loadgrid-attempt-current")
+                    : loc.GetString("cmd-loadgrid-attempt", ("mapId", mapId)));
 
             var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>()
                 .TryLoadGrid(mapId, path, out _, opts, offset, rot);
             shell.WriteLine(loadSuccess
-                ? Loc.GetString("cmd-loadgrid-success")
-                : Loc.GetString("cmd-loadgrid-fail"));
+                ? loc.GetString("cmd-loadgrid-success")
+                : loc.GetString("cmd-loadgrid-fail"));
         }
 
         // Parameter autocomplete and hints
@@ -326,17 +325,17 @@ namespace Robust.Server.Console.Commands
 
             // Map target can be omitted to automatically choose the map the player is on
             if (args.Length == 1)
-                SaveMapCurrent(shell, path);
+                SaveMapCurrent(shell, path, Loc);
             else
-                SaveMapSpecified(args, shell, path);
+                SaveMapSpecified(args, shell, path, Loc);
         }
 
-        private void SaveMapSpecified(string[] args, IConsoleShell shell, ResPath path)
+        private void SaveMapSpecified(string[] args, IConsoleShell shell, ResPath path, ILocalizationManager loc)
         {
             // Validate the mapId parameter
             if (!int.TryParse(args[1], out var intMapId))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-mapid", ("arg", args[1])));
+                shell.WriteError(loc.GetString("cmd-parse-failure-mapid", ("arg", args[1])));
                 return;
             }
             var mapId = new MapId(intMapId);
@@ -344,10 +343,10 @@ namespace Robust.Server.Console.Commands
             // Validate the force-save parameter
             var force = args.Length is 3 && bool.TryParse(args[2], out _);
 
-            SaveMapDo(mapId, shell, path, force);
+            SaveMapDo(mapId, shell, path, force, loc);
         }
 
-        private void SaveMapCurrent(IConsoleShell shell, ResPath path)
+        private void SaveMapCurrent(IConsoleShell shell, ResPath path, ILocalizationManager loc)
         {
             // Get the player's controlled entity
             var ent = shell.Player?.AttachedEntity;
@@ -356,21 +355,21 @@ namespace Robust.Server.Console.Commands
             {
                 // We can't continue with just the first parameter without a player entity.
                 // For example, if a server system ran this command.
-                shell.WriteError(Loc.GetString("cmd-savemap-no-player-ent"));
+                shell.WriteError(loc.GetString("cmd-savemap-no-player-ent"));
                 return;
             }
 
             var mapId = _system.GetEntitySystem<TransformSystem>().GetMapId(ent.Value);
 
-            SaveMapDo(mapId, shell, path, false);
+            SaveMapDo(mapId, shell, path, false, loc);
         }
 
-        private void SaveMapDo(MapId mapId, IConsoleShell shell, ResPath path, bool force)
+        private void SaveMapDo(MapId mapId, IConsoleShell shell, ResPath path, bool force, ILocalizationManager loc)
         {
             // no saving null space
             if (mapId == MapId.Nullspace)
             {
-                shell.WriteError(Loc.GetString("cmd-savemap-nullspace"));
+                shell.WriteError(loc.GetString("cmd-savemap-nullspace"));
                 return;
             }
 
@@ -378,23 +377,23 @@ namespace Robust.Server.Console.Commands
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (!sys.MapExists(mapId))
             {
-                shell.WriteError(Loc.GetString("cmd-savemap-not-exist"));
+                shell.WriteError(loc.GetString("cmd-savemap-not-exist"));
                 return;
             }
 
             // If the map to be saved is initialized, only allow saving it if the Force parameter was given
             if (sys.IsInitialized(mapId) && !force)
             {
-                shell.WriteError(Loc.GetString("cmd-savemap-init-warning"));
+                shell.WriteError(loc.GetString("cmd-savemap-init-warning"));
                 return;
             }
 
-            shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", path)));
+            shell.WriteLine(loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", path)));
             var saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, path);
 
             shell.WriteLine(saveSuccess
-                ? Loc.GetString("cmd-savemap-success")
-                :Loc.GetString("cmd-savemap-error"));
+                ? loc.GetString("cmd-savemap-success")
+                :loc.GetString("cmd-savemap-error"));
         }
     }
 
@@ -474,33 +473,33 @@ namespace Robust.Server.Console.Commands
 
             //  Make mapID optional and pick the next available number if unspecified
             if (args.Length is 1)
-                LoadMapNext(shell, path);
+                LoadMapNext(shell, path, Loc);
             else
-                LoadMapSpecified(args, shell, path);
+                LoadMapSpecified(args, shell, path, Loc);
         }
 
-        private void LoadMapNext(IConsoleShell shell, ResPath path)
+        private void LoadMapNext(IConsoleShell shell, ResPath path, ILocalizationManager loc)
         {
             Vector2 offset = default;
             Angle rot = default;
             var opts = new DeserializationOptions {StoreYamlUids = false};
 
-            shell.WriteLine(Loc.GetString("cmd-loadmap-attempt-next"));
+            shell.WriteLine(loc.GetString("cmd-loadmap-attempt-next"));
 
             var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>()
                 .TryLoadMap(path, out var map, out _, opts, offset, rot);
 
             shell.WriteLine( loadSuccess && map is not null
-                ? Loc.GetString("cmd-loadmap-success", ("mapId", map.Value.Comp.MapId), ("path", path))
-                : Loc.GetString("cmd-loadmap-error", ("path", path)));
+                ? loc.GetString("cmd-loadmap-success", ("mapId", map.Value.Comp.MapId), ("path", path))
+                : loc.GetString("cmd-loadmap-error", ("path", path)));
         }
 
-        private void LoadMapSpecified(string[] args, IConsoleShell shell, ResPath path)
+        private void LoadMapSpecified(string[] args, IConsoleShell shell, ResPath path, ILocalizationManager loc)
         {
             // Validate the mapId parameter's type
             if (!int.TryParse(args[1], out var intMapId))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-integer", ("arg", args[1])));
+                shell.WriteError(loc.GetString("cmd-parse-failure-integer", ("arg", args[1])));
                 return;
             }
 
@@ -509,7 +508,7 @@ namespace Robust.Server.Console.Commands
             // no loading null space
             if (mapId == MapId.Nullspace)
             {
-                shell.WriteError(Loc.GetString("cmd-loadmap-nullspace"));
+                shell.WriteError(loc.GetString("cmd-loadmap-nullspace"));
                 return;
             }
 
@@ -517,7 +516,7 @@ namespace Robust.Server.Console.Commands
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (sys.MapExists(mapId))
             {
-                shell.WriteError(Loc.GetString("cmd-loadmap-exists", ("mapId", mapId)));
+                shell.WriteError(loc.GetString("cmd-loadmap-exists", ("mapId", mapId)));
                 return;
             }
 
@@ -525,14 +524,14 @@ namespace Robust.Server.Console.Commands
             var x = 0f;
             if (args.Length >= 3 && !float.TryParse(args[2], out x))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
+                shell.WriteError(loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
                 return;
             }
 
             var y = 0f;
             if (args.Length >= 4 && !float.TryParse(args[3], out y))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[3])));
+                shell.WriteError(loc.GetString("cmd-parse-failure-float", ("arg", args[3])));
                 return;
             }
             var offset = new Vector2(x, y);
@@ -541,7 +540,7 @@ namespace Robust.Server.Console.Commands
             var rotation = 0f;
             if (args.Length >= 5 && !float.TryParse(args[4], out rotation))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[4])));
+                shell.WriteError(loc.GetString("cmd-parse-failure-float", ("arg", args[4])));
                 return;
             }
             var rot = new Angle(rotation);
@@ -550,20 +549,20 @@ namespace Robust.Server.Console.Commands
             var storeUids = false;
             if (args.Length >= 6 && !bool.TryParse(args[5], out storeUids))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-bool", ("arg", args[5])));
+                shell.WriteError(loc.GetString("cmd-parse-failure-bool", ("arg", args[5])));
                 return;
             }
 
             var opts = new DeserializationOptions { StoreYamlUids = storeUids };
 
-            shell.WriteLine(Loc.GetString("cmd-loadmap-attempt",("mapId", mapId)));
+            shell.WriteLine(loc.GetString("cmd-loadmap-attempt",("mapId", mapId)));
 
             var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>()
                 .TryLoadMapWithId(mapId, path, out _, out _, opts, offset, rot);
 
             shell.WriteLine( loadSuccess
-                ? Loc.GetString("cmd-loadmap-success", ("mapId", mapId), ("path", path))
-                : Loc.GetString("cmd-loadmap-error", ("path", path)));
+                ? loc.GetString("cmd-loadmap-success", ("mapId", mapId), ("path", path))
+                : loc.GetString("cmd-loadmap-error", ("path", path)));
         }
     }
 }

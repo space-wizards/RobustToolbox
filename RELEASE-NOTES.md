@@ -35,7 +35,6 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Update Lidgren.Network to 04678d057cc503f14f49801a725e61cfe27790a0 with additional fixes around MTU handling, NAT handling, and malformed packets.
 * SpawnNextToOrDrop methods have been changed to take `EntProtoId?, Entity<TransformComponent?>, Vector2 = default` instead of `string?, EntityUid, TransformComponent? null`. Because of this, some `Entity<T>`s will need to first be explicity converted into `EntityUid`s.
 
 ### New features
@@ -53,6 +52,21 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 281.0.0
+
+### Breaking changes
+
+* Updated Lidgren.Network to `04678d057cc503f14f49801a725e61cfe27790a0` with additional fixes around MTU handling, NAT handling, and malformed packets.
+
+### New features
+
+* Exposed new Lidgren properties/CVARs for the above-mentioned fixes and previous updates around rate-limit settings.
+
+### Bugfixes
+
+* Fixed `EntitySystemSubscriptionsGenerator` not targeting server-side `SubscribeLocalEvent`/`SubscribeNetworkEvent` attributes.
 
 
 ## 280.0.1

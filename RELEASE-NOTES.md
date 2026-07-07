@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Exposed new Lidgren properties.
 
 ### Bugfixes
 

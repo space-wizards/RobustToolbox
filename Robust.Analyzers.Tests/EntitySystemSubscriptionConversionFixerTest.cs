@@ -94,6 +94,7 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
     """;
 
     [Test]
+    [Description("Tests that a SubscribeLocalEvent invocation is correctly converted to an attribute.")]
     public async Task ConvertLocalEvent()
     {
         const string code = """
@@ -140,6 +141,7 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
     }
 
     [Test]
+    [Description("Tests that a class that isn't marked partial is given the partial modifier when converted.")]
     public async Task ConvertLocalEvent_AddPartial()
     {
         const string code = """
@@ -186,6 +188,7 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
     }
 
     [Test]
+    [Description("Tests that a SubscribeNetworkEvent invocation is correctly converted to an attribute.")]
     public async Task ConvertNetworkEvent()
     {
         const string code = """
@@ -232,6 +235,7 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
     }
 
     [Test]
+    [Description("Tests that the conversion works correctly when the Initialize and event handler methods are declared in separate files (partial classes).")]
     public async Task ConvertLocalEvent_WithPartials()
     {
         const string code1 = """

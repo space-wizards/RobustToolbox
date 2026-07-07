@@ -68,7 +68,8 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
     """;
 
     [Test]
-    public async Task Test()
+    [Description("Tests that a SubscribeLocalEvent invocation in an EntitySystem Intialize method is flagged as elligible for conversion.")]
+    public async Task FlagSubscribeLocalEvent()
     {
         const string code = """
             using Robust.Shared.GameObjects;

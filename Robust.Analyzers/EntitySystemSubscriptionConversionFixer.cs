@@ -41,7 +41,6 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
     {
         var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken);
         var root = await semanticModel!.SyntaxTree.GetRootAsync(context.CancellationToken);
-        //var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
 
         var span = diagnostic.Location.SourceSpan;
         var invocationSyntax = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<InvocationExpressionSyntax>().First();
@@ -51,6 +50,7 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         if (invocationSyntax is null || classSyntax is null || classSymbol is null)
             return;
 
+        // Get the name of the Attribute we need to add to the event handler method.
         if (diagnostic.Properties[EntitySystemSubscriptionConversionAnalyzer.AttributeNameKey] is not string attributeName)
             return;
 
@@ -74,7 +74,7 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
             throw new InvalidOperationException();
 
         // Use the identifier to get the symbol for the event handler method.
-        var handlerMethodSymbol = classSymbol.GetMembers(handlerMethodIdentifer.Identifier.Text).Single();
+        var handlerMethodSymbol = classSymbol.GetMembers(handlerMethodIdentifer.Identifier.Text).OfType<IMethodSymbol>().Single();
 
         // Create a SolutionEditor to edit multiple documents without worrying about immutability.
         // The Initialize method might be in a different document than the handler, thanks to partial classes.
@@ -93,41 +93,60 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         // Make our changes to the document containing the event handler method.
         ModifyHandler(handlerEditor, handlerMethodSymbol, attributeName);
 
-        //
+        // Make sure the class is marked as partial.
         EnsureClassPartial(initializeEditor, classSymbol, classSyntax);
 
-        // Return the modified solution
+        // Return the modified solution.
         return editor.GetChangedSolution();
     }
 
+    /// <summary>
+    /// Edits the document containing the Intialize method.
+    /// Removes the SubscribeWhateverEvent method invocation.
+    /// </summary>
+    /// <param name="editor">An editor for the document containing the Initialize method.</param>
+    /// <param name="invocationSyntax">The SyntaxNode for the invocation of the Initialize method.</param>
     private static void ModifyInitialize(
         DocumentEditor editor,
-        InvocationExpressionSyntax token)
+        InvocationExpressionSyntax invocationSyntax)
     {
-        // Remove the SubscribeWhateverEvent invocation from the Initialize method
-        editor.RemoveNode(token.Parent!);
+        // Remove the SubscribeWhateverEvent invocation from the Initialize method.
+        editor.RemoveNode(invocationSyntax.Parent!);
     }
 
+    /// <summary>
+    /// Edits the document containing the event handler method.
+    /// Adds the SubscribeWhateverEventAttribute to the method.
+    /// </summary>
+    /// <param name="editor">An editor for the document containing the event handler method.</param>
+    /// <param name="handlerMethodSymbol">The symbol for the event handler method.</param>
+    /// <param name="attributeName">The name of the Attribute to be added.</param>
     private static void ModifyHandler(
         DocumentEditor editor,
-        ISymbol handlerMethodSymbol,
+        IMethodSymbol handlerMethodSymbol,
         string attributeName)
     {
-        // Get the syntax node for the event handler method
+        // Get the syntax node for the event handler method.
         var handlerMethodSyntax = handlerMethodSymbol.DeclaringSyntaxReferences.First().GetSyntax() as MethodDeclarationSyntax;
 
-        // Generate the SubscribeWhateverEvent attribute
+        // Generate the SubscribeWhateverEvent attribute.
         var attr = SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeName));
-        // Add the attribute to the event handler method
+
+        // Add the attribute to the event handler method.
         editor.AddAttribute(handlerMethodSyntax!, attr);
     }
 
+    /// <summary>
+    /// Marks the class as partial if it's not already.
+    /// </summary>
     private static void EnsureClassPartial(
         DocumentEditor editor,
         INamedTypeSymbol classSymbol,
         ClassDeclarationSyntax classSyntax)
     {
+        // Use the current modifiers as a base.
         var oldModifiers = DeclarationModifiers.From(classSymbol);
+        // Add the partial modifier if it's not already there.
         editor.SetModifiers(classSyntax, oldModifiers.WithPartial(true));
     }
 }

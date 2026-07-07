@@ -133,7 +133,7 @@ internal sealed partial class PvsSystem
         _grids.Clear();
         var rangeVec = new Vector2(range, range);
         var box = new Box2(viewPos - rangeVec, viewPos + rangeVec);
-        _mapManager.FindGridsIntersecting(map, box, ref _grids, approx: true, includeMap: false);
+        _maps.FindGridsIntersecting(map, box, ref _grids, approx: true, includeMap: false);
 
         foreach (var (grid, _) in _grids)
         {

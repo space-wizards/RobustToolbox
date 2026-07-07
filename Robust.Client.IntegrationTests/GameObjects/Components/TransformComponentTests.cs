@@ -19,12 +19,13 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
                 .NewSimulation()
                 .InitializeInstance();
 
-            var mapId = sim.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap();
-            var mapManager = sim.Resolve<IMapManager>();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapSys = entMan.System<SharedMapSystem>();
+            var mapId = mapSys.CreateMap();
 
             // Adds two grids to use in tests.
-            var gridA = mapManager.CreateGridEntity(mapId);
-            var gridB = mapManager.CreateGridEntity(mapId);
+            var gridA = mapSys.CreateGridEntity(mapId);
+            var gridB = mapSys.CreateGridEntity(mapId);
 
             return (sim, gridA, gridB);
         }

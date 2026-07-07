@@ -25,7 +25,6 @@ public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySyst
 {
     [Dependency] private RecursiveMoveSystem _recursiveMoveSys = default!;
     [Dependency] protected SharedTransformSystem XformSystem = default!;
-    [Dependency] private IMapManager _mapManager = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
 
     private readonly Queue<ComponentTreeEntry<TComp>> _updateQueue = new();
@@ -242,9 +241,9 @@ public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySyst
                 {
                     (pos, rot) = XformSystem.GetRelativePositionRotation(
                         entry.Transform,
-                        newTree!.Value);
+                        newTree.Value);
 
-                    newTreeComp!.Tree.Update(entry, ExtractAabb(entry, pos, rot));
+                    newTreeComp?.Tree.Update(entry, ExtractAabb(entry, pos, rot));
                     continue;
                 }
 
@@ -258,7 +257,7 @@ public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySyst
 
                 (pos, rot) = XformSystem.GetRelativePositionRotation(
                     entry.Transform,
-                    newTree!.Value);
+                    newTree.Value);
 
                 newTreeComp.Tree.Add(entry, ExtractAabb(entry, pos, rot));
             }
@@ -312,7 +311,7 @@ public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySyst
 
         var state = (EntityManager, trees);
 
-        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+        _mapSystem.FindGridsIntersecting(mapId, worldAABB, ref state,
             (EntityUid uid, MapGridComponent grid,
                 ref (EntityManager EntityManager, ValueList<(EntityUid, TTreeComp)> trees) tuple) =>
             {

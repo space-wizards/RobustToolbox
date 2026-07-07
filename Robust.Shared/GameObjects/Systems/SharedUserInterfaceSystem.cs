@@ -10,7 +10,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -24,7 +23,6 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private IParallelManager _parallel = default!;
-    [Dependency] protected IPrototypeManager ProtoManager = default!;
     [Dependency] private IReflectionManager _reflection = default!;
     [Dependency] protected ISharedPlayerManager Player = default!;
     [Dependency] private SharedTransformSystem _transforms = default!;
@@ -106,6 +104,9 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             Log.Debug($"Got BoundInterfaceMessageWrapMessage for unknown UI key: {msg.UiKey}");
             return;
         }
+
+        var received = new BoundUserInterfaceMessageReceivedEvent(sender, uid, msg.UiKey);
+        RaiseLocalEvent(ref received);
 
         // If it's not an open message check we're even a subscriber.
         if (msg.Message is not OpenBoundInterfaceMessage &&

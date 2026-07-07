@@ -27,6 +27,7 @@ namespace Robust.Shared.Localization
     internal abstract partial class LocalizationManager : ILocalizationManagerInternal
     {
         protected static readonly ResPath LocaleDirPath = new("/Locale");
+        protected static readonly ResPath UploadedDirPath = new("/Uploaded");
 
         [Dependency] private IConfigurationManager _configuration = default!;
         [Dependency] private IResourceManager _res = default!;
@@ -403,6 +404,20 @@ namespace Robust.Shared.Localization
                 result.Add(CultureInfo.GetCultureInfo(cultureName, predefinedOnly: false));
             }
 
+            var uploadedFiles = _res.ContentFindFiles(UploadedDirPath)
+                .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase));
+
+            foreach (var file in uploadedFiles)
+            {
+                var cultureName = Path.GetFileNameWithoutExtension(file.Filename);
+                if (CultureInfo.GetCultures(CultureTypes.AllCultures).Any(c => c.Name.Equals(cultureName, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    var culture = CultureInfo.GetCultureInfo(cultureName, predefinedOnly: false);
+                    if (!result.Contains(culture))
+                        result.Add(culture);
+                }
+            }
+
             return result;
         }
 
@@ -485,10 +500,13 @@ namespace Robust.Shared.Localization
         {
             // Load data from .ftl files.
             // Data is loaded from /Locale/<language-code>/*
+            // and from /Uploaded/**/Locale/<language-code>/*
 
             var root = LocaleDirPath / culture.Name;
 
             var files = resourceManager.ContentFindFiles(root)
+                .Concat(resourceManager.ContentFindFiles(UploadedDirPath)
+                    .Where(c => c.CanonPath.Contains($"/Locale/{culture.Name}/", StringComparison.InvariantCultureIgnoreCase)))
                 .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase))
                 .ToArray();
 

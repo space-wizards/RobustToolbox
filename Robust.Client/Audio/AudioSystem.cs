@@ -15,6 +15,7 @@ using Robust.Shared.Audio.Systems;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
@@ -78,6 +79,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private float _maxRayLength;
     private float _zOffset;
     private float _audioEndBuffer;
+
+    public Angle? ListenerRotationOverride;
 
     public override float ZOffset
     {
@@ -324,7 +327,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
             listenerVelocity = Vector2.Zero;
 
         _audio.SetVelocity(listenerVelocity);
-        _audio.SetRotation(eye.Rotation);
+        _audio.SetRotation(ListenerRotationOverride ?? eye.Rotation);
         _audio.SetPosition(eye.Position.Position);
 
         var ourPos = GetListenerCoordinates();

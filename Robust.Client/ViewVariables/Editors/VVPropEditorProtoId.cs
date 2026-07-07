@@ -7,10 +7,10 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Client.ViewVariables.Editors;
 
-internal sealed class VVPropEditorProtoId<T> : VVPropEditor where T : class, IPrototype
+internal sealed partial class VVPropEditorProtoId<T> : VVPropEditor where T : class, IPrototype
 {
-    [Dependency] private readonly ILocalizationManager _loc = default!;
-    [Dependency] private readonly IPrototypeManager _protoManager = default!;
+    [Dependency] private ILocalizationManager _loc = default!;
+    [Dependency] private IPrototypeManager _protoManager = default!;
 
     private ViewVariablesAddWindow? _addWindow;
     private LineEdit? _lineEdit;

@@ -825,6 +825,56 @@ namespace Robust.Shared
         public static readonly CVarDef<string> EntitiesCategoryFilter =
             CVarDef.Create("build.entities_category_filter", "");
 
+        /// <summary>
+        /// URL of the repository fork (e.g. "https://github.com/MyFork/space-station-14").
+        /// </summary>
+        /// <remarks>
+        /// Filled out during publish pipeline (github action). Can be empty for local build or if
+        /// tooling for injecting build info was not used during publish.
+        /// </remarks>
+        public static readonly CVarDef<string> BuildForkUrl =
+            CVarDef.Create("build.fork_url", "");
+
+        /// <summary>
+        /// Git branch name for the current build.
+        /// </summary>
+        /// <remarks>
+        /// Filled out during publish pipeline (github action). Can be empty for local build or if
+        /// tooling for injecting build info was not used during publish.
+        /// </remarks>
+        public static readonly CVarDef<string> BuildBranch =
+            CVarDef.Create("build.branch", "");
+
+        /// <summary>
+        /// URL of the RobustToolbox submodule repository.
+        /// </summary>
+        /// <remarks>
+        /// Filled out during publish pipeline (github action). Can be empty for local build or if
+        /// tooling for injecting build info was not used during publish.
+        /// </remarks>
+        public static readonly CVarDef<string> BuildRobustToolboxUrl =
+            CVarDef.Create("build.robust_toolbox_url", "");
+
+        /// <summary>
+        /// Commit hash of the RobustToolbox submodule.
+        /// </summary>
+        /// <remarks>
+        /// Filled out during publish pipeline (github action). Can be empty for local build or if
+        /// tooling for injecting build info was not used during publish.
+        /// </remarks>
+        public static readonly CVarDef<string> BuildRobustToolboxHash =
+            CVarDef.Create("build.robust_toolbox_hash", "");
+
+        /// <summary>
+        /// Branch of the RobustToolbox submodule.
+        /// </summary>
+        /// <remarks>
+        /// Filled out during publish pipeline (github action). Can be empty for local build or if
+        /// tooling for injecting build info was not used during publish.
+        /// </remarks>
+        public static readonly CVarDef<string> BuildRobustToolboxBranch =
+            CVarDef.Create("build.robust_toolbox_branch", "");
+
         /*
          * WATCHDOG
          */

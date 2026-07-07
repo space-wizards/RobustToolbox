@@ -35,15 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Update Lidgren.Network to 04678d057cc503f14f49801a725e61cfe27790a0 with additional fixes around MTU handling, NAT handling, and malformed packets.
+* Updated Lidgren.Network to `04678d057cc503f14f49801a725e61cfe27790a0` with additional fixes around MTU handling, NAT handling, and malformed packets.
 
 ### New features
 
-* Exposed new Lidgren properties.
+* Exposed new Lidgren properties/CVARs for the above-mentioned fixes and previous updates around rate-limit settings.
 
 ### Bugfixes
 
-*None yet*
+* Fixed `EntitySystemSubscriptionsGenerator` not targeting server-side `SubscribeLocalEvent`/`SubscribeNetworkEvent` attributes.
 
 ### Other
 

@@ -36,7 +36,7 @@ internal sealed partial class PvsSystem
         return pvsSession;
     }
 
-    internal void ComputeSessionState(PvsSession session)
+    internal GameState ComputeSessionState(PvsSession session)
     {
         UpdateSession(session);
 
@@ -50,8 +50,7 @@ internal sealed partial class PvsSystem
         // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
 
         DebugTools.Assert(session.States.Select(x=> x.NetEntity).ToHashSet().Count == session.States.Count);
-        DebugTools.AssertNull(session.State);
-        session.State = new GameState(
+        var state = new GameState(
             session.FromTick,
             _gameTiming.CurTick,
             Math.Max(session.LastInput, session.LastMessage),
@@ -61,6 +60,8 @@ internal sealed partial class PvsSystem
 
         session.ForceSendReliably = session.RequestedFull
                                           || _gameTiming.CurTick > session.LastReceivedAck + (uint) ForceAckThreshold;
+
+        return state;
     }
 
     private void UpdateSession(PvsSession session)
@@ -70,7 +71,6 @@ internal sealed partial class PvsSystem
         DebugTools.AssertEqual(session.States.Count, 0);
         DebugTools.Assert(CullingEnabled && !session.DisableCulling || session.Chunks.Count == 0);
         DebugTools.AssertNull(session.ToSend);
-        DebugTools.AssertNull(session.State);
 
         session.FromTick = session.RequestedFull ? GameTick.Zero : session.LastReceivedAck;
         session.LastInput = _input.GetLastInputCommand(session.Session);

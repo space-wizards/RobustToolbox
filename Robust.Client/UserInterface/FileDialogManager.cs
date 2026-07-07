@@ -25,15 +25,8 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
 
     private async Task<string?> Prompt(bool isSave, FileDialogFilters? filters)
     {
-        try
-        {
-            if (clyde.FileDialogImpl is { } impl)
-                return isSave ? await impl.SaveFile(filters) : await impl.OpenFile(filters);
-        }
-        catch
-        {
-            return null;
-        }
+        if (clyde.FileDialogImpl is { } impl)
+            return isSave ? await impl.SaveFile(filters) : await impl.OpenFile(filters);
 
         return null;
     }

@@ -236,7 +236,7 @@ internal sealed class RayCast_Test
         var physicsSystem = entManager.System<SharedPhysicsSystem>();
 
         mapSystem.CreateMap(out mapId);
-        var grid = sim.Resolve<IMapManager>().CreateGridEntity(mapId);
+        var grid = mapSystem.CreateGridEntity(mapId);
 
         for (var i = 0; i < 3; i++)
         {

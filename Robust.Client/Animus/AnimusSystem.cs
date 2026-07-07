@@ -14,19 +14,21 @@ using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Client.Animus;
 
-public sealed class AnimusSystem : EntitySystem
+public sealed partial class AnimusSystem : EntitySystem
 {
     private const float UpdateInterval = 0.1f;
 
-    [Dependency] private readonly ILogManager _logger = default!;
-    [Dependency] private readonly IClientGameTiming _timing = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly ISerializationManager _serializationManager = default!;
-    private ISawmill _sawmill = default!;
-    private readonly Dictionary<EntityUid, List<(Type, string)>> _actingComponentProperties = new();
-    // TODO: Subscribe to OnAnimationStarted event to register running legacy animations.
+    [Dependency] private ILogManager _logger = default!;
+    [Dependency] private IClientGameTiming _timing = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private ISerializationManager _serializationManager = default!;
 
+    private ISawmill _sawmill = default!;
+
+    private readonly Dictionary<EntityUid, List<(Type, string)>> _actingComponentProperties = new();
+
+    // TODO: Subscribe to OnAnimationStarted event to register running legacy animations.
     private void OnAnimationCompleted(Entity<AnimationPlayerComponent> entity, ref AnimationCompletedEvent args)
     {
         // TODO: Deregister legacy animations.

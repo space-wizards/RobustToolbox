@@ -779,11 +779,9 @@ namespace Robust.Shared.Network
             {
                 netConfig.SetMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval, true);
                 netConfig.MaximumConnections = _config.GetEffectiveMaxConnections();
-                netConfig.ConnectionTimeout = _config.GetCVar(CVars.ConnectionTimeoutServer);
             }
             else
             {
-                netConfig.ConnectionTimeout = _config.GetCVar(CVars.ConnectionTimeoutClient);
                 netConfig.ResendHandshakeInterval = _config.GetCVar(CVars.ResendHandshakeInterval);
                 netConfig.MaximumHandshakeAttempts = _config.GetCVar(CVars.MaximumHandshakeAttempts);
             }

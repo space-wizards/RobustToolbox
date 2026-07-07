@@ -289,7 +289,7 @@ cmd-loadgrid-attempt = Attempting to load grid to map {$mapId}.
 cmd-loadgrid-success = Load successful.
 cmd-loadgrid-fail = Load failed!
 cmd-loadgrid-nullspace-map = Cannot load into nullspace.
-cmd-loadgrid-missing-map = Map {$mapId} does not exist.
+cmd-loadgrid-missing-map = Map {$mapId} did not exist. Creating it now without map init.
 
 cmd-loc-desc = Prints the absolute location of the player's entity to console.
 cmd-loc-help = Usage: {$command}

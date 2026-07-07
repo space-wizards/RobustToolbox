@@ -206,9 +206,6 @@ namespace Robust.Server.Console.Commands
             if (!sys.MapExists(mapId))
             {
                 shell.WriteError(Loc.GetString("cmd-loadgrid-missing-map", ("mapId", mapId)));
-                return;
-                //TODO:ERRANT merge this
-                shell.WriteError($"MapID {intMapId} did not exist, creating without map init");
                 sys.CreateMap(mapId, false); // doesnt runmapinit to be conservative.
             }
 
@@ -282,8 +279,6 @@ namespace Robust.Server.Console.Commands
                         CompletionHelper.MapIds(_entManager),
                         Loc.GetString("cmd-hint-savemap-id"));
                 default:
-                    //TODO:ERRANT fix this
-                    //return LoadMap.GetCompletionResult(shell, args, _resource, _system);
                     return LoadMap.GetCompletionResult(shell, args, _resource, _system, Loc);
             }
 
@@ -411,8 +406,13 @@ namespace Robust.Server.Console.Commands
         public override string Command => "loadmap";
 
         // Parameter autocomplete and hints
-        public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args, IResourceManager resource, IEntitySystemManager system, ILocalizationManager loc)
-        {//TODO:ERRANT is _system actually used here?
+        public static CompletionResult GetCompletionResult(
+            IConsoleShell shell,
+            string[] args,
+            IResourceManager resource,
+            IEntitySystemManager system,
+            ILocalizationManager loc)
+        {
             List<CompletionOption> autocomplete;
             switch (args.Length)
             {

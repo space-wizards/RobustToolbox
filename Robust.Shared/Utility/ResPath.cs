@@ -78,6 +78,18 @@ public readonly struct ResPath : IEquatable<ResPath>
     }
 
     /// <summary>
+    ///     Creates a resource path from user-facing input.
+    ///     Do not assume it is a safe path, use IWritableDirProvider.GetFullPath for that.
+    /// </summary>
+    /// <remarks>
+    ///     This will sanitize (but not make sandbox safe) user input unlike the normal ctor.
+    /// </remarks>
+    public static ResPath FromUncleanPath(string path)
+    {
+        return new ResPath(path.Replace('\\', Separator)).Clean();
+    }
+
+    /// <summary>
     /// Check whether the given string paths contains any non-standard directory separators.
     /// </summary>
     public static bool IsValidPath(string path) => !path.Contains('\\');
@@ -672,5 +684,32 @@ public static class ResPathUtil
         return path.IsRooted
             ? path.CanonPath[1..].Split(ResPath.Separator)
             : path.CanonPath.Split(ResPath.Separator);
+    }
+
+    /// <summary>
+    /// Checks whether this path points to a file and does not contain relative traversal.
+    /// </summary>
+    /// <param name="path">Path to validate.</param>
+    /// <param name="rooted">If true, the path must be rooted. If false, the path must be relative.</param>
+    public static bool IsValidFilePath(this ResPath path, bool rooted)
+    {
+        if (rooted != path.IsRooted)
+            return false;
+
+        if (path == ResPath.Root || path == ResPath.Self || path == ResPath.Empty)
+            return false;
+
+        if (path.Clean() != path)
+            return false;
+
+        // Clean() intentionally preserves base-level relative traversal like "../foo".
+        // Those paths are normalized, but still not safe file paths.
+        foreach (var segment in path.EnumerateSegments())
+        {
+            if (segment == "..")
+                return false;
+        }
+
+        return path.Filename is not ("." or "..");
     }
 }

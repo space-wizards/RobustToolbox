@@ -3,8 +3,10 @@ using System.IO;
 using System.Security.Cryptography;
 using Microsoft.Win32;
 using Robust.Client.Utility;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.HWId;
 
@@ -55,24 +57,24 @@ internal sealed partial class BasicHWId : IHWId
 
     private byte[] GetFileHWid()
     {
-        var path = UserDataDir.GetRootUserDataDir(_gameController);
-        var hwidPath = Path.Combine(path, ".hwid");
+        var userDataRoot = UserDataDir.GetRootUserDataDirProvider(_gameController, true);
+        var hwidPath = new ResPath("/.hwid");
 
-        var value = ReadHWidFile(hwidPath);
+        var value = ReadHWidFile(userDataRoot, hwidPath);
         if (value != null)
             return value;
 
         value = RandomNumberGenerator.GetBytes(LengthHwid);
-        File.WriteAllBytes(hwidPath, value);
+        userDataRoot.WriteAllBytes(hwidPath, value);
 
         return value;
     }
 
-    private static byte[]? ReadHWidFile(string path)
+    private static byte[]? ReadHWidFile(IWritableDirProvider userDataRoot, ResPath path)
     {
         try
         {
-            var value = File.ReadAllBytes(path);
+            var value = userDataRoot.ReadAllBytes(path);
             if (value.Length == LengthHwid)
                 return value;
         }

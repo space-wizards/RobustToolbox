@@ -9,6 +9,7 @@ using Robust.Client.Utility;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Console.Commands
 {
@@ -85,9 +86,10 @@ namespace Robust.Client.Console.Commands
 
         private SqliteConnection GetDb()
         {
-            var basePath = UserDataDir.GetRootUserDataDir(_gameController);
+            var userDataRoot = UserDataDir.GetRootUserDataDirProvider(_gameController, true);
             var launcherDirName = Environment.GetEnvironmentVariable("SS14_LAUNCHER_APPDATA_NAME") ?? "launcher";
-            var dbPath = Path.Combine(basePath, launcherDirName, "settings.db");
+            var dbPath = userDataRoot.GetFullPath(
+                ResPath.FromUncleanPath(launcherDirName).ToRootedPath() / "settings.db");
 
 #if USE_SYSTEM_SQLITE
             SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_sqlite3());

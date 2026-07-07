@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 using Nett;
 using Robust.Shared.Collections;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
@@ -223,9 +224,35 @@ namespace Robust.Shared.Configuration
             }
         }
 
+        public HashSet<string> LoadFromFile(IWritableDirProvider provider, ResPath configFile)
+        {
+            try
+            {
+                HashSet<string> result;
+                using (var file = provider.OpenRead(configFile))
+                {
+                    result = LoadFromTomlStream(file);
+                }
+                SetSaveFile(provider, configFile);
+                ApplyRollback();
+                _sawmill.Info($"Configuration loaded from file");
+                return result;
+            }
+            catch (Exception e)
+            {
+                _sawmill.Error("Unable to load configuration file:\n{0}", e);
+                return new HashSet<string>(0);
+            }
+        }
+
         public void SetSaveFile(string configFile)
         {
             _configFile = new ConfigFileStorageDisk { Path = configFile };
+        }
+
+        public void SetSaveFile(IWritableDirProvider provider, ResPath configFile)
+        {
+            _configFile = new ConfigFileStorageProvider { Provider = provider, Path = configFile };
         }
 
         public void SetVirtualConfig()
@@ -370,6 +397,12 @@ namespace Robust.Shared.Configuration
                     case ConfigFileStorageDisk disk:
                     {
                         using var file = File.Create(disk.Path);
+                        memoryStream.CopyTo(file);
+                        break;
+                    }
+                    case ConfigFileStorageProvider provider:
+                    {
+                        using var file = provider.Provider.Open(provider.Path, FileMode.Create, FileAccess.Write, FileShare.None);
                         memoryStream.CopyTo(file);
                         break;
                     }
@@ -1048,6 +1081,17 @@ namespace Robust.Shared.Configuration
             public override string ToString()
             {
                 return Path;
+            }
+        }
+
+        private sealed class ConfigFileStorageProvider : ConfigFileStorage
+        {
+            public required IWritableDirProvider Provider;
+            public required ResPath Path;
+
+            public override string ToString()
+            {
+                return Path.ToString();
             }
         }
 

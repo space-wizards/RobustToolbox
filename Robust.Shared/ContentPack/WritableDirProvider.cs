@@ -24,7 +24,7 @@ namespace Robust.Shared.ContentPack
         public WritableDirProvider(DirectoryInfo rootDir, bool hideRootDir)
         {
             // FullName does not have a trailing separator, and we MUST have a separator.
-            RootDir = rootDir.FullName + Path.DirectorySeparatorChar.ToString();
+            RootDir = Path.TrimEndingDirectorySeparator(Path.GetFullPath(rootDir.FullName)) + Path.DirectorySeparatorChar;
             _hideRootDir = hideRootDir;
         }
 

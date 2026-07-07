@@ -1604,6 +1604,12 @@ namespace Robust.Shared
             CVarDef.Create("res.checkpathcasing", false);
 
         /// <summary>
+        /// Use virtual file-system instead of physical files for user data.
+        /// </summary>
+        public static readonly CVarDef<bool> ResUserDataVirtual =
+            CVarDef.Create("res.user_data_virtual", false, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Preload all textures at client startup to avoid hitches at runtime.
         /// </summary>
         public static readonly CVarDef<bool> ResTexturePreloadingEnabled =

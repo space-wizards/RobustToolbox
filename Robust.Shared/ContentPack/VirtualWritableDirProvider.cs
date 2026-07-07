@@ -28,14 +28,15 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public string? RootDir => null;
 
+        /// <inheritdoc />
+        public string GetFullPath(ResPath path)
+        {
+            return GetCleanPath(path).ToString();
+        }
+
         public void CreateDir(ResPath path)
         {
-            if (!path.IsRooted)
-            {
-                throw new ArgumentException("Path must be rooted", nameof(path));
-            }
-
-            path = path.Clean();
+            path = GetCleanPath(path);
 
             var directory = _rootDirectoryNode;
 
@@ -61,12 +62,7 @@ namespace Robust.Shared.ContentPack
 
         public void Delete(ResPath path)
         {
-            if (!path.IsRooted)
-            {
-                throw new ArgumentException("Path must be rooted", nameof(path));
-            }
-
-            path = path.Clean();
+            path = GetCleanPath(path);
 
             var pathParent = path.Directory;
 
@@ -104,10 +100,7 @@ namespace Robust.Shared.ContentPack
 
         public Stream Open(ResPath path, FileMode fileMode, FileAccess access, FileShare share)
         {
-            if (!path.IsRooted)
-            {
-                throw new ArgumentException("Path must be rooted", nameof(path));
-            }
+            path = GetCleanPath(path);
 
             var parentPath = path.Directory;
             if (!TryGetNodeAt(parentPath, out var parent) || !(parent is DirectoryNode parentDir))
@@ -206,11 +199,8 @@ namespace Robust.Shared.ContentPack
 
         public void Rename(ResPath oldPath, ResPath newPath)
         {
-            if (!oldPath.IsRooted)
-                throw new ArgumentException("Path must be rooted", nameof(oldPath));
-
-            if (!newPath.IsRooted)
-                throw new ArgumentException("Path must be rooted", nameof(newPath));
+            oldPath = GetCleanPath(oldPath);
+            newPath = GetCleanPath(newPath);
 
             if (!TryGetNodeAt(oldPath.Directory, out var parent) || parent is not DirectoryNode sourceDir)
                 throw new ArgumentException("Source directory does not exist.");
@@ -237,12 +227,7 @@ namespace Robust.Shared.ContentPack
 
         private bool TryGetNodeAt(ResPath path, [NotNullWhen(true)] out INode? node)
         {
-            if (!path.IsRooted)
-            {
-                throw new ArgumentException("Path must be rooted", nameof(path));
-            }
-
-            path = path.Clean();
+            path = GetCleanPath(path);
 
             if (path == ResPath.Root)
             {
@@ -279,6 +264,16 @@ namespace Robust.Shared.ContentPack
                 throw new FileNotFoundException();
 
             return new VirtualWritableDirProvider(dirNode);
+        }
+
+        private static ResPath GetCleanPath(ResPath path)
+        {
+            if (!path.IsRooted)
+            {
+                throw new ArgumentException("Path must be rooted", nameof(path));
+            }
+
+            return path.Clean();
         }
 
         private interface INode

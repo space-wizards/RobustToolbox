@@ -19,6 +19,14 @@ namespace Robust.Shared.ContentPack
         string? RootDir { get; }
 
         /// <summary>
+        /// Resolves a resource path to this provider's full path representation.
+        /// Physical providers return OS filesystem paths, while virtual providers return rooted resource paths.
+        /// </summary>
+        /// <param name="path">Rooted resource path to resolve under this provider.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
+        string GetFullPath(ResPath path);
+
+        /// <summary>
         /// Creates a directory. If the directory exists, does nothing.
         /// </summary>
         /// <param name="path">Path of directory to create.</param>

@@ -127,6 +127,46 @@ internal sealed class ResPathTest
     }
 
     [Test]
+    [TestCase("/..", ExpectedResult = "/")]
+    [TestCase("/../..", ExpectedResult = "/")]
+    [TestCase("/../../a", ExpectedResult = "/a")]
+    [TestCase("/a/../../b", ExpectedResult = "/b")]
+    [TestCase("/a/b/../../../c", ExpectedResult = "/c")]
+    [TestCase("/a/./b//../c", ExpectedResult = "/a/c")]
+    public string CleanRootedTraversalDoesNotEscapeRoot(string input)
+    {
+        var cleaned = new ResPath(input).Clean();
+        Assert.That(cleaned.IsRooted, Is.True);
+        Assert.That(cleaned.CanonPath, Does.Not.StartWith("/.."));
+        return cleaned.ToString();
+    }
+
+    [Test]
+    [TestCase("..", ExpectedResult = "..")]
+    [TestCase("../a", ExpectedResult = "../a")]
+    [TestCase("a/../..", ExpectedResult = "..")]
+    [TestCase("a/../../b", ExpectedResult = "../b")]
+    public string CleanRelativeTraversalPreservesEscapes(string input)
+    {
+        return new ResPath(input).Clean().ToString();
+    }
+
+    [Test]
+    [TestCase("/Config/client_config.toml", true, ExpectedResult = true)]
+    [TestCase("/Config/../client_config.toml", true, ExpectedResult = false)]
+    [TestCase("client_config.toml", true, ExpectedResult = false)]
+    [TestCase("replay.zip", false, ExpectedResult = true)]
+    [TestCase("replays/replay.zip", false, ExpectedResult = true)]
+    [TestCase("../replay.zip", false, ExpectedResult = false)]
+    [TestCase("/replay.zip", false, ExpectedResult = false)]
+    [TestCase(".", false, ExpectedResult = false)]
+    [TestCase("/", true, ExpectedResult = false)]
+    public bool IsValidFilePathTest(string input, bool rooted)
+    {
+        return new ResPath(input).IsValidFilePath(rooted);
+    }
+
+    [Test]
     [TestCase("/a/b", "/a", ExpectedResult = "b")]
     [TestCase("/a", "/", ExpectedResult = "a")]
     [TestCase("/a/b/c", "/", ExpectedResult = "a/b/c")]
@@ -243,5 +283,14 @@ internal sealed class ResPathTest
         var canonPath = new ResPath(canonStr);
         Assert.That(systemPath, Is.EqualTo(canonPath));
         Assert.That(systemPath.ToRelativeSystemPath(), Is.EqualTo(canonPath.ToRelativeSystemPath()));
+    }
+
+    [Test]
+    [TestCase(@"foo\bar\..\baz", "foo/baz")]
+    [TestCase(@"..\..\foo", "../../foo")]
+    [TestCase(@"\..\foo", "/foo")]
+    public void FromUncleanPathTest(string input, string expected)
+    {
+        Assert.That(ResPath.FromUncleanPath(input), Is.EqualTo(new ResPath(expected)));
     }
 }

@@ -59,5 +59,59 @@ namespace Robust.Shared.Tests.Resources
             // ../ should get clamped to /.
             Assert.That(_dirProvider.ReadAllText(new ResPath("/../dummy")), Is.EqualTo("pranked"));
         }
+
+        [Test]
+        public void TestVirtualGetFullPath()
+        {
+            IWritableDirProvider provider = new VirtualWritableDirProvider();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(provider.GetFullPath(ResPath.Root), Is.EqualTo("/"));
+                Assert.That(provider.GetFullPath(new ResPath("/../foo/./bar")), Is.EqualTo("/foo/bar"));
+                Assert.That(() => provider.GetFullPath(new ResPath("foo/bar")), Throws.ArgumentException);
+            });
+        }
+
+        [Test]
+        public void TestVirtualParentAccessClamped()
+        {
+            var provider = new VirtualWritableDirProvider();
+
+            provider.WriteAllText(new ResPath("/dummy"), "pranked");
+
+            Assert.That(provider.ReadAllText(new ResPath("/../dummy")), Is.EqualTo("pranked"));
+        }
+
+        [Test]
+        public void TestVirtualFileMethodsUseFullPath()
+        {
+            var provider = new VirtualWritableDirProvider();
+
+            provider.CreateDir(new ResPath("/foo/../bar"));
+            provider.WriteAllText(new ResPath("/bar/file.txt"), "contents");
+
+            Assert.That(provider.Exists(new ResPath("/foo/../bar/file.txt")), Is.True);
+            Assert.That(provider.IsDir(new ResPath("/foo/../bar")), Is.True);
+            Assert.That(provider.DirectoryEntries(new ResPath("/foo/../bar")), Is.EquivalentTo(new[] {"file.txt"}));
+
+            provider.Rename(new ResPath("/foo/../bar/file.txt"), new ResPath("/foo/../bar/renamed.txt"));
+            Assert.That(provider.ReadAllText(new ResPath("/bar/renamed.txt")), Is.EqualTo("contents"));
+
+            provider.Delete(new ResPath("/foo/../bar/renamed.txt"));
+            Assert.That(provider.Exists(new ResPath("/bar/renamed.txt")), Is.False);
+        }
+
+        [Test]
+        public void TestVirtualOpenSubdirectoryUsesFullPath()
+        {
+            var provider = new VirtualWritableDirProvider();
+            provider.CreateDir(new ResPath("/bar"));
+
+            var subdirectory = provider.OpenSubdirectory(new ResPath("/foo/../bar"));
+            subdirectory.WriteAllText(new ResPath("/file.txt"), "contents");
+
+            Assert.That(provider.ReadAllText(new ResPath("/bar/file.txt")), Is.EqualTo("contents"));
+        }
     }
 }

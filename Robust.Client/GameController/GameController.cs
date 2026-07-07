@@ -395,6 +395,9 @@ namespace Robust.Client
 
             // Figure out user data directory.
             var userDataDir = GetUserDataDir();
+            var userDataProvider = _commandLineArgs?.SelfContained == true
+                ? new WritableDirProvider(Directory.CreateDirectory(userDataDir), false)
+                : UserDataDir.GetUserDataDirProvider(this, false);
 
             _configurationManager.Initialize(false);
             _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
@@ -404,16 +407,16 @@ namespace Robust.Client
 
             if (Options.LoadConfigAndUserData)
             {
-                var configFile = Path.Combine(userDataDir, Options.ConfigFileName);
-                if (File.Exists(configFile))
+                var configPath = Options.ConfigFileName.ToRootedPath();
+                if (userDataProvider.Exists(configPath))
                 {
                     // Load config from user data if available.
-                    _configurationManager.LoadFromFile(configFile);
+                    _configurationManager.LoadFromFile(userDataProvider, configPath);
                 }
                 else
                 {
                     // Else we just use code-defined defaults and let it save to file when the user changes things.
-                    _configurationManager.SetSaveFile(configFile);
+                    _configurationManager.SetSaveFile(userDataProvider, configPath);
                 }
             }
 
@@ -428,7 +431,8 @@ namespace Robust.Client
 
             _prof.Initialize();
 
-            _resManager.Initialize(Options.LoadConfigAndUserData ? userDataDir : null, hideUserDataDir: true);
+            var useVirtualUserData = _configurationManager.GetCVar(CVars.ResUserDataVirtual);
+            _resManager.Initialize(Options.LoadConfigAndUserData && !useVirtualUserData ? userDataDir : null, hideUserDataDir: true);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions)

@@ -87,10 +87,18 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         if (timing == null)
             return source;
 
+        return ApplyOffset(source, timing.CurTime);
+    }
+
+    internal static TimeSpan ApplyOffset(TimeSpan source, TimeSpan offset)
+    {
         // Checks if adding time and curTime will overflow.
-        if (source > TimeSpan.MaxValue - timing.CurTime)
+        if (offset > TimeSpan.Zero && source > TimeSpan.MaxValue - offset)
             return TimeSpan.MaxValue;
 
-        return source + timing.CurTime;
+        if (offset < TimeSpan.Zero && source < TimeSpan.MinValue - offset)
+            return TimeSpan.MinValue;
+
+        return source + offset;
     }
 }

@@ -26,6 +26,14 @@ internal sealed class TimeOffsetSerializerTest : OurSerializationTest
             .SetName("Copy max value clamps to max value");
     }
 
+    private static IEnumerable<TestCaseData> ApplyOffsetTestCases()
+    {
+        yield return new TestCaseData(TimeSpan.MaxValue, TimeSpan.FromSeconds(10), TimeSpan.MaxValue)
+            .SetName("Apply offset max value clamps to max value");
+        yield return new TestCaseData(TimeSpan.MinValue, TimeSpan.FromSeconds(-10), TimeSpan.MinValue)
+            .SetName("Apply offset min value clamps to min value");
+    }
+
     [Test]
     public void ReadReturnsRawOffset()
     {
@@ -44,5 +52,11 @@ internal sealed class TimeOffsetSerializerTest : OurSerializationTest
         var result = Serialization.CreateCopy<TimeSpan, TimeOffsetSerializer>(source);
 
         Assert.That(result, Is.EqualTo(expected));
+    }
+
+    [TestCaseSource(nameof(ApplyOffsetTestCases))]
+    public void ApplyOffsetClamps(TimeSpan source, TimeSpan offset, TimeSpan expected)
+    {
+        Assert.That(TimeOffsetSerializer.ApplyOffset(source, offset), Is.EqualTo(expected));
     }
 }

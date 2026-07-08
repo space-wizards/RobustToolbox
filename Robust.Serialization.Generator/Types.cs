@@ -78,6 +78,12 @@ internal static class Types
         if (HasAttribute(type, CopyByRefNamespace))
             return true;
 
+        if (type is INamedTypeSymbol named &&
+            HasAttribute(named.OriginalDefinition, CopyByRefNamespace))
+        {
+            return true;
+        }
+
         if (type.TypeKind == TypeKind.Enum)
             return true;
 

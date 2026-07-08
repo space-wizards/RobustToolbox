@@ -71,7 +71,7 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
     {
         // Get the identifier of the event handler method.
         if (invocationSyntax.ArgumentList.Arguments[0].Expression is not IdentifierNameSyntax handlerMethodIdentifer)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"Exception determining event handler method identifier for {invocationSyntax}");
 
         var model = await document.GetSemanticModelAsync(c);
         if (model.GetSymbolInfo(handlerMethodIdentifer, c).Symbol is not IMethodSymbol handlerMethodSymbol)
@@ -112,7 +112,7 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         InvocationExpressionSyntax invocationSyntax)
     {
         // Remove the SubscribeWhateverEvent invocation from the Initialize method.
-        editor.RemoveNode(invocationSyntax.Parent!);
+        editor.RemoveNode(invocationSyntax.Parent!, SyntaxRemoveOptions.KeepNoTrivia);
     }
 
     /// <summary>

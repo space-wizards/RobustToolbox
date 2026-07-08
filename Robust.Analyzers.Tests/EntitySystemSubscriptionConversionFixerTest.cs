@@ -203,6 +203,68 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
     }
 
     [Test]
+    [Description("Tests that multiple SubscribeLocalEvent invocations are correctly converted to attributes when there is a gap between them.")]
+    public async Task ConvertLocalEvent_MultipleWithGap()
+    {
+        const string code = """
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+
+                    SubscribeLocalEvent<TestComponent, TestEvent>(OnTest); // Comment here
+
+                    SubscribeLocalEvent<TestComponent, TestEvent2>(OnTest2);
+                }
+
+                private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args)
+                {
+                    // Do something
+                }
+
+                private void OnTest2(EntityUid uid, TestComponent comp, ref TestEvent2 args)
+                {
+                    // Do something
+                }
+            }
+            """;
+
+        const string fixedCode = """
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+                }
+
+                [SubscribeLocalEvent]
+                private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args)
+                {
+                    // Do something
+                }
+
+                [SubscribeLocalEvent]
+                private void OnTest2(EntityUid uid, TestComponent comp, ref TestEvent2 args)
+                {
+                    // Do something
+                }
+            }
+            """;
+
+        await Verifier(code, fixedCode,
+            // /0/Test0.cs(9,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
+            VerifyCS.Diagnostic().WithSpan(9, 9, 9, 62),
+            // /0/Test0.cs(11,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
+            VerifyCS.Diagnostic().WithSpan(11, 9, 11, 64)
+        );
+    }
+
+    [Test]
     [Description("Tests that a class that isn't marked partial is given the partial modifier when converted.")]
     public async Task ConvertLocalEvent_AddPartial()
     {

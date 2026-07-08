@@ -73,8 +73,9 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         if (invocationSyntax.ArgumentList.Arguments[0].Expression is not IdentifierNameSyntax handlerMethodIdentifer)
             throw new InvalidOperationException();
 
-        // Use the identifier to get the symbol for the event handler method.
-        var handlerMethodSymbol = classSymbol.GetMembers(handlerMethodIdentifer.Identifier.Text).OfType<IMethodSymbol>().Single();
+        var model = await document.GetSemanticModelAsync(c);
+        if (model.GetSymbolInfo(handlerMethodIdentifer, c).Symbol is not IMethodSymbol handlerMethodSymbol)
+            throw new InvalidOperationException($"Failed to find event handler method {handlerMethodIdentifer}");
 
         // Create a SolutionEditor to edit multiple documents without worrying about immutability.
         // The Initialize method might be in a different document than the handler, thanks to partial classes.

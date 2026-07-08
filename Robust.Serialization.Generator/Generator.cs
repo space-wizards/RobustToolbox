@@ -1140,21 +1140,7 @@ public class Generator : IIncrementalGenerator
             var nullableValue = isNullableValueType ? ".Value" : string.Empty;
             var nullNotAllowed = isClass && !isNullable;
 
-            if (CanBeCopiedByValue(field.Symbol, field.Type))
-            {
-                if (nullNotAllowed)
-                {
-                    builder.AppendLine($$"""
-                        if (source.{{name}} == null)
-                        {
-                            throw new NullNotAllowedException();
-                        }
-                        """);
-                }
-
-                builder.AppendLine($"{targetName} = source.{name};");
-            }
-            else if (field.CustomSerializer is { Serializer: var serializer, Type: var serializerType } &&
+            if (field.CustomSerializer is { Serializer: var serializer, Type: var serializerType } &&
                 ((serializerType & Copier) != 0 || (serializerType & CopyCreator) != 0))
             {
                 if (nullNotAllowed)
@@ -1200,6 +1186,20 @@ public class Generator : IIncrementalGenerator
 
                 if (isNullable || isNullableValueType)
                     builder.AppendLine("}");
+            }
+            else if (CanBeCopiedByValue(field.Symbol, field.Type))
+            {
+                if (nullNotAllowed)
+                {
+                    builder.AppendLine($$"""
+                        if (source.{{name}} == null)
+                        {
+                            throw new NullNotAllowedException();
+                        }
+                        """);
+                }
+
+                builder.AppendLine($"{targetName} = source.{name};");
             }
             else
             {

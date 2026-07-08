@@ -22,7 +22,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 /// to prevent time-offsets from being unintentionally saved to maps while mapping. If an entity must have an initial
 /// non-zero time, then that time should just be configured during map-init.
 /// </remarks>
-public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNode>
+public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNode>, ITypeCopyCreator<TimeSpan>
 {
     public TimeSpan Read(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies,

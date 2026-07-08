@@ -46,6 +46,8 @@ namespace Robust.Shared.Reflection
         private readonly Dictionary<(Type BaseType, bool Inclusive), Type[]> _getAllChildrenCache = new();
         private ISawmill _sawmill = default!;
 
+        private readonly List<Type> _childrenCache = new();
+
         public void Initialize()
         {
             _sawmill = _logMan.GetSawmill("Reflection");
@@ -66,7 +68,8 @@ namespace Robust.Shared.Reflection
             if (_getAllChildrenCache.TryGetValue(key, out var cached))
                 return cached;
 
-            var children = new List<Type>();
+            _childrenCache.Clear();
+
             foreach (var type in _getAllTypesCache)
             {
                 if (!baseType.IsAssignableFrom(type) || type.IsAbstract)
@@ -75,10 +78,10 @@ namespace Robust.Shared.Reflection
                 if (baseType == type && !inclusive)
                     continue;
 
-                children.Add(type);
+                _childrenCache.Add(type);
             }
 
-            cached = children.ToArray();
+            cached = _childrenCache.ToArray();
             _getAllChildrenCache.Add(key, cached);
             return cached;
         }

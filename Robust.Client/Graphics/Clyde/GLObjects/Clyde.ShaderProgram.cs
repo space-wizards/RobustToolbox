@@ -266,12 +266,22 @@ namespace Robust.Client.Graphics.Clyde
                 // the Matrix3x2 data is stored row-major, and GL uses column-major, the
                 // memory layout is the same (or would be, if Matrix3x2 didn't have an
                 // implicit column)
-                var buf = stackalloc float[9]{
-                    value.M11, value.M12, 0,
-                    value.M21, value.M22, 0,
-                    value.M31, value.M32, 1
-                };
-                GL.UniformMatrix3(slot, 1, false, (float*)buf);
+                Span<float> buf = stackalloc float[9];
+                buf[0] = value.M11;
+                buf[1] = value.M12;
+                buf[2] = 0;
+                buf[3] = value.M21;
+                buf[4] = value.M22;
+                buf[5] = 0;
+                buf[6] = value.M31;
+                buf[7] = value.M32;
+                buf[8] = 1;
+
+                fixed (float* ptr = buf)
+                {
+                    _clyde.UniformMatrix3fv(slot, ptr);
+                }
+
                 _clyde.CheckGlError();
             }
 

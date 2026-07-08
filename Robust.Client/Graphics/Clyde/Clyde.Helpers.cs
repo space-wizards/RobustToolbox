@@ -12,6 +12,8 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
     {
+        private unsafe delegate* unmanaged<int, int, byte, float*, void> _glUniformMatrix3fv;
+
         private void GLClearColor(Color color)
         {
             GL.ClearColor(color.R, color.G, color.B, color.A);
@@ -289,6 +291,21 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             return proc;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private unsafe void UniformMatrix3fv(int location, float* value)
+        {
+            // OpenTK is doing some reflection stuff which is allocating like crazy.
+            // TODO: Remove this at some point.
+            var func = _glUniformMatrix3fv;
+            if (func == null)
+            {
+                func = (delegate* unmanaged<int, int, byte, float*, void>) LoadGLProc("glUniformMatrix3fv");
+                _glUniformMatrix3fv = func;
+            }
+
+            func(location, 1, 0, value);
         }
     }
 }

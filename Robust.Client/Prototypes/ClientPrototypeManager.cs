@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Client.Timing;
-using Robust.Client.Utility;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
@@ -12,12 +10,14 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Prototypes
 {
-    public sealed class ClientPrototypeManager : PrototypeManager
+    public sealed partial class ClientPrototypeManager : PrototypeManager
     {
-        [Dependency] private readonly INetManager _netManager = default!;
-        [Dependency] private readonly IClientGameTiming _timing = default!;
-        [Dependency] private readonly IGameControllerInternal _controller = default!;
-        [Dependency] private readonly IReloadManager _reload = default!;
+        [Dependency] private INetManager _netManager = default!;
+#if TOOLS
+        [Dependency] private IClientGameTiming _timing = default!;
+#endif
+        [Dependency] private IGameControllerInternal _controller = default!;
+        [Dependency] private IReloadManager _reload = default!;
 
         public override void Initialize()
         {
@@ -56,7 +56,7 @@ namespace Robust.Client.Prototypes
             using var _ = _timing.StartStateApplicationArea();
             ReloadPrototypes([file]);
 
-            Logger.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
+            Sawmill.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
 #endif
         }
     }

@@ -17,6 +17,11 @@ internal interface IReloadManager
     /// </summary>
     internal void Register(string directory, string filter);
 
+    /// <summary>
+    /// Registers the specified directory as a <see cref="ResPath"/> and specified file extension to subscribe to.
+    /// </summary>
+    internal void Register(ResPath directory, string filter);
+
     void Initialize();
 }
 

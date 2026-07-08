@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -273,11 +273,11 @@ namespace Robust.Shared.GameObjects
 
         public IComponent GetComponent(Type componentType)
         {
-            if (!_types.ContainsKey(componentType))
+            if (!_types.TryGetValue(componentType, out var value))
             {
                 throw new InvalidOperationException($"{componentType} is not a registered component.");
             }
-            return _typeFactory.CreateInstanceUnchecked<IComponent>(_types[componentType].Type);
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(value.Type);
         }
 
         public IComponent GetComponent(CompIdx componentType)
@@ -287,11 +287,11 @@ namespace Robust.Shared.GameObjects
 
         public T GetComponent<T>() where T : IComponent, new()
         {
-            if (!_types.ContainsKey(typeof(T)))
+            if (!_types.TryGetValue(typeof(T), out var reg))
             {
                 throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
-            return _typeFactory.CreateInstanceUnchecked<T>(_types[typeof(T)].Type);
+            return _typeFactory.CreateInstanceUnchecked<T>(reg.Type);
         }
 
         public IComponent GetComponent(ComponentRegistration reg)
@@ -348,6 +348,14 @@ namespace Robust.Shared.GameObjects
         {
             return GetRegistration(netID).Name;
         }
+
+        [Pure]
+        public CompName CompName<T>() where T : IComponent, new()
+            => GameObjects.CompName.Get<T>(this);
+
+        [Pure]
+        public CompName CompName(Type type)
+            => GameObjects.CompName.Get(type, this);
 
         public ComponentRegistration GetRegistration(ushort netID)
         {
@@ -406,6 +414,9 @@ namespace Robust.Shared.GameObjects
             registration = null;
             return false;
         }
+
+        public bool HasRegistration(string componentName)
+            => _names.ContainsKey(componentName);
 
         public bool TryGetRegistration(Type reference, [NotNullWhen(true)] out ComponentRegistration? registration)
         {
@@ -582,6 +593,10 @@ namespace Robust.Shared.GameObjects
         }
     }
 
+    /// <summary>
+    ///     Exception fired whenever a component not recognized by the engine is encountered.
+    ///     This is usually caused by forgetting <see cref="RegisterComponentAttribute"/>.
+    /// </summary>
     [Serializable]
     public sealed class UnknownComponentException : Exception
     {
@@ -596,10 +611,17 @@ namespace Robust.Shared.GameObjects
         }
     }
 
+    /// <summary>
+    ///     Exception fired if you try to register a new component after all registrations have been locked.
+    ///     This is, typically, after network IDs have been assigned.
+    /// </summary>
     public sealed class ComponentRegistrationLockException : Exception
     {
     }
 
+    /// <summary>
+    ///     Exception fired when a component's name is entirely invalid. All component type names must end with Component.
+    /// </summary>
     public sealed class InvalidComponentNameException : Exception
     {
         public InvalidComponentNameException(string message) : base(message)

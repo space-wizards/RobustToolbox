@@ -8,6 +8,22 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
 {
+    /// <summary>
+    ///     Serializes or deserializes an integer from a set of known constants specified by an enum.
+    ///     This is very niche in utility, for integer fields where yaml should only ever be using named
+    ///     shorthands.
+    /// </summary>
+    /// <example>
+    ///     <code>
+    ///         public enum MyConstants {
+    ///             Foo = 1,
+    ///             Bar = 2,
+    ///             Life = 42,
+    ///         }
+    ///     </code>
+    ///     Using this serializer, an integer field can then be deserialized from, say, <c>"Life"</c> and correctly
+    ///     be set to the value 42.
+    /// </example>
     public sealed class ConstantSerializer<TTag> : ITypeSerializer<int, ValueDataNode>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,

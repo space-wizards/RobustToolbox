@@ -8,14 +8,15 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class PointLightSystem : SharedPointLightSystem
+    public sealed partial class PointLightSystem : SharedPointLightSystem
     {
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly LightTreeSystem _lightTree = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private LightTreeSystem _lightTree = default!;
 
         public override void Initialize()
         {
             base.Initialize();
+            SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
             SubscribeLocalEvent<PointLightComponent, ComponentInit>(HandleInit);
             SubscribeLocalEvent<PointLightComponent, ComponentHandleState>(OnLightHandleState);
         }
@@ -28,6 +29,8 @@ namespace Robust.Client.GameObjects
             component.Enabled = state.Enabled;
             component.Offset = state.Offset;
             component.Softness = state.Softness;
+            component.Falloff = state.Falloff;
+            component.CurveFactor = state.CurveFactor;
             component.CastShadows = state.CastShadows;
             component.Energy = state.Energy;
             component.Radius = state.Radius;

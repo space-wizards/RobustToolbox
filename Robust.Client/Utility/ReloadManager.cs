@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using Robust.Client.Graphics;
 using Robust.Shared;
@@ -15,18 +14,20 @@ using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.Utility;
 
-internal sealed class ReloadManager : IReloadManager
+internal sealed partial class ReloadManager : IReloadManager
 {
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly IResourceManager _res = default!;
-    [Dependency] private readonly ITaskManager _tasks = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private ILogManager _logMan = default!;
+    [Dependency] private IResourceManagerInternal _res = default!;
+#if TOOLS
+    [Dependency] private ITaskManager _tasks = default!;
+#endif
 
     private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
     private CancellationTokenSource _reloadToken = new();
     private readonly HashSet<ResPath> _reloadQueue = new();
-    private List<FileSystemWatcher> _watchers = new();
+    private List<FileSystemWatcher> _watchers = new(); // this list is never used but needed to prevent them from being garbage collected
 
     public event Action<ResPath>? OnChanged;
 
@@ -57,16 +58,19 @@ internal sealed class ReloadManager : IReloadManager
     {
         foreach (var file in _reloadQueue)
         {
-            var rootedFile = file.ToRootedPath();
-
-            if (!_res.ContentFileExists(rootedFile))
+            if (!_res.ContentFileExists(file))
                 continue;
 
-            _sawmill.Info($"Reloading {rootedFile}");
-            OnChanged?.Invoke(rootedFile);
+            _sawmill.Info($"Reloading {file}");
+            OnChanged?.Invoke(file);
         }
 
         _reloadQueue.Clear();
+    }
+
+    public void Register(ResPath directory, string filter)
+    {
+        Register(directory.ToRelativeSystemPath(), filter);
     }
 
     public void Register(string directory, string filter)
@@ -77,7 +81,7 @@ internal sealed class ReloadManager : IReloadManager
 #if TOOLS
         foreach (var root in _res.GetContentRoots())
         {
-            var path = root + directory;
+            var path = Path.Join(root, directory);
 
             if (!Directory.Exists(path))
             {
@@ -90,7 +94,7 @@ internal sealed class ReloadManager : IReloadManager
                 NotifyFilter = NotifyFilters.LastWrite
             };
 
-            _watchers.Add(watcher);
+            _watchers.Add(watcher); // prevent garbage collection
 
             watcher.Changed += OnWatch;
 
@@ -100,7 +104,7 @@ internal sealed class ReloadManager : IReloadManager
             }
             catch (IOException ex)
             {
-                Logger.Error($"Watching resources in path {path} threw an exception:\n{ex}");
+                _sawmill.Error($"Watching resources in path {path} threw an exception:\n{ex}");
             }
         }
 
@@ -122,20 +126,21 @@ internal sealed class ReloadManager : IReloadManager
 
             _tasks.RunOnMainThread(() =>
             {
-                var fullPath = args.FullPath.Replace(Path.DirectorySeparatorChar, '/');
-                var file = new ResPath(fullPath);
-
                 foreach (var rootIter in _res.GetContentRoots())
                 {
-                    if (!file.TryRelativeTo(rootIter, out var relative))
+                    var relPath = Path.GetRelativePath(rootIter, args.FullPath);
+                    if (relPath == args.FullPath)
                     {
+                        // Different root (i.e., "C:/" and "D:/")
                         continue;
                     }
 
-                    _reloadQueue.Add(relative.Value);
+                    var file = ResPath.FromRelativeSystemPath(relPath).ToRootedPath();
+                    if (!file.CanonPath.Contains("/../"))
+                        _reloadQueue.Add(file);
                 }
             });
         }
-        #endif
+#endif
     }
 }

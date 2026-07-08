@@ -9,7 +9,8 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Physics.Shapes;
 
 // Internal so people don't use it when it will have breaking changes very soon.
-internal record struct Polygon : IPhysShape
+[DataDefinition]
+internal partial record struct Polygon : IPhysShape
 {
     [DataField]
     public byte VertexCount { get; internal set; }
@@ -41,6 +42,8 @@ internal record struct Polygon : IPhysShape
 
     }
 
+    public Polygon(PhysShapeAabb aabb) : this(aabb.LocalBounds) {}
+
     public Polygon(PolygonShape polyShape)
     {
         Unsafe.SkipInit(out this);
@@ -50,6 +53,24 @@ internal record struct Polygon : IPhysShape
 
         polyShape.Vertices.AsSpan()[..VertexCount].CopyTo(_vertices.AsSpan);
         polyShape.Normals.AsSpan()[..VertexCount].CopyTo(_normals.AsSpan);
+    }
+
+    internal Polygon(SlimPolygon slim)
+    {
+        Unsafe.SkipInit(out this);
+        Radius = slim.Radius;
+        VertexCount = slim.VertexCount;
+
+        _vertices._00 = slim._vertices._00;
+        _vertices._01 = slim._vertices._01;
+        _vertices._02 = slim._vertices._02;
+        _vertices._03 = slim._vertices._03;
+
+        _normals._00 = slim._normals._00;
+        _normals._01 = slim._normals._01;
+        _normals._02 = slim._normals._02;
+        _normals._03 = slim._normals._03;
+        Centroid = slim.Centroid;
     }
 
     public Polygon(Box2 box)

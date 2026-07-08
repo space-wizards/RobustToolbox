@@ -1,8 +1,8 @@
 using System.Numerics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Events;
 
@@ -20,9 +20,16 @@ public readonly struct StartCollideEvent
 
     public readonly Fixture OurFixture;
     public readonly Fixture OtherFixture;
-    public readonly Vector2 WorldPoint;
 
-    public StartCollideEvent(
+    internal readonly FixedArray2<Vector2> _worldPoints;
+
+    public readonly int PointCount;
+    public readonly Vector2 WorldNormal;
+
+    public Vector2[] WorldPoints => _worldPoints.AsSpan[..PointCount].ToArray();
+
+
+    internal StartCollideEvent(
         EntityUid ourEntity,
         EntityUid otherEntity,
         string ourFixtureId,
@@ -31,7 +38,9 @@ public readonly struct StartCollideEvent
         Fixture otherFixture,
         PhysicsComponent ourBody,
         PhysicsComponent otherBody,
-        Vector2 worldPoint)
+        FixedArray2<Vector2> worldPoints,
+        int pointCount,
+        Vector2 worldNormal)
     {
         OurEntity = ourEntity;
         OtherEntity = otherEntity;
@@ -39,8 +48,10 @@ public readonly struct StartCollideEvent
         OtherFixtureId = otherFixtureId;
         OurFixture = ourFixture;
         OtherFixture = otherFixture;
-        WorldPoint = worldPoint;
         OtherBody = otherBody;
         OurBody = ourBody;
+        _worldPoints = worldPoints;
+        PointCount = pointCount;
+        WorldNormal = worldNormal;
     }
 }

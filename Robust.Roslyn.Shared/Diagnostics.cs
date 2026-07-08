@@ -22,7 +22,7 @@ public static class Diagnostics
     public const string IdValueEventRaisedByRef = "RA0016";
     public const string IdDataDefinitionPartial = "RA0017";
     public const string IdNestedDataDefinitionPartial = "RA0018";
-    public const string IdDataFieldWritable = "RA0019";
+    public const string IdDataFieldWritable = "RA0019"; // No longer used.
     public const string IdDataFieldPropertyWritable = "RA0020";
     public const string IdComponentPauseNotComponent = "RA0021";
     public const string IdComponentPauseNoFields = "RA0022";
@@ -36,6 +36,31 @@ public static class Diagnostics
     public const string IdUseNonGenericVariant = "RA0030";
     public const string IdPreferOtherType = "RA0031";
     public const string IdDuplicateDependency = "RA0032";
+    public const string IdForbidLiteral = "RA0033";
+    public const string IdObsoleteInheritance = "RA0034";
+    public const string IdObsoleteInheritanceWithMessage = "RA0035";
+    public const string IdDataFieldYamlSerializable = "RA0036";
+    public const string IdPrototypeNetSerializable = "RA0037";
+    public const string IdPrototypeSerializable = "RA0038";
+    public const string IdPrototypeInstantiation = "RA0039";
+    public const string IdAutoGenStateAttributeMissing = "RA0040";
+    public const string IdAutoGenStateParamMissing = "RA0041";
+    public const string IdPrototypeRedundantType = "RA0042";
+    public const string IdPrototypeEndsWithPrototype = "RA0043";
+    public const string IdValidateMember = "RA0044";
+    public const string IdPreferProxy = "RA0045";
+    public const string IdProxyForRedundantMethodName = "RA0046";
+    public const string IdProxyForTargetMethodNotFound = "RA0047";
+    public const string IdDependencyNullable = "RA0048";
+    public const string IdHasDependenciesNotPartial = "RA0049";
+    public const string IdHasDependenciesNotPartialParent = "RA0050";
+    public const string IdHasDependenciesReadOnly = "RA0051";
+    public const string IdHasDependenciesPropertyField = "RA0052";
+    public const string IdExclusiveVirtual = "RA0053";
+    public const string IdInvalidAMethodSignatureForGeneratedSubscription = "RA0054";
+    public const string IdInvalidContainingTypeForGeneratedSubscription = "RA0055";
+    public const string IdNonPartialContainingTypeForGeneratedSubscription = "RA0056";
+    public const string IdDataFieldOutsideDefinition = "RA0057";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

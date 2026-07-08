@@ -11,8 +11,6 @@ using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -541,7 +539,7 @@ namespace Robust.Client.Graphics.Clyde
                     case Matrix3x2 matrix3:
                         program.SetUniform(name, matrix3);
                         break;
-                    case Matrix4 matrix4:
+                    case Matrix4x4 matrix4:
                         program.SetUniform(name, matrix4);
                         break;
                     case ClydeTexture clydeTexture:
@@ -613,6 +611,8 @@ namespace Robust.Client.Graphics.Clyde
             EnsureBatchSpaceAvailable(4, GetQuadBatchIndexCount());
             EnsureBatchState(texture, true, GetQuadBatchPrimitiveType(), _queuedShader);
 
+            // TODO RENDERING
+            // It's probably better to do this on the GPU.
             bl = Vector2.Transform(bl, _currentMatrixModel);
             br = Vector2.Transform(br, _currentMatrixModel);
             tr = Vector2.Transform(tr, _currentMatrixModel);
@@ -620,14 +620,189 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, new Vector2(0, 0), modulate);
-            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, new Vector2(1, 0), modulate);
-            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, new Vector2(1, 1), modulate);
-            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, new Vector2(0, 1), modulate);
+            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, Vector2.Zero, modulate);
+            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, Vector2.UnitX, modulate);
+            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, Vector2.One, modulate);
+            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, Vector2.UnitY, modulate);
             BatchVertexIndex += 4;
             QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
 
             _debugStats.LastClydeDrawCalls += 1;
+        }
+
+        private void DrawTextureBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldTextureRect> rects,
+            Color modulate,
+            in Box2 texCoords)
+        {
+            DrawTextureBatch(texture, rects, modulate, in texCoords, true);
+        }
+
+        private void DrawTextureBatchUnmodulated(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldTextureRect> rects,
+            in Box2 texCoords)
+        {
+            DrawTextureBatch(texture, rects, Color.White, in texCoords, false);
+        }
+
+        private void DrawTextureBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldTextureRect> rects,
+            Color modulate,
+            in Box2 texCoords,
+            bool applyModulation)
+        {
+            if (rects.Length == 0)
+                return;
+
+            // Avoids calling EnsureBatchSpaceAvailable / EnsureBatchState for each individual quad.
+            var primitiveType = GetQuadBatchPrimitiveType();
+            var indexCount = GetQuadBatchIndexCount();
+            var rectIndex = 0;
+
+            while (rectIndex < rects.Length)
+            {
+                var availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                EnsureBatchState(texture, true, primitiveType, _queuedShader);
+
+                availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                var count = Math.Min(availableQuads, rects.Length - rectIndex);
+
+                for (var i = 0; i < count; i++)
+                {
+                    ref readonly var rect = ref rects[rectIndex + i];
+                    var color = rect.Modulate ?? Color.White;
+
+                    if (applyModulation)
+                        color *= modulate;
+
+                    // Can probably SIMD this more somehow but future concern.
+                    var quad = rect.Quad;
+                    var transform = quad.Transform * _currentMatrixModel;
+
+                    var bl = Vector2.Transform(quad.Box.BottomLeft, transform);
+                    var br = Vector2.Transform(quad.Box.BottomRight, transform);
+                    var tr = Vector2.Transform(quad.Box.TopRight, transform);
+                    var tl = tr + bl - br;
+
+                    var vIdx = BatchVertexIndex;
+                    BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, Vector2.Zero, color);
+                    BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, Vector2.UnitX, color);
+                    BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, Vector2.One, color);
+                    BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, Vector2.UnitY, color);
+                    BatchVertexIndex += 4;
+                    QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
+                }
+
+                rectIndex += count;
+                _debugStats.LastClydeDrawCalls += count;
+            }
+        }
+
+        private void DrawRectBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldRect> rects,
+            Color modulate,
+            in Box2 texCoords)
+        {
+            DrawRectBatch(texture, rects, modulate, in texCoords, true);
+        }
+
+        private void DrawRectBatchUnmodulated(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldRect> rects,
+            in Box2 texCoords)
+        {
+            DrawRectBatch(texture, rects, Color.White, in texCoords, false);
+        }
+
+        private void DrawRectBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldRect> rects,
+            Color modulate,
+            in Box2 texCoords,
+            bool applyModulation)
+        {
+            if (rects.Length == 0)
+                return;
+
+            var primitiveType = GetQuadBatchPrimitiveType();
+            var indexCount = GetQuadBatchIndexCount();
+            var rectIndex = 0;
+
+            while (rectIndex < rects.Length)
+            {
+                var availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                EnsureBatchState(texture, true, primitiveType, _queuedShader);
+
+                availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                var count = Math.Min(availableQuads, rects.Length - rectIndex);
+
+                for (var i = 0; i < count; i++)
+                {
+                    ref readonly var rect = ref rects[rectIndex + i];
+                    var color = rect.Color;
+
+                    if (applyModulation)
+                        color *= modulate;
+
+                    var box = rect.Rect;
+
+                    var bl = Vector2.Transform(box.BottomLeft, _currentMatrixModel);
+                    var br = Vector2.Transform(box.BottomRight, _currentMatrixModel);
+                    var tr = Vector2.Transform(box.TopRight, _currentMatrixModel);
+                    var tl = tr + bl - br;
+
+                    var vIdx = BatchVertexIndex;
+                    BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, Vector2.Zero, color);
+                    BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, Vector2.UnitX, color);
+                    BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, Vector2.One, color);
+                    BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, Vector2.UnitY, color);
+                    BatchVertexIndex += 4;
+                    QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
+                }
+
+                rectIndex += count;
+                _debugStats.LastClydeDrawCalls += count;
+            }
+        }
+
+        private int GetAvailableBatchQuads(int indexCount)
+        {
+            // The vertex size is so comically high you're probably never hitting it.
+            var availableVertices = Math.Max(0, BatchVertexData.Length - BatchVertexIndex - 1);
+            var availableIndices = Math.Max(0, BatchIndexData.Length - BatchIndexIndex);
+            return Math.Min(availableVertices / 4, availableIndices / indexCount);
         }
 
         private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,

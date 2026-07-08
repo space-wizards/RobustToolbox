@@ -8,9 +8,12 @@ using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
+using Robust.Client.Graphics.FontManagement;
 using Robust.Client.HWId;
 using Robust.Client.Input;
+using Robust.Client.Localization;
 using Robust.Client.Map;
+using Robust.Client.Network.Transfer;
 using Robust.Client.Placement;
 using Robust.Client.Player;
 using Robust.Client.Profiling;
@@ -36,8 +39,10 @@ using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Physics;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -61,10 +66,8 @@ namespace Robust.Client
             deps.Register<IClientGameTiming, ClientGameTiming>();
             deps.Register<IPrototypeManager, ClientPrototypeManager>();
             deps.Register<IPrototypeManagerInternal, ClientPrototypeManager>();
-            deps.Register<IMapManager, NetworkedMapManager>();
-            deps.Register<IMapManagerInternal, NetworkedMapManager>();
-            deps.Register<INetworkedMapManager, NetworkedMapManager>();
             deps.Register<IEntityManager, ClientEntityManager>();
+            deps.Register<FontTagHijackHolder>();
             deps.Register<IReflectionManager, ClientReflectionManager>();
             deps.Register<IConsoleHost, ClientConsoleHost>();
             deps.Register<IClientConsoleHost, ClientConsoleHost>();
@@ -104,6 +107,10 @@ namespace Robust.Client
             deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
             deps.Register<NetworkResourceManager>();
             deps.Register<IReloadManager, ReloadManager>();
+            deps.Register<ILocalizationManager, ClientLocalizationManager>();
+            deps.Register<ILocalizationManagerInternal, ClientLocalizationManager>();
+            deps.Register<LoadingScreenManager>();
+            deps.Register<ILoadingScreenManager, LoadingScreenManager>();
 
             switch (mode)
             {
@@ -114,8 +121,9 @@ namespace Robust.Client
                     deps.Register<IAudioManager, HeadlessAudioManager>();
                     deps.Register<IAudioInternal, HeadlessAudioManager>();
                     deps.Register<IInputManager, InputManager>();
-                    deps.Register<IFileDialogManager, DummyFileDialogManager>();
                     deps.Register<IUriOpener, UriOpenerDummy>();
+                    deps.Register<ISystemFontManager, SystemFontManagerFallback>();
+                    deps.Register<ISystemFontManagerInternal, SystemFontManagerFallback>();
                     break;
                 case GameController.DisplayMode.Clyde:
                     deps.Register<IClyde, Clyde>();
@@ -124,8 +132,9 @@ namespace Robust.Client
                     deps.Register<IAudioManager, AudioManager>();
                     deps.Register<IAudioInternal, AudioManager>();
                     deps.Register<IInputManager, ClydeInputManager>();
-                    deps.Register<IFileDialogManager, FileDialogManager>();
                     deps.Register<IUriOpener, UriOpener>();
+                    deps.Register<ISystemFontManager, SystemFontManager>();
+                    deps.Register<ISystemFontManagerInternal, SystemFontManager>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -140,6 +149,7 @@ namespace Robust.Client
             deps.Register<IViewVariablesManager, ClientViewVariablesManager>();
             deps.Register<IClientViewVariablesManager, ClientViewVariablesManager>();
             deps.Register<IClientViewVariablesManagerInternal, ClientViewVariablesManager>();
+            deps.Register<IViewVariableControlFactory, ViewVariableControlFactory>();
             deps.Register<IClientConGroupController, ClientConGroupController>();
             deps.Register<IScriptClient, ScriptClient>();
             deps.Register<IRobustSerializer, ClientRobustSerializer>();
@@ -150,6 +160,7 @@ namespace Robust.Client
             deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
             deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
+            deps.Register<IFileDialogManager, FileDialogManager>();
 
 #if TOOLS
             deps.Register<IXamlProxyManager, XamlProxyManager>();
@@ -162,6 +173,8 @@ namespace Robust.Client
             deps.Register<IXamlProxyHelper, XamlProxyHelper>();
             deps.Register<MarkupTagManager>();
             deps.Register<IHWId, BasicHWId>();
+            deps.Register<ITransferManager, ClientTransferManager>();
+            deps.Register<ClientTransferTestManager>();
         }
     }
 }

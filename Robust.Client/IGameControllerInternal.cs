@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Client.Input;
+using Robust.Shared;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 
@@ -9,6 +10,7 @@ namespace Robust.Client
     {
         GameControllerOptions Options { get; }
         bool ContentStart { get; set; }
+        StartType StartTypeValue { get; }
         void SetCommandLineArgs(CommandLineArgs args);
         void Run(GameController.DisplayMode mode, GameControllerOptions options, Func<ILogHandler>? logHandlerFactory = null);
         void KeyDown(KeyEventArgs keyEvent);

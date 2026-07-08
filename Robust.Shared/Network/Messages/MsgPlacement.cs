@@ -34,6 +34,11 @@ namespace Robust.Shared.Network.Messages
         public string AlignOption { get; set; }
         public Vector2 RectSize { get; set; }
 
+        /// <summary>
+        /// Used to determine tile sprite mirroring
+        /// </summary>
+        public bool Mirrored { get; set; }
+
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             PlaceType = (PlacementManagerMessage) buffer.ReadByte();
@@ -49,6 +54,7 @@ namespace Robust.Shared.Network.Messages
 
                     NetCoordinates = buffer.ReadNetCoordinates();
                     DirRcv = (Direction)buffer.ReadByte();
+                    Mirrored = buffer.ReadBoolean();
                     break;
                 case PlacementManagerMessage.StartPlacement:
                     Range = buffer.ReadInt32();
@@ -84,6 +90,7 @@ namespace Robust.Shared.Network.Messages
 
                     buffer.Write(NetCoordinates);
                     buffer.Write((byte)DirRcv);
+                    buffer.Write(Mirrored);
                     break;
                 case PlacementManagerMessage.StartPlacement:
                     buffer.Write(Range);

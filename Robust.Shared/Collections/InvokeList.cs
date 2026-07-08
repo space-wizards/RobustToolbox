@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Robust.Shared.Collections;
 
@@ -77,7 +77,7 @@ internal struct InvokeList<T>
         for (var i = 0; i < _entries.Length; i++)
         {
             var entry = _entries[i];
-            if (equality.Equals(entry))
+            if (equality.Equals(entry.Equality))
             {
                 entryIdx = i;
                 break;
@@ -94,14 +94,12 @@ internal struct InvokeList<T>
 
         // Create new backing array and copy stuff into it.
         var newEntries = new Entry[_entries.Length - 1];
-        for (var i = 0; i < entryIdx; i++)
+        for (int srcIdx = 0, dstIdx = 0; dstIdx < newEntries.Length; srcIdx++, dstIdx++)
         {
-            newEntries[i] = _entries[i];
-        }
+            if (srcIdx == entryIdx)
+                srcIdx++;
 
-        for (var i = entryIdx + 1; i < _entries.Length; i++)
-        {
-            newEntries[entryIdx - 1] = _entries[entryIdx];
+            newEntries[dstIdx] = _entries[srcIdx];
         }
 
         return new InvokeList<T>

@@ -1,0 +1,15 @@
+[package]
+name = "robust-native-webview"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+cef = { workspace = true, default-features = false }
+objc2.workspace = true
+objc2-app-kit.workspace = true
+
+[build-dependencies]
+cc = { workspace = true }

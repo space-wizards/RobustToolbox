@@ -29,13 +29,12 @@ namespace Robust.Shared.Audio.Systems;
 /// </remarks>
 public abstract partial class SharedAudioSystem : EntitySystem
 {
-    [Dependency] protected readonly IConfigurationManager CfgManager = default!;
-    [Dependency] protected readonly IGameTiming Timing = default!;
-    [Dependency] private   readonly INetManager _netManager = default!;
-    [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
-    [Dependency] protected readonly IRobustRandom RandMan = default!;
-    [Dependency] protected readonly MetaDataSystem MetadataSys = default!;
-    [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
+    [Dependency] protected IConfigurationManager CfgManager = default!;
+    [Dependency] protected IGameTiming Timing = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] protected IRobustRandom RandMan = default!;
+    [Dependency] protected MetaDataSystem MetadataSys = default!;
+    [Dependency] protected SharedTransformSystem XformSystem = default!;
 
     public const float AudioDespawnBuffer = 1f;
 
@@ -59,6 +58,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         Subs.CVar(CfgManager, CVars.AudioZOffset, SetZOffset);
         SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
         SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
+        SubscribeLocalEvent<AudioComponent, TimedDespawnEvent>(OnTimedDespawn);
     }
 
     /// <summary>
@@ -75,6 +75,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
             return;
 
         var audioLength = GetAudioLength(entity.Comp.FileName);
+        position = CalculateAudioPosition(entity!, (float)audioLength.TotalSeconds, position);
 
         if (audioLength.TotalSeconds < position)
         {
@@ -83,12 +84,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
                 QueueDel(nullEntity.Value);
 
             entity.Comp.StopPlaying();
-            return;
-        }
-
-        if (position < 0f)
-        {
-            Log.Error($"Tried to set playback position for {ToPrettyString(entity.Owner)} / {entity.Comp.FileName} outside of bounds");
             return;
         }
 
@@ -195,7 +190,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
             component.PlaybackPosition = (float) (Timing.CurTime - component.AudioStart).TotalSeconds;
 
             DirtyField(entity.Value, component, nameof(AudioComponent.AudioStart));
-            DirtyField(entity.Value, component, nameof(AudioComponent.PlaybackPosition));
         }
 
         // If we were stopped then played then restart audiostart to now.
@@ -271,6 +265,16 @@ public abstract partial class SharedAudioSystem : EntitySystem
         }
     }
 
+    private void OnTimedDespawn(Entity<AudioComponent> ent, ref TimedDespawnEvent args)
+    {
+        var parent = Transform(ent).ParentUid;
+        if (!Exists(parent))
+            return;
+
+        var ev = new AttachedAudioDespawnedEvent();
+        RaiseLocalEvent(parent, ref ev);
+    }
+
     /// <summary>
     /// Considers Z-offset for audio and gets the adjusted distance.
     /// </summary>
@@ -314,6 +318,36 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         var resolved = ResolveSound(specifier);
         return GetAudioPath(resolved);
+    }
+
+    /// <summary>
+    /// Calculates the current playback position of an audio entity
+    /// and clamps it to the range from 0 to (length - 0.01f).
+    /// </summary>
+    /// <param name="ent">The audio entity.</param>
+    /// <param name="length">
+    /// The total length of the audio file.
+    /// If null, the method retrieves the length using <see cref="GetAudioLength"/>.
+    /// </param>
+    /// <param name="position">
+    /// A precomputed playback position.
+    /// If provided, it will be added to the calculation.
+    /// </param>
+    /// <returns>The playback position as a float.</returns>
+    protected float CalculateAudioPosition(Entity<AudioComponent> ent, float? length = null, float? position = null)
+    {
+        position ??= (float) ((ent.Comp.PauseTime ?? Timing.CurTime) - ent.Comp.AudioStart).TotalSeconds;
+        length ??= (float) GetAudioLength(ent.Comp.FileName).TotalSeconds;
+
+        // Looped audio has no conceptual start or end.
+        if (ent.Comp.Params.Loop)
+            position %= length;
+
+        // TODO clamp the offset inside of AudioSource.SetPlaybackPosition() itself.
+        var maxOffset = Math.Max((float) length - 0.01f, 0f);
+        position = Math.Clamp(position.Value, 0f, maxOffset);
+
+        return position.Value;
     }
 
     #region AudioParams
@@ -430,11 +464,15 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// Gets the timespan of the specified audio.
     /// </summary>
     public TimeSpan GetAudioLength(ResolvedSoundSpecifier specifier)
-    {
-        var filename = GetAudioPath(specifier) ?? string.Empty;
-        if (!filename.StartsWith("/"))
-            throw new ArgumentException("Path must be rooted");
+        => GetAudioLength(GetAudioPath(specifier));
 
+    /// <summary>
+    /// Gets the timespan of the specified filename.
+    /// </summary>
+    protected TimeSpan GetAudioLength(string filename)
+    {
+        if (!filename.StartsWith('/'))
+            throw new ArgumentException($"Path must be rooted. Path: {filename}");
         return GetAudioLengthImpl(filename);
     }
 
@@ -665,7 +703,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     public (EntityUid Entity, Components.AudioComponent Component)? PlayStatic(SoundSpecifier? sound, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayStatic(ResolveSound(sound), playerFilter, coordinates, recordReplay, audioParams);
+        return sound == null ? null : PlayStatic(ResolveSound(sound), playerFilter, coordinates, recordReplay, audioParams ?? sound.Params);
     }
 
     /// <summary>

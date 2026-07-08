@@ -45,7 +45,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<FrozenSet<T>>? instanceProvider = null)
         {
             if (instanceProvider != null)
-                Logger.Warning($"Provided value to a Read-call for a {nameof(FrozenSet<T>)}. Ignoring...");
+            {
+                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
+                sawmill.Warning($"Provided value to a Read-call for a {nameof(FrozenSet<T>)}. Ignoring...");
+            }
 
             var array = new T[node.Sequence.Count];
             var i = 0;
@@ -65,7 +68,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             ISerializationManager.InstantiationDelegate<ImmutableHashSet<T>>? instanceProvider)
         {
             if (instanceProvider != null)
-                Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableHashSet<T>)}. Ignoring...");
+            {
+                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
+                sawmill.Warning($"Provided value to a Read-call for a {nameof(ImmutableHashSet<T>)}. Ignoring...");
+            }
             var set = ImmutableHashSet.CreateBuilder<T>();
 
             foreach (var dataNode in node.Sequence)

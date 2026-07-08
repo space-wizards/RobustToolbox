@@ -1,17 +1,16 @@
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Robust.Shared.Map.Components;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
-using Robust.Shared.Containers;
 
 namespace Robust.Shared.GameObjects;
 
@@ -46,10 +45,10 @@ public abstract partial class SharedTransformSystem
         var oldRot = xform._localRotation;
         var oldMap = xform.MapUid;
         xform._localPosition = tilePos + newGrid.TileSizeHalfVector;
-        xform._localRotation += rotation;
+        xform._localRotation = NormalizeRotation(xform._localRotation + rotation);
 
-        SetGridId(uid, xform, newGridUid, XformQuery);
         var meta = MetaData(uid);
+        SetGridId((uid, xform, meta), newGridUid);
         RaiseMoveEvent((uid, xform, meta), oldGridUid, oldPos, oldRot, oldMap);
 
         DebugTools.Assert(XformQuery.GetComponent(oldGridUid).MapID == XformQuery.GetComponent(newGridUid).MapID);
@@ -119,8 +118,11 @@ public abstract partial class SharedTransformSystem
 
     public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null)
     {
-        DebugTools.Assert(grid == null || grid.Value.Owner == entity.Comp.GridUid,
-            $"Tried to anchor entity {Name(entity)} to a grid ({grid!.Value.Owner}) different from its GridUid ({entity.Comp.GridUid})");
+        if (grid != null && grid.Value.Owner != entity.Comp.GridUid)
+        {
+            Log.Error($"Tried to anchor entity {Name(entity)} to a grid ({grid.Value.Owner}) different from its GridUid ({entity.Comp.GridUid})");
+            return false;
+        }
 
         if (grid == null)
         {
@@ -218,9 +220,10 @@ public abstract partial class SharedTransformSystem
             {
 #if !EXCEPTION_TOLERANCE
                 throw new Exception("Transform is initialising before map ids have been assigned?");
-#endif
+#else
                 Log.Error($"Transform is initialising before map ids have been assigned?");
                 _map.AssignMapId((uid, mapComp));
+#endif
             }
 
             xform.MapUid = uid;
@@ -280,7 +283,7 @@ public abstract partial class SharedTransformSystem
             // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordinates)
             // in that case, we attempt to attach to a grid.
             var pos = new MapCoordinates(GetWorldPosition(component), component.MapID);
-            if (_mapManager.TryFindGridAt(pos, out var gridUid, out gridComp))
+            if (_map.TryFindGridAt(pos, out var gridUid, out gridComp))
                 grid = (gridUid, gridComp);
         }
 
@@ -355,32 +358,49 @@ public abstract partial class SharedTransformSystem
 
     #region GridId
 
-    /// <summary>
-    /// Sets the <see cref="GridId"/> for the transformcomponent without updating its children. Does not Dirty it.
-    /// </summary>
-    internal void SetGridIdNoRecursive(EntityUid uid, TransformComponent xform, EntityUid? gridUid)
+    /// <inheritdoc cref="SetGridId(Entity{TransformComponent,MetaDataComponent},EntityUid?)"/>
+    public void SetGridId(EntityUid uid, TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
     {
-        DebugTools.Assert(gridUid == uid || !HasComp<MapGridComponent>(uid));
-        if (xform._gridUid == gridUid)
-            return;
-
-        DebugTools.Assert(gridUid == null || HasComp<MapGridComponent>(gridUid));
-        xform._gridUid = gridUid;
+        SetGridId((uid, xform, MetaData(uid)), gridId);
     }
 
     /// <summary>
-    /// Sets the <see cref="GridId"/> for the transformcomponent. Does not Dirty it.
+    /// Sets <see cref="TransformComponent.GridUid"/> for the entity and any children. Note that this does not dirty
+    /// the component, as this is implicitly networked via the transform hierarchy.
     /// </summary>
-    public void SetGridId(EntityUid uid, TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
+    public void SetGridId(Entity<TransformComponent, MetaDataComponent?> ent, EntityUid? gridId)
     {
-        if (!xform._gridInitialized || xform._gridUid == gridId || xform.GridUid == uid)
+        if (!ent.Comp1._gridInitialized || ent.Comp1._gridUid == gridId || ent.Comp1.GridUid == ent.Owner)
             return;
 
-        DebugTools.Assert(!HasComp<MapGridComponent>(uid) || gridId == uid);
-        xform._gridUid = gridId;
-        foreach (var child in xform._children)
+        DebugTools.Assert(!HasComp<MapGridComponent>(ent.Owner) || gridId == ent.Owner);
+
+        // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+        _metaQuery.ResolveInternal(ent.Owner, ref ent.Comp2);
+        if ((ent.Comp2!.Flags & MetaDataFlags.ExtraTransformEvents) != 0)
         {
-            SetGridId(child, XformQuery.GetComponent(child), gridId);
+#if DEBUG
+            var childCount = ent.Comp1.ChildCount;
+            var oldParent = ent.Comp1.ParentUid;
+#endif
+
+            var ev = new GridUidChangedEvent((ent.Owner, ent.Comp1, ent.Comp2), ent.Comp1._gridUid);
+            ent.Comp1._gridUid = gridId;
+            RaiseLocalEvent(ent, ref ev);
+
+#if DEBUG
+            // Lets check content didn't do anything silly with the event.
+            DebugTools.AssertEqual(ent.Comp1._gridUid, gridId);
+            DebugTools.AssertEqual(ent.Comp1.ChildCount, childCount);
+            DebugTools.AssertEqual(ent.Comp1.ParentUid, oldParent);
+#endif
+        }
+
+        ent.Comp1._gridUid = gridId;
+
+        foreach (var child in ent.Comp1._children)
+        {
+            SetGridId((child, XformQuery.GetComponent(child), null), gridId);
         }
     }
 
@@ -417,6 +437,11 @@ public abstract partial class SharedTransformSystem
 
     #region Local Rotation
 
+    internal static Angle NormalizeRotation(Angle rotation)
+    {
+        return rotation.Reduced();
+    }
+
     public void SetLocalRotationNoLerp(EntityUid uid, Angle value, TransformComponent? xform = null)
     {
         if (!XformQuery.Resolve(uid, ref xform))
@@ -433,6 +458,27 @@ public abstract partial class SharedTransformSystem
     public void SetLocalRotation(TransformComponent xform, Angle value)
     {
         SetLocalRotation(xform.Owner, value, xform);
+    }
+
+    #endregion
+
+    #region No Local Rotation
+
+    public void SetNoLocalRotation(EntityUid uid, bool value, TransformComponent? xform = null)
+    {
+        if (!XformQuery.Resolve(uid, ref xform))
+            return;
+
+        SetNoLocalRotation((uid, xform), value);
+    }
+
+    public void SetNoLocalRotation(Entity<TransformComponent> entity, bool value)
+    {
+        if (value)
+            SetLocalRotation(entity.Owner, Angle.Zero, entity.Comp);
+
+        entity.Comp._noLocalRotation = value;
+        Dirty(entity);
     }
 
     #endregion
@@ -499,7 +545,7 @@ public abstract partial class SharedTransformSystem
         xform._localPosition = value.Position;
 
         if (rotation != null && !xform.NoLocalRotation)
-            xform._localRotation = rotation.Value;
+            xform._localRotation = NormalizeRotation(rotation.Value);
 
         DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
 
@@ -571,7 +617,10 @@ public abstract partial class SharedTransformSystem
 
             if (newParent != null)
             {
-                ChangeMapId(uid, xform, meta, newParent.MapID);
+                // TODO PERF
+                // if both map & grid id change, we should simultaneously update both.
+
+                ChangeMapId(entity, newParent.MapID);
 
                 if (!xform._gridInitialized)
                     InitializeGridUid(uid, xform);
@@ -579,23 +628,26 @@ public abstract partial class SharedTransformSystem
                 {
                     if (!newParent._gridInitialized)
                         InitializeGridUid(value.EntityId, newParent);
-                    SetGridId(uid, xform, newParent.GridUid);
+                    SetGridId(entity!, newParent.GridUid);
                 }
             }
             else
             {
-                ChangeMapId(uid, xform, meta, MapId.Nullspace);
+                // TODO PERF
+                // if both map & grid id change, we should simultaneously update both.
+
+                ChangeMapId(entity, MapId.Nullspace);
                 if (!xform._gridInitialized)
                     InitializeGridUid(uid, xform);
                 else
-                    SetGridId(uid, xform, null, XformQuery);
+                    SetGridId(entity!, null);
             }
 
             if (xform.Initialized)
             {
                 // preserve world rotation
                 if (rotation == null && oldParent != null && newParent != null && !xform.NoLocalRotation)
-                    xform._localRotation += GetWorldRotation(oldParent) - GetWorldRotation(newParent);
+                    xform._localRotation = NormalizeRotation(xform._localRotation + GetWorldRotation(oldParent) - GetWorldRotation(newParent));
 
                 DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
             }
@@ -609,7 +661,8 @@ public abstract partial class SharedTransformSystem
         if (xform.ParentUid == xform.MapUid)
             DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid || xform.GridUid == xform.MapUid);
 #endif
-        RaiseMoveEvent(entity, oldParentUid, oldPosition, oldRotation, oldMap);
+        // No need to check for grid traversal since we've already handled it
+        RaiseMoveEvent(entity, oldParentUid, oldPosition, oldRotation, oldMap, checkTraversal: false);
     }
 
     public void SetCoordinates(
@@ -624,20 +677,65 @@ public abstract partial class SharedTransformSystem
         SetCoordinates((uid, xform, _metaQuery.GetComponent(uid)), value, rotation, unanchor, newParent, oldParent);
     }
 
-    private void ChangeMapId(EntityUid uid, TransformComponent xform, MetaDataComponent meta, MapId newMapId)
+    private void ChangeMapId(Entity<TransformComponent, MetaDataComponent> ent, MapId newMapId)
     {
-        if (newMapId == xform.MapID)
+        if (newMapId == ent.Comp1.MapID)
             return;
 
         EntityUid? newUid = newMapId == MapId.Nullspace ? null : _map.GetMap(newMapId);
+        bool? mapPaused = null;
 
-        //Set Paused state
-        var mapPaused = _map.IsPaused(newMapId);
-        _metaData.SetEntityPaused(uid, mapPaused, meta);
+        // Client may be moving entities across maps due to things leaving or entering PVS range.
+        // In that case, we don't want to pause or unpause entities.
+        if (!_gameTiming.ApplyingState)
+        {
+            mapPaused = _map.IsPaused(newMapId);
+            _metaData.SetEntityPaused(ent.Owner, mapPaused.Value, ent.Comp2);
+        }
 
-        xform.MapUid = newUid;
-        xform.MapID = newMapId;
-        xform.UpdateChildMapIdsRecursive(newMapId, newUid, mapPaused, XformQuery, _metaQuery, _metaData);
+        ChangeMapIdRecursive(ent, newUid, newMapId, mapPaused);
+    }
+
+    private void ChangeMapIdRecursive(
+        Entity<TransformComponent, MetaDataComponent> ent,
+        EntityUid? newMap,
+        MapId newMapId,
+        bool? paused)
+    {
+        if (paused is { } p)
+        {
+            _metaData.SetEntityPaused(ent.Owner, p, ent.Comp2);
+        }
+
+        if ((ent.Comp2.Flags & MetaDataFlags.ExtraTransformEvents) != 0)
+        {
+#if DEBUG
+            var childCount = ent.Comp1.ChildCount;
+            var oldParent = ent.Comp1.ParentUid;
+#endif
+
+            var ev = new MapUidChangedEvent(ent, ent.Comp1.MapUid, ent.Comp1.MapID);
+            ent.Comp1.MapUid = newMap;
+            ent.Comp1.MapID = newMapId;
+            RaiseLocalEvent(ent.Owner, ref ev);
+
+#if DEBUG
+            // Lets check content didn't do anything silly with the event.
+            DebugTools.AssertEqual(ent.Comp1.MapUid, newMap);
+            DebugTools.AssertEqual(ent.Comp1.MapID, newMapId);
+            DebugTools.AssertEqual(ent.Comp1.ChildCount, childCount);
+            DebugTools.AssertEqual(ent.Comp1.ParentUid, oldParent);
+#endif
+        }
+
+        ent.Comp1.MapUid = newMap;
+        ent.Comp1.MapID = newMapId;
+
+        foreach (var uid in ent.Comp1._children)
+        {
+            var child = new Entity<TransformComponent, MetaDataComponent>(uid, Transform(uid), MetaData(uid));
+            ChangeMapIdRecursive(child, newMap, newMapId, paused);
+        }
     }
 
     #endregion
@@ -918,7 +1016,7 @@ public abstract partial class SharedTransformSystem
     {
         var mapUid = _map.GetMap(coordinates.MapId);
         if (!_gridQuery.HasComponent(entity) &&
-            _mapManager.TryFindGridAt(mapUid, coordinates.Position, out var targetGrid, out _))
+            _map.TryFindGridAt(mapUid, coordinates.Position, out var targetGrid, out _))
         {
             var invWorldMatrix = GetInvWorldMatrix(targetGrid);
             SetCoordinates((entity.Owner, entity.Comp, MetaData(entity.Owner)), new EntityCoordinates(targetGrid, Vector2.Transform(coordinates.Position, invWorldMatrix)));
@@ -957,6 +1055,15 @@ public abstract partial class SharedTransformSystem
         return GetWorldPositionRotation(component);
     }
 
+    [Obsolete("Use variant without entity query")]
+    public (Vector2 Position, Angle Rotation) GetRelativePositionRotation(
+        TransformComponent component,
+        EntityUid relative,
+        EntityQuery<TransformComponent> query)
+    {
+        return GetRelativePositionRotation(component, relative);
+    }
+
     /// <summary>
     ///     Returns the position and rotation relative to some entity higher up in the component's transform hierarchy.
     /// </summary>
@@ -964,15 +1071,14 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (Vector2 Position, Angle Rotation) GetRelativePositionRotation(
         TransformComponent component,
-        EntityUid relative,
-        EntityQuery<TransformComponent> query)
+        EntityUid relative)
     {
         var rot = component._localRotation;
         var pos = component._localPosition;
         var xform = component;
         while (xform.ParentUid != relative)
         {
-            if (xform.ParentUid.IsValid() && query.TryGetComponent(xform.ParentUid, out xform))
+            if (xform.ParentUid.IsValid() && TryComp(xform.ParentUid, out xform))
             {
                 rot += xform._localRotation;
                 pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
@@ -981,13 +1087,22 @@ public abstract partial class SharedTransformSystem
 
             // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
             Log.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
-            var relXform = query.GetComponent(relative);
+            var relXform = Transform(relative);
             pos = Vector2.Transform(pos, GetInvWorldMatrix(relXform));
-            rot = rot - GetWorldRotation(relXform, query);
+            rot = rot - GetWorldRotation(relXform);
             break;
         }
 
         return (pos, rot);
+    }
+
+    [Obsolete("Use variant without entity query")]
+    public Vector2 GetRelativePosition(
+        TransformComponent component,
+        EntityUid relative,
+        EntityQuery<TransformComponent> query)
+    {
+        return GetRelativePosition(component, relative);
     }
 
     /// <summary>
@@ -995,16 +1110,13 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector2 GetRelativePosition(
-        TransformComponent component,
-        EntityUid relative,
-        EntityQuery<TransformComponent> query)
+    public Vector2 GetRelativePosition(TransformComponent component, EntityUid relative)
     {
         var pos = component._localPosition;
         var xform = component;
         while (xform.ParentUid != relative)
         {
-            if (xform.ParentUid.IsValid() && query.TryGetComponent(xform.ParentUid, out xform))
+            if (xform.ParentUid.IsValid() && TryComp(xform.ParentUid, out xform))
             {
                 pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
                 continue;
@@ -1012,7 +1124,7 @@ public abstract partial class SharedTransformSystem
 
             // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
             Log.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
-            var relXform = query.GetComponent(relative);
+            var relXform = Transform(relative);
             pos = Vector2.Transform(pos, GetInvWorldMatrix(relXform));
             break;
         }
@@ -1147,7 +1259,7 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        if (component.GridUid != uid && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
+        if (component.GridUid != uid && _map.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
         {
             var targetGridXform = XformQuery.GetComponent(targetGrid);
             var invLocalMatrix = targetGridXform.InvLocalMatrix;
@@ -1191,7 +1303,7 @@ public abstract partial class SharedTransformSystem
             xform._localPosition = pos;
 
         if (!xform.NoLocalRotation)
-            xform._localRotation = rot;
+            xform._localRotation = NormalizeRotation(rot);
 
         DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
 
@@ -1202,7 +1314,13 @@ public abstract partial class SharedTransformSystem
         if (!xform.Initialized)
             return;
 
-        RaiseMoveEvent((uid, xform, meta), oldParent, oldPosition, oldRotation, xform.MapUid);
+        RaiseMoveEvent(
+            (uid, xform, meta),
+            oldParent,
+            oldPosition,
+            oldRotation,
+            xform.MapUid,
+            checkTraversal: !oldPosition.Equals(pos));
     }
 
     #endregion
@@ -1339,61 +1457,73 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     public void AttachToGridOrMap(EntityUid uid, TransformComponent? xform = null)
     {
+        // TODO make this log an error?
+        // SetCoordinates already does this when trying to move entities mid-deletion.
         if (TerminatingOrDeleted(uid))
             return;
 
-        if (!XformQuery.Resolve(uid, ref xform))
+        if (!XformQuery.Resolve(uid, ref xform, false))
             return;
 
-        if (!xform.ParentUid.IsValid() || xform.ParentUid == xform.GridUid)
+        if (!xform.ParentUid.IsValid())
             return;
 
-        EntityUid newParent;
-        var oldPos = GetWorldPosition(xform);
-        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, out var gridUid, out _)
-            && !TerminatingOrDeleted(gridUid))
+        if (xform.ParentUid == xform.GridUid)
+            return;
+
+        if (!TryGetMapOrGridCoordinates(uid, out var coordinates, xform))
         {
-            newParent = gridUid;
-        }
-        else if (_map.TryGetMap(xform.MapID, out var mapEnt) && !TerminatingOrDeleted(mapEnt))
-        {
-            newParent = mapEnt.Value;
-        }
-        else
-        {
-            if (!_mapManager.IsMap(uid))
+            if (!_mapQuery.HasComp(uid))
                 Log.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
 
             DetachEntity(uid, xform);
             return;
         }
 
-        if (newParent == xform.ParentUid || newParent == uid)
+        if (coordinates.Value.EntityId == xform.ParentUid || coordinates.Value.EntityId == uid)
             return;
 
-        var newPos = Vector2.Transform(oldPos, GetInvWorldMatrix(newParent));
-        SetCoordinates(uid, xform, new(newParent, newPos));
+        SetCoordinates(uid, xform, coordinates.Value);
     }
 
-    public bool TryGetMapOrGridCoordinates(EntityUid uid, [NotNullWhen(true)] out EntityCoordinates? coordinates, TransformComponent? xform = null)
+    /// <summary>
+    /// Attempts to get the current coordinates of the provided entity, relative to either a grid currently at that location, or the map.
+    /// </summary>
+    /// <remarks>
+    /// This will not return coordinates if the map or grid are currently being deleted.
+    /// </remarks>
+    /// <param name="uid">The entity to get the coordinates of.</param>
+    /// <param name="coordinates">The returned coordinates on the grid or map.</param>
+    /// <param name="xform">The transform component of the <paramref name="uid"/>.</param>
+    /// <returns>Whether the grid or map coordinates were found and <paramref name="coordinates"/> was set.</returns>
+    public bool TryGetMapOrGridCoordinates(
+        EntityUid uid,
+        [NotNullWhen(true)] out EntityCoordinates? coordinates,
+        TransformComponent? xform = null)
     {
         coordinates = null;
 
-        if (!XformQuery.Resolve(uid, ref xform))
+        if (!XformQuery.Resolve(uid, ref xform, false))
             return false;
 
         if (!xform.ParentUid.IsValid())
             return false;
 
-        if (xform.MapUid is not { } map)
+        if (xform.MapUid is not { } map || TerminatingOrDeleted(map))
             return false;
 
-        var newParent = map;
         var oldPos = GetWorldPosition(xform);
-        if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _))
-            newParent = gridUid;
+        if (_map.TryFindGridAt(map, oldPos, out var gridUid, out _) && !TerminatingOrDeleted(gridUid))
+        {
+            coordinates = gridUid == xform.ParentUid
+                ? new EntityCoordinates(gridUid, xform.LocalPosition)
+                : new EntityCoordinates(gridUid, Vector2.Transform(oldPos, GetInvWorldMatrix(gridUid)));
+        }
+        else
+        {
+            coordinates = new EntityCoordinates(map, oldPos);
+        }
 
-        coordinates = new(newParent, Vector2.Transform(oldPos, GetInvWorldMatrix(newParent)));
         return true;
     }
     #endregion
@@ -1405,10 +1535,22 @@ public abstract partial class SharedTransformSystem
         => DetachEntity(uid, xform);
 
     /// <inheritdoc cref="DetachEntityInternal"/>
-    public void DetachEntity(EntityUid uid, TransformComponent xform)
+    public void DetachEntity(EntityUid uid, TransformComponent? xform = null)
     {
+        if (!XformQuery.Resolve(uid, ref xform))
+            return;
         XformQuery.TryGetComponent(xform.ParentUid, out var oldXform);
         DetachEntity(uid, xform, MetaData(uid), oldXform);
+    }
+
+    /// <inheritdoc cref="DetachEntityInternal"/>
+    public void DetachEntity(Entity<TransformComponent?> ent)
+    {
+        if (!XformQuery.Resolve(ent.Owner, ref ent.Comp))
+            return;
+
+        XformQuery.TryGetComponent(ent.Comp.ParentUid, out var oldXform);
+        DetachEntity(ent.Owner, ent.Comp, MetaData(ent.Owner), oldXform);
     }
 
     /// <inheritdoc cref="DetachEntityInternal"/>
@@ -1502,9 +1644,10 @@ public abstract partial class SharedTransformSystem
     private void OnGridAdd(EntityUid uid, TransformComponent component, GridAddEvent args)
     {
         // Added to existing map so need to update all children too.
-        if (LifeStage(uid) > EntityLifeStage.Initialized)
+        var meta = MetaData(uid);
+        if (meta.EntityLifeStage > EntityLifeStage.Initialized)
         {
-            SetGridId(uid, component, uid, XformQuery);
+            SetGridId((uid, component, meta), uid);
             return;
         }
 
@@ -1630,7 +1773,7 @@ public abstract partial class SharedTransformSystem
         {
             var mapUid = _map.GetMapOrInvalid(pos2.Value.MapId);
 
-            if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos2.Value.Position, out var targetGrid, out _))
+            if (!_gridQuery.HasComponent(entity1) && _map.TryFindGridAt(mapUid, pos2.Value.Position, out var targetGrid, out _))
             {
                 var invWorldMatrix = GetInvWorldMatrix(targetGrid);
                 SetCoordinates(entity1, new EntityCoordinates(targetGrid, Vector2.Transform(pos2.Value.Position, invWorldMatrix)));
@@ -1653,7 +1796,7 @@ public abstract partial class SharedTransformSystem
         {
             var mapUid = _map.GetMapOrInvalid(pos1.Value.MapId);
 
-            if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos1.Value.Position, out var targetGrid, out _))
+            if (!_gridQuery.HasComponent(entity1) && _map.TryFindGridAt(mapUid, pos1.Value.Position, out var targetGrid, out _))
             {
                 var invWorldMatrix = GetInvWorldMatrix(targetGrid);
                 SetCoordinates(entity2, new EntityCoordinates(targetGrid, Vector2.Transform(pos1.Value.Position, invWorldMatrix)));

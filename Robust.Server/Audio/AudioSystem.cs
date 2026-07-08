@@ -20,8 +20,8 @@ namespace Robust.Server.Audio;
 
 public sealed partial class AudioSystem : SharedAudioSystem
 {
-    [Dependency] private readonly PvsOverrideSystem _pvs = default!;
-    [Dependency] private readonly IResourceManager _resourceManager = default!;
+    [Dependency] private PvsOverrideSystem _pvs = default!;
+    [Dependency] private IResourceManager _resourceManager = default!;
 
     private readonly Dictionary<string, TimeSpan> _cachedAudioLengths = new();
 
@@ -137,7 +137,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         if (TerminatingOrDeleted(coordinates.EntityId))
         {
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}.  Trace: {Environment.StackTrace}");
+            LogAudioPlaybackOnInvalidEntity(specifier, coordinates.EntityId);
             return null;
         }
 
@@ -160,7 +160,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         if (TerminatingOrDeleted(coordinates.EntityId))
         {
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}.  Trace: {Environment.StackTrace}");
+            LogAudioPlaybackOnInvalidEntity(specifier, coordinates.EntityId);
             return null;
         }
 
@@ -280,5 +280,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public override void LoadStream<T>(Entity<AudioComponent> entity, T stream)
     {
         // TODO: Yeah remove this...
+    }
+
+    private void LogAudioPlaybackOnInvalidEntity(ResolvedSoundSpecifier? specifier, EntityUid entityId)
+    {
+        var soundInfo = specifier?.ToString() ?? "unknown sound";
+        Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entityId)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
     }
 }

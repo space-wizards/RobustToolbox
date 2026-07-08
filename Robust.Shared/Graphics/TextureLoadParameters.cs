@@ -21,6 +21,11 @@ public struct TextureLoadParameters : IEquatable<TextureLoadParameters>
     /// </summary>
     public bool Srgb { get; set; }
 
+    /// <summary>
+    /// If false, this texture should not be preloaded on game startup.
+    /// </summary>
+    public bool Preload { get; set; }
+
     public static TextureLoadParameters FromYaml(YamlMappingNode yaml)
     {
         var loadParams = Default;
@@ -34,18 +39,24 @@ public struct TextureLoadParameters : IEquatable<TextureLoadParameters>
             loadParams.Srgb = srgb.AsBool();
         }
 
+        if (yaml.TryGetNode("preload", out var preload))
+        {
+            loadParams.Preload = preload.AsBool();
+        }
+
         return loadParams;
     }
 
     public static readonly TextureLoadParameters Default = new()
     {
         SampleParameters = TextureSampleParameters.Default,
-        Srgb = true
+        Srgb = true,
+        Preload = true
     };
 
     public bool Equals(TextureLoadParameters other)
     {
-        return SampleParameters.Equals(other.SampleParameters) && Srgb == other.Srgb;
+        return SampleParameters.Equals(other.SampleParameters) && Srgb == other.Srgb && Preload == other.Preload;
     }
 
     public override bool Equals(object? obj)

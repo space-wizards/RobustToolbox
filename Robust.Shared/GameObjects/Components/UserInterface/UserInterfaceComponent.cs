@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects
         public GameTick LastFieldUpdate { get; set; }
 
         /// <inheritdoc />
-        public GameTick[] LastModifiedFields { get; set; }
+        public GameTick[] LastModifiedFields { get; set; } = [];
 
         /// <summary>
         /// The currently open interfaces. Used clientside to store the UI.
@@ -25,7 +25,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables, Access(Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadWriteExecute)]
         public readonly Dictionary<Enum, BoundUserInterface> ClientOpenInterfaces = new();
 
-        [DataField]
+        [DataField, AlwaysPushInheritance]
         internal Dictionary<Enum, InterfaceData> Interfaces = new();
 
         /// <summary>
@@ -159,6 +159,15 @@ namespace Robust.Shared.GameObjects
         public readonly Enum UiKey = uiKey;
         public readonly BoundUserInterfaceMessage Message = message;
     }
+
+    /// <summary>
+    ///     Raised whenever the server receives a BUI wrap message from a client for a valid interface.
+    /// </summary>
+    [ByRefEvent]
+    public readonly record struct BoundUserInterfaceMessageReceivedEvent(
+        EntityUid Actor,
+        EntityUid Target,
+        Enum UiKey);
 
     [NetSerializable, Serializable]
     public abstract class BoundUserInterfaceState

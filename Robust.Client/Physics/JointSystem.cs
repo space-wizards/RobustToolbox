@@ -67,7 +67,7 @@ namespace Robust.Client.Physics
 
                 // Add new joint (if possible).
                 // Need to wait for BOTH joint components to come in first before we can add it. Yay dependencies!
-                if (!EntityManager.HasComponent<JointComponent>(other))
+                if (!HasComp<JointComponent>(other))
                     continue;
 
                 // TODO: if (other entity is outside of PVS range) continue;

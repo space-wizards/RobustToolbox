@@ -1,24 +1,23 @@
-using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Utility;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class ContainerSystem : SharedContainerSystem
+    public sealed partial class ContainerSystem : SharedContainerSystem
     {
-        [Dependency] private readonly IRobustSerializer _serializer = default!;
-        [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
-        [Dependency] private readonly PointLightSystem _lightSys = default!;
+        [Dependency] private IRobustSerializer _serializer = default!;
+        [Dependency] private IDynamicTypeFactoryInternal _dynFactory = default!;
+        [Dependency] private PointLightSystem _lightSys = default!;
 
         private EntityQuery<PointLightComponent> _pointLightQuery;
         private EntityQuery<SpriteComponent> _spriteQuery;
@@ -58,7 +57,7 @@ namespace Robust.Client.GameObjects
             if (!RemoveExpectedEntity(meta.NetEntity, out var container))
                 return;
 
-            Insert((uid, TransformQuery.GetComponent(uid), MetaQuery.GetComponent(uid), null), container);
+            Insert((uid, TransformQuery.GetComponent(uid), MetaQuery.GetComponent(uid), null), container, force: true);
         }
 
         public override void ShutdownContainer(BaseContainer container)
@@ -117,7 +116,7 @@ namespace Robust.Client.GameObjects
                 if (!component.Containers.TryGetValue(id, out var container))
                 {
                     var type = _serializer.FindSerializedType(typeof(BaseContainer), data.ContainerType);
-                    container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type!, inject:false);
+                    container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type!, inject: false);
                     container.Init(this, id, (uid, component));
                     component.Containers.Add(id, container);
                 }
@@ -232,7 +231,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            Insert(message.Entity, container);
+            Insert(message.Entity, container, force: true);
         }
 
         public void AddExpectedEntity(NetEntity netEntity, BaseContainer container)
@@ -242,7 +241,7 @@ namespace Robust.Client.GameObjects
 
             if (TryComp(uid, out MetaDataComponent? meta))
             {
-                DebugTools.Assert((meta.Flags & ( MetaDataFlags.Detached | MetaDataFlags.InContainer) ) == MetaDataFlags.Detached,
+                DebugTools.Assert((meta.Flags & (MetaDataFlags.Detached | MetaDataFlags.InContainer)) == MetaDataFlags.Detached,
                     $"Adding entity {ToPrettyString(uid)} to list of expected entities for container {container.ID} in {ToPrettyString(container.Owner)}, despite it already being in a container.");
             }
 #endif
@@ -303,7 +302,7 @@ namespace Robust.Client.GameObjects
             while (parent.IsValid() && (!spriteOccluded || !lightOccluded))
             {
                 var parentXform = TransformQuery.GetComponent(parent);
-                if (TryComp<ContainerManagerComponent>(parent, out var manager) && manager.TryGetContainer(child, out var container))
+                if (TryComp<ContainerManagerComponent>(parent, out var manager) && TryGetContainingContainer(parent, child, out var container, manager))
                 {
                     spriteOccluded = spriteOccluded || !container.ShowContents;
                     lightOccluded = lightOccluded || container.OccludesLight;
@@ -344,7 +343,7 @@ namespace Robust.Client.GameObjects
                     var childLightOccluded = lightOccluded;
 
                     // We already know either sprite or light is not occluding so need to check container.
-                    if (manager.TryGetContainer(child, out var container))
+                    if (TryGetContainingContainer(entity, child, out var container, manager))
                     {
                         childSpriteOccluded = childSpriteOccluded || !container.ShowContents;
                         childLightOccluded = childLightOccluded || container.OccludesLight;

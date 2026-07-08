@@ -20,16 +20,15 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Server.Placement
 {
-    public sealed class PlacementManager : IPlacementManager
+    public sealed partial class PlacementManager : IPlacementManager
     {
-        [Dependency] private readonly IComponentFactory _factory = default!;
-        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
-        [Dependency] private readonly IServerNetManager _networkManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IPrototypeManager _prototype = default!;
-        [Dependency] private readonly IServerEntityManager _entityManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IComponentFactory _factory = default!;
+        [Dependency] private ITileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private IServerNetManager _networkManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IPrototypeManager _prototype = default!;
+        [Dependency] private IServerEntityManager _entityManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private EntityLookupSystem _lookup => _entityManager.System<EntityLookupSystem>();
         private SharedMapSystem _maps => _entityManager.System<SharedMapSystem>();
@@ -140,7 +139,7 @@ namespace Robust.Server.Placement
             {
                 // Replace existing entities if relevant.
                 if (msg.Replacement && _prototype.Index<EntityPrototype>(entityTemplateName).Components.TryGetValue(
-                        _factory.GetComponentName(typeof(PlacementReplacementComponent)), out var compRegistry))
+                        _factory.GetComponentName<PlacementReplacementComponent>(), out var compRegistry))
                 {
                     var key = ((PlacementReplacementComponent)compRegistry.Component).Key;
                     var gridUid = _xformSystem.GetGrid(coordinates);
@@ -179,41 +178,50 @@ namespace Robust.Server.Placement
             }
             else
             {
-                PlaceNewTile(tileType, coordinates, msg.MsgChannel.UserId);
+                if (_tileDefinitionManager[tileType].AllowRotationMirror)
+                    PlaceNewTile(tileType, coordinates, msg.MsgChannel.UserId, Tile.DirectionToByte(dirRcv), msg.Mirrored);
+                else
+                    PlaceNewTile(tileType, coordinates, msg.MsgChannel.UserId, Tile.DirectionToByte(Direction.South), false);
             }
         }
 
-        private void PlaceNewTile(int tileType, EntityCoordinates coordinates, NetUserId placingUserId)
+        private void PlaceNewTile(int tileType, EntityCoordinates coordinates, NetUserId placingUserId, byte direction, bool mirrored)
         {
             if (!coordinates.IsValid(_entityManager)) return;
+
+            var mapSystem = _maps;
 
             MapGridComponent? grid;
 
             EntityUid gridId = coordinates.EntityId;
             if (_entityManager.TryGetComponent(coordinates.EntityId, out grid)
-                || _mapManager.TryFindGridAt(_xformSystem.ToMapCoordinates(coordinates), out gridId, out grid))
+                || mapSystem.TryFindGridAt(_xformSystem.ToMapCoordinates(coordinates), out gridId, out grid))
             {
-                _maps.SetTile(gridId, grid, coordinates, new Tile(tileType));
+                mapSystem.SetTile(gridId, grid, coordinates, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
             }
             else if (tileType != 0) // create a new grid
             {
-                var newGrid = _mapManager.CreateGridEntity(_xformSystem.GetMapId(coordinates));
+                var newGrid = mapSystem.CreateGridEntity(_xformSystem.GetMapId(coordinates));
                 var newGridXform = new Entity<TransformComponent>(
                     newGrid.Owner,
                     _entityManager.GetComponent<TransformComponent>(newGrid));
 
                 _xformSystem.SetWorldPosition(newGridXform, coordinates.Position - newGrid.Comp.TileSizeHalfVector); // assume bottom left tile origin
-                var tilePos = _maps.WorldToTile(newGrid.Owner, newGrid.Comp, coordinates.Position);
-                _maps.SetTile(newGrid.Owner, newGrid.Comp, tilePos, new Tile(tileType));
+                var tilePos = mapSystem.WorldToTile(newGrid.Owner, newGrid.Comp, coordinates.Position);
+                mapSystem.SetTile(newGrid.Owner, newGrid.Comp, tilePos, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
             }
         }
 
+        /// <summary>
+        /// Deletes any existing entity.
+        /// </summary>
+        /// <param name="msg"></param>
         private void HandleEntRemoveReq(MsgPlacement msg)
         {
             //TODO: Some form of admin check
@@ -222,26 +230,61 @@ namespace Robust.Server.Placement
             if (!_entityManager.EntityExists(entity))
                 return;
 
-            var placementEraseEvent = new PlacementEntityEvent(entity, _entityManager.GetComponent<TransformComponent>(entity).Coordinates, PlacementEventAction.Erase, msg.MsgChannel.UserId);
+            var placementEraseEvent = new PlacementEntityEvent(entity,
+                _entityManager.GetComponent<TransformComponent>(entity).Coordinates,
+                PlacementEventAction.Erase,
+                msg.MsgChannel.UserId);
+
             _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
             _entityManager.DeleteEntity(entity);
         }
 
+        /// <summary>
+        /// Deletes almost any existing entity within a selection box.
+        /// </summary>
+        /// <param name="msg"></param>
         private void HandleRectRemoveReq(MsgPlacement msg)
         {
-            EntityCoordinates start = _entityManager.GetCoordinates(msg.NetCoordinates);
-            Vector2 rectSize = msg.RectSize;
-            foreach (var entity in _lookup.GetEntitiesIntersecting(_xformSystem.GetMapId(start),
-                new Box2(start.Position, start.Position + rectSize)))
+            var start = _entityManager.GetCoordinates(msg.NetCoordinates);
+            var rectSize = msg.RectSize;
+
+            foreach (var entity in _lookup.GetEntitiesIntersecting(_xformSystem.GetMapId(start), new Box2(start.Position, start.Position + rectSize)))
             {
-                if (_entityManager.Deleted(entity) ||
-                    _entityManager.HasComponent<MapGridComponent>(entity) ||
-                    _entityManager.HasComponent<ActorComponent>(entity))
-                {
+                if (_entityManager.Deleted(entity)
+                    || _entityManager.HasComponent<MapGridComponent>(entity)
+                    || _entityManager.HasComponent<ActorComponent>(entity))
                     continue;
+
+                var xform = _entityManager.GetComponent<TransformComponent>(entity);
+                var parent = xform.ParentUid;
+                var isChildOfActor = false;
+
+                while (parent.IsValid())
+                {
+                    if (_entityManager.HasComponent<ActorComponent>(parent))
+                    {
+                        isChildOfActor = true;
+                        break;
+                    }
+
+                    if (_entityManager.TryGetComponent<TransformComponent>(parent, out var parentXform))
+                    {
+                        parent = parentXform.ParentUid;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
 
-                var placementEraseEvent = new PlacementEntityEvent(entity, _entityManager.GetComponent<TransformComponent>(entity).Coordinates, PlacementEventAction.Erase, msg.MsgChannel.UserId);
+                if (isChildOfActor)
+                    continue;
+
+                var placementEraseEvent = new PlacementEntityEvent(entity,
+                    _entityManager.GetComponent<TransformComponent>(entity).Coordinates,
+                    PlacementEventAction.Erase,
+                    msg.MsgChannel.UserId);
+
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
                 _entityManager.DeleteEntity(entity);
             }

@@ -13,9 +13,22 @@ namespace Robust.Client.UserInterface
 {
     /// <summary>
     ///     Used by <see cref="OutputPanel"/> and <see cref="RichTextLabel"/> to handle rich text layout.
+    ///     Note that if this text is ever removed or modified without removing the owning control,
+    ///     then <see cref="RemoveControls"/> should be called to ensure that any controls that were added by this
+    ///     entry are also removed.
     /// </summary>
     internal struct RichTextEntry
     {
+        public static readonly Type[] DefaultTags =
+        [
+            typeof(BoldItalicTag),
+            typeof(BoldTag),
+            typeof(BulletTag),
+            typeof(ColorTag),
+            typeof(HeadingTag),
+            typeof(ItalicTag)
+        ];
+
         private readonly Color _defaultColor;
         private readonly Type[]? _tagsAllowed;
 
@@ -36,9 +49,19 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public ValueList<int> LineBreaks;
 
-        private readonly Dictionary<int, Control>? _tagControls;
+        public readonly Dictionary<int, Control>? Controls;
 
-        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
+
+        public RichTextEntry(
+            FormattedMessage message,
+            Control parent,
+            MarkupTagManager tagManager,
+            Color? defaultColor = null) : this(message, parent, tagManager, DefaultTags, defaultColor)
+        {
+            // RichTextEntry constructor but with DefaultTags
+        }
+
+        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed, Color? defaultColor = null)
         {
             Message = message;
             Height = 0;
@@ -46,9 +69,14 @@ namespace Robust.Client.UserInterface
             LineBreaks = default;
             _defaultColor = defaultColor ?? new(200, 200, 200);
             _tagsAllowed = tagsAllowed;
-            Dictionary<int, Control>? tagControls = null;
+            Controls = GetControls(parent, tagManager);
+        }
 
+        private readonly Dictionary<int, Control>? GetControls(Control parent, MarkupTagManager tagManager)
+        {
+            Dictionary<int, Control>? tagControls = null;
             var nodeIndex = -1;
+
             foreach (var node in Message)
             {
                 nodeIndex++;
@@ -56,15 +84,35 @@ namespace Robust.Client.UserInterface
                 if (node.Name == null)
                     continue;
 
-                if (!tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag) || !tag.TryGetControl(node, out var control))
+                if (!tagManager.TryGetMarkupTagHandler(node.Name, _tagsAllowed, out var handler) || !handler.TryCreateControl(node, out var control))
                     continue;
+
+                // Markup tag handler instances are shared across controls. We need to ensure that the hanlder doesn't
+                // store state information and return the same control for each rich text entry.
+                DebugTools.Assert(handler.TryCreateControl(node, out var other) && other != control);
 
                 parent.Children.Add(control);
                 tagControls ??= new Dictionary<int, Control>();
                 tagControls.Add(nodeIndex, control);
             }
 
-            _tagControls = tagControls;
+            return tagControls;
+        }
+
+        // TODO RICH TEXT
+        // Somehow ensure that this **has** to be called when removing rich text from some control.
+        /// <summary>
+        /// Remove all owned controls from their parents.
+        /// </summary>
+        public readonly void RemoveControls()
+        {
+            if (Controls == null)
+                return;
+
+            foreach (var ctrl in Controls.Values)
+            {
+                ctrl.Orphan();
+            }
         }
 
         /// <summary>
@@ -74,7 +122,7 @@ namespace Robust.Client.UserInterface
         /// <param name="maxSizeX">The maximum horizontal size of the container of this entry.</param>
         /// <param name="uiScale"></param>
         /// <param name="lineHeightScale"></param>
-        public void Update(MarkupTagManager tagManager, Font defaultFont, float maxSizeX, float uiScale, float lineHeightScale = 1)
+        public RichTextEntry Update(MarkupTagManager tagManager, Font defaultFont, float maxSizeX, float uiScale, float lineHeightScale = 1)
         {
             // This method is gonna suck due to complexity.
             // Bear with me here.
@@ -112,13 +160,13 @@ namespace Robust.Client.UserInterface
                         continue;
 
                     if (ProcessMetric(ref this, metrics, out breakLine))
-                        return;
+                        return this;
                 }
 
-                if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
+                if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
                     continue;
 
-                control.Measure(new Vector2(Width, Height));
+                control.Measure(new Vector2(maxSizeX, Height));
 
                 var desiredSize = control.DesiredPixelSize;
                 var controlMetrics = new CharMetrics(
@@ -128,11 +176,13 @@ namespace Robust.Client.UserInterface
                     desiredSize.Y);
 
                 if (ProcessMetric(ref this, controlMetrics, out breakLine))
-                    return;
+                    return this;
             }
 
             Width = wordWrap.FinalizeText(out breakLine);
             CheckLineBreak(ref this, breakLine);
+
+            return this;
 
             bool ProcessRune(ref RichTextEntry src, Rune rune, out int? outBreakLine)
             {
@@ -166,9 +216,10 @@ namespace Robust.Client.UserInterface
 
         internal readonly void HideControls()
         {
-            if (_tagControls == null)
+            if (Controls == null)
                 return;
-            foreach (var control in _tagControls.Values)
+
+            foreach (var control in Controls.Values)
             {
                 control.Visible = false;
             }
@@ -193,6 +244,8 @@ namespace Robust.Client.UserInterface
             var baseLine = drawBox.TopLeft + new Vector2(0, defaultFont.GetAscent(uiScale) + verticalOffset);
             var controlYAdvance = 0f;
 
+            var spaceRune = new Rune(' ');
+
             var nodeIndex = -1;
             foreach (var node in Message)
             {
@@ -206,21 +259,30 @@ namespace Robust.Client.UserInterface
 
                 foreach (var rune in text.EnumerateRunes())
                 {
+                    bool skipSpaceBaseline = false;
+
                     if (lineBreakIndex < LineBreaks.Count &&
                         LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
                         baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(font, uiScale, lineHeightScale) + controlYAdvance);
                         controlYAdvance = 0;
                         lineBreakIndex += 1;
+
+                        // The baseline calc is kind of messed up, the newline is After the space but the space is being drawn after doing the newline
+                        // Which means if this metric Ends on a space, the next metric will use the wrong baseline when it starts, for some reason ..
+                        if (rune == spaceRune)
+                            skipSpaceBaseline = true;
                     }
 
                     var advance = font.DrawChar(handle, rune, baseLine, uiScale, color);
-                    baseLine += new Vector2(advance, 0);
+
+                    if (!skipSpaceBaseline)
+                        baseLine += new Vector2(advance, 0);
 
                     globalBreakCounter += 1;
                 }
 
-                if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
+                if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
                     continue;
 
                 // Controls may have been previously hidden via HideControls due to being "out-of frame".
@@ -228,8 +290,13 @@ namespace Robust.Client.UserInterface
                 control.Visible = true;
 
                 var invertedScale = 1f / uiScale;
-                control.Position = new Vector2(baseLine.X * invertedScale, (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale);
                 control.Measure(new Vector2(Width, Height));
+                control.Arrange(UIBox2.FromDimensions(
+                    baseLine.X * invertedScale,
+                    (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale,
+                    control.DesiredSize.X,
+                    control.DesiredSize.Y
+                ));
                 var advanceX = control.DesiredPixelSize.X;
                 controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(font, uiScale, lineHeightScale)) * invertedScale);
                 baseLine += new Vector2(advanceX, 0);
@@ -243,7 +310,7 @@ namespace Robust.Client.UserInterface
                 return node.Value.StringValue ?? "";
 
             //Skip the node if there is no markup tag for it.
-            if (!tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag))
+            if (!tagManager.TryGetMarkupTagHandler(node.Name, _tagsAllowed, out var tag))
                 return "";
 
             if (!node.Closing)

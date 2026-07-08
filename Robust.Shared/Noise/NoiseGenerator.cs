@@ -1,8 +1,6 @@
 using System;
 using System.Numerics;
 using JetBrains.Annotations;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Shared.Noise
 {

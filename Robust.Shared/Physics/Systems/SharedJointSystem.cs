@@ -16,14 +16,14 @@ namespace Robust.Shared.Physics.Systems;
 
 public abstract partial class SharedJointSystem : EntitySystem
 {
-    [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     private EntityQuery<JointComponent> _jointsQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<JointRelayTargetComponent> _relayQuery;
-    private EntityQuery<TransformComponent> _xformQuery;
 
     // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
     // we can delete the component.
@@ -37,7 +37,6 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         _jointsQuery = GetEntityQuery<JointComponent>();
         _relayQuery = GetEntityQuery<JointRelayTargetComponent>();
-        _xformQuery = GetEntityQuery<TransformComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
         UpdatesOutsidePrediction = true;
 
@@ -122,7 +121,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         foreach (var joint in _dirtyJoints)
         {
             if (joint.Comp.Deleted || joint.Comp.JointCount != 0) continue;
-            EntityManager.RemoveComponent<JointComponent>(joint);
+            RemComp<JointComponent>(joint);
         }
 
         _dirtyJoints.Clear();
@@ -237,7 +236,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         string? id = null,
         TransformComponent? xformA = null,
         TransformComponent? xformB = null,
-        int? minimumDistance = null)
+        float? minimumDistance = null)
     {
         if (!Resolve(bodyA, ref xformA) || !Resolve(bodyB, ref xformB))
         {
@@ -247,8 +246,8 @@ public abstract partial class SharedJointSystem : EntitySystem
         anchorA ??= Vector2.Zero;
         anchorB ??= Vector2.Zero;
 
-        var vecA = Vector2.Transform(anchorA.Value, xformA.WorldMatrix);
-        var vecB = Vector2.Transform(anchorB.Value, xformB.WorldMatrix);
+        var vecA = Vector2.Transform(anchorA.Value, _transform.GetWorldMatrix(xformA));
+        var vecB = Vector2.Transform(anchorB.Value, _transform.GetWorldMatrix(xformB));
         var length = (vecA - vecB).Length();
         if (minimumDistance != null)
             length = Math.Max(minimumDistance.Value, length);
@@ -347,7 +346,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         if (!Resolve(uid, ref xform))
             return Vector2.Zero;
 
-        return Physics.Transform.MulT(new Quaternion2D((float) xform.WorldRotation.Theta), worldVector);
+        return Physics.Transform.MulT(new Quaternion2D((float) _transform.GetWorldRotation(xform).Theta), worldVector);
     }
 
     #endregion
@@ -505,17 +504,35 @@ public abstract partial class SharedJointSystem : EntitySystem
         }
     }
 
-    public void RemoveJoint(EntityUid uid, string id)
+    /// <summary>
+    /// Removes any joints attached to this object with a specified ID.
+    /// </summary>
+    /// <param name="uid">Entity UID of the object to remove the joint from</param>
+    /// <param name="id">ID of the joint to remove</param>
+    /// <param name="recursive">Whether to also remove any relayed joints. Optional, defaults to true</param>
+    public void RemoveJoint(EntityUid uid, string id, bool recursive = true)
     {
-        if (!_jointsQuery.TryComp(uid, out var jointComp))
+        if (_jointsQuery.TryComp(uid, out var jointComp) &&
+            jointComp.Joints.TryGetValue(id, out var joint))
+            RemoveJoint(joint);
+
+        if (!recursive || !_relayQuery.TryComp(uid, out var relayComp))
             return;
 
-        if (!jointComp.Joints.TryGetValue(id, out var joint))
-            return;
-
-        RemoveJoint(joint);
+        foreach (var relay in relayComp.Relayed)
+        {
+            if(_jointsQuery.TryComp(relay, out var relayJointComp))
+            {
+                if(relayJointComp.Joints.TryGetValue(id, out var relayJoint))
+                    RemoveJoint(relayJoint);
+            }
+        }
     }
 
+    /// <summary>
+    /// Removes a specific joint from existence
+    /// </summary>
+    /// <param name="joint">The joint to remove</param>
     public void RemoveJoint(Joint joint)
     {
         AddedJoints.Remove(joint);
@@ -552,7 +569,7 @@ public abstract partial class SharedJointSystem : EntitySystem
             _physics.WakeBody(uidA);
         }
 
-        if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
+        if (TryComp<PhysicsComponent>(bodyBUid, out var bodyB) &&
             MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
         {
             var uidB = jointComponentB.Relay ?? bodyBUid;

@@ -9,10 +9,11 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Localization
 {
-    internal sealed partial class LocalizationManager
+    internal abstract partial class LocalizationManager
     {
         private static readonly Regex RegexWordMatch = new Regex(@"\w+");
 
@@ -23,6 +24,7 @@ namespace Robust.Shared.Localization
             AddCtxFunction(bundle, "SUBJECT", FuncSubject);
             AddCtxFunction(bundle, "OBJECT", FuncObject);
             AddCtxFunction(bundle, "DAT-OBJ", FuncDatObj);
+            AddCtxFunction(bundle, "GENITIVE", FuncGenitive);
             AddCtxFunction(bundle, "POSS-ADJ", FuncPossAdj);
             AddCtxFunction(bundle, "POSS-PRONOUN", FuncPossPronoun);
             AddCtxFunction(bundle, "REFLEXIVE", FuncReflexive);
@@ -41,6 +43,10 @@ namespace Robust.Shared.Localization
             AddCtxFunction(bundle, "ATTRIB", args => FuncAttrib(bundle, args));
             AddCtxFunction(bundle, "CAPITALIZE", FuncCapitalize);
             AddCtxFunction(bundle, "INDEFINITE", FuncIndefinite);
+
+            // Rich text
+            AddCtxFunction(bundle, "ESCAPE", FuncEscape);
+            AddCtxFunction(bundle, "ESCAPE-PARAM", FuncEscapeParam);
         }
 
         /// <summary>
@@ -170,10 +176,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 1) return new LocValueString(nameof(Gender.Neuter));
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
-
                 if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) && grammar.Gender.HasValue)
                 {
                     return new LocValueString(grammar.Gender.Value.ToString().ToLowerInvariant());
@@ -215,6 +219,16 @@ namespace Robust.Shared.Localization
         }
 
         /// <summary>
+        /// Returns the respective genitive form (pronoun or possessive adjective) for the entity's gender.
+        /// This is used in languages with a genitive case to indicate possession or related relationships,
+        /// e.g., "у него" (Russian), "seines Vaters" (German).
+        /// </summary>
+        private ILocValue FuncGenitive(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-genitive", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
         /// Returns the respective possessive adjective (his, her, their, its) for the entity's gender.
         /// </summary>
         private ILocValue FuncPossAdj(LocArgs args)
@@ -246,10 +260,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 1) return new LocValueString(GetString("zzzz-counter-default"));
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
-
                 if (TryGetEntityLocAttrib(entity, "counter", out var counter))
                 {
                     return new LocValueString(counter);
@@ -292,9 +304,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 2) return new LocValueString("other");
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
                 ILocValue attrib0 = args.Args[1];
                 if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(bundle)), out var attrib))
                 {
@@ -313,10 +324,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 1) return new LocValueString("false");
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
-
                 if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) && grammar.ProperNoun.HasValue)
                 {
                     return new LocValueString(grammar.ProperNoun.Value.ToString().ToLowerInvariant());
@@ -365,6 +374,24 @@ namespace Robust.Shared.Localization
 
             bundle.AddFunctionOverriding(name, (args, options)
                 => CallFunction(function, bundle, args, options));
+        }
+
+        /// <summary>
+        /// Escape the provided string argument for insertion among rich text markup.
+        /// </summary>
+        private static ILocValue FuncEscape(LocArgs args)
+        {
+            var input = args.Args[0].Format(new LocContext());
+            return new LocValueString(FormattedMessage.EscapeText(input));
+        }
+
+        /// <summary>
+        /// Escape the provided string argument for insertion as a string markup parameter.
+        /// </summary>
+        private static ILocValue FuncEscapeParam(LocArgs args)
+        {
+            var input = args.Args[0].Format(new LocContext());
+            return new LocValueString(FormattedMessage.EscapeStringParameter(input));
         }
     }
 

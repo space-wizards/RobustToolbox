@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Reflection;
@@ -9,9 +11,12 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.Manager
 {
+    [NotContentImplementable]
     public interface ISerializationManager
     {
         public delegate T InstantiationDelegate<out T>();
+
+        bool IsServer { get; }
 
         /// <summary>
         ///     Initializes the serialization manager.
@@ -108,12 +113,41 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T">The type of object to create and populate.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
         T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
+
         T Read<T>(
             DataNode node,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             InstantiationDelegate<T>? instanceProvider = null,
             [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
+
+        T[] ReadArray<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T[]>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
+
+        T ReadDefinition<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : ISerializationGenerated<T>;
+
+        T ReadEnum<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : struct, Enum;
+
+        T ReadStructDefinition<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : struct, ISerializationGenerated<T>;
 
 
         /// <summary>
@@ -421,11 +455,18 @@ namespace Robust.Shared.Serialization.Manager
         #region Composition
 
         DataNode PushComposition(Type type, DataNode[] parents, DataNode child, ISerializationContext? context = null);
+        DataNode PushComposition(Type type, DataNode parent, DataNode child, ISerializationContext? context = null);
 
         public TNode PushComposition<TType, TNode>(TNode[] parents, TNode child, ISerializationContext? context = null) where TNode : DataNode
         {
             // ReSharper disable once CoVariantArrayConversion
             return (TNode)PushComposition(typeof(TType), parents, child, context);
+        }
+
+        public TNode PushComposition<TType, TNode>(TNode parent, TNode child, ISerializationContext? context = null)
+            where TNode : DataNode
+        {
+            return (TNode) PushComposition(typeof(TType), parent, child, context);
         }
 
         TNode PushInheritance<TType, TNode>(ITypeInheritanceHandler<TType, TNode> inheritanceHandler, TNode parent, TNode child,
@@ -439,6 +480,12 @@ namespace Robust.Shared.Serialization.Manager
         {
             // ReSharper disable once CoVariantArrayConversion
             return (TNode) PushComposition(type, parents, child, context);
+        }
+
+        public TNode PushCompositionWithGenericNode<TNode>(Type type, TNode parent, TNode child, ISerializationContext? context = null)
+            where TNode : DataNode
+        {
+            return (TNode) PushComposition(type, parent, child, context);
         }
 
         /// <summary>

@@ -1,0 +1,26 @@
+﻿<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         x:Class="Robust.Client.UserInterface.DevWindowTabTextures">
+    <SplitContainer Orientation="Horizontal">
+        <!-- Left pane: list of textures -->
+        <BoxContainer Orientation="Vertical" MinWidth="200">
+            <Button Name="ReloadButton" Text="{Loc 'dev-window-tab-textures-reload'}" />
+            <LineEdit Name="SearchBar" PlaceHolder="{Loc 'dev-window-tab-textures-filter'}" />
+
+            <ScrollContainer HScrollEnabled="False" VerticalExpand="True">
+                <BoxContainer Name="TextureList" Orientation="Vertical" />
+            </ScrollContainer>
+
+            <Label Name="SummaryLabel" Margin="4" />
+        </BoxContainer>
+
+        <!-- Right pane: show the selected texture info -->
+        <Control MinWidth="400">
+            <BoxContainer Orientation="Vertical">
+                <TextureRect Name="SelectedTextureDisplay" VerticalExpand="True" CanShrink="True"
+                             Stretch="KeepAspectCentered" />
+                <Label Name="SelectedTextureInfo" />
+            </BoxContainer>
+        </Control>
+    </SplitContainer>
+</Control>

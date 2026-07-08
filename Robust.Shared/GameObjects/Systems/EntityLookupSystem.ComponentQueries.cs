@@ -458,7 +458,7 @@ public sealed partial class EntityLookupSystem
             // Get grid entities
             var state = (this, worldAABB, flags, query, ignored, found: false);
 
-            _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+            _map.FindGridsIntersecting(mapId, worldAABB, ref state,
                 static (EntityUid uid, MapGridComponent grid, ref
                     (EntityLookupSystem system,
                     Box2 worldAABB,
@@ -550,7 +550,7 @@ public sealed partial class EntityLookupSystem
             // Get grid entities
             var state = new GridQueryState<IComponent, T>(intersecting, shape, shapeTransform, this, _physics, flags, query);
 
-            _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+            _map.FindGridsIntersecting(mapId, worldAABB, ref state,
                 static (EntityUid uid, MapGridComponent grid, ref GridQueryState<IComponent, T> state) =>
                 {
                     var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
@@ -596,7 +596,7 @@ public sealed partial class EntityLookupSystem
             // Get grid entities
             var state = new GridQueryState<T, TShape>(entities, shape, shapeTransform, this, _physics, flags, query);
 
-            _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+            _map.FindGridsIntersecting(mapId, worldAABB, ref state,
                 static (EntityUid uid, MapGridComponent grid, ref GridQueryState<T, TShape> state) =>
                 {
                     var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
@@ -621,7 +621,7 @@ public sealed partial class EntityLookupSystem
 
     public void GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        var mapPos = _transform.ToMapCoordinates(coordinates);
         GetEntitiesInRange(mapPos, range, entities, flags);
     }
 

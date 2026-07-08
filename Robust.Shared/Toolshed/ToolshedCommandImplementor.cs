@@ -51,10 +51,7 @@ internal sealed class ToolshedCommandImplementor
         FullName = SubCommand == null ? Owner.Name : $"{Owner.Name}:{SubCommand}";
         _toolshed = toolshed;
 
-        Methods = Owner.GetType()
-            .GetMethods(ToolshedCommand.MethodFlags)
-            .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>() is { } attr &&
-                        attr.SubCommand == SubCommand)
+        Methods = Owner.GetMethods(SubCommand)
             .Select(x => new CommandMethod(x, this))
             .ToArray();
 

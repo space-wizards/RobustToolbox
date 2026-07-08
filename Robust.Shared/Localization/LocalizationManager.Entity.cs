@@ -12,7 +12,7 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.Localization
 {
-    internal sealed partial class LocalizationManager
+    internal abstract partial class LocalizationManager
     {
         // Concurrent dict so that multiple threads "reading" .Name won't cause a concurrent write issue
         // when the cache gets populated.
@@ -134,7 +134,7 @@ namespace Robust.Shared.Localization
                     .Select(x => GetString(x.Suffix!));
                 suffix = string.Join(", ", suffixes);
             }
-            
+
             return new EntityLocData(
                 name ?? "",
                 desc ?? "",

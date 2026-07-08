@@ -1,16 +1,25 @@
+using System;
 using System.IO;
 using System.Text;
-using Robust.Shared.Graphics;
 
 namespace Robust.Client.Graphics
 {
+    [NotContentImplementable]
     public interface IFontManager
     {
         public void ClearFontCache();
     }
     internal interface IFontManagerInternal : IFontManager
     {
-        IFontFaceHandle Load(Stream stream);
+        IFontFaceHandle Load(Stream stream, int index = 0);
+        IFontFaceHandle Load(IFontMemoryHandle memory, int index = 0);
+
+        /// <summary>
+        /// Load a specified font in a font collection.
+        /// </summary>
+        /// <param name="memory">Memory for the entire font collection.</param>
+        /// <param name="postscriptName">The postscript name of the font to load.</param>
+        IFontFaceHandle LoadWithPostscriptName(IFontMemoryHandle memory, string postscriptName);
         IFontInstanceHandle MakeInstance(IFontFaceHandle handle, int size);
         void SetFontDpi(uint fontDpi);
     }
@@ -22,8 +31,6 @@ namespace Robust.Client.Graphics
 
     internal interface IFontInstanceHandle
     {
-
-
         Texture? GetCharTexture(Rune codePoint, float scale);
         Texture? GetCharTexture(char chr, float scale) => GetCharTexture((Rune) chr, scale);
         CharMetrics? GetCharMetrics(Rune codePoint, float scale);
@@ -33,6 +40,12 @@ namespace Robust.Client.Graphics
         int GetDescent(float scale);
         int GetHeight(float scale);
         int GetLineHeight(float scale);
+    }
+
+    internal unsafe interface IFontMemoryHandle : IDisposable
+    {
+        byte* GetData();
+        nint GetDataSize();
     }
 
     /// <summary>

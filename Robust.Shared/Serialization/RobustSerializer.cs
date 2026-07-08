@@ -15,9 +15,9 @@ namespace Robust.Shared.Serialization
 {
     internal abstract partial class RobustSerializer : IRobustSerializerInternal
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] protected readonly IRobustMappedStringSerializer MappedStringSerializer = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] protected IRobustMappedStringSerializer MappedStringSerializer = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private readonly Dictionary<Type, Dictionary<string, Type?>> _cachedSerialized = new();
 
@@ -27,6 +27,8 @@ namespace Robust.Shared.Serialization
         private Serializer _serializer = default!;
 
         private HashSet<Type> _serializableTypes = default!;
+        private bool _initialized;
+        private SerializerFloatFlags _floatFlags;
 
         private static Type[] AlwaysNetSerializable => new[]
         {
@@ -56,8 +58,25 @@ namespace Robust.Shared.Serialization
 
         #endregion
 
+        public SerializerFloatFlags FloatFlags
+        {
+            get => _floatFlags;
+            set
+            {
+                if (_initialized)
+                    throw new InvalidOperationException("Already initialized!");
+
+                _floatFlags = value;
+            }
+        }
+
         public void Initialize()
         {
+            if (_initialized)
+                throw new InvalidOperationException("Already initialized!");
+
+            _initialized = true;
+
             var types = _reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>()
                 .OrderBy(x => x.FullName, StringComparer.InvariantCulture)
                 .ToList();
@@ -89,10 +108,23 @@ namespace Robust.Shared.Serialization
                 CustomTypeSerializers = new[]
                 {
                     MappedStringSerializer.TypeSerializer,
-                    new Vector2Serializer(),
-                    new Matrix3x2Serializer(),
+                    new NetMathSerializer(),
+                    new NetBitArraySerializer(),
+                    new NetFormattedStringSerializer(),
+                    new NetUnsafeFloatSerializer(),
                 }
             };
+
+            if ((_floatFlags & SerializerFloatFlags.RemoveReadNan) != 0)
+            {
+                settings.CustomTypeSerializers =
+                [
+                    ..settings.CustomTypeSerializers,
+                    // This replaces NetSerializer's default serializer.
+                    new NetSafeFloatSerializer()
+                ];
+            }
+
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
             LogSzr.Info($"Serializer Types Hash: {_serializer.GetSHA256()}");

@@ -24,15 +24,16 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Localization
 {
-    internal sealed partial class LocalizationManager : ILocalizationManagerInternal, IPostInjectInit
+    internal abstract partial class LocalizationManager : ILocalizationManagerInternal
     {
-        private static readonly ResPath LocaleDirPath = new("/Locale");
+        protected static readonly ResPath LocaleDirPath = new("/Locale");
+        protected static readonly ResPath UploadedDirPath = new("/Uploaded");
 
-        [Dependency] private readonly IConfigurationManager _configuration = default!;
-        [Dependency] private readonly IResourceManager _res = default!;
-        [Dependency] private readonly ILogManager _log = default!;
-        [Dependency] private readonly IPrototypeManager _prototype = default!;
-        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private IConfigurationManager _configuration = default!;
+        [Dependency] private IResourceManager _res = default!;
+        [Dependency] private ILogManager _log = default!;
+        [Dependency] private IPrototypeManager _prototype = default!;
+        [Dependency] private IEntityManager _entMan = default!;
 
         private ISawmill _logSawmill = default!;
         private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();
@@ -40,7 +41,9 @@ namespace Robust.Shared.Localization
         private (CultureInfo, FluentBundle)? _defaultCulture;
         private (CultureInfo, FluentBundle)[] _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();
 
-        void IPostInjectInit.PostInject()
+        void ILocalizationManager.Initialize() => Initialize();
+
+        public virtual void Initialize()
         {
             _logSawmill = _log.GetSawmill("loc");
             _prototype.PrototypesReloaded += OnPrototypesReloaded;
@@ -65,7 +68,7 @@ namespace Robust.Shared.Localization
 
             if (!TryGetString(messageId, out var msg))
             {
-                _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+                _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                     messageId);
                 msg = messageId;
             }
@@ -83,7 +86,7 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, arg))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+            _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                 messageId);
             return messageId;
         }
@@ -96,7 +99,7 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, arg1, arg2))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+            _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                 messageId);
             return messageId;
         }
@@ -109,7 +112,7 @@ namespace Robust.Shared.Localization
             if (TryGetString(messageId, out var argMsg, args))
                 return argMsg;
 
-            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+            _logSawmill.Warning("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
                 messageId);
             return messageId;
         }
@@ -401,6 +404,20 @@ namespace Robust.Shared.Localization
                 result.Add(CultureInfo.GetCultureInfo(cultureName, predefinedOnly: false));
             }
 
+            var uploadedFiles = _res.ContentFindFiles(UploadedDirPath)
+                .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase));
+
+            foreach (var file in uploadedFiles)
+            {
+                var cultureName = Path.GetFileNameWithoutExtension(file.Filename);
+                if (CultureInfo.GetCultures(CultureTypes.AllCultures).Any(c => c.Name.Equals(cultureName, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    var culture = CultureInfo.GetCultureInfo(cultureName, predefinedOnly: false);
+                    if (!result.Contains(culture))
+                        result.Add(culture);
+                }
+            }
+
             return result;
         }
 
@@ -483,10 +500,13 @@ namespace Robust.Shared.Localization
         {
             // Load data from .ftl files.
             // Data is loaded from /Locale/<language-code>/*
+            // and from /Uploaded/**/Locale/<language-code>/*
 
             var root = LocaleDirPath / culture.Name;
 
             var files = resourceManager.ContentFindFiles(root)
+                .Concat(resourceManager.ContentFindFiles(UploadedDirPath)
+                    .Where(c => c.CanonPath.Contains($"/Locale/{culture.Name}/", StringComparison.InvariantCultureIgnoreCase)))
                 .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase))
                 .ToArray();
 

@@ -18,15 +18,14 @@ namespace Robust.Shared.GameObjects
 {
     public abstract partial class SharedTransformSystem : EntitySystem
     {
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedMapSystem _map = default!;
-        [Dependency] private readonly MetaDataSystem _metaData = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly INetManager _netMan = default!;
-        [Dependency] private readonly SharedContainerSystem _container = default!;
-        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private SharedMapSystem _map = default!;
+        [Dependency] private MetaDataSystem _metaData = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private INetManager _netMan = default!;
+        [Dependency] private SharedContainerSystem _container = default!;
+        [Dependency] private SharedGridTraversalSystem _traversal = default!;
 
         private EntityQuery<MapComponent> _mapQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
@@ -70,11 +69,14 @@ namespace Robust.Shared.GameObjects
 
         private void MapManagerOnTileChanged(ref TileChangedEvent e)
         {
-            if(e.NewTile.Tile != Tile.Empty)
-                return;
+            foreach (var change in e.Changes)
+            {
+                if(change.NewTile != Tile.Empty)
+                    continue;
 
-            // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
-            DeparentAllEntsOnTile(e.NewTile.GridUid, e.NewTile.GridIndices);
+                // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
+                DeparentAllEntsOnTile(e.Entity, change.GridIndices);
+            }
         }
 
         /// <summary>
@@ -133,7 +135,7 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return xform.Coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+            DebugTools.Assert(!_gridQuery.HasComp(uid) && !_mapQuery.HasComp(uid));
 
             // Not parented to grid so convert their pos back to the grid.
             var worldPos = GetWorldPosition(xform, XformQuery);
@@ -174,7 +176,7 @@ namespace Robust.Shared.GameObjects
             if (mapId == parentUid)
                 return coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(parentUid) && !_mapManager.IsMap(parentUid));
+            DebugTools.Assert(!HasComp<MapGridComponent>(parentUid) && !HasComp<MapComponent>(parentUid));
 
             // Not parented to grid so convert their pos back to the grid.
             var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(parentXform, XformQuery));
@@ -260,12 +262,13 @@ namespace Robust.Shared.GameObjects
             return true;
         }
 
-        public void RaiseMoveEvent(
+        internal void RaiseMoveEvent(
             Entity<TransformComponent, MetaDataComponent> ent,
             EntityUid oldParent,
             Vector2 oldPosition,
             Angle oldRotation,
-            EntityUid? oldMap)
+            EntityUid? oldMap,
+            bool checkTraversal = true)
         {
             var pos = ent.Comp1._parent == EntityUid.Invalid
                 ? default
@@ -295,7 +298,10 @@ namespace Robust.Shared.GameObjects
             // Finally, handle grid traversal. This is handled separately to avoid out-of-order move events.
             // I.e., if the traversal raises its own move event, this ensures that all the old move event handlers
             // have finished running first. Ideally this shouldn't be required, but this is here just in case
-            _traversal.CheckTraverse(ent);
+            if (checkTraversal)
+            {
+                _traversal.CheckTraverse(ent);
+            }
         }
     }
 

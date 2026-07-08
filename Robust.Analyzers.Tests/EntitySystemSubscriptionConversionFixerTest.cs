@@ -89,6 +89,7 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
         }
 
         public readonly struct TestEvent;
+        public readonly struct TestEvent2;
         public sealed partial class TestComponent : IComponent;
         public sealed class TestNetworkEvent;
     """;
@@ -137,6 +138,67 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
         await Verifier(code, fixedCode,
             // /0/Test0.cs(9,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
             VerifyCS.Diagnostic().WithSpan(9, 9, 9, 62)
+        );
+    }
+
+    [Test]
+    [Description("Tests that multiple SubscribeLocalEvent invocations are correctly converted to attributes.")]
+    public async Task ConvertLocalEvent_Multiple()
+    {
+        const string code = """
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+
+                    SubscribeLocalEvent<TestComponent, TestEvent>(OnTest); // Comment here
+                    SubscribeLocalEvent<TestComponent, TestEvent2>(OnTest2);
+                }
+
+                private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args)
+                {
+                    // Do something
+                }
+
+                private void OnTest2(EntityUid uid, TestComponent comp, ref TestEvent2 args)
+                {
+                    // Do something
+                }
+            }
+            """;
+
+        const string fixedCode = """
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+                }
+
+                [SubscribeLocalEvent]
+                private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args)
+                {
+                    // Do something
+                }
+
+                [SubscribeLocalEvent]
+                private void OnTest2(EntityUid uid, TestComponent comp, ref TestEvent2 args)
+                {
+                    // Do something
+                }
+            }
+            """;
+
+        await Verifier(code, fixedCode,
+            // /0/Test0.cs(9,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
+            VerifyCS.Diagnostic().WithSpan(9, 9, 9, 62),
+            // /0/Test0.cs(10,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
+            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 64)
         );
     }
 

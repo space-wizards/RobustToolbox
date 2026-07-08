@@ -123,4 +123,27 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
 
         await Verifier(code, []);
     }
+
+    [Test]
+    [Description("Tests that subscriptions using anonymous delegates are not flagged as elligible for conversion.")]
+    public async Task IgnoreAnonymousDelegate()
+    {
+        const string code = """
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+
+                    SubscribeLocalEvent<TestComponent, TestEvent>((u, c, ref _) => OnTest(u, c));
+                }
+
+                private void OnTest(EntityUid uid, TestComponent comp) { }
+            }
+            """;
+
+        await Verifier(code, []);
+    }
 }

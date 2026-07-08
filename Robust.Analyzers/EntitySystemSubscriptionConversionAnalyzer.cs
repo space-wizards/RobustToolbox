@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using Robust.Roslyn.Shared;
@@ -93,6 +94,11 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
                 if (invocation.Arguments.Any(
                     arg => (arg.Parameter?.Name == "before" || arg.Parameter?.Name == "after")
                     && arg.Value is not IDefaultValueOperation))
+                    continue;
+
+                // Ignore anything that isn't a direct method reference, i.e. an anonymous delegate.
+                if (invocation.Arguments.SingleOrDefault(arg => arg.Parameter?.Name == "handler") is not { } handlerArg
+                    || handlerArg.Value.Syntax is not IdentifierNameSyntax)
                     continue;
 
                 var props = new Dictionary<string, string?>

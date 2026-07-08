@@ -553,18 +553,20 @@ namespace Robust.Shared.Physics.Systems
                 if (bodyA.Hard && !fixtureA.Hard)
                     continue;
 
+                var shapeA = fixtureA.Shape;
                 for (var i = 0; i < fixtureA.Shape.ChildCount; i++)
                 {
-                    input.ProxyA.Set(fixtureA.Shape, i);
+                    input.ProxyA.Set(ref shapeA, i);
 
                     foreach (var fixtureB in managerB.Fixtures.Values)
                     {
                         if (bodyB.Hard && !fixtureB.Hard)
                             continue;
 
+                        var shapeB = fixtureB.Shape;
                         for (var j = 0; j < fixtureB.Shape.ChildCount; j++)
                         {
-                            input.ProxyB.Set(fixtureB.Shape, j);
+                            input.ProxyB.Set(ref shapeB, j);
                             DistanceManager.ComputeDistance(out var output, out _, input);
 
                             if (distance < output.Distance)
@@ -626,8 +628,9 @@ namespace Robust.Shared.Physics.Systems
 
                 DebugTools.Assert(fixtureA.ProxyCount <= 1);
 
-                input.ProxyA.Set(fixtureA.Shape, 0);
-                input.ProxyB.Set(pointShape, 0);
+                var shapeA = fixtureA.Shape;
+                input.ProxyA.Set(ref shapeA, 0);
+                input.ProxyB.Set(ref pointShape, 0);
                 DistanceManager.ComputeDistance(out var output, out _, input);
 
                 if (distance < output.Distance)

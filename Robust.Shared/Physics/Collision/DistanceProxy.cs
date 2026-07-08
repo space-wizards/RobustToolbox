@@ -39,7 +39,7 @@ internal ref struct DistanceProxy
 {
     internal float Radius;
     internal ReadOnlySpan<Vector2> Vertices;
-    internal FixedArray2<Vector2> Buffer;
+    internal FixedArray8<Vector2> Buffer;
 
     // GJK using Voronoi regions (Christer Ericson) and Barycentric coordinates.
 
@@ -54,7 +54,7 @@ internal ref struct DistanceProxy
     /// must remain in scope while the proxy is in use.
     /// </summary>
     /// <param name="shape">The shape.</param>
-    internal void Set<T>(T shape, int index) where T : IPhysShape
+    internal void Set<T>(ref T shape, int index) where T : IPhysShape
     {
         switch (shape.ShapeType)
         {
@@ -66,18 +66,28 @@ internal ref struct DistanceProxy
                 break;
 
             case ShapeType.Polygon:
-                if (shape is Polygon poly)
+                if (typeof(T) == typeof(Polygon))
                 {
-                    Span<Vector2> verts = new Vector2[poly.VertexCount];
-                    poly._vertices.AsSpan[..poly.VertexCount].CopyTo(verts);
-                    Vertices = verts;
+                    ref var poly = ref Unsafe.As<T, Polygon>(ref shape);
+                    Vertices = poly._vertices.AsSpan[..poly.VertexCount];
+                    Radius = poly.Radius;
+                }
+                else if (typeof(T) == typeof(SlimPolygon))
+                {
+                    ref var fast = ref Unsafe.As<T, SlimPolygon>(ref shape);
+                    Vertices = fast._vertices.AsSpan[..fast.VertexCount];
+                    Radius = fast.Radius;
+                }
+                else if (shape is Polygon poly)
+                {
+                    poly._vertices.AsSpan[..poly.VertexCount].CopyTo(Buffer.AsSpan);
+                    Vertices = Buffer.AsSpan[..poly.VertexCount];
                     Radius = poly.Radius;
                 }
                 else if (shape is SlimPolygon fast)
                 {
-                    Span<Vector2> verts = new Vector2[fast.VertexCount];
-                    fast._vertices.AsSpan[..fast.VertexCount].CopyTo(verts);
-                    Vertices = verts;
+                    fast._vertices.AsSpan[..fast.VertexCount].CopyTo(Buffer.AsSpan);
+                    Vertices = Buffer.AsSpan[..fast.VertexCount];
                     Radius = fast.Radius;
                 }
                 else

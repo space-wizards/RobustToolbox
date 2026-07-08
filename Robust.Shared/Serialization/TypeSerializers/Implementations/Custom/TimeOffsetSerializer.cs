@@ -8,6 +8,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -29,21 +30,8 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
     {
-        if (context is {WritingReadingPrototypes: true})
-            return TimeSpan.Zero;
-
-        if (context is not EntityDeserializer {CurrentReadingEntity.PostInit: true} ctx)
-            return TimeSpan.Zero;
-
-        var timing = ctx.Timing;
         var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
-        var time = TimeSpan.FromSeconds(seconds);
-        
-        // Checks if adding time and curTime will overflow.
-        if(time > TimeSpan.MaxValue - timing.CurTime)
-            return TimeSpan.MaxValue;
-        
-        return time + timing.CurTime;
+        return TimeSpan.FromSeconds(seconds);
     }
 
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
@@ -80,5 +68,29 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
             value -= serializer.Timing.CurTime;
 
         return new ValueDataNode(value.TotalSeconds.ToString(CultureInfo.InvariantCulture));
+    }
+
+    public TimeSpan CreateCopy(
+        ISerializationManager serializationManager,
+        TimeSpan source,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null)
+    {
+        var timing = context switch
+        {
+            EntityDeserializer {CurrentReadingEntity.PostInit: true} deserializer => deserializer.Timing,
+            EntityDeserializer => null,
+            _ => dependencies.Resolve<IGameTiming>(),
+        };
+
+        if (timing == null)
+            return source;
+
+        // Checks if adding time and curTime will overflow.
+        if (source > TimeSpan.MaxValue - timing.CurTime)
+            return TimeSpan.MaxValue;
+
+        return source + timing.CurTime;
     }
 }

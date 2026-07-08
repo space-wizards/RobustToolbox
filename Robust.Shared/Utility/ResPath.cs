@@ -603,12 +603,6 @@ public static class ResPathUtil
     }
 
     /// <summary>
-    /// Return a ResPath that only contains the filename.
-    /// Useful if you want a string that's already divided in filename/extension format.
-    /// </summary>
-    public static ResPath GetFilename(this ResPath path) => new (path.Filename);
-
-    /// <summary>
     /// Gets the segments in common with 2 paths.
     /// </summary>
     public static ResPath GetCommonSegments(this ResPath path, ResPath other)

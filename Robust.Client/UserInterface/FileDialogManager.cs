@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Robust.Client.Graphics;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 
@@ -31,7 +30,7 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
         return null;
     }
 
-    public async Task<(Stream?, ResPath?)> GetFileAndName(
+    public async Task<(Stream?, string?)> GetFileAndName(
         FileDialogFilters? filters = null,
         FileAccess access = FileAccess.ReadWrite,
         FileShare? share = null)
@@ -40,12 +39,11 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
 
         if (name == null) return (null, null);
 
-        var path = new ResPath(name);
-        var resPath = path.GetFilename();
-        return (File.Open(name, FileMode.Open, access, Validate(access, share)), resPath);
+        var path = Path.GetFileName(name);
+        return (File.Open(name, FileMode.Open, access, Validate(access, share)), path);
     }
 
-    public async Task<ResPath?> GetName(
+    public async Task<string?> GetName(
         FileDialogFilters? filters = null,
         FileAccess access = FileAccess.ReadWrite,
         FileShare? share = null)
@@ -53,7 +51,7 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
         Validate(access, share);
         var name = await Prompt(false, filters);
 
-        return name == null ? null : new ResPath(name).GetFilename();
+        return name == null ? null : Path.GetFileName(name);
     }
 
     public async Task<Stream?> OpenFile(

@@ -1,7 +1,6 @@
 using System.IO;
 using System.Threading.Tasks;
 using Robust.Client.Graphics;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 
@@ -29,7 +28,7 @@ public interface IFileDialogManager
     /// If null is provided and <paramref name="access"/> is <see cref="FileAccess.Read"/>,
     /// <see cref="FileShare.Read"/> is selected, otherwise <see cref="FileShare.None"/>.
     /// </param>
-    Task<(Stream?, ResPath?)> GetFileAndName(
+    Task<(Stream?, string?)> GetFileAndName(
         FileDialogFilters? filters = null,
         FileAccess access = FileAccess.ReadWrite,
         FileShare? share = null);
@@ -42,7 +41,7 @@ public interface IFileDialogManager
     /// <see langword="null" /> if the user canceled the action.
     /// </returns>
     /// <inheritdoc cref = "GetFileAndName"/>
-    Task<ResPath?> GetName(
+    Task<string?> GetName(
         FileDialogFilters? filters = null,
         FileAccess access = FileAccess.ReadWrite,
         FileShare? share = null);

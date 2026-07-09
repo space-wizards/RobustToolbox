@@ -54,7 +54,7 @@ internal ref struct DistanceProxy
     /// must remain in scope while the proxy is in use.
     /// </summary>
     /// <param name="shape">The shape.</param>
-    internal void Set<T>(ref T shape, int index) where T : IPhysShape
+    internal void Set<T>(in T shape, int index) where T : IPhysShape
     {
         switch (shape.ShapeType)
         {
@@ -66,19 +66,7 @@ internal ref struct DistanceProxy
                 break;
 
             case ShapeType.Polygon:
-                if (typeof(T) == typeof(Polygon))
-                {
-                    ref var poly = ref Unsafe.As<T, Polygon>(ref shape);
-                    Vertices = poly._vertices.AsSpan[..poly.VertexCount];
-                    Radius = poly.Radius;
-                }
-                else if (typeof(T) == typeof(SlimPolygon))
-                {
-                    ref var fast = ref Unsafe.As<T, SlimPolygon>(ref shape);
-                    Vertices = fast._vertices.AsSpan[..fast.VertexCount];
-                    Radius = fast.Radius;
-                }
-                else if (shape is Polygon poly)
+                if (shape is Polygon poly)
                 {
                     poly._vertices.AsSpan[..poly.VertexCount].CopyTo(Buffer.AsSpan);
                     Vertices = Buffer.AsSpan[..poly.VertexCount];
@@ -105,7 +93,7 @@ internal ref struct DistanceProxy
 
                 Buffer._00 = chain.Vertices[index];
                 Buffer._01 = index + 1 < chain.Vertices.Length ? chain.Vertices[index + 1] : chain.Vertices[0];
-                Vertices = Buffer.AsSpan;
+                Vertices = Buffer.AsSpan[..2];
 
                 Radius = chain.Radius;
                 break;
@@ -114,7 +102,7 @@ internal ref struct DistanceProxy
 
                 Buffer._00 = edge.Vertex1;
                 Buffer._01 = edge.Vertex2;
-                Vertices = Buffer.AsSpan;
+                Vertices = Buffer.AsSpan[..2];
 
                 Radius = edge.Radius;
                 break;

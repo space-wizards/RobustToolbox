@@ -2170,8 +2170,9 @@ namespace Robust.Shared.Maths
 
         /// <summary>
         ///     Gets the associated color name with this color instance by using an inverted version of <see cref="DefaultColors"/>.
+        ///     Returns <see langword="null"/> if there is no possible name with this color instance.
         /// </summary>
-        /// <returns>The associated color name, usable with <see cref="DefaultColors"/>.</returns>
+        /// <returns>The associated color name if any, usable with <see cref="DefaultColors"/>.</returns>
         public readonly string? Name()
         {
             return DefaultColorsInverted.GetValueOrDefault(this);

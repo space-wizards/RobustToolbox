@@ -10,6 +10,22 @@ namespace Robust.Shared.Tests.Utility;
 internal sealed class ColorExtensionsTest
 {
     [Test]
+    public void TestAnalogousPalette()
+    {
+        var palette = ColorExtensions.GetAnalogousComplementaries(Color.Red);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(palette, Has.Length.EqualTo(3));
+            Assert.That(MathHelper.CloseToPercent(palette[0], Color.Red));
+
+            Assert.That(Color.ToHsl(palette[0]).X, Is.Zero);
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, ColorExtensions.AnalogousHueDelta));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - ColorExtensions.AnalogousHueDelta));
+        }
+    }
+
+    [Test]
     public void TestTriadicPalette()
     {
         var palette = ColorExtensions.GetTriadicComplementaries(Color.Red);

@@ -30,7 +30,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
-            return Color.TryFromName(node.Value, out _) || Color.TryFromHex(node.Value) != null
+            return Color.TryFromName(node.Value, out _) || Color.TryFromHex(node.Value, out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, "Failed parsing Color.");
         }

@@ -933,59 +933,64 @@ namespace Robust.Shared.Maths
             return new(Vector4.Lerp(α.RGBA, β.RGBA, λ));
         }
 
-        public static Color? TryFromHex(ReadOnlySpan<char> hexColor)
+        public static bool TryFromHex(ReadOnlySpan<char> hexColor, out Color color)
         {
-            if (hexColor.Length <= 0 || hexColor[0] != '#') return null;
+            color = default;
+
+            if (hexColor.Length <= 0 || hexColor[0] != '#') return false;
             if (hexColor.Length == 9)
             {
-                if (!byte.TryParse(hexColor[1..3], NumberStyles.HexNumber, null, out var r)) return null;
-                if (!byte.TryParse(hexColor[3..5], NumberStyles.HexNumber, null, out var g)) return null;
-                if (!byte.TryParse(hexColor[5..7], NumberStyles.HexNumber, null, out var b)) return null;
-                if (!byte.TryParse(hexColor[7..9], NumberStyles.HexNumber, null, out var a)) return null;
-                return new Color(r, g, b, a);
+                if (!byte.TryParse(hexColor[1..3], NumberStyles.HexNumber, null, out var r)) return false;
+                if (!byte.TryParse(hexColor[3..5], NumberStyles.HexNumber, null, out var g)) return false;
+                if (!byte.TryParse(hexColor[5..7], NumberStyles.HexNumber, null, out var b)) return false;
+                if (!byte.TryParse(hexColor[7..9], NumberStyles.HexNumber, null, out var a)) return false;
+                color = new Color(r, g, b, a);
+                return true;
             }
             if (hexColor.Length == 7)
             {
-                if (!byte.TryParse(hexColor[1..3], NumberStyles.HexNumber, null, out var r)) return null;
-                if (!byte.TryParse(hexColor[3..5], NumberStyles.HexNumber, null, out var g)) return null;
-                if (!byte.TryParse(hexColor[5..7], NumberStyles.HexNumber, null, out var b)) return null;
-                return new Color(r, g, b);
-            }
-
-            static bool ParseDup(char chr, out byte value)
-            {
-                Span<char> buf = stackalloc char[2];
-                buf[0] = chr;
-                buf[1] = chr;
-
-                return byte.TryParse(buf, NumberStyles.HexNumber, null, out value);
+                if (!byte.TryParse(hexColor[1..3], NumberStyles.HexNumber, null, out var r)) return false;
+                if (!byte.TryParse(hexColor[3..5], NumberStyles.HexNumber, null, out var g)) return false;
+                if (!byte.TryParse(hexColor[5..7], NumberStyles.HexNumber, null, out var b)) return false;
+                color = new Color(r, g, b);
+                return true;
             }
 
             if (hexColor.Length == 5)
             {
-                if (!ParseDup(hexColor[1], out var rByte)) return null;
-                if (!ParseDup(hexColor[2], out var gByte)) return null;
-                if (!ParseDup(hexColor[3], out var bByte)) return null;
-                if (!ParseDup(hexColor[4], out var aByte)) return null;
+                if (!ParseDup(hexColor[1], out var rByte)) return false;
+                if (!ParseDup(hexColor[2], out var gByte)) return false;
+                if (!ParseDup(hexColor[3], out var bByte)) return false;
+                if (!ParseDup(hexColor[4], out var aByte)) return false;
 
-                return new Color(rByte, gByte, bByte, aByte);
+                color = new Color(rByte, gByte, bByte, aByte);
+                return true;
             }
             if (hexColor.Length == 4)
             {
-                if (!ParseDup(hexColor[1], out var rByte)) return null;
-                if (!ParseDup(hexColor[2], out var gByte)) return null;
-                if (!ParseDup(hexColor[3], out var bByte)) return null;
+                if (!ParseDup(hexColor[1], out var rByte)) return false;
+                if (!ParseDup(hexColor[2], out var gByte)) return false;
+                if (!ParseDup(hexColor[3], out var bByte)) return false;
 
-                return new Color(rByte, gByte, bByte);
+                color = new Color(rByte, gByte, bByte);
+                return true;
             }
-            return null;
+            return false;
+        }
+
+        private static bool ParseDup(char chr, out byte value)
+        {
+            Span<char> buf = stackalloc char[2];
+            buf[0] = chr;
+            buf[1] = chr;
+
+            return byte.TryParse(buf, NumberStyles.HexNumber, null, out value);
         }
 
         public static Color FromHex(ReadOnlySpan<char> hexColor, Color? fallback = null)
         {
-            var color = TryFromHex(hexColor);
-            if (color.HasValue)
-                return color.Value;
+            if (TryFromHex(hexColor, out var color))
+                return color;
             if (fallback.HasValue)
                 return fallback.Value;
             throw new ArgumentException($"Invalid color code \"{new string(hexColor)}\" and no fallback provided.", nameof(hexColor));
@@ -993,9 +998,8 @@ namespace Robust.Shared.Maths
 
         public static Color FromXaml(string name)
         {
-            var color = TryFromHex(name);
-            if (color != null)
-                return color.Value;
+            if (TryFromHex(name, out var color))
+                return color;
 
             if (TryFromName(name, out var namedColor))
                 return namedColor;
@@ -2025,12 +2029,8 @@ namespace Robust.Shared.Maths
             if (TryFromName(input, out color))
                 return true;
 
-            var nullableColor = TryFromHex(input);
-            if (nullableColor != null)
-            {
-                color = nullableColor.Value;
+            if (TryFromHex(input, out color))
                 return true;
-            }
 
             return false;
         }

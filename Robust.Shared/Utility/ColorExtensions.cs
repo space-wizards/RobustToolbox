@@ -17,7 +17,7 @@ public static class ColorExtensions
     /// </summary>
     public static Color[] GetAnalogousComplementaries(this Color color)
     {
-        return GetComplementaryColors(color, TriadicHueDelta);
+        return GetComplementaryColors(color, AnalogousHueDelta);
     }
 
     /// <summary>

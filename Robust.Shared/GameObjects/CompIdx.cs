@@ -11,6 +11,8 @@ namespace Robust.Shared.GameObjects;
 public readonly struct CompIdx : IEquatable<CompIdx>
 {
     internal readonly int Value;
+    internal readonly bool Archetype;
+    internal readonly int ArchetypeIndex;
 
     internal static CompIdx Index<T>() => Store<T>.Index;
 
@@ -41,17 +43,34 @@ public readonly struct CompIdx : IEquatable<CompIdx>
         return ref array[idx.Value];
     }
 
+    internal static bool GetArchetype<T>()
+    {
+        return Store<T>.Index.Archetype;
+    }
+
+    internal static void SetArchetype<T>(bool archetype, int index)
+    {
+        Store<T>.Index = new CompIdx(Store<T>.Index.Value, archetype, index);
+    }
+
     private static int _CompIdxMaster = -1;
 
     private static class Store<T>
     {
         // ReSharper disable once StaticMemberInGenericType
-        public static readonly CompIdx Index = new(Interlocked.Increment(ref _CompIdxMaster));
+        public static CompIdx Index = new(Interlocked.Increment(ref _CompIdxMaster));
     }
 
     internal CompIdx(int value)
     {
         Value = value;
+    }
+
+    internal CompIdx(int value, bool archetype, int archetypeIndex)
+    {
+        Value = value;
+        Archetype = archetype;
+        ArchetypeIndex = archetypeIndex;
     }
 
     public bool Equals(CompIdx other)

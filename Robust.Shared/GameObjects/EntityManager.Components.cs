@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Arch.LowLevel.Jagged;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -42,6 +44,8 @@ namespace Robust.Shared.GameObjects
         private Dictionary<EntityUid, IComponent>[] _entTraitArray
             = Array.Empty<Dictionary<EntityUid, IComponent>>();
 
+        private JaggedArray<IComponent>[] _entTraitJaggedArray = Array.Empty<JaggedArray<IComponent>>();
+
         private readonly HashSet<IComponent> _deleteSet = new(TypeCapacity);
 
         private UniqueIndexHkm<EntityUid, IComponent> _entCompIndex =
@@ -74,6 +78,11 @@ namespace Robust.Shared.GameObjects
             {
                 dict.Clear();
             }
+
+            foreach (var array in _entTraitJaggedArray)
+            {
+                array.Clear();
+            }
         }
 
         private void RegisterComponents(IEnumerable<ComponentRegistration> components)
@@ -84,6 +93,24 @@ namespace Robust.Shared.GameObjects
                 var dict = new Dictionary<EntityUid, IComponent>();
                 traitDict.Add(reg.Type, dict);
                 CompIdx.AssignArray(ref _entTraitArray, reg.Idx, dict);
+
+                if (!reg.Archetype)
+                    continue;
+
+                var type = typeof(ArchetypeComponent<>).MakeGenericType(reg.Type);
+                var field = type.GetField(nameof(ArchetypeComponent<>.Index), BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
+                if (field is not int archetypeIndex)
+                    throw new UnreachableException($"Couldn't get index for archetypal component type {reg.Type}");
+
+                var newSize = archetypeIndex + 1;
+                if (_entTraitJaggedArray.Length <= newSize)
+                    Array.Resize(ref _entTraitJaggedArray, newSize);
+
+                foreach (ref var array in _entTraitJaggedArray.AsSpan())
+                {
+                    // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+                    array ??= new JaggedArray<IComponent>(128);
+                }
             }
             _entTraitDict = traitDict.ToFrozenDictionary();
         }
@@ -380,6 +407,13 @@ namespace Robust.Shared.GameObjects
                 {
                     comp = component;
                 }
+            }
+
+            if (CompIdx.GetArchetype<T>())
+            {
+                var array = _entTraitJaggedArray[ArchetypeComponent<T>.Index];
+                array.EnsureCapacity(uid.Id);
+                array.Add(uid.Id, component);
             }
 
             // actually ADD the component
@@ -749,6 +783,12 @@ namespace Robust.Shared.GameObjects
 
             _entTraitArray[idx.Value].Remove(entityUid);
 
+            if (idx.Archetype)
+            {
+                var array = _entTraitJaggedArray[idx.ArchetypeIndex];
+                array.Remove(entityUid.Id);
+            }
+
             // TODO if terminating the entity, maybe defer this?
             // _entCompIndex.Remove(uid) gets called later on anyways.
             _entCompIndex.Remove(entityUid, component);
@@ -762,6 +802,9 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool HasComponent<T>(EntityUid uid) where T : IComponent
         {
+            if (CompIdx.GetArchetype<T>())
+                return _entTraitJaggedArray[ArchetypeComponent<T>.Index].ContainsKey(uid.Id);
+
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
             return dict.TryGetValue(uid, out var comp) && !comp.Deleted;
@@ -889,6 +932,9 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid) where T : IComponent
         {
+            if (CompIdx.GetArchetype<T>())
+                return (T) _entTraitJaggedArray[ArchetypeComponent<T>.Index][uid.Id];
+
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
             if (dict.TryGetValue(uid, out var comp))
@@ -956,6 +1002,21 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component) where T : IComponent?
         {
+            if (CompIdx.GetArchetype<T>())
+            {
+                if (_entTraitJaggedArray[ArchetypeComponent<T>.Index].TryGetValue(uid.Id, out IComponent archetypeComp))
+                {
+                    if (!archetypeComp.Deleted)
+                    {
+                        component = (T)archetypeComp;
+                        return true;
+                    }
+                }
+
+                component = default;
+                return false;
+            }
+
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
             if (dict.TryGetValue(uid, out var comp))
@@ -1190,14 +1251,19 @@ namespace Robust.Shared.GameObjects
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp1).Name}");
-            return new EntityQuery<TComp1>(this, comps);
+
+            JaggedArray<IComponent>? jaggedArray = null;
+            if (CompIdx.GetArchetype<TComp1>())
+                jaggedArray = _entTraitJaggedArray[ArchetypeComponent<TComp1>.Index];
+
+            return new EntityQuery<TComp1>(this, comps, jaggedArray);
         }
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
             var comps = _entTraitDict[type];
             DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
-            return new EntityQuery<IComponent>(this, comps);
+            return new EntityQuery<IComponent>(this, comps, null);
         }
 
         /// <inheritdoc />
@@ -1411,7 +1477,12 @@ namespace Robust.Shared.GameObjects
         where TComp1 : IComponent
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            return new AllEntityQueryEnumerator<TComp1>(trait1);
+
+            JaggedArray<IComponent>? jaggedArray = null;
+            if (CompIdx.GetArchetype<TComp1>())
+                jaggedArray = _entTraitJaggedArray[ArchetypeComponent<TComp1>.Index];
+
+            return new AllEntityQueryEnumerator<TComp1>(trait1, jaggedArray);
         }
 
         public AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQueryEnumerator<TComp1, TComp2>()
@@ -1420,7 +1491,16 @@ namespace Robust.Shared.GameObjects
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            return new AllEntityQueryEnumerator<TComp1, TComp2>(trait1, trait2);
+
+            JaggedArray<IComponent>? jaggedArray1 = null;
+            if (CompIdx.GetArchetype<TComp1>())
+                jaggedArray1 = _entTraitJaggedArray[ArchetypeComponent<TComp1>.Index];
+
+            JaggedArray<IComponent>? jaggedArray2 = null;
+            if (CompIdx.GetArchetype<TComp2>())
+                jaggedArray2 = _entTraitJaggedArray[ArchetypeComponent<TComp2>.Index];
+
+            return new AllEntityQueryEnumerator<TComp1, TComp2>(trait1, trait2, jaggedArray1, jaggedArray2);
         }
 
         public AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQueryEnumerator<TComp1, TComp2, TComp3>()
@@ -1431,7 +1511,20 @@ namespace Robust.Shared.GameObjects
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
-            return new AllEntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3);
+
+            JaggedArray<IComponent>? jaggedArray1 = null;
+            if (CompIdx.GetArchetype<TComp1>())
+                jaggedArray1 = _entTraitJaggedArray[ArchetypeComponent<TComp1>.Index];
+
+            JaggedArray<IComponent>? jaggedArray2 = null;
+            if (CompIdx.GetArchetype<TComp2>())
+                jaggedArray2 = _entTraitJaggedArray[ArchetypeComponent<TComp2>.Index];
+
+            JaggedArray<IComponent>? jaggedArray3 = null;
+            if (CompIdx.GetArchetype<TComp3>())
+                jaggedArray3 = _entTraitJaggedArray[ArchetypeComponent<TComp3>.Index];
+
+            return new AllEntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3, jaggedArray1, jaggedArray2, jaggedArray3);
         }
 
         public AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
@@ -1444,14 +1537,36 @@ namespace Robust.Shared.GameObjects
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
             var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
-            return new AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4);
+
+            JaggedArray<IComponent>? jaggedArray1 = null;
+            if (CompIdx.GetArchetype<TComp1>())
+                jaggedArray1 = _entTraitJaggedArray[ArchetypeComponent<TComp1>.Index];
+
+            JaggedArray<IComponent>? jaggedArray2 = null;
+            if (CompIdx.GetArchetype<TComp2>())
+                jaggedArray2 = _entTraitJaggedArray[ArchetypeComponent<TComp2>.Index];
+
+            JaggedArray<IComponent>? jaggedArray3 = null;
+            if (CompIdx.GetArchetype<TComp3>())
+                jaggedArray3 = _entTraitJaggedArray[ArchetypeComponent<TComp3>.Index];
+
+            JaggedArray<IComponent>? jaggedArray4 = null;
+            if (CompIdx.GetArchetype<TComp4>())
+                jaggedArray4 = _entTraitJaggedArray[ArchetypeComponent<TComp4>.Index];
+
+            return new AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4, jaggedArray1, jaggedArray2, jaggedArray3, jaggedArray4);
         }
 
         public EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            return new EntityQueryEnumerator<TComp1>(trait1, MetaQuery);
+
+            JaggedArray<IComponent>? jaggedArray = null;
+            if (CompIdx.GetArchetype<TComp1>())
+                jaggedArray = _entTraitJaggedArray[ArchetypeComponent<TComp1>.Index];
+
+            return new EntityQueryEnumerator<TComp1>(trait1, MetaQuery, jaggedArray);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
@@ -1460,7 +1575,16 @@ namespace Robust.Shared.GameObjects
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            return new EntityQueryEnumerator<TComp1, TComp2>(trait1, trait2, MetaQuery);
+
+            JaggedArray<IComponent>? jaggedArray1 = null;
+            if (CompIdx.GetArchetype<TComp1>())
+                jaggedArray1 = _entTraitJaggedArray[ArchetypeComponent<TComp1>.Index];
+
+            JaggedArray<IComponent>? jaggedArray2 = null;
+            if (CompIdx.GetArchetype<TComp2>())
+                jaggedArray2 = _entTraitJaggedArray[ArchetypeComponent<TComp2>.Index];
+
+            return new EntityQueryEnumerator<TComp1, TComp2>(trait1, trait2, MetaQuery, jaggedArray1, jaggedArray2);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
@@ -1471,7 +1595,20 @@ namespace Robust.Shared.GameObjects
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
-            return new EntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3, MetaQuery);
+
+            JaggedArray<IComponent>? jaggedArray1 = null;
+            if (CompIdx.GetArchetype<TComp1>())
+                jaggedArray1 = _entTraitJaggedArray[ArchetypeComponent<TComp1>.Index];
+
+            JaggedArray<IComponent>? jaggedArray2 = null;
+            if (CompIdx.GetArchetype<TComp2>())
+                jaggedArray2 = _entTraitJaggedArray[ArchetypeComponent<TComp2>.Index];
+
+            JaggedArray<IComponent>? jaggedArray3 = null;
+            if (CompIdx.GetArchetype<TComp3>())
+                jaggedArray3 = _entTraitJaggedArray[ArchetypeComponent<TComp3>.Index];
+
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3, MetaQuery, jaggedArray1, jaggedArray2, jaggedArray3);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
@@ -1485,7 +1622,23 @@ namespace Robust.Shared.GameObjects
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
             var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
 
-            return new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4, MetaQuery);
+            JaggedArray<IComponent>? jaggedArray1 = null;
+            if (CompIdx.GetArchetype<TComp1>())
+                jaggedArray1 = _entTraitJaggedArray[ArchetypeComponent<TComp1>.Index];
+
+            JaggedArray<IComponent>? jaggedArray2 = null;
+            if (CompIdx.GetArchetype<TComp2>())
+                jaggedArray2 = _entTraitJaggedArray[ArchetypeComponent<TComp2>.Index];
+
+            JaggedArray<IComponent>? jaggedArray3 = null;
+            if (CompIdx.GetArchetype<TComp3>())
+                jaggedArray3 = _entTraitJaggedArray[ArchetypeComponent<TComp3>.Index];
+
+            JaggedArray<IComponent>? jaggedArray4 = null;
+            if (CompIdx.GetArchetype<TComp4>())
+                jaggedArray4 = _entTraitJaggedArray[ArchetypeComponent<TComp4>.Index];
+
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4, MetaQuery, jaggedArray1, jaggedArray2, jaggedArray3, jaggedArray4);
         }
 
         /// <inheritdoc />
@@ -1801,11 +1954,13 @@ namespace Robust.Shared.GameObjects
     {
         private readonly EntityManager _entMan;
         private readonly Dictionary<EntityUid, IComponent> _traitDict;
+        private readonly JaggedArray<IComponent>? _jaggedArray;
 
-        internal EntityQuery(EntityManager entMan, Dictionary<EntityUid, IComponent> traitDict)
+        internal EntityQuery(EntityManager entMan, Dictionary<EntityUid, IComponent> traitDict, JaggedArray<IComponent>? jaggedArray)
         {
             _entMan = entMan;
             _traitDict = traitDict;
+            _jaggedArray = jaggedArray;
         }
 
         /// <summary>
@@ -1824,6 +1979,9 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public TComp1 GetComponent(EntityUid uid)
         {
+            if (_jaggedArray != null)
+                return (TComp1) _jaggedArray[uid.Id];
+
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
                 return (TComp1) comp;
 
@@ -1834,6 +1992,9 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
         public Entity<TComp1> Get(EntityUid uid)
         {
+            if (_jaggedArray != null)
+                return new Entity<TComp1>(uid, (TComp1) _jaggedArray[uid.Id]);
+
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
                 return new Entity<TComp1>(uid, (TComp1) comp);
 
@@ -1874,6 +2035,15 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
         {
+            if (_jaggedArray != null)
+            {
+                if (_jaggedArray.TryGetValue(uid.Id, out IComponent archetypeComp) && !archetypeComp.Deleted)
+                {
+                    component = (TComp1) archetypeComp;
+                    return true;
+                }
+            }
+
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
             {
                 component = (TComp1) comp;
@@ -1922,6 +2092,11 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool HasComponent(EntityUid uid)
         {
+            if (_jaggedArray != null)
+            {
+                return _jaggedArray.TryGetValue(uid.Id, out IComponent archetypeComp) && !archetypeComp.Deleted;
+            }
+
             return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
@@ -1948,6 +2123,15 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.AssertOwner(uid, component);
                 return true;
+            }
+
+            if (_jaggedArray != null)
+            {
+                if (_jaggedArray.TryGetValue(uid.Id, out IComponent archetypeComp) && !archetypeComp.Deleted)
+                {
+                    component = (TComp1)archetypeComp;
+                    return true;
+                }
             }
 
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
@@ -2007,7 +2191,12 @@ namespace Robust.Shared.GameObjects
         [Pure]
         internal TComp1 GetComponentInternal(EntityUid uid)
         {
-            if (_traitDict.TryGetValue(uid, out var comp))
+            if (_jaggedArray != null)
+            {
+                if (_jaggedArray.TryGetValue(uid.Id, out IComponent archetypeComp))
+                    return (TComp1) archetypeComp;
+            }
+            else if (_traitDict.TryGetValue(uid, out var comp))
                 return (TComp1) comp;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
@@ -2036,6 +2225,18 @@ namespace Robust.Shared.GameObjects
         [Pure]
         internal bool TryGetComponentInternal(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
         {
+            if (_jaggedArray != null)
+            {
+                if (_jaggedArray.TryGetValue(uid.Id, out IComponent archetypeComp))
+                {
+                    component = (TComp1) archetypeComp;
+                    return true;
+                }
+
+                component = default;
+                return false;
+            }
+
             if (_traitDict.TryGetValue(uid, out var comp))
             {
                 component = (TComp1) comp;
@@ -2053,6 +2254,11 @@ namespace Robust.Shared.GameObjects
         [Pure]
         internal bool HasComponentInternal(EntityUid uid)
         {
+            if (_jaggedArray != null)
+            {
+                return _jaggedArray.TryGetValue(uid.Id, out IComponent archetypeComp) && !archetypeComp.Deleted;
+            }
+
             return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
@@ -2069,7 +2275,15 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            if (_traitDict.TryGetValue(uid, out var comp))
+            if (_jaggedArray != null)
+            {
+                if (_jaggedArray.TryGetValue(uid.Id, out IComponent archetypeComp))
+                {
+                    component = (TComp1)archetypeComp;
+                    return true;
+                }
+            }
+            else if (_traitDict.TryGetValue(uid, out var comp))
             {
                 component = (TComp1)comp;
                 return true;
@@ -2254,13 +2468,16 @@ namespace Robust.Shared.GameObjects
     {
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
+        private readonly JaggedArray<IComponent>? _jaggedArray;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
-            EntityQuery<MetaDataComponent> metaQuery)
+            EntityQuery<MetaDataComponent> metaQuery,
+            JaggedArray<IComponent>? jaggedArray = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _metaQuery = metaQuery;
+            _jaggedArray = jaggedArray;
         }
 
         /// <summary>
@@ -2318,15 +2535,21 @@ namespace Robust.Shared.GameObjects
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
+        private readonly JaggedArray<IComponent>? _jaggedArray1;
+        private readonly JaggedArray<IComponent>? _jaggedArray2;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
-            EntityQuery<MetaDataComponent> metaQuery)
+            EntityQuery<MetaDataComponent> metaQuery,
+            JaggedArray<IComponent>? jaggedArray1 = null,
+            JaggedArray<IComponent>? jaggedArray2 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
             _metaQuery = metaQuery;
+            _jaggedArray1 = jaggedArray1;
+            _jaggedArray2 = jaggedArray2;
         }
 
         /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`1.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@)"/>
@@ -2389,17 +2612,26 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
         private readonly Dictionary<EntityUid, IComponent> _traitDict3;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
+        private readonly JaggedArray<IComponent>? _jaggedArray1;
+        private readonly JaggedArray<IComponent>? _jaggedArray2;
+        private readonly JaggedArray<IComponent>? _jaggedArray3;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             Dictionary<EntityUid, IComponent> traitDict3,
-            EntityQuery<MetaDataComponent> metaQuery)
+            EntityQuery<MetaDataComponent> metaQuery,
+            JaggedArray<IComponent>? jaggedArray1 = null,
+            JaggedArray<IComponent>? jaggedArray2 = null,
+            JaggedArray<IComponent>? jaggedArray3 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
             _traitDict3 = traitDict3;
             _metaQuery = metaQuery;
+            _jaggedArray1 = jaggedArray1;
+            _jaggedArray2 = jaggedArray2;
+            _jaggedArray3 = jaggedArray3;
         }
 
         /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`1.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@)"/>
@@ -2475,19 +2707,31 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, IComponent> _traitDict3;
         private readonly Dictionary<EntityUid, IComponent> _traitDict4;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
+        private readonly JaggedArray<IComponent>? _jaggedArray1;
+        private readonly JaggedArray<IComponent>? _jaggedArray2;
+        private readonly JaggedArray<IComponent>? _jaggedArray3;
+        private readonly JaggedArray<IComponent>? _jaggedArray4;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             Dictionary<EntityUid, IComponent> traitDict3,
             Dictionary<EntityUid, IComponent> traitDict4,
-            EntityQuery<MetaDataComponent> metaQuery)
+            EntityQuery<MetaDataComponent> metaQuery,
+            JaggedArray<IComponent>? jaggedArray1 = null,
+            JaggedArray<IComponent>? jaggedArray2 = null,
+            JaggedArray<IComponent>? jaggedArray3 = null,
+            JaggedArray<IComponent>? jaggedArray4 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
             _traitDict3 = traitDict3;
             _traitDict4 = traitDict4;
             _metaQuery = metaQuery;
+            _jaggedArray1 = jaggedArray1;
+            _jaggedArray2 = jaggedArray2;
+            _jaggedArray3 = jaggedArray3;
+            _jaggedArray4 = jaggedArray4;
         }
 
         /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`1.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@)"/>
@@ -2598,11 +2842,14 @@ namespace Robust.Shared.GameObjects
         where TComp1 : IComponent
     {
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
+        private readonly JaggedArray<IComponent>? _jaggedArray;
 
         public AllEntityQueryEnumerator(
-            Dictionary<EntityUid, IComponent> traitDict)
+            Dictionary<EntityUid, IComponent> traitDict,
+            JaggedArray<IComponent>? jaggedArray = null)
         {
             _traitDict = traitDict.GetEnumerator();
+            _jaggedArray = jaggedArray;
         }
 
         /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`1.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@)"/>
@@ -2649,13 +2896,19 @@ namespace Robust.Shared.GameObjects
     {
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
+        private readonly JaggedArray<IComponent>? _jaggedArray1;
+        private readonly JaggedArray<IComponent>? _jaggedArray2;
 
         public AllEntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
-            Dictionary<EntityUid, IComponent> traitDict2)
+            Dictionary<EntityUid, IComponent> traitDict2,
+            JaggedArray<IComponent>? jaggedArray1 = null,
+            JaggedArray<IComponent>? jaggedArray2 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
+            _jaggedArray1 = jaggedArray1;
+            _jaggedArray2 = jaggedArray2;
         }
 
         /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`2.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@,`1@)"/>
@@ -2711,15 +2964,24 @@ namespace Robust.Shared.GameObjects
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
         private readonly Dictionary<EntityUid, IComponent> _traitDict3;
+        private readonly JaggedArray<IComponent>? _jaggedArray1;
+        private readonly JaggedArray<IComponent>? _jaggedArray2;
+        private readonly JaggedArray<IComponent>? _jaggedArray3;
 
         public AllEntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
-            Dictionary<EntityUid, IComponent> traitDict3)
+            Dictionary<EntityUid, IComponent> traitDict3,
+            JaggedArray<IComponent>? jaggedArray1 = null,
+            JaggedArray<IComponent>? jaggedArray2 = null,
+            JaggedArray<IComponent>? jaggedArray3 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
             _traitDict3 = traitDict3;
+            _jaggedArray1 = jaggedArray1;
+            _jaggedArray2 = jaggedArray2;
+            _jaggedArray3 = jaggedArray3;
         }
 
         /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`3.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@,`1@,`2@)"/>
@@ -2787,17 +3049,29 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
         private readonly Dictionary<EntityUid, IComponent> _traitDict3;
         private readonly Dictionary<EntityUid, IComponent> _traitDict4;
+        private readonly JaggedArray<IComponent>? _jaggedArray1;
+        private readonly JaggedArray<IComponent>? _jaggedArray2;
+        private readonly JaggedArray<IComponent>? _jaggedArray3;
+        private readonly JaggedArray<IComponent>? _jaggedArray4;
 
         public AllEntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             Dictionary<EntityUid, IComponent> traitDict3,
-            Dictionary<EntityUid, IComponent> traitDict4)
+            Dictionary<EntityUid, IComponent> traitDict4,
+            JaggedArray<IComponent>? jaggedArray1 = null,
+            JaggedArray<IComponent>? jaggedArray2 = null,
+            JaggedArray<IComponent>? jaggedArray3 = null,
+            JaggedArray<IComponent>? jaggedArray4 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
             _traitDict3 = traitDict3;
             _traitDict4 = traitDict4;
+            _jaggedArray1 = jaggedArray1;
+            _jaggedArray2 = jaggedArray2;
+            _jaggedArray3 = jaggedArray3;
+            _jaggedArray4 = jaggedArray4;
         }
 
         /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityQueryEnumerator`4.MoveNext(Robust.Shared.GameObjects.EntityUid@,`0@,`1@,`2@,`3@)"/>

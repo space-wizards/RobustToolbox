@@ -7,7 +7,7 @@ namespace Robust.Shared.Utility;
 
 public static class ColorExtensions
 {
-    public static readonly float AnalogousHueDelta = 45f / 360f; // +/- 1/8. 45 degrees, 0.125 over hue
+    public static readonly float AnalogousHueDelta = 30f / 360f; // +/- 1/12. 30 degrees, 0.08333... over hue
     public static readonly float TriadicHueDelta = 120f / 360f; // +/- 1/3. 120 degrees, 0.333 over hue
     public static readonly float SplitComplementaryHueDelta = 150f / 360f; // +/- 5/12. 150 degrees, 0.4166... over hue
     public static readonly float ComplementaryHueDelta = 180f / 360f; // +/- 1/2. 180 degrees

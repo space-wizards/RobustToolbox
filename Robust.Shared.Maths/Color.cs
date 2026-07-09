@@ -185,7 +185,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Deconstruct a Color instance into its float RGBA parts.
+        ///     Deconstructs a Color instance into its float RGBA parts.
         /// </summary>
         /// <param name="r">The Color instance's red value.</param>
         /// <param name="g">The Color instance's green value.</param>
@@ -200,7 +200,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Deconstruct a Color instance into its float RGB parts.
+        ///     Deconstructs a Color instance into its float RGB parts.
         /// </summary>
         /// <param name="r">The Color instance's red value.</param>
         /// <param name="g">The Color instance's green value.</param>

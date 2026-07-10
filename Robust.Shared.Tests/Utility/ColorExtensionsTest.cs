@@ -4,7 +4,6 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Tests.Utility;
 
-[TestFixture]
 [Parallelizable(ParallelScope.All)]
 [TestOf(typeof(ColorExtensions))]
 internal sealed class ColorExtensionsTest
@@ -20,8 +19,8 @@ internal sealed class ColorExtensionsTest
             Assert.That(MathHelper.CloseToPercent(palette[0], Color.Red));
 
             Assert.That(Color.ToHsl(palette[0]).X, Is.Zero);
-            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, ColorExtensions.AnalogousHueDelta));
-            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - ColorExtensions.AnalogousHueDelta));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, 30f / 360f));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - 30f / 360f));
         }
     }
 
@@ -36,8 +35,8 @@ internal sealed class ColorExtensionsTest
             Assert.That(MathHelper.CloseToPercent(palette[0], Color.Red));
 
             Assert.That(Color.ToHsl(palette[0]).X, Is.Zero);
-            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, ColorExtensions.TriadicHueDelta));
-            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - ColorExtensions.TriadicHueDelta));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, 120f / 360f));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - 120f / 360f));
         }
     }
 
@@ -52,8 +51,8 @@ internal sealed class ColorExtensionsTest
             Assert.That(MathHelper.CloseToPercent(palette[0], Color.Red));
 
             Assert.That(Color.ToHsl(palette[0]).X, Is.Zero);
-            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, ColorExtensions.SplitComplementaryHueDelta));
-            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - ColorExtensions.SplitComplementaryHueDelta));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, 150f / 360f));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - 150f / 360f));
         }
     }
 
@@ -68,8 +67,8 @@ internal sealed class ColorExtensionsTest
             Assert.That(MathHelper.CloseToPercent(palette[0], Color.Red));
 
             Assert.That(Color.ToHsl(palette[0]).X, Is.Zero);
-            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, ColorExtensions.ComplementaryHueDelta));
-            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - ColorExtensions.ComplementaryHueDelta));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[1]).X, 180f / 360f));
+            Assert.That(MathHelper.CloseToPercent(Color.ToHsl(palette[2]).X, 1f - 180f / 360f));
         }
     }
 }

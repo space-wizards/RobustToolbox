@@ -415,8 +415,7 @@ namespace Robust.Shared.GameObjects
 
             if (CompIdx.GetDense<T>())
             {
-                var array = _entTraitJaggedArray[DenseComponent<T>.Index];
-                array.EnsureCapacity(200_000_000);
+                var array = _entTraitJaggedArray[DenseComponent<T>.Index]
                 array.Add(uid.Id, component);
             }
 

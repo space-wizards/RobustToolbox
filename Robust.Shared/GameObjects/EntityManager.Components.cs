@@ -37,6 +37,7 @@ namespace Robust.Shared.GameObjects
         private const int ComponentCollectionCapacity = 1024;
         private const int EntityCapacity = 1024;
         private const int NetComponentCapacity = 8;
+        private const int DenseBucketSize = 512;
 
         private FrozenDictionary<Type, Dictionary<EntityUid, IComponent>> _entTraitDict
             = FrozenDictionary<Type, Dictionary<EntityUid, IComponent>>.Empty;
@@ -44,7 +45,7 @@ namespace Robust.Shared.GameObjects
         private Dictionary<EntityUid, IComponent>[] _entTraitArray
             = Array.Empty<Dictionary<EntityUid, IComponent>>();
 
-        private JaggedArray<IComponent>[] _entTraitJaggedArray = Array.Empty<JaggedArray<IComponent>>();
+        private SparseJaggedArray<IComponent>[] _entTraitJaggedArray = Array.Empty<SparseJaggedArray<IComponent>>();
 
         private readonly HashSet<IComponent> _deleteSet = new(TypeCapacity);
 
@@ -109,7 +110,7 @@ namespace Robust.Shared.GameObjects
                 foreach (ref var array in _entTraitJaggedArray.AsSpan())
                 {
                     // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
-                    array ??= new JaggedArray<IComponent>(128);
+                    array ??= new SparseJaggedArray<IComponent>(DenseBucketSize);
                 }
             }
             _entTraitDict = traitDict.ToFrozenDictionary();
@@ -1252,7 +1253,7 @@ namespace Robust.Shared.GameObjects
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp1).Name}");
 
-            JaggedArray<IComponent>? jaggedArray = null;
+            SparseJaggedArray<IComponent>? jaggedArray = null;
             if (CompIdx.GetDense<TComp1>())
                 jaggedArray = _entTraitJaggedArray[DenseComponent<TComp1>.Index];
 
@@ -1478,7 +1479,7 @@ namespace Robust.Shared.GameObjects
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
 
-            JaggedArray<IComponent>? jaggedArray = null;
+            SparseJaggedArray<IComponent>? jaggedArray = null;
             if (CompIdx.GetDense<TComp1>())
                 jaggedArray = _entTraitJaggedArray[DenseComponent<TComp1>.Index];
 
@@ -1492,11 +1493,11 @@ namespace Robust.Shared.GameObjects
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
 
-            JaggedArray<IComponent>? jaggedArray1 = null;
+            SparseJaggedArray<IComponent>? jaggedArray1 = null;
             if (CompIdx.GetDense<TComp1>())
                 jaggedArray1 = _entTraitJaggedArray[DenseComponent<TComp1>.Index];
 
-            JaggedArray<IComponent>? jaggedArray2 = null;
+            SparseJaggedArray<IComponent>? jaggedArray2 = null;
             if (CompIdx.GetDense<TComp2>())
                 jaggedArray2 = _entTraitJaggedArray[DenseComponent<TComp2>.Index];
 
@@ -1512,15 +1513,15 @@ namespace Robust.Shared.GameObjects
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
 
-            JaggedArray<IComponent>? jaggedArray1 = null;
+            SparseJaggedArray<IComponent>? jaggedArray1 = null;
             if (CompIdx.GetDense<TComp1>())
                 jaggedArray1 = _entTraitJaggedArray[DenseComponent<TComp1>.Index];
 
-            JaggedArray<IComponent>? jaggedArray2 = null;
+            SparseJaggedArray<IComponent>? jaggedArray2 = null;
             if (CompIdx.GetDense<TComp2>())
                 jaggedArray2 = _entTraitJaggedArray[DenseComponent<TComp2>.Index];
 
-            JaggedArray<IComponent>? jaggedArray3 = null;
+            SparseJaggedArray<IComponent>? jaggedArray3 = null;
             if (CompIdx.GetDense<TComp3>())
                 jaggedArray3 = _entTraitJaggedArray[DenseComponent<TComp3>.Index];
 
@@ -1538,19 +1539,19 @@ namespace Robust.Shared.GameObjects
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
             var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
 
-            JaggedArray<IComponent>? jaggedArray1 = null;
+            SparseJaggedArray<IComponent>? jaggedArray1 = null;
             if (CompIdx.GetDense<TComp1>())
                 jaggedArray1 = _entTraitJaggedArray[DenseComponent<TComp1>.Index];
 
-            JaggedArray<IComponent>? jaggedArray2 = null;
+            SparseJaggedArray<IComponent>? jaggedArray2 = null;
             if (CompIdx.GetDense<TComp2>())
                 jaggedArray2 = _entTraitJaggedArray[DenseComponent<TComp2>.Index];
 
-            JaggedArray<IComponent>? jaggedArray3 = null;
+            SparseJaggedArray<IComponent>? jaggedArray3 = null;
             if (CompIdx.GetDense<TComp3>())
                 jaggedArray3 = _entTraitJaggedArray[DenseComponent<TComp3>.Index];
 
-            JaggedArray<IComponent>? jaggedArray4 = null;
+            SparseJaggedArray<IComponent>? jaggedArray4 = null;
             if (CompIdx.GetDense<TComp4>())
                 jaggedArray4 = _entTraitJaggedArray[DenseComponent<TComp4>.Index];
 
@@ -1562,7 +1563,7 @@ namespace Robust.Shared.GameObjects
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
 
-            JaggedArray<IComponent>? jaggedArray = null;
+            SparseJaggedArray<IComponent>? jaggedArray = null;
             if (CompIdx.GetDense<TComp1>())
                 jaggedArray = _entTraitJaggedArray[DenseComponent<TComp1>.Index];
 
@@ -1576,11 +1577,11 @@ namespace Robust.Shared.GameObjects
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
 
-            JaggedArray<IComponent>? jaggedArray1 = null;
+            SparseJaggedArray<IComponent>? jaggedArray1 = null;
             if (CompIdx.GetDense<TComp1>())
                 jaggedArray1 = _entTraitJaggedArray[DenseComponent<TComp1>.Index];
 
-            JaggedArray<IComponent>? jaggedArray2 = null;
+            SparseJaggedArray<IComponent>? jaggedArray2 = null;
             if (CompIdx.GetDense<TComp2>())
                 jaggedArray2 = _entTraitJaggedArray[DenseComponent<TComp2>.Index];
 
@@ -1596,15 +1597,15 @@ namespace Robust.Shared.GameObjects
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
 
-            JaggedArray<IComponent>? jaggedArray1 = null;
+            SparseJaggedArray<IComponent>? jaggedArray1 = null;
             if (CompIdx.GetDense<TComp1>())
                 jaggedArray1 = _entTraitJaggedArray[DenseComponent<TComp1>.Index];
 
-            JaggedArray<IComponent>? jaggedArray2 = null;
+            SparseJaggedArray<IComponent>? jaggedArray2 = null;
             if (CompIdx.GetDense<TComp2>())
                 jaggedArray2 = _entTraitJaggedArray[DenseComponent<TComp2>.Index];
 
-            JaggedArray<IComponent>? jaggedArray3 = null;
+            SparseJaggedArray<IComponent>? jaggedArray3 = null;
             if (CompIdx.GetDense<TComp3>())
                 jaggedArray3 = _entTraitJaggedArray[DenseComponent<TComp3>.Index];
 
@@ -1622,19 +1623,19 @@ namespace Robust.Shared.GameObjects
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
             var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
 
-            JaggedArray<IComponent>? jaggedArray1 = null;
+            SparseJaggedArray<IComponent>? jaggedArray1 = null;
             if (CompIdx.GetDense<TComp1>())
                 jaggedArray1 = _entTraitJaggedArray[DenseComponent<TComp1>.Index];
 
-            JaggedArray<IComponent>? jaggedArray2 = null;
+            SparseJaggedArray<IComponent>? jaggedArray2 = null;
             if (CompIdx.GetDense<TComp2>())
                 jaggedArray2 = _entTraitJaggedArray[DenseComponent<TComp2>.Index];
 
-            JaggedArray<IComponent>? jaggedArray3 = null;
+            SparseJaggedArray<IComponent>? jaggedArray3 = null;
             if (CompIdx.GetDense<TComp3>())
                 jaggedArray3 = _entTraitJaggedArray[DenseComponent<TComp3>.Index];
 
-            JaggedArray<IComponent>? jaggedArray4 = null;
+            SparseJaggedArray<IComponent>? jaggedArray4 = null;
             if (CompIdx.GetDense<TComp4>())
                 jaggedArray4 = _entTraitJaggedArray[DenseComponent<TComp4>.Index];
 
@@ -1954,9 +1955,9 @@ namespace Robust.Shared.GameObjects
     {
         private readonly EntityManager _entMan;
         private readonly Dictionary<EntityUid, IComponent> _traitDict;
-        private readonly JaggedArray<IComponent>? _jaggedArray;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray;
 
-        internal EntityQuery(EntityManager entMan, Dictionary<EntityUid, IComponent> traitDict, JaggedArray<IComponent>? jaggedArray)
+        internal EntityQuery(EntityManager entMan, Dictionary<EntityUid, IComponent> traitDict, SparseJaggedArray<IComponent>? jaggedArray)
         {
             _entMan = entMan;
             _traitDict = traitDict;
@@ -2468,12 +2469,12 @@ namespace Robust.Shared.GameObjects
     {
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
-        private readonly JaggedArray<IComponent>? _jaggedArray;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             EntityQuery<MetaDataComponent> metaQuery,
-            JaggedArray<IComponent>? jaggedArray = null)
+            SparseJaggedArray<IComponent>? jaggedArray = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _metaQuery = metaQuery;
@@ -2535,15 +2536,15 @@ namespace Robust.Shared.GameObjects
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
-        private readonly JaggedArray<IComponent>? _jaggedArray1;
-        private readonly JaggedArray<IComponent>? _jaggedArray2;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray1;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray2;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             EntityQuery<MetaDataComponent> metaQuery,
-            JaggedArray<IComponent>? jaggedArray1 = null,
-            JaggedArray<IComponent>? jaggedArray2 = null)
+            SparseJaggedArray<IComponent>? jaggedArray1 = null,
+            SparseJaggedArray<IComponent>? jaggedArray2 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
@@ -2612,18 +2613,18 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
         private readonly Dictionary<EntityUid, IComponent> _traitDict3;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
-        private readonly JaggedArray<IComponent>? _jaggedArray1;
-        private readonly JaggedArray<IComponent>? _jaggedArray2;
-        private readonly JaggedArray<IComponent>? _jaggedArray3;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray1;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray2;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray3;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             Dictionary<EntityUid, IComponent> traitDict3,
             EntityQuery<MetaDataComponent> metaQuery,
-            JaggedArray<IComponent>? jaggedArray1 = null,
-            JaggedArray<IComponent>? jaggedArray2 = null,
-            JaggedArray<IComponent>? jaggedArray3 = null)
+            SparseJaggedArray<IComponent>? jaggedArray1 = null,
+            SparseJaggedArray<IComponent>? jaggedArray2 = null,
+            SparseJaggedArray<IComponent>? jaggedArray3 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
@@ -2707,10 +2708,10 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, IComponent> _traitDict3;
         private readonly Dictionary<EntityUid, IComponent> _traitDict4;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
-        private readonly JaggedArray<IComponent>? _jaggedArray1;
-        private readonly JaggedArray<IComponent>? _jaggedArray2;
-        private readonly JaggedArray<IComponent>? _jaggedArray3;
-        private readonly JaggedArray<IComponent>? _jaggedArray4;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray1;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray2;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray3;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray4;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
@@ -2718,10 +2719,10 @@ namespace Robust.Shared.GameObjects
             Dictionary<EntityUid, IComponent> traitDict3,
             Dictionary<EntityUid, IComponent> traitDict4,
             EntityQuery<MetaDataComponent> metaQuery,
-            JaggedArray<IComponent>? jaggedArray1 = null,
-            JaggedArray<IComponent>? jaggedArray2 = null,
-            JaggedArray<IComponent>? jaggedArray3 = null,
-            JaggedArray<IComponent>? jaggedArray4 = null)
+            SparseJaggedArray<IComponent>? jaggedArray1 = null,
+            SparseJaggedArray<IComponent>? jaggedArray2 = null,
+            SparseJaggedArray<IComponent>? jaggedArray3 = null,
+            SparseJaggedArray<IComponent>? jaggedArray4 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
@@ -2842,11 +2843,11 @@ namespace Robust.Shared.GameObjects
         where TComp1 : IComponent
     {
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-        private readonly JaggedArray<IComponent>? _jaggedArray;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray;
 
         public AllEntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
-            JaggedArray<IComponent>? jaggedArray = null)
+            SparseJaggedArray<IComponent>? jaggedArray = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _jaggedArray = jaggedArray;
@@ -2896,14 +2897,14 @@ namespace Robust.Shared.GameObjects
     {
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
-        private readonly JaggedArray<IComponent>? _jaggedArray1;
-        private readonly JaggedArray<IComponent>? _jaggedArray2;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray1;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray2;
 
         public AllEntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
-            JaggedArray<IComponent>? jaggedArray1 = null,
-            JaggedArray<IComponent>? jaggedArray2 = null)
+            SparseJaggedArray<IComponent>? jaggedArray1 = null,
+            SparseJaggedArray<IComponent>? jaggedArray2 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
@@ -2964,17 +2965,17 @@ namespace Robust.Shared.GameObjects
         private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
         private readonly Dictionary<EntityUid, IComponent> _traitDict3;
-        private readonly JaggedArray<IComponent>? _jaggedArray1;
-        private readonly JaggedArray<IComponent>? _jaggedArray2;
-        private readonly JaggedArray<IComponent>? _jaggedArray3;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray1;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray2;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray3;
 
         public AllEntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             Dictionary<EntityUid, IComponent> traitDict3,
-            JaggedArray<IComponent>? jaggedArray1 = null,
-            JaggedArray<IComponent>? jaggedArray2 = null,
-            JaggedArray<IComponent>? jaggedArray3 = null)
+            SparseJaggedArray<IComponent>? jaggedArray1 = null,
+            SparseJaggedArray<IComponent>? jaggedArray2 = null,
+            SparseJaggedArray<IComponent>? jaggedArray3 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
@@ -3049,20 +3050,20 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
         private readonly Dictionary<EntityUid, IComponent> _traitDict3;
         private readonly Dictionary<EntityUid, IComponent> _traitDict4;
-        private readonly JaggedArray<IComponent>? _jaggedArray1;
-        private readonly JaggedArray<IComponent>? _jaggedArray2;
-        private readonly JaggedArray<IComponent>? _jaggedArray3;
-        private readonly JaggedArray<IComponent>? _jaggedArray4;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray1;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray2;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray3;
+        private readonly SparseJaggedArray<IComponent>? _jaggedArray4;
 
         public AllEntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             Dictionary<EntityUid, IComponent> traitDict3,
             Dictionary<EntityUid, IComponent> traitDict4,
-            JaggedArray<IComponent>? jaggedArray1 = null,
-            JaggedArray<IComponent>? jaggedArray2 = null,
-            JaggedArray<IComponent>? jaggedArray3 = null,
-            JaggedArray<IComponent>? jaggedArray4 = null)
+            SparseJaggedArray<IComponent>? jaggedArray1 = null,
+            SparseJaggedArray<IComponent>? jaggedArray2 = null,
+            SparseJaggedArray<IComponent>? jaggedArray3 = null,
+            SparseJaggedArray<IComponent>? jaggedArray4 = null)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;

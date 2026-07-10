@@ -46,13 +46,6 @@ public abstract partial class AnimusActionAnimationBase
         },
     };
 
-    ///<summary>
-    /// Should this action be restarted on trigger?
-    /// (Useful if an already running animation needs to change immediately after certain events).
-    /// </summary>
-    [DataField]
-    public bool RestartOnTrigger;
-
     public virtual void Initialize(EntityManager entityManager)
     {
 

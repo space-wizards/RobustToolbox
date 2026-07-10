@@ -28,5 +28,4 @@ internal sealed class AnimusInstance
     internal AnimusStateBase ActiveState = new AnimusStateNull();
     internal AnimusStateBase DefaultState = new AnimusStateNull();
     internal TimeSpan ActiveStateExitTime = TimeSpan.Zero;
-    internal TimeSpan NextUpdate = TimeSpan.Zero;
 }

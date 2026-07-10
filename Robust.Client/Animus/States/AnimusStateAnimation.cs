@@ -38,10 +38,9 @@ internal sealed partial class AnimusStateAnimation : AnimusStateBase
         Action.Initialize(entityManager);
     }
 
-    internal override void Enter(EntityUid ent, bool enteredByTrigger)
+    internal override void Enter(EntityUid ent)
     {
-        if (enteredByTrigger && Action.RestartOnTrigger ||
-            _animationPlayerSystem.HasRunningAnimation(ent, RunningAnimationKey) ||
+        if (_animationPlayerSystem.HasRunningAnimation(ent, RunningAnimationKey) ||
             !Action.TryNextAnimation(_appearanceSystem, ent, out var animation, false))
             return;
 

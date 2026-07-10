@@ -1,6 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Client.Animus.Conditions;
@@ -9,7 +9,9 @@ namespace Robust.Client.Animus.Conditions;
 [PublicAPI]
 public abstract partial class AnimusConditionBase
 {
-    internal bool LastResult = false;
+    private bool _lastResult;
+    private TimeSpan _lastUpdate;
+    protected virtual TimeSpan UpdateInterval { get; } = TimeSpan.FromSeconds(0.1);
 
     /// <summary>
     /// IoCManager.InjectDependencies doesn't work, override this method to initialize dependencies manually.
@@ -22,9 +24,11 @@ public abstract partial class AnimusConditionBase
 
     protected abstract bool Evaluate(EntityUid ent);
 
-    internal bool EvaluateInternal(Entity<AnimusComponent> ent)
+    internal bool EvaluateInternal(Entity<AnimusComponent> ent, TimeSpan currentTime, bool isFirstTimePredicted)
     {
-        LastResult = Evaluate(ent);
-        return LastResult;
+        if (!isFirstTimePredicted || currentTime - _lastUpdate < UpdateInterval)
+            return _lastResult;
+        _lastResult = Evaluate(ent);
+        return _lastResult;
     }
 }

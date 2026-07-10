@@ -1,6 +1,5 @@
 ﻿using System;
 using Robust.Client.Animus.Conditions;
-using Robust.Client.Animus.Triggers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager.Attributes;
 
@@ -14,12 +13,6 @@ internal abstract partial class AnimusStateBase
     /// </summary>
     [DataField]
     internal AnimusConditionBase[] Conditions = [];
-
-    /// <summary>
-    /// A collection of triggers that cause a conditions check.
-    /// </summary>
-    [DataField]
-    internal AnimusTriggerBase[] Triggers = [];
 
     /// <summary>
     /// If set to true, the state only executes its action one time instead of restarting it once the animation ends.
@@ -41,7 +34,7 @@ internal abstract partial class AnimusStateBase
         Instance = animusInstance;
     }
 
-    internal virtual void Enter(EntityUid ent, bool enteredByTrigger)
+    internal virtual void Enter(EntityUid ent)
     {
 
     }

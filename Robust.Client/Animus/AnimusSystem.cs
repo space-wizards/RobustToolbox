@@ -2,25 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Animus.States;
-using Robust.Client.Animus.Triggers;
 using Robust.Client.GameObjects;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Random;
 using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Client.Animus;
 
 public sealed partial class AnimusSystem : EntitySystem
 {
-    private const float UpdateInterval = 0.1f;
-
     [Dependency] private ILogManager _logger = default!;
     [Dependency] private IClientGameTiming _timing = default!;
-    [Dependency] private IRobustRandom _random = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ISerializationManager _serializationManager = default!;
 
@@ -50,9 +45,7 @@ public sealed partial class AnimusSystem : EntitySystem
 
         if (animusInstance.ActiveState.OneShot)
         {
-            SwitchState((entity, comp),
-                animusInstance.DefaultState,
-                false);
+            SwitchState((entity, comp), animusInstance.DefaultState);
         }
         else if (EvaluateConditions((entity, comp), animusInstance.ActiveState))
         {
@@ -95,17 +88,6 @@ public sealed partial class AnimusSystem : EntitySystem
         }
     }
 
-    internal void TriggerInternal(AnimusStateBase state, Entity<AnimusComponent> entity)
-    {
-        foreach (var cond in state.Conditions)
-        {
-            if (!cond.EvaluateInternal(entity))
-                return;
-        }
-
-        SwitchState(entity, state, true);
-    }
-
     internal void RegisterEntityAnimationProperty(EntityUid uid, Type type, string prop)
     {
         if (!_actingComponentProperties.ContainsKey(uid))
@@ -141,7 +123,6 @@ public sealed partial class AnimusSystem : EntitySystem
             Prototype = proto,
             Timer = _serializationManager.CreateCopy(proto.Timer, null, false),
             DefaultState = _serializationManager.CreateCopy(proto.DefaultState, null, false, false),
-            NextUpdate = _timing.CurTime + TimeSpan.FromSeconds(UpdateInterval),
         };
 
         animusInstance.ActiveState.Initialize(entity, EntityManager, animusInstance);
@@ -175,28 +156,13 @@ public sealed partial class AnimusSystem : EntitySystem
             cond.Initialize(EntityManager);
         }
 
-        foreach (var trigger in stateCopy.Triggers)
-        {
-            trigger.InitializeInternal(EntityManager, entity, stateCopy);
-        }
-
         return stateCopy;
     }
 
     private void UpdateStateMachine(Entity<AnimusComponent> entity, AnimusInstance animusInstance)
     {
-        UpdateTriggers(entity, animusInstance);
         ExitActiveStateIfExitTimerReached(entity, animusInstance);
-
-        if (animusInstance.NextUpdate > _timing.CurTime)
-            return;
-
         CheckStateMachineConditionsAndUpdateState(entity, animusInstance);
-
-        animusInstance.NextUpdate = _timing.CurTime + (
-            animusInstance.Timer?.GetNextPeriod(_random) ??
-            TimeSpan.FromSeconds(UpdateInterval)
-        );
     }
 
     private void ExitActiveStateIfExitTimerReached(Entity<AnimusComponent> entity, AnimusInstance animusInstance)
@@ -207,7 +173,7 @@ public sealed partial class AnimusSystem : EntitySystem
         if (animusInstance.ActiveStateExitTime > _timing.CurTime)
             return;
 
-        SwitchState(entity, animusInstance.DefaultState, false);
+        SwitchState(entity, animusInstance.DefaultState);
         animusInstance.ActiveStateExitTime = TimeSpan.Zero;
     }
 
@@ -231,72 +197,28 @@ public sealed partial class AnimusSystem : EntitySystem
             break;
         }
 
-        SwitchState(entity, nextState, false);
+        SwitchState(entity, nextState);
         if (nextState.ExitPeriod != TimeSpan.Zero)
             animusInstance.ActiveStateExitTime = _timing.CurTime + nextState.ExitPeriod;
-    }
-
-    private void UpdateTriggers(Entity<AnimusComponent> entity, AnimusInstance animusInstance)
-    {
-        foreach (var state in animusInstance.States)
-        {
-            EvaluateTriggers(entity, state);
-        }
     }
 
     private bool EvaluateConditions(Entity<AnimusComponent> entity, AnimusStateBase state)
     {
         foreach (var cond in state.Conditions)
         {
-            // Skip the check if it was recently false.
-            if ((!_timing.IsFirstTimePredicted || state.Instance.NextUpdate > _timing.CurTime) && !cond.LastResult)
-                return false;
-
-            if (!cond.EvaluateInternal(entity))
+            if (!cond.EvaluateInternal(entity, _timing.CurTime, _timing.IsFirstTimePredicted))
                 return false;
         }
         return true;
     }
 
-    private static void EvaluateTriggers(Entity<AnimusComponent> entity, AnimusStateBase state)
-    {
-        foreach (var trigger in state.Triggers)
-        {
-            if (trigger.TriggerIfNecessaryInternal(entity))
-            {
-                return;
-            }
-        }
-    }
-
-    private static void SwitchState(Entity<AnimusComponent> entity, AnimusStateBase newState, bool switchedByTrigger)
+    private static void SwitchState(Entity<AnimusComponent> entity, AnimusStateBase newState)
     {
         if (newState.Instance.ActiveState == newState)
             return;
 
         newState.Instance.ActiveState.Exit(entity.Owner);
-        newState.Enter(entity.Owner, switchedByTrigger);
+        newState.Enter(entity.Owner);
         newState.Instance.ActiveState = newState;
-    }
-
-    public void TriggerFor<TEvent>(Entity<AnimusComponent> entity) where TEvent : EntityEventArgs
-    {
-        if (!TryComp<AnimusComponent>(entity, out var comp))
-            return;
-
-        // Good thing this isn't called on a per-frame basis...
-        foreach (var animusInstance in comp.ActiveStateMachines)
-        {
-            foreach (var state in animusInstance.States)
-            {
-                foreach (var trigger in state.Triggers)
-                {
-                    if (trigger is AnimusTriggerEvents eventsTrigger && eventsTrigger.Events.Contains(typeof(TEvent).Name))
-                    {
-                        TriggerInternal(state, entity);
-                    }
-                }
-            }
-        }
     }
 }

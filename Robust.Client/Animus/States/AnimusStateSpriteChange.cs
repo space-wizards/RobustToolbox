@@ -24,7 +24,7 @@ internal sealed partial class AnimusStateSpriteChange : AnimusStateBase
         Action.Initialize((ent, spriteComponent), entityManager);
     }
 
-    internal override void Enter(EntityUid ent, bool enteredByTrigger)
+    internal override void Enter(EntityUid ent)
     {
         if (!_entityManager.TryGetComponent<SpriteComponent>(ent, out var spriteComponent))
             return;

@@ -5,4 +5,4 @@ namespace Robust.Shared.GameObjects;
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 [BaseTypeRequired(typeof(IComponent))]
-public sealed class ArchetypeComponentAttribute : Attribute;
+public sealed class DenseComponentAttribute : Attribute;

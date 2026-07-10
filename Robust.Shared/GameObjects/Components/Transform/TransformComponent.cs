@@ -22,7 +22,7 @@ namespace Robust.Shared.GameObjects
     ///     and move when their parent moves cheaply.
     /// </summary>
     /// <seealso cref="SharedTransformSystem"/>
-    [ArchetypeComponent]
+    [DenseComponent]
     [RegisterComponent, NetworkedComponent]
     public sealed partial class TransformComponent : Component, IComponentDebug
     {

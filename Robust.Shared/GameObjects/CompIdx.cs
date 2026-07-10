@@ -11,8 +11,8 @@ namespace Robust.Shared.GameObjects;
 public readonly struct CompIdx : IEquatable<CompIdx>
 {
     internal readonly int Value;
-    internal readonly bool Archetype;
-    internal readonly int ArchetypeIndex;
+    internal readonly bool Dense;
+    internal readonly int DenseIndex;
 
     internal static CompIdx Index<T>() => Store<T>.Index;
 
@@ -43,14 +43,14 @@ public readonly struct CompIdx : IEquatable<CompIdx>
         return ref array[idx.Value];
     }
 
-    internal static bool GetArchetype<T>()
+    internal static bool GetDense<T>()
     {
-        return Store<T>.Index.Archetype;
+        return Store<T>.Index.Dense;
     }
 
-    internal static void SetArchetype<T>(bool archetype, int index)
+    internal static void SetDense<T>(bool dense, int index)
     {
-        Store<T>.Index = new CompIdx(Store<T>.Index.Value, archetype, index);
+        Store<T>.Index = new CompIdx(Store<T>.Index.Value, dense, index);
     }
 
     private static int _CompIdxMaster = -1;
@@ -66,11 +66,11 @@ public readonly struct CompIdx : IEquatable<CompIdx>
         Value = value;
     }
 
-    internal CompIdx(int value, bool archetype, int archetypeIndex)
+    internal CompIdx(int value, bool dense, int denseIndex)
     {
         Value = value;
-        Archetype = archetype;
-        ArchetypeIndex = archetypeIndex;
+        Dense = dense;
+        DenseIndex = denseIndex;
     }
 
     public bool Equals(CompIdx other)

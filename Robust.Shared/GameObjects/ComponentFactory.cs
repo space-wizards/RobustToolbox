@@ -130,9 +130,9 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"{lowerCaseName} is already registered, previous: {prevName}");
 
             var unsaved = type.HasCustomAttribute<UnsavedComponentAttribute>();
-            var archetype = type.HasCustomAttribute<ArchetypeComponentAttribute>();
+            var dense = type.HasCustomAttribute<DenseComponentAttribute>();
 
-            var registration = new ComponentRegistration(name, type, idx, unsaved, archetype);
+            var registration = new ComponentRegistration(name, type, idx, unsaved, dense);
 
             idxToType[idx] = type;
             names[name] = registration;

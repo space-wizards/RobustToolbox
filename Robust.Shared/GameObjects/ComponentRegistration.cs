@@ -47,17 +47,17 @@ public sealed class ComponentRegistration
 
     public FrozenDictionary<string, int> NetworkedFieldLookup = FrozenDictionary<string, int>.Empty;
 
-    internal bool Archetype;
+    internal bool Dense;
 
     // Internal for sandboxing.
     // Avoid content passing an instance of this to ComponentFactory to get any type they want instantiated.
-    internal ComponentRegistration(string name, Type type, CompIdx idx, bool unsaved = false, bool archetype = false)
+    internal ComponentRegistration(string name, Type type, CompIdx idx, bool unsaved = false, bool dense = false)
     {
         Name = name;
         Type = type;
         Idx = idx;
         Unsaved = unsaved;
-        Archetype = archetype;
+        Dense = dense;
     }
 
     public override string ToString()

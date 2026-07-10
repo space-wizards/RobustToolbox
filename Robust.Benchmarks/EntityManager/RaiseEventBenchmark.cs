@@ -21,11 +21,31 @@ public partial class RaiseEventBenchmark
         ProgramShared.PathOffset = "../../../../";
         _simulation = RobustServerSimulation
             .NewSimulation()
-            .RegisterEntitySystems(f => f.Resolve(ref _sys))
+            .RegisterComponents(f =>
+            {
+                f.RegisterClass<BenchSystem.Bench1Component>();
+                f.RegisterClass<BenchSystem.Bench2Component>();
+                f.RegisterClass<BenchSystem.Bench3Component>();
+                f.RegisterClass<BenchSystem.Bench4Component>();
+                f.RegisterClass<BenchSystem.Bench5Component>();
+                f.RegisterClass<BenchSystem.Bench6Component>();
+                f.RegisterClass<BenchSystem.Bench7Component>();
+                f.RegisterClass<BenchSystem.Bench8Component>();
+                f.RegisterClass<BenchSystem.Bench9Component>();
+                f.RegisterClass<BenchSystem.Bench10Component>();
+                f.RegisterClass<BenchSystem.Bench11Component>();
+                f.RegisterClass<BenchSystem.Bench12Component>();
+                f.RegisterClass<BenchSystem.Bench13Component>();
+                f.RegisterClass<BenchSystem.Bench14Component>();
+                f.RegisterClass<BenchSystem.Bench15Component>();
+                f.RegisterClass<BenchSystem.Bench16Component>();
+            })
+            .RegisterEntitySystems(f => f.LoadExtraSystemType<BenchSystem>())
             .InitializeInstance();
 
         _entityManager = _simulation.Resolve<IEntityManager>();
         var bus = (EntityEventBus)_entityManager.EventBus;
+        _entityManager.EntitySysManager.Resolve(ref _sys);
 
         var uid = _entityManager.Spawn();
         _sys.Ent = new(uid, _entityManager.GetComponent<TransformComponent>(uid));

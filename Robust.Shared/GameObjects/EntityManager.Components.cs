@@ -45,9 +45,6 @@ namespace Robust.Shared.GameObjects
         private Dictionary<EntityUid, IComponent>[] _entTraitArray
             = Array.Empty<Dictionary<EntityUid, IComponent>>();
 
-        /// <summary>
-        ///     Holds components that are marked with <see cref="DenseComponentAttribute"/>
-        /// </summary>
         private SparseJaggedArray<IComponent>[] _entTraitJaggedArray = Array.Empty<SparseJaggedArray<IComponent>>();
 
         private readonly HashSet<IComponent> _deleteSet = new(TypeCapacity);
@@ -415,7 +412,8 @@ namespace Robust.Shared.GameObjects
 
             if (CompIdx.GetDense<T>())
             {
-                var array = _entTraitJaggedArray[DenseComponent<T>.Index]
+                var array = _entTraitJaggedArray[DenseComponent<T>.Index];
+                array.EnsureCapacity(uid.Id);
                 array.Add(uid.Id, component);
             }
 

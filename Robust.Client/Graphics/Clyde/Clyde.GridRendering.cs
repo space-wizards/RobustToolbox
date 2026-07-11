@@ -391,11 +391,12 @@ namespace Robust.Client.Graphics.Clyde
                     var xNeighborIsSame = maps.TryGetTile(grid.Comp, xNeighborIndices, out var xNeighborTile) && xNeighborTile.TypeId == tile.TypeId;
                     var yNeighborIsSame = maps.TryGetTile(grid.Comp, yNeighborIndices, out var yNeighborTile) && yNeighborTile.TypeId == tile.TypeId;
 
-                    if (!isCorner && neighborIsSame)
-                        continue;
-
-                    if (isCorner && xNeighborIsSame && yNeighborIsSame && neighborIsSame)
-                        continue;
+                    switch (isCorner)
+                    {
+                        case false when neighborIsSame:
+                        case true when xNeighborIsSame && yNeighborIsSame && neighborIsSame:
+                            continue;
+                    }
 
                     var direction = new Vector2i(nx, ny).AsDirection();
                     var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.TypeId, direction);
@@ -498,25 +499,16 @@ namespace Robust.Client.Graphics.Clyde
             }
             // finally we have the corner pieces
             if (northEast)
-            {
-                northEast = false;
                 edges.Add(Interior4Of16Edge.CornerNorthEast);
-            }
+
             if (southEast)
-            {
-                southEast = false;
                 edges.Add(Interior4Of16Edge.CornerSouthEast);
-            }
+
             if (northWest)
-            {
-                northWest = false;
                 edges.Add(Interior4Of16Edge.CornerNorthWest);
-            }
+
             if (southWest)
-            {
-                southWest = false;
                 edges.Add(Interior4Of16Edge.CornerSouthWest);
-            }
 
             foreach (var edge in edges)
             {
@@ -540,7 +532,6 @@ namespace Robust.Client.Graphics.Clyde
             var i = 0;
             var chunkSize = grid.Comp.ChunkSize;
             var chunkOriginScaled = chunk.Indices * chunkSize;
-            var maps = _entityManager.System<SharedMapSystem>();
 
             for (ushort x = 0; x < chunkSize; x++)
             {
@@ -549,6 +540,7 @@ namespace Robust.Client.Graphics.Clyde
                     var gridX = x + chunkOriginScaled.X;
                     var gridY = y + chunkOriginScaled.Y;
                     var tile = chunk.GetTile(x, y);
+
                     if (!_tileDefinitionManager.TryGetDefinition(tile.TypeId, out var tileDef))
                         continue;
 

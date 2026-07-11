@@ -800,6 +800,30 @@ namespace Robust.Shared
         public static readonly CVarDef<string> BuildManifestUrl =
             CVarDef.Create("build.manifest_url", string.Empty);
 
+        /// <summary> URL of the fork repository. </summary>
+        public static readonly CVarDef<string> ForkUrl =
+            CVarDef.Create("build.fork_url", string.Empty);
+
+        /// <summary> Commit ID on which version was built </summary>
+        public static readonly CVarDef<string> CommitId =
+            CVarDef.Create("build.commit_id", string.Empty);
+
+        /// <summary> Branch on which version was built. </summary>
+        public static readonly CVarDef<string> BranchName =
+            CVarDef.Create("build.branch_name", string.Empty);
+
+        /// <summary> Url for RobustToolbox repository (or its fork), used for this version. </summary>
+        public static readonly CVarDef<string> RobustToolboxUrl =
+            CVarDef.Create("build.robust_toolbox_url", string.Empty);
+
+        /// <summary> Commit ID of RobustToolbox, used for this version. </summary>
+        public static readonly CVarDef<string> RobustToolboxCommitId =
+            CVarDef.Create("build.robust_toolbox_commit_id", string.Empty);
+
+        /// <summary> Branch on which RobustToolbox for this version was built. </summary>
+        public static readonly CVarDef<string> RobustToolboxBranchName =
+            CVarDef.Create("build.robust_toolbox_branch_name", string.Empty);
+
         /// <summary>
         /// URL at which the launcher can download the manifest game files.
         /// </summary>

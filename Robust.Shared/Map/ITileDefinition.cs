@@ -59,6 +59,9 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     The numeric tile ID used to refer to this tile inside the map datastructure.
         /// </summary>
+        /// <remarks>
+        ///     The engine does not automatically generate these IDs, games are responsible for assigning them.
+        /// </remarks>
         ushort TileId { get; }
 
         /// <summary>

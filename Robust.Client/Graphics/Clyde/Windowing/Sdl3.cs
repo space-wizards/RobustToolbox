@@ -14,8 +14,8 @@ internal partial class Clyde
 {
     private sealed partial class Sdl3WindowingImpl : IWindowingImpl
     {
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
 
         private readonly Clyde _clyde;
         private GCHandle _selfGCHandle;
@@ -60,6 +60,10 @@ internal partial class Clyde
             // causes a "that operation is not supported" error to be logged on startup.
             // https://github.com/libsdl-org/SDL/issues/11813
             SDL.SDL_SetHint(SDL.SDL_HINT_WINDOWS_GAMEINPUT, "0");
+
+#if MACOS
+            SDL.SDL_SetHint(SDL.SDL_HINT_MAC_OPENGL_ASYNC_DISPATCH, "1");
+#endif
 
             var res = SDL.SDL_Init(SDL.SDL_InitFlags.SDL_INIT_VIDEO | SDL.SDL_InitFlags.SDL_INIT_EVENTS);
             if (!res)

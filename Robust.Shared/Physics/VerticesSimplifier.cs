@@ -14,6 +14,7 @@ namespace Robust.Shared.Physics
     /// <summary>
     /// Takes in a list of vertices and removes any that are redundant (within tolerance).
     /// </summary>
+    [NotContentImplementable]
     public interface IVerticesSimplifier
     {
         List<Vector2> Simplify(List<Vector2> vertices, float tolerance);

@@ -75,7 +75,7 @@ internal partial class Clyde
                 IntPtr surface;
                 fixed (byte* ptr = copied)
                 {
-                    surface = SDL.SDL_CreateSurfaceFrom(
+                    surface = (nint) SDL.SDL_CreateSurfaceFrom(
                         img.Width,
                         img.Height,
                         SDL.SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888,

@@ -332,21 +332,15 @@ namespace Robust.Shared.Serialization.Manager.Definition
             inheritanceBehavior ??= InheritanceBehavior.Default;
 
             if (fieldInfo.HasAttribute<AlwaysPushInheritanceAttribute>(true))
-            {
                 inheritanceBehavior = InheritanceBehavior.Always;
-            }
             else if (fieldInfo.HasAttribute<NeverPushInheritanceAttribute>(true))
-            {
                 inheritanceBehavior = InheritanceBehavior.Never;
-            }
 
             if (fieldInfo is SpecificPropertyInfo propertyInfo)
             {
                 // We only want the most overriden instance of a property for the type we are working with
                 if (!propertyInfo.IsMostOverridden(typeof(T)))
-                {
                     return false;
-                }
 
                 if (propertyInfo.PropertyInfo.GetMethod == null)
                 {
@@ -355,36 +349,54 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
             }
 
-            if (!fieldInfo.TryGetAttribute<DataFieldAttribute>(out var dataFieldAttribute, true))
+            // Most data fields have an explicit data field attribute
+            if (fieldInfo.TryGetAttribute<DataFieldAttribute>(out var dataFieldAttribute, true))
+                return GatherDataFieldData(fieldInfo, out dataFieldBaseAttribute, ref backingField, dataFieldAttribute);
+
+            if (fieldInfo.TryGetAttribute<IncludeDataFieldAttribute>(out var includeDataFieldAttribute, true))
             {
-                if (!fieldInfo.TryGetAttribute<IncludeDataFieldAttribute>(out var includeDataFieldAttribute, true))
-                {
-                    var potentialBackingField = fieldInfo.GetBackingField();
-                    if (potentialBackingField != null)
-                    {
-                        return GatherFieldData(potentialBackingField, out dataFieldBaseAttribute,
-                            out backingField, ref inheritanceBehavior);
-                    }
-                    return true;
-                }
                 dataFieldBaseAttribute = includeDataFieldAttribute;
+                return true;
             }
-            else
+
+            // This field/property has no explicit data field related annotations. However, things like
+            // DataRecordAttribute will cause all fields to be interpreted as data fields, so we still handle them
+
+            if (fieldInfo is not SpecificPropertyInfo)
+                return true;
+
+            var potentialBackingField = fieldInfo.GetBackingField();
+            if (potentialBackingField == null)
+                return false;
+
+            return GatherFieldData(potentialBackingField,
+                out dataFieldBaseAttribute,
+                out backingField,
+                ref inheritanceBehavior);
+        }
+
+        private static bool GatherDataFieldData(
+            AbstractFieldInfo fieldInfo,
+            out DataFieldBaseAttribute dataFieldBaseAttribute,
+            ref AbstractFieldInfo backingField,
+            DataFieldAttribute dataFieldAttribute)
+        {
+            dataFieldBaseAttribute = dataFieldAttribute;
+
+            if (fieldInfo is not SpecificPropertyInfo property
+                || dataFieldAttribute.ReadOnly
+                || property.PropertyInfo.SetMethod != null)
             {
-                dataFieldBaseAttribute = dataFieldAttribute;
-
-                if (fieldInfo is SpecificPropertyInfo property && !dataFieldAttribute.ReadOnly && property.PropertyInfo.SetMethod == null)
-                {
-                    if (!property.TryGetBackingField(out var backingFieldInfo))
-                    {
-                        Logger.ErrorS(LogCategory, $"Property {property} in type {property.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
-                        return false;
-                    }
-
-                    backingField = backingFieldInfo;
-                }
+                return true;
             }
 
+            if (!property.TryGetBackingField(out var backingFieldInfo))
+            {
+                Logger.ErrorS(LogCategory, $"Property {property} in type {property.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
+                return false;
+            }
+
+            backingField = backingFieldInfo;
             return true;
         }
 
@@ -424,6 +436,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 fieldDefinitions.Add(fieldDefinition);
             }
 
+            // There should be no duplicates
+            // I.e., we haven't accidentally included a property's backing field twice?
+            DebugTools.Assert(fieldDefinitions.Select(x=> x.FieldInfo).Distinct().Count() == fieldDefinitions.Count);
             return fieldDefinitions;
         }
     }

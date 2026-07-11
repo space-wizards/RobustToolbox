@@ -333,7 +333,7 @@ internal partial class UserInterfaceManager
 
         if (_suppliedTooltip != null)
         {
-            PopupRoot.RemoveChild(_suppliedTooltip);
+            _suppliedTooltip.Orphan();
             _suppliedTooltip = null;
         }
 
@@ -475,12 +475,17 @@ internal partial class UserInterfaceManager
 
         // If we are in a focused control or doing a CanFocus, return true
         // So that InputManager doesn't propagate events to simulation.
-        if (!args.CanFocus && KeyboardFocused != null)
+        if (!args.CanFocus && OnIsUIFocused())
         {
             return true;
         }
 
         return false;
+    }
+
+    private bool OnIsUIFocused()
+    {
+        return KeyboardFocused != null;
     }
 
     /// <inheritdoc />
@@ -538,7 +543,7 @@ internal partial class UserInterfaceManager
         if (_showingTooltip) return;
         _showingTooltip = true;
         var hovered = CurrentlyHovered;
-        if (hovered == null)
+        if (hovered == null || hovered.Root == null)
         {
             return;
         }
@@ -563,7 +568,7 @@ internal partial class UserInterfaceManager
         if (_suppliedTooltip == null)
             return;
 
-        PopupRoot.AddChild(_suppliedTooltip);
+        hovered.Root.PopupRoot.AddChild(_suppliedTooltip);
         Tooltips.PositionTooltip(_suppliedTooltip);
         hovered.PerformShowTooltip();
     }

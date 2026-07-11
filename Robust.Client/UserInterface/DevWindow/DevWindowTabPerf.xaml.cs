@@ -9,7 +9,7 @@ namespace Robust.Client.UserInterface;
 [GenerateTypedNameReferences]
 public sealed partial class DevWindowTabPerf : Control
 {
-    [Dependency] private readonly ProfViewManager _profViewMgr = default!;
+    [Dependency] private ProfViewManager _profViewMgr = default!;
 
     private ProfViewManager.Snapshot? _currentSnapshot;
 

@@ -19,6 +19,7 @@ internal sealed partial class EntityEventBus : IEventBus
     // Data on individual events. Used to check ordering info and fire broadcast events.
     private FrozenDictionary<Type, EventData> _eventData = FrozenDictionary<Type, EventData>.Empty;
     private readonly Dictionary<Type, EventData> _eventDataUnfrozen = new();
+    private FrozenSet<Type> _networkReceivableEvents = FrozenSet<Type>.Empty;
 
     // Inverse subscriptions to be able to unsubscribe an IEntityEventSubscriber.
     private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, BroadcastRegistration>> _inverseEventSubscriptions

@@ -838,6 +838,7 @@ namespace Robust.UnitTesting
 
                 if (Options != null)
                 {
+                    Options.BeforeStartServices?.Invoke(deps);
                     Options.BeforeStart?.Invoke();
                     cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
                     LoadExtraPrototypes(deps, Options);
@@ -1099,6 +1100,7 @@ namespace Robust.UnitTesting
 
                 if (Options != null)
                 {
+                    Options.BeforeStartServices?.Invoke(deps);
                     Options.BeforeStart?.Invoke();
                     cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
                     LoadExtraPrototypes(deps, Options);
@@ -1299,6 +1301,7 @@ namespace Robust.UnitTesting
         {
             public Action? InitIoC { get; set; }
             public Action? BeforeRegisterComponents { get; set; }
+            public Action<IDependencyCollection>? BeforeStartServices { get; set; }
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
 

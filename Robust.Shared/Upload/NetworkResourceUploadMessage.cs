@@ -26,7 +26,7 @@ public sealed class NetworkResourceUploadMessage : NetMessage
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
-        var dataLength = buffer.ReadVariableInt32();
+        var dataLength = buffer.ReadVariableByteLength(nameof(Data));
         Data = buffer.ReadBytes(dataLength);
         // What is the second argument here?
         RelativePath = new ResPath(buffer.ReadString());

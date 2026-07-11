@@ -521,6 +521,19 @@ cmd-net_watchent-help = Usage: {$command} <0|EntityUid>
 cmd-net_draw_interp-desc = Toggles the debug drawing of the network interpolation.
 cmd-net_draw_interp-help = Usage: {$command} <0|EntityUid>
 
+cmd-net-size-stats-desc = Dumps maximum observed network serialization sizes.
+cmd-net-size-stats-help = Usage: {$command} [limit]
+       {$command} clear
+cmd-net-size-stats-cleared = Cleared network size stats.
+cmd-net-size-stats-invalid-limit = Expected a positive integer limit or 'clear'.
+cmd-net-size-stats-status = Network size stats are {$status}.
+cmd-net-size-stats-status-enabled = enabled
+cmd-net-size-stats-status-disabled = disabled
+cmd-net-size-stats-enable = Enable with: {$cvar} true
+cmd-net-size-stats-empty = No network size stats recorded.
+cmd-net-size-stats-unit-count = count
+cmd-net-size-stats-unit-bytes = B
+
 cmd-vram-desc = Displays video memory usage statics by the game.
 cmd-vram-help = Usage: {$command}
 

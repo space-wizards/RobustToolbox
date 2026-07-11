@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -62,7 +63,17 @@ public sealed partial class NetManager
             return;
         }
 
-        var packet = BuildMessage(message, channel.Connection.Peer);
+        NetOutgoingMessage packet;
+        try
+        {
+            packet = BuildMessage(message, channel.Connection.Peer);
+        }
+        catch (InvalidDataException e)
+        {
+            _logger.Error($"Refusing to send invalid {message.GetType().Name} to {channel}: {e.Message}");
+            return;
+        }
+
         var method = message.DeliveryMethod;
         var seqChannel = message.SequenceChannel;
 

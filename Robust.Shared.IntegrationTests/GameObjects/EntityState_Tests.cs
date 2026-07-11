@@ -42,10 +42,13 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<IConfigurationManager, ServerNetConfigurationManager>();
             container.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<INetManager, NetManager>();
+            container.Register<IServerNetManager, NetManager>();
             container.Register<IHWId, DummyHWId>();
             container.Register<IReflectionManager, ServerReflectionManager>();
+            container.RegisterInstance<IEntityManager>(Mock.Of<IEntityManager>());
             container.Register<IRobustSerializer, ServerRobustSerializer>();
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
+            container.Register<INetValidationManager, NetValidationManager>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<IGameTiming, GameTiming>();
             container.Register<ProfManager, ProfManager>();

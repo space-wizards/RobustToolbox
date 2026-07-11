@@ -210,6 +210,36 @@ namespace Robust.Shared
             CVarDef.Create("net.logging", false, CVar.ARCHIVE);
 
         /// <summary>
+        /// Log sent and received NetMessages at or above this size in bytes. Set to 0 to disable.
+        /// </summary>
+        public static readonly CVarDef<int> NetMessageSizeLogThreshold =
+            CVarDef.Create("net.message_size_log_threshold", 0, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Track maximum observed serialized sizes for NetMessages, EntityEventArgs, and their members.
+        /// </summary>
+        public static readonly CVarDef<bool> NetMessageSizeStats =
+            CVarDef.Create("net.message_size_stats", false, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum collection element count accepted by NetSerializer.
+        /// </summary>
+        public static readonly CVarDef<int> NetSerializerMaxCollectionLength =
+            CVarDef.Create("net.serializer_max_collection_length", 1024 * 1024, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum byte array length accepted by NetSerializer.
+        /// </summary>
+        public static readonly CVarDef<int> NetSerializerMaxByteArrayLength =
+            CVarDef.Create("net.serializer_max_byte_array_length", 16 * 1024 * 1024, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum string length accepted by NetSerializer.
+        /// </summary>
+        public static readonly CVarDef<int> NetSerializerMaxStringLength =
+            CVarDef.Create("net.serializer_max_string_length", 16 * 1024 * 1024, CVar.ARCHIVE);
+
+        /// <summary>
         /// Whether prediction is enabled on the client.
         /// </summary>
         /// <remarks>

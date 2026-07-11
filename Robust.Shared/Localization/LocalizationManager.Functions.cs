@@ -65,28 +65,24 @@ namespace Robust.Shared.Localization
         /// </summary>
         private LocValueString FuncAutoGenerate(LocArgs args, PronounGrammarPrototype inflection)
         {
-            var outGender = "";
+            string? outGender = null;
             if (inflection.FtlReturn is not { } function) // this should not happen
                 return new LocValueString("ERROR");
 
-            if (args.Args.Count < 1)
-                outGender = backupGender;
-
-            else if (args.Args[0].Value is EntityUid entity)
+            if (args.Args[0].Value is EntityUid entity)
             {
                 if (_entMan.TryGetComponent<GrammarComponent>(entity, out var grammar))
                 {
                     if (grammar.Pronouns.TryGetValue(inflection, out var value))
                         outGender = value;
-                    if (grammar.Gender is { } gender)
+                    else if (grammar.Gender is { } gender)
                         outGender = gender.ToString().ToLowerInvariant();
                 }
                 else if (TryGetEntityLocAttrib(entity, "gender", out var locGender))
                     outGender = locGender;
-                else
-                    outGender = backupGender;
-            }
 
+            }
+            outGender ??= backupGender;
             return new LocValueString(GetString(function, ("gender", outGender)));
         }
 

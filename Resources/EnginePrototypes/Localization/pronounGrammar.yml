@@ -61,7 +61,7 @@
   name: pronouns-plurality
   description: pronouns-plurality-desc
 
-# conjugation - primarily used in non-english languages
+# conjugation - primarily used in non-english languages (epicene or other)
 - type: pronounGrammar
   id: ConjugateBe
   ftlFunction: CONJUGATE-BE

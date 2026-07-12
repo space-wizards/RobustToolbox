@@ -176,11 +176,15 @@ public partial class EntityManager
         if (!containerComp.Containers.TryGetValue(containerId, out var container))
             return false;
 
-        var doMapInit = _mapSystem.IsInitialized(TransformQuery.GetComponent(containerUid).MapUid);
-        uid = Spawn(protoName, overrides, doMapInit);
+        uid = Spawn(protoName, overrides, false);
 
         if (_containers.Insert(uid.Value, container))
+        {
+            if (_mapSystem.IsInitialized(TransformQuery.GetComponent(containerUid).MapUid)
+                && MetaQuery.TryComp(uid, out var metaData))
+                RunMapInit(uid.Value, metaData);
             return true;
+        }
 
         DeleteEntity(uid.Value);
         uid = null;

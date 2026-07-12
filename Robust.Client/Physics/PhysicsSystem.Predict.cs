@@ -204,6 +204,7 @@ public sealed partial class PhysicsSystem
         for (var i = 0; i < index; i++)
         {
             var contact = contacts[i];
+            if (contact.Flags.HasFlag(ContactFlags.Deleted)) continue;
             var uidA = contact.EntityA;
             var uidB = contact.EntityB;
             var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA));

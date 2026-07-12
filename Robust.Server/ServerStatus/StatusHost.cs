@@ -194,12 +194,12 @@ namespace Robust.Server.ServerStatus
                 SetCVarIfUnmodified(CVars.BuildManifestHash, info.ManifestHash ?? "");
                 SetCVarIfUnmodified(CVars.BuildManifestDownloadUrl, info.ManifestDownloadUrl ?? "");
                 SetCVarIfUnmodified(CVars.BuildManifestUrl, info.ManifestUrl ?? "");
-                SetCVarIfUnmodified(CVars.ForkUrl, info.ForkUrl ?? "");
-                SetCVarIfUnmodified(CVars.CommitId, info.CommitId ?? "");
-                SetCVarIfUnmodified(CVars.BranchName, info.BranchName ?? "");
-                SetCVarIfUnmodified(CVars.RobustToolboxUrl, info.RobustToolboxUrl ?? "");
-                SetCVarIfUnmodified(CVars.RobustToolboxCommitId, info.RobustToolboxCommitId ?? "");
-                SetCVarIfUnmodified(CVars.RobustToolboxBranchName, info.RobustToolboxBranchName ?? "");
+                SetCVarIfUnmodified(CVars.SourceUrl, info.SourceUrl ?? "");
+                SetCVarIfUnmodified(CVars.SourceCommitId, info.SourceCommitId ?? "");
+                SetCVarIfUnmodified(CVars.SourceBranchName, info.SourceBranchName ?? "");
+                SetCVarIfUnmodified(CVars.EngineSourceBranchName, info.EngineSourceBranchName ?? "");
+                SetCVarIfUnmodified(CVars.EngineSourceUrl, info.EngineSourceUrl ?? "");
+                SetCVarIfUnmodified(CVars.EngineSourceCommitId, info.EngineSourceCommitId ?? "");
             }
 
             void SetCVarIfUnmodified(CVarDef<string> cvar, string val)
@@ -238,18 +238,18 @@ namespace Robust.Server.ServerStatus
             string? ManifestUrl,
             [property: JsonPropertyName("manifest_download_url")]
             string? ManifestDownloadUrl,
-            [property: JsonPropertyName("fork_url")]
-            string? ForkUrl ,
+            [property: JsonPropertyName("built_on_source_url")]
+            string? SourceUrl,
             [property: JsonPropertyName("built_on_commit_id")]
-            string? CommitId ,
-            [property: JsonPropertyName("built_on_branch")]
-            string? BranchName ,
-            [property: JsonPropertyName("robust_toolbox_built_on_commit_id")]
-            string? RobustToolboxCommitId ,
-            [property: JsonPropertyName("robust_toolbox_built_on_branch_id")]
-            string? RobustToolboxBranchName ,
-            [property: JsonPropertyName("robust_toolbox_url")]
-            string? RobustToolboxUrl
+            string? SourceCommitId,
+            [property: JsonPropertyName("built_on_branch_name")]
+            string? SourceBranchName,
+            [property: JsonPropertyName("built_on_engine_url")]
+            string? EngineSourceUrl,
+            [property: JsonPropertyName("built_on_engine_commit_id")]
+            string? EngineSourceCommitId,
+            [property: JsonPropertyName("built_on_engine_branch_name")]
+            string? EngineSourceBranchName
         );
 
         private sealed class ContextImpl : IStatusHandlerContext

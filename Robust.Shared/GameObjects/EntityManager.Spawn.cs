@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects;
 
@@ -151,10 +150,13 @@ public partial class EntityManager
             return true;
         }
 
-        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
-        uid = Spawn(protoName, overrides, doMapInit);
+        uid = Spawn(protoName, overrides, doMapInit: false);
         if (_containers.Insert(uid.Value, container))
+        {
+            if (_mapSystem.IsInitialized(xform.MapUid))
+                RunMapInit(uid.Value, MetaQuery.Comp(uid.Value));
             return true;
+        }
 
         DeleteEntity(uid.Value);
         uid = null;
@@ -176,13 +178,13 @@ public partial class EntityManager
         if (!containerComp.Containers.TryGetValue(containerId, out var container))
             return false;
 
-        uid = Spawn(protoName, overrides, false);
+        uid = Spawn(protoName, overrides, doMapInit: false);
 
         if (_containers.Insert(uid.Value, container))
         {
-            if (_mapSystem.IsInitialized(TransformQuery.GetComponent(containerUid).MapUid)
-                && MetaQuery.TryComp(uid, out var metaData))
-                RunMapInit(uid.Value, metaData);
+            if (_mapSystem.IsInitialized(TransformQuery.GetComponent(containerUid).MapUid))
+                RunMapInit(uid.Value, MetaQuery.Comp(uid.Value));
+
             return true;
         }
 
@@ -197,9 +199,12 @@ public partial class EntityManager
         if (!xform.ParentUid.IsValid())
             return Spawn(protoName);
 
-        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
-        var uid = Spawn(protoName, overrides, doMapInit);
+        var uid = Spawn(protoName, overrides, doMapInit: false);
         _xforms.DropNextTo(uid, target);
+
+        if (_mapSystem.IsInitialized(xform.MapUid))
+            RunMapInit(uid, MetaQuery.Comp(uid));
+
         return uid;
     }
 
@@ -225,8 +230,7 @@ public partial class EntityManager
     {
         inserted = true;
         xform ??= TransformQuery.GetComponent(containerUid);
-        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
-        var uid = Spawn(protoName, overrides, doMapInit);
+        var uid = Spawn(protoName, overrides, doMapInit: false);
 
         if ((containerComp == null && !TryGetComponent(containerUid, out containerComp))
              || !containerComp.Containers.TryGetValue(containerId, out var container)
@@ -236,6 +240,9 @@ public partial class EntityManager
             if (xform.ParentUid.IsValid())
                 _xforms.DropNextTo(uid, (containerUid, xform));
         }
+
+        if (_mapSystem.IsInitialized(xform.MapUid))
+            RunMapInit(uid, MetaQuery.Comp(uid));
 
         return uid;
     }

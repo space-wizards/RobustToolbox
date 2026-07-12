@@ -9,7 +9,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes.PronounGrammar;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Localization
@@ -73,7 +73,7 @@ namespace Robust.Shared.Localization
             {
                 if (_entMan.TryGetComponent<GrammarComponent>(entity, out var grammar))
                 {
-                    if (grammar.Pronouns.TryGetValue(inflection, out var value))
+                    if (grammar.Attributes.TryGetValue(inflection.ID, out var value))
                         outGender = value;
                     else if (grammar.Gender is { } gender)
                         outGender = gender.ToString().ToLowerInvariant();

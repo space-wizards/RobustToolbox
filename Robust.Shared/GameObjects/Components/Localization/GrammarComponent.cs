@@ -4,7 +4,6 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Prototypes.PronounGrammar;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
@@ -17,6 +16,14 @@ namespace Robust.Shared.GameObjects.Components.Localization;
 // [Access(typeof(GrammarSystem))] TODO access
 public sealed partial class GrammarComponent : Component
 {
+    /// <summary>
+    ///     Set values to overwrite Loc attributes (eg. proper, gender, pronouns)
+    /// </summary>
+    /// <remarks>
+    ///     Use the id of a <see cref="PronounGrammarPrototype"> as a key to define custom pronouns per inflection.
+    ///     If this list does not contain a pronoun for a desired inflection,
+    ///     the gender's pronoun will be used as a fallback.
+    /// </remarks>
     [DataField, AutoNetworkedField]
     public Dictionary<string, string> Attributes = new();
 
@@ -27,14 +34,6 @@ public sealed partial class GrammarComponent : Component
         [Obsolete("Use GrammarSystem.SetGender instead")]
         set => IoCManager.Resolve<IEntityManager>().System<GrammarSystem>().SetGender((Owner, this), value);
     }
-
-    /// <summary>
-    ///     Optional list of custom pronouns for an entity, as well as the pronounGrammar inflection they belong to.
-    ///     If this list does not contain a pronoun for a desired inflection,
-    ///     the gender's pronoun will be used as a fallback.
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    public Dictionary<ProtoId<PronounGrammarPrototype>, string> Pronouns = [];
 
     [ViewVariables]
     public bool? ProperNoun

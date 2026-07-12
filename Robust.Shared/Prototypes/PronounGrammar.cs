@@ -1,7 +1,7 @@
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Localization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
-namespace Robust.Shared.Prototypes.PronounGrammar;
+namespace Robust.Shared.Prototypes;
 
 /*
     HOW PRONOUNS WORK:

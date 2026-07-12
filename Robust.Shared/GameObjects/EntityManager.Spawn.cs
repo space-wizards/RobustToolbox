@@ -155,6 +155,7 @@ public partial class EntityManager
         {
             if (_mapSystem.IsInitialized(xform.MapUid))
                 RunMapInit(uid.Value, MetaQuery.Comp(uid.Value));
+
             return true;
         }
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Robust.Server.GameObjects;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.EntitySerialization;
@@ -17,11 +16,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.Console.Commands
 {
-    public sealed partial class SaveGridCommand : LocalizedCommands
+    public sealed partial class SaveGridCommand : LocalizedEntityCommands
     {
         [Dependency] private IEntityManager _ent = default!;
         [Dependency] private IResourceManager _resource = default!;
-        [Dependency] private IEntitySystemManager _system = null!;
+        [Dependency] private SharedTransformSystem _trans = default!;
 
         public override string Command => "savegrid";
 
@@ -58,7 +57,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var gridEnt = _system.GetEntitySystem<TransformSystem>().GetGrid(ent.Value);
+            var gridEnt = _trans.GetGrid(ent.Value);
 
             // Validate if the player is over a grid
             if (gridEnt is null)
@@ -127,11 +126,13 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed partial class LoadGridCommand : LocalizedCommands
+    public sealed partial class LoadGridCommand : LocalizedEntityCommands
     {
-        [Dependency] private IEntityManager _entManager = null!;
-        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IEntityManager _entManager = default!;
+        [Dependency] private SharedMapSystem _map = default!;
+        [Dependency] private MapLoaderSystem _mapLoader = default!;
         [Dependency] private IResourceManager _resource = default!;
+        [Dependency] private SharedTransformSystem _trans = default!;
 
         public override string Command => "loadgrid";
 
@@ -169,9 +170,9 @@ namespace Robust.Server.Console.Commands
 
             // Read all the necessary information from the player's attached entity
             var ent = shell.Player.AttachedEntity.Value;
-            var offset = _system.GetEntitySystem<TransformSystem>().GetWorldPosition(ent);
-            var mapId = _system.GetEntitySystem<TransformSystem>().GetMapId(ent);
-            var rot = _system.GetEntitySystem<TransformSystem>().GetWorldRotation(ent);
+            var offset = _trans.GetWorldPosition(ent);
+            var mapId = _trans.GetMapId(ent);
+            var rot = _trans.GetWorldRotation(ent);
             var opts = DeserializationOptions.Default;
 
             LoadGrid(mapId, shell, path, opts, offset, rot, true, loc);
@@ -200,11 +201,10 @@ namespace Robust.Server.Console.Commands
             }
 
             // Validate if the target map exists
-            var sys = _system.GetEntitySystem<SharedMapSystem>();
-            if (!sys.MapExists(mapId))
+            if (!_map.MapExists(mapId))
             {
                 shell.WriteError(loc.GetString("cmd-loadgrid-missing-map", ("mapId", mapId)));
-                sys.CreateMap(mapId, false); // doesnt runmapinit to be conservative.
+                _map.CreateMap(mapId, false); // doesnt runmapinit to be conservative.
             }
 
             // Validate the x coordinate's type
@@ -261,8 +261,7 @@ namespace Robust.Server.Console.Commands
                     ? loc.GetString("cmd-loadgrid-attempt-current")
                     : loc.GetString("cmd-loadgrid-attempt", ("mapId", mapId)));
 
-            var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>()
-                .TryLoadGrid(mapId, path, out _, opts, offset, rot);
+            var loadSuccess = _mapLoader.TryLoadGrid(mapId, path, out _, opts, offset, rot);
             shell.WriteLine(loadSuccess
                 ? loc.GetString("cmd-loadgrid-success")
                 : loc.GetString("cmd-loadgrid-fail"));
@@ -278,17 +277,19 @@ namespace Robust.Server.Console.Commands
                         CompletionHelper.MapIds(_entManager),
                         Loc.GetString("cmd-hint-savemap-id"));
                 default:
-                    return LoadMap.GetCompletionResult(shell, args, _resource, _system, Loc);
+                    return LoadMap.GetCompletionResult(shell, args, _resource, _trans, Loc);
             }
 
         }
     }
 
-    public sealed partial class SaveMap : LocalizedCommands
+    public sealed partial class SaveMap : LocalizedEntityCommands
     {
         [Dependency] private IEntityManager _entManager = default!;
-        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private SharedMapSystem _map = default!;
+        [Dependency] private MapLoaderSystem _mapLoader = default!;
         [Dependency] private IResourceManager _resource = default!;
+        [Dependency] private SharedTransformSystem _trans = default!;
 
         public override string Command => "savemap";
 
@@ -359,7 +360,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var mapId = _system.GetEntitySystem<TransformSystem>().GetMapId(ent.Value);
+            var mapId = _trans.GetMapId(ent.Value);
 
             SaveMapDo(mapId, shell, path, false, loc);
         }
@@ -374,22 +375,21 @@ namespace Robust.Server.Console.Commands
             }
 
             // Validate if the map to be saved exists
-            var sys = _system.GetEntitySystem<SharedMapSystem>();
-            if (!sys.MapExists(mapId))
+            if (!_map.MapExists(mapId))
             {
                 shell.WriteError(loc.GetString("cmd-savemap-not-exist"));
                 return;
             }
 
             // If the map to be saved is initialized, only allow saving it if the Force parameter was given
-            if (sys.IsInitialized(mapId) && !force)
+            if (_map.IsInitialized(mapId) && !force)
             {
                 shell.WriteError(loc.GetString("cmd-savemap-init-warning"));
                 return;
             }
 
             shell.WriteLine(loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", path)));
-            var saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, path);
+            var saveSuccess = _mapLoader.TrySaveMap(mapId, path);
 
             shell.WriteLine(saveSuccess
                 ? loc.GetString("cmd-savemap-success")
@@ -397,10 +397,12 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed partial class LoadMap : LocalizedCommands
+    public sealed partial class LoadMap : LocalizedEntityCommands
     {
-        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private SharedMapSystem _map = default!;
+        [Dependency] private MapLoaderSystem _mapLoader = default!;
         [Dependency] private IResourceManager _resource = default!;
+        [Dependency] private SharedTransformSystem _trans = default!;
 
         public override string Command => "loadmap";
 
@@ -409,7 +411,7 @@ namespace Robust.Server.Console.Commands
             IConsoleShell shell,
             string[] args,
             IResourceManager resource,
-            IEntitySystemManager system,
+            SharedTransformSystem trans,
             ILocalizationManager loc)
         {
             List<CompletionOption> autocomplete;
@@ -449,7 +451,7 @@ namespace Robust.Server.Console.Commands
                 if (ent is null)
                     return;
 
-                var offset = system.GetEntitySystem<TransformSystem>().GetWorldPosition(ent.Value);
+                var offset = trans.GetWorldPosition(ent.Value);
                 x = (int)Math.Round(offset.X);
                 y = (int)Math.Round(offset.Y);
             }
@@ -457,7 +459,7 @@ namespace Robust.Server.Console.Commands
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
-            return GetCompletionResult(shell, args, _resource, _system, Loc);
+            return GetCompletionResult(shell, args, _resource, _trans, Loc);
         }
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -486,8 +488,7 @@ namespace Robust.Server.Console.Commands
 
             shell.WriteLine(loc.GetString("cmd-loadmap-attempt-next"));
 
-            var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>()
-                .TryLoadMap(path, out var map, out _, opts, offset, rot);
+            var loadSuccess = _mapLoader.TryLoadMap(path, out var map, out _, opts, offset, rot);
 
             shell.WriteLine( loadSuccess && map is not null
                 ? loc.GetString("cmd-loadmap-success", ("mapId", map.Value.Comp.MapId), ("path", path))
@@ -513,8 +514,7 @@ namespace Robust.Server.Console.Commands
             }
 
             // Do not allow loading the map onto an already taken Id
-            var sys = _system.GetEntitySystem<SharedMapSystem>();
-            if (sys.MapExists(mapId))
+            if (_map.MapExists(mapId))
             {
                 shell.WriteError(loc.GetString("cmd-loadmap-exists", ("mapId", mapId)));
                 return;
@@ -557,8 +557,7 @@ namespace Robust.Server.Console.Commands
 
             shell.WriteLine(loc.GetString("cmd-loadmap-attempt",("mapId", mapId)));
 
-            var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>()
-                .TryLoadMapWithId(mapId, path, out _, out _, opts, offset, rot);
+            var loadSuccess = _mapLoader.TryLoadMapWithId(mapId, path, out _, out _, opts, offset, rot);
 
             shell.WriteLine( loadSuccess
                 ? loc.GetString("cmd-loadmap-success", ("mapId", mapId), ("path", path))

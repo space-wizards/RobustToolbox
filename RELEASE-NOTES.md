@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 282.0.0
+
+### Breaking changes
+
+* Serv5 has been merged, re-doing the internals of DataDefinition serialization.
+  * It can now write into readonly fields.
+  * DataFields defined on objects that don't have DataDefinitions will cause errors in the analyzer and require the attribute.
+  * Value types will now be copied directly where possible rather than round-tripping through TryCustomCopy if no custom serializer is specified.
+  * It no longer uses as many expression trees so more tests should be able to run concurrently
+
+
 ## 281.0.0
 
 ### Breaking changes

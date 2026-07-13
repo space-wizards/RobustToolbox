@@ -132,7 +132,10 @@ public sealed partial class PhysicsSystem
 
             // Don't evaluate deleted contacts.
             if ((contact.Flags & (ContactFlags.Deleting | ContactFlags.Deleted)) != 0x0)
+            {
+                contact.IsTouching = false;
                 continue;
+            }
 
             if (!bodyA.CanCollide || !bodyB.CanCollide)
             {

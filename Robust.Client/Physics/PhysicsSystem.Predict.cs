@@ -130,7 +130,11 @@ public sealed partial class PhysicsSystem
             var uidA = contact.EntityA;
             var uidB = contact.EntityB;
 
-            if ((contact.Flags & ContactFlags.Deleted) != 0x0 || !bodyA.CanCollide || !bodyB.CanCollide)
+            // Don't evaluate deleted contacts.
+            if ((contact.Flags & (ContactFlags.Deleting | ContactFlags.Deleted)) != 0x0)
+                continue;
+
+            if (!bodyA.CanCollide || !bodyB.CanCollide)
             {
                 contact.IsTouching = false;
                 continue;

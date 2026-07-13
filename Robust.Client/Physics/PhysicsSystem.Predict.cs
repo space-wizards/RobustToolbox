@@ -130,7 +130,7 @@ public sealed partial class PhysicsSystem
             var uidA = contact.EntityA;
             var uidB = contact.EntityB;
 
-            if (!bodyA.CanCollide || !bodyB.CanCollide)
+            if ((contact.Flags & ContactFlags.Deleted) != 0x0 || !bodyA.CanCollide || !bodyB.CanCollide)
             {
                 contact.IsTouching = false;
                 continue;
@@ -204,7 +204,6 @@ public sealed partial class PhysicsSystem
         for (var i = 0; i < index; i++)
         {
             var contact = contacts[i];
-            if (contact.Flags.HasFlag(ContactFlags.Deleted)) continue;
             var uidA = contact.EntityA;
             var uidB = contact.EntityB;
             var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA));

@@ -48,7 +48,7 @@ public sealed partial class GrammarSystem : EntitySystem
     {
         if (key == null)
             return;
-        if (value == null)
+        if (value == null || value == "")
             grammar.Comp.Attributes.Remove(key);
         else
             grammar.Comp.Attributes[key] = value;

@@ -108,7 +108,7 @@ public class Generator : IIncrementalGenerator
         var containingTypesEnd = new StringBuilder();
         foreach (var parent in containingTypes)
         {
-            var syntax = (ClassDeclarationSyntax)parent.DeclaringSyntaxReferences[0].GetSyntax();
+            var syntax = (TypeDeclarationSyntax)parent.DeclaringSyntaxReferences[0].GetSyntax();
             if (!IsPartial(syntax))
             {
                 nonPartial = true;

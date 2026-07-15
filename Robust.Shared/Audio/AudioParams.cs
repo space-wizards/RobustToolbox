@@ -168,10 +168,10 @@ namespace Robust.Shared.Audio
         ///     Returns a copy of this instance with a modified variation set, for easy chaining.
         /// </summary>
         [Pure]
-        public readonly AudioParams AddVariation(float variation)
+        public readonly AudioParams AddVariation(float? variation)
         {
             var me = this;
-            if (variation == 0f)
+            if (variation == null)
                 return me;
 
             me.Variation = (me.Variation ?? 0f) + variation;

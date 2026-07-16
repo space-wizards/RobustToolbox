@@ -62,22 +62,12 @@ public class Generator : IIncrementalGenerator
             .Where(static type => type != null);
 
         initContext.RegisterSourceOutput(
-            dataDefinitions.Collect(),
-            static (sourceContext, sources) =>
+            dataDefinitions,
+            static (sourceContext, source) =>
             {
-                var done = new HashSet<string>();
-
-                foreach (var source in sources)
-                {
-                    var (name, code) = source!.Value;
-
-                    if (!done.Add(name))
-                        continue;
-
-                    sourceContext.AddSource(name, SourceText.From(code, Encoding.UTF8));
-                }
-            }
-        );
+                var (name, code) = source!.Value;
+                sourceContext.AddSource(name, SourceText.From(code, Encoding.UTF8));
+            });
     }
 
     private static bool IsCandidateTypeDeclaration(SyntaxNode node)

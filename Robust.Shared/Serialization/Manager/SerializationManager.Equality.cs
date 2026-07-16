@@ -15,62 +15,28 @@ public sealed partial class SerializationManager
         ISerializationContext? context);
 
     private readonly ConcurrentDictionary<Type, EqualityBoxingDelegate> _equalityBoxingDelegates = new();
-    private readonly ConcurrentDictionary<Type, EqualityBoxingDelegate> _hashSetEqualityBoxingDelegates = new();
 
     public bool DataFieldEquals<T>(T left, T right, ISerializationContext? context = null)
     {
-        if (EqualityComparer<T>.Default.Equals(left, right))
+        if (ReferenceEquals(left, right))
             return true;
 
         if (left is null || right is null)
             return false;
 
-        var type = typeof(T);
         var leftType = left.GetType();
         if (leftType != right.GetType())
             return false;
 
-        if (type.IsAssignableTo(typeof(ISerializationGenerated<>).MakeGenericType(type)))
-            return GetOrCreateEqualityBoxingDelegate(type)(left, right, context);
+        // Primitive, enum, string, Type and CopyByRef values have no structural
+        // equality to fall back to.
+        if (leftType == typeof(T) && SerializedType<T>.Information.ReturnSource)
+            return EqualityComparer<T>.Default.Equals(left, right);
 
-        if (leftType.IsAssignableTo(typeof(ISerializationGenerated<>).MakeGenericType(leftType)))
-            return GetOrCreateEqualityBoxingDelegate(leftType)(left, right, context);
-
-        if (left is Array leftArray && right is Array rightArray)
-            return ArrayEquals(leftArray, rightArray, context);
-
-        if (left is IDictionary leftDictionary && right is IDictionary rightDictionary)
-            return DictionaryEquals(leftDictionary, rightDictionary, context);
-
-        if (leftType.IsGenericType &&
-            leftType.GetGenericTypeDefinition() == typeof(HashSet<>))
-        {
-            return GetOrCreateHashSetEqualityBoxingDelegate(leftType)(left, right, context);
-        }
-
-        if (left is IEnumerable leftEnumerable &&
-            right is IEnumerable rightEnumerable &&
-            left is not string)
-        {
-            return EnumerableEquals(leftEnumerable, rightEnumerable, context);
-        }
-
-        return false;
+        return GetOrCreateEqualityBoxingDelegate(leftType)(left, right, context);
     }
 
-    private EqualityBoxingDelegate GetOrCreateHashSetEqualityBoxingDelegate(Type type)
-    {
-        return _hashSetEqualityBoxingDelegates.GetOrAdd(type, type =>
-        {
-            var method = typeof(SerializationManager)
-                .GetMethod(nameof(HashSetEqualsGeneric), BindingFlags.Instance | BindingFlags.NonPublic)!
-                .MakeGenericMethod(type.GetGenericArguments()[0]);
-
-            return method.CreateDelegate<EqualityBoxingDelegate>(this);
-        });
-    }
-
-    private bool HashSetEqualsGeneric<T>(object left, object right, ISerializationContext? context)
+    private bool HashSetEqualsGeneric<T>(object left, object right, ISerializationContext? _)
     {
         return ((HashSet<T>) left).SetEquals((HashSet<T>) right);
     }
@@ -91,23 +57,49 @@ public sealed partial class SerializationManager
 
     private EqualityBoxingDelegate GetOrCreateEqualityBoxingDelegate(Type type)
     {
-        return _equalityBoxingDelegates.GetOrAdd(type, type =>
+        return _equalityBoxingDelegates.GetOrAdd(type, static (type, manager) =>
         {
-            var methodName = type.IsAssignableTo(typeof(ISerializationGenerated<>).MakeGenericType(type))
-                ? nameof(DataDefinitionEqualsGeneric)
-                : nameof(DataFieldEqualsGeneric);
+            if (type.IsAssignableTo(typeof(ISerializationGenerated<>).MakeGenericType(type)))
+                return manager.CreateGenericEqualityDelegate(type, nameof(DataDefinitionEqualsGeneric));
 
-            var method = typeof(SerializationManager)
-                .GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)!
-                .MakeGenericMethod(type);
+            if (type.IsArray)
+                return manager.ArrayEqualsBoxed;
 
-            return method.CreateDelegate<EqualityBoxingDelegate>(this);
-        });
+            if (type.IsAssignableTo(typeof(IDictionary)))
+                return manager.DictionaryEqualsBoxed;
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>))
+                return manager.CreateGenericEqualityDelegate(type.GetGenericArguments()[0], nameof(HashSetEqualsGeneric));
+
+            if (type != typeof(string) && type.IsAssignableTo(typeof(IEnumerable)))
+                return manager.EnumerableEqualsBoxed;
+
+            return static (left, right, _) => Equals(left, right);
+        }, this);
     }
 
-    private bool DataFieldEqualsGeneric<T>(object left, object right, ISerializationContext? context)
+    private EqualityBoxingDelegate CreateGenericEqualityDelegate(Type type, string methodName)
     {
-        return DataFieldEquals((T) left, (T) right, context);
+        var method = typeof(SerializationManager)
+            .GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)!
+            .MakeGenericMethod(type);
+
+        return method.CreateDelegate<EqualityBoxingDelegate>(this);
+    }
+
+    private bool ArrayEqualsBoxed(object left, object right, ISerializationContext? context)
+    {
+        return ArrayEquals((Array) left, (Array) right, context);
+    }
+
+    private bool DictionaryEqualsBoxed(object left, object right, ISerializationContext? context)
+    {
+        return DictionaryEquals((IDictionary) left, (IDictionary) right, context);
+    }
+
+    private bool EnumerableEqualsBoxed(object left, object right, ISerializationContext? context)
+    {
+        return EnumerableEquals((IEnumerable) left, (IEnumerable) right, context);
     }
 
     private bool DataDefinitionEqualsGeneric<T>(object left, object right, ISerializationContext? context)
@@ -129,6 +121,8 @@ public sealed partial class SerializationManager
 
         var leftEnumerator = left.GetEnumerator();
         var rightEnumerator = right.GetEnumerator();
+        using var leftDisposable = leftEnumerator as IDisposable;
+        using var rightDisposable = rightEnumerator as IDisposable;
         while (leftEnumerator.MoveNext())
         {
             rightEnumerator.MoveNext();
@@ -160,6 +154,8 @@ public sealed partial class SerializationManager
     {
         var leftEnumerator = left.GetEnumerator();
         var rightEnumerator = right.GetEnumerator();
+        using var leftDisposable = leftEnumerator as IDisposable;
+        using var rightDisposable = rightEnumerator as IDisposable;
 
         while (true)
         {
@@ -179,7 +175,7 @@ public sealed partial class SerializationManager
 
     private bool ObjectFieldEquals(object? left, object? right, ISerializationContext? context)
     {
-        if (Equals(left, right))
+        if (ReferenceEquals(left, right))
             return true;
 
         if (left is null || right is null)

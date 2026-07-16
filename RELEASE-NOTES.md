@@ -54,6 +54,42 @@ END TEMPLATE-->
 *None yet*
 
 
+## 283.0.0
+
+### Breaking changes
+
+* The CompNetworkGenerator now .Clears and .Adds for collections where possible on the client.
+* Defer UI state application until the Update loop.
+* Expose the file name for selected file in dialog.
+* Removed unused GridEventHandler.
+
+### New features
+
+* Added a NetMessage.EstimateBufferSize() to provide an estimate of the initialCapacity required for NetMessages. This will make NetMessage take an existing adequately sized pooled buffer for your message. This is opt-in and will default to the old 4-byte size if not specified.
+* Add AudioParams.AddVariation.
+* Made AudioAuxiliaryComponent public.
+* Added API for OwnedTexture to load a texture without caching it.
+* Make TableContainer virtual and public.
+* Try to make connection failure message more useful by not defaulting to the first message (on IPV4 or IPV6).
+* Add methods for generating Color palettes.
+* Expose FovRenderTarget for the viewport.
+* Add TryComp(EntityUid, Type, IComponent?) proxy methods to EntitySystem.
+
+### Bugfixes
+
+* Static + StaticSundries will now also be considered for grid-traversal when a grid moves over these entities.
+* Fix field deltas not supporting 1-field states.
+* Fix interface cast in serialization generator.
+* Dispose PVS session states on disconnect.
+* Fix BaseWindow jittering on resize.
+
+### Internal
+
+* Improve clean and incremental build times around serialization generators.
+* Cleanup engine warnings around transform handling.
+* Made several internal performance improvements on debug and release.
+
+
 ## 282.0.0
 
 ### Breaking changes

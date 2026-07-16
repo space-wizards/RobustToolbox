@@ -276,8 +276,11 @@ namespace Robust.Shared.Network
             _config.OnValueChanged(CVars.NetConnectionTimeout, ConnectionTimeoutChanged);
             _config.OnValueChanged(CVars.NetMaxIpConnections, MaxIpConnectionsChanged);
             _config.OnValueChanged(CVars.NetMaxRapidConnections, MaxRapidConnectionsChanged);
+            _config.OnValueChanged(CVars.NetSendConnectionRejectionReasons, SendConnectionRejectionReasonsChanged);
             _config.OnValueChanged(CVars.NetRapidConnectionWindow, RapidConnectionWindowChanged);
             _config.OnValueChanged(CVars.NetRapidConnectionDecay, RapidConnectionDecayChanged);
+            _config.OnValueChanged(CVars.NetMaxFragmentReassemblyBytesPerConnection, MaxFragmentReassemblyBytesPerConnectionChanged);
+            _config.OnValueChanged(CVars.NetFragmentGroupTimeout, FragmentGroupTimeoutChanged);
 
             _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
             _config.OnValueChanged(CVars.NetLogging, NetLoggingChanged);
@@ -381,6 +384,14 @@ namespace Robust.Shared.Network
             }
         }
 
+        private void SendConnectionRejectionReasonsChanged(bool sendReasons)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.SendConnectionRejectionReasons = sendReasons;
+            }
+        }
+
         private void RapidConnectionWindowChanged(double time)
         {
             foreach (var netPeer in _netPeers)
@@ -394,6 +405,22 @@ namespace Robust.Shared.Network
             foreach (var netPeer in _netPeers)
             {
                 netPeer.Peer.Configuration.RapidConnectionDecay = decay;
+            }
+        }
+
+        private void MaxFragmentReassemblyBytesPerConnectionChanged(int limit)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.MaximumFragmentReassemblyBytesPerConnection = limit;
+            }
+        }
+
+        private void FragmentGroupTimeoutChanged(float timeout)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.FragmentGroupTimeout = timeout;
             }
         }
 
@@ -577,8 +604,11 @@ namespace Robust.Shared.Network
             _config.UnsubValueChanged(CVars.NetConnectionTimeout, ConnectionTimeoutChanged);
             _config.UnsubValueChanged(CVars.NetMaxIpConnections, MaxIpConnectionsChanged);
             _config.UnsubValueChanged(CVars.NetMaxRapidConnections, MaxRapidConnectionsChanged);
+            _config.UnsubValueChanged(CVars.NetSendConnectionRejectionReasons, SendConnectionRejectionReasonsChanged);
             _config.UnsubValueChanged(CVars.NetRapidConnectionWindow, RapidConnectionWindowChanged);
             _config.UnsubValueChanged(CVars.NetRapidConnectionDecay, RapidConnectionDecayChanged);
+            _config.UnsubValueChanged(CVars.NetMaxFragmentReassemblyBytesPerConnection, MaxFragmentReassemblyBytesPerConnectionChanged);
+            _config.UnsubValueChanged(CVars.NetFragmentGroupTimeout, FragmentGroupTimeoutChanged);
 
             _serializer.ClientHandshakeComplete -= OnSerializerOnClientHandshakeComplete;
 
@@ -788,6 +818,7 @@ namespace Robust.Shared.Network
             netConfig.ConnectionTimeout = _config.GetCVar(CVars.NetConnectionTimeout);
             netConfig.MaximumIpConnections = _config.GetCVar(CVars.NetMaxIpConnections);
             netConfig.MaximumRapidConnections = _config.GetCVar(CVars.NetMaxRapidConnections);
+            netConfig.SendConnectionRejectionReasons = _config.GetCVar(CVars.NetSendConnectionRejectionReasons);
             netConfig.RapidConnectionWindow = _config.GetCVar(CVars.NetRapidConnectionWindow);
             netConfig.RapidConnectionDecay = _config.GetCVar(CVars.NetRapidConnectionDecay);
 
@@ -807,6 +838,8 @@ namespace Robust.Shared.Network
             netConfig.AutoExpandMTU = _config.GetCVar(CVars.NetMtuExpand);
             netConfig.ExpandMTUFrequency = _config.GetCVar(CVars.NetMtuExpandFrequency);
             netConfig.ExpandMTUFailAttempts = _config.GetCVar(CVars.NetMtuExpandFailAttempts);
+            netConfig.MaximumFragmentReassemblyBytesPerConnection = _config.GetCVar(CVars.NetMaxFragmentReassemblyBytesPerConnection);
+            netConfig.FragmentGroupTimeout = _config.GetCVar(CVars.NetFragmentGroupTimeout);
 
             return netConfig;
         }
@@ -1194,9 +1227,14 @@ namespace Robust.Shared.Network
             return new T();
         }
 
-        private NetOutgoingMessage BuildMessage(NetMessage message, NetPeer peer)
+        private NetOutgoingMessage BuildMessage(NetMessage message, NetChannel channel)
         {
-            var packet = peer.CreateMessage(4);
+            var initialCapacity = message.EstimateBufferSize();
+
+            if (channel.Encryption != null)
+                initialCapacity += NetEncryption.EncryptionOverhead;
+
+            var packet = channel.Connection.Peer.CreateMessage(initialCapacity);
 
             if (!_strings.TryFindStringId(message.MsgName, out int msgId))
                 throw new NetManagerException(

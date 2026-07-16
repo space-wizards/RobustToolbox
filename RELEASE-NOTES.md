@@ -35,15 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Update Lidgren.Network to 04678d057cc503f14f49801a725e61cfe27790a0 with additional fixes around MTU handling, NAT handling, and malformed packets.
+*None yet*
 
 ### New features
 
-*None yet*
+* Added a NetMessage.EstimateBufferSize() to provide an estimate of the initialCapacity required for NetMessages. This will make NetMessage take an existing adequately sized pooled buffer for your message. This is opt-in and will default to the old 4-byte size if not specified.
 
 ### Bugfixes
 
-*None yet*
+* Static + StaticSundries will now also be considered for grid-traversal when a grid moves over these entities.
 
 ### Other
 
@@ -52,6 +52,32 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 282.0.0
+
+### Breaking changes
+
+* Serv5 has been merged, re-doing the internals of DataDefinition serialization.
+  * It can now write into readonly fields.
+  * DataFields defined on objects that don't have DataDefinitions will cause errors in the analyzer and require the attribute.
+  * Value types will now be copied directly where possible rather than round-tripping through TryCustomCopy if no custom serializer is specified.
+  * It no longer uses as many expression trees so more tests should be able to run concurrently
+
+
+## 281.0.0
+
+### Breaking changes
+
+* Updated Lidgren.Network to `04678d057cc503f14f49801a725e61cfe27790a0` with additional fixes around MTU handling, NAT handling, and malformed packets.
+
+### New features
+
+* Exposed new Lidgren properties/CVARs for the above-mentioned fixes and previous updates around rate-limit settings.
+
+### Bugfixes
+
+* Fixed `EntitySystemSubscriptionsGenerator` not targeting server-side `SubscribeLocalEvent`/`SubscribeNetworkEvent` attributes.
 
 
 ## 280.0.1

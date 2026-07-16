@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using static Robust.Roslyn.Shared.DataDefinitionHelper;
 using static Robust.Serialization.Generator.CustomSerializerType;
 using static Robust.Serialization.Generator.Types;
@@ -41,7 +42,7 @@ public class Generator : IIncrementalGenerator
     {
         IncrementalValuesProvider<(string name, string code)?> dataDefinitions = initContext.SyntaxProvider
             .CreateSyntaxProvider(
-                static (node, _) => node is TypeDeclarationSyntax,
+                static (node, _) => IsCandidateTypeDeclaration(node),
                 static (context, _) =>
                 {
                     var type = (TypeDeclarationSyntax)context.Node;
@@ -71,10 +72,16 @@ public class Generator : IIncrementalGenerator
                     if (!done.Add(name))
                         continue;
 
-                    sourceContext.AddSource(name, code);
+                    sourceContext.AddSource(name, SourceText.From(code, Encoding.UTF8));
                 }
             }
         );
+    }
+
+    private static bool IsCandidateTypeDeclaration(SyntaxNode node)
+    {
+        return node is TypeDeclarationSyntax { AttributeLists.Count: > 0 } and not InterfaceDeclarationSyntax ||
+               node is TypeDeclarationSyntax { BaseList: not null } and not InterfaceDeclarationSyntax;
     }
 
     private static (string, string)? GenerateForDataDefinition(
@@ -171,14 +178,7 @@ public class Generator : IIncrementalGenerator
             {{containingTypesEnd}}
             """);
 
-        return ($"{symbolName}.g.cs", NormalizeSource(builder.ToString()));
-    }
-
-    private static string NormalizeSource(string source)
-    {
-        return SyntaxFactory.ParseCompilationUnit(source)
-            .NormalizeWhitespace()
-            .ToFullString();
+        return ($"{symbolName}.g.cs", builder.ToString());
     }
 
     private static void GetDataFields(

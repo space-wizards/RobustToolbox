@@ -266,6 +266,15 @@ namespace Robust.Shared.Serialization.Manager
 
         #endregion
 
+        #region Equality
+
+        bool DataFieldEquals<T>(T left, T right, ISerializationContext? context = null);
+
+        [PreferGenericVariant]
+        bool DataFieldEquals(Type type, object? left, object? right, ISerializationContext? context = null);
+
+        #endregion
+
         #region Copy
 
         /// <summary>

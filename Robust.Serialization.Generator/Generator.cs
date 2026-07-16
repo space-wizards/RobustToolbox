@@ -170,6 +170,8 @@ public class Generator : IIncrementalGenerator
 
                 {{GetWriter(definition)}}
 
+                {{GetEquality(definition)}}
+
                 {{GetValidator(definition)}}
 
                 {{GetFieldDefinitions(definition)}}
@@ -1061,6 +1063,95 @@ public class Generator : IIncrementalGenerator
                 {{builder}}
             }
             """;
+    }
+
+    private static string GetEquality(DataDefinition definition)
+    {
+        var builder = new StringBuilder();
+
+        if (GetFirstDataDefinitionBaseType(definition.Type) is { } baseType)
+        {
+            builder.AppendLine($$"""
+                if (!{{baseType.ToDisplayString()}}.AreEqual(left, right, serialization, context))
+                    return false;
+                """);
+        }
+
+        foreach (var field in definition.Fields)
+        {
+            if (!definition.Type.Equals(field.Symbol.ContainingType, SymbolEqualityComparer.Default))
+                continue;
+
+            if (field.Attribute.ReadOnly)
+                continue;
+
+            var fieldType = field.Type.ToDisplayString();
+            if (IsMultidimensionalArray(field.Type))
+                fieldType = fieldType.Replace("*", "");
+
+            if (field.Type.NullableAnnotation == NullableAnnotation.Annotated &&
+                !fieldType.EndsWith("?"))
+            {
+                fieldType += "?";
+            }
+
+            var equalityExpression = GetFieldEqualityExpression(field, fieldType);
+
+            builder.AppendLine($$"""
+                if (!{{equalityExpression}})
+                    return false;
+                """);
+        }
+
+        builder.AppendLine("return true;");
+
+        return $$"""
+            public static bool AreEqual(
+                {{definition.GenericTypeName}} left,
+                {{definition.GenericTypeName}} right,
+                ISerializationManager serialization,
+                ISerializationContext? context = null)
+            {
+                {{builder}}
+            }
+            """;
+    }
+
+    private static string GetFieldEqualityExpression(DataField field, string fieldType)
+    {
+        var fieldName = field.Symbol.Name;
+
+        if (TryGetFastHashSetEquality(field.Type, $"left.{fieldName}", $"right.{fieldName}", out var hashSetEquality))
+            return hashSetEquality;
+
+        if (CanFieldUseDirectEquality(field))
+            return $"EqualityComparer<{fieldType}>.Default.Equals(left.{fieldName}, right.{fieldName})";
+
+        return $"serialization.DataFieldEquals<{fieldType}>(left.{fieldName}, right.{fieldName}, context)";
+    }
+
+    private static bool CanFieldUseDirectEquality(DataField field)
+    {
+        return CanTypeBeCopiedByValue(field.Type);
+    }
+
+    private static bool TryGetFastHashSetEquality(
+        ITypeSymbol type,
+        string leftAccess,
+        string rightAccess,
+        [NotNullWhen(true)] out string? equality)
+    {
+        equality = null;
+
+        if (type.WithNullableAnnotation(NullableAnnotation.None) is not INamedTypeSymbol namedType ||
+            !IsGenericCollectionType(namedType, "HashSet", 1))
+        {
+            return false;
+        }
+
+        equality =
+            $"ReferenceEquals({leftAccess}, {rightAccess}) || ({leftAccess} != null && {rightAccess} != null && {leftAccess}.SetEquals({rightAccess}))";
+        return true;
     }
 
     private static string GetFieldDefinitions(DataDefinition definition)

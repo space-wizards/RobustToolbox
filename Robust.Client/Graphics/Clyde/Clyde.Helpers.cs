@@ -310,12 +310,17 @@ namespace Robust.Client.Graphics.Clyde
             // (vM) while GL postmultiplies vectors with matrices (Mv); however, since
             // Matrix3x2 is stored row-major and GL uses column-major, the memory layout
             // is the same apart from Matrix3x2's implicit column.
-            float* matrix = stackalloc float[9]
-            {
-                value.M11, value.M12, 0,
-                value.M21, value.M22, 0,
-                value.M31, value.M32, 1
-            };
+            // Assign these individually instead of using a stackalloc initializer because in debug it is allocating yipee.
+            float* matrix = stackalloc float[9];
+            matrix[0] = value.M11;
+            matrix[1] = value.M12;
+            matrix[2] = 0;
+            matrix[3] = value.M21;
+            matrix[4] = value.M22;
+            matrix[5] = 0;
+            matrix[6] = value.M31;
+            matrix[7] = value.M32;
+            matrix[8] = 1;
 
             func(location, 1, 0, matrix);
         }

@@ -215,6 +215,14 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
+        /// Fraction of every normal sprite layer cropped from its bottom edge before rendering.
+        /// This is applied before layer and post shaders, allowing effects such as water immersion
+        /// without consuming the sprite's single post-shader slot.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float BottomClipFraction { get; set; }
+
+        /// <summary>
         ///     Whether to pass the screen texture to the <see cref="PostShader"/>.
         /// </summary>
         /// <remarks>

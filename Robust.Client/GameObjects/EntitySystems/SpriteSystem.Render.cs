@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
@@ -146,6 +147,20 @@ public sealed partial class SpriteSystem
         var layerColor = layer.Owner.Comp.color * layer.Color;
         var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
         var quad = Box2.FromDimensions(textureSize / -2, textureSize);
+        UIBox2? subRegion = null;
+
+        var bottomClip = Math.Clamp(layer.Owner.Comp.BottomClipFraction, 0f, 0.999f);
+        if (bottomClip > 0f)
+        {
+            // Crop the texture as well as its quad so the visible portion keeps its original scale.
+            // Texture sub-regions use a top-left origin while world quads use a bottom-left origin.
+            quad.Bottom = MathHelper.Lerp(quad.Bottom, quad.Top, bottomClip);
+            subRegion = new UIBox2(
+                0f,
+                0f,
+                texture.Width,
+                texture.Height * (1f - bottomClip));
+        }
 
         if (layer.UnShaded)
         {
@@ -158,7 +173,7 @@ public sealed partial class SpriteSystem
             layerColor = new(new Vector4(-1) - layerColor.RGBA);
         }
 
-        drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
+        drawingHandle.DrawTextureRectRegion(texture, quad, layerColor, subRegion);
 
         if (layer.Shader != null)
             drawingHandle.UseShader(null);

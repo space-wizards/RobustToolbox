@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* The `Color` API now includes a `bool TryFromHex(ReadOnlySpan<char> hexColor, out Color color)` signature for returning a `bool` and `out Color` instead of a `Color?`.
 
 ### Bugfixes
 
@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* The `Color` API is now better documented.
 
 ### Internal
 

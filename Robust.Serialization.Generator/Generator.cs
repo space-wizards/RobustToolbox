@@ -42,7 +42,7 @@ public class Generator : IIncrementalGenerator
     {
         IncrementalValuesProvider<(string name, string code)?> dataDefinitions = initContext.SyntaxProvider
             .CreateSyntaxProvider(
-                static (node, _) => node is TypeDeclarationSyntax,
+                static (node, _) => IsCandidateTypeDeclaration(node),
                 static (context, _) =>
                 {
                     var type = (TypeDeclarationSyntax)context.Node;
@@ -76,6 +76,12 @@ public class Generator : IIncrementalGenerator
                 }
             }
         );
+    }
+
+    private static bool IsCandidateTypeDeclaration(SyntaxNode node)
+    {
+        return node is TypeDeclarationSyntax { AttributeLists.Count: > 0 } and not InterfaceDeclarationSyntax ||
+               node is TypeDeclarationSyntax { BaseList: not null } and not InterfaceDeclarationSyntax;
     }
 
     private static (string, string)? GenerateForDataDefinition(

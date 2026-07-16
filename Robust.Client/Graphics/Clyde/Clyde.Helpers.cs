@@ -294,10 +294,10 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private unsafe void UniformMatrix3fv(int location, float* value)
+        private unsafe void UniformMatrix3fv(int location, in Matrix3x2 value)
         {
-            // OpenTK is doing some reflection stuff which is allocating like crazy.
-            // TODO: Remove this at some point.
+            // OpenTK's pointer overload allocates a RuntimePtr on every call in debug builds.
+            // Bypass the binding for this hot path until OpenTK is upgraded.
             var func = _glUniformMatrix3fv;
             if (func == null)
             {
@@ -305,7 +305,19 @@ namespace Robust.Client.Graphics.Clyde
                 _glUniformMatrix3fv = func;
             }
 
-            func(location, 1, 0, value);
+            // We put the rows of the input matrix into the columns of our GPU matrices.
+            // This transpose is required, as in C#, we premultiply vectors with matrices
+            // (vM) while GL postmultiplies vectors with matrices (Mv); however, since
+            // Matrix3x2 is stored row-major and GL uses column-major, the memory layout
+            // is the same apart from Matrix3x2's implicit column.
+            float* matrix = stackalloc float[9]
+            {
+                value.M11, value.M12, 0,
+                value.M21, value.M22, 0,
+                value.M31, value.M32, 1
+            };
+
+            func(location, 1, 0, matrix);
         }
     }
 }

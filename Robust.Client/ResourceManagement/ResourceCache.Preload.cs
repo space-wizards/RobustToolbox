@@ -325,10 +325,18 @@ namespace Robust.Client.ResourceManagement
             // Finalize the atlases.
             for (var i = 0; i < imageAtlases.Count; i++)
             {
-                var atlasTexture = Clyde.LoadTextureFromImage(imageAtlases[i], $"Meta atlas {i}");
-                finalAtlases.Add(atlasTexture);
+                var imageAtlas = imageAtlases[i];
+                try
+                {
+                    var atlasTexture = Clyde.LoadTextureFromImage(imageAtlas, $"Meta atlas {i}");
+                    finalAtlases.Add(atlasTexture);
 
-                sawmill.Debug($"(Meta atlas {i}) - cropped utilization: {(float)finalPixels[i] / (maxSize * imageAtlases[i].Height):P2}, fill percentage: {(float)imageAtlases[i].Height / maxSize:P2}");
+                    sawmill.Debug($"(Meta atlas {i}) - cropped utilization: {(float)finalPixels[i] / (maxSize * imageAtlas.Height):P2}, fill percentage: {(float)imageAtlas.Height / maxSize:P2}");
+                }
+                finally
+                {
+                    imageAtlas.Dispose();
+                }
             }
 
             // Finally, reference the actual atlas from the RSIs.
@@ -359,23 +367,30 @@ namespace Robust.Client.ResourceManagement
             var errors = 0;
             foreach (var data in rsiList)
             {
-                if (data.Bad)
-                {
-                    errors += 1;
-                    continue;
-                }
-
                 try
                 {
-                    var rsiRes = new RSIResource();
-                    rsiRes.LoadFinish(this, data);
-                    resList[data.Path] = rsiRes;
+                    if (data.Bad)
+                    {
+                        errors += 1;
+                        continue;
+                    }
+
+                    try
+                    {
+                        var rsiRes = new RSIResource();
+                        rsiRes.LoadFinish(this, data);
+                        resList[data.Path] = rsiRes;
+                    }
+                    catch (Exception e)
+                    {
+                        sawmill.Error($"Exception while loading RSI {data.Path}:\n{e}");
+                        data.Bad = true;
+                        errors += 1;
+                    }
                 }
-                catch (Exception e)
+                finally
                 {
-                    sawmill.Error($"Exception while loading RSI {data.Path}:\n{e}");
-                    data.Bad = true;
-                    errors += 1;
+                    data.AtlasSheet?.Dispose();
                 }
             }
 

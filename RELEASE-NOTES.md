@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added a NetMessage.EstimateBufferSize() to provide an estimate of the initialCapacity required for NetMessages. This will make NetMessage take an existing adequately sized pooled buffer for your message. This is opt-in and will default to the old 4-byte size if not specified.
 
 ### Bugfixes
 
-*None yet*
+* Static + StaticSundries will now also be considered for grid-traversal when a grid moves over these entities.
 
 ### Other
 

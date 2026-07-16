@@ -310,6 +310,43 @@ internal sealed partial class AutoNetworkingTests : RobustIntegrationTest
 
         Assert.That(state?.GetType().Name, Is.EqualTo("Field3_FieldComponentState"));
     }
+
+    [Test]
+    public async Task SingleFieldDeltaCreatesClientBaseStateTest()
+    {
+        await using var pair = await StartConnectedPair();
+        var server = pair.Server;
+        var client = pair.Client;
+
+        server.Post(() => server.System<SharedMapSystem>().CreateMap());
+        await RunTicksSync(server, client, 10);
+
+        EntityUid serverEntity = default;
+        await server.WaitPost(() =>
+        {
+            serverEntity = server.EntMan.Spawn();
+            server.EntMan.EnsureComponent<AutoNetworkingTestSingleFieldDeltaComponent>(serverEntity);
+
+            var session = server.PlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, serverEntity);
+            server.PlayerMan.JoinGame(session);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        IComponentState? state = null;
+        await client.WaitPost(() =>
+        {
+            var entity = client.EntMan.GetEntity(server.EntMan.GetNetEntity(serverEntity));
+            var component = client.EntMan.GetComponent<AutoNetworkingTestSingleFieldDeltaComponent>(entity);
+            component.Value = 2;
+            client.EntMan.DirtyField(entity, component, nameof(AutoNetworkingTestSingleFieldDeltaComponent.Value));
+            state = client.EntMan.GetComponentState(client.EntMan.EventBus, component, null, component.CreationTick);
+        });
+
+        Assert.That(state, Is.TypeOf<AutoNetworkingTestSingleFieldDeltaComponent.AutoNetworkingTestSingleFieldDeltaComponent_AutoState>());
+        Assert.That(((AutoNetworkingTestSingleFieldDeltaComponent.AutoNetworkingTestSingleFieldDeltaComponent_AutoState) state!).Value, Is.EqualTo(2));
+    }
 }
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
@@ -357,4 +394,11 @@ public sealed partial class AutoNetworkingTestFieldDeltaComponent : Component
 
     [DataField, AutoNetworkedField]
     public int Field3 = 3;
+}
+
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
+public sealed partial class AutoNetworkingTestSingleFieldDeltaComponent : Component
+{
+    [DataField, AutoNetworkedField]
+    public int Value = 1;
 }

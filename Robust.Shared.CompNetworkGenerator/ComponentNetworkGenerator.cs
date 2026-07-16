@@ -567,13 +567,15 @@ namespace Robust.Shared.CompNetworkGenerator
             }}";
 
                 clientDeltaGetState = @$"// Delta state
-            if (component is IComponentDelta delta && args.FromTick > component.CreationTick && delta.LastFieldUpdate >= args.FromTick)
+            if (component is IComponentDelta delta && args.FromTick > component.CreationTick)
             {{
-                var fields = EntityManager.GetModifiedFields(component, args.FromTick);
+                var aspects = EntityManager.GetModifiedAspects(component, args.FromTick);
 
                 // Try and get a matching delta state for the relevant dirty fields, otherwise fall back to full state.
-                switch (fields)
-                {{{clientDeltaGetFields}
+                switch (aspects)
+                {{
+                    case >= DeltaAspect.Unclassified:
+                        break;{clientDeltaGetFields}
                     default:
                         break;
                 }}
@@ -648,10 +650,11 @@ namespace Robust.Shared.CompNetworkGenerator
             var deltaCompFieldsText = TrimNewLines(deltaCompFields);
             var fieldStatesText = TrimNewLines(fieldStates);
 
-            var netManagerDependency = usesClientCollectionCopy
+            var usesClientGetState = usesClientCollectionCopy || fieldDeltas;
+            var netManagerDependency = usesClientGetState
                 ? "[global::Robust.Shared.IoC.Dependency] private global::Robust.Shared.Network.INetManager _net = default!;"
                 : string.Empty;
-            var getStateSubscription = usesClientCollectionCopy
+            var getStateSubscription = usesClientGetState
                 ? $@"            if (_net.IsClient)
                 SubscribeLocalEvent<{componentName}, ComponentGetState>(OnGetStateClient);
             else
@@ -737,7 +740,7 @@ namespace Robust.Shared.CompNetworkGenerator
             outSb.AppendLine("            };");
             outSb.AppendLine("        }");
 
-            if (usesClientCollectionCopy)
+            if (usesClientGetState)
             {
                 outSb.AppendLine();
                 outSb.AppendLine($"        private void OnGetStateClient(EntityUid uid, {componentName} component, ref ComponentGetState args)");

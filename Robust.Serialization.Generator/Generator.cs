@@ -43,18 +43,20 @@ public class Generator : IIncrementalGenerator
         IncrementalValuesProvider<(string name, string code)?> dataDefinitions = initContext.SyntaxProvider
             .CreateSyntaxProvider(
                 static (node, _) => IsCandidateTypeDeclaration(node),
-                static (context, _) =>
+                static (context, cancellationToken) =>
                 {
                     var type = (TypeDeclarationSyntax)context.Node;
-                    var symbol = (ITypeSymbol)context.SemanticModel.GetDeclaredSymbol(type)!;
+                    if (context.SemanticModel.GetDeclaredSymbol(type, cancellationToken) is not INamedTypeSymbol symbol)
+                        return null;
 
                     if (symbol.TypeKind == TypeKind.Interface ||
+                        !IsCanonicalCandidateDeclaration(type, symbol, cancellationToken) ||
                         !IsDataDefinition(symbol, out var isDataRecord))
                     {
                         return null;
                     }
 
-                    return GenerateForDataDefinition(type, symbol, isDataRecord);
+                    return GenerateForDataDefinition(type, symbol, isDataRecord, cancellationToken);
                 }
             )
             .Where(static type => type != null);
@@ -84,10 +86,46 @@ public class Generator : IIncrementalGenerator
                node is TypeDeclarationSyntax { BaseList: not null } and not InterfaceDeclarationSyntax;
     }
 
+    private static bool IsCanonicalCandidateDeclaration(
+        TypeDeclarationSyntax declaration,
+        INamedTypeSymbol symbol,
+        CancellationToken cancellationToken)
+    {
+        TypeDeclarationSyntax? canonical = null;
+
+        foreach (var reference in symbol.DeclaringSyntaxReferences)
+        {
+            if (reference.GetSyntax(cancellationToken) is not TypeDeclarationSyntax syntax ||
+                !IsCandidateTypeDeclaration(syntax))
+            {
+                continue;
+            }
+
+            if (canonical == null || CompareDeclarations(syntax, canonical) < 0)
+                canonical = syntax;
+        }
+
+        return canonical == declaration;
+    }
+
+    private static int CompareDeclarations(TypeDeclarationSyntax left, TypeDeclarationSyntax right)
+    {
+        var pathComparison = string.Compare(
+            left.SyntaxTree.FilePath,
+            right.SyntaxTree.FilePath,
+            StringComparison.Ordinal);
+
+        if (pathComparison != 0)
+            return pathComparison;
+
+        return left.SpanStart.CompareTo(right.SpanStart);
+    }
+
     private static (string, string)? GenerateForDataDefinition(
         TypeDeclarationSyntax declaration,
-        ITypeSymbol type,
-        bool isDataRecord)
+        INamedTypeSymbol type,
+        bool isDataRecord,
+        CancellationToken cancellationToken)
     {
         var builder = new StringBuilder();
         var containingTypes = new Stack<INamedTypeSymbol>();
@@ -115,7 +153,7 @@ public class Generator : IIncrementalGenerator
         var containingTypesEnd = new StringBuilder();
         foreach (var parent in containingTypes)
         {
-            var syntax = (TypeDeclarationSyntax)parent.DeclaringSyntaxReferences[0].GetSyntax();
+            var syntax = (TypeDeclarationSyntax)parent.DeclaringSyntaxReferences[0].GetSyntax(cancellationToken);
             if (!IsPartial(syntax))
             {
                 nonPartial = true;
@@ -339,11 +377,11 @@ public class Generator : IIncrementalGenerator
                 ? "private"
                 : "protected";
 
-        var copyBaseCall = IsDataDefinition(definition.Type.BaseType, out _)
+        var copyBaseCall = definition.IsDataDefinition(definition.Type.BaseType, out _)
             ? "base(ISerializationGeneratedCopy, source, serialization, hookCtx, context)"
             : "this()";
 
-        var readBaseCall = IsDataDefinition(definition.Type.BaseType, out _)
+        var readBaseCall = definition.IsDataDefinition(definition.Type.BaseType, out _)
             ? "base(ISerializationGeneratedRead, mappingDataNode, serialization, hookCtx, context)"
             : "this()";
 
@@ -486,7 +524,7 @@ public class Generator : IIncrementalGenerator
                 method = $"ReadEnum<{fieldTypeName}>";
                 nullableString = string.Empty;
             }
-            else if (field.Type.IsValueType && IsDataDefinition(field.Type, out _))
+            else if (field.Type.IsValueType && definition.IsDataDefinition(field.Type, out _))
             {
                 method = $"ReadStructDefinition<{fieldTypeName}>";
                 nullableString = string.Empty;
@@ -508,7 +546,7 @@ public class Generator : IIncrementalGenerator
                     nullableString = string.Empty;
                 }
             }
-            else if (IsDataDefinition(field.Type, out _) && field.Type.TypeKind != TypeKind.Interface)
+            else if (definition.IsDataDefinition(field.Type, out _) && field.Type.TypeKind != TypeKind.Interface)
             {
                 method = $"ReadDefinition<{fieldTypeName}>";
             }
@@ -588,7 +626,7 @@ public class Generator : IIncrementalGenerator
         var builder = new StringBuilder();
         var modifiers = string.Empty;
 
-        if (GetFirstDataDefinitionBaseType(definition.Type) != null)
+        if (definition.GetFirstDataDefinitionBaseType() != null)
             modifiers = "override ";
         else if (IsVirtualClass(definition.Type))
             modifiers = "virtual ";
@@ -701,7 +739,7 @@ public class Generator : IIncrementalGenerator
                 builder.AppendLine("}");
         }
 
-        if (GetFirstDataDefinitionBaseType(definition.Type) is { } baseType)
+        if (definition.GetFirstDataDefinitionBaseType() is { } baseType)
             builder.AppendLine($"{baseType.ToDisplayString()}.Validate(nodes, node, serialization, context);");
 
         return $$"""
@@ -721,7 +759,7 @@ public class Generator : IIncrementalGenerator
         var baseDefinition = false;
         while (baseType != null)
         {
-            if (!baseDefinition && IsDataDefinition(baseType, out _))
+            if (!baseDefinition && definition.IsDataDefinition(baseType, out _))
                 baseDefinition = true;
 
             GetCopierMethod(definition, baseType, baseType.ToDisplayString(), true, builder, requiredFields);
@@ -741,7 +779,7 @@ public class Generator : IIncrementalGenerator
         StringBuilder builder,
         string requiredFields)
     {
-        if (!IsDataDefinition(type, out _))
+        if (!definition.IsDataDefinition(type, out _))
             return;
 
         var sameType = definition.Type.Equals(type, SymbolEqualityComparer.Default) &&
@@ -805,7 +843,7 @@ public class Generator : IIncrementalGenerator
         }
         else
         {
-            var baseCopy = IsDataDefinition(definition.Type.BaseType, out _)
+            var baseCopy = definition.IsDataDefinition(definition.Type.BaseType, out _)
                 ? $$"""
                       var definitionCast = ({{definition.Type.BaseType!.ToDisplayString()}})target;
                       base.Copy(ref definitionCast, serialization, hookCtx, context);
@@ -851,7 +889,7 @@ public class Generator : IIncrementalGenerator
         string body;
         if (definition.Type.IsAbstract)
         {
-            var baseRead = IsDataDefinition(definition.Type.BaseType, out _)
+            var baseRead = definition.IsDataDefinition(definition.Type.BaseType, out _)
                 ? $$"""
                       var definitionCast = ({{definition.Type.BaseType!.ToDisplayString()}})target;
                       {{definition.Type.BaseType!.ToDisplayString()}}.Read(ref definitionCast, mappingDataNode, serialization, hookCtx, context);
@@ -881,7 +919,7 @@ public class Generator : IIncrementalGenerator
         }
         else
         {
-            var baseRead = IsDataDefinition(definition.Type.BaseType, out _)
+            var baseRead = definition.IsDataDefinition(definition.Type.BaseType, out _)
                 ? $$"""
                       var definitionCast = ({{definition.Type.BaseType!.ToDisplayString()}})target;
                       {{definition.Type.BaseType!.ToDisplayString()}}.Read(ref definitionCast, mappingDataNode, serialization, hookCtx, context);
@@ -1042,7 +1080,7 @@ public class Generator : IIncrementalGenerator
 
         }
 
-        if (GetFirstDataDefinitionBaseType(definition.Type) is { } baseType)
+        if (definition.GetFirstDataDefinitionBaseType() is { } baseType)
         {
             var baseTypeName = baseType.ToDisplayString();
             builder.AppendLine(
@@ -1102,7 +1140,7 @@ public class Generator : IIncrementalGenerator
             fieldTags.Add($"\"{field.Attribute.Tag}\"");
         }
 
-        if (GetFirstDataDefinitionBaseType(definition.Type) is { } baseType)
+        if (definition.GetFirstDataDefinitionBaseType() is { } baseType)
             builder.AppendLine(
                 $"{baseType.ToDisplayString()}.GetFieldDefinitions(instance, fields, [{string.Join(", ", fieldTags)}]);");
 
@@ -1230,7 +1268,7 @@ public class Generator : IIncrementalGenerator
                         {
                         """);
 
-                    if (IsDataDefinition(type, out _) && !type.IsAbstract &&
+                    if (definition.IsDataDefinition(type, out _) && !type.IsAbstract &&
                         type is not INamedTypeSymbol { TypeKind: TypeKind.Interface })
                     {
                         var nullable = !type.IsValueType || IsNullableType(type);

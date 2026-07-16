@@ -310,6 +310,7 @@ internal sealed partial class AutoNetworkingTests : RobustIntegrationTest
 
         Assert.That(state?.GetType().Name, Is.EqualTo("Field3_FieldComponentState"));
     }
+
 }
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]

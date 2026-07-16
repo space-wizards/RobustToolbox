@@ -12,6 +12,7 @@ public sealed partial class GenericVisualizerSystem : VisualizerSystem<GenericVi
 {
     [Dependency] private IReflectionManager _refMan = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSys = default!;
+    [Dependency] private SpriteSystem _spriteSys = default!;
 
     protected override void OnAppearanceChange(EntityUid uid, GenericVisualizerComponent component, ref AppearanceChangeEvent args)
     {
@@ -32,12 +33,13 @@ public sealed partial class GenericVisualizerSystem : VisualizerSystem<GenericVi
                 if (!layerDataDict.TryGetValue(appearanceValue, out var layerData))
                     continue;
 
-                object layerKey = _refMan.TryParseEnumReference(layerKeyRaw, out var @enum)
-                    ? @enum
-                    : layerKeyRaw;
+                int layerIndex;
+                if (_refMan.TryParseEnumReference(layerKeyRaw, out var @enum))
+                    layerIndex = _spriteSys.LayerMapReserve((uid, args.Sprite), @enum);
+                else
+                    layerIndex = _spriteSys.LayerMapReserve((uid, args.Sprite), layerKeyRaw);
 
-                var layerIndex = args.Sprite.LayerMapReserveBlank(layerKey);
-                args.Sprite.LayerSetData(layerIndex, layerData);
+                _spriteSys.LayerSetData((uid, args.Sprite), layerIndex, layerData);
             }
         }
     }

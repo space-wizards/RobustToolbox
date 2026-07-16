@@ -1,5 +1,7 @@
-﻿using Robust.Client.Graphics;
+﻿using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
 using Robust.Client.Utility;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
@@ -16,6 +18,7 @@ namespace Robust.Client.UserInterface.Controls
         private IRsiStateLike? _state;
         private int _curFrame;
         private float _curFrameTime;
+        private SpriteSystem _sprite;
 
         /// <summary>
         ///     Internal TextureRect used to do actual drawing of the texture.
@@ -28,6 +31,7 @@ namespace Robust.Client.UserInterface.Controls
         public AnimatedTextureRect()
         {
             IoCManager.InjectDependencies(this);
+            IoCManager.Resolve<IEntitySystemManager>().Resolve(ref _sprite);
 
             DisplayRect = new TextureRect();
             AddChild(DisplayRect);
@@ -36,7 +40,7 @@ namespace Robust.Client.UserInterface.Controls
         public void SetFromSpriteSpecifier(SpriteSpecifier specifier)
         {
             _curFrame = 0;
-            _state = specifier.RsiStateLike();
+            _state = _sprite.RsiStateLike(specifier);
             _curFrameTime = _state.GetDelay(0);
             DisplayRect.Texture = _state.GetFrame(RsiDirection, 0);
         }

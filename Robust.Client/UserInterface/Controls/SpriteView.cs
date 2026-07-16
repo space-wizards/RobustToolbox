@@ -182,10 +182,12 @@ namespace Robust.Client.UserInterface.Controls
 
         private void UpdateSize()
         {
-            if (!ResolveEntity(out _, out var sprite, out _))
+            if (!ResolveEntity(out var uid, out var sprite, out _))
                 return;
+            
+            SpriteSystem ??= EntMan.System<SpriteSystem>();
 
-            var spriteBox = sprite.CalculateRotatedBoundingBox(default,  _worldRotation ?? Angle.Zero, _eyeRotation)
+            var spriteBox = SpriteSystem.CalculateBounds((uid, sprite), default, _worldRotation ?? Angle.Zero, _eyeRotation)
                 .CalcBoundingBox();
 
             if (!SpriteOffset)

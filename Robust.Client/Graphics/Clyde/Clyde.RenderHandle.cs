@@ -19,6 +19,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Clyde _clyde;
             private readonly IEntityManager _entities;
+            private readonly SpriteSystem _sprite;
             private readonly ClydeTexture _whiteClydeTexture;
             private readonly Box2 _whiteUv;
 
@@ -29,6 +30,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _clyde = clyde;
                 _entities = entities;
+                _sprite = _entities.System<SpriteSystem>();
 
                 var white = _clyde.GetStockTexture(ClydeStockTexture.White);
                 _whiteClydeTexture = ExtractTexture(white, null, out var whiteBounds);
@@ -235,10 +237,11 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 // Draw the entity.
-                sprite.Render(
+                _sprite.RenderSprite((entity, sprite),
                     DrawingHandleWorld,
                     eyeRot,
                     worldRot.Value,
+                    default,
                     overrideDirection);
 
                 // Reset to screen space

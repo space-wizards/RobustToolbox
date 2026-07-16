@@ -21,6 +21,8 @@ internal sealed partial class UITestControl
 
         private readonly IEntityManager _entMan;
         private readonly IGameTiming _timing;
+        private readonly IEntitySystemManager _sysMan;
+        private readonly SpriteSystem _sprite;
         private readonly BoxContainer _box;
 
         private record Entry(EntityUid Uid, SpriteComponent Sprite, TransformComponent Transform,
@@ -32,7 +34,8 @@ internal sealed partial class UITestControl
 
         public TabSpriteView()
         {
-            IoCManager.Resolve(ref _entMan, ref _timing);
+            IoCManager.Resolve(ref _entMan, ref _timing, ref _sysMan);
+            _sysMan.Resolve(ref _sprite);
             SetValue(TabContainer.TabTitleProperty, nameof(SpriteView));
             _box = new BoxContainer
             {
@@ -193,7 +196,8 @@ internal sealed partial class UITestControl
 
             entry = AddEntry("Offset", (e, time) =>
             {
-                e.Sprite.Offset = new Vector2(MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
+                var offset = new Vector2(MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
+                _sprite.SetOffset((e.Uid, e.Sprite), offset);
                 e.View.InvalidateMeasure();
             });
             added.Add(entry);
@@ -201,23 +205,28 @@ internal sealed partial class UITestControl
             entry = AddEntry("Scaled", (e, time) =>
             {
                 var theta = (float) Angle.FromDegrees(_degreesPerSecond * time).Theta;
-                e.Sprite.Scale = Vector2.One + new Vector2(0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
+                var scale = Vector2.One + new Vector2(0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
+                _sprite.SetScale((e.Uid, e.Sprite), scale);
                 e.View.InvalidateMeasure();
             });
             added.Add(entry);
 
             entry = AddEntry("Sprite Rotation", (e, time) =>
             {
-                e.Sprite.Rotation = Angle.FromDegrees(time * _degreesPerSecond);
+                var rotation = Angle.FromDegrees(time * _degreesPerSecond);
+                _sprite.SetRotation((e.Uid, e.Sprite), rotation);
             });
             added.Add(entry);
 
             entry = AddEntry("Combination", (e, time) =>
             {
                 var theta = (float) Angle.FromDegrees(_degreesPerSecond * time * 2).Theta;
-                e.Sprite.Scale = Vector2.One + new Vector2(0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
-                e.Sprite.Offset = new(MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
-                e.Sprite.Rotation = Angle.FromDegrees(0.5 * time * _degreesPerSecond);
+                var scale = Vector2.One + new Vector2(0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
+                _sprite.SetScale((e.Uid, e.Sprite), scale);
+                var offset = new Vector2(MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
+                _sprite.SetOffset((e.Uid, e.Sprite), offset);
+                var rotation = Angle.FromDegrees(0.5 * time * _degreesPerSecond);
+                _sprite.SetRotation((e.Uid, e.Sprite), rotation);
                 e.Transform.LocalRotation = Angle.FromDegrees(0.25 * time * _degreesPerSecond);
                 e.View.InvalidateMeasure();
             });

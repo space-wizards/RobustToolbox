@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using static Robust.Roslyn.Shared.DataDefinitionHelper;
 using static Robust.Serialization.Generator.CustomSerializerType;
 using static Robust.Serialization.Generator.Types;
@@ -71,7 +72,7 @@ public class Generator : IIncrementalGenerator
                     if (!done.Add(name))
                         continue;
 
-                    sourceContext.AddSource(name, code);
+                    sourceContext.AddSource(name, SourceText.From(code, Encoding.UTF8));
                 }
             }
         );
@@ -108,7 +109,7 @@ public class Generator : IIncrementalGenerator
         var containingTypesEnd = new StringBuilder();
         foreach (var parent in containingTypes)
         {
-            var syntax = (ClassDeclarationSyntax)parent.DeclaringSyntaxReferences[0].GetSyntax();
+            var syntax = (TypeDeclarationSyntax)parent.DeclaringSyntaxReferences[0].GetSyntax();
             if (!IsPartial(syntax))
             {
                 nonPartial = true;
@@ -171,14 +172,7 @@ public class Generator : IIncrementalGenerator
             {{containingTypesEnd}}
             """);
 
-        return ($"{symbolName}.g.cs", NormalizeSource(builder.ToString()));
-    }
-
-    private static string NormalizeSource(string source)
-    {
-        return SyntaxFactory.ParseCompilationUnit(source)
-            .NormalizeWhitespace()
-            .ToFullString();
+        return ($"{symbolName}.g.cs", builder.ToString());
     }
 
     private static void GetDataFields(

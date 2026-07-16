@@ -176,16 +176,34 @@ namespace Robust.Shared.CompNetworkGenerator
                 {fieldName} = this.{fieldName},");
             }
 
-            void AppendCollectionClone(string fieldName)
+            void AppendCollectionClone(string fieldName, bool nullable)
             {
+                var value = nullable
+                    ? $"this.{fieldName} == null ? null! : new(this.{fieldName})"
+                    : $"new(this.{fieldName})";
                 shallowClone.Append($@"
-                {fieldName} = this.{fieldName} == null ? null! : new(this.{fieldName}),");
+                {fieldName} = {value},");
             }
 
-            string GetClientCollectionField(string fieldName)
+            string GetClientCollectionField(string fieldName, bool nullable)
             {
                 usesClientCollectionCopy = true;
-                return $"component.{fieldName} == null ? null! : new(component.{fieldName})";
+                return nullable
+                    ? $"component.{fieldName} == null ? null! : new(component.{fieldName})"
+                    : $"new(component.{fieldName})";
+            }
+
+            string GetCollectionRefill(ITypeSymbol type, string target, string source, string indentation)
+            {
+                var named = (INamedTypeSymbol) type;
+                return named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat) switch
+                {
+                    GlobalDictionaryName => $@"foreach (var (key, value) in {source})
+{indentation}    {target}.Add(key, value);",
+                    GlobalHashSetName => $"{target}.UnionWith({source});",
+                    GlobalListName => $"{target}.AddRange({source});",
+                    _ => throw new InvalidOperationException($"Unsupported collection type {type}")
+                };
             }
 
             foreach (var (type, name) in fields)
@@ -293,7 +311,7 @@ namespace Robust.Shared.CompNetworkGenerator
                         deltaHandleFields.Append($@"
                     EnsureEntitySet<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
 
-                        AppendCollectionClone(name);
+                        AppendCollectionClone(name, nullable);
 
                         deltaApply.Add($@"fullState.{name} = {name};");
 
@@ -313,7 +331,7 @@ namespace Robust.Shared.CompNetworkGenerator
                         deltaHandleFields.Append($@"
                     EnsureEntityList<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
 
-                        AppendCollectionClone(name);
+                        AppendCollectionClone(name, nullable);
 
                         deltaApply.Add($@"fullState.{name} = {name};");
 
@@ -367,7 +385,7 @@ namespace Robust.Shared.CompNetworkGenerator
                     EnsureEntityDictionary<{ensureGeneric}>({cast} {fieldHandleValue}, uid, component.{name});");
                                 }
 
-                                AppendCollectionClone(name);
+                                AppendCollectionClone(name, nullable);
 
                                 deltaApply.Add($@"fullState.{name} = {name};");
 
@@ -391,7 +409,7 @@ namespace Robust.Shared.CompNetworkGenerator
                                 deltaHandleFields.Append($@"
                     EnsureEntityDictionary<{componentName}, {key}>({cast} {fieldHandleValue}, uid, component.{name});");
 
-                                AppendCollectionClone(name);
+                                AppendCollectionClone(name, nullable);
 
                                 deltaApply.Add($@"fullState.{name} = {name};");
 
@@ -437,24 +455,61 @@ namespace Robust.Shared.CompNetworkGenerator
                         else if (IsCloneType(type))
                         {
                             getField = $"component.{name}";
-                            clientGetField = GetClientCollectionField(name);
+                            clientGetField = GetClientCollectionField(name, nullable);
                             cast = $"({castString})";
 
                             var nullCast = nullable ? castString.Substring(0, castString.Length - 1) : castString;
+                            var handleRefill = GetCollectionRefill(type, $"component.{name}", $"state.{name}", "                ");
+                            var deltaRefill = GetCollectionRefill(type, $"component.{name}", $"{name}Value", "                        ");
 
-                            handleStateSetters.Append($@"
-            component.{name} = state.{name} == null ? null! : new(state.{name});");
+                            if (nullable)
+                            {
+                                handleStateSetters.Append($@"
+            if (state.{name} == null)
+                component.{name} = null!;
+            else if (component.{name} == null)
+                component.{name} = new(state.{name});
+            else if (!ReferenceEquals(component.{name}, state.{name}))
+            {{
+                component.{name}.Clear();
+                {handleRefill}
+            }}");
 
-                            deltaHandleFields.Append($@"
+                                deltaHandleFields.Append($@"
                     var {name}Value = {cast} {fieldHandleValue};
                     if ({name}Value == null)
                         component.{name} = null!;
-                    else
-                        component.{name} = new {nullCast}({name}Value);");
+                    else if (component.{name} == null)
+                        component.{name} = new {nullCast}({name}Value);
+                    else if (!ReferenceEquals(component.{name}, {name}Value))
+                    {{
+                        component.{name}.Clear();
+                        {deltaRefill}
+                    }}");
 
-                            AppendCollectionClone(name);
+                                deltaApply.Add($"fullState.{name} = {name} == null ? null! : new({name});");
+                            }
+                            else
+                            {
+                                handleStateSetters.Append($@"
+            if (!ReferenceEquals(component.{name}, state.{name}))
+            {{
+                component.{name}.Clear();
+                {handleRefill}
+            }}");
 
-                            deltaApply.Add($"fullState.{name} = {name} == null ? null! : new({name});");
+                                deltaHandleFields.Append($@"
+                    var {name}Value = {cast} {fieldHandleValue};
+                    if (!ReferenceEquals(component.{name}, {name}Value))
+                    {{
+                        component.{name}.Clear();
+                        {deltaRefill}
+                    }}");
+
+                                deltaApply.Add($"fullState.{name} = new({name});");
+                            }
+
+                            AppendCollectionClone(name, nullable);
                         }
                         else
                         {
@@ -650,11 +705,10 @@ namespace Robust.Shared.CompNetworkGenerator
             var deltaCompFieldsText = TrimNewLines(deltaCompFields);
             var fieldStatesText = TrimNewLines(fieldStates);
 
-            var usesClientGetState = usesClientCollectionCopy || fieldDeltas;
-            var netManagerDependency = usesClientGetState
+            var netManagerDependency = usesClientCollectionCopy
                 ? "[global::Robust.Shared.IoC.Dependency] private global::Robust.Shared.Network.INetManager _net = default!;"
                 : string.Empty;
-            var getStateSubscription = usesClientGetState
+            var getStateSubscription = usesClientCollectionCopy
                 ? $@"            if (_net.IsClient)
                 SubscribeLocalEvent<{componentName}, ComponentGetState>(OnGetStateClient);
             else
@@ -740,7 +794,7 @@ namespace Robust.Shared.CompNetworkGenerator
             outSb.AppendLine("            };");
             outSb.AppendLine("        }");
 
-            if (usesClientGetState)
+            if (usesClientCollectionCopy)
             {
                 outSb.AppendLine();
                 outSb.AppendLine($"        private void OnGetStateClient(EntityUid uid, {componentName} component, ref ComponentGetState args)");

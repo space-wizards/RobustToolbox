@@ -85,7 +85,6 @@ internal sealed class GridMovement_Test : RobustIntegrationTest
 
         var systems = server.ResolveDependency<IEntitySystemManager>();
         var fixtureSystem = systems.GetEntitySystem<FixtureSystem>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var entManager = server.ResolveDependency<IEntityManager>();
         var physSystem = systems.GetEntitySystem<SharedPhysicsSystem>();
         var transformSystem = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
@@ -93,8 +92,8 @@ internal sealed class GridMovement_Test : RobustIntegrationTest
 
         await server.WaitAssertion(() =>
         {
-            entManager.System<SharedMapSystem>().CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            mapSystem.CreateMap(out var mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
             mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
 
             var entity = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10.5f, 10.5f), mapId));

@@ -35,15 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Validate Box2i inputs to ensure no negative-sized boxes.
+*None yet*
 
 ### New features
 
-* Added a DictionaryEquals extension method to check equality between two dictionaries.
+* Added a NetMessage.EstimateBufferSize() to provide an estimate of the initialCapacity required for NetMessages. This will make NetMessage take an existing adequately sized pooled buffer for your message. This is opt-in and will default to the old 4-byte size if not specified.
 
 ### Bugfixes
 
-*None yet*
+* Static + StaticSundries will now also be considered for grid-traversal when a grid moves over these entities.
 
 ### Other
 
@@ -52,6 +52,103 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 282.0.0
+
+### Breaking changes
+
+* Serv5 has been merged, re-doing the internals of DataDefinition serialization.
+  * It can now write into readonly fields.
+  * DataFields defined on objects that don't have DataDefinitions will cause errors in the analyzer and require the attribute.
+  * Value types will now be copied directly where possible rather than round-tripping through TryCustomCopy if no custom serializer is specified.
+  * It no longer uses as many expression trees so more tests should be able to run concurrently
+
+
+## 281.0.0
+
+### Breaking changes
+
+* Updated Lidgren.Network to `04678d057cc503f14f49801a725e61cfe27790a0` with additional fixes around MTU handling, NAT handling, and malformed packets.
+
+### New features
+
+* Exposed new Lidgren properties/CVARs for the above-mentioned fixes and previous updates around rate-limit settings.
+
+### Bugfixes
+
+* Fixed `EntitySystemSubscriptionsGenerator` not targeting server-side `SubscribeLocalEvent`/`SubscribeNetworkEvent` attributes.
+
+
+## 280.0.1
+
+### Bugfixes
+
+* Fix DynamicTree.Clear not removing node references.
+* Reverted validation for `UiBox2i` `ctor`s as it was causing regressions in debug UIs.
+* Fix command completions not being ordered. The list will still populate by any commands that contain the supplied arg.
+* Lidgren rate-limit settings were tweaked to make it less likely that players will unintentionally trigger it
+
+### Other
+
+* `EyeComponent.DrawLight` is now serialized.
+
+
+## 280.0.0
+
+### Breaking changes
+
+* Validate UIBox2i inputs
+* IMapManager has been completely nuked from the codebase. Almost all of its content-facing functionality was ported to `SharedMapSystem` in https://github.com/space-wizards/RobustToolbox/pull/6579 beforehand.
+
+### New features
+
+* Lidgren now rate-limits logging. You can control this via the `net.lidgren_log_rate_...` CVars.
+
+### Bugfixes
+
+* Fixed Lidgren.ChatClient/ChatServer not building properly.
+* Fixed multiple sources of memory exhaustion/DOS attack surfaces in Lidgren.
+
+
+## 279.0.1
+
+### Bugfixes
+
+* Fix SubscribeLocalEvent name and added `MeansImplicitUse` attribute to the sourcegenned eventbus methods.
+
+
+## 279.0.0
+
+### Breaking changes
+
+* Validate Box2i inputs to ensure no negative-sized boxes.
+* Removed QuadTree due to lack of maintenance, test coverage, and usage.
+* Partivally reverted the additional mouse cursors on button hovers.
+* Changed SpawnAtPosition EntityCoordinates overload to use the attached entity's rotation, and also added a rotation override argument.
+* Reduced the default ReallyBeIdle tick count from 25 to 5.
+
+### New features
+
+* Added DictionaryEquals helper method to compare elements to determine if 2 dictionaries are identical.
+* Tracy integration is now supported for profiling.
+* SubscribeLocalEvent and SubscribeNetworkEvent can now be replaced with the similarly named attributes on methods.
+* Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
+* Added a DictionaryEquals extension method to check equality between two dictionaries.
+* Added support for uploading .ftl files. Format is: /<your-uploaded-folder>/<language-code>.ftl - Example: /TestUpload/en-US.ftl , you can have multiple files, so long they are on different subfolders, they will all be loaded.
+
+### Bugfixes
+
+* Fix IsHardCollidable mask check.
+* Fix Robust.Benchmarks not compiling in some instances.
+* Fix ApplyLinearImpulse not correctly using world-space.
+* Fix OnClientRequestFull throwing an error when logging deleted entities.
+
+### Internal
+
+* Unnecessary prototypemanager dependencies were removed from engine systems.
+* Added a 30m timeout to engine test workflows.
+* Cleaned up ContainerSystems and PlayerManagers code-files.
 
 
 ## 278.0.0

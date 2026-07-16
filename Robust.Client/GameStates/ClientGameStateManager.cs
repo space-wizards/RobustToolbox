@@ -321,6 +321,7 @@ namespace Robust.Client.GameStates
 
             _prof.WriteValue($"State buffer size", curBufSize);
             _prof.WriteValue($"State apply count", targetProcessedTick.Value - _timing.LastProcessedTick.Value);
+            _prof.EmitEntities(_entities.EntityCount);
 
             bool processedAny = false;
 
@@ -1036,6 +1037,9 @@ namespace Robust.Client.GameStates
 
             if (metaState == null)
                 throw new MissingMetadataException(state.NetEntity);
+
+            // record the entity we created to the profiler
+            using var group = _prof.Group($"Create entity {metaState.PrototypeId}");
 
             var uid = _entities.CreateEntity(metaState.PrototypeId, out var newMeta);
             _toApply.Add(uid, new(uid, state.NetEntity, newMeta, true, false, GameTick.Zero, state, null, null));

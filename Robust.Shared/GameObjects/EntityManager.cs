@@ -37,7 +37,6 @@ namespace Robust.Shared.GameObjects
         [IoC.Dependency] protected IPrototypeManager PrototypeManager = default!;
         [IoC.Dependency] protected ILogManager LogManager = default!;
         [IoC.Dependency] private IEntitySystemManager _entitySystemManager = default!;
-        [IoC.Dependency] private IMapManager _mapManager = default!;
         [IoC.Dependency] private IGameTiming _gameTiming = default!;
         [IoC.Dependency] private ISerializationManager _serManager = default!;
         [IoC.Dependency] private ProfManager _prof = default!;
@@ -72,6 +71,12 @@ namespace Robust.Shared.GameObjects
 
         protected readonly Queue<EntityUid> QueuedDeletions = new();
         protected readonly HashSet<EntityUid> QueuedDeletionsSet = new();
+
+        private Histogram? _tickUpdateHistogram;
+        private Histogram.Child? _entitySystemsHistogram;
+        private Histogram.Child? _entityEventBusHistogram;
+        private Histogram.Child? _queuedDeletionHistogram;
+        private Histogram.Child? _componentCullHistogram;
 
         private EntityDiffContext _context = new();
 
@@ -273,29 +278,43 @@ namespace Robust.Shared.GameObjects
 
         public virtual void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntitySystems").NewTimer())
+            UpdateTickHistogram(histogram);
+
+            using (_entitySystemsHistogram?.NewTimer())
             using (_prof.Group("Systems"))
             {
                 _entitySystemManager.TickUpdate(frameTime, noPredictions);
             }
 
-            using (histogram?.WithLabels("EntityEventBus").NewTimer())
+            using (_entityEventBusHistogram?.NewTimer())
             using (_prof.Group("Events"))
             {
                 EventBusInternal.ProcessEventQueue();
             }
 
-            using (histogram?.WithLabels("QueuedDeletion").NewTimer())
+            using (_queuedDeletionHistogram?.NewTimer())
             using (_prof.Group("QueueDel"))
             {
                 ProcessQueueudDeletions();
             }
 
-            using (histogram?.WithLabels("ComponentCull").NewTimer())
+            using (_componentCullHistogram?.NewTimer())
             using (_prof.Group("ComponentCull"))
             {
                 CullRemovedComponents();
             }
+        }
+
+        private void UpdateTickHistogram(Histogram? histogram)
+        {
+            if (ReferenceEquals(_tickUpdateHistogram, histogram))
+                return;
+
+            _tickUpdateHistogram = histogram;
+            _entitySystemsHistogram = histogram?.WithLabels("EntitySystems");
+            _entityEventBusHistogram = histogram?.WithLabels("EntityEventBus");
+            _queuedDeletionHistogram = histogram?.WithLabels("QueuedDeletion");
+            _componentCullHistogram = histogram?.WithLabels("ComponentCull");
         }
 
         internal virtual void ProcessQueueudDeletions()
@@ -360,7 +379,7 @@ namespace Robust.Shared.GameObjects
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
             EntityCoordinates coords;
-            if (_mapManager.TryFindGridAt(coordinates, out var gridUid, out var grid)
+            if (_mapSystem.TryFindGridAt(coordinates, out var gridUid, out var grid)
                 && MetaQuery.TryGetComponentInternal(gridUid, out var meta)
                 && meta.EntityLifeStage < EntityLifeStage.Terminating)
             {

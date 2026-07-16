@@ -28,7 +28,6 @@ namespace Robust.Server.Placement
         [Dependency] private IPlayerManager _playerManager = default!;
         [Dependency] private IPrototypeManager _prototype = default!;
         [Dependency] private IServerEntityManager _entityManager = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private ILogManager _logManager = default!;
 
         private EntityLookupSystem _lookup => _entityManager.System<EntityLookupSystem>();
@@ -190,27 +189,29 @@ namespace Robust.Server.Placement
         {
             if (!coordinates.IsValid(_entityManager)) return;
 
+            var mapSystem = _maps;
+
             MapGridComponent? grid;
 
             EntityUid gridId = coordinates.EntityId;
             if (_entityManager.TryGetComponent(coordinates.EntityId, out grid)
-                || _mapManager.TryFindGridAt(_xformSystem.ToMapCoordinates(coordinates), out gridId, out grid))
+                || mapSystem.TryFindGridAt(_xformSystem.ToMapCoordinates(coordinates), out gridId, out grid))
             {
-                _maps.SetTile(gridId, grid, coordinates, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
+                mapSystem.SetTile(gridId, grid, coordinates, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
             }
             else if (tileType != 0) // create a new grid
             {
-                var newGrid = _mapManager.CreateGridEntity(_xformSystem.GetMapId(coordinates));
+                var newGrid = mapSystem.CreateGridEntity(_xformSystem.GetMapId(coordinates));
                 var newGridXform = new Entity<TransformComponent>(
                     newGrid.Owner,
                     _entityManager.GetComponent<TransformComponent>(newGrid));
 
                 _xformSystem.SetWorldPosition(newGridXform, coordinates.Position - newGrid.Comp.TileSizeHalfVector); // assume bottom left tile origin
-                var tilePos = _maps.WorldToTile(newGrid.Owner, newGrid.Comp, coordinates.Position);
-                _maps.SetTile(newGrid.Owner, newGrid.Comp, tilePos, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
+                var tilePos = mapSystem.WorldToTile(newGrid.Owner, newGrid.Comp, coordinates.Position);
+                mapSystem.SetTile(newGrid.Owner, newGrid.Comp, tilePos, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);

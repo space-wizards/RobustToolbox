@@ -63,6 +63,12 @@ namespace Robust.Shared.GameObjects
         void RemoveComponents(EntityUid target, ComponentRegistry registry);
 
         /// <summary>
+        /// Clears initial dirty ticks from a component loaded directly from prototype data if the component state can be
+        /// reconstructed by the client from the same prototype data.
+        /// </summary>
+        void ClearPrototypeLoadTicks(IComponent component, ComponentRegistration reg);
+
+        /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
         ///     automatically be Initialized and Started.
         /// </summary>

@@ -3,6 +3,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Random;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
@@ -569,6 +570,11 @@ public interface IPrototypeManager
 internal interface IPrototypeManagerInternal : IPrototypeManager
 {
     event Action<DataNodeDocument>? LoadedData;
+
+    /// <summary>
+    /// Loads the prototype and context component data for an entity.
+    /// </summary>
+    void LoadEntity(Entity<MetaDataComponent> ent, IEntityLoadContext? context);
 }
 
 /// <summary>

@@ -9,6 +9,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Timing;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -24,6 +25,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
           components:
           - type: Joint
           - type: Physics
+";
+
+        private const string PrototypeLoadDirtyId = "PrototypeLoadDirty";
+        private const string PrototypeLoadDirty = $@"
+        - type: entity
+          id: {PrototypeLoadDirtyId}
+          components:
+          - type: Occluder
+          - type: Joint
+          - type: CollisionWake
 ";
 
         [Test]
@@ -73,6 +84,63 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 Assert.That(!entMan.HasComponent<JointComponent>(entity));
                 Assert.That(!entMan.HasComponent<PhysicsComponent>(entity));
             });
+        }
+
+        [Test]
+        public void PrototypeLoadWithHandleStateClearsComponentTicks()
+        {
+            var sim = DirtyPrototypeSimulation();
+            var entMan = sim.Resolve<IEntityManager>();
+
+            var entity = entMan.SpawnEntity(PrototypeLoadDirtyId, MapCoordinates.Nullspace);
+            var comp = entMan.GetComponent<OccluderComponent>(entity);
+
+            Assert.That(comp.LastModifiedTick, Is.EqualTo(GameTick.Zero));
+            Assert.That(comp.CreationTick, Is.EqualTo(GameTick.Zero));
+        }
+
+        [Test]
+        public void PrototypeLoadWithSharedHandleStateClearsComponentTicks()
+        {
+            var sim = DirtyPrototypeSimulation();
+            var entMan = sim.Resolve<IEntityManager>();
+
+            var entity = entMan.SpawnEntity(PrototypeLoadDirtyId, MapCoordinates.Nullspace);
+            var comp = entMan.GetComponent<JointComponent>(entity);
+
+            Assert.That(comp.LastModifiedTick, Is.EqualTo(GameTick.Zero));
+            Assert.That(comp.CreationTick, Is.EqualTo(GameTick.Zero));
+        }
+
+        [Test]
+        public void PrototypeLoadWithAutoStateClearsComponentTicks()
+        {
+            var sim = DirtyPrototypeSimulation();
+            var entMan = sim.Resolve<IEntityManager>();
+
+            var entity = entMan.SpawnEntity(PrototypeLoadDirtyId, MapCoordinates.Nullspace);
+            var comp = entMan.GetComponent<CollisionWakeComponent>(entity);
+
+            Assert.That(comp.LastModifiedTick, Is.EqualTo(GameTick.Zero));
+            Assert.That(comp.CreationTick, Is.EqualTo(GameTick.Zero));
+        }
+
+        [Test]
+        public void PrototypeLoadOverrideKeepsComponentDirty()
+        {
+            var sim = DirtyPrototypeSimulation();
+            var entMan = sim.Resolve<IEntityManager>();
+
+            var overrides = new ComponentRegistry
+            {
+                ["Occluder"] = new EntityPrototype.ComponentRegistryEntry(new OccluderComponent())
+            };
+
+            var entity = entMan.SpawnEntity(PrototypeLoadDirtyId, MapCoordinates.Nullspace, overrides);
+            var comp = entMan.GetComponent<OccluderComponent>(entity);
+
+            Assert.That(comp.LastModifiedTick, Is.EqualTo(sim.Resolve<IGameTiming>().CurTick));
+            Assert.That(comp.CreationTick, Is.EqualTo(sim.Resolve<IGameTiming>().CurTick));
         }
 
         [Test]
@@ -359,6 +427,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var map = sim.CreateMap().Uid;
             var coords = new EntityCoordinates(map, default);
             return (sim, coords);
+        }
+
+        private static ISimulation DirtyPrototypeSimulation()
+        {
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .RegisterPrototypes(fac => fac.LoadString(PrototypeLoadDirty))
+                .InitializeInstance();
+
+            sim.Resolve<IGameTiming>().CurTick = new GameTick(42);
+            return sim;
         }
 
         [NetworkedComponent()]

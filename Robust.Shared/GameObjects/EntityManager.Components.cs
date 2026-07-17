@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using JetBrains.Annotations;
+using Robust.Shared.Analyzers;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Physics.Components;
@@ -46,6 +47,10 @@ namespace Robust.Shared.GameObjects
 
         private UniqueIndexHkm<EntityUid, IComponent> _entCompIndex =
             new(ComponentCollectionCapacity);
+
+        private bool[]? _prototypeLoadClearableNetComponents;
+
+        internal bool EnablePrototypeLoadTickClear = true;
 
         /// <inheritdoc />
         public event Action<AddedComponentEventArgs>? ComponentAdded;
@@ -91,6 +96,54 @@ namespace Robust.Shared.GameObjects
         private void OnComponentsAdded(ComponentRegistration[] components)
         {
             RegisterComponents(components);
+            _prototypeLoadClearableNetComponents = null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ClearPrototypeLoadTicks(IComponent component, ComponentRegistration reg)
+        {
+            if (!EnablePrototypeLoadTickClear
+                || !Started
+                || !component.NetSyncEnabled
+                || component.SessionSpecific
+                || !IsPrototypeLoadClearable(reg))
+            {
+                return;
+            }
+
+            component.ClearTicks();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool IsPrototypeLoadClearable(ComponentRegistration reg)
+        {
+            return reg.NetID is { } netId
+                   && netId < PrototypeLoadClearableNetComponents.Length
+                   && PrototypeLoadClearableNetComponents[netId];
+        }
+
+        private bool[] PrototypeLoadClearableNetComponents
+        {
+            get
+            {
+                if (_prototypeLoadClearableNetComponents is { } clearable)
+                    return clearable;
+
+                var handleStateHandlers = EventBusInternal.GetNetCompEventHandlers<ComponentHandleState>();
+                clearable = new bool[handleStateHandlers.Length];
+                var netComps = _componentFactory.NetworkedComponents!;
+
+                for (var i = 0; i < clearable.Length; i++)
+                {
+                    var reg = netComps[i];
+                    clearable[i] = reg.Type != typeof(MetaDataComponent)
+                                   && reg.Type != typeof(TransformComponent)
+                                   && (handleStateHandlers[i] != null
+                                       || reg.Type.HasCustomAttribute<AutoGenerateComponentStateAttribute>());
+                }
+
+                return _prototypeLoadClearableNetComponents = clearable;
+            }
         }
 
         #region Component Management

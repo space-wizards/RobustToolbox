@@ -651,6 +651,8 @@ public sealed partial class EntityDeserializer :
 
                 if (!entry.Component.NetSyncEnabled && compReg.NetID is { } netId)
                     meta.NetComponents.Remove(netId);
+
+                EntMan.ClearPrototypeLoadTicks(component, compReg);
             }
         }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Components;
@@ -41,10 +42,98 @@ public abstract partial class SharedJointSystem : EntitySystem
         UpdatesOutsidePrediction = true;
 
         UpdatesBefore.Add(typeof(SharedPhysicsSystem));
+        SubscribeLocalEvent<JointComponent, ComponentGetState>(GetCompState);
+        SubscribeLocalEvent<JointComponent, ComponentHandleState>(HandleComponentState);
         SubscribeLocalEvent<JointComponent, ComponentShutdown>(OnJointShutdown);
         SubscribeLocalEvent<JointComponent, ComponentInit>(OnJointInit);
 
         InitializeRelay();
+    }
+
+    private void GetCompState(EntityUid uid, JointComponent component, ref ComponentGetState args)
+    {
+        var states = new Dictionary<string, JointState>(component.Joints.Count);
+
+        foreach (var (id, joint) in component.Joints)
+        {
+            states.Add(id, joint.GetState(EntityManager));
+        }
+
+        args.State = new JointComponentState(GetNetEntity(component.Relay), states);
+    }
+
+    private void HandleComponentState(EntityUid uid, JointComponent component, ref ComponentHandleState args)
+    {
+        if (args.Current is not JointComponentState jointState) return;
+
+        component.Relay = EnsureEntity<JointComponent>(jointState.Relay, uid);
+
+        // Initial state gets applied before the entity (& entity's transform) have been initialized.
+        // So just let joint init code handle that.
+        if (!component.Initialized)
+        {
+            component.Joints.Clear();
+            foreach (var (id, state) in jointState.Joints)
+            {
+                component.Joints[id] = state.GetJoint(EntityManager, uid);
+            }
+            return;
+        }
+
+        foreach (var j in AddedJoints)
+        {
+            if ((j.BodyAUid == uid || j.BodyBUid == uid) && !jointState.Joints.ContainsKey(j.ID))
+                ToRemove.Add(j);
+        }
+        AddedJoints.ExceptWith(ToRemove);
+        ToRemove.Clear();
+
+        var removed = new List<Joint>();
+        foreach (var (existing, j) in component.Joints)
+        {
+            if (!jointState.Joints.ContainsKey(existing))
+                removed.Add(j);
+        }
+
+        foreach (var j in removed)
+        {
+            RemoveJoint(j);
+        }
+
+        foreach (var (id, state) in jointState.Joints)
+        {
+            if (component.Joints.TryGetValue(id, out var joint))
+            {
+                joint.ApplyState(state);
+                continue;
+            }
+
+            var uidA = GetEntity(state.UidA);
+            var other = uidA == uid ? GetEntity(state.UidB) : uidA;
+
+            // Add new joint (if possible).
+            // Need to wait for BOTH joint components to come in first before we can add it. Yay dependencies!
+            if (!HasComp<JointComponent>(other))
+                continue;
+
+            // TODO: if (other entity is outside of PVS range) continue;
+            // for now, half-assed check until something like PR #3000 gets merged.
+            if (Transform(other).MapID == MapId.Nullspace)
+                continue;
+
+            // oh jolly what good fun: the joint component state can get handled prior to the transform component state.
+            // so if our current transform is on another map, this would throw an error.
+            // so lets just... assume the server state isn't messed up, and defer the joint processing.
+            // alternatively:
+            // TODO: component state handling ordering.
+            if (Transform(uid).MapID == MapId.Nullspace)
+            {
+                AddedJoints.Add(state.GetJoint(EntityManager, uid));
+                continue;
+            }
+
+            AddJoint(state.GetJoint(EntityManager, uid));
+        }
     }
 
     #region Lifetime

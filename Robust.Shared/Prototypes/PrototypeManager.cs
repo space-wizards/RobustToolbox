@@ -1170,6 +1170,7 @@ namespace Robust.Shared.Prototypes
                 foreach (var id in modified.Modified.Keys)
                 {
                     _prototypeDataCache.Remove(id);
+                    _entityComponentRegistrations.Remove(id);
                 }
             }
 
@@ -1179,6 +1180,7 @@ namespace Robust.Shared.Prototypes
             foreach (var id in removed)
             {
                 _prototypeDataCache.Remove(id);
+                _entityComponentRegistrations.Remove(id);
             }
         }
 

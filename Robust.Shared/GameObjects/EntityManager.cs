@@ -35,6 +35,7 @@ namespace Robust.Shared.GameObjects
         #region Dependencies
 
         [IoC.Dependency] protected IPrototypeManager PrototypeManager = default!;
+        [IoC.Dependency] private IPrototypeManagerInternal _prototypeManagerInternal = default!;
         [IoC.Dependency] protected ILogManager LogManager = default!;
         [IoC.Dependency] private IEntitySystemManager _entitySystemManager = default!;
         [IoC.Dependency] private IGameTiming _gameTiming = default!;
@@ -1011,7 +1012,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(prototype, out metadata);
             try
             {
-                EntityPrototype.LoadEntity((entity, metadata), ComponentFactory, this, _serManager, context);
+                _prototypeManagerInternal.LoadEntity((entity, metadata), context);
                 return entity;
             }
             catch (Exception e)

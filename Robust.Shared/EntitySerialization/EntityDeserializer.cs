@@ -690,7 +690,6 @@ public sealed partial class EntityDeserializer :
             // I'm scared turning over this rock will reveal a lot of bugs. So leaving that to a future PR.
             // I.e., creating "temp" here just unnecessarily slows everything down.
             var temp = (IComponent) _seriMan.Read(compReg.Type, data, this)!;
-
             _seriMan.CopyTo(temp, ref existing, this, notNullableOverride: true);
         }
 

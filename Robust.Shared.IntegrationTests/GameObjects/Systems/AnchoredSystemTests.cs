@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Containers;
@@ -83,12 +82,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         private sealed partial class AnchorOnInitComponent : Component;
 
         [Reflect(false)]
-        private sealed class AnchorOnInitTestSystem : EntitySystem
+        private sealed partial class AnchorOnInitTestSystem : EntitySystem
         {
+            [Dependency] private SharedTransformSystem _transform = default!;
+
             public override void Initialize()
             {
                 base.Initialize();
-                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => Transform(e).Anchored = true);
+                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => _transform.AnchorEntity(e));
             }
         }
 
@@ -263,8 +264,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             sim.System<MoveEventTestSystem>().FailOnMove = true;
 
             // Act
+#pragma warning disable CS0618 // Checking property setters.
             sim.Transform(ent1).WorldPosition = new Vector2(99, 99);
             sim.Transform(ent1).LocalPosition = new Vector2(99, 99);
+#pragma warning restore CS0618
 
             Assert.That(xformSys.GetMapCoordinates(ent1), Is.EqualTo(coordinates));
             sim.System<MoveEventTestSystem>().FailOnMove = false;

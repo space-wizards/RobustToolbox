@@ -4,7 +4,12 @@ on:
   push:
     branches: [master]
   pull_request:
+    types: [ opened, reopened, synchronize, ready_for_review ]
     branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 jobs:
   build:
@@ -35,7 +40,9 @@ jobs:
         run: cp RobustToolbox/global.json .
       - name: Install dependencies
         run: dotnet restore
-      - name: Build
+      - name: Build (Release)
+        run: dotnet build --configuration Release --no-restore /m
+      - name: Build (Debug)
         run: dotnet build --configuration DebugOpt --no-restore /m
       - name: Content.Tests
         shell: pwsh

@@ -7,6 +7,7 @@ using Robust.Client.Timing;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
@@ -167,5 +168,148 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
 
     }
 #endif
+
+    /// <summary>
+    /// Checks that PVS re-entry only reapplies component states for components dirtied while the entity was out of PVS.
+    /// </summary>
+    [Test]
+    public async Task TestReEntryOnlyReplaysDirtyComponents()
+    {
+        await using var pair = await StartConnectedPair(
+            new ServerIntegrationOptions { Pool = false },
+            new ClientIntegrationOptions { Pool = false });
+
+        var (client, server) = pair;
+
+        var sEntMan = server.ResolveDependency<IEntityManager>();
+        var confMan = server.ResolveDependency<IConfigurationManager>();
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
+        var xforms = sEntMan.System<SharedTransformSystem>();
+
+        var cEntMan = client.ResolveDependency<IEntityManager>();
+        PvsReEntryReplayTestSystem? cSystem = null;
+
+        server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
+
+        await RunTicksSync(server, client, 10);
+
+        EntityUid map = default;
+        NetEntity entity = default;
+        NetEntity dirtyEntity = default;
+        NetEntity player = default;
+        EntityCoordinates coords = default;
+
+        await server.WaitPost(() =>
+        {
+            map = server.System<SharedMapSystem>().CreateMap();
+            coords = new EntityCoordinates(map, default);
+
+            var playerUid = sEntMan.SpawnEntity(null, coords);
+            var entUid = sEntMan.SpawnEntity(null, coords);
+            var comp = sEntMan.EnsureComponent<PvsReEntryReplayTestComponent>(entUid);
+            comp.Value = 1;
+            sEntMan.Dirty(entUid, comp);
+
+            var dirtyEntUid = sEntMan.SpawnEntity(null, coords);
+            comp = sEntMan.EnsureComponent<PvsReEntryReplayTestComponent>(dirtyEntUid);
+            comp.Value = 1;
+            sEntMan.Dirty(dirtyEntUid, comp);
+
+            entity = sEntMan.GetNetEntity(entUid);
+            dirtyEntity = sEntMan.GetNetEntity(dirtyEntUid);
+            player = sEntMan.GetNetEntity(playerUid);
+
+            var session = sPlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, playerUid);
+            sPlayerMan.JoinGame(session);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        MetaDataComponent? meta = null;
+        MetaDataComponent? dirtyMeta = null;
+        var initialHandleCount = 0;
+        await client.WaitPost(() =>
+        {
+            cSystem = client.System<PvsReEntryReplayTestSystem>();
+            Assert.That(cEntMan.TryGetEntityData(entity, out _, out meta), Is.True);
+            Assert.That(cEntMan.TryGetEntityData(dirtyEntity, out _, out dirtyMeta), Is.True);
+            Assert.That(meta!.Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.None));
+            Assert.That(dirtyMeta!.Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.None));
+            initialHandleCount = cSystem.HandleStateCount;
+            Assert.That(initialHandleCount, Is.GreaterThanOrEqualTo(2));
+        });
+
+        var farAway = new EntityCoordinates(map, new Vector2(100, 100));
+        await server.WaitPost(() => xforms.SetCoordinates(sEntMan.GetEntity(player), farAway));
+        await RunTicksSync(server, client, 10);
+
+        await client.WaitPost(() =>
+        {
+            Assert.That(meta!.Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.Detached));
+            Assert.That(dirtyMeta!.Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.Detached));
+            Assert.That(cSystem!.HandleStateCount, Is.EqualTo(initialHandleCount));
+        });
+
+        await server.WaitPost(() =>
+        {
+            var comp = sEntMan.GetComponent<PvsReEntryReplayTestComponent>(sEntMan.GetEntity(dirtyEntity));
+            comp.Value = 2;
+            sEntMan.Dirty(sEntMan.GetEntity(dirtyEntity), comp);
+        });
+
+        await RunTicksSync(server, client, 5);
+
+        await client.WaitPost(() =>
+        {
+            Assert.That(cSystem!.HandleStateCount, Is.EqualTo(initialHandleCount));
+        });
+
+        // Re-enter after dirtying one of the test components. Only the dirtied component should get replayed.
+        await server.WaitPost(() => xforms.SetCoordinates(sEntMan.GetEntity(player), coords));
+        await RunTicksSync(server, client, 10);
+
+        await client.WaitPost(() =>
+        {
+            var uid = cEntMan.GetEntity(entity);
+            var dirtyUid = cEntMan.GetEntity(dirtyEntity);
+            Assert.That(meta!.Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.None));
+            Assert.That(dirtyMeta!.Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.None));
+            Assert.That(cSystem!.HandleStateCount, Is.EqualTo(initialHandleCount + 1));
+            Assert.That(cEntMan.GetComponent<PvsReEntryReplayTestComponent>(uid).Value, Is.EqualTo(1));
+            Assert.That(cEntMan.GetComponent<PvsReEntryReplayTestComponent>(dirtyUid).Value, Is.EqualTo(2));
+        });
+    }
+}
+
+[RegisterComponent, NetworkedComponent]
+public sealed partial class PvsReEntryReplayTestComponent : Component
+{
+    public int Value;
+}
+
+public sealed partial class PvsReEntryReplayTestSystem : EntitySystem
+{
+    public int HandleStateCount;
+
+    public override void Initialize()
+    {
+        SubscribeLocalEvent<PvsReEntryReplayTestComponent, ComponentGetState>(OnGetState);
+        SubscribeLocalEvent<PvsReEntryReplayTestComponent, ComponentHandleState>(OnHandleState);
+    }
+
+    private void OnGetState(Entity<PvsReEntryReplayTestComponent> ent, ref ComponentGetState args)
+    {
+        args.State = new MetaDataComponentState(null, ent.Comp.Value.ToString(), null, null);
+    }
+
+    private void OnHandleState(Entity<PvsReEntryReplayTestComponent> ent, ref ComponentHandleState args)
+    {
+        if (args.Current is not MetaDataComponentState state)
+            return;
+
+        ent.Comp.Value = int.Parse(state.Description!);
+        HandleStateCount++;
+    }
 }
 

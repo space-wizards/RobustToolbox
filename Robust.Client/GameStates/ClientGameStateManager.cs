@@ -76,6 +76,7 @@ namespace Robust.Client.GameStates
 
         private uint _metaCompNetId;
         private uint _xformCompNetId;
+        private uint _containerCompNetId;
 
         [Dependency] private IReplayRecordingManager _replayRecording = default!;
         [Dependency] private IComponentFactory _compFactory = default!;
@@ -191,6 +192,12 @@ namespace Robust.Client.GameStates
                 throw new InvalidOperationException("TransformComponent does not have a NetId.");
 
             _xformCompNetId = xformId.Value;
+
+            var containerId = _compFactory.GetRegistration(typeof(ContainerManagerComponent)).NetID;
+            if (!containerId.HasValue)
+                throw new InvalidOperationException("ContainerManagerComponent does not have a NetId.");
+
+            _containerCompNetId = containerId.Value;
         }
 
         private void OnComponentAdded(AddedComponentEventArgs args)
@@ -1386,19 +1393,36 @@ namespace Robust.Client.GameStates
             if (data.EnteringPvs)
             {
                 // last-server state has already been updated with new information from curState
-                // --> simply reset to the most recent server state.
+                // --> simply reset dirtied components to the most recent server state.
                 //
                 // as to why we need to reset: because in the process of detaching to null-space, we will have dirtied
                 // the entity. most notably, all entities will have been ejected from their containers.
-                foreach (var (id, state) in _processor.GetLastServerStates(data.NetEntity))
+                var lastState = _processor.GetLastServerStates(data.NetEntity);
+                var netComponents = data.Meta.NetComponents;
+                var uid = data.Uid;
+                var meta = data.Meta;
+
+                void AddCompState(ushort id)
                 {
-                    if (!data.Meta.NetComponents.TryGetValue(id, out var comp))
+                    if (!lastState.TryGetValue(id, out var state))
+                        return;
+
+                    if (!netComponents.TryGetValue(id, out var comp))
                     {
                         comp = _compFactory.GetComponent(id);
-                        _entities.AddComponent(data.Uid, comp, true, metadata: data.Meta);
+                        _entities.AddComponent(uid, comp, true, metadata: meta);
                     }
 
                     _compStateWork[id] = (comp, state, null);
+                }
+
+                AddCompState((ushort) _metaCompNetId);
+                AddCompState((ushort) _xformCompNetId);
+                AddCompState((ushort) _containerCompNetId);
+
+                foreach (var compChange in data.CurState!.ComponentChanges.Span)
+                {
+                    AddCompState(compChange.NetID);
                 }
             }
             else if (data.CurState != null)

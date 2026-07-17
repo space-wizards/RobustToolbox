@@ -295,6 +295,7 @@ namespace Robust.Shared.Prototypes
         {
             _kindNames.Clear();
             _kinds = FrozenDictionary<Type, KindData>.Empty;
+            ClearEntityComponentRegistrationCache();
         }
 
         /// <inheritdoc />
@@ -478,10 +479,15 @@ namespace Robust.Shared.Prototypes
         private void Freeze(IEnumerable<KindData> kinds)
         {
             var st = RStopwatch.StartNew();
+            var frozeEntityPrototypes = false;
             foreach (var kind in kinds)
             {
                 kind.Freeze();
+                frozeEntityPrototypes |= kind.Type == typeof(EntityPrototype);
             }
+
+            if (frozeEntityPrototypes)
+                RebuildEntityComponentRegistrationCache();
 
             // fun fact: Sawmill can be null in tests????
             Sawmill?.Verbose($"Freezing prototype instances took {st.Elapsed.TotalMilliseconds:f2}ms");
@@ -1170,7 +1176,6 @@ namespace Robust.Shared.Prototypes
                 foreach (var id in modified.Modified.Keys)
                 {
                     _prototypeDataCache.Remove(id);
-                    _entityComponentRegistrations.Remove(id);
                 }
             }
 
@@ -1180,7 +1185,6 @@ namespace Robust.Shared.Prototypes
             foreach (var id in removed)
             {
                 _prototypeDataCache.Remove(id);
-                _entityComponentRegistrations.Remove(id);
             }
         }
 

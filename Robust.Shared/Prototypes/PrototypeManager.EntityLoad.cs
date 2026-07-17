@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
@@ -8,7 +9,8 @@ namespace Robust.Shared.Prototypes;
 
 public abstract partial class PrototypeManager
 {
-    private readonly Dictionary<string, PrototypeComponentRegistration[]> _entityComponentRegistrations = new();
+    private FrozenDictionary<string, PrototypeComponentRegistration[]> _entityComponentRegistrations
+        = FrozenDictionary<string, PrototypeComponentRegistration[]>.Empty;
 
     void IPrototypeManagerInternal.LoadEntity(Entity<MetaDataComponent> ent, IEntityLoadContext? context)
     {
@@ -34,6 +36,34 @@ public abstract partial class PrototypeManager
         if (_entityComponentRegistrations.TryGetValue(prototype.ID, out var cached))
             return cached;
 
+        // This should only happen if an entity is being loaded before prototype resolution has rebuilt the cache.
+        return BuildComponentRegistrations(prototype);
+    }
+
+    private void RebuildEntityComponentRegistrationCache()
+    {
+        if (!TryGetInstances<EntityPrototype>(out var prototypes))
+        {
+            ClearEntityComponentRegistrationCache();
+            return;
+        }
+
+        var registrations = new Dictionary<string, PrototypeComponentRegistration[]>(prototypes.Count);
+        foreach (var (id, prototype) in prototypes)
+        {
+            registrations[id] = BuildComponentRegistrations(prototype);
+        }
+
+        _entityComponentRegistrations = registrations.ToFrozenDictionary();
+    }
+
+    private void ClearEntityComponentRegistrationCache()
+    {
+        _entityComponentRegistrations = FrozenDictionary<string, PrototypeComponentRegistration[]>.Empty;
+    }
+
+    private PrototypeComponentRegistration[] BuildComponentRegistrations(EntityPrototype prototype)
+    {
         var registrations = new PrototypeComponentRegistration[prototype.Components.Count];
         var i = 0;
 
@@ -42,7 +72,6 @@ public abstract partial class PrototypeManager
             registrations[i++] = new PrototypeComponentRegistration(name, entry, _factory.GetRegistration(name));
         }
 
-        _entityComponentRegistrations[prototype.ID] = registrations;
         return registrations;
     }
 

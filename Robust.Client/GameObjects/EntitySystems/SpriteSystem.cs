@@ -37,6 +37,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private AppearanceSystem _appearance = default!;
 
         public static readonly ProtoId<ShaderPrototype> UnshadedId = "unshaded";
+
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
 
         public static readonly ResPath TextureRoot = SpriteSpecifierSerializer.TextureRoot;

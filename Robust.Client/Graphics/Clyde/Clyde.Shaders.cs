@@ -37,6 +37,9 @@ namespace Robust.Client.Graphics.Clyde
         private readonly Dictionary<ClydeHandle, LoadedShaderInstance> _shaderInstances =
             new();
 
+        private readonly Dictionary<ClydeHandle, ClydeShaderInstance> _noBlendShaderInstances =
+            new();
+
         private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new();
 
         private sealed class LoadedShader
@@ -397,8 +400,47 @@ namespace Robust.Client.Graphics.Clyde
         {
             while (_deadShaderInstances.TryDequeue(out var handle))
             {
+                if (_noBlendShaderInstances.Remove(handle, out var noBlendInstance))
+                    _shaderInstances.Remove(noBlendInstance.Handle);
+
                 _shaderInstances.Remove(handle);
             }
+        }
+
+        private ClydeShaderInstance GetNoBlendShaderInstance(ShaderInstance shader)
+        {
+            var clydeShader = (ClydeShaderInstance) shader;
+            var sourceData = _shaderInstances[clydeShader.Handle];
+
+            if (!_noBlendShaderInstances.TryGetValue(clydeShader.Handle, out var instance))
+            {
+                var newHandle = AllocRid();
+                var newData = new LoadedShaderInstance(sourceData)
+                {
+                    BlendMode = ShaderBlendMode.None,
+                    ParametersDirty = true,
+                };
+
+                _shaderInstances.Add(newHandle, newData);
+                instance = new ClydeShaderInstance(newHandle, this);
+                _noBlendShaderInstances.Add(clydeShader.Handle, instance);
+                return instance;
+            }
+
+            var data = _shaderInstances[instance.Handle];
+            data.ShaderHandle = sourceData.ShaderHandle;
+            data.HasLighting = sourceData.HasLighting;
+            data.BlendMode = ShaderBlendMode.None;
+            data.ParametersDirty = true;
+            data.Stencil = sourceData.Stencil;
+            data.Parameters.Clear();
+
+            foreach (var (key, value) in sourceData.Parameters)
+            {
+                data.Parameters[key] = value;
+            }
+
+            return instance;
         }
 
         private sealed class ClydeShaderInstance : ShaderInstance

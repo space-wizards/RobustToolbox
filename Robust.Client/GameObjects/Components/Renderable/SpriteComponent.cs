@@ -201,35 +201,58 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)] internal bool _inertUpdateQueued;
 
+        private const string LegacyPostShaderId = "__legacy";
+
         /// <summary>
-        ///     Shader instance to use when drawing the final sprite to the world.
+        ///     Ordered post-shaders to apply. These get run on the final entity sprite.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
+        [ViewVariables]
+        internal List<PostShaderEntry> PostShaders = new();
+
+        [ViewVariables]
+        internal bool PostShaderOrderDirty;
+
+        /// <summary>
+        ///     Legacy for code that still expects 1 shader.
+        /// </summary>
+        [ViewVariables]
+        [Obsolete("Use SpriteSystem.SetPostShader(), SpriteSystem.RemovePostShader(), or SpriteSystem.ClearPostShaders() instead.")]
         public ShaderInstance? PostShader
         {
-            get;
-            // This will get obsoleted, but I only want to mark it as obsolete when multi-shader support is added, so
-            // that people can use the appropriate method and don't migrate to an incorrect new method that wont
-            // be obsoleted.
-            set;
+            get => PostShaders.Count == 1 ? PostShaders[0].Shader : null;
+            set
+            {
+                PostShaders.Clear();
+
+                if (value != null)
+                    PostShaders.Add(new PostShaderEntry(LegacyPostShaderId, value));
+
+                PostShaderOrderDirty = false;
+            }
         }
 
         /// <summary>
-        ///     Whether to pass the screen texture to the <see cref="PostShader"/>.
+        ///     Legacy single-post-shader flag.
         /// </summary>
         /// <remarks>
-        ///     Should be false unless you really need it.
+        ///     New post-shader code should set this per entry through SpriteSystem.SetPostShader().
         /// </remarks>
         [DataField]
+        [Obsolete("Use SpriteSystem.SetPostShader(..., getScreenTexture: true) instead.")]
         public bool GetScreenTexture;
 
         /// <summary>
-        ///     If true, this raise a entity system event before rendering this sprite, allowing systems to modify the
-        ///     shader parameters. Usually this can just be done via a frame-update, but some shaders require
-        ///     information about the viewport / eye.
+        ///     Legacy single-post-shader flag.
         /// </summary>
+        /// <remarks>
+        ///     New post-shader code should set this per entry through SpriteSystem.SetPostShader().
+        /// </remarks>
         [DataField]
+        [Obsolete("Use SpriteSystem.SetPostShader(..., raiseShaderEvent: true) instead.")]
         public bool RaiseShaderEvent;
+
+        [ViewVariables]
+        internal bool HasPostShaders => PostShaders.Count != 0;
 
         [ViewVariables] internal Dictionary<object, int> LayerMap { get; set; } = new();
         [ViewVariables] internal List<Layer> Layers = new();
@@ -1765,6 +1788,129 @@ namespace Robust.Client.GameObjects
             {
                 ParameterTexture = toClone.ParameterTexture;
                 ParameterUV = toClone.ParameterUV;
+            }
+        }
+
+        /// <summary>
+        ///     A post-shader currently applied to this sprite.
+        /// </summary>
+        public sealed class PostShaderEntry
+        {
+            /// <summary>
+            ///     Stable id used by systems to replace or remove their own post-shader.
+            /// </summary>
+            public readonly string Id;
+
+            /// <summary>
+            ///     Shader instance to run for this post-shader pass.
+            /// </summary>
+            public ShaderInstance Shader;
+
+            /// <summary>
+            ///     Whether this post-shader needs the current viewport texture assigned as SCREEN_TEXTURE.
+            /// </summary>
+            public bool GetScreenTexture;
+
+            /// <summary>
+            ///     Whether to raise BeforePostShaderRenderEvent before rendering this sprite.
+            /// </summary>
+            public bool RaiseShaderEvent;
+
+            /// <summary>
+            ///     Post-shader ids that this entry should run before.
+            /// </summary>
+            /// <remarks>
+            ///     Missing ids are ignored.
+            /// </remarks>
+            public string[] Before;
+
+            /// <summary>
+            ///     Post-shader ids that this entry should run after.
+            /// </summary>
+            /// <remarks>
+            ///     Missing ids are ignored.
+            /// </remarks>
+            public string[] After;
+
+            /// <summary>
+            ///     Original insertion position, used as the tie-breaker for unrelated post-shaders.
+            /// </summary>
+            internal int InsertionIndex;
+
+            /// <summary>
+            ///     Creates a post-shader entry.
+            /// </summary>
+            public PostShaderEntry(
+                string id,
+                ShaderInstance shader,
+                bool getScreenTexture = false,
+                bool raiseShaderEvent = false,
+                string[]? before = null,
+                string[]? after = null)
+            {
+                Id = id;
+                Shader = shader;
+                GetScreenTexture = getScreenTexture;
+                RaiseShaderEvent = raiseShaderEvent;
+                Before = before ?? Array.Empty<string>();
+                After = after ?? Array.Empty<string>();
+            }
+
+            /// <summary>
+            ///     Copies a post-shader entry for sprite cloning.
+            /// </summary>
+            public PostShaderEntry(PostShaderEntry toClone)
+            {
+                Id = toClone.Id;
+                Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
+                GetScreenTexture = toClone.GetScreenTexture;
+                RaiseShaderEvent = toClone.RaiseShaderEvent;
+                Before = toClone.Before;
+                After = toClone.After;
+                InsertionIndex = toClone.InsertionIndex;
+            }
+        }
+
+        // Use args over big list just to make changes easier and not breaking for callers.
+        public struct PostShaderArgs
+        {
+            /// <summary>
+            ///     Stable id used to replace or remove this post-shader later.
+            /// </summary>
+            public string Id;
+
+            /// <summary>
+            ///     Shader instance to run for this post-shader pass.
+            /// </summary>
+            public ShaderInstance Shader;
+
+            /// <summary>
+            ///     Whether this post-shader needs the current viewport texture assigned as SCREEN_TEXTURE.
+            /// </summary>
+            public bool GetScreenTexture;
+
+            /// <summary>
+            ///     Whether to raise BeforePostShaderRenderEvent before rendering this sprite.
+            /// </summary>
+            public bool RaiseShaderEvent;
+
+            /// <summary>
+            ///     Post-shader ids that this entry should run before.
+            /// </summary>
+            public IEnumerable<string>? Before;
+
+            /// <summary>
+            ///     Post-shader ids that this entry should run after.
+            /// </summary>
+            public IEnumerable<string>? After;
+
+            /// <summary>
+            ///     Creates post-shader arguments with the required id and shader.
+            /// </summary>
+            public PostShaderArgs(string id, ShaderInstance shader)
+            {
+                Id = id;
+                Shader = shader;
             }
         }
 

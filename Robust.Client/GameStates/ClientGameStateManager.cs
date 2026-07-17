@@ -59,6 +59,7 @@ namespace Robust.Client.GameStates
         private readonly HashSet<EntityUid> _sorted = new();
         private readonly List<NetEntity> _created = new();
         private readonly List<NetEntity> _detached = new();
+        private readonly HashSet<EntityUid> _detachBatch = new();
 
         private readonly record struct StateData(
             EntityUid Uid,

@@ -292,6 +292,7 @@ namespace Robust.Client.Graphics.Clyde
             var overlayIndex = 0;
 
             RenderTexture? entityPostRenderTarget = null;
+            RenderTexture? entityPostRenderTarget2 = null;
             bool flushed = false;
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
@@ -317,7 +318,8 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 Vector2i roundedPos = default;
-                if (entry.Sprite.PostShader != null)
+                var applyPostShaders = false;
+                if (entry.Sprite.PostShaderCount > 0)
                 {
                     // get the size of the sprite on screen, scaled slightly to allow for shaders that increase the final sprite size.
                     var screenSpriteSize = (Vector2i)(entry.SpriteScreenBB.Size * PostShadeScale).Rounded();
@@ -331,14 +333,17 @@ namespace Robust.Client.Graphics.Clyde
                         screenSpriteSize.Y++;
 
                     bool exit = false;
-                    if (entry.Sprite.GetScreenTexture && entry.Sprite.PostShader != null)
+                    if (entry.Sprite.GetScreenTexture)
                     {
                         FlushRenderQueue();
                         var tex = CopyScreenTexture(viewport.RenderTarget);
                         if (tex == null)
                             exit = true;
                         else
-                            entry.Sprite.PostShader.SetParameter("SCREEN_TEXTURE", tex);
+                        {
+                            for (var shaderIndex = 0; shaderIndex < entry.Sprite.PostShaderCount; shaderIndex++)
+                                entry.Sprite.GetPostShader(shaderIndex).SetParameter("SCREEN_TEXTURE", tex);
+                        }
                     }
 
                     // check that sprite size is valid
@@ -365,6 +370,16 @@ namespace Robust.Client.Graphics.Clyde
                                 name: nameof(entityPostRenderTarget));
                         }
 
+                        if (entry.Sprite.PostShaderCount > 1 &&
+                            (entityPostRenderTarget2 == null
+                             || entityPostRenderTarget2.Size.X < entityPostRenderTarget.Size.X
+                             || entityPostRenderTarget2.Size.Y < entityPostRenderTarget.Size.Y))
+                        {
+                            entityPostRenderTarget2 = CreateRenderTarget(entityPostRenderTarget.Size,
+                                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                                name: nameof(entityPostRenderTarget2));
+                        }
+
                         _renderHandle.UseRenderTarget(entityPostRenderTarget);
                         _renderHandle.Clear(default, 0, ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
 
@@ -379,34 +394,66 @@ namespace Robust.Client.Graphics.Clyde
                         if (entry.Sprite.RaiseShaderEvent)
                             _entityManager.EventBus.RaiseLocalEvent(entry.Uid,
                                 new BeforePostShaderRenderEvent(entry.Sprite, viewport), false);
+
+                        applyPostShaders = true;
                     }
                 }
 
                 spriteSystem.RenderSprite(new(entry.Uid, entry.Sprite), _renderHandle.DrawingHandleWorld, eye.Rotation, entry.WorldRot, entry.WorldPos);
 
-                if (entry.Sprite.PostShader != null && entityPostRenderTarget != null)
+                if (applyPostShaders && entityPostRenderTarget != null)
                 {
                     var oldProj = _currentMatrixProj;
                     var oldView = _currentMatrixView;
-
-                    _renderHandle.UseRenderTarget(viewport.RenderTarget);
-                    _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
-
-                    _renderHandle.UseShader(entry.Sprite.PostShader);
-                    CalcScreenMatrices(viewport.Size, out var proj, out var view);
-                    _renderHandle.SetProjView(proj, view);
                     _renderHandle.SetModelTransform(Matrix3x2.Identity);
 
-                    var rounded = roundedPos - entityPostRenderTarget.Size / 2;
+                    var source = entityPostRenderTarget;
+                    for (var shaderIndex = 0; shaderIndex < entry.Sprite.PostShaderCount; shaderIndex++)
+                    {
+                        var finalShader = shaderIndex == entry.Sprite.PostShaderCount - 1;
+                        Box2i box;
 
-                    var box = Box2i.FromDimensions(rounded, entityPostRenderTarget.Size);
+                        if (finalShader)
+                        {
+                            _renderHandle.UseRenderTarget(viewport.RenderTarget);
+                            _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
+                            CalcScreenMatrices(viewport.Size, out var proj, out var view);
+                            _renderHandle.SetProjView(proj, view);
 
-                    _renderHandle.DrawTextureScreen(entityPostRenderTarget.Texture,
-                        box.BottomLeft, box.BottomRight, box.TopLeft, box.TopRight,
-                        Color.White, null);
+                            var rounded = roundedPos - source.Size / 2;
+                            box = Box2i.FromDimensions(rounded, source.Size);
+                        }
+                        else
+                        {
+                            DebugTools.Assert(entityPostRenderTarget2 != null);
+                            var destination = ReferenceEquals(source, entityPostRenderTarget)
+                                ? entityPostRenderTarget2
+                                : entityPostRenderTarget;
+
+                            _renderHandle.UseRenderTarget(destination);
+                            _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, destination.Size));
+                            _renderHandle.Clear(default, 0,
+                                ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
+                            CalcScreenMatrices(destination.Size, out var proj, out var view);
+                            _renderHandle.SetProjView(proj, view);
+                            box = Box2i.FromDimensions(Vector2i.Zero, source.Size);
+                        }
+
+                        _renderHandle.UseShader(entry.Sprite.GetPostShader(shaderIndex));
+                        _renderHandle.DrawTextureScreen(source.Texture,
+                            box.BottomLeft, box.BottomRight, box.TopLeft, box.TopRight,
+                            Color.White, null);
+                        _renderHandle.UseShader(null);
+
+                        if (!finalShader)
+                        {
+                            source = ReferenceEquals(source, entityPostRenderTarget)
+                                ? entityPostRenderTarget2!
+                                : entityPostRenderTarget;
+                        }
+                    }
 
                     _renderHandle.SetProjView(oldProj, oldView);
-                    _renderHandle.UseShader(null);
                 }
             }
 
@@ -424,6 +471,7 @@ namespace Robust.Client.Graphics.Clyde
 
             ArrayPool<int>.Shared.Return(indexList);
             entityPostRenderTarget?.DisposeDeferred();
+            entityPostRenderTarget2?.DisposeDeferred();
 
             _debugStats.Entities += _drawingSpriteList.Count;
             _drawingSpriteList.Clear();

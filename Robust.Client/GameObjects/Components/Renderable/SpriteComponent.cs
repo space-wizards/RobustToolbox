@@ -202,16 +202,35 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)] internal bool _inertUpdateQueued;
 
         /// <summary>
-        ///     Shader instance to use when drawing the final sprite to the world.
+        ///     Primary shader instance to use when drawing the final sprite to the world.
+        ///     Additional shaders in <see cref="PostShaderChain"/> are applied afterwards.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public ShaderInstance? PostShader
+        public ShaderInstance? PostShader { get; set; }
+
+        /// <summary>
+        ///     Additional post-shaders applied in order after <see cref="PostShader"/>.
+        ///     Use <see cref="SpriteSystem.AddPostShader"/> and <see cref="SpriteSystem.RemovePostShader"/>
+        ///     to modify the chain.
+        /// </summary>
+        [ViewVariables]
+        public IReadOnlyList<ShaderInstance> PostShaderChain => _postShaderChain;
+
+        internal readonly List<ShaderInstance> _postShaderChain = new();
+
+        internal int PostShaderCount => _postShaderChain.Count + (PostShader == null ? 0 : 1);
+
+        internal ShaderInstance GetPostShader(int index)
         {
-            get;
-            // This will get obsoleted, but I only want to mark it as obsolete when multi-shader support is added, so
-            // that people can use the appropriate method and don't migrate to an incorrect new method that wont
-            // be obsoleted.
-            set;
+            if (PostShader != null)
+            {
+                if (index == 0)
+                    return PostShader;
+
+                index--;
+            }
+
+            return _postShaderChain[index];
         }
 
         /// <summary>

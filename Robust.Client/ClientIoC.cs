@@ -64,6 +64,7 @@ namespace Robust.Client
 
             deps.Register<IGameTiming, ClientGameTiming>();
             deps.Register<IClientGameTiming, ClientGameTiming>();
+            deps.Register<IEntityTimerManager, ClientEntityTimerManager>();
             deps.Register<IPrototypeManager, ClientPrototypeManager>();
             deps.Register<IPrototypeManagerInternal, ClientPrototypeManager>();
             deps.Register<IEntityManager, ClientEntityManager>();

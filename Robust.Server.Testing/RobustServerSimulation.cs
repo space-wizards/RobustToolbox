@@ -16,6 +16,7 @@ using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
 using Robust.Server.Replays;
 using Robust.Server.ServerStatus;
+using Robust.Server.Timing;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
@@ -253,6 +254,7 @@ namespace Robust.UnitTesting.Server
             container.Register<IPrototypeManager, ServerPrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
+            container.Register<IEntityTimerManager, ServerEntityTimerManager>();
             container.Register<IManifoldManager, CollisionManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();

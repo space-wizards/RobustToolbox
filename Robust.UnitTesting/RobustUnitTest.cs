@@ -43,6 +43,7 @@ namespace Robust.UnitTesting
     public abstract partial class RobustUnitTest
     {
         protected virtual Type[]? ExtraComponents => null;
+        protected virtual Type[]? ExtraSystems => null;
         private static Type[] _components = new []
             {
                 typeof(EyeComponent),
@@ -113,6 +114,15 @@ namespace Robust.UnitTesting
             configurationManager.LoadCVarsFromAssembly(typeof(RTCVars).Assembly);
 
             var systems = deps.Resolve<IEntitySystemManager>();
+            if (ExtraSystems != null)
+            {
+                var loadExtra = typeof(IEntitySystemManager).GetMethod(nameof(IEntitySystemManager.LoadExtraSystemType))!;
+                foreach (var system in ExtraSystems)
+                {
+                    loadExtra.MakeGenericMethod(system).Invoke(systems, null);
+                }
+            }
+
             // Required systems
             systems.LoadExtraSystemType<EntityLookupSystem>();
 

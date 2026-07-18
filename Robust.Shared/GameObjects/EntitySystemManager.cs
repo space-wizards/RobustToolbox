@@ -10,6 +10,7 @@ using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
 using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using Dependency = Robust.Shared.IoC.DependencyAttribute;
@@ -28,6 +29,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private ProfManager _profManager = default!;
         [Dependency] private IDependencyCollection _dependencyCollection = default!;
         [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IEntityTimerManager _entityTimerManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private IRuntimeLog _runtimeLog = default!;
@@ -141,6 +143,8 @@ namespace Robust.Shared.GameObjects
             // Tempted to make this an assert
             // However, EntityManager calls this directly so we'd need to remove that and manually call it.
             if (_initialized) return;
+
+            _entityTimerManager.Initialize();
 
             var excludedTypes = new HashSet<Type>();
 
@@ -319,6 +323,7 @@ namespace Robust.Shared.GameObjects
 
         public void Clear()
         {
+            _entityTimerManager.Shutdown();
             _extraLoadedTypes.Clear();
             _systemTypes.Clear();
             _updateOrder = Array.Empty<UpdateReg>();
@@ -330,6 +335,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void TickUpdate(float frameTime, bool noPredictions)
         {
+            _entityTimerManager.UpdateTimers(noPredictions);
+
             foreach (var updReg in _updateOrder)
             {
                 if (noPredictions && !updReg.System.UpdatesOutsidePrediction)

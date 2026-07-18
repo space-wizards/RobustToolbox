@@ -1,12 +1,9 @@
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
-using Robust.Client.ComponentTrees;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
@@ -139,11 +136,11 @@ internal partial class Clyde
             // To help explain the remainder of this function, it should be functionally equivalent to the following
             // three lines of code, but has been expanded & simplified to speed up the calculation:
             //
-            // (data.WorldPos, data.WorldRot) = batch.Sys.GetWorldPositionRotation(data.Xform, batch.Query);
+            // (data.WorldPos, data.WorldRot) = batch.Sys.GetWorldPositionRotation(data.Xform);
             // var spriteWorldBB = data.Sprite.CalculateRotatedBoundingBox(data.WorldPos, data.WorldRot, batch.ViewRotation);
             // data.SpriteScreenBB = Viewport.GetWorldToLocalMatrix().TransformBox(spriteWorldBB);
 
-            var (pos, rot) = batch.Sys.GetRelativePositionRotation(data.Xform, batch.TreeOwner, batch.Query);
+            var (pos, rot) = batch.Sys.GetRelativePositionRotation(data.Xform, batch.TreeOwner);
             pos = new Vector2(
                 batch.TreePos.X + batch.Cos * pos.X - batch.Sin * pos.Y,
                 batch.TreePos.Y + batch.Sin * pos.X + batch.Cos * pos.Y);

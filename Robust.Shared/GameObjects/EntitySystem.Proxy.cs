@@ -495,6 +495,14 @@ public partial class EntitySystem
         return EntityManager.TryGetComponent(uid, out comp);
     }
 
+    /// <inheritdoc cref="IEntityManager.TryGetComponent(EntityUid?, Type, out IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
+    protected bool TryComp(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? comp)
+    {
+        return EntityManager.TryGetComponent(uid, type, out comp);
+    }
+
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryComp(EntityUid uid, [NotNullWhen(true)] out TransformComponent? comp)
@@ -521,6 +529,20 @@ public partial class EntitySystem
         }
 
         return EntityManager.TryGetComponent(uid.Value, out comp);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TryGetComponent(EntityUid?, Type, out IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
+    protected bool TryComp([NotNullWhen(true)] EntityUid? uid, Type type, [NotNullWhen(true)] out IComponent? comp)
+    {
+        if (!uid.HasValue)
+        {
+            comp = null;
+            return false;
+        }
+
+        return EntityManager.TryGetComponent(uid.Value, type, out comp);
     }
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>

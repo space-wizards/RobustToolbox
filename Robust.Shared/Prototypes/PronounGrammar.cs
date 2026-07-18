@@ -50,13 +50,4 @@ public sealed partial class PronounGrammarPrototype : IPrototype
     /// </summary>
     [DataField]
     public LocId Description { get; private set; }
-
-
-    private static readonly IPrototypeManager _protoMan = default!; // TODO: DO THIS PROPERLY. NOT SURE HOW. SORRY.
-    public static ProtoId<PronounGrammarPrototype>? ParseFromDbString(string input)
-    {
-        if (_protoMan.TryIndex<PronounGrammarPrototype>(input, out var pronoun))
-            return pronoun;
-        return null;
-    }
 }

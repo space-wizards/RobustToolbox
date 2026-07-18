@@ -9,14 +9,14 @@ namespace Robust.Client.Animus.Actions;
 [PublicAPI]
 public abstract partial class AnimusActionSpriteChangeBase
 {
-    public abstract void Initialize(Entity<SpriteComponent> entity, EntityManager entityManager);
+    public abstract void Initialize(Entity<SpriteComponent> entity, IEntityManager entityManager);
     public abstract void ExecuteSpriteChange(Entity<SpriteComponent> entity);
     public abstract void ResetSpriteChange(Entity<SpriteComponent> entity);
 }
 
 public sealed partial class AnimusActionSpriteChangeNull : AnimusActionSpriteChangeBase
 {
-    public override void Initialize(Entity<SpriteComponent> entity, EntityManager entityManager)
+    public override void Initialize(Entity<SpriteComponent> entity, IEntityManager entityManager)
     {
     }
 

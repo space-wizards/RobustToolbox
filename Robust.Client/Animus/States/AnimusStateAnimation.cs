@@ -22,7 +22,7 @@ internal sealed partial class AnimusStateAnimation : AnimusStateBase
     /// <summary>
     /// IoCManager.InjectDependencies won't work, use this override to inject your dependencies manually.
     /// </summary>
-    internal override void Initialize(EntityUid ent, EntityManager entityManager, AnimusInstance animusInstance)
+    internal override void Initialize(EntityUid ent, IEntityManager entityManager, AnimusInstance animusInstance)
     {
         base.Initialize(ent, entityManager, animusInstance);
         _animationPlayerSystem = entityManager.System<AnimationPlayerSystem>();

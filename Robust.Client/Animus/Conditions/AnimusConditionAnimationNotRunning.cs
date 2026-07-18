@@ -10,7 +10,7 @@ public sealed partial class AnimusConditionAnimationNotRunning : AnimusCondition
 
     private AnimusSystem _animationStateMachineSystem;
 
-    public override void Initialize(EntityManager entityManager)
+    public override void Initialize(IEntityManager entityManager)
     {
         base.Initialize(entityManager);
         _animationStateMachineSystem = entityManager.System<AnimusSystem>();

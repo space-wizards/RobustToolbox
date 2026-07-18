@@ -17,7 +17,7 @@ public abstract partial class AnimusConditionBase
     /// IoCManager.InjectDependencies doesn't work, override this method to initialize dependencies manually.
     /// </summary>
     /// <param name="entityManager"></param>
-    public virtual void Initialize(EntityManager entityManager)
+    public virtual void Initialize(IEntityManager entityManager)
     {
     }
 

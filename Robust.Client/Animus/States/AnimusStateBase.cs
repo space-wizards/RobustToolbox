@@ -29,7 +29,7 @@ internal abstract partial class AnimusStateBase
     internal AnimusInstance Instance;
 
     [MustCallBase]
-    internal virtual void Initialize(EntityUid ent, EntityManager entityManager, AnimusInstance animusInstance)
+    internal virtual void Initialize(EntityUid ent, IEntityManager entityManager, AnimusInstance animusInstance)
     {
         Instance = animusInstance;
     }

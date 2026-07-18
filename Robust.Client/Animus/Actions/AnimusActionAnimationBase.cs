@@ -46,7 +46,7 @@ public abstract partial class AnimusActionAnimationBase
         },
     };
 
-    public virtual void Initialize(EntityManager entityManager)
+    public virtual void Initialize(IEntityManager entityManager)
     {
     }
 

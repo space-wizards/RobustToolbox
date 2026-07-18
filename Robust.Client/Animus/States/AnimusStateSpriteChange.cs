@@ -13,9 +13,9 @@ internal sealed partial class AnimusStateSpriteChange : AnimusStateBase
     internal AnimusActionSpriteChangeBase Action = NullAction;
 
     private static readonly AnimusActionSpriteChangeBase NullAction = new AnimusActionSpriteChangeNull();
-    private EntityManager _entityManager;
+    private IEntityManager _entityManager;
 
-    internal override void Initialize(EntityUid ent, EntityManager entityManager, AnimusInstance animusInstance)
+    internal override void Initialize(EntityUid ent, IEntityManager entityManager, AnimusInstance animusInstance)
     {
         base.Initialize(ent, entityManager, animusInstance);
         _entityManager = entityManager;

@@ -60,6 +60,7 @@ namespace Robust.Client.GameStates
         private readonly List<NetEntity> _created = new();
         private readonly List<NetEntity> _detached = new();
         private readonly HashSet<EntityUid> _detachBatch = new();
+        private readonly List<(NetEntity NetEntity, Entity<MetaDataComponent> Entity)> _detachEntities = new();
 
         private readonly record struct StateData(
             EntityUid Uid,
@@ -1303,24 +1304,23 @@ namespace Robust.Client.GameStates
             EntityLookupSystem lookupSys)
         {
             _detachBatch.Clear();
+            _detachEntities.Clear();
 
             foreach (var netEntity in entities)
             {
-                if (!ShouldDetach(netEntity, maxTick, out var ent, out _))
+                if (!TryGetDetachEntity(netEntity, maxTick, out var ent))
                     continue;
 
-                _detachBatch.Add(ent!.Value);
+                _detachBatch.Add(ent.Owner);
+                _detachEntities.Add((netEntity, ent));
             }
 
             var broadphaseRoots = 0;
 
-            foreach (var netEntity in entities)
+            foreach (var (netEntity, ent) in _detachEntities)
             {
-                if (!ShouldDetach(netEntity, maxTick, out var ent, out var meta))
-                    continue;
-
-                var uid = ent!.Value;
-                var metadata = meta!;
+                var uid = ent.Owner;
+                var metadata = ent.Comp;
 
                 if (lastStateApplied.HasValue)
                     metadata.LastStateApplied = lastStateApplied.Value;
@@ -1373,15 +1373,17 @@ namespace Robust.Client.GameStates
             _prof.WriteValue("Broadphase roots", ProfData.Int32(broadphaseRoots));
             _prof.WriteValue("Batch", ProfData.Int32(_detachBatch.Count));
             _detachBatch.Clear();
+            _detachEntities.Clear();
         }
 
-        private bool ShouldDetach(
+        private bool TryGetDetachEntity(
             NetEntity netEntity,
             GameTick maxTick,
-            out EntityUid? ent,
-            out MetaDataComponent? meta)
+            out Entity<MetaDataComponent> ent)
         {
-            if (!_entities.TryGetEntityData(netEntity, out ent, out meta))
+            ent = default;
+
+            if (!_entities.TryGetEntityData(netEntity, out var uid, out var meta))
                 return false;
 
             if (meta.LastStateApplied > maxTick)
@@ -1391,7 +1393,11 @@ namespace Robust.Client.GameStates
                 return false;
             }
 
-            return (meta.Flags & (MetaDataFlags.Detached | MetaDataFlags.Undetachable)) == 0;
+            if ((meta.Flags & (MetaDataFlags.Detached | MetaDataFlags.Undetachable)) != 0)
+                return false;
+
+            ent = (uid.Value, meta);
+            return true;
         }
 
         private bool HasDetachingParent(TransformComponent xform, EntityQuery<TransformComponent> xforms)

@@ -23,6 +23,33 @@ public sealed partial class AnimusSystem : EntitySystem
 
     private readonly Dictionary<EntityUid, List<(Type, string)>> _actingComponentProperties = new();
 
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        _sawmill = _logger.GetSawmill("asm");
+
+        SubscribeLocalEvent<AnimusComponent, ComponentInit>(OnAnimationStateMachineComponentInit);
+        SubscribeLocalEvent<AnimationPlayerComponent, AnimationCompletedEvent>(OnAnimationCompleted);
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        if (!_timing.IsFirstTimePredicted)
+            return;
+
+        var query = EntityQueryEnumerator<AnimusComponent>();
+        while (query.MoveNext(out var entity, out var comp))
+        {
+            foreach (var animusInstance in comp.ActiveStateMachines)
+            {
+                UpdateStateMachine((entity, comp), animusInstance);
+            }
+        }
+    }
+
     // TODO: Subscribe to OnAnimationStarted event to register running legacy animations.
     private void OnAnimationCompleted(Entity<AnimationPlayerComponent> entity, ref AnimationCompletedEvent args)
     {
@@ -58,33 +85,6 @@ public sealed partial class AnimusSystem : EntitySystem
         foreach (var animusInstance in entity.Comp.StateMachines)
         {
             InitializeStateMachine(entity, animusInstance);
-        }
-    }
-
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        _sawmill = _logger.GetSawmill("asm");
-
-        SubscribeLocalEvent<AnimusComponent, ComponentInit>(OnAnimationStateMachineComponentInit);
-        SubscribeLocalEvent<AnimationPlayerComponent, AnimationCompletedEvent>(OnAnimationCompleted);
-    }
-
-    public override void Update(float frameTime)
-    {
-        base.Update(frameTime);
-
-        if (!_timing.IsFirstTimePredicted)
-            return;
-
-        var query = EntityQueryEnumerator<AnimusComponent>();
-        while (query.MoveNext(out var entity, out var comp))
-        {
-            foreach (var animusInstance in comp.ActiveStateMachines)
-            {
-                UpdateStateMachine((entity, comp), animusInstance);
-            }
         }
     }
 

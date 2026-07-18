@@ -183,11 +183,9 @@ internal abstract partial class ViewVariablesManager
             return;
         }
 
-        SetWritePathCaller(new NetUserId(req.MsgChannel.UserId));
-
         try
         {
-            WritePath(req.Path, req.Value ?? string.Empty);
+            WritePath(req.Path, req.Value, new NetUserId(req.MsgChannel.UserId));
         }
         catch (Exception)
         {

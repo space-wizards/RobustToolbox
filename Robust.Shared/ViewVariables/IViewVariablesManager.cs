@@ -56,7 +56,17 @@ public interface IViewVariablesManager
     ViewVariablesPath? ResolvePath(string path);
     object? ReadPath(string path);
     string? ReadPathSerialized(string path);
-    void WritePath(string path, string value);
+
+    /// <summary>
+    ///     Writes a serialized <paramref name="value"/> to the member at <paramref name="path"/>.
+    /// </summary>
+    /// <param name="path">The VV path to write to.</param>
+    /// <param name="value">The serialized value to write, or <c>null</c> to set the member to null.</param>
+    /// <param name="caller">
+    ///     The user responsible for the write, used to attribute the <see cref="PropertyModified"/> event.
+    ///     <c>null</c> for internal/unattributed writes.
+    /// </param>
+    void WritePath(string path, string? value, NetUserId? caller = null);
     object? InvokePath(string path, string arguments);
     IEnumerable<string> ListPath(string path, VVListPathOptions options);
 
@@ -66,8 +76,6 @@ public interface IViewVariablesManager
     Task<IEnumerable<string>> ListRemotePath(string path, VVListPathOptions options, ICommonSession? session = null);
 
     event VVPropertyModifiedHandler? PropertyModified;
-
-    void SetWritePathCaller(NetUserId userId);
 }
 
 public delegate void VVPropertyModifiedHandler(NetUserId userId, object target, string memberName, object? oldValue, object? newValue);

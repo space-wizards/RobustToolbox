@@ -25,8 +25,6 @@ internal abstract partial class ViewVariablesManager : IViewVariablesManager, IP
 
     public virtual event VVPropertyModifiedHandler? PropertyModified;
 
-    public virtual void SetWritePathCaller(NetUserId userId) { }
-
     private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
 
     private const BindingFlags MembersBindings =
@@ -67,10 +65,10 @@ internal abstract partial class ViewVariablesManager : IViewVariablesManager, IP
         }
     }
 
-    public virtual void WritePath(string path, string value)
+    public virtual void WritePath(string path, string? value, NetUserId? caller = null)
     {
         var resPath = ResolvePath(path);
-        resPath?.Set(DeserializeValue(resPath.Type, value));
+        resPath?.Set(value != null ? DeserializeValue(resPath.Type, value) : null);
     }
 
     public object? InvokePath(string path, string arguments)

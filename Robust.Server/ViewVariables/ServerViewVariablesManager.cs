@@ -166,14 +166,7 @@ namespace Robust.Server.ViewVariables
             }
         }
 
-        private NetUserId? _lastWritePathCaller;
-
-        public override void SetWritePathCaller(NetUserId userId)
-        {
-            _lastWritePathCaller = userId;
-        }
-
-        public override void WritePath(string path, string value)
+        public override void WritePath(string path, string? value, NetUserId? caller = null)
         {
             var resPath = ResolvePath(path);
             if (resPath == null)
@@ -211,7 +204,7 @@ namespace Robust.Server.ViewVariables
 
             parentObj ??= resPath;
 
-            base.WritePath(path, value);
+            base.WritePath(path, value, caller);
 
             object? newValue = null;
             try
@@ -223,10 +216,7 @@ namespace Robust.Server.ViewVariables
                 newValue = value;
             }
 
-            var caller = _lastWritePathCaller ?? default;
-            _lastWritePathCaller = null;
-
-            PropertyModified?.Invoke(caller, parentObj, memberName, oldValue, newValue);
+            PropertyModified?.Invoke(caller ?? default, parentObj, memberName, oldValue, newValue);
         }
 
         private void _msgReqData(MsgViewVariablesReqData message)

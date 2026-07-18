@@ -40,8 +40,6 @@ jobs:
         run: cp RobustToolbox/global.json .
       - name: Install dependencies
         run: dotnet restore
-      - name: Build (Release)
-        run: dotnet build --configuration Release --no-restore /m
       - name: Build (Debug)
         run: dotnet build --configuration DebugOpt --no-restore /m
       - name: Content.Tests
@@ -59,3 +57,5 @@ jobs:
           name: nunit3-results
           path: test_results/*
           retention-days: 7
+      - name: Build (Release)
+        run: dotnet build --configuration Release --no-restore /m

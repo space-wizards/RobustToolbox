@@ -553,7 +553,10 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     _renderHandle.UseRenderTarget(viewport.RenderTarget);
                     _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
-                    _renderHandle.UseShader(shader);
+                    // The sprite has already been drawn into a transparent RT, so its color is already multiplied
+                    // by alpha. Use premultiplied blending for the final viewport composite to avoid applying
+                    // translucent sprite alpha twice. Stuff like an interaction outline would make the entire sprite double transparent.
+                    _renderHandle.UseShader(GetPremultipliedBlendShaderInstance(shader));
                     CalcScreenMatrices(viewport.Size, out var finalProj, out var finalView);
                     _renderHandle.SetProjView(finalProj, finalView);
                     _renderHandle.SetModelTransform(Matrix3x2.Identity);

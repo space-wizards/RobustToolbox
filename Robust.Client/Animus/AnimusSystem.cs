@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Animus.States;
-using Robust.Client.Animus.Timers;
 using Robust.Client.GameObjects;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;

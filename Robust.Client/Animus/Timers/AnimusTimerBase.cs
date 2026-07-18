@@ -18,6 +18,7 @@ public abstract partial class AnimusTimerBase
     /// </summary>
     /// <param name="entityManager">Entity manager to fetch systems with.</param>
     /// <param name="dependencyCollection">Dependency collection to fetch non-system dependencies with.</param>
+    [MustCallBase]
     public virtual void Initialize(IEntityManager entityManager, IDependencyCollection dependencyCollection)
     {
         Random = dependencyCollection.Resolve<IRobustRandom>();

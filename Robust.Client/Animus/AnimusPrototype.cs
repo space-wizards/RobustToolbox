@@ -32,5 +32,4 @@ internal sealed partial class AnimusPrototype : IPrototype
     /// </summary>
     [DataField]
     internal AnimusStateBase DefaultState = new AnimusStateNull();
-
 }

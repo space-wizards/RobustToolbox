@@ -36,21 +36,17 @@ internal abstract partial class AnimusStateBase
 
     internal virtual void Enter(EntityUid ent)
     {
-
     }
 
     internal virtual void Update(EntityUid ent, bool finished)
     {
-
     }
 
     internal virtual void Exit(EntityUid ent)
     {
-
     }
 }
 
 internal sealed partial class AnimusStateNull : AnimusStateBase
 {
-
 }

@@ -18,16 +18,13 @@ public sealed partial class AnimusActionSpriteChangeNull : AnimusActionSpriteCha
 {
     public override void Initialize(Entity<SpriteComponent> entity, EntityManager entityManager)
     {
-
     }
 
     public override void ExecuteSpriteChange(Entity<SpriteComponent> entity)
     {
-
     }
 
     public override void ResetSpriteChange(Entity<SpriteComponent> entity)
     {
-
     }
 }

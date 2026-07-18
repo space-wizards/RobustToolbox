@@ -22,10 +22,10 @@ public sealed partial class AnimusComponent : Component
 /// </summary>
 internal sealed class AnimusInstance
 {
-    internal ProtoId<AnimusPrototype> Prototype = default;
     internal AnimusStateBase[] States = [];
     internal AnimusTimerBase? Timer = null;
     internal AnimusStateBase ActiveState = new AnimusStateNull();
     internal AnimusStateBase DefaultState = new AnimusStateNull();
     internal TimeSpan ActiveStateExitTime = TimeSpan.Zero;
+    internal TimeSpan NextUpdate = TimeSpan.Zero;
 }

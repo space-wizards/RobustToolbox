@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Client.Animus.States;
+using Robust.Client.Animus.Timers;
 using Robust.Client.GameObjects;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
@@ -20,14 +20,17 @@ public sealed partial class AnimusSystem : EntitySystem
     [Dependency] private ISerializationManager _serializationManager = default!;
 
     private ISawmill _sawmill = default!;
+    private IDependencyCollection _dependencyCollection = default!;
 
     private readonly Dictionary<EntityUid, List<string>> _runningAnimations = new();
 
     public override void Initialize()
     {
         base.Initialize();
+        _dependencyCollection = IoCManager.InitThread();
 
-        _sawmill = _logger.GetSawmill("asm");
+        _sawmill = _logger.GetSawmill("animus");
+
 
         SubscribeLocalEvent<AnimusComponent, ComponentInit>(OnAnimationStateMachineComponentInit);
         SubscribeLocalEvent<AnimationPlayerComponent, AnimationCompletedEvent>(OnAnimationCompleted);
@@ -53,7 +56,7 @@ public sealed partial class AnimusSystem : EntitySystem
 
     private void OnAnimationStarted(Entity<AnimationPlayerComponent> entity, ref AnimationStartedEvent args)
     {
-        if (!TryComp<AnimusComponent>(entity, out var comp))
+        if (!TryComp<AnimusComponent>(entity, out _))
             return;
 
         if (!_runningAnimations.ContainsKey(entity.Owner))
@@ -67,7 +70,7 @@ public sealed partial class AnimusSystem : EntitySystem
         if (!TryComp<AnimusComponent>(entity, out var comp))
             return;
 
-        if(_runningAnimations.TryGetValue(entity.Owner, out var animKeys))
+        if (_runningAnimations.TryGetValue(entity.Owner, out var animKeys))
             animKeys.Remove(args.Key);
 
         AnimusInstance? animusInstance = null;
@@ -111,13 +114,18 @@ public sealed partial class AnimusSystem : EntitySystem
 
         var animusInstance = new AnimusInstance()
         {
-            Prototype = proto,
             Timer = _serializationManager.CreateCopy(proto.Timer, null, false),
             DefaultState = _serializationManager.CreateCopy(proto.DefaultState, null, false, false),
         };
 
         animusInstance.ActiveState.Initialize(entity, EntityManager, animusInstance);
         animusInstance.DefaultState.Initialize(entity, EntityManager, animusInstance);
+
+        if (animusInstance.Timer != null)
+        {
+            animusInstance.Timer.Initialize(EntityManager, _dependencyCollection);
+            animusInstance.NextUpdate = _timing.CurTime + animusInstance.Timer.GetNextPeriod();
+        }
 
         foreach (var state in proto.States)
         {
@@ -137,7 +145,10 @@ public sealed partial class AnimusSystem : EntitySystem
         entity.Comp.ActiveStateMachines.Add(animusInstance);
     }
 
-    private AnimusStateBase CopyInitializeState(Entity<AnimusComponent> entity, AnimusStateBase state, AnimusInstance animusInstance)
+    private AnimusStateBase CopyInitializeState(
+        Entity<AnimusComponent> entity,
+        AnimusStateBase state,
+        AnimusInstance animusInstance)
     {
         var stateCopy = _serializationManager.CreateCopy(state, null, false, false);
         stateCopy.Initialize(entity.Owner, EntityManager, animusInstance);
@@ -152,11 +163,20 @@ public sealed partial class AnimusSystem : EntitySystem
 
     private void UpdateStateMachine(Entity<AnimusComponent> entity, AnimusInstance animusInstance)
     {
-        ExitActiveStateIfExitTimerReached(entity, animusInstance);
-        CheckStateMachineConditionsAndUpdateState(entity, animusInstance);
+        ExitStateIfExitTimerReached(entity, animusInstance);
+
+        if (animusInstance.Timer != null)
+        {
+            if (animusInstance.NextUpdate > _timing.CurTime)
+                return;
+
+            animusInstance.NextUpdate += animusInstance.Timer.GetNextPeriod();
+        }
+
+        CheckConditionsUpdateState(entity, animusInstance);
     }
 
-    private void ExitActiveStateIfExitTimerReached(Entity<AnimusComponent> entity, AnimusInstance animusInstance)
+    private void ExitStateIfExitTimerReached(Entity<AnimusComponent> entity, AnimusInstance animusInstance)
     {
         if (animusInstance.ActiveStateExitTime == TimeSpan.Zero)
             return;
@@ -168,7 +188,7 @@ public sealed partial class AnimusSystem : EntitySystem
         animusInstance.ActiveStateExitTime = TimeSpan.Zero;
     }
 
-    private void CheckStateMachineConditionsAndUpdateState(Entity<AnimusComponent> entity, AnimusInstance animusInstance)
+    private void CheckConditionsUpdateState(Entity<AnimusComponent> entity, AnimusInstance animusInstance)
     {
         var currentState = animusInstance.ActiveState;
         var nextState = animusInstance.DefaultState;
@@ -200,6 +220,7 @@ public sealed partial class AnimusSystem : EntitySystem
             if (!cond.EvaluateInternal(entity, _timing.CurTime, _timing.IsFirstTimePredicted))
                 return false;
         }
+
         return true;
     }
 

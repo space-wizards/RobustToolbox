@@ -48,20 +48,29 @@ public abstract partial class AnimusActionAnimationBase
 
     public virtual void Initialize(EntityManager entityManager)
     {
-
     }
 
-    protected abstract Animation? GetNextAnimation(AppearanceSystem appearanceSystem, EntityUid entity, bool restarting);
+    protected abstract Animation? GetNextAnimation(
+        AppearanceSystem appearanceSystem,
+        EntityUid entity,
+        bool restarting);
 
     protected abstract Animation? GetStopAnimation(AppearanceSystem appearanceSystem, EntityUid entity);
 
-    internal bool TryNextAnimation(AppearanceSystem appearanceSystem, EntityUid entity, [NotNullWhen(true)] out Animation? anim, bool restarting)
+    internal bool TryNextAnimation(
+        AppearanceSystem appearanceSystem,
+        EntityUid entity,
+        [NotNullWhen(true)] out Animation? anim,
+        bool restarting)
     {
         anim = GetNextAnimation(appearanceSystem, entity, restarting);
         return anim != null;
     }
 
-    internal bool TryStopAnimation(AppearanceSystem appearanceSystem, EntityUid entity, [NotNullWhen(true)] out Animation? anim)
+    internal bool TryStopAnimation(
+        AppearanceSystem appearanceSystem,
+        EntityUid entity,
+        [NotNullWhen(true)] out Animation? anim)
     {
         anim = GetStopAnimation(appearanceSystem, entity);
         return anim != null;

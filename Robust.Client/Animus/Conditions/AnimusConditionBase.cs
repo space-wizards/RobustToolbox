@@ -19,7 +19,6 @@ public abstract partial class AnimusConditionBase
     /// <param name="entityManager"></param>
     public virtual void Initialize(EntityManager entityManager)
     {
-
     }
 
     protected abstract bool Evaluate(EntityUid ent);
@@ -29,6 +28,7 @@ public abstract partial class AnimusConditionBase
         if (!isFirstTimePredicted || currentTime - _lastUpdate < UpdateInterval)
             return _lastResult;
         _lastResult = Evaluate(ent);
+        _lastUpdate = currentTime;
         return _lastResult;
     }
 }

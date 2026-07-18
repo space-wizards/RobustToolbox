@@ -22,6 +22,7 @@ public sealed partial class AnimusSystem : EntitySystem
     private ISawmill _sawmill = default!;
 
     private readonly Dictionary<EntityUid, List<(Type, string)>> _actingComponentProperties = new();
+    private readonly Dictionary<EntityUid, List<string>> _runningAnimations = new();
 
     public override void Initialize()
     {
@@ -31,6 +32,7 @@ public sealed partial class AnimusSystem : EntitySystem
 
         SubscribeLocalEvent<AnimusComponent, ComponentInit>(OnAnimationStateMachineComponentInit);
         SubscribeLocalEvent<AnimationPlayerComponent, AnimationCompletedEvent>(OnAnimationCompleted);
+        SubscribeLocalEvent<AnimationPlayerComponent, AnimationStartedEvent>(OnAnimationStarted);
     }
 
     public override void Update(float frameTime)
@@ -50,13 +52,24 @@ public sealed partial class AnimusSystem : EntitySystem
         }
     }
 
-    // TODO: Subscribe to OnAnimationStarted event to register running legacy animations.
-    private void OnAnimationCompleted(Entity<AnimationPlayerComponent> entity, ref AnimationCompletedEvent args)
+    private void OnAnimationStarted(Entity<AnimationPlayerComponent> entity, ref AnimationStartedEvent args)
     {
-        // TODO: Deregister legacy animations.
-
         if (!TryComp<AnimusComponent>(entity, out var comp))
             return;
+
+        if (!_runningAnimations.ContainsKey(entity.Owner))
+            _runningAnimations.Add(entity.Owner, []);
+
+        _runningAnimations[entity.Owner].Add(args.Key);
+    }
+
+    private void OnAnimationCompleted(Entity<AnimationPlayerComponent> entity, ref AnimationCompletedEvent args)
+    {
+        if (!TryComp<AnimusComponent>(entity, out var comp))
+            return;
+
+        if(_runningAnimations.TryGetValue(entity.Owner, out var animKeys))
+            animKeys.Remove(args.Key);
 
         AnimusInstance? animusInstance = null;
         foreach (var machine in comp.ActiveStateMachines)
@@ -220,5 +233,10 @@ public sealed partial class AnimusSystem : EntitySystem
         newState.Instance.ActiveState.Exit(entity.Owner);
         newState.Enter(entity.Owner);
         newState.Instance.ActiveState = newState;
+    }
+
+    internal bool HasAnimationRunning(EntityUid entityUid, string key)
+    {
+        return _runningAnimations.ContainsKey(entityUid) && _runningAnimations[entityUid].Contains(key);
     }
 }

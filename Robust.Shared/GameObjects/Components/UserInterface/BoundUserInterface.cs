@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
@@ -82,6 +83,43 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
+        /// Schedules or replaces a timer owned by this BUI's <see cref="UserInterfaceComponent"/>.
+        /// The timer is automatically cancelled when the BUI is disposed.
+        /// </summary>
+        protected TimeSpan SetTimer(
+            EntityTimerId id,
+            TimeSpan delay,
+            TimeSpan? interval = null,
+            EntityTimerFlags flags = EntityTimerFlags.None)
+        {
+            return UiSystem.SetTimer(this, id, delay, interval, flags);
+        }
+
+        /// <summary>
+        /// Schedules or replaces a timer at an absolute simulation-time deadline.
+        /// </summary>
+        protected void SetTimerAt(
+            EntityTimerId id,
+            TimeSpan deadline,
+            TimeSpan? interval = null,
+            EntityTimerFlags flags = EntityTimerFlags.None)
+        {
+            UiSystem.SetTimerAt(this, id, deadline, interval, flags);
+        }
+
+        protected bool CancelTimer(EntityTimerId id)
+        {
+            return UiSystem.CancelTimer(this, id);
+        }
+
+        /// <summary>
+        /// Called when a timer scheduled by this BUI elapses.
+        /// </summary>
+        protected internal virtual void OnTimer(EntityTimerEvent timer)
+        {
+        }
+
+        /// <summary>
         /// Helper method that gets called upon prototype reload.
         /// </summary>
         public virtual void OnProtoReload(PrototypesReloadedEventArgs args)
@@ -136,6 +174,8 @@ namespace Robust.Shared.GameObjects
         {
             if (disposing)
             {
+                UiSystem.CancelTimers(this);
+
                 if (Disposals != null)
                 {
                     foreach (var control in Disposals)

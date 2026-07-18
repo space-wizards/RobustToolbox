@@ -15,10 +15,7 @@ internal sealed partial class AnimusStateAnimation : AnimusStateBase
     private static readonly AnimusActionAnimationBase NullAction = new AnimusActionAnimationNull();
 
     private AnimationPlayerSystem _animationPlayerSystem;
-    private AnimusSystem _animationStateMachineSystem;
     private AppearanceSystem _appearanceSystem;
-
-    private readonly List<(Type, string)> _animationCompProps = [];
 
     [DataField]
     internal AnimusActionAnimationBase Action = NullAction;
@@ -33,7 +30,6 @@ internal sealed partial class AnimusStateAnimation : AnimusStateBase
     {
         base.Initialize(ent, entityManager, animusInstance);
         _animationPlayerSystem = entityManager.System<AnimationPlayerSystem>();
-        _animationStateMachineSystem = entityManager.System<AnimusSystem>();
         _appearanceSystem = entityManager.System<AppearanceSystem>();
         Action.Initialize(entityManager);
     }
@@ -44,7 +40,6 @@ internal sealed partial class AnimusStateAnimation : AnimusStateBase
             !Action.TryNextAnimation(_appearanceSystem, ent, out var animation, false))
             return;
 
-        UpdateAnimationCompProps(ent, animation);
         _animationPlayerSystem.Play(ent, animation, RunningAnimationKey);
     }
 
@@ -54,7 +49,6 @@ internal sealed partial class AnimusStateAnimation : AnimusStateBase
             !Action.TryNextAnimation(_appearanceSystem, ent, out var animation, finished))
             return;
 
-        UpdateAnimationCompProps(ent, animation);
         _animationPlayerSystem.Play(ent, animation, RunningAnimationKey);
     }
 
@@ -64,11 +58,6 @@ internal sealed partial class AnimusStateAnimation : AnimusStateBase
         if (_animationPlayerSystem.HasRunningAnimation(ent, RunningAnimationKey))
             _animationPlayerSystem.Stop(ent, RunningAnimationKey);
 
-        // TODO: The stopping animation can still clash with registered component properties but to fix this
-        // a state queue would be required first.
-        // For now, we'll test and see if any glitches would even occur due to this.
-        ClearAnimationCompProps(ent);
-
         // Fetch stopping animation if it isn't running yet.
         if (_animationPlayerSystem.HasRunningAnimation(ent, StopAnimationKey) ||
             !Action.TryStopAnimation(_appearanceSystem, ent, out var animation))
@@ -76,31 +65,5 @@ internal sealed partial class AnimusStateAnimation : AnimusStateBase
 
         // Play the stopping animation.
         _animationPlayerSystem.Play(ent, animation, StopAnimationKey);
-    }
-
-    private void ClearAnimationCompProps(EntityUid ent)
-    {
-        foreach (var compProp in _animationCompProps)
-        {
-            _animationStateMachineSystem.DeregisterEntityAnimationProperty(ent,
-                compProp.Item1,
-                compProp.Item2);
-        }
-        _animationCompProps.Clear();
-    }
-
-    private void UpdateAnimationCompProps(EntityUid ent, Animation anim)
-    {
-        ClearAnimationCompProps(ent);
-        foreach (var track in anim.AnimationTracks)
-        {
-            if (track is not AnimationTrackComponentProperty { ComponentType: not null, Property: not null } propTrack)
-                continue;
-
-            _animationCompProps.Add((propTrack.ComponentType, propTrack.Property));
-            _animationStateMachineSystem.RegisterEntityAnimationProperty(ent,
-                propTrack.ComponentType,
-                propTrack.Property);
-        }
     }
 }

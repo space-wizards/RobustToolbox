@@ -21,7 +21,6 @@ public sealed partial class AnimusSystem : EntitySystem
 
     private ISawmill _sawmill = default!;
 
-    private readonly Dictionary<EntityUid, List<(Type, string)>> _actingComponentProperties = new();
     private readonly Dictionary<EntityUid, List<string>> _runningAnimations = new();
 
     public override void Initialize()
@@ -99,27 +98,6 @@ public sealed partial class AnimusSystem : EntitySystem
         {
             InitializeStateMachine(entity, animusInstance);
         }
-    }
-
-    internal void RegisterEntityAnimationProperty(EntityUid uid, Type type, string prop)
-    {
-        if (!_actingComponentProperties.ContainsKey(uid))
-            _actingComponentProperties.Add(uid, []);
-        if (_actingComponentProperties[uid]
-            .Any(x => x.Item1 == type && x.Item2 == prop))
-        {
-            _sawmill.Error($"An animation using the {prop} property on {type.Name} has already been registered for entity {uid}");
-            return;
-        }
-        _actingComponentProperties[uid].Add((type, prop));
-    }
-
-    internal void DeregisterEntityAnimationProperty(EntityUid uid, Type type, string prop)
-    {
-        if(!_actingComponentProperties.ContainsKey(uid))
-            _actingComponentProperties.Add(uid, []);
-        var tuple = _actingComponentProperties[uid].Single(x => x.Item1 == type && x.Item2 == prop);
-        _actingComponentProperties[uid].Remove(tuple);
     }
 
     /// <summary>

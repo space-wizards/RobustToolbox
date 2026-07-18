@@ -242,7 +242,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
             if (!_broadQuery.TryGetComponent(xform.Broadphase.Value.Uid, out var oldBroadphase))
             {
-                DebugTools.Assert("Encountered deleted broadphase.");
+                AssertMissingBroadphaseExpected(xform.Broadphase.Value.Uid);
                 if (_fixturesQuery.TryGetComponent(child, out var fixtures))
                 {
                     foreach (var fixture in fixtures.Fixtures.Values)
@@ -567,7 +567,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
             if (!_broadQuery.TryGetComponent(xform.Broadphase.Value.Uid, out oldBroadphase))
             {
-                DebugTools.Assert("Encountered deleted broadphase.");
+                AssertMissingBroadphaseExpected(xform.Broadphase.Value.Uid);
 
                 // broadphase was probably deleted.
                 if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
@@ -794,6 +794,16 @@ public sealed partial class EntityLookupSystem : EntitySystem
             // parented to one from another.
             DebugTools.Assert(_netMan.IsClient);
             broadUid = old.Uid;
+
+            if (!_broadQuery.TryGetComponent(broadUid, out var currentBroadphase))
+            {
+                AssertMissingBroadphaseExpected(broadUid);
+                ClearFixtureProxies(uid);
+                xform.Broadphase = null;
+                return;
+            }
+
+            broadphase = currentBroadphase;
         }
 
         if (old.CanCollide)
@@ -828,22 +838,34 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (!_broadQuery.TryGetComponent(old.Uid, out broadphase))
         {
             // broadphase was probably deleted
-            DebugTools.Assert("Encountered deleted broadphase.");
+            AssertMissingBroadphaseExpected(old.Uid);
 
-            if (_fixturesQuery.TryGetComponent(xform.Owner, out FixturesComponent? fixtures))
-            {
-                foreach (var fixture in fixtures.Fixtures.Values)
-                {
-                    fixture.ProxyCount = 0;
-                    fixture.Proxies = Array.Empty<FixtureProxy>();
-                }
-            }
-
+            ClearFixtureProxies(xform.Owner);
             xform.Broadphase = null;
             return false;
         }
 
         return true;
+    }
+
+    private void AssertMissingBroadphaseExpected(EntityUid broadphaseUid)
+    {
+        if (TerminatingOrDeleted(broadphaseUid))
+            return;
+
+        DebugTools.Assert("Encountered deleted broadphase.");
+    }
+
+    private void ClearFixtureProxies(EntityUid uid)
+    {
+        if (!_fixturesQuery.TryGetComponent(uid, out FixturesComponent? fixtures))
+            return;
+
+        foreach (var fixture in fixtures.Fixtures.Values)
+        {
+            fixture.ProxyCount = 0;
+            fixture.Proxies = Array.Empty<FixtureProxy>();
+        }
     }
 
     public BroadphaseComponent? GetCurrentBroadphase(TransformComponent xform)

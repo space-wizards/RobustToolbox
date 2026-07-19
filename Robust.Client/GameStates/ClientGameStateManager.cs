@@ -61,6 +61,7 @@ namespace Robust.Client.GameStates
         private readonly List<NetEntity> _detached = new();
         private readonly HashSet<EntityUid> _detachBatch = new();
         private readonly List<(NetEntity NetEntity, Entity<MetaDataComponent> Entity)> _detachEntities = new();
+        private readonly List<(EntityState State, EntityUid Uid, MetaDataComponent Meta)> _resolvedEntityStates = new();
 
         private readonly record struct StateData(
             EntityUid Uid,
@@ -808,6 +809,7 @@ namespace Robust.Client.GameStates
             _toApply.Clear();
             _created.Clear();
             _pendingReapplyNetStates.Clear();
+            _resolvedEntityStates.Clear();
             var curSpan = curState.EntityStates.Span;
 
             // Create new entities
@@ -818,9 +820,10 @@ namespace Robust.Client.GameStates
                 var created = 0;
                 foreach (var es in curSpan)
                 {
-                    if (_entities.TryGetEntity(es.NetEntity, out var nUid))
+                    if (_entities.TryGetEntityData(es.NetEntity, out var uid, out var meta))
                     {
-                        DebugTools.Assert(_entities.EntityExists(nUid));
+                        DebugTools.Assert(_entities.EntityExists(uid));
+                        _resolvedEntityStates.Add((es, uid.Value, meta));
                         continue;
                     }
 
@@ -833,16 +836,13 @@ namespace Robust.Client.GameStates
 
             // Add entity entities that aren't new to _toCreate.
             // In the process, we also check if these entities are re-entering PVS range.
-            foreach (var es in curSpan)
+            foreach (var (es, uid, meta) in _resolvedEntityStates)
             {
-                if (!_entities.TryGetEntityData(es.NetEntity, out var uid, out var meta))
-                    continue;
-
                 var isEnteringPvs = (meta.Flags & MetaDataFlags.Detached) != 0;
                 if (isEnteringPvs)
                 {
                     // _toApply already contains newly created entities, but these should never be "entering PVS"
-                    DebugTools.Assert(!_toApply.ContainsKey(uid.Value));
+                    DebugTools.Assert(!_toApply.ContainsKey(uid));
 
                     meta.Flags &= ~MetaDataFlags.Detached;
                     enteringPvs++;
@@ -850,16 +850,16 @@ namespace Robust.Client.GameStates
                 else if (meta.LastStateApplied >= es.EntityLastModified && meta.LastStateApplied != GameTick.Zero)
                 {
                     // _toApply already contains newly created entities, but for those this set should have no effect
-                    DebugTools.Assert(!_toApply.ContainsKey(uid.Value) || meta.LastStateApplied == curState.ToSequence);
+                    DebugTools.Assert(!_toApply.ContainsKey(uid) || meta.LastStateApplied == curState.ToSequence);
 
                     meta.LastStateApplied = curState.ToSequence;
                     continue;
                 }
 
                 // Any newly created entities already added to _toApply should've already been caught by the previous continue
-                DebugTools.Assert(!_toApply.ContainsKey(uid.Value));
+                DebugTools.Assert(!_toApply.ContainsKey(uid));
 
-                _toApply.Add(uid.Value, new(uid.Value, es.NetEntity, meta, false, isEnteringPvs, meta.LastStateApplied, es, null, null));
+                _toApply.Add(uid, new(uid, es.NetEntity, meta, false, isEnteringPvs, meta.LastStateApplied, es, null, null));
                 meta.LastStateApplied = curState.ToSequence;
             }
 

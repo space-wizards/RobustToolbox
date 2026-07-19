@@ -59,6 +59,8 @@ namespace Robust.Client.GameStates
         private readonly HashSet<EntityUid> _sorted = new();
         private readonly List<NetEntity> _created = new();
         private readonly List<NetEntity> _detached = new();
+        private readonly HashSet<EntityUid> _detachBatch = new();
+        private readonly List<(NetEntity NetEntity, Entity<MetaDataComponent> Entity)> _detachEntities = new();
 
         private readonly record struct StateData(
             EntityUid Uid,
@@ -1301,25 +1303,29 @@ namespace Robust.Client.GameStates
             ContainerSystem containerSys,
             EntityLookupSystem lookupSys)
         {
+            _detachBatch.Clear();
+            _detachEntities.Clear();
+
             foreach (var netEntity in entities)
             {
-                if (!_entities.TryGetEntityData(netEntity, out var ent, out var meta))
+                if (!TryGetDetachEntity(netEntity, maxTick, out var ent))
                     continue;
 
-                if (meta.LastStateApplied > maxTick)
-                {
-                    // Server sent a new state for this entity sometime after the detach message was sent. The
-                    // detach message probably just arrived late or was initially dropped.
-                    continue;
-                }
+                _detachBatch.Add(ent.Owner);
+                _detachEntities.Add((netEntity, ent));
+            }
 
-                if ((meta.Flags & (MetaDataFlags.Detached | MetaDataFlags.Undetachable)) != 0)
-                    continue;
+            var broadphaseRoots = 0;
+
+            foreach (var (netEntity, ent) in _detachEntities)
+            {
+                var uid = ent.Owner;
+                var metadata = ent.Comp;
 
                 if (lastStateApplied.HasValue)
-                    meta.LastStateApplied = lastStateApplied.Value;
+                    metadata.LastStateApplied = lastStateApplied.Value;
 
-                var xform = xforms.GetComponent(ent.Value);
+                var xform = xforms.GetComponent(uid);
 
                 // TODO PVS DETACH
                 // Why is this if block here again? If a null-space entity gets sent to a player via some PVS override,
@@ -1327,30 +1333,35 @@ namespace Robust.Client.GameStates
                 // I.e., modifying the metadata flag & pausing the entity should probably happen outside of this block.
                 if (xform.ParentUid.IsValid())
                 {
-                    lookupSys.RemoveFromEntityTree(ent.Value, xform);
+                    if (!HasDetachingParent(xform, xforms))
+                    {
+                        lookupSys.RemoveFromEntityTree(uid, xform);
+                        broadphaseRoots++;
+                    }
+
                     xform.Broadphase = BroadphaseData.Invalid;
 
                     // In some cursed scenarios an entity inside of a container can leave PVS without the container itself leaving PVS.
                     // In those situations, we need to add the entity back to the list of expected entities after detaching.
                     BaseContainer? container = null;
-                    if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
+                    if ((metadata.Flags & MetaDataFlags.InContainer) != 0 &&
                         metas.TryGetComponent(xform.ParentUid, out var containerMeta) &&
                         (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
-                        containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container))
+                        containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container))
                     {
-                        containerSys.Remove((ent.Value, xform, meta), container, false, true);
+                        containerSys.Remove((uid, xform, metadata), container, false, true);
                     }
 
-                    meta._flags |= MetaDataFlags.Detached;
-                    xformSys.DetachEntity(ent.Value, xform);
-                    DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
+                    metadata._flags |= MetaDataFlags.Detached;
+                    xformSys.DetachEntity(uid, xform);
+                    DebugTools.Assert((metadata.Flags & MetaDataFlags.InContainer) == 0);
 
                     // We mark the entity as paused, without raising a pause-event.
                     // The entity gets un-paused when the metadata's comp-state is reapplied (which also does not raise
                     // an un-pause event). The assumption is that game logic that has to handle the pausing should be
                     // getting networked anyway. And if its some client-side timer on a networked entity, the timer
                     // shouldn't actually be getting paused just because the entity has left the players view.
-                    meta.PauseTime = TimeSpan.Zero;
+                    metadata.PauseTime = TimeSpan.Zero;
 
                     if (container != null)
                         containerSys.AddExpectedEntity(netEntity, container);
@@ -1358,6 +1369,50 @@ namespace Robust.Client.GameStates
 
                 _detached.Add(netEntity);
             }
+
+            _prof.WriteValue("Broadphase roots", ProfData.Int32(broadphaseRoots));
+            _prof.WriteValue("Batch", ProfData.Int32(_detachBatch.Count));
+            _detachBatch.Clear();
+            _detachEntities.Clear();
+        }
+
+        private bool TryGetDetachEntity(
+            NetEntity netEntity,
+            GameTick maxTick,
+            out Entity<MetaDataComponent> ent)
+        {
+            ent = default;
+
+            if (!_entities.TryGetEntityData(netEntity, out var uid, out var meta))
+                return false;
+
+            if (meta.LastStateApplied > maxTick)
+            {
+                // Server sent a new state for this entity sometime after the detach message was sent. The
+                // detach message probably just arrived late or was initially dropped.
+                return false;
+            }
+
+            if ((meta.Flags & (MetaDataFlags.Detached | MetaDataFlags.Undetachable)) != 0)
+                return false;
+
+            ent = (uid.Value, meta);
+            return true;
+        }
+
+        private bool HasDetachingParent(TransformComponent xform, EntityQuery<TransformComponent> xforms)
+        {
+            var parent = xform.ParentUid;
+
+            while (parent.IsValid())
+            {
+                if (_detachBatch.Contains(parent))
+                    return true;
+
+                parent = xforms.GetComponent(parent).ParentUid;
+            }
+
+            return false;
         }
 
         private void HandleEntityState(in StateData data, IEventBus bus, GameTick toTick)

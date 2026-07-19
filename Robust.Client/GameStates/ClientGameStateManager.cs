@@ -50,7 +50,7 @@ namespace Robust.Client.GameStates
         private readonly Dictionary<EntityUid, StateData> _toApply = new();
         private StateData[] _toApplySorted = default!;
         private readonly Dictionary<ushort, (IComponent Component, IComponentState? curState, IComponentState? nextState)> _compStateWork = new();
-        private readonly Dictionary<EntityUid, HashSet<Type>> _pendingReapplyNetStates = new();
+        private readonly Dictionary<EntityUid, HashSet<ushort>> _pendingReapplyNetStates = new();
         private readonly HashSet<NetEntity> _stateEnts = new();
         private readonly List<EntityUid> _toDelete = new();
         private readonly List<IComponent> _toRemove = new();
@@ -71,7 +71,7 @@ namespace Robust.Client.GameStates
             GameTick LastApplied,
             EntityState? CurState,
             EntityState? NextState,
-            HashSet<Type>? PendingReapply);
+            HashSet<ushort>? PendingReapply);
 
         private readonly ObjectPool<Dictionary<ushort, IComponentState?>> _compDataPool =
             new DefaultObjectPool<Dictionary<ushort, IComponentState?>>(new DictPolicy<ushort, IComponentState?>(), 256);
@@ -1061,8 +1061,12 @@ namespace Robust.Client.GameStates
 
             foreach (var (type, owner) in value)
             {
+                var netId = _compFactory.GetRegistration(type).NetID;
+                if (netId == null)
+                    continue;
+
                 var pending = _pendingReapplyNetStates.GetOrNew(owner);
-                pending.Add(type);
+                pending.Add(netId.Value);
             }
         }
 
@@ -1502,22 +1506,16 @@ namespace Robust.Client.GameStates
             {
                 var lastState = _processor.GetLastServerStates(data.NetEntity);
 
-                foreach (var type in reapplyTypes)
+                foreach (var netId in reapplyTypes)
                 {
-                    var compRef = _compFactory.GetRegistration(type);
-                    var netId = compRef.NetID;
-
-                    if (netId == null)
-                        continue;
-
-                    if (!data.Meta.NetComponents.TryGetValue(netId.Value, out var comp) ||
-                        !lastState.TryGetValue(netId.Value, out var lastCompState))
+                    if (!data.Meta.NetComponents.TryGetValue(netId, out var comp) ||
+                        !lastState.TryGetValue(netId, out var lastCompState))
                     {
                         continue;
                     }
 
                     ref var compState =
-                        ref CollectionsMarshal.GetValueRefOrAddDefault(_compStateWork, netId.Value, out var exists);
+                        ref CollectionsMarshal.GetValueRefOrAddDefault(_compStateWork, netId, out var exists);
 
                     if (exists)
                         continue;

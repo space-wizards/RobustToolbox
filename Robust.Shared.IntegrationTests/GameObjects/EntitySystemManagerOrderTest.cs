@@ -85,8 +85,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             deps.RegisterInstance<IModLoader>(new Mock<IModLoader>().Object);
             deps.Register<IEntitySystemManager, EntitySystemManager>();
-            var timerManager = new Mock<IEntityTimerManager>();
-            deps.RegisterInstance<IEntityTimerManager>(timerManager.Object);
             // WHEN WILL THE SUFFERING END
             deps.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
 
@@ -119,10 +117,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
             systems.Initialize();
 
             var counter = new Counter();
-            timerManager
-                .Setup(manager => manager.UpdateTimers(false))
-                .Callback(() => Assert.That(counter.X, Is.Zero));
-
             systems.GetEntitySystem<TestSystemA>().Counter = counter;
             systems.GetEntitySystem<TestSystemB>().Counter = counter;
             systems.GetEntitySystem<TestSystemC>().Counter = counter;
@@ -131,9 +125,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
             systems.TickUpdate(1, noPredictions: false);
 
             Assert.That(counter.X, Is.EqualTo(4));
-            timerManager.Verify(manager => manager.Initialize(), Times.Once);
-            timerManager.Verify(manager => manager.UpdateTimers(false), Times.Once);
-
             Assert.That(systems.GetEntitySystem<TestSystemA>().LastUpdate, Is.EqualTo(0));
             Assert.That(systems.GetEntitySystem<TestSystemB>().LastUpdate, Is.EqualTo(3));
             Assert.That(systems.GetEntitySystem<TestSystemC>().LastUpdate, Is.EqualTo(2));

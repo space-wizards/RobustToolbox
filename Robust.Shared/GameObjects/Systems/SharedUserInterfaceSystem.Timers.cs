@@ -7,7 +7,7 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedUserInterfaceSystem
 {
-    [Dependency] private IEntityTimerManager _entityTimers = default!;
+    [Dependency] private EntityTimerSystem _entityTimers = default!;
 
     private readonly Dictionary<(BoundUserInterface Bui, EntityTimerId LocalId), EntityTimerId> _boundTimerIds = new();
     private readonly Dictionary<(EntityUid Owner, EntityTimerId TimerId), BoundTimerRegistration> _boundTimers = new();
@@ -63,6 +63,15 @@ public abstract partial class SharedUserInterfaceSystem
 
         _boundTimers.Remove((bui.Owner, timerId));
         return _entityTimers.CancelTimer<UserInterfaceComponent>(bui.Owner, timerId);
+    }
+
+    internal bool TryGetTimer(BoundUserInterface bui, EntityTimerId id, out EntityTimerInfo timer)
+    {
+        if (_boundTimerIds.TryGetValue((bui, id), out var timerId))
+            return _entityTimers.TryGetTimer<UserInterfaceComponent>(bui.Owner, timerId, out timer);
+
+        timer = default;
+        return false;
     }
 
     internal void CancelTimers(BoundUserInterface bui)

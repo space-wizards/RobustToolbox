@@ -10,7 +10,7 @@ public sealed partial class SharedTimedDespawnSystem : EntitySystem
     private static readonly EntityTimerId DespawnTimer = new("timed-despawn");
 
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private IEntityTimerManager _timers = default!;
+    [Dependency] private EntityTimerSystem _timers = default!;
 
     public override void Initialize()
     {

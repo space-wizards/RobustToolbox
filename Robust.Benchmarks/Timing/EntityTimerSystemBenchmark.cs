@@ -8,11 +8,11 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.Benchmarks.Timing;
 
-public sealed class EntityTimerManagerBenchmark
+public sealed class EntityTimerSystemBenchmark
 {
     private static readonly TimeSpan FarDeadline = TimeSpan.FromHours(1);
     private readonly EntityTimerId[] _readyIds = new EntityTimerId[10];
-    private IEntityTimerManager _timers = default!;
+    private EntityTimerSystem _timers = default!;
     private Entity<BenchmarkTimerComponent> _owner;
 
     [UsedImplicitly]
@@ -29,7 +29,7 @@ public sealed class EntityTimerManagerBenchmark
             .InitializeInstance();
 
         var entities = simulation.Resolve<IEntityManager>();
-        _timers = simulation.Resolve<IEntityTimerManager>();
+        _timers = simulation.System<EntityTimerSystem>();
         var uid = entities.SpawnEntity(null, MapCoordinates.Nullspace);
         _owner = new Entity<BenchmarkTimerComponent>(uid, entities.AddComponent<BenchmarkTimerComponent>(uid));
 

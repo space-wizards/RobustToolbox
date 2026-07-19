@@ -15,7 +15,6 @@ using Robust.Server.Scripting;
 using Robust.Server.Serialization;
 using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
-using Robust.Server.Timing;
 using Robust.Server.Upload;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
@@ -52,7 +51,6 @@ namespace Robust.Server
             deps.Register<IBaseServerInternal, BaseServer>();
             deps.Register<BaseServer, BaseServer>();
             deps.Register<IGameTiming, GameTiming>();
-            deps.Register<IEntityTimerManager, ServerEntityTimerManager>();
             deps.Register<IReflectionManager, ServerReflectionManager>();
             deps.Register<IConsoleHost, ServerConsoleHost>();
             deps.Register<IServerConsoleHost, ServerConsoleHost>();

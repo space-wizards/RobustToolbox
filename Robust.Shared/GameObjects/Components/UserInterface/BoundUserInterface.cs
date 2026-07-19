@@ -113,6 +113,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
+        /// Gets runtime information for a timer owned by this BUI.
+        /// </summary>
+        protected bool TryGetTimer(EntityTimerId id, out EntityTimerInfo timer)
+        {
+            return UiSystem.TryGetTimer(this, id, out timer);
+        }
+
+        /// <summary>
         /// Called when a timer scheduled by this BUI elapses.
         /// </summary>
         protected internal virtual void OnTimer(EntityTimerEvent timer)

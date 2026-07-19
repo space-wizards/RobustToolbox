@@ -29,7 +29,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private ProfManager _profManager = default!;
         [Dependency] private IDependencyCollection _dependencyCollection = default!;
         [Dependency] private ILogManager _logManager = default!;
-        [Dependency] private IEntityTimerManager _entityTimerManager = default!;
+        private EntityTimerSystem? _entityTimerSystem;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private IRuntimeLog _runtimeLog = default!;
@@ -144,8 +144,6 @@ namespace Robust.Shared.GameObjects
             // However, EntityManager calls this directly so we'd need to remove that and manually call it.
             if (_initialized) return;
 
-            _entityTimerManager.Initialize();
-
             var excludedTypes = new HashSet<Type>();
 
             SystemDependencyCollection = new(_dependencyCollection);
@@ -221,6 +219,8 @@ namespace Robust.Shared.GameObjects
                     entitySystem.AutoSubscriptions();
                 SystemLoaded?.Invoke(this, new SystemChangedArgs(system));
             }
+
+            SystemDependencyCollection.TryResolveType(out _entityTimerSystem);
 
             // Create update order for entity systems.
             var (fUpdate, update) = CalculateUpdateOrder(_systemTypes, subTypes, SystemDependencyCollection);
@@ -323,19 +323,19 @@ namespace Robust.Shared.GameObjects
 
         public void Clear()
         {
-            _entityTimerManager.Shutdown();
             _extraLoadedTypes.Clear();
             _systemTypes.Clear();
             _updateOrder = Array.Empty<UpdateReg>();
             _frameUpdateOrder = Array.Empty<FrameUpdateReg>();
             _initialized = false;
+            _entityTimerSystem = null;
             SystemDependencyCollection?.Clear();
         }
 
         /// <inheritdoc />
         public void TickUpdate(float frameTime, bool noPredictions)
         {
-            _entityTimerManager.UpdateTimers(noPredictions);
+            _entityTimerSystem?.UpdateTimers(noPredictions);
 
             foreach (var updReg in _updateOrder)
             {

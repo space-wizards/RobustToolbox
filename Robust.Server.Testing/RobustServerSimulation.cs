@@ -254,7 +254,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IPrototypeManager, ServerPrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
-            container.Register<IEntityTimerManager, ServerEntityTimerManager>();
             container.Register<IManifoldManager, CollisionManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
@@ -334,6 +333,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
+            entitySystemMan.LoadExtraSystemType<ServerEntityTimerSystem>();
             entitySystemMan.LoadExtraSystemType<PvsSystem>();
             entitySystemMan.LoadExtraSystemType<InputSystem>();
             entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();

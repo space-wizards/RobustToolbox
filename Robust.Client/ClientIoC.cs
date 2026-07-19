@@ -25,7 +25,6 @@ using Robust.Client.Replays.Playback;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Serialization;
 using Robust.Client.State;
-using Robust.Client.Timing;
 using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
@@ -64,7 +63,6 @@ namespace Robust.Client
 
             deps.Register<IGameTiming, ClientGameTiming>();
             deps.Register<IClientGameTiming, ClientGameTiming>();
-            deps.Register<IEntityTimerManager, ClientEntityTimerManager>();
             deps.Register<IPrototypeManager, ClientPrototypeManager>();
             deps.Register<IPrototypeManagerInternal, ClientPrototypeManager>();
             deps.Register<IEntityManager, ClientEntityManager>();

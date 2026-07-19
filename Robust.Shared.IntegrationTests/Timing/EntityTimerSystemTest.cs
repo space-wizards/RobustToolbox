@@ -11,8 +11,8 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Timing;
 
-[TestFixture, NonParallelizable, TestOf(typeof(IEntityTimerManager))]
-internal sealed partial class EntityTimerManagerTest
+[TestFixture, NonParallelizable, TestOf(typeof(EntityTimerSystem))]
+internal sealed partial class EntityTimerSystemTest
 {
     private static readonly EntityTimerId FirstId = new("first");
     private static readonly EntityTimerId SecondId = new("second");
@@ -38,12 +38,15 @@ internal sealed partial class EntityTimerManagerTest
         {
             Assert.That(simulation.Timers.TryGetTimer<TimerAComponent>(uid, FirstId, out var timer), Is.True);
             Assert.That(timer.Deadline, Is.EqualTo(deadline));
+            Assert.That(timer.Remaining, Is.EqualTo(deadline));
             Assert.That(simulation.Timers.TryGetTimer<TimerBComponent>(uid, SharedId, out _), Is.True);
             Assert.That(simulation.Timers.CancelTimer<TimerAComponent>(uid, SecondId), Is.True);
             Assert.That(simulation.Timers.CancelTimer<TimerAComponent>(uid, SecondId), Is.False);
         });
 
         simulation.Now = TimeSpan.FromSeconds(5);
+        Assert.That(simulation.Timers.TryGetTimer<TimerAComponent>(uid, FirstId, out var halfway), Is.True);
+        Assert.That(halfway.Remaining, Is.EqualTo(TimeSpan.FromSeconds(5)));
         simulation.Update();
         Assert.That(simulation.System.Events, Is.Empty);
 
@@ -127,9 +130,15 @@ internal sealed partial class EntityTimerManagerTest
 
         simulation.MetaData.SetEntityPaused(uid, true);
         Assert.That(simulation.Timers.TryGetTimer<TimerAComponent>(uid, FirstId, out var suspended), Is.True);
-        Assert.That(suspended.Suspended, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(suspended.Suspended, Is.True);
+            Assert.That(suspended.Remaining, Is.EqualTo(TimeSpan.FromSeconds(5)));
+        });
 
         simulation.Now = TimeSpan.FromSeconds(10);
+        Assert.That(simulation.Timers.TryGetTimer<TimerAComponent>(uid, FirstId, out suspended), Is.True);
+        Assert.That(suspended.Remaining, Is.EqualTo(TimeSpan.FromSeconds(5)));
         simulation.Update();
         Assert.That(simulation.System.Events, Is.EqualTo(new[]
         {
@@ -142,11 +151,38 @@ internal sealed partial class EntityTimerManagerTest
         {
             Assert.That(resumed.Suspended, Is.False);
             Assert.That(resumed.Deadline, Is.EqualTo(TimeSpan.FromSeconds(15)));
+            Assert.That(resumed.Remaining, Is.EqualTo(TimeSpan.FromSeconds(5)));
         });
 
         simulation.Now = TimeSpan.FromSeconds(15);
         simulation.Update();
         Assert.That(simulation.System.Events[^1], Is.EqualTo(new FiredTimer("A", FirstId, 1, null)));
+    }
+
+    [Test]
+    public void RemainingIsClampedAndRepeatingTimerReportsNextOccurrence()
+    {
+        var simulation = new TimerSimulation();
+        var (uid, first, _) = simulation.SpawnOwner();
+        simulation.Timers.SetTimerAt<TimerAComponent>(
+            (uid, first),
+            RepeatId,
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(5));
+
+        simulation.Now = TimeSpan.FromSeconds(17);
+        Assert.That(simulation.Timers.TryGetTimer<TimerAComponent>(uid, RepeatId, out var overdue), Is.True);
+        Assert.That(overdue.Remaining, Is.EqualTo(TimeSpan.Zero));
+
+        simulation.Update();
+
+        Assert.That(simulation.Timers.TryGetTimer<TimerAComponent>(uid, RepeatId, out var repeated), Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(repeated.Deadline, Is.EqualTo(TimeSpan.FromSeconds(20)));
+            Assert.That(repeated.Remaining, Is.EqualTo(TimeSpan.FromSeconds(3)));
+            Assert.That(repeated.Interval, Is.EqualTo(TimeSpan.FromSeconds(5)));
+        });
     }
 
     [Test]
@@ -208,7 +244,7 @@ internal sealed partial class EntityTimerManagerTest
     {
         public readonly ISimulation Simulation;
         public readonly IEntityManager Entities;
-        public readonly IEntityTimerManager Timers;
+        public readonly EntityTimerSystem Timers;
         public readonly MetaDataSystem MetaData;
         public readonly TimerTestSystem System;
         public TimeSpan Now;
@@ -233,7 +269,7 @@ internal sealed partial class EntityTimerManagerTest
                 .InitializeInstance();
 
             Entities = Simulation.Resolve<IEntityManager>();
-            Timers = Simulation.Resolve<IEntityTimerManager>();
+            Timers = Simulation.System<EntityTimerSystem>();
             MetaData = Entities.System<MetaDataSystem>();
             System = Entities.System<TimerTestSystem>();
         }
@@ -255,7 +291,7 @@ internal sealed partial class EntityTimerManagerTest
     [Reflect(false)]
     private sealed partial class TimerTestSystem : EntitySystem
     {
-        [Dependency] private IEntityTimerManager _timers = default!;
+        [Dependency] private EntityTimerSystem _timers = default!;
 
         public readonly List<FiredTimer> Events = new();
         public EntityTimerId? CancelOnFire;

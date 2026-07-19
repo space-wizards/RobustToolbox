@@ -9,11 +9,15 @@ using Robust.Shared.IoC;
 namespace Robust.Shared.Timing;
 
 /// <summary>
-/// Shared implementation for the client and server entity timer managers.
+/// Maintains a runtime index of timers owned by components on entities.
 /// </summary>
-internal abstract partial class EntityTimerManager : IEntityTimerManager
+/// <remarks>
+/// This system does not serialize timer state. Components that need persistence or prediction rollback must retain
+/// their deadline and call <see cref="SetTimerAt{TComponent}"/> after initialization, loading, or state application.
+/// All methods must be called from the main simulation thread.
+/// </remarks>
+public abstract partial class EntityTimerSystem : EntitySystem
 {
-    [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IGameTiming _timing = default!;
 #if EXCEPTION_TOLERANCE
     [Dependency] private IRuntimeLog _runtimeLog = default!;
@@ -26,33 +30,31 @@ internal abstract partial class EntityTimerManager : IEntityTimerManager
 
     private ulong _nextGeneration;
     private ulong _nextSequence;
-    private bool _initialized;
     private bool _updating;
 
-    public void Initialize()
+    public override void Initialize()
     {
-        if (_initialized)
-            return;
-
-        _entityManager.ComponentRemoved += OnComponentRemoved;
-        _entityManager.EntityDeleted += OnEntityDeleted;
-        _entityManager.BeforeEntityFlush += OnBeforeEntityFlush;
-        _entityManager.EventBus.SubscribeLocalEvent<MetaDataComponent, EntityPausedEvent>(OnEntityPaused);
-        _entityManager.EventBus.SubscribeLocalEvent<MetaDataComponent, EntityUnpausedEvent>(OnEntityUnpaused);
-        _initialized = true;
+        base.Initialize();
+        EntityManager.ComponentRemoved += OnComponentRemoved;
+        EntityManager.EntityDeleted += OnEntityDeleted;
+        EntityManager.BeforeEntityFlush += OnBeforeEntityFlush;
+        SubscribeLocalEvent<MetaDataComponent, EntityPausedEvent>(OnEntityPaused);
+        SubscribeLocalEvent<MetaDataComponent, EntityUnpausedEvent>(OnEntityUnpaused);
     }
 
-    public void Shutdown()
+    public override void Shutdown()
     {
-        if (!_initialized)
-            return;
-
-        _entityManager.ComponentRemoved -= OnComponentRemoved;
-        _entityManager.EntityDeleted -= OnEntityDeleted;
-        _entityManager.BeforeEntityFlush -= OnBeforeEntityFlush;
+        EntityManager.ComponentRemoved -= OnComponentRemoved;
+        EntityManager.EntityDeleted -= OnEntityDeleted;
+        EntityManager.BeforeEntityFlush -= OnBeforeEntityFlush;
         Clear();
-        _initialized = false;
+        base.Shutdown();
     }
+
+    /// <summary>
+    /// Schedule or replace a timer relative to the current simulation time.
+    /// </summary>
+    /// <returns>The absolute simulation-time deadline.</returns>
 
     public TimeSpan SetTimer<TComponent>(
         Entity<TComponent> owner,
@@ -93,7 +95,7 @@ internal abstract partial class EntityTimerManager : IEntityTimerManager
             data.NotBeforeTick = NextTick(_timing.CurTick);
 
         if ((flags & EntityTimerFlags.IgnoreEntityPause) == 0 &&
-            _entityManager.TryGetComponent(owner.Owner, out MetaDataComponent? metadata) &&
+            EntityManager.TryGetComponent(owner.Owner, out MetaDataComponent? metadata) &&
             metadata.EntityPaused)
         {
             data.Suspended = true;
@@ -170,7 +172,10 @@ internal abstract partial class EntityTimerManager : IEntityTimerManager
             return false;
         }
 
-        timer = new EntityTimerInfo(data.Deadline, data.Interval, data.Suspended);
+        var remaining = data.Suspended
+            ? data.Remaining
+            : Max(data.Deadline - _timing.CurTime, TimeSpan.Zero);
+        timer = new EntityTimerInfo(data.Deadline, remaining, data.Interval, data.Suspended);
         return true;
     }
 
@@ -197,7 +202,10 @@ internal abstract partial class EntityTimerManager : IEntityTimerManager
     /// <summary>
     /// Select which queues should be processed for this platform and tick.
     /// </summary>
-    protected abstract (bool Predicted, bool OutsidePrediction) GetQueuesToProcess(bool noPredictions);
+    protected virtual (bool Predicted, bool OutsidePrediction) GetQueuesToProcess(bool noPredictions)
+    {
+        return (true, true);
+    }
 
     private void ProcessQueues(bool processPredicted, bool processOutsidePrediction)
     {
@@ -294,7 +302,7 @@ internal abstract partial class EntityTimerManager : IEntityTimerManager
             RemoveTimer(data.Key);
         }
 
-        if (!_entityManager.TryGetComponent(data.Key.Owner, data.Key.Component, out var component))
+        if (!EntityManager.TryGetComponent(data.Key.Owner, data.Key.Component, out var component))
         {
             RemoveTimer(data.Key);
             return;
@@ -311,7 +319,7 @@ internal abstract partial class EntityTimerManager : IEntityTimerManager
         try
         {
 #endif
-            _entityManager.EventBus.RaiseComponentEvent(data.Key.Owner, component, data.Key.Component, ref ev);
+            EntityManager.EventBus.RaiseComponentEvent(data.Key.Owner, component, data.Key.Component, ref ev);
 #if EXCEPTION_TOLERANCE
         }
         catch (Exception e)
@@ -429,7 +437,7 @@ internal abstract partial class EntityTimerManager : IEntityTimerManager
     {
         if (owner.Comp is null ||
             owner.Comp.Deleted ||
-            !_entityManager.TryGetComponent(owner.Owner, out TComponent? current) ||
+            !EntityManager.TryGetComponent(owner.Owner, out TComponent? current) ||
             !ReferenceEquals(owner.Comp, current))
         {
             throw new ArgumentException("The entity timer owner is not a live component.", nameof(owner));

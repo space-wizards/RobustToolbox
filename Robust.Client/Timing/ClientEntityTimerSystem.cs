@@ -3,7 +3,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Timing;
 
-internal sealed partial class ClientEntityTimerManager : EntityTimerManager
+internal sealed partial class ClientEntityTimerSystem : EntityTimerSystem
 {
     [Dependency] private IClientGameTiming _clientTiming = default!;
 

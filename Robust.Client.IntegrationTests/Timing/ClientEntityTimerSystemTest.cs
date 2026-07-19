@@ -9,8 +9,8 @@ using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Client.Timing;
 
-[TestFixture, NonParallelizable, TestOf(typeof(IEntityTimerManager))]
-internal sealed class ClientEntityTimerManagerTest : RobustUnitTest
+[TestFixture, NonParallelizable, TestOf(typeof(EntityTimerSystem))]
+internal sealed class ClientEntityTimerSystemTest : RobustUnitTest
 {
     protected override Type[]? ExtraComponents => [typeof(ClientTimerComponent)];
     protected override Type[]? ExtraSystems => [typeof(ClientTimerTestSystem)];
@@ -21,7 +21,7 @@ internal sealed class ClientEntityTimerManagerTest : RobustUnitTest
     public void PredictionQueuesAndStateApplication()
     {
         var entities = IoCManager.Resolve<IEntityManager>();
-        var timers = IoCManager.Resolve<IEntityTimerManager>();
+        var timers = entities.System<EntityTimerSystem>();
         var timing = IoCManager.Resolve<IClientGameTiming>();
         var system = entities.System<ClientTimerTestSystem>();
         var uid = entities.SpawnEntity(null, MapCoordinates.Nullspace);

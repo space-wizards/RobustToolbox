@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
@@ -7,48 +7,53 @@ namespace Robust.Shared.Spawners;
 
 public abstract partial class SharedTimedDespawnSystem : EntitySystem
 {
-    [Dependency] private IGameTiming _timing = default!;
+    private static readonly EntityTimerId DespawnTimer = new("timed-despawn");
 
-    private readonly HashSet<EntityUid> _queuedDespawnEntities = new();
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IEntityTimerManager _timers = default!;
 
     public override void Initialize()
     {
         base.Initialize();
         UpdatesOutsidePrediction = true;
+
+        SubscribeLocalEvent<TimedDespawnComponent, ComponentInit>(OnComponentInit);
+        SubscribeLocalEvent<TimedDespawnComponent, EntityTimerEvent>(OnTimer);
     }
 
-    public override void Update(float frameTime)
+    private void OnComponentInit(Entity<TimedDespawnComponent> ent, ref ComponentInit args)
     {
-        base.Update(frameTime);
+        ent.Comp.Deadline ??= _timing.CurTime + TimeSpan.FromSeconds(ent.Comp.Lifetime);
+        Schedule(ent);
+    }
 
-        // AAAAAAAAAAAAAAAAAAAAAAAAAAA
-        // Client both needs to predict this, but also can't properly handle prediction resetting.
-        if (!_timing.IsFirstTimePredicted)
+    private void OnTimer(Entity<TimedDespawnComponent> ent, ref EntityTimerEvent args)
+    {
+        if (args.Id != DespawnTimer)
             return;
 
-        _queuedDespawnEntities.Clear();
-
-        var query = EntityQueryEnumerator<TimedDespawnComponent>();
-
-        while (query.MoveNext(out var uid, out var comp))
+        // Client-side deletion must not occur during past prediction. Keep the timer armed so it can retry.
+        if (!_timing.IsFirstTimePredicted)
         {
-            comp.Lifetime -= frameTime;
-
-            if (!CanDelete(uid))
-                continue;
-
-            if (comp.Lifetime <= 0)
-            {
-                _queuedDespawnEntities.Add(uid);
-            }
+            Schedule(ent);
+            return;
         }
 
-        foreach (var queued in _queuedDespawnEntities)
-        {
-            var ev = new TimedDespawnEvent();
-            RaiseLocalEvent(queued, ref ev);
-            QueueDel(queued);
-        }
+        if (!CanDelete(ent))
+            return;
+
+        var ev = new TimedDespawnEvent();
+        RaiseLocalEvent(ent, ref ev);
+        QueueDel(ent);
+    }
+
+    private void Schedule(Entity<TimedDespawnComponent> ent)
+    {
+        _timers.SetTimerAt(
+            ent,
+            DespawnTimer,
+            ent.Comp.Deadline ?? _timing.CurTime,
+            flags: EntityTimerFlags.UpdatesOutsidePrediction);
     }
 
     protected abstract bool CanDelete(EntityUid uid);

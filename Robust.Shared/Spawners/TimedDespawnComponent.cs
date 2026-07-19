@@ -1,5 +1,8 @@
+using System;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Robust.Shared.Spawners;
 
@@ -10,6 +13,7 @@ namespace Robust.Shared.Spawners;
 /// NOT networked as we don't want clients predicting networked entity deletions.
 /// </remarks>
 [RegisterComponent]
+[AutoGenerateComponentPause]
 public sealed partial class TimedDespawnComponent : Component
 {
     /// <summary>
@@ -17,4 +21,10 @@ public sealed partial class TimedDespawnComponent : Component
     /// </summary>
     [DataField("lifetime")]
     public float Lifetime = 5f;
+
+    /// <summary>
+    /// Absolute simulation time at which this entity should be deleted.
+    /// </summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan? Deadline;
 }

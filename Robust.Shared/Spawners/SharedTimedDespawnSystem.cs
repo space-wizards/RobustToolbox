@@ -5,7 +5,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Spawners;
 
-public abstract partial class SharedTimedDespawnSystem : EntitySystem
+public sealed partial class SharedTimedDespawnSystem : EntitySystem
 {
     private static readonly EntityTimerId DespawnTimer = new("timed-despawn");
 
@@ -18,12 +18,18 @@ public abstract partial class SharedTimedDespawnSystem : EntitySystem
         UpdatesOutsidePrediction = true;
 
         SubscribeLocalEvent<TimedDespawnComponent, ComponentInit>(OnComponentInit);
+        SubscribeLocalEvent<TimedDespawnComponent, AfterAutoHandleStateEvent>(OnAfterHandleState);
         SubscribeLocalEvent<TimedDespawnComponent, EntityTimerEvent>(OnTimer);
     }
 
     private void OnComponentInit(Entity<TimedDespawnComponent> ent, ref ComponentInit args)
     {
         ent.Comp.Deadline ??= _timing.CurTime + TimeSpan.FromSeconds(ent.Comp.Lifetime);
+        Schedule(ent);
+    }
+
+    private void OnAfterHandleState(Entity<TimedDespawnComponent> ent, ref AfterAutoHandleStateEvent args)
+    {
         Schedule(ent);
     }
 
@@ -39,12 +45,9 @@ public abstract partial class SharedTimedDespawnSystem : EntitySystem
             return;
         }
 
-        if (!CanDelete(ent))
-            return;
-
         var ev = new TimedDespawnEvent();
         RaiseLocalEvent(ent, ref ev);
-        QueueDel(ent);
+        PredictedDel(ent.Owner);
     }
 
     private void Schedule(Entity<TimedDespawnComponent> ent)
@@ -55,6 +58,4 @@ public abstract partial class SharedTimedDespawnSystem : EntitySystem
             ent.Comp.Deadline ?? _timing.CurTime,
             flags: EntityTimerFlags.UpdatesOutsidePrediction);
     }
-
-    protected abstract bool CanDelete(EntityUid uid);
 }

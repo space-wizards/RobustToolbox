@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Microsoft.Extensions.ObjectPool;
@@ -900,11 +899,11 @@ namespace Robust.Client.GameStates
 
                 if (!_processor._lastStateFullRep.ContainsKey(meta.NetEntity))
                 {
-                    DebugTools.Assert(curState.EntityDeletions.Value.Contains(meta.NetEntity));
+                    DebugTools.Assert(curState.EntityDeletions.Span.Contains(meta.NetEntity));
                     continue;
                 }
 
-                DebugTools.Assert(!curState.EntityDeletions.Value.Contains(meta.NetEntity));
+                DebugTools.Assert(!curState.EntityDeletions.Span.Contains(meta.NetEntity));
 
                 ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_toApply, uid, out var exists);
 
@@ -1033,11 +1032,8 @@ namespace Robust.Client.GameStates
         {
             // TODO GAME STATE
             // store MetaData & Transform information separately.
-            var metaState =
-                (MetaDataComponentState?)state.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId)
-                    .State;
-
-            if (metaState == null)
+            if (!TryGetComponentChange(state, _metaCompNetId, out var metaChange) ||
+                metaChange.State is not MetaDataComponentState metaState)
                 throw new MissingMetadataException(state.NetEntity);
 
             // record the entity we created to the profiler
@@ -1121,15 +1117,28 @@ namespace Robust.Client.GameStates
         {
             // TODO GAME STATE
             // store MetaData & Transform information separately.
-            if (data.CurState != null
-                && data.CurState.ComponentChanges.Value
-                    .TryFirstOrNull(c => c.NetID == _xformCompNetId, out var found))
+            if (data.CurState != null && TryGetComponentChange(data.CurState, _xformCompNetId, out var found))
             {
-                var state = (TransformComponentState)found.Value.State!;
+                var state = (TransformComponentState)found.State!;
                 return _entities.GetEntity(state.ParentID);
             }
 
             return _entities.TransformQuery.GetComponent(uid).ParentUid;
+        }
+
+        private static bool TryGetComponentChange(EntityState entityState, uint netId, out ComponentChange change)
+        {
+            foreach (ref readonly var componentChange in entityState.ComponentChanges.Span)
+            {
+                if (componentChange.NetID != netId)
+                    continue;
+
+                change = componentChange;
+                return true;
+            }
+
+            change = default;
+            return false;
         }
 
         /// <inheritdoc />

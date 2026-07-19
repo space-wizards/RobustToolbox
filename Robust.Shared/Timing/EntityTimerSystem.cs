@@ -95,7 +95,7 @@ public abstract partial class EntityTimerSystem : EntitySystem
             data.NotBeforeTick = NextTick(_timing.CurTick);
 
         if ((flags & EntityTimerFlags.IgnoreEntityPause) == 0 &&
-            EntityManager.TryGetComponent(owner.Owner, out MetaDataComponent? metadata) &&
+            TryComp(owner.Owner, out MetaDataComponent? metadata) &&
             metadata.EntityPaused)
         {
             data.Suspended = true;
@@ -437,7 +437,7 @@ public abstract partial class EntityTimerSystem : EntitySystem
     {
         if (owner.Comp is null ||
             owner.Comp.Deleted ||
-            !EntityManager.TryGetComponent(owner.Owner, out TComponent? current) ||
+            !TryComp(owner.Owner, out TComponent? current) ||
             !ReferenceEquals(owner.Comp, current))
         {
             throw new ArgumentException("The entity timer owner is not a live component.", nameof(owner));

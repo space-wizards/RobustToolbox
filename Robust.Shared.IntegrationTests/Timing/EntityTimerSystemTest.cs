@@ -240,6 +240,19 @@ internal sealed partial class EntityTimerSystemTest
         }));
     }
 
+    [Test]
+    public void EntitySystemManagerDispatchesTimersBeforeSystemUpdates()
+    {
+        var simulation = new TimerSimulation();
+        var (uid, first, _) = simulation.SpawnOwner();
+        simulation.System.CheckTimerBeforeUpdate = FirstId;
+        simulation.Timers.SetTimer<TimerAComponent>((uid, first), FirstId, TimeSpan.Zero);
+
+        simulation.Entities.TickUpdate(0f, noPredictions: false);
+
+        Assert.That(simulation.System.TimerWasDispatchedBeforeUpdate, Is.True);
+    }
+
     private sealed class TimerSimulation
     {
         public readonly ISimulation Simulation;
@@ -296,11 +309,19 @@ internal sealed partial class EntityTimerSystemTest
         public readonly List<FiredTimer> Events = new();
         public EntityTimerId? CancelOnFire;
         public EntityTimerId? ScheduleChildOnFire;
+        public EntityTimerId? CheckTimerBeforeUpdate;
+        public bool TimerWasDispatchedBeforeUpdate;
 
         public override void Initialize()
         {
             SubscribeLocalEvent<TimerAComponent, EntityTimerEvent>(OnTimerA);
             SubscribeLocalEvent<TimerBComponent, EntityTimerEvent>(OnTimerB);
+        }
+
+        public override void Update(float frameTime)
+        {
+            if (CheckTimerBeforeUpdate is { } id)
+                TimerWasDispatchedBeforeUpdate = Events.Exists(timer => timer.Id == id);
         }
 
         private void OnTimerA(EntityUid uid, TimerAComponent component, ref EntityTimerEvent args)

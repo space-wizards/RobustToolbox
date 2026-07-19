@@ -13,7 +13,7 @@ namespace Robust.UnitTesting.Client.Timing;
 internal sealed class ClientEntityTimerSystemTest : RobustUnitTest
 {
     protected override Type[]? ExtraComponents => [typeof(ClientTimerComponent)];
-    protected override Type[]? ExtraSystems => [typeof(ClientTimerTestSystem)];
+    protected override Type[]? ExtraSystems => [typeof(ClientEntityTimerSystem), typeof(ClientTimerTestSystem)];
 
     public override UnitTestProject Project => UnitTestProject.Client;
 

@@ -29,7 +29,7 @@ public sealed class EntityTimerSystemBenchmark
             .InitializeInstance();
 
         var entities = simulation.Resolve<IEntityManager>();
-        _timers = simulation.System<EntityTimerSystem>();
+        _timers = entities.System<EntityTimerSystem>();
         var uid = entities.SpawnEntity(null, MapCoordinates.Nullspace);
         _owner = new Entity<BenchmarkTimerComponent>(uid, entities.AddComponent<BenchmarkTimerComponent>(uid));
 

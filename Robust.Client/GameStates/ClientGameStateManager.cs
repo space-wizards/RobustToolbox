@@ -50,6 +50,7 @@ namespace Robust.Client.GameStates
         private StateData[] _toApplySorted = default!;
         private readonly Dictionary<ushort, (IComponent Component, IComponentState? curState, IComponentState? nextState)> _compStateWork = new();
         private readonly Dictionary<EntityUid, HashSet<Type>> _pendingReapplyNetStates = new();
+        private readonly Dictionary<NetEntity, HashSet<ushort>> _detachedDirtyComponents = new();
         private readonly HashSet<NetEntity> _stateEnts = new();
         private readonly List<EntityUid> _toDelete = new();
         private readonly List<IComponent> _toRemove = new();
@@ -78,6 +79,7 @@ namespace Robust.Client.GameStates
 
         private uint _metaCompNetId;
         private uint _xformCompNetId;
+        private uint _containerCompNetId;
 
         [Dependency] private IReplayRecordingManager _replayRecording = default!;
         [Dependency] private IComponentFactory _compFactory = default!;
@@ -193,6 +195,12 @@ namespace Robust.Client.GameStates
                 throw new InvalidOperationException("TransformComponent does not have a NetId.");
 
             _xformCompNetId = xformId.Value;
+
+            var containerId = _compFactory.GetRegistration(typeof(ContainerManagerComponent)).NetID;
+            if (!containerId.HasValue)
+                throw new InvalidOperationException("ContainerManagerComponent does not have a NetId.");
+
+            _containerCompNetId = containerId.Value;
         }
 
         private void OnComponentAdded(AddedComponentEventArgs args)
@@ -218,6 +226,7 @@ namespace Robust.Client.GameStates
         public void Reset()
         {
             _processor.Reset();
+            _detachedDirtyComponents.Clear();
             _timing.CurTick = GameTick.Zero;
             _timing.LastRealTick = GameTick.Zero;
             _lastProcessedInput = 0;
@@ -643,7 +652,13 @@ namespace Robust.Client.GameStates
                         if (_sawmill.Level <= LogLevel.Debug)
                             _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
 
-                        if ((meta.Flags & MetaDataFlags.Detached) == 0 && compState != null)
+                        // If we dirty a component outside of PVS range (god forbid) then we need to ensure
+                        // it gets states re-run for these components if it comes back into PVS range.
+                        if ((meta.Flags & MetaDataFlags.Detached) != 0)
+                        {
+                            _detachedDirtyComponents.GetOrNew(meta.NetEntity).Add(netId);
+                        }
+                        else if (compState != null)
                         {
                             var handleState = new ComponentHandleState(compState, null);
                             _entities.EventBus.RaiseComponentEvent(entity, comp, ref handleState);
@@ -1157,6 +1172,7 @@ namespace Robust.Client.GameStates
             }
 
             _sawmill.Info($"Resetting all entity states to tick {state.ToSequence}.");
+            _detachedDirtyComponents.Clear();
 
             // Construct hashset for set.Contains() checks.
             _stateEnts.Clear();
@@ -1241,6 +1257,7 @@ namespace Robust.Client.GameStates
             {
                 // Don't worry about this for later.
                 _entities.PendingNetEntityStates.Remove(netEntity);
+                _detachedDirtyComponents.Remove(netEntity);
 
                 if (!_entities.TryGetEntity(netEntity, out var id))
                     continue;
@@ -1450,19 +1467,45 @@ namespace Robust.Client.GameStates
             if (data.EnteringPvs)
             {
                 // last-server state has already been updated with new information from curState
-                // --> simply reset to the most recent server state.
+                // --> simply reset required structural components and any components dirtied during prediction while
+                // detached to the most recent server state.
                 //
                 // as to why we need to reset: because in the process of detaching to null-space, we will have dirtied
                 // the entity. most notably, all entities will have been ejected from their containers.
-                foreach (var (id, state) in _processor.GetLastServerStates(data.NetEntity))
+                var lastState = _processor.GetLastServerStates(data.NetEntity);
+                var netComponents = data.Meta.NetComponents;
+                var uid = data.Uid;
+                var meta = data.Meta;
+
+                void AddCompState(ushort id)
                 {
-                    if (!data.Meta.NetComponents.TryGetValue(id, out var comp))
+                    if (!lastState.TryGetValue(id, out var state))
+                        return;
+
+                    if (!netComponents.TryGetValue(id, out var comp))
                     {
                         comp = _compFactory.GetComponent(id);
-                        _entities.AddComponent(data.Uid, comp, true, metadata: data.Meta);
+                        _entities.AddComponent(uid, comp, true, metadata: meta);
                     }
 
                     _compStateWork[id] = (comp, state, null);
+                }
+
+                AddCompState((ushort) _metaCompNetId);
+                AddCompState((ushort) _xformCompNetId);
+                AddCompState((ushort) _containerCompNetId);
+
+                if (_detachedDirtyComponents.Remove(data.NetEntity, out var dirtyComponents))
+                {
+                    foreach (var netId in dirtyComponents)
+                    {
+                        AddCompState(netId);
+                    }
+                }
+
+                foreach (var compChange in data.CurState!.ComponentChanges.Span)
+                {
+                    AddCompState(compChange.NetID);
                 }
             }
             else if (data.CurState != null)

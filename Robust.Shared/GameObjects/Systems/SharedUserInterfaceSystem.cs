@@ -48,7 +48,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Defer BUIs during state handling so client doesn't spam a BUI constantly during prediction.
     /// </summary>
-    private readonly List<(BoundUserInterface bui, QueuedUpdate updateType)> _queuedBuis = new();
+    private readonly List<(BoundUserInterface bui, QueuedUpdate updateType, BoundUserInterfaceState? state)> _queuedBuis = new();
 
     public override void Initialize()
     {
@@ -91,9 +91,9 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentShutdown>(OnActorShutdown);
     }
 
-    private void AddQueued(BoundUserInterface bui, QueuedUpdate type)
+    private void AddQueued(BoundUserInterface bui, QueuedUpdate type, BoundUserInterfaceState? state = null)
     {
-        _queuedBuis.Add((bui, type));
+        _queuedBuis.Add((bui, type, state));
     }
 
     /// <summary>
@@ -312,7 +312,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             DebugTools.Assert(!ent.Comp.Actors.ContainsKey(key));
         }
 
-        DebugTools.Assert(ent.Comp.ClientOpenInterfaces.Values.All(x => _queuedBuis.Contains((x, QueuedUpdate.Close))));
+        DebugTools.Assert(ent.Comp.ClientOpenInterfaces.Values.All(x => _queuedBuis.Contains((x, QueuedUpdate.Close, null))));
     }
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
@@ -500,7 +500,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                 if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui) || !cBui.IsOpened)
                     continue;
 
-                AddQueued(cBui, QueuedUpdate.ApplyState);
+                AddQueued(cBui, QueuedUpdate.ApplyState, buiState);
             }
         }
 
@@ -528,7 +528,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // Existing BUI just keep it.
         if (entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var existing))
         {
-            _queuedBuis.Remove((existing, QueuedUpdate.Close));
+            _queuedBuis.Remove((existing, QueuedUpdate.Close, null));
             return;
         }
 
@@ -1110,28 +1110,19 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     {
         if (_timing.IsFirstTimePredicted)
         {
-            foreach (var (bui, updateType) in _queuedBuis)
+            foreach (var (bui, updateType, state) in _queuedBuis)
             {
-                if (updateType == QueuedUpdate.Open || updateType == QueuedUpdate.ApplyState)
+                switch (updateType)
                 {
+                    case QueuedUpdate.Open:
 #if EXCEPTION_TOLERANCE
                     try
                     {
 #endif
-                    if (updateType == QueuedUpdate.Open)
-                    {
-                        bui.Open();
-                    }
-
-                    if (UIQuery.TryComp(bui.Owner, out var uiComp))
-                    {
-                        if (uiComp.States.TryGetValue(bui.UiKey, out var buiState))
+                        if (updateType == QueuedUpdate.Open)
                         {
-                            bui.State = buiState;
-                            bui.UpdateState(buiState);
-                            bui.Update();
+                            bui.Open();
                         }
-                    }
 #if EXCEPTION_TOLERANCE
                     }
                     catch (Exception e)
@@ -1140,10 +1131,28 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                             $"Caught exception while attempting to create a BUI {bui.UiKey} with type {bui.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
                     }
 #endif
-                }
-                // Close BUI
-                else
-                {
+                    break;
+                    case QueuedUpdate.ApplyState:
+                    if (state == null)
+                        break;
+#if EXCEPTION_TOLERANCE
+                    try
+                    {
+#endif
+                        bui.State = state;
+                        bui.Update();
+                        bui.UpdateState(state);
+#if EXCEPTION_TOLERANCE
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(
+                            $"Caught exception while attempting to create a BUI {bui.UiKey} with type {bui.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
+                    }
+#endif
+                    break;
+                    case QueuedUpdate.Close:
+                    default:
                     if (UIQuery.TryComp(bui.Owner, out var uiComp))
                     {
                         uiComp.ClientOpenInterfaces.Remove(bui.UiKey);
@@ -1167,6 +1176,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                             $"Caught exception while attempting to dispose of a BUI {bui.UiKey} with type {bui.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
                     }
 #endif
+                    break;
                 }
             }
 

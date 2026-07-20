@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -13,6 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 /// <summary>
 /// A highly complex serializer that allows you to serialize a list with complex objects
 /// as if it were an organized dictionary.
+/// Should be used on a Datafield with the <see cref="AlwaysPushInheritanceAttribute"/>
 /// </summary>
 /// <typeparam name="T">An object which implements <see cref="IOrganizeableCollection{T}"/></typeparam>
 public sealed class OrganizedListSerializer<T> : ITypeSerializer<List<T>, SequenceDataNode> where T : IOrganizeableCollection<T>

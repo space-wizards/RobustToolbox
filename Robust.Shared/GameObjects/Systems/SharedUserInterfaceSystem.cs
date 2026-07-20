@@ -1119,10 +1119,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                     try
                     {
 #endif
-                        if (updateType == QueuedUpdate.Open)
-                        {
-                            bui.Open();
-                        }
+                        bui.Open();
 #if EXCEPTION_TOLERANCE
                     }
                     catch (Exception e)
@@ -1147,7 +1144,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                     catch (Exception e)
                     {
                         Log.Error(
-                            $"Caught exception while attempting to create a BUI {bui.UiKey} with type {bui.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
+                            $"Caught exception while attempting to update a BUI {bui.UiKey} with type {bui.GetType()} with a state of type {state.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
                     }
 #endif
                     break;

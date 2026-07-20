@@ -1134,8 +1134,9 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                     }
                     catch (Exception e)
                     {
+                        var operationType = updateType == QueuedUpdate.Open ? "create" : "update";
                         Log.Error(
-                            $"Caught exception while attempting to {updateType == QueuedUpdate.Open ? "create" : "update"} a BUI {bui.UiKey} with type {bui.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
+                            $"Caught exception while attempting to {operationType} a BUI {bui.UiKey} with type {bui.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
                     }
 #endif
                 }

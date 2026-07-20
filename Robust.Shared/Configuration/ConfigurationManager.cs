@@ -74,6 +74,23 @@ namespace Robust.Shared.Configuration
             return LoadFromTomlTable(tblRoot);
         }
 
+        /// <inheritdoc />
+        public HashSet<string> ValidateTomlStream(Stream file)
+        {
+            TomlTable tblRoot;
+            try
+            {
+                tblRoot = Toml.ReadStream(file);
+            }
+            catch (Exception e)
+            {
+                _sawmill.Error("Unable to load configuration from table:\n{0}", e);
+                return [];
+            }
+
+            return ValidateTomlTable(tblRoot);
+        }
+
         private HashSet<string> LoadFromTomlTable(TomlTable table)
         {
             var loaded = new HashSet<string>();
@@ -94,6 +111,19 @@ namespace Robust.Shared.Configuration
             {
                 RunDeferredInvokeCallbacks(in callbackEvents);
             }
+
+            return loaded;
+        }
+
+        /// <summary>
+        /// Validates a TomlTable and returns the set of cvars contained.
+        /// </summary>
+        private HashSet<string> ValidateTomlTable(TomlTable table)
+        {
+            var loaded = new HashSet<string>();
+
+            foreach (var (cvar, _) in ParseCVarValuesFromToml(table))
+                loaded.Add(cvar);
 
             return loaded;
         }

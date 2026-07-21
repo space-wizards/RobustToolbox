@@ -163,7 +163,15 @@ namespace Robust.Client.Graphics.Clyde
             }
             catch (Exception e)
             {
-                _logManager.GetSawmill("clyde.overlay").Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+                _logManager.GetSawmill("clyde.overlay")
+                    .Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+            }
+            finally
+            {
+                // cleanup state so shaders/transforms dont leak into future overlays
+                // many overlays already do cleanup manually, but ideally they don't have to at all
+                _renderHandle.SetModelTransform(Matrix3x2.Identity);
+                _renderHandle.UseShader(null);
             }
         }
 
@@ -227,7 +235,16 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (Exception e)
                 {
-                    _logManager.GetSawmill("clyde.overlay").Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+                    _logManager.GetSawmill("clyde.overlay")
+                        .Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+                }
+                finally
+                {
+                    // cleanup state so shaders/transforms dont leak into future overlays
+                    // many overlays already do cleanup manually, but ideally they don't have to at all
+                    // screen and world handles are backed by the same renderhandle, so we only need to do this for one
+                    handle.DrawingHandleScreen.SetTransform(Matrix3x2.Identity);
+                    handle.DrawingHandleScreen.UseShader(null);
                 }
             }
         }
@@ -286,13 +303,18 @@ namespace Robust.Client.Graphics.Clyde
             var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
 
             var spriteSystem = _entityManager.System<SpriteSystem>();
-            GetSprites(mapId, viewport, eye, worldBounds, out var indexList);
+            int[] indexList;
+            using (_prof.Group("Gather Sprites"))
+            {
+                GetSprites(mapId, viewport, eye, worldBounds, out indexList);
+            }
 
             var screenSize = viewport.Size;
             var overlayIndex = 0;
 
             RenderTexture? entityPostRenderTarget = null;
             bool flushed = false;
+            using var _drawZone = _prof.Group("Draw");
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];

@@ -9,7 +9,8 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Physics.Shapes;
 
 // Internal so people don't use it when it will have breaking changes very soon.
-internal record struct Polygon : IPhysShape
+[DataDefinition]
+internal partial record struct Polygon : IPhysShape
 {
     [DataField]
     public byte VertexCount { get; internal set; }

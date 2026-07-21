@@ -13,11 +13,11 @@ namespace Robust.Shared.GameObjects
     [RegisterComponent, NetworkedComponent, Access(typeof(SharedUserInterfaceSystem))]
     public sealed partial class UserInterfaceComponent : Component, IComponentDelta
     {
-        /// <inheritdoc />
-        public GameTick LastFieldUpdate { get; set; }
+        /// <inheritdoc/>
+        public GameTick LastUnclassifiedDirty { get; set; }
 
         /// <inheritdoc />
-        public GameTick[] LastModifiedFields { get; set; }
+        public GameTick[] LastModifiedFields { get; set; } = [];
 
         /// <summary>
         /// The currently open interfaces. Used clientside to store the UI.
@@ -159,6 +159,15 @@ namespace Robust.Shared.GameObjects
         public readonly Enum UiKey = uiKey;
         public readonly BoundUserInterfaceMessage Message = message;
     }
+
+    /// <summary>
+    ///     Raised whenever the server receives a BUI wrap message from a client for a valid interface.
+    /// </summary>
+    [ByRefEvent]
+    public readonly record struct BoundUserInterfaceMessageReceivedEvent(
+        EntityUid Actor,
+        EntityUid Target,
+        Enum UiKey);
 
     [NetSerializable, Serializable]
     public abstract class BoundUserInterfaceState

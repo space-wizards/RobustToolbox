@@ -5,6 +5,7 @@ color-selector-sliders-hue = H
 color-selector-sliders-saturation = S
 color-selector-sliders-value = V
 color-selector-sliders-alpha = A
+color-selector-input-hex = Hex
 
 color-selector-sliders-rgb = RGB
 color-selector-sliders-hsv = HSV

@@ -8,6 +8,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -494,6 +495,14 @@ public partial class EntitySystem
         return EntityManager.TryGetComponent(uid, out comp);
     }
 
+    /// <inheritdoc cref="IEntityManager.TryGetComponent(EntityUid?, Type, out IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
+    protected bool TryComp(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? comp)
+    {
+        return EntityManager.TryGetComponent(uid, type, out comp);
+    }
+
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryComp(EntityUid uid, [NotNullWhen(true)] out TransformComponent? comp)
@@ -520,6 +529,20 @@ public partial class EntitySystem
         }
 
         return EntityManager.TryGetComponent(uid.Value, out comp);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TryGetComponent(EntityUid?, Type, out IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
+    protected bool TryComp([NotNullWhen(true)] EntityUid? uid, Type type, [NotNullWhen(true)] out IComponent? comp)
+    {
+        if (!uid.HasValue)
+        {
+            comp = null;
+            return false;
+        }
+
+        return EntityManager.TryGetComponent(uid.Value, type, out comp);
     }
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
@@ -691,6 +714,49 @@ public partial class EntitySystem
     {
         return EntityManager.HasComponent(uid, type);
     }
+
+    /// <summary>
+    /// Returns true if an entity prototype has a <typeparamref name="T"/>.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp<T>([ForbidLiteral] EntProtoId id) where T : IComponent, new()
+        => HasComp(id, Factory.CompName<T>());
+
+    /// <summary>
+    /// Returns true if an entity prototype has a component with a given type.
+    /// Will throw if the type does not belong to a component.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp([ForbidLiteral] EntProtoId id, Type type)
+        => HasComp(id, Factory.CompName(type));
+
+    /// <summary>
+    /// Returns true if a entity prototype contains a component with a given name.
+    /// Logs errors in case of the prototype not existing.
+    /// If you call this a lot on the same prototype, resolve it first and call the <see cref="EntityPrototype"/>-using <c>HasComp</c> variants.
+    /// </summary>
+    [Pure]
+    protected bool HasComp([ForbidLiteral] EntProtoId id, CompName name)
+        => ProtoMan.Resolve(id, out var proto) && proto.HasComp(name);
+
+    /// <summary>
+    /// Returns true if an already-resolved entity prototype has a component of type <typeparamref name="T"/>.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp<T>(EntityPrototype proto) where T : IComponent, new()
+        => proto.HasComp(Factory.CompName<T>());
+
+    /// <summary>
+    /// Returns true if an already-resolved entity prototype has a component with a given type.
+    /// Will throw if the type does not belong to a component.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp(EntityPrototype proto, Type type)
+        => proto.HasComp(Factory.CompName(type));
 
     #endregion
 
@@ -1782,5 +1848,85 @@ public partial class EntitySystem
         return EntityManager.GetNetCoordinatesArray(entities);
     }
 
+    #endregion
+
+    #region Singletons
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.Single``1"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1> Single<TComp1>()
+        where TComp1: IComponent
+    {
+        return EntityManager.Single<TComp1>();
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.Single``2"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2> Single<TComp1, TComp2>()
+        where TComp1: IComponent
+        where TComp2: IComponent
+    {
+        return EntityManager.Single<TComp1, TComp2>();
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.Single``3"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2, TComp3> Single<TComp1, TComp2, TComp3>()
+        where TComp1: IComponent
+        where TComp2: IComponent
+        where TComp3: IComponent
+    {
+        return EntityManager.Single<TComp1, TComp2, TComp3>();
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.Single``4"/>
+    [ProxyFor(typeof(EntityManager))]
+    public Entity<TComp1, TComp2, TComp3, TComp4> Single<TComp1, TComp2, TComp3, TComp4>()
+        where TComp1: IComponent
+        where TComp2: IComponent
+        where TComp3: IComponent
+        where TComp4: IComponent
+    {
+        return EntityManager.Single<TComp1, TComp2, TComp3, TComp4>();
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.TrySingle``1(System.Nullable{Robust.Shared.GameObjects.Entity{``0}}@)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool TrySingle<TComp1>([NotNullWhen(true)] out Entity<TComp1>? entity)
+        where TComp1 : IComponent
+    {
+        return EntityManager.TrySingle(out entity);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.TrySingle``2(System.Nullable{Robust.Shared.GameObjects.Entity{``0,``1}}@)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool TrySingle<TComp1, TComp2>([NotNullWhen(true)] out Entity<TComp1, TComp2>? entity)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+    {
+        return EntityManager.TrySingle(out entity);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.TrySingle``3(System.Nullable{Robust.Shared.GameObjects.Entity{``0,``1,``2}}@)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool TrySingle<TComp1, TComp2, TComp3>([NotNullWhen(true)] out Entity<TComp1, TComp2, TComp3>? entity)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+    {
+        return EntityManager.TrySingle(out entity);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.TrySingle``4(System.Nullable{Robust.Shared.GameObjects.Entity{``0,``1,``2,``3}}@)"/>
+    [ProxyFor(typeof(EntityManager))]
+    public bool TrySingle<TComp1, TComp2, TComp3, TComp4>(
+        [NotNullWhen(true)] out Entity<TComp1, TComp2, TComp3, TComp4>? entity)
+        where TComp1 : IComponent
+        where TComp2 : IComponent
+        where TComp3 : IComponent
+        where TComp4 : IComponent
+    {
+        return EntityManager.TrySingle(out entity);
+    }
     #endregion
 }

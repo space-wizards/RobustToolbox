@@ -19,18 +19,20 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed partial class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
-        [Dependency] private readonly IClientGameStateManager _stateMan = default!;
-        [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IClientNetManager _networkManager = default!;
+        [Dependency] private IClientGameTiming _gameTiming = default!;
+        [Dependency] private IClientGameStateManager _stateMan = default!;
+        [Dependency] private IBaseClient _client = default!;
+        [Dependency] private IReplayRecordingManager _replayRecording = default!;
 
         internal event Action? AfterStartup;
         internal event Action? AfterShutdown;
 
         private readonly Queue<EntityUid> _queuedPredictedDeletions = new();
         private readonly HashSet<EntityUid> _queuedPredictedDeletionsSet = new();
+        private Histogram? _tickUpdateHistogram;
+        private Histogram.Child? _entityNetHistogram;
 
         public override void Initialize()
         {
@@ -206,7 +208,9 @@ namespace Robust.Client.GameObjects
 
         public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntityNet").NewTimer())
+            UpdateTickHistogram(histogram);
+
+            using (_entityNetHistogram?.NewTimer())
             {
                 while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameTiming.LastRealTick)
                 {
@@ -217,6 +221,15 @@ namespace Robust.Client.GameObjects
             }
 
             base.TickUpdate(frameTime, noPredictions, histogram);
+        }
+
+        private void UpdateTickHistogram(Histogram? histogram)
+        {
+            if (ReferenceEquals(_tickUpdateHistogram, histogram))
+                return;
+
+            _tickUpdateHistogram = histogram;
+            _entityNetHistogram = histogram?.WithLabels("EntityNet");
         }
 
         internal override void ProcessQueueudDeletions()

@@ -71,7 +71,10 @@ public sealed partial class SerializationManager
     [Obsolete]
     public bool TryCustomCopy<T>(T source, ref T target, SerializationHookContext hookCtx,  bool hasHooks, ISerializationContext? context = null)
     {
-        if (TryGetCopierOrCreator<T>(out var copier, out var copyCreator))
+        if (target != null && source is ISerializationGenerated)
+            return false;
+
+        if (TryGetCopierOrCreator<T>(out var copier, out var copyCreator, context))
         {
             if (copier != null)
             {
@@ -136,6 +139,18 @@ public sealed partial class SerializationManager
         {
             serializer = default;
             if (!TryGetTypeNodeSerializer(typeof(TInterface).GetGenericTypeDefinition(), typeof(TType), typeof(TNode), out var rawSerializer))
+                return false;
+
+            serializer = (TInterface)rawSerializer;
+            return true;
+        }
+
+        internal bool TryGetTypeNodeSerializerArray<TInterface, TType, TNode>([NotNullWhen(true)] out TInterface? serializer)
+            where TInterface : BaseSerializerInterfaces.ITypeNodeInterface<TType[], TNode>
+            where TNode : DataNode
+        {
+            serializer = default;
+            if (!TryGetTypeNodeSerializer(typeof(TInterface).GetGenericTypeDefinition(), typeof(TType[]), typeof(TNode), out var rawSerializer))
                 return false;
 
             serializer = (TInterface)rawSerializer;
@@ -234,23 +249,29 @@ public sealed partial class SerializationManager
             copyCreator = null;
 
             var information = SerializedType<TType>.Information;
-            if (information.Id >= _typeSerializersArray.Length)
-                return false;
+            if (information.Id < _typeSerializersArray.Length &&
+                _typeSerializersArray[information.Id] is { } serializerArray)
+            {
+                var copiers = serializerArray[CopierIndex];
+                var copyCreators = serializerArray[CopyCreatorIndex];
+                copier = Unsafe.As<ITypeCopier<TType>?>(copiers.Regular);
+                copyCreator = Unsafe.As<ITypeCopyCreator<TType>?>(copyCreators.Regular);
 
-            var serializerArray = _typeSerializersArray[information.Id];
-            if (serializerArray == null)
-                return false;
+                if (copier != null || copyCreator != null)
+                    return true;
 
-            var copiers = serializerArray[CopierIndex];
-            var copyCreators = serializerArray[CopyCreatorIndex];
-            copier = Unsafe.As<ITypeCopier<TType>?>(copiers.Regular);
-            copyCreator = Unsafe.As<ITypeCopyCreator<TType>?>(copyCreators.Regular);
+                copier = Unsafe.As<ITypeCopier<TType>?>(copiers.Generic);
+                copyCreator = Unsafe.As<ITypeCopyCreator<TType>?>(copyCreators.Generic);
 
-            if (copier != null || copyCreator != null)
-                return true;
+                if (copier != null || copyCreator != null)
+                    return true;
+            }
 
-            copier = Unsafe.As<ITypeCopier<TType>?>(copiers.Generic);
-            copyCreator = Unsafe.As<ITypeCopyCreator<TType>?>(copyCreators.Generic);
+            if (TryGetTypeSerializer(typeof(ITypeCopier<>), typeof(TType), out var rawCopier))
+                copier = (ITypeCopier<TType>) rawCopier;
+
+            if (TryGetTypeSerializer(typeof(ITypeCopyCreator<>), typeof(TType), out var rawCopyCreator))
+                copyCreator = (ITypeCopyCreator<TType>) rawCopyCreator;
 
             return copier != null || copyCreator != null;
         }
@@ -415,13 +436,17 @@ public sealed partial class SerializationManager
         private void RegisterIndexedSerializer(Type elementType, int interfaceIndex, object serializer, bool regular)
         {
             var id = SerializedType.GetId(elementType);
-            if (id >= _typeSerializers.Count)
+            if (id >= _typeSerializersArray.Length)
             {
                 Array.Resize(ref _typeSerializersArray, (id + 1) * 2);
             }
 
-            var array = new (object? Regular, object? Generic)[SerializerInterfaces.Length];
-            _typeSerializersArray[id] = array;
+            var array = _typeSerializersArray[id];
+            if (array == null)
+            {
+                array = new (object? Regular, object? Generic)[SerializerInterfaces.Length];
+                _typeSerializersArray[id] = array;
+            }
 
             if (regular)
             {
@@ -453,7 +478,7 @@ public sealed partial class SerializationManager
         }
     }
 
-    private static class SerializedType<T>
+    internal static class SerializedType<T>
     {
         // ReSharper disable once StaticMemberInGenericType
         internal static readonly TypeInformation Information;
@@ -467,7 +492,7 @@ public sealed partial class SerializationManager
         }
     }
 
-    private readonly struct TypeInformation
+    internal readonly struct TypeInformation
     {
         internal readonly int Id;
         internal readonly bool ReturnSource;

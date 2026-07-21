@@ -7,6 +7,7 @@ using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp.PixelFormats;
 using Xilium.CefGlue;
@@ -19,16 +20,18 @@ namespace Robust.Client.WebView.Cef
     {
         private readonly List<ControlImpl> _activeControls = new();
 
+        private static readonly ProtoId<ShaderPrototype> _bgraShader = "bgra";
+
         public IWebViewControlImpl MakeControlImpl(WebViewControl owner)
         {
-            var shader = _prototypeManager.Index<ShaderPrototype>("bgra");
+            var shader = _prototypeManager.Index(_bgraShader);
             var shaderInstance = shader.Instance();
             var impl =  new ControlImpl(this, owner, shaderInstance);
             _dependencyCollection.InjectDependencies(impl);
             return impl;
         }
 
-        private sealed class ControlImpl : IWebViewControlImpl
+        private sealed partial class ControlImpl : IWebViewControlImpl
         {
             private static readonly Dictionary<Key, CefKeyCodes.ChromiumKeyboardCode> KeyMap = new()
             {
@@ -132,8 +135,8 @@ namespace Robust.Client.WebView.Cef
                 [Key.Pause] = VKEY_PAUSE,
             };
 
-            [Dependency] private readonly IClyde _clyde = default!;
-            [Dependency] private readonly IInputManager _inputMgr = default!;
+            [Dependency] private IClyde _clyde = default!;
+            [Dependency] private IInputManager _inputMgr = default!;
 
             private readonly WebViewManagerCef _manager;
             public readonly WebViewControl Owner;

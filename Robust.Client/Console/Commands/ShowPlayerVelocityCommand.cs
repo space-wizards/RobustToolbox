@@ -4,9 +4,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
-    public sealed class ShowPlayerVelocityCommand : LocalizedEntityCommands
+    public sealed partial class ShowPlayerVelocityCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly ShowPlayerVelocityDebugSystem _system = default!;
+        [Dependency] private ShowPlayerVelocityDebugSystem _system = default!;
 
         public override string Command => "showplayervelocity";
 

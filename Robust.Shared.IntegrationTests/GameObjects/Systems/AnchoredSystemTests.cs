@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Containers;
@@ -38,14 +37,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
                 })
                 .InitializeInstance();
 
-            var mapManager = sim.Resolve<IMapManager>();
+            var mapSystem = sim.System<SharedMapSystem>();
 
             var testMapId = sim.CreateMap().MapId;
             var coords = new MapCoordinates(new Vector2(7, 7), testMapId);
             // Add grid 1, as the default grid to anchor things to.
-            var grid = mapManager.CreateGridEntity(testMapId);
+            var grid = mapSystem.CreateGridEntity(testMapId);
 
-            return (sim, grid, coords, sim.System<SharedTransformSystem>(), sim.System<SharedMapSystem>());
+            return (sim, grid, coords, sim.System<SharedTransformSystem>(), mapSystem);
         }
 
         // An entity is anchored to the tile it is over on the target grid.
@@ -83,19 +82,21 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         private sealed partial class AnchorOnInitComponent : Component;
 
         [Reflect(false)]
-        private sealed class AnchorOnInitTestSystem : EntitySystem
+        private sealed partial class AnchorOnInitTestSystem : EntitySystem
         {
+            [Dependency] private SharedTransformSystem _transform = default!;
+
             public override void Initialize()
             {
                 base.Initialize();
-                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => Transform(e).Anchored = true);
+                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => _transform.AnchorEntity(e));
             }
         }
 
         [Reflect(false)]
-        internal sealed class MoveEventTestSystem : EntitySystem
+        internal sealed partial class MoveEventTestSystem : EntitySystem
         {
-            [Dependency] private readonly SharedTransformSystem _transform = default!;
+            [Dependency] private SharedTransformSystem _transform = default!;
 
             public override void Initialize()
             {
@@ -160,9 +161,8 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var mapSys = sim.System<SharedMapSystem>();
 
             var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
             var mapId = sim.CreateMap().MapId;
-            var grid = mapMan.CreateGridEntity(mapId);
+            var grid = mapSys.CreateGridEntity(mapId);
             var coordinates = new MapCoordinates(new Vector2(7, 7), mapId);
             var pos = mapSys.TileIndicesFor(grid, coordinates);
             mapSys.SetTile(grid, pos, new Tile(1));
@@ -264,8 +264,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             sim.System<MoveEventTestSystem>().FailOnMove = true;
 
             // Act
+#pragma warning disable CS0618 // Checking property setters.
             sim.Transform(ent1).WorldPosition = new Vector2(99, 99);
             sim.Transform(ent1).LocalPosition = new Vector2(99, 99);
+#pragma warning restore CS0618
 
             Assert.That(xformSys.GetMapCoordinates(ent1), Is.EqualTo(coordinates));
             sim.System<MoveEventTestSystem>().FailOnMove = false;

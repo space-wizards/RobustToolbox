@@ -12,12 +12,12 @@ namespace Robust.Client.Commands;
 /// <summary>
 /// Shows a debug overlay for audio sources.
 /// </summary>
-public sealed class ShowAudioCommand : LocalizedCommands
+public sealed partial class ShowAudioCommand : LocalizedCommands
 {
-    [Dependency] private readonly IResourceCache _client = default!;
-    [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly IOverlayManager _overlayManager = default!;
-    [Dependency] private readonly IPlayerManager _playerMgr = default!;
+    [Dependency] private IResourceCache _client = default!;
+    [Dependency] private IEntityManager _entManager = default!;
+    [Dependency] private IOverlayManager _overlayManager = default!;
+    [Dependency] private IPlayerManager _playerMgr = default!;
     public override string Command => "showaudio";
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {

@@ -24,12 +24,13 @@ namespace Robust.Client.ResourceManagement
 {
     internal partial class ResourceCache
     {
-        [field: Dependency] public IClyde Clyde { get; } = default!;
-        [field: Dependency] public IAudioInternal ClydeAudio { get; } = default!;
-        [Dependency] private readonly IResourceManager _manager = default!;
-        [field: Dependency] public IFontManager FontManager { get; } = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private IClyde _clyde = null!;
+        public IClyde Clyde => _clyde;
+        [Dependency] private IResourceManager _manager = default!;
+        [Dependency] private IFontManager _fontManager = null!;
+        public IFontManager FontManager => _fontManager;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IConfigurationManager _configurationManager = default!;
 
         public void PreloadTextures()
         {
@@ -324,10 +325,18 @@ namespace Robust.Client.ResourceManagement
             // Finalize the atlases.
             for (var i = 0; i < imageAtlases.Count; i++)
             {
-                var atlasTexture = Clyde.LoadTextureFromImage(imageAtlases[i], $"Meta atlas {i}");
-                finalAtlases.Add(atlasTexture);
+                var imageAtlas = imageAtlases[i];
+                try
+                {
+                    var atlasTexture = Clyde.LoadTextureFromImage(imageAtlas, $"Meta atlas {i}");
+                    finalAtlases.Add(atlasTexture);
 
-                sawmill.Debug($"(Meta atlas {i}) - cropped utilization: {(float)finalPixels[i] / (maxSize * imageAtlases[i].Height):P2}, fill percentage: {(float)imageAtlases[i].Height / maxSize:P2}");
+                    sawmill.Debug($"(Meta atlas {i}) - cropped utilization: {(float)finalPixels[i] / (maxSize * imageAtlas.Height):P2}, fill percentage: {(float)imageAtlas.Height / maxSize:P2}");
+                }
+                finally
+                {
+                    imageAtlas.Dispose();
+                }
             }
 
             // Finally, reference the actual atlas from the RSIs.
@@ -358,23 +367,30 @@ namespace Robust.Client.ResourceManagement
             var errors = 0;
             foreach (var data in rsiList)
             {
-                if (data.Bad)
-                {
-                    errors += 1;
-                    continue;
-                }
-
                 try
                 {
-                    var rsiRes = new RSIResource();
-                    rsiRes.LoadFinish(this, data);
-                    resList[data.Path] = rsiRes;
+                    if (data.Bad)
+                    {
+                        errors += 1;
+                        continue;
+                    }
+
+                    try
+                    {
+                        var rsiRes = new RSIResource();
+                        rsiRes.LoadFinish(this, data);
+                        resList[data.Path] = rsiRes;
+                    }
+                    catch (Exception e)
+                    {
+                        sawmill.Error($"Exception while loading RSI {data.Path}:\n{e}");
+                        data.Bad = true;
+                        errors += 1;
+                    }
                 }
-                catch (Exception e)
+                finally
                 {
-                    sawmill.Error($"Exception while loading RSI {data.Path}:\n{e}");
-                    data.Bad = true;
-                    errors += 1;
+                    data.AtlasSheet?.Dispose();
                 }
             }
 

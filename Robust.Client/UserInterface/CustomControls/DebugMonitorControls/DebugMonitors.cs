@@ -9,12 +9,12 @@ using Robust.Shared.Network;
 
 namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 {
-    internal sealed class DebugMonitors : BoxContainer, IDebugMonitors
+    internal sealed partial class DebugMonitors : BoxContainer, IDebugMonitors
     {
-        [Dependency] private readonly IClientGameTiming _timing = default!;
-        [Dependency] private readonly IClientGameStateManager _state = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IClientNetManager _net = default!;
+        [Dependency] private IClientGameTiming _timing = default!;
+        [Dependency] private IClientGameStateManager _state = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IClientNetManager _net = default!;
 
         private readonly Control[] _monitors = new Control[Enum.GetNames<DebugMonitor>().Length];
 
@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
             Add(DebugMonitor.Memory, new DebugMemoryPanel());
             Add(DebugMonitor.Clyde, new DebugClydePanel { HorizontalAlignment = HAlignment.Left });
             Add(DebugMonitor.System, new DebugSystemPanel { HorizontalAlignment = HAlignment.Left });
-            Add(DebugMonitor.Version, new DebugVersionPanel(_cfg) {HorizontalAlignment = HAlignment.Left});
+            Add(DebugMonitor.Version, new DebugVersionPanel(_cfg) { HorizontalAlignment = HAlignment.Left });
             Add(DebugMonitor.Input, new DebugInputPanel { HorizontalAlignment = HAlignment.Left });
             Add(DebugMonitor.Prof, new LiveProfileViewControl());
 

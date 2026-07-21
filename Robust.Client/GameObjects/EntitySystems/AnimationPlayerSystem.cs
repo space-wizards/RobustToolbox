@@ -2,21 +2,16 @@ using System;
 using System.Collections.Generic;
 using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class AnimationPlayerSystem : EntitySystem
+    public sealed partial class AnimationPlayerSystem : EntitySystem
     {
         private readonly List<Entity<AnimationPlayerComponent>> _activeAnimations = new();
 
         private EntityQuery<AnimationPlayerComponent> _playerQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
-
-#if DEBUG
-        [Dependency] private readonly IComponentFactory _compFact = default!;
-#endif
 
         public override void Initialize()
         {
@@ -129,7 +124,7 @@ namespace Robust.Client.GameObjects
                 if (IsClientSide(ent) || !animatedComp.NetSyncEnabled)
                     continue;
 
-                var reg = _compFact.GetRegistration(animatedComp);
+                var reg = Factory.GetRegistration(animatedComp);
 
                 // In principle there is nothing wrong with this, as long as the property of the component being
                 // animated is not part of the networked state and setting it does not dirty the component. Hence only a

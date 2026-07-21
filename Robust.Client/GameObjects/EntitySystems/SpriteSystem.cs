@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
@@ -13,7 +12,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Timing;
@@ -28,18 +26,15 @@ namespace Robust.Client.GameObjects
     [UsedImplicitly]
     public sealed partial class SpriteSystem : EntitySystem
     {
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IEyeManager _eye = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IPrototypeManager _proto = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IComponentFactory _factory = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IEyeManager _eye = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
 
         // Note that any new system dependencies have to be added to RobustUnitTest.BaseSetup()
-        [Dependency] private readonly SharedTransformSystem _xforms = default!;
-        [Dependency] private readonly SpriteTreeSystem _tree = default!;
-        [Dependency] private readonly AppearanceSystem _appearance = default!;
+        [Dependency] private SharedTransformSystem _xforms = default!;
+        [Dependency] private SpriteTreeSystem _tree = default!;
+        [Dependency] private AppearanceSystem _appearance = default!;
 
         public static readonly ProtoId<ShaderPrototype> UnshadedId = "unshaded";
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
@@ -64,7 +59,7 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
-            _sawmill = _logManager.GetSawmill("sprite");
+            _sawmill = LogManager.GetSawmill("sprite");
             _query = GetEntityQuery<SpriteComponent>();
         }
 
@@ -76,7 +71,7 @@ namespace Robust.Client.GameObjects
         private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
         {
             // I'm not 100% this is needed, but I CBF with this ATM. Somebody kill server sprite component please.
-            QueueUpdateInert(uid, component);
+            QueueUpdateIsInert((uid, component));
         }
 
         private void OnBiasChanged(double value)
@@ -220,7 +215,7 @@ namespace Robust.Client.GameObjects
                     sprite ??= Frame0(spriteSpec);
                     break;
                 case SpriteSpecifier.Texture texture:
-                    sprite = texture.GetTexture(_resourceCache);
+                    sprite = GetTexture(texture);
                     break;
                 default:
                     throw new NotImplementedException();

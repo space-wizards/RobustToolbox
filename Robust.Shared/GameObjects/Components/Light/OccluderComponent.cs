@@ -23,7 +23,7 @@ public sealed partial class OccluderComponent : Component, IComponentTreeEntry<O
     /// Local-space convex polygon vertices. Vertices may be specified in any order; serialization normalizes them
     /// through the physics hull implementation.
     /// </summary>
-    [DataField(customTypeSerializer: typeof(PhysicsHullSerializer)), AutoNetworkedField]
+    [DataField("polygon", customTypeSerializer: typeof(PhysicsHullSerializer)), AutoNetworkedField]
     private Vector2[] _polygon =
     [
         new(-0.5f, 0.5f),

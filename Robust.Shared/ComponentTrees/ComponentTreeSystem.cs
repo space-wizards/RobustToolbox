@@ -293,13 +293,13 @@ public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySyst
     #endregion
 
     #region Queries
-    public IEnumerable<(EntityUid, TTreeComp)> GetIntersectingTrees(MapId mapId, Box2Rotated worldBounds)
+    public ValueList<(EntityUid Uid, TTreeComp Comp)> GetIntersectingTrees(MapId mapId, Box2Rotated worldBounds)
         => GetIntersectingTrees(mapId, worldBounds.CalcBoundingBox());
 
-    public IEnumerable<(EntityUid Uid, TTreeComp Comp)> GetIntersectingTrees(MapId mapId, Box2 worldAABB)
+    public ValueList<(EntityUid Uid, TTreeComp Comp)> GetIntersectingTrees(MapId mapId, Box2 worldAABB)
     {
         if (!CheckEnabled())
-            return [];
+            return default;
         // Anything that queries these trees should only do so if there are no queued updates, otherwise it can lead to
         // errors. Currently there is no easy way to enforce this, but this should work as long as nothing queries the
         // trees directly:

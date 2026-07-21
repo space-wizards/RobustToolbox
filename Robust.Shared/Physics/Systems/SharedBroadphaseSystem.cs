@@ -396,7 +396,7 @@ namespace Robust.Shared.Physics.Systems
             DebugTools.Assert(proxy.Body.CanCollide);
 
             // Broadphase can't intersect with entities on itself so skip.
-            if (proxy.Entity == broadphase || !_xformQuery.TryGetComponent(proxy.Entity, out var xform))
+            if (proxy.Entity == broadphase || broadphase == EntityUid.Invalid || !_xformQuery.TryGetComponent(proxy.Entity, out var xform))
             {
                 return;
             }

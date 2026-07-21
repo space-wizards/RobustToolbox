@@ -18,6 +18,8 @@ namespace Robust.Client.UserInterface.Controls
     {
         public const string StylePropertyFontColor = "font-color";
         public const string StylePropertyFont = "font";
+        public const string StylePropertyFontOutlineThickness = "font-outline-thickness";
+        public const string StylePropertyFontOutlineColor = "font-outline-color";
         public const string StylePropertyAlignMode = "alignMode";
 
         private int _cachedTextHeight;
@@ -165,6 +167,25 @@ namespace Robust.Client.UserInterface.Controls
 
         public int? ShadowOffsetYOverride { get; set; }
 
+        public float? FontOutlineThicknessOverride { get; set; }
+
+        public Color? FontOutlineColorOverride { get; set; }
+
+        private TextOutline? ActualFontOutline
+        {
+            get
+            {
+                var thickness = FontOutlineThicknessOverride;
+                if (!thickness.HasValue && TryGetStyleProperty<float>(StylePropertyFontOutlineThickness, out var styleThickness))
+                    thickness = styleThickness;
+
+                var color = FontOutlineColorOverride;
+                if (!color.HasValue && TryGetStyleProperty<Color>(StylePropertyFontOutlineColor, out var styleColor))
+                    color = styleColor;
+
+                return TextOutline.FromOverrides(thickness, color);
+            }
+        }
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
@@ -234,7 +255,7 @@ namespace Robust.Client.UserInterface.Controls
                     baseLine = CalcBaseline();
                 }
 
-                var advance = font.DrawChar(handle, rune, baseLine, UIScale, actualFontColor);
+                var advance = font.DrawChar(handle, rune, baseLine, UIScale, actualFontColor, outline: ActualFontOutline);
                 baseLine += new Vector2(advance, 0);
             }
         }

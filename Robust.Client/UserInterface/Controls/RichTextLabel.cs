@@ -133,6 +133,26 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public FormattedMessage? GetFormattedMessage() => _entry == null ? null : new FormattedMessage(_entry.Value.Message);
 
+        public float? FontOutlineThicknessOverride { get; set; }
+
+        public Color? FontOutlineColorOverride { get; set; }
+
+        private TextOutline? ActualFontOutline
+        {
+            get
+            {
+                var thickness = FontOutlineThicknessOverride;
+                if (!thickness.HasValue && TryGetStyleProperty<float>(Label.StylePropertyFontOutlineThickness, out var styleThickness))
+                    thickness = styleThickness;
+
+                var color = FontOutlineColorOverride;
+                if (!color.HasValue && TryGetStyleProperty<Color>(Label.StylePropertyFontOutlineColor, out var styleColor))
+                    color = styleColor;
+
+                return TextOutline.FromOverrides(thickness, color);
+            }
+        }
+
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             if (_entry == null)
@@ -150,7 +170,7 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale);
+            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale, ActualFontOutline);
         }
 
         [Pure]

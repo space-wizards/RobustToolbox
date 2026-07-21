@@ -140,13 +140,11 @@ public partial class EntityManager
         if (!xform.ParentUid.IsValid())
             return false;
 
-        if (!_containers.TryGetContainingContainer(target, out var container))
-        {
-            uid = SpawnNextToOrDrop(protoName, target, xform, overrides);
-            return true;
-        }
+        if (_containers.TryGetContainingContainer(target, out var container))
+            return TrySpawnInContainer(protoName, container, out uid, xform.MapUid, overrides);
 
-        return TrySpawnInContainer(protoName, container, out uid, xform.MapUid, overrides);
+        uid = SpawnNextToOrDrop(protoName, target, xform, overrides);
+        return true;
     }
 
     public bool TrySpawnInContainer(
@@ -158,13 +156,8 @@ public partial class EntityManager
         ComponentRegistry? overrides = null)
     {
         uid = null;
-        if (containerComp == null && !TryGetComponent(containerUid, out containerComp))
-            return false;
-
-        if (!containerComp.Containers.TryGetValue(containerId, out var container))
-            return false;
-
-        return TrySpawnInContainer(protoName, container, out uid, overrides);
+        return _containers.TryGetContainer(containerUid, containerId, out var container, containerComp)
+               && TrySpawnInContainer(protoName, container, out uid, overrides);
     }
 
     public bool TrySpawnInContainer(
@@ -240,19 +233,11 @@ public partial class EntityManager
         ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null)
     {
-        inserted = true;
         xform ??= TransformQuery.GetComponent(containerUid);
         var uid = CreateEntityUninitialized(protoName, out var meta, overrides);
         InitializeAndStartEntity((uid, meta), doMapInit: false);
 
-        if ((containerComp == null && !TryGetComponent(containerUid, out containerComp))
-             || !containerComp.Containers.TryGetValue(containerId, out var container)
-             || !_containers.Insert(uid, container))
-        {
-            inserted = false;
-            if (xform.ParentUid.IsValid())
-                _xforms.DropNextTo(uid, (containerUid, xform));
-        }
+        inserted = _containers.InsertOrDrop((containerUid, containerComp, xform), uid, containerId);
 
         if (_mapSystem.IsInitialized(xform.MapUid))
             RunMapInit(uid, meta);
@@ -278,18 +263,11 @@ public partial class EntityManager
         ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null)
     {
-        inserted = true;
         xform ??= TransformQuery.GetComponent(container.Owner);
         var uid = CreateEntityUninitialized(protoName, out var meta, overrides);
         InitializeAndStartEntity((uid, meta), doMapInit: false);
 
-        if (!_containers.Insert(uid, container))
-        {
-            inserted = false;
-            if (xform.ParentUid.IsValid())
-                _xforms.DropNextTo(uid, (container.Owner, xform));
-        }
-
+        inserted = _containers.InsertOrDrop(uid, container);
         if (_mapSystem.IsInitialized(xform.MapUid))
             RunMapInit(uid, meta);
 

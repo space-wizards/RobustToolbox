@@ -136,6 +136,16 @@ public abstract partial class SharedContainerSystem
         return true;
     }
 
+    /// <inheritdoc cref="InsertOrDrop(Entity{TransformComponent?,MetaDataComponent?,PhysicsComponent?},BaseContainer,TransformComponent?)"/>
+    public bool InsertOrDrop(Entity<ContainerManagerComponent?, TransformComponent?> container, Entity<TransformComponent?, MetaDataComponent?, PhysicsComponent?> toInsert,
+        string containerId)
+    {
+        if (!TryGetContainer(container, containerId, out var baseContainer, container))
+            return false;
+
+        return InsertOrDrop(toInsert, baseContainer, container.Comp2);
+    }
+
     /// <summary>
     /// Attempts to insert an entity into a container. If it fails, it will instead drop the entity next to the
     /// container entity.

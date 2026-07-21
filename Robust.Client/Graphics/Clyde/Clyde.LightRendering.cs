@@ -362,7 +362,7 @@ namespace Robust.Client.Graphics.Clyde
 
             eye.GetViewMatrixNoOffset(out var eyeTransform, eye.Scale);
 
-            UpdateOcclusionGeometry(mapId, expandedBounds);
+            UpdateOcclusionGeometry(mapId, expandedBounds, eye.Position.Position);
 
             DrawFov(viewport, eye);
 
@@ -1180,6 +1180,21 @@ namespace Robust.Client.Graphics.Clyde
             return boundaryEdgeCounts.TryGetValue(key, out var boundaryCount) && boundaryCount > 1;
         }
 
+        internal static bool ShouldSuppressSharedOccluderEdge(
+            Vector4 edge,
+            Dictionary<OccluderEdgeKey, int> boundaryEdgeCounts,
+            Vector2 eyePosition)
+        {
+            // Boundary keys are direction-independent, so reversed windings still match.
+            var key = OccluderEdgeKey.From(edge);
+            if (!boundaryEdgeCounts.TryGetValue(key, out var boundaryCount) || boundaryCount <= 1)
+                return false;
+
+            // Old square-wall visibility kept some shared seams when viewing into a wall run.
+            // Without this, looking down a line of walls can see through the cap between wall 1 and wall 2.
+            return !SharedEdgeCapsWallRun(edge, boundaryEdgeCounts, eyePosition);
+        }
+
         internal static bool OccluderBoundarySharesEdge(
             ReadOnlySpan<Vector2> polygon,
             Matrix3x2 worldTransform,
@@ -1227,6 +1242,73 @@ namespace Robust.Client.Graphics.Clyde
             return Vector2.DistanceSquared(a, b) <= SharedOccluderEdgeTolerance * SharedOccluderEdgeTolerance;
         }
 
+        private static bool SharedEdgeCapsWallRun(
+            Vector4 edge,
+            Dictionary<OccluderEdgeKey, int> boundaryEdgeCounts,
+            Vector2 eyePosition)
+        {
+            var a = new Vector2(edge.X, edge.Y);
+            var b = new Vector2(edge.Z, edge.W);
+            var edgeDelta = b - a;
+            var lengthSquared = edgeDelta.LengthSquared();
+            if (lengthSquared <= SharedOccluderEdgeTolerance * SharedOccluderEdgeTolerance)
+                return false;
+
+            // Candidate caps are the seams the eye is looking directly into.
+            // If the eye projects outside the segment, this is a side-on internal seam and should stay suppressed.
+            var projected = Vector2.Dot(eyePosition - a, edgeDelta) / lengthSquared;
+            if (projected <= SharedOccluderEdgeTolerance || projected >= 1f - SharedOccluderEdgeTolerance)
+                return false;
+
+            var edgeKey = OccluderEdgeKey.From(edge);
+            var edgeDir = edgeDelta / MathF.Sqrt(lengthSquared);
+            var edgeNormal = new Vector2(-edgeDir.Y, edgeDir.X);
+            var capPoint = a + edgeDelta * projected;
+            var capDistance = Vector2.Dot(capPoint - eyePosition, edgeNormal);
+            if (MathF.Abs(capDistance) <= SharedOccluderEdgeTolerance)
+                return false;
+
+            foreach (var (otherKey, count) in boundaryEdgeCounts)
+            {
+                if (count <= 1 || otherKey == edgeKey)
+                    continue;
+
+                otherKey.ToEdge(out var otherA, out var otherB);
+                var otherDelta = otherB - otherA;
+                var otherLength = otherDelta.Length();
+                if (otherLength <= SharedOccluderEdgeTolerance)
+                    continue;
+
+                var otherDir = otherDelta / otherLength;
+                if (MathF.Abs(Cross(edgeDir, otherDir)) > SharedOccluderEdgeTolerance)
+                    continue;
+
+                // Only consider seams on the same run track. For example, a horizontal wall column should only compare
+                // against horizontal shared edges whose x-ranges overlap the eye projection point.
+                var otherProjectedA = Vector2.Dot(otherA - a, edgeDelta) / lengthSquared;
+                var otherProjectedB = Vector2.Dot(otherB - a, edgeDelta) / lengthSquared;
+                if (projected < MathF.Min(otherProjectedA, otherProjectedB) - SharedOccluderEdgeTolerance ||
+                    projected > MathF.Max(otherProjectedA, otherProjectedB) + SharedOccluderEdgeTolerance)
+                {
+                    continue;
+                }
+
+                var otherDistance = Vector2.Dot(otherA - eyePosition, edgeNormal);
+                if (MathF.Sign(otherDistance) == MathF.Sign(capDistance) &&
+                    MathF.Abs(otherDistance) < MathF.Abs(capDistance) - SharedOccluderEdgeTolerance)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static float Cross(Vector2 a, Vector2 b)
+        {
+            return a.X * b.Y - a.Y * b.X;
+        }
+
         internal readonly record struct OccluderEdgeKey(long AX, long AY, long BX, long BY)
         {
             public static OccluderEdgeKey From(Vector4 edge)
@@ -1252,6 +1334,12 @@ namespace Robust.Client.Graphics.Clyde
                 // We don't want fp inaccuracies to cause issues with edges not being considered together.
                 return (long) MathF.Round(value / SharedOccluderEdgeTolerance);
             }
+
+            public void ToEdge(out Vector2 a, out Vector2 b)
+            {
+                a = new Vector2(AX * SharedOccluderEdgeTolerance, AY * SharedOccluderEdgeTolerance);
+                b = new Vector2(BX * SharedOccluderEdgeTolerance, BY * SharedOccluderEdgeTolerance);
+            }
         }
 
         private static float SignedArea(ReadOnlySpan<Vector2> vertices)
@@ -1272,7 +1360,7 @@ namespace Robust.Client.Graphics.Clyde
             return new Vector4(a.X, a.Y, b.X, b.Y);
         }
 
-        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds)
+        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Vector2 eyePosition)
         {
             using var _ = _prof.Group("UpdateOcclusionGeometry");
             using var _p = DebugGroup(nameof(UpdateOcclusionGeometry));
@@ -1408,7 +1496,7 @@ namespace Robust.Client.Graphics.Clyde
                             var edge = edges[i];
                             // Do not write internal seams between adjacent occluders. Rendering those seams as depth
                             // geometry creates dark slivers/wedges at wall joins.
-                            if (ShouldSuppressSharedOccluderEdge(edge, boundaryEdgeCounts))
+                            if (ShouldSuppressSharedOccluderEdge(edge, boundaryEdgeCounts, eyePosition))
                             {
                                 continue;
                             }

@@ -24,7 +24,7 @@ public sealed class OrganizedListSerializer<T> : ITypeSerializer<List<T>, Sequen
         IDependencyCollection dependencies,
         ISerializationContext? context = null)
     {
-        var list = new List<ValidationNode>();
+        var list = new List<ValidationNode>(node.Count);
         foreach (var elem in node.Sequence)
         {
             list.Add(serializationManager.ValidateNode<T>(elem, context));
@@ -46,7 +46,7 @@ public sealed class OrganizedListSerializer<T> : ITypeSerializer<List<T>, Sequen
             sawmill.Warning($"Provided value to a Read-call for a {nameof(List<T>)}. Ignoring...");
         }
 
-        var list = new List<T>();
+        var list = new List<T>(node.Count);
 
         foreach (var sequence in node.Sequence)
         {
@@ -60,8 +60,11 @@ public sealed class OrganizedListSerializer<T> : ITypeSerializer<List<T>, Sequen
             for (var j = list.Count - 1; j > i; j--)
             {
                 var item2 = serializationManager.Read<T>(node.Sequence[j], hookCtx, context);
-                if (((Object)item).Equals(item2))
+                if (item.Equals(item2))
                 {
+                    // Note that this does not organize the nested list items.
+                    // If you deem that necessary, then feel free to write additional logic for that :P
+                    // You'd likely want to do the equality checking at the read step rather than here if you were going to.
                     list.RemoveAt(j);
                     item.Insert(item2);
                     modified = true;
@@ -82,7 +85,7 @@ public sealed class OrganizedListSerializer<T> : ITypeSerializer<List<T>, Sequen
         bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        var sequence = new SequenceDataNode();
+        var sequence = new SequenceDataNode(value.Count);
 
         foreach (var elem in value)
         {

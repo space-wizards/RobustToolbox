@@ -166,7 +166,7 @@ public partial class EntityManager
         [NotNullWhen(true)] out EntityUid? uid,
         ComponentRegistry? overrides = null)
     {
-        return TrySpawnInContainer(protoName, container, out uid, TransformQuery.GetComponent(container.Owner).MapUid, overrides);
+        return TrySpawnInContainer(protoName, container, out uid, TransformQuery.Comp(container.Owner).MapUid, overrides);
     }
 
     /// <summary>
@@ -233,7 +233,7 @@ public partial class EntityManager
         ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null)
     {
-        xform ??= TransformQuery.GetComponent(containerUid);
+        xform ??= TransformQuery.Comp(containerUid);
         var uid = CreateEntityUninitialized(protoName, out var meta, overrides);
         InitializeAndStartEntity((uid, meta), doMapInit: false);
 
@@ -263,7 +263,7 @@ public partial class EntityManager
         ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null)
     {
-        xform ??= TransformQuery.GetComponent(container.Owner);
+        xform ??= TransformQuery.Comp(container.Owner);
         var uid = CreateEntityUninitialized(protoName, out var meta, overrides);
         InitializeAndStartEntity((uid, meta), doMapInit: false);
 

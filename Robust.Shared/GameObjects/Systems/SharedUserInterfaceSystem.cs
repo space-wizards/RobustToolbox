@@ -10,7 +10,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -24,7 +23,6 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private IParallelManager _parallel = default!;
-    [Dependency] protected IPrototypeManager ProtoManager = default!;
     [Dependency] private IReflectionManager _reflection = default!;
     [Dependency] protected ISharedPlayerManager Player = default!;
     [Dependency] private SharedTransformSystem _transforms = default!;
@@ -36,10 +34,21 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
 
     private ActorRangeCheckJob _rangeJob;
 
+    /// Update type to apply
+    private enum QueuedUpdate
+    {
+        /// Upen a UI
+        Open,
+        /// Apply new state to the UI
+        ApplyState,
+        /// Close the UI
+        Close
+    };
+
     /// <summary>
     /// Defer BUIs during state handling so client doesn't spam a BUI constantly during prediction.
     /// </summary>
-    private readonly List<(BoundUserInterface Bui, bool value)> _queuedBuis = new();
+    private readonly List<(BoundUserInterface bui, QueuedUpdate updateType)> _queuedBuis = new();
 
     public override void Initialize()
     {
@@ -82,9 +91,9 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentShutdown>(OnActorShutdown);
     }
 
-    private void AddQueued(BoundUserInterface bui, bool value)
+    private void AddQueued(BoundUserInterface bui, QueuedUpdate type)
     {
-        _queuedBuis.Add((bui, value));
+        _queuedBuis.Add((bui, type));
     }
 
     /// <summary>
@@ -106,6 +115,9 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             Log.Debug($"Got BoundInterfaceMessageWrapMessage for unknown UI key: {msg.UiKey}");
             return;
         }
+
+        var received = new BoundUserInterfaceMessageReceivedEvent(sender, uid, msg.UiKey);
+        RaiseLocalEvent(ref received);
 
         // If it's not an open message check we're even a subscriber.
         if (msg.Message is not OpenBoundInterfaceMessage &&
@@ -238,7 +250,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
 
         if (ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
         {
-            AddQueued(cBui, false);
+            AddQueued(cBui, QueuedUpdate.Close);
         }
 
         if (ent.Comp.Actors.Count == 0)
@@ -280,7 +292,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // PlayerAttachedEvent will catch some of these.
         foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
         {
-            AddQueued(bui, true);
+            AddQueued(bui, QueuedUpdate.Open);
         }
     }
 
@@ -300,37 +312,36 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             DebugTools.Assert(!ent.Comp.Actors.ContainsKey(key));
         }
 
-        DebugTools.Assert(ent.Comp.ClientOpenInterfaces.Values.All(x => _queuedBuis.Contains((x, false))));
+        DebugTools.Assert(ent.Comp.ClientOpenInterfaces.Values.All(x => _queuedBuis.Contains((x, QueuedUpdate.Close))));
     }
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
     {
-        if (args.FromTick > ent.Comp.CreationTick && ent.Comp.LastFieldUpdate >= args.FromTick)
+        var aspects = EntityManager.GetModifiedAspects(ent.Comp, args.FromTick);
+
+        switch (aspects)
         {
-            var fields = EntityManager.GetModifiedFields(ent.Comp, args.FromTick);
-
-            switch (fields)
+            case >= DeltaAspect.Unclassified:
+                break;
+            case 1 << 0:
             {
-                case 1 << 0:
-                {
-                    var state = new UserInterfaceActorsDeltaState();
-                    AddActors(ent, state.Actors, ref args);
+                var state = new UserInterfaceActorsDeltaState();
+                AddActors(ent, state.Actors, ref args);
 
-                    args.State = state;
-                    return;
-                }
-                case 1 << 2:
-                {
-                    var states = ent.Comp.States;
+                args.State = state;
+                return;
+            }
+            case 1 << 2:
+            {
+                var states = ent.Comp.States;
 
-                    // TODO Game State
-                    // Force the client to serialize & de-serialize implicitly generated component states.
-                    if (_netManager.IsClient)
-                        states = new(states);
+                // TODO Game State
+                // Force the client to serialize & de-serialize implicitly generated component states.
+                if (_netManager.IsClient)
+                    states = new(states);
 
-                    args.State = new UserInterfaceStatesDeltaState {States = states};
-                    return;
-                }
+                args.State = new UserInterfaceStatesDeltaState {States = states};
+                return;
             }
         }
 
@@ -462,7 +473,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                 }
 
                 var bui = ent.Comp.ClientOpenInterfaces[key];
-                AddQueued(bui, false);
+                AddQueued(bui, QueuedUpdate.Close);
             }
         }
 
@@ -489,9 +500,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                 if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui) || !cBui.IsOpened)
                     continue;
 
-                cBui.State = buiState;
-                cBui.UpdateState(buiState);
-                cBui.Update();
+                AddQueued(cBui, QueuedUpdate.ApplyState);
             }
         }
 
@@ -519,7 +528,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // Existing BUI just keep it.
         if (entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var existing))
         {
-            _queuedBuis.Remove((existing, false));
+            _queuedBuis.Remove((existing, QueuedUpdate.Close));
             return;
         }
 
@@ -544,7 +553,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         if (!open)
             return;
 
-        AddQueued(boundUserInterface, true);
+        AddQueued(boundUserInterface, QueuedUpdate.Open);
     }
 
     /// <summary>
@@ -1101,15 +1110,18 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     {
         if (_timing.IsFirstTimePredicted)
         {
-            foreach (var (bui, open) in _queuedBuis)
+            foreach (var (bui, updateType) in _queuedBuis)
             {
-                if (open)
+                if (updateType == QueuedUpdate.Open || updateType == QueuedUpdate.ApplyState)
                 {
 #if EXCEPTION_TOLERANCE
                     try
                     {
 #endif
-                    bui.Open();
+                    if (updateType == QueuedUpdate.Open)
+                    {
+                        bui.Open();
+                    }
 
                     if (UIQuery.TryComp(bui.Owner, out var uiComp))
                     {

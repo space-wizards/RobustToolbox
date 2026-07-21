@@ -37,7 +37,6 @@ namespace Robust.Shared.GameObjects
         [IoC.Dependency] protected IPrototypeManager PrototypeManager = default!;
         [IoC.Dependency] protected ILogManager LogManager = default!;
         [IoC.Dependency] private IEntitySystemManager _entitySystemManager = default!;
-        [IoC.Dependency] private IMapManager _mapManager = default!;
         [IoC.Dependency] private IGameTiming _gameTiming = default!;
         [IoC.Dependency] private ISerializationManager _serManager = default!;
         [IoC.Dependency] private ProfManager _prof = default!;
@@ -72,6 +71,12 @@ namespace Robust.Shared.GameObjects
 
         protected readonly Queue<EntityUid> QueuedDeletions = new();
         protected readonly HashSet<EntityUid> QueuedDeletionsSet = new();
+
+        private Histogram? _tickUpdateHistogram;
+        private Histogram.Child? _entitySystemsHistogram;
+        private Histogram.Child? _entityEventBusHistogram;
+        private Histogram.Child? _queuedDeletionHistogram;
+        private Histogram.Child? _componentCullHistogram;
 
         private EntityDiffContext _context = new();
 
@@ -273,29 +278,43 @@ namespace Robust.Shared.GameObjects
 
         public virtual void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntitySystems").NewTimer())
+            UpdateTickHistogram(histogram);
+
+            using (_entitySystemsHistogram?.NewTimer())
             using (_prof.Group("Systems"))
             {
                 _entitySystemManager.TickUpdate(frameTime, noPredictions);
             }
 
-            using (histogram?.WithLabels("EntityEventBus").NewTimer())
+            using (_entityEventBusHistogram?.NewTimer())
             using (_prof.Group("Events"))
             {
                 EventBusInternal.ProcessEventQueue();
             }
 
-            using (histogram?.WithLabels("QueuedDeletion").NewTimer())
+            using (_queuedDeletionHistogram?.NewTimer())
             using (_prof.Group("QueueDel"))
             {
                 ProcessQueueudDeletions();
             }
 
-            using (histogram?.WithLabels("ComponentCull").NewTimer())
+            using (_componentCullHistogram?.NewTimer())
             using (_prof.Group("ComponentCull"))
             {
                 CullRemovedComponents();
             }
+        }
+
+        private void UpdateTickHistogram(Histogram? histogram)
+        {
+            if (ReferenceEquals(_tickUpdateHistogram, histogram))
+                return;
+
+            _tickUpdateHistogram = histogram;
+            _entitySystemsHistogram = histogram?.WithLabels("EntitySystems");
+            _entityEventBusHistogram = histogram?.WithLabels("EntityEventBus");
+            _queuedDeletionHistogram = histogram?.WithLabels("QueuedDeletion");
+            _componentCullHistogram = histogram?.WithLabels("ComponentCull");
         }
 
         internal virtual void ProcessQueueudDeletions()
@@ -351,7 +370,9 @@ namespace Robust.Shared.GameObjects
             if (coordinates.MapId == MapId.Nullspace)
             {
                 transform._parent = EntityUid.Invalid;
+#pragma warning disable CS0618 // AnchorEntity/Unanchor only work on initialized entities
                 transform.Anchored = false;
+#pragma warning restore CS0618
                 return newEntity;
             }
 
@@ -360,7 +381,7 @@ namespace Robust.Shared.GameObjects
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
             EntityCoordinates coords;
-            if (_mapManager.TryFindGridAt(coordinates, out var gridUid, out var grid)
+            if (_mapSystem.TryFindGridAt(coordinates, out var gridUid, out var grid)
                 && MetaQuery.TryGetComponentInternal(gridUid, out var meta)
                 && meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
@@ -383,6 +404,21 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetEntities() => Entities;
 
+        #region Dirtying
+
+        private bool DirtyComponent(IComponent component, bool isUnclassifiedChange = true)
+        {
+            var newChange = component.LastModifiedTick != CurrentTick;
+            component.LastModifiedTick = CurrentTick;
+
+            if (isUnclassifiedChange && component is IComponentDelta delta)
+            {
+                delta.LastUnclassifiedDirty = CurrentTick;
+            }
+
+            return newChange;
+        }
+
         /// <inheritdoc />
         public virtual void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null)
         {
@@ -402,14 +438,16 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("use override with an EntityUid or Entity<T>")]
-        public void Dirty(IComponent component, MetaDataComponent? meta = null)
+        public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            Dirty(component.Owner, component, meta);
+            DirtyInternal(uid, component, meta);
         }
 
-        /// <inheritdoc />
-        public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
+        internal void DirtyInternal(
+            EntityUid uid,
+            IComponent component,
+            MetaDataComponent? meta = null,
+            bool isUnclassifiedChange = true)
         {
             DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
                 $"Attempted to dirty a non-networked component: {component.GetType()}");
@@ -418,15 +456,18 @@ namespace Robust.Shared.GameObjects
             if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;
 
-            if (component.LastModifiedTick == CurrentTick)
-                return;
-
-            DirtyEntity(uid, meta);
-            component.LastModifiedTick = CurrentTick;
+            if (DirtyComponent(component, isUnclassifiedChange))
+                DirtyEntity(uid, meta);
         }
 
         /// <inheritdoc />
         public virtual void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
+        {
+            DirtyInternal(ent, meta);
+        }
+
+        internal void DirtyInternal<T>(Entity<T> ent, MetaDataComponent? meta = null, bool isUnclassifiedChange = true)
+            where T : IComponent
         {
             DebugTools.Assert(ent.Comp.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
                 $"Attempted to dirty a non-networked component: {ent.Comp.GetType()}");
@@ -434,11 +475,8 @@ namespace Robust.Shared.GameObjects
             if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
                 return;
 
-            if (ent.Comp.LastModifiedTick == CurrentTick)
-                return;
-
-            DirtyEntity(ent, meta);
-            ent.Comp.LastModifiedTick = CurrentTick;
+            if (DirtyComponent(ent.Comp, isUnclassifiedChange))
+                DirtyEntity(ent, meta);
         }
 
         /// <inheritdoc />
@@ -454,8 +492,8 @@ namespace Robust.Shared.GameObjects
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
             // chances are at least one of these components didn't get net-sync disabled.
             DirtyEntity(ent, meta);
-            ent.Comp1.LastModifiedTick = CurrentTick;
-            ent.Comp2.LastModifiedTick = CurrentTick;
+            DirtyComponent(ent.Comp1);
+            DirtyComponent(ent.Comp2);
         }
 
         /// <inheritdoc />
@@ -474,9 +512,9 @@ namespace Robust.Shared.GameObjects
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
             // chances are at least one of these components didn't get net-sync disabled.
             DirtyEntity(ent, meta);
-            ent.Comp1.LastModifiedTick = CurrentTick;
-            ent.Comp2.LastModifiedTick = CurrentTick;
-            ent.Comp3.LastModifiedTick = CurrentTick;
+            DirtyComponent(ent.Comp1);
+            DirtyComponent(ent.Comp2);
+            DirtyComponent(ent.Comp3);
         }
 
         /// <inheritdoc />
@@ -498,11 +536,13 @@ namespace Robust.Shared.GameObjects
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
             // chances are at least one of these components didn't get net-sync disabled.
             DirtyEntity(ent, meta);
-            ent.Comp1.LastModifiedTick = CurrentTick;
-            ent.Comp2.LastModifiedTick = CurrentTick;
-            ent.Comp3.LastModifiedTick = CurrentTick;
-            ent.Comp4.LastModifiedTick = CurrentTick;
+            DirtyComponent(ent.Comp1);
+            DirtyComponent(ent.Comp2);
+            DirtyComponent(ent.Comp3);
+            DirtyComponent(ent.Comp4);
         }
+
+        #endregion
 
         public bool TryQueueDeleteEntity(EntityUid? uid)
         {

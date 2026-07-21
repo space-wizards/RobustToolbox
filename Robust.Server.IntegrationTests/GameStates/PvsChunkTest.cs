@@ -7,7 +7,6 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Server.GameStates;
@@ -17,12 +16,9 @@ public sealed class PvsChunkTest : RobustIntegrationTest
     [Test]
     public async Task TestGridMapChange()
     {
-        var server = StartServer();
-        var client = StartClient();
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
-
-        var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
@@ -30,17 +26,10 @@ public sealed class PvsChunkTest : RobustIntegrationTest
         var mapSys = sEntMan.System<MapSystem>();
 
         var cEntMan = client.ResolveDependency<IEntityManager>();
-        var netMan = client.ResolveDependency<IClientNetManager>();
 
-        Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-        client.Post(() => netMan.ClientConnect(null!, 0, null!));
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         // Ensure client & server ticks are synced.
         // Client runs 1 tick ahead
@@ -73,7 +62,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             mapCoords = new(map1, default);
 
             map2 = server.System<SharedMapSystem>().CreateMap();
-            var gridComp = mapMan.CreateGridEntity(map2);
+            var gridComp = mapSys.CreateGridEntity(map2);
             grid = gridComp.Owner;
             mapSys.SetTile(grid, gridComp, Vector2i.Zero, new Tile(1));
             var gridCoords = new EntityCoordinates(grid, .5f, .5f);
@@ -87,11 +76,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         var nEntity = sEntMan.GetNetEntity(entity);
         var nGrid = sEntMan.GetNetEntity(grid);
@@ -110,11 +95,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
 
         // Teleport grid to new map
         await server.WaitPost(() => xforms.SetCoordinates(grid, mapCoords));
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         Assert.That(xform.ParentUid, Is.EqualTo(grid));
         Assert.That(xform.GridUid, Is.EqualTo(grid));
@@ -127,11 +108,7 @@ public sealed class PvsChunkTest : RobustIntegrationTest
 
         // Delete the original map.
         await server.WaitPost(() => sEntMan.DeleteEntity(map2));
-        for (int i = 0; i < 10; i++)
-        {
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-        }
+        await RunTicksSync(server, client, 10);
 
         Assert.That(xform.ParentUid, Is.EqualTo(grid));
         Assert.That(xform.GridUid, Is.EqualTo(grid));
@@ -142,9 +119,6 @@ public sealed class PvsChunkTest : RobustIntegrationTest
         Assert.That(!cEntMan.TryGetEntity(nMap2, out _));
         Assert.That(cEntMan.TryGetEntity(nGrid, out _));
 
-        await client.WaitPost(() => netMan.ClientDisconnect(""));
-        await server.WaitRunTicks(5);
-        await client.WaitRunTicks(5);
     }
 }
 

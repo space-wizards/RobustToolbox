@@ -84,7 +84,7 @@ namespace Robust.Client.Debugging
         [Dependency] private IOverlayManager _overlay = default!;
         [Dependency] private IEyeManager _eye = default!;
         [Dependency] private IInputManager _input = default!;
-        [Dependency] private IMapManager _map = default!;
+        [Dependency] private SharedMapSystem _map = default!;
         [Dependency] private IPlayerManager _player = default!;
         [Dependency] private IResourceCache _resourceCache = default!;
 
@@ -103,13 +103,13 @@ namespace Robust.Client.Debugging
                             EntityManager,
                             _eye,
                             _input,
-                            _map,
                             _player,
                             _resourceCache,
                             this,
                             _entityLookup,
                             _physics,
-                            _transform));
+                            _transform,
+                            _map));
 
                 if (value == PhysicsDebugFlags.None)
                     _overlay.RemoveOverlay(typeof(PhysicsDebugOverlay));
@@ -203,12 +203,12 @@ namespace Robust.Client.Debugging
         private readonly IEntityManager _entityManager;
         private readonly IEyeManager _eyeManager;
         private readonly IInputManager _inputManager;
-        private readonly IMapManager _mapManager;
         private readonly IPlayerManager _playerManager;
         private readonly DebugPhysicsSystem _debugPhysicsSystem;
         private readonly EntityLookupSystem _lookup;
         private readonly SharedPhysicsSystem _physicsSystem;
         private readonly SharedTransformSystem _transformSystem;
+        private readonly SharedMapSystem _mapSystem;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
 
@@ -219,17 +219,17 @@ namespace Robust.Client.Debugging
         private HashSet<Joint> _drawnJoints = new();
         private List<Entity<MapGridComponent>> _grids = new();
 
-        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem, SharedTransformSystem transformSystem)
+        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem, SharedTransformSystem transformSystem, SharedMapSystem mapSystem)
         {
             _entityManager = entityManager;
             _eyeManager = eyeManager;
             _inputManager = inputManager;
-            _mapManager = mapManager;
             _playerManager = playerManager;
             _debugPhysicsSystem = system;
             _lookup = lookup;
             _physicsSystem = physicsSystem;
             _transformSystem = transformSystem;
+            _mapSystem = mapSystem;
             _font = new VectorFont(cache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
         }
 
@@ -293,7 +293,7 @@ namespace Robust.Client.Debugging
                 }
 
                 _grids.Clear();
-                _mapManager.FindGridsIntersecting(mapId, viewBounds, ref _grids);
+                _mapSystem.FindGridsIntersecting(mapId, viewBounds, ref _grids);
 
                 foreach (var grid in _grids)
                 {

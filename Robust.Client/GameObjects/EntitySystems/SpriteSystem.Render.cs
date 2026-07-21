@@ -90,6 +90,7 @@ public sealed partial class SpriteSystem
     /// Pre-step before rendering a sprite's layers, ensuring the order is overriden if <see cref="SpriteComponent.LayersOrderOverride"/> is set.
     /// Layers with parents are skipped here, as they are assumed to be rendered as child layers instead.
     /// </summary>
+    /// <remarks>This should never run with duplicate layers, or layers being skipped over (fine if out of order though).</remarks>
     private void RenderLayersWithOverride(Entity<SpriteComponent> sprite, DrawingHandleWorld drawingHandle, ref readonly LayerRenderingStrategyMatrices matrices, Angle angle, Direction? overrideDirection)
     {
         if (sprite.Comp.LayersOrderOverride != null)
@@ -118,6 +119,8 @@ public sealed partial class SpriteSystem
                 return;
 
             // Render any remaining layers beyond the override
+            // We do this because some added-on-top layers may not have a corresponding LayerMap for the entity!
+            // This is intentional for those layers, but it does mean we have to make this assumption for layers past the override.
             foreach (var layer in sprite.Comp.Layers[highestIndex..])
             {
                 if (layer.ParentLayer != null)
@@ -125,6 +128,10 @@ public sealed partial class SpriteSystem
 
                 RenderLayerWithChildren(sprite, layer, drawingHandle, in matrices, angle, overrideDirection);
             }
+
+#if DEBUG
+            ValidateLayersWithOverride(sprite);
+#endif
         }
         else
         {
@@ -242,7 +249,7 @@ public sealed partial class SpriteSystem
     }
 
     /// <summary>
-    /// Handle a a "fake layer" that just exists to modify the parameters of a shader being used by some other
+    /// Handle a "fake layer" that just exists to modify the parameters of a shader being used by some other
     /// layer.
     /// </summary>
     private void HandleShaderLayer(Layer layer, Texture texture, CopyToShaderParameters @params)
@@ -268,6 +275,75 @@ public sealed partial class SpriteSystem
         var uv = new Vector4(sr.Left, sr.Bottom, sr.Right, sr.Top);
         shader.SetParameter(paramUV, uv);
     }
+
+    #if DEBUG
+    /// <summary>
+    /// Debug check to see that:
+    /// - All layers on a sprite go through the renderer
+    /// - No layer is gone through more than once
+    /// </summary>
+    private void ValidateLayersWithOverride(Entity<SpriteComponent> sprite)
+    {
+        HashSet<int> seenLayers = new HashSet<int>();
+
+        if (sprite.Comp.LayersOrderOverride == null)
+            return;
+
+        var highestIndex = 0;
+        foreach (var index in sprite.Comp.LayersOrderOverride)
+        {
+            if (index >= sprite.Comp.Layers.Count || index < 0)
+            {
+                Log.Error($"Tried to override the layer render order with an index '{index}' outside the bounds of the layer list for {ToPrettyString(sprite)}");
+                continue;
+            }
+
+            if (highestIndex < index)
+                highestIndex = index + 1;
+
+            var layer = sprite.Comp.Layers[index];
+
+            if (layer.ParentLayer != null)
+                continue;
+
+            RecursiveLayerCheck(layer);
+        }
+
+        if (highestIndex == sprite.Comp.Layers.Count)
+            return;
+
+        foreach (var layer in sprite.Comp.Layers[highestIndex..])
+        {
+            if (layer.ParentLayer != null)
+                continue;
+
+            RecursiveLayerCheck(layer);
+        }
+
+        for (int i = 0; i <= sprite.Comp.Layers.Count; i++)
+        {
+            DebugTools.Assert(seenLayers.Contains(i), $"SpriteComponent of entity {sprite.ToString()} somehow skipped rendering a layer with index {i}; incorrectly applied LayersOrderOverride?");
+        }
+
+        return;
+
+        void RecursiveLayerCheck(Layer layer)
+        {
+            foreach (var childIndex in layer.ChildLayers)
+            {
+                if (childIndex >= sprite.Comp.Layers.Count || childIndex < 0)
+                {
+                    Log.Error($"Tried to access a child layer with an index '{childIndex}' outside the bounds of the layer list for entity {ToPrettyString(sprite)}");
+                    continue;
+                }
+
+                RecursiveLayerCheck(sprite.Comp.Layers[childIndex]);
+            }
+
+            DebugTools.Assert(seenLayers.Add(layer.Index), $"SpriteComponent of entity {sprite.ToString()} tried to render the same layer with index {layer.Index} more than once; looping recursion?");
+        }
+    }
+    #endif
 }
 
 /// <summary>

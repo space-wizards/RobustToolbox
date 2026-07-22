@@ -140,13 +140,12 @@ public abstract partial class SharedContainerSystem
     public bool InsertOrDrop(Entity<ContainerManagerComponent?, TransformComponent?> container, Entity<TransformComponent?, MetaDataComponent?, PhysicsComponent?> toInsert,
         string containerId)
     {
-        if (!TryGetContainer(container, containerId, out var baseContainer, container))
-        {
-            _transform.DropNextTo(toInsert, (container.Owner, container.Comp2));
-            return false;
-        }
+        if (TryGetContainer(container, containerId, out var baseContainer, container))
+            return InsertOrDrop(toInsert, baseContainer, container.Comp2);
 
-        return InsertOrDrop(toInsert, baseContainer, container.Comp2);
+        _transform.DropNextTo(toInsert, (container.Owner, container.Comp2));
+        return false;
+
     }
 
     /// <summary>

@@ -18,8 +18,8 @@ internal sealed partial class CollisionManager
     {
         var input = new DistanceInput();
 
-        input.ProxyA.Set(shapeA, indexA);
-        input.ProxyB.Set(shapeB, indexB);
+        input.ProxyA.Set(in shapeA, indexA);
+        input.ProxyB.Set(in shapeB, indexB);
         input.TransformA = xfA;
         input.TransformB = xfB;
         input.UseRadii = true;

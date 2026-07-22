@@ -646,6 +646,7 @@ public abstract partial class SharedPhysicsSystem
         if (count == 0)
             return;
 
+        using var _mz = _prof.Group("Generate Manifolds");
         var wake = ArrayPool<bool>.Shared.Rent(count);
 
         _parallel.ProcessNow(new ManifoldsJob()

@@ -62,7 +62,7 @@ public sealed partial class NetManager
             return;
         }
 
-        var packet = BuildMessage(message, channel.Connection.Peer);
+        var packet = BuildMessage(message, channel);
         var method = message.DeliveryMethod;
         var seqChannel = message.SequenceChannel;
 

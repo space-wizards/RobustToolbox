@@ -767,8 +767,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         {
             if (bui.State?.Equals(state) != true)
             {
-                bui.UpdateState(state);
-                bui.Update();
+                AddQueued(bui, QueuedUpdate.ApplyState, state);
             }
         }
 

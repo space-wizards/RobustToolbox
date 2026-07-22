@@ -177,18 +177,11 @@ namespace Robust.Client.Graphics
             }
 
             var glyphPosition = baseline + new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
-            if (outline is { Thickness: > 0 } settings)
+            if (outline is { Thickness: > 0 } settings &&
+                Handle.GetOutlinedChar(rune, scale, settings.Thickness) is { } outlinedGlyph)
             {
-                // Sample concentric rings so the outline remains smooth at small sizes without gaps at larger sizes.
-                var outlineRadius = settings.Thickness * scale;
-                for (var radius = outlineRadius; radius > 0; radius -= 1f)
-                {
-                    for (var angle = 0f; angle < MathHelper.TwoPi; angle += 1f / radius)
-                    {
-                        var offset = new Vector2(MathF.Sin(angle), MathF.Cos(angle)) * radius;
-                        DrawGlyph(handle, texture, glyphPosition + offset, settings.Color);
-                    }
-                }
+                var outlinePosition = baseline + new Vector2(outlinedGlyph.Left, -outlinedGlyph.Top);
+                DrawGlyph(handle, outlinedGlyph.Texture, outlinePosition, settings.Color);
             }
 
             DrawGlyph(handle, texture, glyphPosition, color);

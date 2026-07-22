@@ -130,8 +130,8 @@ public sealed record ResourceManifestData(
 
         foreach (var child in mapNode)
         {
-            var moduleName = child.Key.AsString();  // Just "Goobstation"
-            var diskPath = child.Value.AsString();   // Just "GoobResources"
+            var moduleName = child.Key.AsString();
+            var diskPath = child.Value.AsString();
 
             dict[moduleName] = diskPath;
         }

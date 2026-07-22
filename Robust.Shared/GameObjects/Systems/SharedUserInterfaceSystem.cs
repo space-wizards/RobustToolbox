@@ -765,10 +765,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // Predict the change on client
         if (state != null && _netManager.IsClient && entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var bui))
         {
-            if (bui.State?.Equals(state) != true)
-            {
-                AddQueued(bui, QueuedUpdate.ApplyState, state);
-            }
+            AddQueued(bui, QueuedUpdate.ApplyState, state);
         }
 
         DirtyField(entity, nameof(UserInterfaceComponent.States));

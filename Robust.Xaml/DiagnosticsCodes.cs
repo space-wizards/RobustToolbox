@@ -20,8 +20,8 @@ internal static class DiagnosticsCodes
 
     internal static string MapToXamlXErrorCode(object exception)
     {
-    	return exception switch
-    	{
+        return exception switch
+        {
             XamlXWellKnownDiagnosticCodes wellKnownDiagnosticCodes => wellKnownDiagnosticCodes switch
             {
                 XamlXWellKnownDiagnosticCodes.Obsolete => Obsolete,
@@ -33,7 +33,7 @@ internal static class DiagnosticsCodes
             XamlLoadException => EmitError,
             XamlParseException => ParseError,
 
-    		_ => "RXN_UNKNOWN",
-    	};
+            _ => "RXN_UNKNOWN",
+        };
     }
 }

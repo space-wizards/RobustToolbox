@@ -48,6 +48,9 @@ END TEMPLATE-->
   <Control StyleClasses="Hello World" />
   ```
 
+- Setting `StyleClasses` in XAML now overrides all of the style classes with the provided list, instead of concatenating the given style class with any existing style classes.
+  The stock Button controls have modified setters to provide compatibility with older stylesheets, but user-defined controls may need to watch out for this.
+
 ### New features
 
 *None yet*

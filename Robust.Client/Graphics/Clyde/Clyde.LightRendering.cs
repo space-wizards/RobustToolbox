@@ -33,6 +33,7 @@ namespace Robust.Client.Graphics.Clyde
         private const int ShadowMapSize = 512;
 
         private const float SharedOccluderEdgeTolerance = 0.001f;
+        private const float SharedOccluderEdgeToleranceSquared = SharedOccluderEdgeTolerance * SharedOccluderEdgeTolerance;
         private const float SharedOccluderNeighbourQueryPadding = 1f + SharedOccluderEdgeTolerance;
 
         // Horizontal width, in pixels, of the shadow maps used to render FOV.
@@ -101,6 +102,8 @@ namespace Robust.Client.Graphics.Clyde
         private LightCapacityComparer _lightCap = new();
         private ShadowCapacityComparer _shadowCap = new ShadowCapacityComparer();
         private readonly Dictionary<OccluderEdgeKey, int> _occluderBoundaryEdgeCounts = new();
+        private readonly List<BoundaryEdge> _occluderBoundaryEdges = new();
+        private readonly List<Vector2> _occluderBoundaryVertices = new();
 
         private float _maxLightRadius;
 
@@ -1121,11 +1124,13 @@ namespace Robust.Client.Graphics.Clyde
             MapId map,
             Box2 expandedBounds,
             EntityQuery<TransformComponent> xforms,
-            Dictionary<OccluderEdgeKey, int> boundaryEdgeCounts)
+            Dictionary<OccluderEdgeKey, int> boundaryEdgeCounts,
+            List<BoundaryEdge> boundaryEdges,
+            List<Vector2> boundaryVertices)
         {
             // Build a count of world-space polygon edges near the render area.
             // Edges with a count > 1 are internal seams between neighbouring occluders and should not cast.
-            // The extra one-tile padding lets an on-screen wall suppress a seam shared with an off-screen neighbour.
+            // Polygon edges can partially overlap.
             var boundaryBounds = expandedBounds.Enlarged(SharedOccluderNeighbourQueryPadding);
 
             foreach (var (treeUid, comp) in _occluderSystem.GetIntersectingTrees(map, boundaryBounds))
@@ -1140,27 +1145,31 @@ namespace Robust.Client.Graphics.Clyde
 
                     var worldTransform = _transformSystem.GetWorldMatrix(entry.Transform, xforms);
 
-                    AddOccluderBoundaryEdges(occluder.Polygon, worldTransform, boundaryEdgeCounts);
+                    AddOccluderBoundaryEdges(occluder.Polygon, worldTransform, boundaryEdges, boundaryVertices);
 
                     return true;
                 }, treeBounds);
             }
+
+            BuildBoundarySegmentCounts(boundaryEdges, boundaryVertices, boundaryEdgeCounts);
         }
 
         private static void AddOccluderBoundaryEdges(
             ReadOnlySpan<Vector2> polygon,
             Matrix3x2 worldTransform,
-            Dictionary<OccluderEdgeKey, int> edgeCounts)
+            List<BoundaryEdge> boundaryEdges,
+            List<Vector2> boundaryVertices)
         {
             if (polygon.Length < 3)
                 return;
 
             for (var i = 0; i < polygon.Length; i++)
             {
-                AddBoundaryEdge(
-                    edgeCounts,
-                    Vector2.Transform(polygon[i], worldTransform),
-                    Vector2.Transform(polygon[(i + 1) % polygon.Length], worldTransform));
+                var a = Vector2.Transform(polygon[i], worldTransform);
+                var b = Vector2.Transform(polygon[(i + 1) % polygon.Length], worldTransform);
+
+                boundaryEdges.Add(new BoundaryEdge(a, b));
+                boundaryVertices.Add(a);
             }
         }
 
@@ -1171,28 +1180,236 @@ namespace Robust.Client.Graphics.Clyde
             edgeCounts[key] = count + 1;
         }
 
+        private static void BuildBoundarySegmentCounts(
+            List<BoundaryEdge> boundaryEdges,
+            List<Vector2> boundaryVertices,
+            Dictionary<OccluderEdgeKey, int> edgeCounts)
+        {
+            foreach (var edge in boundaryEdges)
+            {
+                AddSplitBoundaryEdgeSegments(edge.A, edge.B, boundaryVertices, edgeCounts);
+            }
+        }
+
+        internal static int BuildSplitOccluderEdges(
+            ReadOnlySpan<Vector2> polygon,
+            Matrix3x2 worldTransform,
+            List<Vector2> boundaryVertices,
+            Span<Vector4> edges)
+        {
+            if (polygon.Length < 3)
+                return 0;
+
+            Span<Vector2> worldVertices = polygon.Length <= 64
+                ? stackalloc Vector2[polygon.Length]
+                : new Vector2[polygon.Length];
+
+            // CW order TODO: Change frontfacedirection at some point
+            // Mostly so we're consistent with physics datafields.
+            var clockwise = SignedArea(polygon) < 0f;
+            for (var i = 0; i < polygon.Length; i++)
+            {
+                var sourceIndex = clockwise ? i : polygon.Length - 1 - i;
+                worldVertices[i] = Vector2.Transform(polygon[sourceIndex], worldTransform);
+            }
+
+            var edgeCount = 0;
+            for (var i = 0; i < worldVertices.Length && edgeCount < edges.Length; i++)
+            {
+                var a = worldVertices[i];
+                var b = worldVertices[(i + 1) % worldVertices.Length];
+                AddSplitOccluderEdgeSegments(a, b, boundaryVertices, edges, ref edgeCount);
+            }
+
+            return edgeCount;
+        }
+
+        private static void AddSplitBoundaryEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Dictionary<OccluderEdgeKey, int> edgeCounts)
+        {
+            var splitFactorCapacity = boundaryVertices.Count + 2;
+            if (splitFactorCapacity <= 64)
+            {
+                Span<float> splitFactors = stackalloc float[splitFactorCapacity];
+                AddSplitBoundaryEdgeSegments(a, b, boundaryVertices, splitFactors, edgeCounts);
+                return;
+            }
+
+            var splitFactorBuffer = ArrayPool<float>.Shared.Rent(splitFactorCapacity);
+            try
+            {
+                AddSplitBoundaryEdgeSegments(a, b, boundaryVertices, splitFactorBuffer.AsSpan(0, splitFactorCapacity), edgeCounts);
+            }
+            finally
+            {
+                ArrayPool<float>.Shared.Return(splitFactorBuffer);
+            }
+        }
+
+        private static void AddSplitBoundaryEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Span<float> splitFactors,
+            Dictionary<OccluderEdgeKey, int> edgeCounts)
+        {
+            var splitCount = BuildSplitFactors(a, b, boundaryVertices, splitFactors);
+            AddSplitBoundaryEdgeSegments(a, b, splitFactors[..splitCount], edgeCounts);
+        }
+
+        private static void AddSplitOccluderEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Span<Vector4> edges,
+            ref int edgeCount)
+        {
+            var splitFactorCapacity = boundaryVertices.Count + 2;
+            if (splitFactorCapacity <= 64)
+            {
+                Span<float> splitFactors = stackalloc float[splitFactorCapacity];
+                AddSplitOccluderEdgeSegments(a, b, boundaryVertices, splitFactors, edges, ref edgeCount);
+                return;
+            }
+
+            var splitFactorBuffer = ArrayPool<float>.Shared.Rent(splitFactorCapacity);
+            try
+            {
+                AddSplitOccluderEdgeSegments(
+                    a,
+                    b,
+                    boundaryVertices,
+                    splitFactorBuffer.AsSpan(0, splitFactorCapacity),
+                    edges,
+                    ref edgeCount);
+            }
+            finally
+            {
+                ArrayPool<float>.Shared.Return(splitFactorBuffer);
+            }
+        }
+
+        private static void AddSplitOccluderEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Span<float> splitFactors,
+            Span<Vector4> edges,
+            ref int edgeCount)
+        {
+            var splitCount = BuildSplitFactors(a, b, boundaryVertices, splitFactors);
+            AddSplitOccluderEdgeSegments(a, b, splitFactors[..splitCount], edges, ref edgeCount);
+        }
+
+        private static void AddSplitBoundaryEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            ReadOnlySpan<float> splitFactors,
+            Dictionary<OccluderEdgeKey, int> edgeCounts)
+        {
+            if (splitFactors.Length < 2)
+                return;
+
+            var edge = b - a;
+            var previous = splitFactors[0];
+            for (var i = 1; i < splitFactors.Length; i++)
+            {
+                var next = splitFactors[i];
+                if (next - previous <= SharedOccluderEdgeTolerance)
+                    continue;
+
+                AddBoundaryEdge(edgeCounts, a + edge * previous, a + edge * next);
+                previous = next;
+            }
+        }
+
+        private static void AddSplitOccluderEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            ReadOnlySpan<float> splitFactors,
+            Span<Vector4> edges,
+            ref int edgeCount)
+        {
+            if (splitFactors.Length < 2)
+                return;
+
+            var edge = b - a;
+            var previous = splitFactors[0];
+            for (var i = 1; i < splitFactors.Length && edgeCount < edges.Length; i++)
+            {
+                var next = splitFactors[i];
+                if (next - previous <= SharedOccluderEdgeTolerance)
+                    continue;
+
+                edges[edgeCount++] = EdgeToVector4(a + edge * previous, a + edge * next);
+                previous = next;
+            }
+        }
+
+        private static int BuildSplitFactors(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Span<float> splitFactors)
+        {
+            var edge = b - a;
+            var lengthSquared = edge.LengthSquared();
+            if (lengthSquared <= SharedOccluderEdgeToleranceSquared)
+                return 0;
+
+            var splitCount = 0;
+            AddSplitFactor(0f, splitFactors, ref splitCount);
+            AddSplitFactor(1f, splitFactors, ref splitCount);
+
+            foreach (var vertex in boundaryVertices)
+            {
+                if (TryGetPointOnSegmentFactor(vertex, a, edge, lengthSquared, out var factor))
+                    AddSplitFactor(factor, splitFactors, ref splitCount);
+            }
+
+            splitFactors[..splitCount].Sort();
+            return splitCount;
+        }
+
+        private static void AddSplitFactor(float factor, Span<float> splitFactors, ref int splitCount)
+        {
+            if (splitCount >= splitFactors.Length)
+                return;
+
+            for (var i = 0; i < splitCount; i++)
+            {
+                if (MathF.Abs(splitFactors[i] - factor) <= SharedOccluderEdgeTolerance)
+                    return;
+            }
+
+            splitFactors[splitCount++] = factor;
+        }
+
+        private static bool TryGetPointOnSegmentFactor(
+            Vector2 point,
+            Vector2 a,
+            Vector2 edge,
+            float lengthSquared,
+            out float factor)
+        {
+            factor = Vector2.Dot(point - a, edge) / lengthSquared;
+            if (factor <= SharedOccluderEdgeTolerance || factor >= 1f - SharedOccluderEdgeTolerance)
+                return false;
+
+            var closest = a + edge * factor;
+            return PointsMatch(point, closest);
+        }
+
         internal static bool ShouldSuppressSharedOccluderEdge(
             Vector4 edge,
             Dictionary<OccluderEdgeKey, int> boundaryEdgeCounts)
         {
             // Boundary keys are direction-independent, so reversed windings still match.
             var key = OccluderEdgeKey.From(edge);
-            return boundaryEdgeCounts.TryGetValue(key, out var boundaryCount) && boundaryCount > 1;
-        }
-
-        internal static bool ShouldSuppressSharedOccluderEdge(
-            Vector4 edge,
-            Dictionary<OccluderEdgeKey, int> boundaryEdgeCounts,
-            Vector2 eyePosition)
-        {
-            // Boundary keys are direction-independent, so reversed windings still match.
-            var key = OccluderEdgeKey.From(edge);
-            if (!boundaryEdgeCounts.TryGetValue(key, out var boundaryCount) || boundaryCount <= 1)
-                return false;
-
-            // Old square-wall visibility kept some shared seams when viewing into a wall run.
-            // Without this, looking down a line of walls can see through the cap between wall 1 and wall 2.
-            return !SharedEdgeCapsWallRun(edge, boundaryEdgeCounts, eyePosition);
+            return HasSharedBoundaryEdge(key, boundaryEdgeCounts);
         }
 
         internal static bool OccluderBoundarySharesEdge(
@@ -1239,74 +1456,96 @@ namespace Robust.Client.Graphics.Clyde
 
         private static bool PointsMatch(Vector2 a, Vector2 b)
         {
-            return Vector2.DistanceSquared(a, b) <= SharedOccluderEdgeTolerance * SharedOccluderEdgeTolerance;
+            return Vector2.DistanceSquared(a, b) <= SharedOccluderEdgeToleranceSquared;
         }
 
-        private static bool SharedEdgeCapsWallRun(
-            Vector4 edge,
-            Dictionary<OccluderEdgeKey, int> boundaryEdgeCounts,
+        internal static bool ShouldSuppressSharedOccluderEdge(
+            int edgeIndex,
+            ReadOnlySpan<Vector4> edges,
+            ReadOnlySpan<bool> sharedEdges,
             Vector2 eyePosition)
         {
+            if (!sharedEdges[edgeIndex])
+                return false;
+
+            var previous = edgeIndex == 0 ? edges.Length - 1 : edgeIndex - 1;
+            var next = edgeIndex + 1 == edges.Length ? 0 : edgeIndex + 1;
+
+            // All of this handling is just to keep the old occluder behavior with edge-specific seams
+            // e.g. if we have a wall beyond a wall then we need to occlude it even if connected.
+            if (EdgeViewedAsCap(edges[edgeIndex], eyePosition))
+                return false;
+
+            var startVisible = !sharedEdges[previous] && EdgeFacesPoint(edges[previous], eyePosition);
+            var endVisible = !sharedEdges[next] && EdgeFacesPoint(edges[next], eyePosition);
+
+            return startVisible || endVisible;
+        }
+
+        private static bool EdgeViewedAsCap(Vector4 edge, Vector2 point)
+        {
+            // Checking parallel / perpendicular edges to handle when we should dump seams.
+            // You'll know if this breaks because wall areas suddenly get random occluder seams.
             var a = new Vector2(edge.X, edge.Y);
             var b = new Vector2(edge.Z, edge.W);
             var edgeDelta = b - a;
             var lengthSquared = edgeDelta.LengthSquared();
-            if (lengthSquared <= SharedOccluderEdgeTolerance * SharedOccluderEdgeTolerance)
+            if (lengthSquared <= SharedOccluderEdgeToleranceSquared)
                 return false;
 
-            // Candidate caps are the seams the eye is looking directly into.
-            // If the eye projects outside the segment, this is a side-on internal seam and should stay suppressed.
-            var projected = Vector2.Dot(eyePosition - a, edgeDelta) / lengthSquared;
+            var pointFromA = point - a;
+            var projected = Vector2.Dot(pointFromA, edgeDelta) / lengthSquared;
             if (projected <= SharedOccluderEdgeTolerance || projected >= 1f - SharedOccluderEdgeTolerance)
                 return false;
 
-            var edgeKey = OccluderEdgeKey.From(edge);
-            var edgeDir = edgeDelta / MathF.Sqrt(lengthSquared);
-            var edgeNormal = new Vector2(-edgeDir.Y, edgeDir.X);
-            var capPoint = a + edgeDelta * projected;
-            var capDistance = Vector2.Dot(capPoint - eyePosition, edgeNormal);
-            if (MathF.Abs(capDistance) <= SharedOccluderEdgeTolerance)
-                return false;
+            var signedArea = Vector2Helpers.Cross(edgeDelta, pointFromA);
+            return signedArea * signedArea > SharedOccluderEdgeToleranceSquared * lengthSquared;
+        }
 
-            foreach (var (otherKey, count) in boundaryEdgeCounts)
+        private static bool HasSharedBoundaryEdge(
+            OccluderEdgeKey key,
+            Dictionary<OccluderEdgeKey, int> boundaryEdgeCounts)
+        {
+            boundaryEdgeCounts.TryGetValue(key, out var count);
+            if (count > 1)
+                return true;
+
+            for (var dax = -1; dax <= 1; dax++)
             {
-                if (count <= 1 || otherKey == edgeKey)
-                    continue;
-
-                otherKey.ToEdge(out var otherA, out var otherB);
-                var otherDelta = otherB - otherA;
-                var otherLength = otherDelta.Length();
-                if (otherLength <= SharedOccluderEdgeTolerance)
-                    continue;
-
-                var otherDir = otherDelta / otherLength;
-                if (MathF.Abs(Cross(edgeDir, otherDir)) > SharedOccluderEdgeTolerance)
-                    continue;
-
-                // Only consider seams on the same run track. For example, a horizontal wall column should only compare
-                // against horizontal shared edges whose x-ranges overlap the eye projection point.
-                var otherProjectedA = Vector2.Dot(otherA - a, edgeDelta) / lengthSquared;
-                var otherProjectedB = Vector2.Dot(otherB - a, edgeDelta) / lengthSquared;
-                if (projected < MathF.Min(otherProjectedA, otherProjectedB) - SharedOccluderEdgeTolerance ||
-                    projected > MathF.Max(otherProjectedA, otherProjectedB) + SharedOccluderEdgeTolerance)
+                for (var day = -1; day <= 1; day++)
                 {
-                    continue;
-                }
+                    for (var dbx = -1; dbx <= 1; dbx++)
+                    {
+                        for (var dby = -1; dby <= 1; dby++)
+                        {
+                            if (dax == 0 && day == 0 && dbx == 0 && dby == 0)
+                                continue;
 
-                var otherDistance = Vector2.Dot(otherA - eyePosition, edgeNormal);
-                if (MathF.Sign(otherDistance) == MathF.Sign(capDistance) &&
-                    MathF.Abs(otherDistance) < MathF.Abs(capDistance) - SharedOccluderEdgeTolerance)
-                {
-                    return false;
+                            var candidate = new OccluderEdgeKey(
+                                key.AX + dax,
+                                key.AY + day,
+                                key.BX + dbx,
+                                key.BY + dby);
+
+                            if (boundaryEdgeCounts.TryGetValue(candidate, out var candidateCount))
+                            {
+                                count += candidateCount;
+                                if (count > 1)
+                                    return true;
+                            }
+                        }
+                    }
                 }
             }
 
-            return true;
+            return false;
         }
 
-        private static float Cross(Vector2 a, Vector2 b)
+        private static bool EdgeFacesPoint(Vector4 edge, Vector2 point)
         {
-            return a.X * b.Y - a.Y * b.X;
+            var a = new Vector2(edge.X, edge.Y) - point;
+            var b = new Vector2(edge.Z, edge.W) - point;
+            return Vector2Helpers.Cross(a, b) > 0f;
         }
 
         internal readonly record struct OccluderEdgeKey(long AX, long AY, long BX, long BY)
@@ -1335,12 +1574,9 @@ namespace Robust.Client.Graphics.Clyde
                 return (long) MathF.Round(value / SharedOccluderEdgeTolerance);
             }
 
-            public void ToEdge(out Vector2 a, out Vector2 b)
-            {
-                a = new Vector2(AX * SharedOccluderEdgeTolerance, AY * SharedOccluderEdgeTolerance);
-                b = new Vector2(BX * SharedOccluderEdgeTolerance, BY * SharedOccluderEdgeTolerance);
-            }
         }
+
+        private readonly record struct BoundaryEdge(Vector2 A, Vector2 B);
 
         private static float SignedArea(ReadOnlySpan<Vector2> vertices)
         {
@@ -1395,8 +1631,18 @@ namespace Robust.Client.Graphics.Clyde
 
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
             var boundaryEdgeCounts = _occluderBoundaryEdgeCounts;
+            var boundaryEdges = _occluderBoundaryEdges;
+            var boundaryVertices = _occluderBoundaryVertices;
             boundaryEdgeCounts.Clear();
-            BuildOccluderBoundaryEdgeSets(map, expandedBounds, xforms, boundaryEdgeCounts);
+            boundaryEdges.Clear();
+            boundaryVertices.Clear();
+            BuildOccluderBoundaryEdgeSets(
+                map,
+                expandedBounds,
+                xforms,
+                boundaryEdgeCounts,
+                boundaryEdges,
+                boundaryVertices);
 
             try
             {
@@ -1472,10 +1718,8 @@ namespace Robust.Client.Graphics.Clyde
 
                         var polygon = occluder.Polygon;
 
-                        var maxEdgeCount = polygon.Length;
-                        if (ai + maxEdgeCount * 4 > maxDepthVertices
-                            || ii + maxEdgeCount * GetQuadBatchIndexCount() > maxDepthIndices
-                            || ami + polygon.Length > arrayMaskBuffer.Length
+                        var maxEdgeCount = Math.Min(maxDepthFaces, polygon.Length + boundaryVertices.Count);
+                        if (ami + polygon.Length > arrayMaskBuffer.Length
                             || imi + (polygon.Length - 2) * 3 > indexMaskBuffer.Length)
                         {
                             geometryFull = true;
@@ -1485,18 +1729,33 @@ namespace Robust.Client.Graphics.Clyde
                         Span<Vector4> edges = maxEdgeCount <= 64
                             ? stackalloc Vector4[maxEdgeCount]
                             : new Vector4[maxEdgeCount];
+                        Span<bool> sharedEdges = maxEdgeCount <= 64
+                            ? stackalloc bool[maxEdgeCount]
+                            : new bool[maxEdgeCount];
 
-                        var edgeCount = BuildOccluderEdges(
+                        var edgeCount = BuildSplitOccluderEdges(
                             polygon,
                             worldTransform,
+                            boundaryVertices,
                             edges);
+                        var activeEdges = edges[..edgeCount];
+                        var activeSharedEdges = sharedEdges[..edgeCount];
 
                         for (var i = 0; i < edgeCount; i++)
                         {
-                            var edge = edges[i];
-                            // Do not write internal seams between adjacent occluders. Rendering those seams as depth
-                            // geometry creates dark slivers/wedges at wall joins.
-                            if (ShouldSuppressSharedOccluderEdge(edge, boundaryEdgeCounts, eyePosition))
+                            activeSharedEdges[i] = ShouldSuppressSharedOccluderEdge(activeEdges[i], boundaryEdgeCounts);
+                        }
+
+                        for (var i = 0; i < edgeCount; i++)
+                        {
+                            var edge = activeEdges[i];
+                            // Skip internal seams between adjacent occluders. Rendering any shared seam breaks the
+                            // connected occluder boundary and can show as shadow/FOV seams at wall and diagonal joins.
+                            if (ShouldSuppressSharedOccluderEdge(
+                                    i,
+                                    activeEdges,
+                                    activeSharedEdges,
+                                    eyePosition))
                             {
                                 continue;
                             }

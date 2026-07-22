@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using Robust.Client.Graphics;
 using Robust.Shared;
@@ -12,7 +10,6 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
-using TerraFX.Interop.Windows;
 using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.Utility;
@@ -154,7 +151,6 @@ internal sealed partial class ReloadManager : IReloadManager
 
     private ResPath ResolveModularPath(ResPath relative, string rootIter)
     {
-        var finalPath = relative;
         var rootName = new DirectoryInfo(rootIter).Name;
 
         if (_manifest.ModularResources == null)
@@ -162,10 +158,12 @@ internal sealed partial class ReloadManager : IReloadManager
 
         foreach (var (vfsPath, diskPath) in _manifest.ModularResources)
         {
-            if (diskPath != rootName) continue;
-            finalPath = new ResPath(vfsPath) / relative;
-            break;
+            if (diskPath != rootName)
+                continue;
+
+            return (new ResPath(vfsPath) / relative.ToRelativePath()).ToRootedPath();
         }
-        return finalPath;
+
+        return relative;
     }
 }

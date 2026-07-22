@@ -181,16 +181,10 @@ namespace Robust.Client.Graphics
             {
                 // Sample concentric rings so the outline remains smooth at small sizes without gaps at larger sizes.
                 var outlineRadius = settings.Thickness * scale;
-                var ringCount = (int) MathF.Ceiling(outlineRadius);
-
-                for (var ring = 1; ring <= ringCount; ring++)
+                for (var radius = outlineRadius; radius > 0; radius -= 1f)
                 {
-                    var radius = MathF.Min(ring, outlineRadius);
-                    var segmentCount = Math.Max(1, (int) MathF.Ceiling(MathHelper.TwoPi * radius));
-
-                    for (var segment = 0; segment < segmentCount; segment++)
+                    for (var angle = 0f; angle < MathHelper.TwoPi; angle += 1f / radius)
                     {
-                        var angle = segment / (float) segmentCount * MathHelper.TwoPi;
                         var offset = new Vector2(MathF.Sin(angle), MathF.Cos(angle)) * radius;
                         DrawGlyph(handle, texture, glyphPosition + offset, settings.Color);
                     }

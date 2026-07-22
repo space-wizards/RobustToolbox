@@ -1644,6 +1644,13 @@ namespace Robust.Client.Graphics.Clyde
                 boundaryEdges,
                 boundaryVertices);
 
+            var edgeVertices = maxDepthFaces > 64
+                ? ArrayPool<Vector4>.Shared.Rent(maxDepthFaces)
+                : null;
+            var sharedEdgeVertices = maxDepthFaces > 64
+                ? ArrayPool<bool>.Shared.Rent(maxDepthFaces)
+                : null;
+
             try
             {
                 foreach (var (uid, comp) in _occluderSystem.GetIntersectingTrees(map, expandedBounds))
@@ -1728,10 +1735,10 @@ namespace Robust.Client.Graphics.Clyde
 
                         Span<Vector4> edges = maxEdgeCount <= 64
                             ? stackalloc Vector4[maxEdgeCount]
-                            : new Vector4[maxEdgeCount];
+                            : edgeVertices.AsSpan(0, maxEdgeCount);
                         Span<bool> sharedEdges = maxEdgeCount <= 64
                             ? stackalloc bool[maxEdgeCount]
-                            : new bool[maxEdgeCount];
+                            : sharedEdgeVertices.AsSpan(0, maxEdgeCount);
 
                         var edgeCount = BuildSplitOccluderEdges(
                             polygon,
@@ -1803,6 +1810,12 @@ namespace Robust.Client.Graphics.Clyde
                 ArrayPool<ushort>.Shared.Return(indexBuffer);
                 ArrayPool<Vector2>.Shared.Return(arrayMaskBuffer);
                 ArrayPool<ushort>.Shared.Return(indexMaskBuffer);
+
+                if (edgeVertices != null)
+                    ArrayPool<Vector4>.Shared.Return(edgeVertices);
+
+                if (sharedEdgeVertices != null)
+                    ArrayPool<bool>.Shared.Return(sharedEdgeVertices);
             }
 
             _debugStats.Occluders += occluderCount;

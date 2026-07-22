@@ -179,24 +179,27 @@ namespace Robust.Client.Graphics
             var glyphPosition = baseline + new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
             if (outline is { Thickness: > 0 } settings)
             {
-                // Draw the outline by rendering the glyph around its original position.
-                var outlineOffset = settings.Thickness * scale;
-                foreach (var offset in OutlineOffsets)
+                // Sample concentric rings so the outline remains smooth at small sizes without gaps at larger sizes.
+                var outlineRadius = settings.Thickness * scale;
+                var ringCount = (int) MathF.Ceiling(outlineRadius);
+
+                for (var ring = 1; ring <= ringCount; ring++)
                 {
-                    DrawGlyph(handle, texture, glyphPosition + offset * outlineOffset, settings.Color);
+                    var radius = MathF.Min(ring, outlineRadius);
+                    var segmentCount = Math.Max(1, (int) MathF.Ceiling(MathHelper.TwoPi * radius));
+
+                    for (var segment = 0; segment < segmentCount; segment++)
+                    {
+                        var angle = segment / (float) segmentCount * MathHelper.TwoPi;
+                        var offset = new Vector2(MathF.Sin(angle), MathF.Cos(angle)) * radius;
+                        DrawGlyph(handle, texture, glyphPosition + offset, settings.Color);
+                    }
                 }
             }
 
             DrawGlyph(handle, texture, glyphPosition, color);
             return metrics.Value.Advance;
         }
-
-        private static readonly Vector2[] OutlineOffsets =
-        [
-            new(-1, -1), new(0, -1), new(1, -1), // Top
-            new(-1, 0), new(1, 0), // Sides
-            new(-1, 1), new(0, 1), new(1, 1), // Bottom
-        ];
 
         private static void DrawGlyph(DrawingHandleBase handle, Texture texture, Vector2 position, Color color)
         {

@@ -133,19 +133,19 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public FormattedMessage? GetFormattedMessage() => _entry == null ? null : new FormattedMessage(_entry.Value.Message);
 
-        public float? FontOutlineThicknessOverride { get; set; }
+        public float? OutlineThicknessOverride { get; set; }
 
-        public Color? FontOutlineColorOverride { get; set; }
+        public Color? OutlineColorOverride { get; set; }
 
         private TextOutline? ActualFontOutline
         {
             get
             {
-                var thickness = FontOutlineThicknessOverride;
+                var thickness = OutlineThicknessOverride;
                 if (!thickness.HasValue && TryGetStyleProperty<float>(Label.StylePropertyFontOutlineThickness, out var styleThickness))
                     thickness = styleThickness;
 
-                var color = FontOutlineColorOverride;
+                var color = OutlineColorOverride;
                 if (!color.HasValue && TryGetStyleProperty<Color>(Label.StylePropertyFontOutlineColor, out var styleColor))
                     color = styleColor;
 

@@ -167,19 +167,19 @@ namespace Robust.Client.UserInterface.Controls
 
         public int? ShadowOffsetYOverride { get; set; }
 
-        public float? FontOutlineThicknessOverride { get; set; }
+        public float? OutlineThicknessOverride { get; set; }
 
-        public Color? FontOutlineColorOverride { get; set; }
+        public Color? OutlineColorOverride { get; set; }
 
         private TextOutline? ActualFontOutline
         {
             get
             {
-                var thickness = FontOutlineThicknessOverride;
+                var thickness = OutlineThicknessOverride;
                 if (!thickness.HasValue && TryGetStyleProperty<float>(StylePropertyFontOutlineThickness, out var styleThickness))
                     thickness = styleThickness;
 
-                var color = FontOutlineColorOverride;
+                var color = OutlineColorOverride;
                 if (!color.HasValue && TryGetStyleProperty<Color>(StylePropertyFontOutlineColor, out var styleColor))
                     color = styleColor;
 

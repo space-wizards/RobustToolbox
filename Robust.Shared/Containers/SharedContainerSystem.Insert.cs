@@ -141,7 +141,10 @@ public abstract partial class SharedContainerSystem
         string containerId)
     {
         if (!TryGetContainer(container, containerId, out var baseContainer, container))
+        {
+            _transform.DropNextTo(toInsert, (container.Owner, container.Comp2));
             return false;
+        }
 
         return InsertOrDrop(toInsert, baseContainer, container.Comp2);
     }

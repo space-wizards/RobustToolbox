@@ -13,9 +13,10 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Shapes;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
-using static Robust.Shared.GameObjects.OccluderComponent;
 using Robust.Shared.Utility;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
 
@@ -30,6 +31,11 @@ namespace Robust.Client.Graphics.Clyde
     {
         // Horizontal width, in pixels, of the shadow maps used to render regular lights.
         private const int ShadowMapSize = 512;
+
+        private const float SharedOccluderEdgeTolerance = 0.001f;
+        private const float SharedOccluderEdgeToleranceSquared = SharedOccluderEdgeTolerance * SharedOccluderEdgeTolerance;
+        private const float SharedOccluderNeighbourQueryPadding = 1f + SharedOccluderEdgeTolerance;
+        private const float SharedOccluderBoundaryVertexCellSize = 1f;
 
         // Horizontal width, in pixels, of the shadow maps used to render FOV.
         // I figured this was more accuracy sensitive than lights so resolution is significantly higher.
@@ -92,10 +98,20 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
         private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
 
-        private (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] _lightsToRenderList = default!;
+        private LightRenderData[] _lightsToRenderList = default!;
 
         private LightCapacityComparer _lightCap = new();
         private ShadowCapacityComparer _shadowCap = new ShadowCapacityComparer();
+
+        // Count of how many occluders share an edge; if shared then don't render the seams there.
+        private readonly Dictionary<OccluderEdgeKey, int> _occluderBoundaryEdgeCounts = new();
+        private readonly HashSet<OccluderEdgeKey> _occluderSharedBoundaryEdges = new();
+        private readonly List<BoundaryEdge> _occluderBoundaryEdges = new();
+        private readonly List<Vector2> _occluderBoundaryVertices = new();
+
+        // Spatial index for boundary vertices. This avoids checking every wall vertex against every edge when
+        // splitting overlapping occluders.
+        private readonly Dictionary<Vector2i, List<Vector2>> _occluderBoundaryVertexCells = new();
 
         private float _maxLightRadius;
 
@@ -357,7 +373,7 @@ namespace Robust.Client.Graphics.Clyde
 
             eye.GetViewMatrixNoOffset(out var eyeTransform, eye.Scale);
 
-            UpdateOcclusionGeometry(mapId, expandedBounds, eyeTransform);
+            UpdateOcclusionGeometry(mapId, expandedBounds, eye.Position.Position);
 
             DrawFov(viewport, eye);
 
@@ -380,11 +396,16 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     for (var i = 0; i < count; i++)
                     {
-                        var (light, lightPos, _, _) = _lightsToRenderList[i];
+                        ref var lightData = ref _lightsToRenderList[i];
+                        var light = lightData.Light;
 
-                        if (!light.CastShadows) continue;
+                        if (lightData.ShadowMapIndex < 0) continue;
 
-                        DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i);
+                        DrawOcclusionDepth(
+                            lightData.Position,
+                            ShadowMapSize,
+                            light.Radius,
+                            lightData.ShadowMapIndex);
                     }
                 }
 
@@ -459,7 +480,10 @@ namespace Robust.Client.Graphics.Clyde
             {
                 for (var i = 0; i < count; i++)
                 {
-                    var (component, lightPos, _, rot) = _lightsToRenderList[i];
+                    ref var lightData = ref _lightsToRenderList[i];
+                    var component = lightData.Light;
+                    var lightPos = lightData.Position;
+                    var rot = lightData.Rotation;
 
                     Texture? mask = null;
                     var rotation = Angle.Zero;
@@ -520,7 +544,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     lightShader.SetUniformMaybe("lightCenter", lightPos);
                     lightShader.SetUniformMaybe("lightIndex",
-                        component.CastShadows ? (i + 0.5f) / ShadowTexture.Height : -1);
+                        lightData.ShadowMapIndex >= 0 ? (lightData.ShadowMapIndex + 0.5f) / ShadowTexture.Height : -1);
 
                     var offset = new Vector2(component.Radius, component.Radius);
 
@@ -569,6 +593,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private static bool LightQuery(ref (
             Clyde clyde,
+            MapId map,
             int count,
             int shadowCastingCount,
             EntityQuery<TransformComponent> xforms,
@@ -592,35 +617,76 @@ namespace Robust.Client.Graphics.Clyde
             if (!circle.Intersects(state.worldAABB))
                 return true;
 
-            // If the light is a shadow casting light, keep a separate track of that
             if (light.CastShadows)
+            {
+                // Shadow-casting lights embedded inside an occluder cannot work consistently.
+                // As such we just disable them! If you want light inside an occluder use non-shadow casting lights!
+                if (state.clyde.IsLightEmbeddedInOccluder(state.map, lightPos, state.xforms))
+                    return true;
+
+                // If the light is a shadow casting light, keep a separate track of that.
                 shadowCount++;
+            }
 
             var distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared();
-            state.clyde._lightsToRenderList[count++] = (light, lightPos, distanceSquared, rot);
+            state.clyde._lightsToRenderList[count++] = new LightRenderData(
+                light,
+                lightPos,
+                distanceSquared,
+                rot);
 
             return true;
         }
 
-        private sealed class LightCapacityComparer : IComparer<(PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
+        internal struct LightRenderData
         {
-            public int Compare(
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
+            public PointLightComponent Light;
+            public Vector2 Position;
+            public float DistanceSquared;
+            public Angle Rotation;
+            public bool CastShadows;
+            public int ShadowMapIndex;
+
+            public LightRenderData(
+                PointLightComponent light,
+                Vector2 position,
+                float distanceSquared,
+                Angle rotation)
             {
-                if (x.light.CastShadows && !y.light.CastShadows) return 1;
-                if (!x.light.CastShadows && y.light.CastShadows) return -1;
+                Light = light;
+                Position = position;
+                DistanceSquared = distanceSquared;
+                Rotation = rotation;
+                CastShadows = light.CastShadows;
+                ShadowMapIndex = -1;
+            }
+
+            internal LightRenderData(bool castShadows)
+            {
+                Light = default!;
+                Position = Vector2.Zero;
+                DistanceSquared = 0f;
+                Rotation = Angle.Zero;
+                CastShadows = castShadows;
+                ShadowMapIndex = -1;
+            }
+        }
+
+        private sealed class LightCapacityComparer : IComparer<LightRenderData>
+        {
+            public int Compare(LightRenderData x, LightRenderData y)
+            {
+                if (x.CastShadows && !y.CastShadows) return 1;
+                if (!x.CastShadows && y.CastShadows) return -1;
                 return 0;
             }
         }
 
-        private sealed class ShadowCapacityComparer : IComparer<(PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
+        private sealed class ShadowCapacityComparer : IComparer<LightRenderData>
         {
-            public int Compare(
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
+            public int Compare(LightRenderData x, LightRenderData y)
             {
-                return x.distanceSquared.CompareTo(y.distanceSquared);
+                return x.DistanceSquared.CompareTo(y.DistanceSquared);
             }
         }
 
@@ -631,7 +697,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
-            var state = (this, count: 0, shadowCastingCount: 0, xforms, worldAABB);
+            var state = (this, map, count: 0, shadowCastingCount: 0, xforms, worldAABB);
             var lightAabb = worldAABB.Enlarged(_maxLightRadius);
 
             foreach (var (uid, comp) in _lightTreeSystem.GetIntersectingTrees(map, lightAabb))
@@ -666,13 +732,100 @@ namespace Robust.Client.Graphics.Clyde
 
             for (var i = 0; i < state.count; i++)
             {
-                expandedBounds = expandedBounds.ExtendToContain(_lightsToRenderList[i].pos);
+                expandedBounds = expandedBounds.ExtendToContain(_lightsToRenderList[i].Position);
             }
 
+            var renderedShadowCastingCount = AssignShadowMapRows(_lightsToRenderList.AsSpan(0, state.count), _maxShadowcastingLights);
+
             _debugStats.TotalLights += state.count;
-            _debugStats.ShadowLights += Math.Min(state.shadowCastingCount, _maxShadowcastingLights);
+            _debugStats.ShadowLights += renderedShadowCastingCount;
 
             return (state.count, expandedBounds);
+        }
+
+        internal static int AssignShadowMapRows(Span<LightRenderData> lights, int maxShadowcastingLights)
+        {
+            var shadowMapIndex = 0;
+
+            for (var i = 0; i < lights.Length; i++)
+            {
+                ref var lightData = ref lights[i];
+                lightData.ShadowMapIndex = -1;
+
+                if (!lightData.CastShadows || shadowMapIndex >= maxShadowcastingLights)
+                    continue;
+
+                lightData.ShadowMapIndex = shadowMapIndex;
+                shadowMapIndex++;
+            }
+
+            return shadowMapIndex;
+        }
+
+        private bool IsLightEmbeddedInOccluder(
+            MapId map,
+            Vector2 lightPosition,
+            EntityQuery<TransformComponent> xforms)
+        {
+            // Shadow-casting lights inside an occluder produce unstable/inside-out shadows.
+            // Do a narrow tree query around the light and only run the expensive polygon TestPoint
+            // for occluders whose cached AABB can contain the light.
+            var pointBounds = new Box2(lightPosition, lightPosition).Enlarged(SharedOccluderEdgeTolerance);
+
+            foreach (var (treeUid, comp) in _occluderSystem.GetIntersectingTrees(map, pointBounds))
+            {
+                var treeBounds = _transformSystem.GetInvWorldMatrix(treeUid, xforms).TransformBox(pointBounds);
+                var state = new LightEmbeddedOccluderQueryState(
+                    _fixtureSystem,
+                    _transformSystem,
+                    xforms,
+                    lightPosition);
+
+                comp.Tree.QueryAabb(ref state, CheckLightEmbeddedInOccluder, treeBounds, approx: true);
+
+                if (state.Embedded)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool CheckLightEmbeddedInOccluder(
+            ref LightEmbeddedOccluderQueryState state,
+            in ComponentTreeEntry<OccluderComponent> entry)
+        {
+            var occluder = entry.Component;
+            if (!occluder.Enabled)
+                return true;
+
+            var (worldPosition, worldRotation) = state.TransformSystem.GetWorldPositionRotation(
+                entry.Transform,
+                state.Xforms);
+
+            if (!OccluderOverlapsPoint(
+                    state.FixtureSystem,
+                    occluder.PolygonArray,
+                    new Transform(worldPosition, worldRotation),
+                    state.LightPosition))
+            {
+                return true;
+            }
+
+            state.Embedded = true;
+            return false;
+        }
+
+        private struct LightEmbeddedOccluderQueryState(
+            FixtureSystem fixtureSystem,
+            TransformSystem transformSystem,
+            EntityQuery<TransformComponent> xforms,
+            Vector2 lightPosition)
+        {
+            public readonly FixtureSystem FixtureSystem = fixtureSystem;
+            public readonly TransformSystem TransformSystem = transformSystem;
+            public readonly EntityQuery<TransformComponent> Xforms = xforms;
+            public readonly Vector2 LightPosition = lightPosition;
+            public bool Embedded;
         }
 
         /// <inheritdoc/>
@@ -829,7 +982,7 @@ namespace Robust.Client.Graphics.Clyde
             BindVertexArray(_occlusionMaskVao.Handle);
             CheckGlError();
 
-            GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
+            GL.DrawElements(PrimitiveType.Triangles, _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
                 IntPtr.Zero);
             CheckGlError();
 
@@ -945,7 +1098,735 @@ namespace Robust.Client.Graphics.Clyde
             _drawQuad(Vector2.Zero, Vector2.One, Matrix3x2.Identity, fovShader);
         }
 
-        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Matrix3x2 eyeTransform)
+        internal static int BuildOccluderEdges(
+            ReadOnlySpan<Vector2> polygon,
+            Matrix3x2 worldTransform,
+            Span<Vector4> edges)
+        {
+            if (polygon.Length < 3)
+                return 0;
+
+            Span<Vector2> worldVertices = polygon.Length <= 64
+                ? stackalloc Vector2[polygon.Length]
+                : new Vector2[polygon.Length];
+
+            // Occluder polygons are stored as physics hulls, i.e. generally CCW.
+            // The depth shader is authored for clockwise wall edges, so normalize the order here.
+            var clockwise = SignedArea(polygon) < 0f;
+            for (var i = 0; i < polygon.Length; i++)
+            {
+                var sourceIndex = clockwise ? i : polygon.Length - 1 - i;
+                worldVertices[i] = Vector2.Transform(polygon[sourceIndex], worldTransform);
+            }
+
+            var edgeCount = 0;
+            for (var i = 0; i < worldVertices.Length && edgeCount < edges.Length; i++)
+            {
+                edges[edgeCount++] = EdgeToVector4(worldVertices[i], worldVertices[(i + 1) % worldVertices.Length]);
+            }
+
+            return edgeCount;
+        }
+
+        private void BuildOccluderBoundaryEdgeSets(
+            MapId map,
+            Box2 expandedBounds,
+            EntityQuery<TransformComponent> xforms,
+            Dictionary<OccluderEdgeKey, int> boundaryEdgeCounts,
+            HashSet<OccluderEdgeKey> sharedBoundaryEdges,
+            List<BoundaryEdge> boundaryEdges,
+            List<Vector2> boundaryVertices,
+            Dictionary<Vector2i, List<Vector2>> boundaryVertexCells)
+        {
+            // Build a count of world-space polygon edges near the render area.
+            // Edges with a count > 1 are internal seams between neighbouring occluders and should not cast.
+            // Polygon edges can partially overlap.
+            var boundaryBounds = expandedBounds.Enlarged(SharedOccluderNeighbourQueryPadding);
+
+            foreach (var (treeUid, comp) in _occluderSystem.GetIntersectingTrees(map, boundaryBounds))
+            {
+                var treeBounds = _transformSystem.GetInvWorldMatrix(treeUid, xforms).TransformBox(boundaryBounds);
+
+                comp.Tree.QueryAabb((in ComponentTreeEntry<OccluderComponent> entry) =>
+                {
+                    var occluder = entry.Component;
+                    if (!occluder.Enabled)
+                        return true;
+
+                    var worldTransform = _transformSystem.GetWorldMatrix(entry.Transform, xforms);
+
+                    AddOccluderBoundaryEdges(occluder.Polygon, worldTransform, boundaryEdges, boundaryVertices);
+
+                    return true;
+                }, treeBounds);
+            }
+
+            BuildBoundaryVertexCells(boundaryVertices, boundaryVertexCells);
+            BuildBoundarySegmentCounts(boundaryEdges, boundaryVertices, boundaryVertexCells, boundaryEdgeCounts);
+            BuildSharedBoundaryEdges(boundaryEdgeCounts, sharedBoundaryEdges);
+        }
+
+        private static void BuildBoundaryVertexCells(
+            List<Vector2> boundaryVertices,
+            Dictionary<Vector2i, List<Vector2>> boundaryVertexCells)
+        {
+            // The exact edge/point check still happens later; cells only reduce the candidate vertex set.
+            foreach (var vertex in boundaryVertices)
+            {
+                var cell = GetBoundaryVertexCell(vertex);
+                if (!boundaryVertexCells.TryGetValue(cell, out var cellVertices))
+                {
+                    cellVertices = new List<Vector2>();
+                    boundaryVertexCells[cell] = cellVertices;
+                }
+
+                cellVertices.Add(vertex);
+            }
+        }
+
+        private static void ClearBoundaryVertexCells(Dictionary<Vector2i, List<Vector2>> boundaryVertexCells)
+        {
+            // Keep the dictionary/list allocations around between frames. Occluder topology usually changes slowly,
+            // but the render bounds can change every frame.
+            foreach (var vertices in boundaryVertexCells.Values)
+            {
+                vertices.Clear();
+            }
+        }
+
+        private static void AddOccluderBoundaryEdges(
+            ReadOnlySpan<Vector2> polygon,
+            Matrix3x2 worldTransform,
+            List<BoundaryEdge> boundaryEdges,
+            List<Vector2> boundaryVertices)
+        {
+            if (polygon.Length < 3)
+                return;
+
+            for (var i = 0; i < polygon.Length; i++)
+            {
+                var a = Vector2.Transform(polygon[i], worldTransform);
+                var b = Vector2.Transform(polygon[(i + 1) % polygon.Length], worldTransform);
+
+                boundaryEdges.Add(new BoundaryEdge(a, b));
+                boundaryVertices.Add(a);
+            }
+        }
+
+        private static void AddBoundaryEdge(Dictionary<OccluderEdgeKey, int> edgeCounts, Vector2 a, Vector2 b)
+        {
+            var key = OccluderEdgeKey.From(a, b);
+            edgeCounts.TryGetValue(key, out var count);
+            edgeCounts[key] = count + 1;
+        }
+
+        private static void BuildBoundarySegmentCounts(
+            List<BoundaryEdge> boundaryEdges,
+            List<Vector2> boundaryVertices,
+            Dictionary<Vector2i, List<Vector2>> boundaryVertexCells,
+            Dictionary<OccluderEdgeKey, int> edgeCounts)
+        {
+            foreach (var edge in boundaryEdges)
+            {
+                AddSplitBoundaryEdgeSegments(edge.A, edge.B, boundaryVertices, boundaryVertexCells, edgeCounts);
+            }
+        }
+
+        private static void BuildSharedBoundaryEdges(
+            Dictionary<OccluderEdgeKey, int> boundaryEdgeCounts,
+            HashSet<OccluderEdgeKey> sharedBoundaryEdges)
+        {
+            // The fuzzy neighbour search is too expensive to repeat for every rendered split edge.
+            // Do it once while building the frame's boundary data, then render-time checks are HashSet.Contains().
+            foreach (var key in boundaryEdgeCounts.Keys)
+            {
+                if (HasSharedBoundaryEdge(key, boundaryEdgeCounts))
+                    sharedBoundaryEdges.Add(key);
+            }
+        }
+
+        internal static int BuildSplitOccluderEdges(
+            ReadOnlySpan<Vector2> polygon,
+            Matrix3x2 worldTransform,
+            List<Vector2> boundaryVertices,
+            Span<Vector4> edges)
+        {
+            if (polygon.Length < 3)
+                return 0;
+
+            Span<Vector2> worldVertices = polygon.Length <= 64
+                ? stackalloc Vector2[polygon.Length]
+                : new Vector2[polygon.Length];
+
+            // CW order TODO: Change frontfacedirection at some point
+            // Mostly so we're consistent with physics datafields.
+            var clockwise = SignedArea(polygon) < 0f;
+            for (var i = 0; i < polygon.Length; i++)
+            {
+                var sourceIndex = clockwise ? i : polygon.Length - 1 - i;
+                worldVertices[i] = Vector2.Transform(polygon[sourceIndex], worldTransform);
+            }
+
+            var edgeCount = 0;
+            for (var i = 0; i < worldVertices.Length && edgeCount < edges.Length; i++)
+            {
+                var a = worldVertices[i];
+                var b = worldVertices[(i + 1) % worldVertices.Length];
+                AddSplitOccluderEdgeSegments(a, b, boundaryVertices, edges, ref edgeCount);
+            }
+
+            return edgeCount;
+        }
+
+        private static int BuildSplitOccluderEdges(
+            ReadOnlySpan<Vector2> polygon,
+            Matrix3x2 worldTransform,
+            List<Vector2> boundaryVertices,
+            Dictionary<Vector2i, List<Vector2>> boundaryVertexCells,
+            Span<Vector4> edges)
+        {
+            if (polygon.Length < 3)
+                return 0;
+
+            Span<Vector2> worldVertices = polygon.Length <= 64
+                ? stackalloc Vector2[polygon.Length]
+                : new Vector2[polygon.Length];
+
+            // CW order TODO: Change frontfacedirection at some point
+            // Mostly so we're consistent with physics datafields.
+            var clockwise = SignedArea(polygon) < 0f;
+            for (var i = 0; i < polygon.Length; i++)
+            {
+                var sourceIndex = clockwise ? i : polygon.Length - 1 - i;
+                worldVertices[i] = Vector2.Transform(polygon[sourceIndex], worldTransform);
+            }
+
+            var edgeCount = 0;
+            for (var i = 0; i < worldVertices.Length && edgeCount < edges.Length; i++)
+            {
+                var a = worldVertices[i];
+                var b = worldVertices[(i + 1) % worldVertices.Length];
+                AddSplitOccluderEdgeSegments(a, b, boundaryVertices, boundaryVertexCells, edges, ref edgeCount);
+            }
+
+            return edgeCount;
+        }
+
+        private static void AddSplitBoundaryEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Dictionary<Vector2i, List<Vector2>> boundaryVertexCells,
+            Dictionary<OccluderEdgeKey, int> edgeCounts)
+        {
+            var splitFactorCapacity = boundaryVertices.Count + 2;
+            if (splitFactorCapacity <= 64)
+            {
+                Span<float> splitFactors = stackalloc float[splitFactorCapacity];
+                AddSplitBoundaryEdgeSegments(a, b, boundaryVertices, boundaryVertexCells, splitFactors, edgeCounts);
+                return;
+            }
+
+            var splitFactorBuffer = ArrayPool<float>.Shared.Rent(splitFactorCapacity);
+            try
+            {
+                AddSplitBoundaryEdgeSegments(a, b, boundaryVertices, boundaryVertexCells, splitFactorBuffer.AsSpan(0, splitFactorCapacity), edgeCounts);
+            }
+            finally
+            {
+                ArrayPool<float>.Shared.Return(splitFactorBuffer);
+            }
+        }
+
+        private static void AddSplitBoundaryEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Dictionary<Vector2i, List<Vector2>> boundaryVertexCells,
+            Span<float> splitFactors,
+            Dictionary<OccluderEdgeKey, int> edgeCounts)
+        {
+            var splitCount = BuildSplitFactors(a, b, boundaryVertexCells, splitFactors);
+            AddSplitBoundaryEdgeSegments(a, b, splitFactors[..splitCount], edgeCounts);
+        }
+
+        private static void AddSplitOccluderEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Span<Vector4> edges,
+            ref int edgeCount)
+        {
+            var splitFactorCapacity = boundaryVertices.Count + 2;
+            if (splitFactorCapacity <= 64)
+            {
+                Span<float> splitFactors = stackalloc float[splitFactorCapacity];
+                AddSplitOccluderEdgeSegments(a, b, boundaryVertices, splitFactors, edges, ref edgeCount);
+                return;
+            }
+
+            var splitFactorBuffer = ArrayPool<float>.Shared.Rent(splitFactorCapacity);
+            try
+            {
+                AddSplitOccluderEdgeSegments(
+                    a,
+                    b,
+                    boundaryVertices,
+                    splitFactorBuffer.AsSpan(0, splitFactorCapacity),
+                    edges,
+                    ref edgeCount);
+            }
+            finally
+            {
+                ArrayPool<float>.Shared.Return(splitFactorBuffer);
+            }
+        }
+
+        private static void AddSplitOccluderEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Dictionary<Vector2i, List<Vector2>> boundaryVertexCells,
+            Span<Vector4> edges,
+            ref int edgeCount)
+        {
+            var splitFactorCapacity = boundaryVertices.Count + 2;
+            if (splitFactorCapacity <= 64)
+            {
+                Span<float> splitFactors = stackalloc float[splitFactorCapacity];
+                AddSplitOccluderEdgeSegments(a, b, boundaryVertices, boundaryVertexCells, splitFactors, edges, ref edgeCount);
+                return;
+            }
+
+            var splitFactorBuffer = ArrayPool<float>.Shared.Rent(splitFactorCapacity);
+            try
+            {
+                AddSplitOccluderEdgeSegments(
+                    a,
+                    b,
+                    boundaryVertices,
+                    boundaryVertexCells,
+                    splitFactorBuffer.AsSpan(0, splitFactorCapacity),
+                    edges,
+                    ref edgeCount);
+            }
+            finally
+            {
+                ArrayPool<float>.Shared.Return(splitFactorBuffer);
+            }
+        }
+
+        private static void AddSplitOccluderEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Span<float> splitFactors,
+            Span<Vector4> edges,
+            ref int edgeCount)
+        {
+            var splitCount = BuildSplitFactors(a, b, boundaryVertices, splitFactors);
+            AddSplitOccluderEdgeSegments(a, b, splitFactors[..splitCount], edges, ref edgeCount);
+        }
+
+        private static void AddSplitOccluderEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Dictionary<Vector2i, List<Vector2>> boundaryVertexCells,
+            Span<float> splitFactors,
+            Span<Vector4> edges,
+            ref int edgeCount)
+        {
+            var splitCount = BuildSplitFactors(a, b, boundaryVertexCells, splitFactors);
+            AddSplitOccluderEdgeSegments(a, b, splitFactors[..splitCount], edges, ref edgeCount);
+        }
+
+        private static void AddSplitBoundaryEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            ReadOnlySpan<float> splitFactors,
+            Dictionary<OccluderEdgeKey, int> edgeCounts)
+        {
+            if (splitFactors.Length < 2)
+                return;
+
+            var edge = b - a;
+            var previous = splitFactors[0];
+            for (var i = 1; i < splitFactors.Length; i++)
+            {
+                var next = splitFactors[i];
+                if (next - previous <= SharedOccluderEdgeTolerance)
+                    continue;
+
+                AddBoundaryEdge(edgeCounts, a + edge * previous, a + edge * next);
+                previous = next;
+            }
+        }
+
+        private static void AddSplitOccluderEdgeSegments(
+            Vector2 a,
+            Vector2 b,
+            ReadOnlySpan<float> splitFactors,
+            Span<Vector4> edges,
+            ref int edgeCount)
+        {
+            if (splitFactors.Length < 2)
+                return;
+
+            var edge = b - a;
+            var previous = splitFactors[0];
+            for (var i = 1; i < splitFactors.Length && edgeCount < edges.Length; i++)
+            {
+                var next = splitFactors[i];
+                if (next - previous <= SharedOccluderEdgeTolerance)
+                    continue;
+
+                edges[edgeCount++] = EdgeToVector4(a + edge * previous, a + edge * next);
+                previous = next;
+            }
+        }
+
+        private static int BuildSplitFactors(
+            Vector2 a,
+            Vector2 b,
+            List<Vector2> boundaryVertices,
+            Span<float> splitFactors)
+        {
+            var edge = b - a;
+            var lengthSquared = edge.LengthSquared();
+            if (lengthSquared <= SharedOccluderEdgeToleranceSquared)
+                return 0;
+
+            var splitCount = 0;
+            AddSplitFactor(0f, splitFactors, ref splitCount);
+            AddSplitFactor(1f, splitFactors, ref splitCount);
+
+            var minX = MathF.Min(a.X, b.X) - SharedOccluderEdgeTolerance;
+            var minY = MathF.Min(a.Y, b.Y) - SharedOccluderEdgeTolerance;
+            var maxX = MathF.Max(a.X, b.X) + SharedOccluderEdgeTolerance;
+            var maxY = MathF.Max(a.Y, b.Y) + SharedOccluderEdgeTolerance;
+
+            for (var i = 0; i < boundaryVertices.Count; i++)
+            {
+                AddSplitFactorForVertex(
+                    boundaryVertices[i],
+                    a,
+                    edge,
+                    lengthSquared,
+                    minX,
+                    minY,
+                    maxX,
+                    maxY,
+                    splitFactors,
+                    ref splitCount);
+            }
+
+            splitFactors[..splitCount].Sort();
+            return splitCount;
+        }
+
+        private static int BuildSplitFactors(
+            Vector2 a,
+            Vector2 b,
+            Dictionary<Vector2i, List<Vector2>> boundaryVertexCells,
+            Span<float> splitFactors)
+        {
+            var edge = b - a;
+            var lengthSquared = edge.LengthSquared();
+            if (lengthSquared <= SharedOccluderEdgeToleranceSquared)
+                return 0;
+
+            var splitCount = 0;
+            AddSplitFactor(0f, splitFactors, ref splitCount);
+            AddSplitFactor(1f, splitFactors, ref splitCount);
+
+            var minX = MathF.Min(a.X, b.X) - SharedOccluderEdgeTolerance;
+            var minY = MathF.Min(a.Y, b.Y) - SharedOccluderEdgeTolerance;
+            var maxX = MathF.Max(a.X, b.X) + SharedOccluderEdgeTolerance;
+            var maxY = MathF.Max(a.Y, b.Y) + SharedOccluderEdgeTolerance;
+
+            // Only vertices in cells touched by the edge AABB can split this edge.
+            // This is just to make the neighbor lookups faster.
+            var minCell = GetBoundaryVertexCell(new Vector2(minX, minY));
+            var maxCell = GetBoundaryVertexCell(new Vector2(maxX, maxY));
+
+            for (var x = minCell.X; x <= maxCell.X; x++)
+            {
+                for (var y = minCell.Y; y <= maxCell.Y; y++)
+                {
+                    if (!boundaryVertexCells.TryGetValue(new Vector2i(x, y), out var cellVertices))
+                        continue;
+
+                    for (var i = 0; i < cellVertices.Count; i++)
+                    {
+                        AddSplitFactorForVertex(
+                            cellVertices[i],
+                            a,
+                            edge,
+                            lengthSquared,
+                            minX,
+                            minY,
+                            maxX,
+                            maxY,
+                            splitFactors,
+                            ref splitCount);
+                    }
+                }
+            }
+
+            splitFactors[..splitCount].Sort();
+            return splitCount;
+        }
+
+        private static void AddSplitFactorForVertex(
+            Vector2 vertex,
+            Vector2 a,
+            Vector2 edge,
+            float lengthSquared,
+            float minX,
+            float minY,
+            float maxX,
+            float maxY,
+            Span<float> splitFactors,
+            ref int splitCount)
+        {
+            if (vertex.X < minX || vertex.X > maxX || vertex.Y < minY || vertex.Y > maxY)
+                return;
+
+            if (TryGetPointOnSegmentFactor(vertex, a, edge, lengthSquared, out var factor))
+                AddSplitFactor(factor, splitFactors, ref splitCount);
+        }
+
+        private static Vector2i GetBoundaryVertexCell(Vector2 vertex)
+        {
+            return new Vector2i(
+                (int) MathF.Floor(vertex.X / SharedOccluderBoundaryVertexCellSize),
+                (int) MathF.Floor(vertex.Y / SharedOccluderBoundaryVertexCellSize));
+        }
+
+        private static void AddSplitFactor(float factor, Span<float> splitFactors, ref int splitCount)
+        {
+            if (splitCount >= splitFactors.Length)
+                return;
+
+            for (var i = 0; i < splitCount; i++)
+            {
+                if (MathF.Abs(splitFactors[i] - factor) <= SharedOccluderEdgeTolerance)
+                    return;
+            }
+
+            splitFactors[splitCount++] = factor;
+        }
+
+        private static bool TryGetPointOnSegmentFactor(
+            Vector2 point,
+            Vector2 a,
+            Vector2 edge,
+            float lengthSquared,
+            out float factor)
+        {
+            factor = Vector2.Dot(point - a, edge) / lengthSquared;
+            if (factor <= SharedOccluderEdgeTolerance || factor >= 1f - SharedOccluderEdgeTolerance)
+                return false;
+
+            var closest = a + edge * factor;
+            return PointsMatch(point, closest);
+        }
+
+        internal static bool ShouldSuppressSharedOccluderEdge(
+            Vector4 edge,
+            IReadOnlySet<OccluderEdgeKey> sharedBoundaryEdges)
+        {
+            // Boundary keys are direction-independent, so reversed windings still match.
+            var key = OccluderEdgeKey.From(edge);
+            return sharedBoundaryEdges.Contains(key);
+        }
+
+        internal static bool OccluderBoundarySharesEdge(
+            ReadOnlySpan<Vector2> polygon,
+            Matrix3x2 worldTransform,
+            Vector4 edge)
+        {
+            if (polygon.Length < 3)
+                return false;
+
+            for (var i = 0; i < polygon.Length; i++)
+            {
+                var a = Vector2.Transform(polygon[i], worldTransform);
+                var b = Vector2.Transform(polygon[(i + 1) % polygon.Length], worldTransform);
+
+                if (EdgeMatchesEndpoints(edge, a, b))
+                    return true;
+            }
+
+            return false;
+        }
+
+        internal static bool OccluderOverlapsPoint(
+            FixtureSystem fixtures,
+            Vector2[] polygon,
+            in Transform occluderTransform,
+            Vector2 worldPoint)
+        {
+            if (polygon.Length < 3)
+                return false;
+
+            var occluderShape = new Polygon(polygon);
+            return occluderShape.VertexCount >= 3 && fixtures.TestPoint(occluderShape, occluderTransform, worldPoint);
+        }
+
+        private static bool EdgeMatchesEndpoints(Vector4 edge, Vector2 a, Vector2 b)
+        {
+            var edgeA = new Vector2(edge.X, edge.Y);
+            var edgeB = new Vector2(edge.Z, edge.W);
+
+            return PointsMatch(edgeA, a) && PointsMatch(edgeB, b)
+                   || PointsMatch(edgeA, b) && PointsMatch(edgeB, a);
+        }
+
+        private static bool PointsMatch(Vector2 a, Vector2 b)
+        {
+            return Vector2.DistanceSquared(a, b) <= SharedOccluderEdgeToleranceSquared;
+        }
+
+        internal static bool ShouldSuppressSharedOccluderEdge(
+            int edgeIndex,
+            ReadOnlySpan<Vector4> edges,
+            ReadOnlySpan<bool> sharedEdges,
+            Vector2 eyePosition)
+        {
+            if (!sharedEdges[edgeIndex])
+                return false;
+
+            var previous = edgeIndex == 0 ? edges.Length - 1 : edgeIndex - 1;
+            var next = edgeIndex + 1 == edges.Length ? 0 : edgeIndex + 1;
+
+            // All of this handling is just to keep the old occluder behavior with edge-specific seams
+            // e.g. if we have a wall beyond a wall then we need to occlude it even if connected.
+            if (EdgeViewedAsCap(edges[edgeIndex], eyePosition))
+                return false;
+
+            var startVisible = !sharedEdges[previous] && EdgeFacesPoint(edges[previous], eyePosition);
+            var endVisible = !sharedEdges[next] && EdgeFacesPoint(edges[next], eyePosition);
+
+            return startVisible || endVisible;
+        }
+
+        private static bool EdgeViewedAsCap(Vector4 edge, Vector2 point)
+        {
+            // Checking parallel / perpendicular edges to handle when we should dump seams.
+            // You'll know if this breaks because wall areas suddenly get random occluder seams.
+            var a = new Vector2(edge.X, edge.Y);
+            var b = new Vector2(edge.Z, edge.W);
+            var edgeDelta = b - a;
+            var lengthSquared = edgeDelta.LengthSquared();
+            if (lengthSquared <= SharedOccluderEdgeToleranceSquared)
+                return false;
+
+            var pointFromA = point - a;
+            var projected = Vector2.Dot(pointFromA, edgeDelta) / lengthSquared;
+            if (projected <= SharedOccluderEdgeTolerance || projected >= 1f - SharedOccluderEdgeTolerance)
+                return false;
+
+            var signedArea = Vector2Helpers.Cross(edgeDelta, pointFromA);
+            return signedArea * signedArea > SharedOccluderEdgeToleranceSquared * lengthSquared;
+        }
+
+        private static bool HasSharedBoundaryEdge(
+            OccluderEdgeKey key,
+            Dictionary<OccluderEdgeKey, int> boundaryEdgeCounts)
+        {
+            boundaryEdgeCounts.TryGetValue(key, out var count);
+            if (count > 1)
+                return true;
+
+            for (var dax = -1; dax <= 1; dax++)
+            {
+                for (var day = -1; day <= 1; day++)
+                {
+                    for (var dbx = -1; dbx <= 1; dbx++)
+                    {
+                        for (var dby = -1; dby <= 1; dby++)
+                        {
+                            if (dax == 0 && day == 0 && dbx == 0 && dby == 0)
+                                continue;
+
+                            var candidate = new OccluderEdgeKey(
+                                key.AX + dax,
+                                key.AY + day,
+                                key.BX + dbx,
+                                key.BY + dby);
+
+                            if (boundaryEdgeCounts.TryGetValue(candidate, out var candidateCount))
+                            {
+                                count += candidateCount;
+                                if (count > 1)
+                                    return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool EdgeFacesPoint(Vector4 edge, Vector2 point)
+        {
+            var a = new Vector2(edge.X, edge.Y) - point;
+            var b = new Vector2(edge.Z, edge.W) - point;
+            return Vector2Helpers.Cross(a, b) > 0f;
+        }
+
+        internal readonly record struct OccluderEdgeKey(long AX, long AY, long BX, long BY)
+        {
+            public static OccluderEdgeKey From(Vector4 edge)
+            {
+                return From(new Vector2(edge.X, edge.Y), new Vector2(edge.Z, edge.W));
+            }
+
+            public static OccluderEdgeKey From(Vector2 a, Vector2 b)
+            {
+                var ax = Quantize(a.X);
+                var ay = Quantize(a.Y);
+                var bx = Quantize(b.X);
+                var by = Quantize(b.Y);
+
+                if (ax > bx || ax == bx && ay > by)
+                    return new OccluderEdgeKey(bx, by, ax, ay);
+
+                return new OccluderEdgeKey(ax, ay, bx, by);
+            }
+
+            private static long Quantize(float value)
+            {
+                // We don't want fp inaccuracies to cause issues with edges not being considered together.
+                return (long) MathF.Round(value / SharedOccluderEdgeTolerance);
+            }
+
+        }
+
+        private readonly record struct BoundaryEdge(Vector2 A, Vector2 B);
+
+        private static float SignedArea(ReadOnlySpan<Vector2> vertices)
+        {
+            var area = 0f;
+            for (var i = 0; i < vertices.Length; i++)
+            {
+                var j = (i + 1) % vertices.Length;
+                area += vertices[i].X * vertices[j].Y;
+                area -= vertices[i].Y * vertices[j].X;
+            }
+
+            return area * 0.5f;
+        }
+
+        private static Vector4 EdgeToVector4(Vector2 a, Vector2 b)
+        {
+            return new Vector4(a.X, a.Y, b.X, b.Y);
+        }
+
+        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Vector2 eyePosition)
         {
             using var _ = _prof.Group("UpdateOcclusionGeometry");
             using var _p = DebugGroup(nameof(UpdateOcclusionGeometry));
@@ -954,14 +1835,20 @@ namespace Robust.Client.Graphics.Clyde
             // 3D geometry used during depth projection.
             // 2D mask geometry used to apply wall bleed.
 
-            // 16 = 4 vertices * 4 directions
-            var arrayBuffer = ArrayPool<Vector4>.Shared.Rent(_maxOccluders * 4 * 4);
-            // multiplied by 2 (it's a vector2 of bytes)
-            var arrayVIBuffer = ArrayPool<byte>.Shared.Rent(_maxOccluders * 2 * 4 * 4);
-            var indexBuffer = ArrayPool<ushort>.Shared.Rent(_maxOccluders * GetQuadBatchIndexCount() * 4);
+            var maxMaskVertices = _maxOccluders * PhysicsConstants.MaxPolygonVertices;
+            var maxDepthFaces = _maxOccluders * PhysicsConstants.MaxPolygonVertices;
+            var maxDepthVertices = maxDepthFaces * 4;
+            var maxDepthIndices = maxDepthFaces * GetQuadBatchIndexCount();
+            var maxMaskIndices = _maxOccluders * (PhysicsConstants.MaxPolygonVertices - 2) * 3;
 
-            var arrayMaskBuffer = ArrayPool<Vector2>.Shared.Rent(_maxOccluders * 4);
-            var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(_maxOccluders * GetQuadBatchIndexCount());
+            // 16 = 4 vertices * 4 directions
+            var arrayBuffer = ArrayPool<Vector4>.Shared.Rent(maxDepthVertices);
+            // multiplied by 2 (it's a vector2 of bytes)
+            var arrayVIBuffer = ArrayPool<byte>.Shared.Rent(maxDepthVertices * 2);
+            var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxDepthIndices);
+
+            var arrayMaskBuffer = ArrayPool<Vector2>.Shared.Rent(maxMaskVertices);
+            var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(maxMaskIndices);
 
             // I love mysterious variable names, it keeps you on your toes.
             var ai = 0;
@@ -969,18 +1856,54 @@ namespace Robust.Client.Graphics.Clyde
             var ami = 0;
             var ii = 0;
             var imi = 0;
-            var amiMax = _maxOccluders * 4;
+            var occluderCount = 0;
+            var geometryFull = false;
 
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+            var boundaryEdgeCounts = _occluderBoundaryEdgeCounts;
+            var sharedBoundaryEdges = _occluderSharedBoundaryEdges;
+            var boundaryEdges = _occluderBoundaryEdges;
+            var boundaryVertices = _occluderBoundaryVertices;
+            var boundaryVertexCells = _occluderBoundaryVertexCells;
+            boundaryEdgeCounts.Clear();
+            sharedBoundaryEdges.Clear();
+            boundaryEdges.Clear();
+            boundaryVertices.Clear();
+            ClearBoundaryVertexCells(boundaryVertexCells);
 
+            // Rebuild the frame-local occluder boundary cache for the current render bounds.
+            // Could also cache shaderd occluders but effo and this is fast enough for now.
+            BuildOccluderBoundaryEdgeSets(
+                map,
+                expandedBounds,
+                xforms,
+                boundaryEdgeCounts,
+                sharedBoundaryEdges,
+                boundaryEdges,
+                boundaryVertices,
+                boundaryVertexCells);
+
+            var edgeVertices = maxDepthFaces > 64
+                ? ArrayPool<Vector4>.Shared.Rent(maxDepthFaces)
+                : null;
+            var sharedEdgeVertices = maxDepthFaces > 64
+                ? ArrayPool<bool>.Shared.Rent(maxDepthFaces)
+                : null;
+
+            /*
+             * You may be wondering what this is even doing.
+             * Essentially we get the edge of each occluder that's relevant (i.e. facing away from me) and store it for later use.
+             * However we also need some situations where we dump it instead, i.e. shared edges (so continous walls don't have seams between them)
+             * as well as some other scenarios (at least so it looks similar to how it did prior to poly occluders).
+             */
             try
             {
                 foreach (var (uid, comp) in _occluderSystem.GetIntersectingTrees(map, expandedBounds))
                 {
-                    if (ami >= amiMax)
+                    if (geometryFull || ami >= maxMaskVertices || ai >= maxDepthVertices)
                         break;
 
-                    var treeBounds = _transformSystem.GetInvWorldMatrix(uid).TransformBox(expandedBounds);
+                    var treeBounds = _transformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in ComponentTreeEntry<OccluderComponent> entry) =>
                     {
@@ -990,96 +1913,17 @@ namespace Robust.Client.Graphics.Clyde
                             return true;
                         }
 
-                        if (ami >= amiMax)
+                        if (geometryFull || ami >= maxMaskVertices || ai >= maxDepthVertices)
                             return false;
 
                         var worldTransform = _transformSystem.GetWorldMatrix(transform, xforms);
-                        var box = occluder.BoundingBox;
 
-                        var tl = Vector2.Transform(box.TopLeft, worldTransform);
-                        var tr = Vector2.Transform(box.TopRight, worldTransform);
-                        var br = Vector2.Transform(box.BottomRight, worldTransform);
-                        var bl = tl + br - tr;
-
-                        // Faces.
-                        var faceN = new Vector4(tl.X, tl.Y, tr.X, tr.Y);
-                        var faceE = new Vector4(tr.X, tr.Y, br.X, br.Y);
-                        var faceS = new Vector4(br.X, br.Y, bl.X, bl.Y);
-                        var faceW = new Vector4(bl.X, bl.Y, tl.X, tl.Y);
-
-                        //
-                        // Buckle up.
-                        // For the front-face culled final FOV to work, we obviously cannot have faces inside a series
-                        // of walls that are perpendicular to you.
-                        // This next code does that by only writing render indices for faces that should be rendered.
-                        //
-
-                        //
-                        // Keep in mind, a face only blocks light from *leaving* from the back.
-                        // It does not block light entering.
-                        //
-                        // So first rule: a face always exists if there's no neighboring occluder in that direction.
-                        // Can't have holes after all.
-                        // Second rule: otherwise, if either vertex of the face is "visible" from the camera,
-                        // we don't draw the face.
-                        // This visibility check is significantly more simple and resourceful than you might think.
-                        // A corner becomes "occluded" if it's not visible from either cardinal direction it's on.
-                        // So a the top right corner is occluded if there's something blocking visibility
-                        // on the top AND right.
-                        // This "occluded in direction" check has two parts: whether this is a neighboring occluder (duh)
-                        // And whether the is in that direction of the corner.
-                        // (so a corner on the back of a wall is occluded because the camera is position on the other side).
-                        //
-                        // You'll notice that in some cases like corner walls, ALL corners are marked "occluded".
-                        // This is fine! The occlusion only blocks incoming light,
-                        // and the neighboring walls DO treat those corners as visible.
-                        // Yes, you cannot share the handling of overlapping corners of two aligned neighboring occluders.
-                        // They still have different potential behavior, keeps the code simple(ish).
-                        //
-
-                        // Calculate delta positions from camera.
-                        var dTl = Vector2.Transform(tl, eyeTransform);
-                        var dTr = Vector2.Transform(tr, eyeTransform);
-                        var dBl = Vector2.Transform(bl, eyeTransform);
-                        var dBr = dBl + dTr - dTl;
-
-                        // Get which neighbors are occluding.
-                        var no = (occluder.Occluding & OccluderDir.North) != 0;
-                        var so = (occluder.Occluding & OccluderDir.South) != 0;
-                        var eo = (occluder.Occluding & OccluderDir.East) != 0;
-                        var wo = (occluder.Occluding & OccluderDir.West) != 0;
-
-                        // Do visibility tests for occluders (described above).
-                        static bool CheckFaceEyeVis(Vector2 a, Vector2 b)
+                        bool TryWriteFaceOfBuffer(Vector2 a, Vector2 b)
                         {
-                            // determine which side of the plane the face is on
-                            // the plane is at the origin of this coordinate system, which is also the eye
-                            // the normal of the plane is that of the face
-                            // therefore, if the dot <= 0, the face is facing the camera
-                            // I don't like this, but rotated occluders started happening
+                            if (ai + 4 > arrayBuffer.Length || ii + GetQuadBatchIndexCount() > indexBuffer.Length)
+                                return false;
 
-                            // var normal =  (b - a).Rotated90DegreesAnticlockwiseWorld;
-                            // Vector2.Dot(normal, a) <= 0;
-                            // equivalent to:
-                            return a.X * b.Y > a.Y * b.X;
-                        }
-
-                        var nV = ((!no) && CheckFaceEyeVis(dTl, dTr));
-                        var sV = ((!so) && CheckFaceEyeVis(dBr, dBl));
-                        var eV = ((!eo) && CheckFaceEyeVis(dTr, dBr));
-                        var wV = ((!wo) && CheckFaceEyeVis(dBl, dTl));
-                        var tlV = nV || wV;
-                        var trV = nV || eV;
-                        var blV = sV || wV;
-                        var brV = sV || eV;
-
-                        // Handle faces, rules described above.
-                        // Note that "from above" it should be clockwise.
-                        // Further handling is in the shadow depth vertex shader.
-                        // (I have broken this so many times. - 20kdc)
-
-                        void WriteFaceOfBuffer(Vector4 vec)
-                        {
+                            var vec = new Vector4(a.X, a.Y, b.X, b.Y);
                             var aiBase = ai;
                             for (byte vi = 0; vi < 4; vi++)
                             {
@@ -1094,42 +1938,95 @@ namespace Robust.Client.Graphics.Clyde
                             }
 
                             QuadBatchIndexWrite(indexBuffer, ref ii, (ushort)aiBase);
+                            return true;
                         }
 
-                        // North face (TL/TR)
-                        if (!no || !tlV && !trV)
+                        bool TryWriteMaskPolygon(ReadOnlySpan<Vector2> polygonVertices)
                         {
-                            WriteFaceOfBuffer(faceN);
+                            // Wall bleed uses a flat 2D mask of occupied occluder area.
+                            // Convex occluders are serialized through the physics hull, so a simple fan is sufficient.
+                            if (polygonVertices.Length < 3)
+                                return true;
+
+                            var indexCount = (polygonVertices.Length - 2) * 3;
+                            if (ami + polygonVertices.Length > arrayMaskBuffer.Length || imi + indexCount > indexMaskBuffer.Length)
+                                return false;
+
+                            var amiBase = ami;
+                            for (var i = 0; i < polygonVertices.Length; i++)
+                            {
+                                arrayMaskBuffer[ami++] = Vector2.Transform(polygonVertices[i], worldTransform);
+                            }
+
+                            for (var i = 1; i < polygonVertices.Length - 1; i++)
+                            {
+                                indexMaskBuffer[imi++] = (ushort) amiBase;
+                                indexMaskBuffer[imi++] = (ushort) (amiBase + i);
+                                indexMaskBuffer[imi++] = (ushort) (amiBase + i + 1);
+                            }
+
+                            return true;
                         }
 
-                        // East face (TR/BR)
-                        if (!eo || !brV && !trV)
+                        var polygon = occluder.Polygon;
+
+                        var maxEdgeCount = Math.Min(maxDepthFaces, polygon.Length + boundaryVertices.Count);
+                        if (ami + polygon.Length > arrayMaskBuffer.Length
+                            || imi + (polygon.Length - 2) * 3 > indexMaskBuffer.Length)
                         {
-                            WriteFaceOfBuffer(faceE);
+                            geometryFull = true;
+                            return false;
                         }
 
-                        // South face (BR/BL)
-                        if (!so || !brV && !blV)
+                        Span<Vector4> edges = maxEdgeCount <= 64
+                            ? stackalloc Vector4[maxEdgeCount]
+                            : edgeVertices.AsSpan(0, maxEdgeCount);
+                        Span<bool> sharedEdges = maxEdgeCount <= 64
+                            ? stackalloc bool[maxEdgeCount]
+                            : sharedEdgeVertices.AsSpan(0, maxEdgeCount);
+
+                        var edgeCount = BuildSplitOccluderEdges(
+                            polygon,
+                            worldTransform,
+                            boundaryVertices,
+                            boundaryVertexCells,
+                            edges);
+                        var activeEdges = edges[..edgeCount];
+                        var activeSharedEdges = sharedEdges[..edgeCount];
+
+                        for (var i = 0; i < edgeCount; i++)
                         {
-                            WriteFaceOfBuffer(faceS);
+                            activeSharedEdges[i] = ShouldSuppressSharedOccluderEdge(activeEdges[i], sharedBoundaryEdges);
                         }
 
-                        // West face (BL/TL)
-                        if (!wo || !blV && !tlV)
+                        for (var i = 0; i < edgeCount; i++)
                         {
-                            WriteFaceOfBuffer(faceW);
+                            var edge = activeEdges[i];
+                            // Skip internal seams between adjacent occluders. Rendering any shared seam breaks the
+                            // connected occluder boundary and can show as shadow/FOV seams at wall and diagonal joins.
+                            if (ShouldSuppressSharedOccluderEdge(
+                                    i,
+                                    activeEdges,
+                                    activeSharedEdges,
+                                    eyePosition))
+                            {
+                                continue;
+                            }
+
+                            if (!TryWriteFaceOfBuffer(new Vector2(edge.X, edge.Y), new Vector2(edge.Z, edge.W)))
+                            {
+                                geometryFull = true;
+                                return false;
+                            }
                         }
 
-                        // Generate mask geometry.
-                        arrayMaskBuffer[ami + 0] = new Vector2(tl.X, tl.Y);
-                        arrayMaskBuffer[ami + 1] = new Vector2(tr.X, tr.Y);
-                        arrayMaskBuffer[ami + 2] = new Vector2(br.X, br.Y);
-                        arrayMaskBuffer[ami + 3] = new Vector2(bl.X, bl.Y);
+                        if (!TryWriteMaskPolygon(polygon))
+                        {
+                            geometryFull = true;
+                            return false;
+                        }
 
-                        // Generate mask indices.
-                        QuadBatchIndexWrite(indexMaskBuffer, ref imi, (ushort)ami);
-
-                        ami += 4;
+                        occluderCount += 1;
 
                         return true;
                     }, treeBounds);
@@ -1159,9 +2056,15 @@ namespace Robust.Client.Graphics.Clyde
                 ArrayPool<ushort>.Shared.Return(indexBuffer);
                 ArrayPool<Vector2>.Shared.Return(arrayMaskBuffer);
                 ArrayPool<ushort>.Shared.Return(indexMaskBuffer);
+
+                if (edgeVertices != null)
+                    ArrayPool<Vector4>.Shared.Return(edgeVertices);
+
+                if (sharedEdgeVertices != null)
+                    ArrayPool<bool>.Shared.Return(sharedEdgeVertices);
             }
 
-            _debugStats.Occluders += ami / 4;
+            _debugStats.Occluders += occluderCount;
         }
 
         private void RegenLightRts(Viewport viewport)
@@ -1268,7 +2171,7 @@ namespace Robust.Client.Graphics.Clyde
         private void MaxLightsChanged(int value)
         {
             _maxLights = value;
-            _lightsToRenderList = new (PointLightComponent, Vector2, float , Angle)[value];
+            _lightsToRenderList = new LightRenderData[value];
             DebugTools.Assert(_maxLights >= _maxShadowcastingLights);
         }
     }

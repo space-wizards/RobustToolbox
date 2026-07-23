@@ -31,6 +31,7 @@ using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -45,7 +46,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         [ViewVariables]
         public int VertexCount => Vertices.Length;
 
-        [DataField("vertices"),
+        [DataField("vertices", customTypeSerializer: typeof(PhysicsHullSerializer)),
          Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
              Other = AccessPermissions.Read)]
         public Vector2[] Vertices = Array.Empty<Vector2>();

@@ -976,68 +976,103 @@ namespace Robust.Client.Input
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length != 3)
+            if (args.Length < 3 || args.Length > 6)
             {
                 shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
                 return;
             }
 
-            var keyName = args[0];
-
-            if (!Enum.TryParse<Key>(keyName, true, out var keyId))
+            var registration = new KeyBindingRegistration();
+            for (var i = 0; i < args.Length; i++)
             {
-                shell.WriteLine($"Key '{keyName}' is unrecognized.");
-                return;
+                switch (i)
+                {
+                    case 0: // Base key
+                        if (!Enum.TryParse<Key>(args[0], true, out var keyId))
+                        {
+                            shell.WriteLine($"Key '{args[0]}' is unrecognized.");
+                            return;
+                        }
+                        registration.BaseKey = keyId;
+                        break;
+
+                    case 1: // Types of bindings
+                        if (!Enum.TryParse<KeyBindingType>(args[1], true, out var keyMode))
+                        {
+                            shell.WriteLine($"BindMode '{args[1]}' is unrecognized.");
+                            return;
+                        }
+                        registration.Type = keyMode;
+                        break;
+
+                    case 2: // Binding functions
+                        registration.Function = args[2];
+                        break;
+
+                    case 3:  // Modifier key 1
+                        if (!Enum.TryParse<Key>(args[3], true, out var keyMod1))
+                        {
+                            shell.WriteLine($"Key '{args[3]}' is unrecognized.");
+                            return;
+                        }
+                        registration.Mod1 = keyMod1;
+                        break;
+
+                    case 4: // Modifier key 2
+                        if (!Enum.TryParse<Key>(args[4], true, out var keyMod2))
+                        {
+                            shell.WriteLine($"Key '{args[4]}' is unrecognized.");
+                            return;
+                        }
+                        registration.Mod2 = keyMod2;
+                        break;
+
+                    case 5: // Modifier key 3
+                        if (!Enum.TryParse<Key>(args[5], true, out var keyMod3))
+                        {
+                            shell.WriteLine($"Key '{args[5]}' is unrecognized.");
+                            return;
+                        }
+                        registration.Mod3 = keyMod3;
+                        break;
+                }
             }
-
-            if (!Enum.TryParse<KeyBindingType>(args[1], true, out var keyMode))
-            {
-                shell.WriteLine($"BindMode '{args[1]}' is unrecognized.");
-                return;
-            }
-
-            var inputCommand = args[2];
-
-            var registration = new KeyBindingRegistration
-            {
-                Function = inputCommand,
-                BaseKey = keyId,
-                Type = keyMode
-            };
 
             _inputManager.RegisterBinding(registration);
         }
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
-            if (args.Length == 1)
+            switch (args.Length)
             {
-                var options = Enum.GetNames<Key>();
-                return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-bind-arg-key"));
+                case 1: // Main Key
+                    var optionsMain = Enum.GetNames<Key>();
+                    return CompletionResult.FromHintOptions(optionsMain, Loc.GetString("cmd-bind-arg-key"));
+
+                case 2: // Types of bindings
+                    var typeOptions = Enum.GetNames<KeyBindingType>().Except(new[] { nameof(KeyBindingType.Unknown) });
+                    return CompletionResult.FromHintOptions(typeOptions, Loc.GetString("cmd-bind-arg-mode"));
+
+                case 3: // Binding functions
+                    if (!Enum.TryParse<KeyBindingType>(args[1], true, out var type))
+                        return CompletionResult.Empty;
+
+                    if (type == KeyBindingType.Command)
+                    {
+                        // Don't show completions for key functions if mode is command, it wouldn't make sense.
+                        return CompletionResult.FromHint(Loc.GetString("cmd-bind-arg-command"));
+                    }
+
+                    var funcOptions = _inputManager.NetworkBindMap.AllKeyFunctions.Select(x => x.FunctionName);
+                    return CompletionResult.FromHintOptions(funcOptions, Loc.GetString("cmd-bind-arg-command"));
+
+                case 4 or 5 or 6: // Modifier keys
+                    var optionsMod = Enum.GetNames<Key>();
+                    return CompletionResult.FromHintOptions(optionsMod, Loc.GetString("cmd-bind-arg-key-mod"));
+
+                default:
+                    return CompletionResult.Empty;
             }
-
-            if (args.Length == 2)
-            {
-                var options = Enum.GetNames<KeyBindingType>().Except(new[] { nameof(KeyBindingType.Unknown) });
-                return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-bind-arg-mode"));
-            }
-
-            if (!Enum.TryParse<KeyBindingType>(args[1], true, out var type))
-                return CompletionResult.Empty;
-
-            if (args.Length == 3)
-            {
-                if (type == KeyBindingType.Command)
-                {
-                    // Don't show completions for key functions if mode is command, it wouldn't make sense.
-                    return CompletionResult.FromHint(Loc.GetString("cmd-bind-arg-command"));
-                }
-
-                var options = _inputManager.NetworkBindMap.AllKeyFunctions.Select(x => x.FunctionName);
-                return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-bind-arg-command"));
-            }
-
-            return CompletionResult.Empty;
         }
     }
 

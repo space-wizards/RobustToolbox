@@ -55,6 +55,7 @@ internal sealed partial class PvsSystem
         if (!_async)
         {
             using var _= Histogram.WithLabels("Process Acks").NewTimer();
+            using var _pz = _prof.Group("Process Acks");
             _parallelManager.ProcessNow(_ackJob, _ackJob.Count);
             return null;
         }

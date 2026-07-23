@@ -18,6 +18,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
+using Robust.Shared.Profiling;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -40,6 +41,7 @@ internal sealed partial class PvsSystem : EntitySystem
     [Dependency] private PvsOverrideSystem _pvsOverride = default!;
     [Dependency] private IServerReplayRecordingManager _replay = default!;
     [Dependency] private SharedMapSystem _maps = default!;
+    [Dependency] private ProfManager _prof = default!;
 
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
     // Main issue is that I CBF figuring out the logic for handling it changing mid-game.
@@ -190,6 +192,8 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         _getStateHandlers ??= EntityManager.EventBusInternal.GetNetCompEventHandlers<ComponentGetState>();
 
+        using var _pvs = _prof.Group("PVS");
+
         // Wait for pending jobs and process disconnected players
         ProcessDisconnections();
 
@@ -294,6 +298,7 @@ internal sealed partial class PvsSystem : EntitySystem
     private void CullDeletionHistory(GameTick oldestAck)
     {
         using var _ = Histogram.WithLabels("Cull History").NewTimer();
+        using var _pz = _prof.Group("Cull History");
         CullDeletionHistoryUntil(oldestAck);
         _maps.CullDeletionHistory(oldestAck);
     }
@@ -301,7 +306,10 @@ internal sealed partial class PvsSystem : EntitySystem
     private void GetEntityStates(PvsSession session)
     {
         // First, we send the client's own viewers. we want to ALWAYS send these, regardless of any pvs budget.
-        AddForcedEntities(session);
+        using (_prof.Group("Forced"))
+        {
+            AddForcedEntities(session);
+        }
 
         // After processing the entity's viewers, we set actual, budget limits.
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
@@ -317,10 +325,16 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         // Process all PVS overrides.
-        AddAllOverrides(session);
+        using (_prof.Group("Overrides"))
+        {
+            AddAllOverrides(session);
+        }
 
         // Process all entities in visible PVS chunks
-        AddPvsChunks(session);
+        using (_prof.Group("Chunks"))
+        {
+            AddPvsChunks(session);
+        }
 
 #if DEBUG
         VerifySessionData(session);

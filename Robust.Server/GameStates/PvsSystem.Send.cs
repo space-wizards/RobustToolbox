@@ -23,6 +23,7 @@ internal sealed partial class PvsSystem
         // the sessions array
 
         using var _ = Histogram.WithLabels("Send States").NewTimer();
+        using var _pz = _prof.Group("Send States");
         var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
         Parallel.ForEach(_sessions, opts, _threadResourcesPool.Get, SendSessionState, _threadResourcesPool.Return);
     }
@@ -43,6 +44,7 @@ internal sealed partial class PvsSystem
 
     private void SendSessionState(PvsSession data, ZStdCompressionContext ctx)
     {
+        using var _tz = _prof.Group("Send Session");
         DebugTools.AssertEqual(data.State, null);
 
         // PVS benchmarks use dummy sessions.

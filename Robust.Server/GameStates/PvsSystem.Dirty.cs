@@ -78,6 +78,7 @@ namespace Robust.Server.GameStates
         private void CleanupDirty()
         {
             using var _ = Histogram.WithLabels("Clean Dirty").NewTimer();
+            using var _pz = _prof.Group("Clean Dirty");
             if (!CullingEnabled)
             {
                 _seenAllEnts.Clear();

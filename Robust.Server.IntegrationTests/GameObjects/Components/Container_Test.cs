@@ -21,6 +21,8 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
+                .RegisterComponents(f => f.RegisterClass<ContainerHierarchyTestComponent>())
+                .RegisterEntitySystems(f => f.LoadExtraSystemType<ContainerHierarchyTestSystem>())
                 .InitializeInstance();
             var map = sim.CreateMap();
             _coords = new EntityCoordinates(map.Item1, default);
@@ -251,6 +253,54 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
         }
 
         [Test]
+        public void ContainerHierarchyChanged_RaisedForNestedInsertTransferAndRemoval()
+        {
+            var sim = SimulationFactory();
+            var entManager = sim.Resolve<IEntityManager>();
+            var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
+            var recorder = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerHierarchyTestSystem>();
+            var outerA = sim.SpawnEntity(null, _coords);
+            var outerB = sim.SpawnEntity(null, _coords);
+            var inner = sim.SpawnEntity(null, _coords);
+            var child = sim.SpawnEntity(null, _coords);
+
+            entManager.AddComponent<ContainerHierarchyTestComponent>(inner);
+            entManager.AddComponent<ContainerHierarchyTestComponent>(child);
+
+            var outerAContainer = containerSys.MakeContainer<Container>(outerA, "outerA");
+            var outerBContainer = containerSys.MakeContainer<Container>(outerB, "outerB");
+            var innerContainer = containerSys.MakeContainer<Container>(inner, "inner");
+
+            Assert.That(containerSys.Insert(child, innerContainer), Is.True);
+            recorder.Clear();
+
+            Assert.That(containerSys.Insert(inner, outerAContainer), Is.True);
+            Assert.That(recorder.Events, Is.EquivalentTo(new[]
+            {
+                new ContainerHierarchyEventRecord(inner, outerA, true),
+                new ContainerHierarchyEventRecord(child, outerA, true),
+            }));
+
+            recorder.Clear();
+            Assert.That(containerSys.Insert(inner, outerBContainer), Is.True);
+            Assert.That(recorder.Events, Is.EqualTo(new[]
+            {
+                new ContainerHierarchyEventRecord(inner, outerA, false),
+                new ContainerHierarchyEventRecord(child, outerA, false),
+                new ContainerHierarchyEventRecord(inner, outerB, true),
+                new ContainerHierarchyEventRecord(child, outerB, true),
+            }));
+
+            recorder.Clear();
+            Assert.That(containerSys.Remove(inner, outerBContainer), Is.True);
+            Assert.That(recorder.Events, Is.EqualTo(new[]
+            {
+                new ContainerHierarchyEventRecord(inner, outerB, false),
+                new ContainerHierarchyEventRecord(child, outerB, false),
+            }));
+        }
+
+        [Test]
         public void Container_Serialize()
         {
             var sim = SimulationFactory();
@@ -332,6 +382,31 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             protected internal override bool CanInsert(EntityUid toinsert, bool assumeEmpty, IEntityManager entMan)
             {
                 return entMan.HasComponent<ContainerManagerComponent>(toinsert);
+            }
+        }
+
+        private sealed partial class ContainerHierarchyTestComponent : Component;
+
+        private readonly record struct ContainerHierarchyEventRecord(EntityUid Entity, EntityUid ContainerOwner, bool Added);
+
+        private sealed partial class ContainerHierarchyTestSystem : EntitySystem
+        {
+            public readonly List<ContainerHierarchyEventRecord> Events = new();
+
+            public override void Initialize()
+            {
+                base.Initialize();
+                SubscribeLocalEvent<ContainerHierarchyTestComponent, EntContainerHierarchyChangedMessage>(OnContainerHierarchyChanged);
+            }
+
+            public void Clear()
+            {
+                Events.Clear();
+            }
+
+            private void OnContainerHierarchyChanged(EntityUid uid, ContainerHierarchyTestComponent component, ref EntContainerHierarchyChangedMessage args)
+            {
+                Events.Add(new ContainerHierarchyEventRecord(uid, args.ContainerOwner, args.Added));
             }
         }
     }

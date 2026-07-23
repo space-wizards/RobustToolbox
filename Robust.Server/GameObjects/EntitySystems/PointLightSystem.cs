@@ -13,6 +13,7 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
     {
         base.Initialize();
         SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
+        SubscribeLocalEvent<PointLightComponent, EntContainerHierarchyChangedMessage>(OnContainerHierarchyChanged);
         SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
         SubscribeLocalEvent<PointLightComponent, ComponentShutdown>(OnLightShutdown);
         SubscribeLocalEvent<PointLightComponent, MetaFlagRemoveAttemptEvent>(OnFlagRemoveAttempt);
@@ -39,6 +40,27 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
         return comp is { Enabled: true, CastShadows: true, Radius: > 7, LifeStage: <= ComponentLifeStage.Running };
     }
 
+    private void OnContainerHierarchyChanged(EntityUid uid, PointLightComponent component, ref EntContainerHierarchyChangedMessage args)
+    {
+        SetContainerOccluded(uid, IsCurrentContainerOrParentOccluder(uid), component);
+    }
+
+    private void OnLightGetState(EntityUid uid, PointLightComponent component, ref ComponentGetState args)
+    {
+        args.State = new PointLightComponentState()
+        {
+            Color = component.Color,
+            Enabled = component.Enabled,
+            Energy = component.Energy,
+            Offset = component.Offset,
+            Radius = component.Radius,
+            Softness = component.Softness,
+            Falloff = component.Falloff,
+            CurveFactor = component.CurveFactor,
+            CastShadows = component.CastShadows,
+            ContainerOccluded = component.ContainerOccluded,
+        };
+    }
     protected override void UpdatePriority(EntityUid uid, SharedPointLightComponent comp, MetaDataComponent meta)
     {
         _metadata.SetFlag((uid, meta), MetaDataFlags.PvsPriority, IsHighPriority(comp));
@@ -75,4 +97,26 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
     {
         return RemCompDeferred<PointLightComponent>(uid);
     }
+
+    /// <summary>
+    /// Recursively check if a container or any parent container occludes light.
+    /// This is probably a terribly unoptimized way to get the occlusion right
+    /// </summary>
+    /// <returns>True if any container should block light.</returns>
+    private bool IsContainerOrParentOccluder(BaseContainer container)
+    {
+        if (container.OccludesLight)
+            return true;
+        
+        if (!_container.TryGetContainingContainer(container.Owner, out var nextContainer))
+            return false;
+
+        return IsContainerOrParentOccluder(nextContainer);
+    }
+
+    private bool IsCurrentContainerOrParentOccluder(EntityUid uid)
+    {
+        return _container.TryGetContainingContainer(uid, out var container) && IsContainerOrParentOccluder(container);
+    }
+
 }

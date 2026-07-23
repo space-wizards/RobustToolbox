@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -8,11 +9,12 @@ using Robust.Shared.Physics;
 
 namespace Robust.Shared.ComponentTrees;
 
-public abstract class SharedLightTreeSystem : ComponentTreeSystem<LightTreeComponent, SharedPointLightComponent>
+public abstract partial class SharedLightTreeSystem : ComponentTreeSystem<LightTreeComponent, SharedPointLightComponent>
 {
-    [Dependency] private readonly SharedPointLightSystem _pointLight = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly INetManager _net = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private INetManager _net = default!;
+
+    public bool IsAvailable => Enabled;
 
     #region Component Tree Overrides
     protected override bool DoFrameUpdate => true;
@@ -21,17 +23,9 @@ public abstract class SharedLightTreeSystem : ComponentTreeSystem<LightTreeCompo
     protected override int InitialCapacity => 128;
     protected override bool Enabled => _net.IsClient || _cfg.GetCVar(CVars.LookupEnableServerLightTree);
 
-    protected override void OnCompStartup(EntityUid uid, SharedPointLightComponent component, ComponentStartup args)
-    {
-        base.OnCompStartup(uid, component, args);
-        _pointLight.UpdatePriority((uid, component));
-    }
-
     protected override Box2 ExtractAabb(in ComponentTreeEntry<SharedPointLightComponent> entry, Vector2 pos, Angle rot)
     {
-        // Really we should be rotating the light offset by the relative rotation. But I assume the light offset will
-        // always be relatively small, so fuck it, this is probably faster than having to compute the angle every time.
-        var radius = entry.Component.Radius + entry.Component.Offset.Length();
+        var radius = Math.Min(entry.Component.Radius, _cfg.GetCVar(CVars.MaxLightRadius)) + entry.Component.Offset.Length();
         var radiusVec = new Vector2(radius, radius);
         return new Box2(pos - radiusVec, pos + radiusVec);
     }

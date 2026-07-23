@@ -466,12 +466,7 @@ namespace Robust.Client.Graphics.Clyde
                     if (component.Mask != null)
                     {
                         mask = component.Mask;
-                        rotation = component.Rotation;
-
-                        if (component.MaskAutoRotate)
-                        {
-                            rotation += rot;
-                        }
+                        rotation = SharedPointLightSystem.GetMaskWorldRotation(component, rot);
                     }
 
                     var maskTexture = mask ?? _stockTextureWhite;

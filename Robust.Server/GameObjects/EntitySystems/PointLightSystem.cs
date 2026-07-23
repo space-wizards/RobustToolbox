@@ -18,14 +18,22 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
         //SubscribeLocalEvent<PointLightComponent, EntInsertedIntoContainerMessage>(OnInserted);
         SubscribeLocalEvent<PointLightComponent, EntGotInsertedIntoContainerMessage>(OnInserted);
         SubscribeLocalEvent<PointLightComponent, EntGotRemovedFromContainerMessage>(OnRemoved);
-        // SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
+        SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
         SubscribeLocalEvent<PointLightComponent, ComponentShutdown>(OnLightShutdown);
         SubscribeLocalEvent<PointLightComponent, MetaFlagRemoveAttemptEvent>(OnFlagRemoveAttempt);
+    }
+
+    private void OnLightStartup(Entity<PointLightComponent> ent, ref ComponentStartup args)
+    {
+        UpdatePriority(ent.Owner, ent.Comp, MetaData(ent.Owner));
+        SetContainerOccluded(ent.Owner, IsCurrentContainerOrParentOccluder(ent.Owner), ent.Comp);
+        _lightTree.QueueTreeUpdate(ent.Owner, ent.Comp);
     }
 
     private void OnLightShutdown(Entity<PointLightComponent> ent, ref ComponentShutdown args)
     {
         UpdatePriority(ent.Owner, ent.Comp, MetaData(ent.Owner));
+        _lightTree.QueueTreeUpdate(ent.Owner, ent.Comp);
     }
 
     private void OnFlagRemoveAttempt(Entity<PointLightComponent> ent, ref MetaFlagRemoveAttemptEvent args)
@@ -47,7 +55,7 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
 
     private void OnRemoved(EntityUid uid, PointLightComponent component, EntGotRemovedFromContainerMessage args)
     {
-        SetContainerOccluded(uid, IsContainerOrParentOccluder(args.Container), component);
+        SetContainerOccluded(uid, IsCurrentContainerOrParentOccluder(uid), component);
     }
 
     private void OnLightGetState(EntityUid uid, PointLightComponent component, ref ComponentGetState args)
@@ -117,5 +125,10 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
             return false;
 
         return IsContainerOrParentOccluder(nextContainer);
+    }
+
+    private bool IsCurrentContainerOrParentOccluder(EntityUid uid)
+    {
+        return _container.TryGetContainingContainer(uid, out var container) && IsContainerOrParentOccluder(container);
     }
 }

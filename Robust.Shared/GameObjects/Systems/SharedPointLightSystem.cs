@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
@@ -91,6 +92,18 @@ public abstract class SharedPointLightSystem : EntitySystem
         Dirty(uid, comp);
     }
 
+    public void SetOffset(EntityUid uid, Vector2 value, SharedPointLightComponent? comp = null)
+    {
+        if (!ResolveLight(uid, ref comp) || comp.Offset == value)
+            return;
+
+        comp.Offset = value;
+        Dirty(uid, comp);
+
+        if (comp.AddToTree)
+            _lightTree.QueueTreeUpdate(uid, comp);
+    }
+
     public void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.Radius, radius))
@@ -152,5 +165,14 @@ public abstract class SharedPointLightSystem : EntitySystem
             CastShadows = component.CastShadows,
             ContainerOccluded = component.ContainerOccluded,
         };
+    }
+
+    public static Angle GetMaskWorldRotation(SharedPointLightComponent light, Angle worldRotation)
+    {
+        var rotation = light.Rotation;
+        if (light.MaskAutoRotate)
+            rotation += worldRotation;
+
+        return rotation;
     }
 }

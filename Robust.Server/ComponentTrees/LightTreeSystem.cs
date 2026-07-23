@@ -12,8 +12,6 @@ public sealed class LightTreeSystem : SharedLightTreeSystem
             return;
 
         base.Initialize();
-        SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnCompStartup);
-        SubscribeLocalEvent<PointLightComponent, ComponentRemove>(OnCompRemoved);
 
         // TODO LIGHT move PointLightComponent to shared
         Query = EntityManager.GetEntityQuery<SharedPointLightComponent, PointLightComponent>();

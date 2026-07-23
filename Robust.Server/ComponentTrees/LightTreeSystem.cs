@@ -1,8 +1,8 @@
-using Robust.Client.GameObjects;
+using Robust.Server.GameObjects;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
 
-namespace Robust.Client.ComponentTrees;
+namespace Robust.Server.ComponentTrees;
 
 public sealed class LightTreeSystem : SharedLightTreeSystem
 {
@@ -12,8 +12,6 @@ public sealed class LightTreeSystem : SharedLightTreeSystem
             return;
 
         base.Initialize();
-        SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnCompStartup);
-        SubscribeLocalEvent<PointLightComponent, ComponentRemove>(OnCompRemoved);
 
         // TODO LIGHT move PointLightComponent to shared
         Query = EntityManager.GetEntityQuery<SharedPointLightComponent, PointLightComponent>();

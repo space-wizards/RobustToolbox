@@ -27,7 +27,6 @@ namespace Robust.Shared.Configuration
         ///     The description of this CVar.
         /// </summary>
         public string? Desc { get; }
-
         private protected CVarDef(string name, object defaultValue, CVar flags, string? desc)
         {
             Name = name;
@@ -97,6 +96,9 @@ namespace Robust.Shared.Configuration
     [MeansImplicitUse]
     public sealed class CVarDefsAttribute : Attribute
     {
-
+        /// <summary>
+        ///     If true, all CVars defined on this class are saved to a fork-specific configuration file.
+        /// </summary>
+        public bool Fork { get; init; }
     }
 }

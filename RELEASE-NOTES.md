@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* CVar.FORK is now a flag if you wish to save / load CVars to a folder specific to your Fork ID. Configs will now also save in a Config subfolder with the base config and all fork-specific configs located within.
 
 ### New features
 
@@ -43,7 +43,8 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* The client will no longer save server CVars and vice versa.
+* Fix ConfigurationManager doing raw File calls over using the UserData provider.
 
 ### Other
 

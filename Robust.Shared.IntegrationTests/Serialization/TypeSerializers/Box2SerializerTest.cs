@@ -13,9 +13,9 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         [Test]
         public void SerializationTest()
         {
-            var left = 1;
+            var left = -3;
             var bottom = -2;
-            var right = -3;
+            var right = 1;
             var top = 4;
             var str = $"{left},{bottom},{right},{top}";
             var box = new Box2(left, bottom, right, top);
@@ -27,9 +27,9 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         [Test]
         public void DeserializationTest()
         {
-            var left = 1;
+            var left = -3;
             var bottom = -2;
-            var right = -3;
+            var right = 1;
             var top = 4;
             var str = $"{left},{bottom},{right},{top}";
             var node = new ValueDataNode(str);
@@ -47,6 +47,24 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             Assert.That(deserializedBox.BottomRight, Is.EqualTo(box.BottomRight));
             Assert.That(deserializedBox.TopLeft, Is.EqualTo(box.TopLeft));
             Assert.That(deserializedBox.TopRight, Is.EqualTo(box.TopRight));
+        }
+
+        [Test]
+        public void ValidationRejectsInvalidBox2Bounds()
+        {
+            var node = new ValueDataNode("1,0,0,1");
+            var validation = Serialization.ValidateNode<Box2, ValueDataNode, Box2Serializer>(node);
+
+            Assert.That(validation.GetErrors(), Is.Not.Empty);
+        }
+
+        [Test]
+        public void ValidationRejectsInvalidBox2iBounds()
+        {
+            var node = new ValueDataNode("0,1,1,0");
+            var validation = Serialization.ValidateNode<Box2i, ValueDataNode, Box2Serializer>(node);
+
+            Assert.That(validation.GetErrors(), Is.Not.Empty);
         }
     }
 }

@@ -8,6 +8,8 @@ namespace Robust.Shared.Maths.Tests
     [TestOf(typeof(Box2))]
     internal sealed class Box2_Test
     {
+        public delegate void Box2Setter(ref Box2 box);
+
         private static IEnumerable<(float left, float bottom, float right, float top)> Sources =>
             new (float, float, float, float)[]
             {
@@ -74,6 +76,61 @@ namespace Robust.Shared.Maths.Tests
                 Box2.UnitCentered,
                 new Box2(new Vector2(0.5f, 0.5f), new Vector2(1.5f, 1.5f))),
         };
+
+        private static TestCaseData[] UnionStaticCases =
+        [
+            new TestCaseData(
+                new Box2(-2, -1, 0, 1),
+                new Box2(-1, -3, 4, 0),
+                new Box2(-2, -3, 4, 1)),
+            new TestCaseData(
+                new Box2(-1, -1, 1, 1),
+                new Box2(-0.5f, -0.5f, 0.5f, 0.5f),
+                new Box2(-1, -1, 1, 1)),
+        ];
+
+        private static TestCaseData[] EnlargeAabbCases =
+        [
+            new TestCaseData(
+                new Box2(-1, -1, 1, 1),
+                new Box2(-2, -3, 4, 5),
+                true,
+                new Box2(-2, -3, 4, 5)),
+            new TestCaseData(
+                new Box2(-2, -3, 4, 5),
+                new Box2(-1, -1, 1, 1),
+                false,
+                new Box2(-2, -3, 4, 5)),
+        ];
+
+        private static TestCaseData[] HasNanCases =
+        [
+            new TestCaseData(new Box2(float.NaN, 0, 1, 2), true),
+            new TestCaseData(new Box2(0, float.NaN, 1, 2), true),
+            new TestCaseData(new Box2(0, 1, float.NaN, 2), true),
+            new TestCaseData(new Box2(0, 1, 2, float.NaN), true),
+            new TestCaseData(new Box2(0, 1, 2, 3), false),
+        ];
+
+        private static TestCaseData[] InvalidSetterCases =
+        [
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Left = 2)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Right = -2)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Bottom = 2)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Top = -2)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.BottomLeft = new Vector2(2, 0))),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.TopRight = new Vector2(0, -2))),
+        ];
+
+        private static TestCaseData[] ValidSetterCases =
+        [
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Left = -2), new Box2(-2, -1, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Right = 2), new Box2(-1, -1, 2, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Bottom = -2), new Box2(-1, -2, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Top = 2), new Box2(-1, -1, 1, 2)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.BottomLeft = new Vector2(-2, -2)), new Box2(-2, -2, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.TopRight = new Vector2(2, 2)), new Box2(-1, -1, 2, 2)),
+        ];
 
         [Test, TestCaseSource(nameof(MatrixCases))]
         public void TestBox2Matrices(Matrix3x2 matrix, Box2 bounds, Box2 result)
@@ -248,6 +305,43 @@ namespace Robust.Shared.Maths.Tests
             Assert.That(result.Top, Is.EqualTo(2f));
         }
 
+        [Test, TestCaseSource(nameof(UnionStaticCases))]
+        public void Box2UnionStatic(Box2 boxOne, Box2 boxTwo, Box2 expected)
+        {
+            Assert.That(Box2.Union(boxOne, boxTwo), Is.EqualTo(expected));
+        }
+
+        [Test, TestCaseSource(nameof(EnlargeAabbCases))]
+        public void Box2EnlargeAabb(Box2 box, Box2 other, bool expectedChanged, Box2 expectedBox)
+        {
+            Assert.That(box.EnlargeAabb(other), Is.EqualTo(expectedChanged));
+            Assert.That(box, Is.EqualTo(expectedBox));
+        }
+
+        [Test, TestCaseSource(nameof(HasNanCases))]
+        public void Box2HasNan(Box2 box, bool expected)
+        {
+            Assert.That(box.HasNan(), Is.EqualTo(expected));
+        }
+
+        [Test, TestCaseSource(nameof(InvalidSetterCases))]
+        public void Box2RejectsInvalidSetters(Box2Setter setter)
+        {
+            var box = new Box2(-1, -1, 1, 1);
+
+            Assert.That(() => setter(ref box), Throws.TypeOf<ArgumentOutOfRangeException>());
+        }
+
+        [Test, TestCaseSource(nameof(ValidSetterCases))]
+        public void Box2AcceptsValidSetters(Box2Setter setter, Box2 expected)
+        {
+            var box = new Box2(-1, -1, 1, 1);
+
+            setter(ref box);
+
+            Assert.That(box, Is.EqualTo(expected));
+        }
+
         [Test]
         public void Box2IsEmpty()
         {
@@ -394,7 +488,7 @@ namespace Robust.Shared.Maths.Tests
         [Test]
         public void Box2Equals([ValueSource(nameof(Sources))] (float, float, float, float) test)
         {
-            var (left, top, right, bottom) = test;
+            var (left, bottom, right, top) = test;
 
             var controlBox = new Box2(left, bottom, right, top);
             var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
@@ -416,7 +510,7 @@ namespace Robust.Shared.Maths.Tests
         [Test]
         public void Box2EqualsOperator([ValueSource(nameof(Sources))] (float, float, float, float) test)
         {
-            var (left, top, right, bottom) = test;
+            var (left, bottom, right, top) = test;
 
             var controlBox = new Box2(left, bottom, right, top);
             var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
@@ -433,7 +527,7 @@ namespace Robust.Shared.Maths.Tests
         [Test]
         public void Box2InequalsOperator([ValueSource(nameof(Sources))] (float, float, float, float) test)
         {
-            var (left, top, right, bottom) = test;
+            var (left, bottom, right, top) = test;
 
             var controlBox = new Box2(left, bottom, right, top);
             var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);

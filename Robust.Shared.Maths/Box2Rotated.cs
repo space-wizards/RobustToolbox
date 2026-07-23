@@ -113,15 +113,34 @@ namespace Robust.Shared.Maths
 
             var originX = Vector128.Create(Origin.X);
             var originY = Vector128.Create(Origin.Y);
+            var rotTheta = (float) Rotation.Theta;
 
-            var cos = Vector128.Create((float) Math.Cos(Rotation));
-            var sin = Vector128.Create((float) Math.Sin(Rotation));
+            var cos = Vector128.Create(MathF.Cos(rotTheta));
+            var sin = Vector128.Create(MathF.Sin(rotTheta));
 
             var boxX = Vector128.Shuffle(boxVec, Vector128.Create(0, 2, 2, 0)) - originX;
             var boxY = Vector128.Shuffle(boxVec, Vector128.Create(1, 1, 3, 3)) - originY;
 
             x = boxX * cos - boxY * sin + originX;
             y = boxX * sin + boxY * cos + originY;
+        }
+
+        /// <summary>
+        /// Applies the box rotation to all corners.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void GetCorners(
+            out Vector2 bottomLeft,
+            out Vector2 bottomRight,
+            out Vector2 topRight,
+            out Vector2 topLeft)
+        {
+            GetVertices(out var x, out var y);
+
+            bottomLeft = new Vector2(x.GetElement(0), y.GetElement(0));
+            bottomRight = new Vector2(x.GetElement(1), y.GetElement(1));
+            topRight = new Vector2(x.GetElement(2), y.GetElement(2));
+            topLeft = new Vector2(x.GetElement(3), y.GetElement(3));
         }
 
         public readonly bool Contains(Vector2 worldPoint)
@@ -173,7 +192,10 @@ namespace Robust.Shared.Maths
         {
             unchecked
             {
-                return (Box.GetHashCode() * 397) ^ Rotation.GetHashCode();
+                var hashCode = Box.GetHashCode();
+                hashCode = (hashCode * 397) ^ Rotation.GetHashCode();
+                hashCode = (hashCode * 397) ^ Origin.GetHashCode();
+                return hashCode;
             }
         }
 

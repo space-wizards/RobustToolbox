@@ -95,11 +95,12 @@ internal partial record struct Polygon : IPhysShape
         Unsafe.SkipInit(out this);
         Radius = 0f;
         VertexCount = 4;
+        bounds.GetCorners(out var bottomLeft, out var bottomRight, out var topRight, out var topLeft);
 
-        _vertices._00 = bounds.BottomLeft;
-        _vertices._01 = bounds.BottomRight;
-        _vertices._02 = bounds.TopRight;
-        _vertices._03 = bounds.TopLeft;
+        _vertices._00 = bottomLeft;
+        _vertices._01 = bottomRight;
+        _vertices._02 = topRight;
+        _vertices._03 = topLeft;
 
         CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
 

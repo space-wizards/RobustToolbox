@@ -97,11 +97,11 @@ public sealed partial class SpriteSystem
         HashSet<int> seenLayers = new HashSet<int>();
 #endif
 
-        if (sprite.Comp.LayersOrderOverride != null)
+        if (sprite.Comp.LayersOrderOverride != null &&
+            sprite.Comp.LayersOrderOverride.TryGetValue(Layer.GetDirection(sprite.Comp.LayersOrderOverrideDirectionType, angle), out var layerDirection))
         {
-
             var highestIndex = 0;
-            foreach (var index in sprite.Comp.LayersOrderOverride)
+            foreach (var index in layerDirection)
             {
                 if (index >= sprite.Comp.Layers.Count || index < 0)
                 {

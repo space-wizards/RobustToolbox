@@ -25,6 +25,14 @@ namespace Robust.Client.Graphics.Clyde
         private readonly ConcurrentQueue<ClydeHandle> _renderTargetDisposeQueue
             = new();
 
+        private const int PostShaderRenderTargetPoolMax = 16;
+        private const int PostShaderRenderTargetMinSize = 32;
+
+        private static readonly RenderTargetFormatParameters PostShaderRenderTargetFormat =
+            new(RenderTargetColorFormat.Rgba8Srgb, true);
+
+        private readonly List<RenderTexture> _postShaderRenderTargetPool = new();
+
         // This is always kept up-to-date, except in CreateRenderTarget (because it restores the old value)
         // It is used for SRGB emulation.
         // It, like _mainWindowRenderTarget, is initialized in Clyde's constructor
@@ -301,6 +309,77 @@ namespace Robust.Client.Graphics.Clyde
             {
                 DeleteRenderTexture(handle);
             }
+        }
+
+        private RenderTexture RentPostShaderRenderTarget(Vector2i minSize)
+        {
+            var bucket = BucketPostShaderRenderTargetSize(minSize);
+
+            var bestIdx = -1;
+            long bestArea = long.MaxValue;
+
+            for (var i = 0; i < _postShaderRenderTargetPool.Count; i++)
+            {
+                var rt = _postShaderRenderTargetPool[i];
+                if (rt.Size.X < bucket.X || rt.Size.Y < bucket.Y)
+                    continue;
+
+                var area = (long) rt.Size.X * rt.Size.Y;
+                if (area >= bestArea)
+                    continue;
+
+                bestArea = area;
+                bestIdx = i;
+            }
+
+            if (bestIdx >= 0)
+            {
+                var rented = _postShaderRenderTargetPool[bestIdx];
+                _postShaderRenderTargetPool.RemoveAt(bestIdx);
+                return rented;
+            }
+
+            return CreateRenderTarget(bucket, PostShaderRenderTargetFormat, name: "post-shader-pool");
+        }
+
+        private void ReturnPostShaderRenderTarget(RenderTexture rt)
+        {
+            if (_postShaderRenderTargetPool.Count >= PostShaderRenderTargetPoolMax)
+            {
+                rt.DisposeDeferred();
+                return;
+            }
+
+            _postShaderRenderTargetPool.Add(rt);
+        }
+
+        private void ClearPostShaderRenderTargetPool()
+        {
+            foreach (var rt in _postShaderRenderTargetPool)
+                rt.DisposeDeferred();
+
+            _postShaderRenderTargetPool.Clear();
+            FlushRenderTargetDispose();
+        }
+
+        private static Vector2i BucketPostShaderRenderTargetSize(Vector2i size)
+        {
+            return new(NextPowerOfTwo(size.X), NextPowerOfTwo(size.Y));
+        }
+
+        private static int NextPowerOfTwo(int value)
+        {
+            var v = Math.Max(value, PostShaderRenderTargetMinSize);
+            if ((v & (v - 1)) == 0)
+                return v;
+
+            v--;
+            v |= v >> 1;
+            v |= v >> 2;
+            v |= v >> 4;
+            v |= v >> 8;
+            v |= v >> 16;
+            return v + 1;
         }
 
         public IEnumerable<(RenderTargetBase, LoadedRenderTarget)> GetLoadedRenderTextures()

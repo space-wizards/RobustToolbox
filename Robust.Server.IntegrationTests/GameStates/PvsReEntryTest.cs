@@ -25,7 +25,6 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
         await using var pair = await StartConnectedPair();
         var (client, server) = pair;
 
-        var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();

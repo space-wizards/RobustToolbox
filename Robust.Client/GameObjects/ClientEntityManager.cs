@@ -32,6 +32,8 @@ namespace Robust.Client.GameObjects
         private readonly Queue<EntityUid> _queuedPredictedDeletions = new();
         private readonly HashSet<EntityUid> _queuedPredictedDeletionsSet = new();
         private readonly HashSet<EntityUid> _predictedDetachedEntities = new();
+        private Histogram? _tickUpdateHistogram;
+        private Histogram.Child? _entityNetHistogram;
 
         public override void Initialize()
         {
@@ -210,7 +212,9 @@ namespace Robust.Client.GameObjects
 
         public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntityNet").NewTimer())
+            UpdateTickHistogram(histogram);
+
+            using (_entityNetHistogram?.NewTimer())
             {
                 while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameTiming.LastRealTick)
                 {
@@ -221,6 +225,15 @@ namespace Robust.Client.GameObjects
             }
 
             base.TickUpdate(frameTime, noPredictions, histogram);
+        }
+
+        private void UpdateTickHistogram(Histogram? histogram)
+        {
+            if (ReferenceEquals(_tickUpdateHistogram, histogram))
+                return;
+
+            _tickUpdateHistogram = histogram;
+            _entityNetHistogram = histogram?.WithLabels("EntityNet");
         }
 
         internal override void ProcessQueueudDeletions()

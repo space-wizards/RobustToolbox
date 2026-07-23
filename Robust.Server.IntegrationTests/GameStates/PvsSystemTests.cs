@@ -22,7 +22,6 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         await using var pair = await StartConnectedPair();
         var (client, server) = pair;
 
-        var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
@@ -42,7 +41,7 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             map = server.System<SharedMapSystem>().CreateMap(out var mapId);
-            var gridComp = mapMan.CreateGridEntity(mapId);
+            var gridComp = maps.CreateGridEntity(mapId);
             maps.SetTile(gridComp, Vector2i.Zero, new Tile(1));
             grid = gridComp.Owner;
         });

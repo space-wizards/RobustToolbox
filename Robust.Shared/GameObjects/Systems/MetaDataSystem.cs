@@ -10,7 +10,6 @@ namespace Robust.Shared.GameObjects;
 public abstract partial class MetaDataSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
 
     private EntityPausedEvent _pausedEvent;
 
@@ -18,6 +17,8 @@ public abstract partial class MetaDataSystem : EntitySystem
 
     public override void Initialize()
     {
+        base.Initialize();
+
         _metaQuery = GetEntityQuery<MetaDataComponent>();
         SubscribeLocalEvent<MetaDataComponent, ComponentHandleState>(OnMetaDataHandle);
         SubscribeLocalEvent<MetaDataComponent, ComponentGetState>(OnMetaDataGetState);
@@ -37,7 +38,7 @@ public abstract partial class MetaDataSystem : EntitySystem
         component._entityDescription = state.Description;
 
         if(state.PrototypeId != null && state.PrototypeId != component._entityPrototype?.ID)
-            component._entityPrototype = _proto.Index<EntityPrototype>(state.PrototypeId);
+            component._entityPrototype = ProtoMan.Index<EntityPrototype>(state.PrototypeId);
 
         component.PauseTime = state.PauseTime;
     }

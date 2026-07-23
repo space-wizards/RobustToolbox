@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Utility;
 using SharpZstd.Interop;
 
@@ -19,8 +20,14 @@ internal sealed partial class PvsSystem
     private readonly ObjectPool<List<PvsIndex>> _entDataListPool
         = new DefaultObjectPool<List<PvsIndex>>(new ListPolicy<PvsIndex>(), MaxVisPoolSize);
 
+    private readonly ObjectPool<List<ComponentChange>> _componentChangeListPool
+        = new DefaultObjectPool<List<ComponentChange>>(new ListPolicy<ComponentChange>(), MaxVisPoolSize);
+
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<HashSet<ushort>> _netComponentSetPool
+        = new DefaultObjectPool<HashSet<ushort>>(new SetPolicy<ushort>(), MaxVisPoolSize);
 
     private readonly ObjectPool<PvsChunk> _chunkPool =
         new DefaultObjectPool<PvsChunk>(new PvsChunkPolicy(), 256);
@@ -62,5 +69,39 @@ internal sealed partial class PvsSystem
         {
             CompressionContext.Dispose();
         }
+    }
+
+    private List<ComponentChange> GetComponentChangeList(int capacity)
+    {
+        var list = _componentChangeListPool.Get();
+        list.EnsureCapacity(capacity);
+        return list;
+    }
+
+    private HashSet<ushort> GetNetComponentSet()
+    {
+        return _netComponentSetPool.Get();
+    }
+
+    private void ReturnEntityState(EntityState state)
+    {
+        if (state.ComponentChanges.Value is List<ComponentChange> changes)
+            _componentChangeListPool.Return(changes);
+
+        if (state.NetComponents is { } netComps)
+        {
+            _netComponentSetPool.Return(netComps);
+            state.NetComponents = null;
+        }
+    }
+
+    internal void ClearSessionState(PvsSession session)
+    {
+        foreach (var state in session.States)
+        {
+            ReturnEntityState(state);
+        }
+
+        session.ClearState();
     }
 }

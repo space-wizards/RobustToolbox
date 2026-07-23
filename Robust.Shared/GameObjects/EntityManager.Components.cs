@@ -397,6 +397,7 @@ namespace Robust.Shared.GameObjects
             if (component is IComponentDelta delta)
             {
                 var curTick = _gameTiming.CurTick;
+                delta.LastUnclassifiedDirty = curTick;
                 delta.LastModifiedFields = new GameTick[reg.NetworkedFields.Length];
                 Array.Fill(delta.LastModifiedFields, curTick);
             }
@@ -1191,6 +1192,18 @@ namespace Robust.Shared.GameObjects
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp1).Name}");
             return new EntityQuery<TComp1>(this, comps);
+        }
+
+        // this literally just exists to handle SharedLightComponent and is pretty hacky
+        // just move point light to shared and kill this.
+        // TODO LIGHT
+        internal EntityQuery<TCompShared> GetEntityQuery<TCompShared, TComp>()
+            where TCompShared : IComponent
+            where TComp : TCompShared
+        {
+            var comps = _entTraitArray[CompIdx.ArrayIndex<TComp>()];
+            DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp).Name}");
+            return new EntityQuery<TCompShared>(this, comps);
         }
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)

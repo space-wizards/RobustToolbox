@@ -33,7 +33,6 @@ internal sealed class BroadphaseNetworkingTest : RobustIntegrationTest
 
         await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
 
-        var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var cEntMan = client.ResolveDependency<IEntityManager>();
         var netMan = client.ResolveDependency<IClientNetManager>();
@@ -60,7 +59,7 @@ internal sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             map1 = mapSystem.CreateMap(out var mapId);
-            var gridEnt = mapMan.CreateGridEntity(mapId);
+            var gridEnt = mapSystem.CreateGridEntity(mapId);
             mapSystem.SetTile(gridEnt, Vector2i.Zero, new Tile(1));
             grid1 = gridEnt.Owner;
         });
@@ -130,7 +129,7 @@ internal sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         {
             // Create grid
             map2 = mapSystem.CreateMap(out var mapId);
-            var gridEnt = mapMan.CreateGridEntity(mapId);
+            var gridEnt = mapSystem.CreateGridEntity(mapId);
             mapSystem.SetTile(gridEnt, Vector2i.Zero, new Tile(1));
             grid2 = gridEnt.Owner;
 

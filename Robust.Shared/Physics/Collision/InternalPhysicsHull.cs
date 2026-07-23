@@ -10,7 +10,9 @@ namespace Robust.Shared.Physics;
 /// </summary>
 internal ref struct InternalPhysicsHull
 {
-    public Span<Vector2> Points;
+    private FixedArray8<Vector2> _points;
+
+    public Span<Vector2> Points => field.IsEmpty ? _points.AsSpan : field;
     public int Count;
 
     internal InternalPhysicsHull(Span<Vector2> vertices, int count) : this()
@@ -66,7 +68,6 @@ internal ref struct InternalPhysicsHull
             return hull;
         }
 
-        hull.Points = new Vector2[PhysicsConstants.MaxPolygonVertices];
         var bestPoint = ps[bestIndex];
 
         // compute hull to the right of p1-bestPoint
@@ -221,8 +222,6 @@ internal ref struct InternalPhysicsHull
 		    // all points collinear
 		    return hull;
 	    }
-
-        hull.Points = new Vector2[PhysicsConstants.MaxPolygonVertices];
 
 	    // stitch hulls together, preserving CCW winding order
 	    hull.Points[hull.Count++] = p1;

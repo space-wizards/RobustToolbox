@@ -12,14 +12,14 @@ using System;
 
 namespace Robust.Shared.Audio;
 
-[ImplicitDataDefinitionForInheritors, Serializable, NetSerializable]
+[CopyByRef, ImplicitDataDefinitionForInheritors, Serializable, NetSerializable]
 public abstract partial class SoundSpecifier
 {
     [DataField("params")]
     public AudioParams Params { get; set; } = AudioParams.Default;
 }
 
-[Serializable, NetSerializable]
+[CopyByRef, Serializable, NetSerializable]
 public sealed partial class SoundPathSpecifier : SoundSpecifier
 {
     public const string Node = "path";
@@ -47,7 +47,7 @@ public sealed partial class SoundPathSpecifier : SoundSpecifier
     }
 }
 
-[Serializable, NetSerializable]
+[CopyByRef, Serializable, NetSerializable]
 public sealed partial class SoundCollectionSpecifier : SoundSpecifier
 {
     public const string Node = "collection";

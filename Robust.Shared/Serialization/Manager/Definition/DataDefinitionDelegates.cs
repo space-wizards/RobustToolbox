@@ -35,6 +35,14 @@ internal delegate void SerializeDelegateSignature<T>(
 );
 
 [Obsolete("Used only in source generation")]
+internal delegate bool EqualDelegateSignature<T>(
+    T left,
+    T right,
+    ISerializationManager serialization,
+    ISerializationContext? context
+);
+
+[Obsolete("Used only in source generation")]
 internal delegate void ValidateAllFieldsDelegate(
     Dictionary<string, ValidationNode> nodes,
     MappingDataNode node,

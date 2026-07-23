@@ -180,12 +180,11 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            var protoData = PrototypeManager.GetPrototypeData(prototype);
             var comps = _entCompIndex[uid];
+            var hasIgnoredComps = ignoredComps is { Count: > 0 };
 
             // Fast check if the component counts match.
-            // Note that transform and metadata are not included in the prototype data.
-            if (protoData.Count + 2 != comps.Count)
+            if (prototype.Components.Count + 2 != comps.Count)
                 return false;
 
             foreach (var component in comps)
@@ -195,34 +194,19 @@ namespace Robust.Shared.GameObjects
 
                 var compType = component.GetType();
 
-                if (compType == typeof(TransformComponent) || compType == typeof(MetaDataComponent))
+                if (compType == _xformReg.Type || compType == _metaReg.Type)
                     continue;
 
-                var compName = _componentFactory.GetComponentName(compType);
+                var compReg = _componentFactory.GetRegistration(compType);
 
-                if (ignoredComps?.Contains(compName) == true)
+                if (hasIgnoredComps && ignoredComps!.Contains(compReg.Name))
                     continue;
 
                 // If the component isn't on the prototype then it's custom.
-                if (!protoData.TryGetValue(compName, out var protoMapping))
+                if (!prototype.Components.TryGetValue(compReg.Name, out var protoEntry))
                     return false;
 
-                MappingDataNode compMapping;
-                try
-                {
-                    compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: true, context: _context);
-                }
-                catch (Exception e)
-                {
-                    _sawmill.Error($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
-#if !EXCEPTION_TOLERANCE
-                    throw;
-#else
-                    return false;
-#endif
-                }
-
-                if (compMapping.AnyExcept(protoMapping))
+                if (!_serManager.DataFieldEquals(compReg.Type, component, protoEntry.Component, _context))
                     return false;
             }
 

@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added IAudioManager.ConvertAudioDeviceNameForDisplay helper method for decoding OpenAL device names into a more human-readable format.
 
 ### Bugfixes
 

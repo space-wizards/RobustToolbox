@@ -120,7 +120,7 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
     {
         if (container.OccludesLight)
             return true;
-        
+
         if (!_container.TryGetContainingContainer(container.Owner, out var nextContainer))
             return false;
 

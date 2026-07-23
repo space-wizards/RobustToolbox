@@ -78,7 +78,7 @@ namespace Robust.Shared.GameObjects
         private Histogram.Child? _queuedDeletionHistogram;
         private Histogram.Child? _componentCullHistogram;
 
-        private EntityDiffContext _context = new();
+        private EntityDiffContext _context;
 
         /// <summary>
         ///     All entities currently stored in the manager.
@@ -139,6 +139,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public EntityManager()
         {
+            _context = new(_serManager);
         }
 
         public virtual void Initialize()

@@ -337,9 +337,8 @@ namespace Robust.Shared.ContentPack
                 foreach (var filename in root.FindFiles(relative.Value))
                 {
                     var newPath = prefix / filename;
-                    if (!alreadyReturnedFiles.Contains(newPath))
+                    if (alreadyReturnedFiles.Add(newPath))
                     {
-                        alreadyReturnedFiles.Add(newPath);
                         yield return newPath;
                     }
                 }

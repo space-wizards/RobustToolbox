@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -564,6 +564,14 @@ public interface IPrototypeManager
     /// Entity prototypes grouped by their categories.
     /// </summary>
     FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; }
+
+    /// <summary>
+    /// Tries to get the list of all associated variants for a given prototype. 
+    /// </summary>
+    /// <param name="collectionMember">The prototype being indexed.</param>
+    /// <param name="collectionVariants">The collection of variants this prototype belongs to.</param>
+    /// <returns>Returns true if the prototype is part of a variant collection, false otherwise.</returns>
+    bool TryGetVariantCollection<T>(ProtoId<T> collectionMember, [NotNullWhen(true)] out List<ProtoId<T>>? collectionVariants) where T : class, IPrototype;
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

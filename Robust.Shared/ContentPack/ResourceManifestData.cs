@@ -33,12 +33,14 @@ public sealed record ResourceManifestData(
         }
     }
 
-    public static ResourceManifestData LoadFromFile(string filePath)
+    public static ResourceManifestData LoadFromFile(string baseDir, ResPath resPath)
     {
-        if (!File.Exists(filePath))
+        var safePath = PathHelpers.SafeGetResourcePath(baseDir, resPath);
+
+        if (!File.Exists(safePath))
             return Default;
 
-        using var stream = File.OpenRead(filePath);
+        using var stream = File.OpenRead(safePath);
         return Parse(stream);
     }
 

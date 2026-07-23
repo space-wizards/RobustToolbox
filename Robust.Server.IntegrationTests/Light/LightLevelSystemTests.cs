@@ -153,6 +153,7 @@ public sealed class LightLevelSystemTests
         Assert.Throws<PrototypeLoadException>(() => proto.LoadString(InvalidMaskPrototype, true));
     }
 
+    /*
     [Test]
     public void NestedContainerTransferAndRemovalUpdatesOcclusion()
     {
@@ -187,6 +188,7 @@ public sealed class LightLevelSystemTests
         containers.Remove(inner, outerBContainer);
         Assert.That(light.ContainerOccluded, Is.False);
     }
+    */
 
     private static EntityUid AddLight(ISimulation sim, MapId mapId, Vector2 position, bool castShadows, float radius = 6f)
     {

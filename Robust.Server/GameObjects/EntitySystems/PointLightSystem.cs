@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -7,6 +8,7 @@ namespace Robust.Server.GameObjects;
 
 public sealed partial class PointLightSystem : SharedPointLightSystem
 {
+    [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private MetaDataSystem _metadata = default!;
 
     public override void Initialize()
@@ -19,9 +21,17 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
         SubscribeLocalEvent<PointLightComponent, MetaFlagRemoveAttemptEvent>(OnFlagRemoveAttempt);
     }
 
+    private void OnLightStartup(Entity<PointLightComponent> ent, ref ComponentStartup args)
+    {
+        UpdatePriority(ent.Owner, ent.Comp, MetaData(ent.Owner));
+        SetContainerOccluded(ent.Owner, IsCurrentContainerOrParentOccluder(ent.Owner), ent.Comp);
+        _lightTree.QueueTreeUpdate(ent.Owner, ent.Comp);
+    }
+
     private void OnLightShutdown(Entity<PointLightComponent> ent, ref ComponentShutdown args)
     {
         UpdatePriority(ent.Owner, ent.Comp, MetaData(ent.Owner));
+        _lightTree.QueueTreeUpdate(ent.Owner, ent.Comp);
     }
 
     private void OnFlagRemoveAttempt(Entity<PointLightComponent> ent, ref MetaFlagRemoveAttemptEvent args)
@@ -30,10 +40,6 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
             args.ToRemove &= ~MetaDataFlags.PvsPriority;
     }
 
-    private void OnLightStartup(EntityUid uid, PointLightComponent component, ComponentStartup args)
-    {
-        UpdatePriority(uid, component, MetaData(uid));
-    }
 
     private bool IsHighPriority(SharedPointLightComponent comp)
     {

@@ -1,83 +1,118 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
+using System.Text;
+using JetBrains.Annotations;
 using Robust.Shared.Collections;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Random;
 
-public static class RandomExtensions
+[PublicAPI]
+public static partial class RandomExtensions
 {
-    /// <summary>
-    ///     Generate a random number from a normal (gaussian) distribution.
-    /// </summary>
-    /// <param name="random">The random object to generate the number from.</param>
-    /// <param name="μ">The average or "center" of the normal distribution.</param>
-    /// <param name="σ">The standard deviation of the normal distribution.</param>
-    public static double NextGaussian(this IRobustRandom random, double μ = 0, double σ = 1)
+    extension<T>(T random)
+        where T : IRobustRandom
     {
-        // https://stackoverflow.com/a/218600
-        var α = random.NextDouble();
-        var β = random.NextDouble();
+        /// <summary>
+        ///     Have a certain chance to return a boolean.
+        /// </summary>
+        /// <param name="chance">The chance to pass, from 0 to 1.</param>
+        [MustUseReturnValue]
+        public bool Prob(float chance)
+        {
+            DebugTools.Assert(chance is <= 1 and >= 0, $"Chance must be in the range 0-1. It was {chance}.");
 
-        var randStdNormal = Math.Sqrt(-2.0 * Math.Log(α)) * Math.Sin(2.0 * Math.PI * β);
+            return random.NextFloat() < chance;
+        }
 
-        return μ + σ * randStdNormal;
+        /// <summary>
+        ///     Creates a string populated with random symbols from <see cref="sourceRunes"/>.
+        /// </summary>
+        /// <param name="destination">Buffer to write into</param>
+        /// <param name="sourceRunes">The source to use for random symbols.</param>
+        /// <param name="length">The number of symbols to put into the destination buffer.</param>
+        /// <returns>The number of chars written, which is distinct from the input length.</returns>
+        /// <exception cref="ArgumentException">
+        ///     Thrown when the generated string may not fit into the destination.
+        /// </exception>
+        /// <remarks>
+        ///     This function is <i>somewhat</i> Unicode aware. It correctly handles surrogate pairs, but does not
+        ///     support Unicode characters composed of more than one Unicode codepoint.
+        /// </remarks>
+        /// <seealso cref="System.Random.GetString"/>
+        public int FillStringFromRunes(Span<char> destination, ReadOnlySpan<Rune> sourceRunes, int length)
+        {
+            // There was something fancier here, but then I realized that for internationalization reasons we probably
+            // should require people just always create the larger minimum buffer size.
+            if (destination.Length < length * 2)
+                throw new ArgumentException("Destination buffer is not large enough for all possible strings.");
+
+            var index = 0;
+
+            Span<char> runeBuffer = stackalloc char[2];
+
+            for (var i = 0; i < length; i++)
+            {
+                var symbol = random.Pick(sourceRunes);
+
+                // All runes are one or two chars, so we only have two possible lengths to check for.
+                var len = symbol.EncodeToUtf16(runeBuffer);
+
+                destination[index++] = runeBuffer[0];
+
+                if (len == 2)
+                    destination[index++] = runeBuffer[1];
+            }
+
+            return index;
+        }
+
+        /// <summary>
+        ///     Creates a string populated with random symbols from <see cref="sourceRunes"/>.
+        /// </summary>
+        /// <param name="sourceRunes">The source to use for random symbols.</param>
+        /// <param name="length">The number of symbols to put into the destination buffer.</param>
+        /// <returns>A string populated with randomly selected symbols.</returns>
+        /// <remarks>
+        ///     This function is <i>somewhat</i> Unicode aware. It correctly handles surrogate pairs, but does not
+        ///     support Unicode characters composed of more than one Unicode codepoint.
+        /// </remarks>
+        /// <example>
+        ///     static Runes = "!@#$%^&*".EnumerateRunes().ToArray();
+        ///     var string = rng.FillStringFromRunes(Runes, 4);
+        ///     <br/>
+        ///     Console.WriteLine(string); // %*#@
+        /// </example>
+        /// <seealso cref="System.Random.GetString"/>
+        public string FillStringFromRunes(ReadOnlySpan<Rune> sourceRunes, int length)
+        {
+            const int stackBufferSize = 32;
+
+            // This is a fixed memory region on the stack, not an allocation.
+            Span<char> destBuffer = stackalloc char[stackBufferSize * 2];
+
+            // So discarding it for an array if we need to isn't a big issue.
+            if (length > stackBufferSize)
+                destBuffer = new char[length * 2];
+
+            var chars = random.FillStringFromRunes(destBuffer, sourceRunes, length);
+
+            // This is in fact how you create a string from a Span<char>, see
+            // https://learn.microsoft.com/en-us/dotnet/api/system.span-1.tostring?view=net-10.0
+            // Lovely OOP intent overloading right here.
+            return destBuffer[0..chars].ToString();
+        }
     }
 
     /// <summary>Picks a random element from a collection.</summary>
-    public static T Pick<T>(this IRobustRandom random, IReadOnlyList<T> list)
-    {
-        var index = random.Next(list.Count);
-        return list[index];
-    }
-
-    /// <summary>Picks a random element from a collection.</summary>
-    public static ref T Pick<T>(this IRobustRandom random, ValueList<T> list)
-    {
-        var index = random.Next(list.Count);
-        return ref list[index];
-    }
-
-    /// <summary>Picks a random element from a collection.</summary>
+    [Obsolete("System.Random based APIs are deprecated.")]
     public static ref T Pick<T>(this System.Random random, ValueList<T> list)
     {
         var index = random.Next(list.Count);
         return ref list[index];
-    }
-
-    /// <summary>Picks a random element from a collection.</summary>
-    /// <remarks>
-    ///     This is O(n).
-    /// </remarks>
-    public static T Pick<T>(this IRobustRandom random, IReadOnlyCollection<T> collection)
-    {
-        var index = random.Next(collection.Count);
-        var i = 0;
-        foreach (var t in collection)
-        {
-            if (i++ == index)
-            {
-                return t;
-            }
-        }
-
-        throw new UnreachableException("This should be unreachable!");
-    }
-
-    /// <summary>
-    /// Picks a random element from a list, removes it from list and returns it.
-    /// This is O(n) as it preserves the order of other items in the list.
-    /// </summary>
-    public static T PickAndTake<T>(this IRobustRandom random, IList<T> list)
-    {
-        var index = random.Next(list.Count);
-        var element = list[index];
-        list.RemoveAt(index);
-        return element;
     }
 
     /// <summary>
@@ -144,15 +179,6 @@ public static class RandomExtensions
     public static Vector2 NextPolarVector2(this System.Random random, float minMagnitude, float maxMagnitude)
         => random.NextAngle().RotateVec(new Vector2(random.NextFloat(minMagnitude, maxMagnitude), 0));
 
-    [Obsolete("Exists as a method directly on IRobustRandom.")]
-    public static float NextFloat(this IRobustRandom random)
-    {
-        // This is pretty much the CoreFX implementation.
-        // So credits to that.
-        // Except using float instead of double.
-        return random.Next() * 4.6566128752458E-10f;
-    }
-
     [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static float NextFloat(this System.Random random)
     {
@@ -162,130 +188,4 @@ public static class RandomExtensions
     [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static float NextFloat(this System.Random random, float minValue, float maxValue)
         => random.NextFloat() * (maxValue - minValue) + minValue;
-
-    /// <summary>
-    ///     Have a certain chance to return a boolean.
-    /// </summary>
-    /// <param name="random">The random instance to run on.</param>
-    /// <param name="chance">The chance to pass, from 0 to 1.</param>
-    public static bool Prob(this IRobustRandom random, float chance)
-    {
-        DebugTools.Assert(chance <= 1 && chance >= 0, $"Chance must be in the range 0-1. It was {chance}.");
-
-        return random.NextDouble() < chance;
-    }
-
-    /// <summary>
-    /// Get set amount of random items from a collection.
-    /// If <paramref name="allowDuplicates"/> is false and <paramref name="source"/>
-    /// is smaller then <paramref name="count"/> - returns shuffled <paramref name="source"/> clone.
-    /// If <paramref name="source"/> is empty, and/or <paramref name="count"/> is 0, returns empty.
-    /// </summary>
-    /// <param name="random">Instance of random to invoke upon.</param>
-    /// <param name="source">Collection from which items should be picked.</param>
-    /// <param name="count">Number of random items to be picked.</param>
-    /// <param name="allowDuplicates">If true, items are allowed to be picked more than once.</param>
-    public static T[] GetItems<T>(this IRobustRandom random, IList<T> source, int count, bool allowDuplicates = true)
-    {
-        if (source.Count == 0 || count <= 0)
-            return Array.Empty<T>();
-
-        if (allowDuplicates == false && count >= source.Count)
-        {
-            var arr = source.ToArray();
-            // Explicit type cast to IList<T> to avoid calling the Span<T> overload.
-            // We have some tests that rely on mocking of this call, and Moq doesn't support Span<T> atm.
-            // https://github.com/space-wizards/RobustToolbox/issues/6329
-            random.Shuffle((IList<T>)arr);
-            return arr;
-        }
-
-        var sourceCount = source.Count;
-        var result = new T[count];
-
-        if (allowDuplicates)
-        {
-            for (var i = 0; i < count; i++)
-            {
-                result[i] = source[random.Next(sourceCount)];
-            }
-
-            return result;
-        }
-
-        var indices = sourceCount <= 1024 ? stackalloc int[sourceCount] : new int[sourceCount];
-        for (var i = 0; i < sourceCount; i++)
-        {
-            indices[i] = i;
-        }
-
-        for (var i = 0; i < count; i++)
-        {
-            var j = random.Next(sourceCount - i);
-            result[i] = source[indices[j]];
-            indices[j] = indices[sourceCount - i - 1];
-        }
-
-        return result;
-    }
-
-    /// <inheritdoc cref="GetItems{T}(Robust.Shared.Random.IRobustRandom,System.Collections.Generic.IList{T},int,bool)"/>
-    public static T[] GetItems<T>(this IRobustRandom random, ValueList<T> source, int count, bool allowDuplicates = true)
-    {
-        return GetItems(random, source.Span, count, allowDuplicates);
-    }
-
-    /// <inheritdoc cref="GetItems{T}(Robust.Shared.Random.IRobustRandom,System.Collections.Generic.IList{T},int,bool)"/>
-    public static T[] GetItems<T>(this IRobustRandom random, T[] source, int count, bool allowDuplicates = true)
-    {
-        return GetItems(random, source.AsSpan(), count, allowDuplicates);
-    }
-
-    /// <inheritdoc cref="GetItems{T}(Robust.Shared.Random.IRobustRandom,System.Collections.Generic.IList{T},int,bool)"/>
-    public static T[] GetItems<T>(this IRobustRandom random, Span<T> source, int count, bool allowDuplicates = true)
-    {
-        if (source.Length == 0 || count <= 0)
-            return Array.Empty<T>();
-
-        if (allowDuplicates == false && count >= source.Length)
-        {
-            var arr = source.ToArray();
-            // Explicit type cast to IList<T> to avoid calling the Span<T> overload.
-            // We have some tests that rely on mocking of this call, and Moq doesn't support Span<T> atm.
-            // https://github.com/space-wizards/RobustToolbox/issues/6329
-            random.Shuffle((IList<T>)arr);
-            return arr;
-        }
-
-        var sourceCount = source.Length;
-        var result = new T[count];
-
-        if (allowDuplicates)
-        {
-            // TODO RANDOM consider just using System.Random.GetItems()
-            // However, the different implementations might mean that lists & arrays shuffled using the same seed
-            // generate different results, which might be undesirable?
-            for (var i = 0; i < count; i++)
-            {
-                result[i] = source[random.Next(sourceCount)];
-            }
-
-            return result;
-        }
-
-        var indices = sourceCount <= 1024 ? stackalloc int[sourceCount] : new int[sourceCount];
-        for (var i = 0; i < sourceCount; i++)
-        {
-            indices[i] = i;
-        }
-
-        for (var i = 0; i < count; i++)
-        {
-            var j = random.Next(sourceCount - i);
-            result[i] = source[indices[j]];
-            indices[j] = indices[sourceCount - i - 1];
-        }
-
-        return result;
-    }
 }

@@ -12,7 +12,6 @@ using Linguini.Shared.Types.Bundle;
 using Linguini.Syntax.Ast;
 using Linguini.Syntax.Parser;
 using Linguini.Syntax.Parser.Error;
-using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;

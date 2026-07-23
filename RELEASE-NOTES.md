@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added the ability to set Clyde windows to borderless mode.
 
 ### Bugfixes
 

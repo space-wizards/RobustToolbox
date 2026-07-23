@@ -72,6 +72,12 @@ public sealed partial class PrototypeCopyToShaderParameters
     /// The name of the shader parameter that will receive UVs to select the sprite in <see cref="ParameterTexture"/>.
     /// </summary>
     [DataField] public string? ParameterUV;
+
+    /// <summary>
+    /// The name of the shader parameter that will receive the color of the layer which these parameters are on.
+    /// This is usually the entity's <see cref="SpriteComponent.Color"/> multiplied by the corresponding layer's <see cref="SpriteComponent.Layer.Color"/>.
+    /// </summary>
+    [DataField] public string? ParameterColor;
 }
 
 [Serializable, NetSerializable]

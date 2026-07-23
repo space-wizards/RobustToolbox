@@ -5,6 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
@@ -41,17 +43,26 @@ public sealed partial class SerializationManager
 
     private SerializerProvider _regularSerializerProvider = default!;
 
+    private ISawmill _serializerSawmill = default!;
+
     private void InitializeTypeSerializers(IEnumerable<Type> typeSerializers)
     {
-        _regularSerializerProvider = new(typeSerializers);
+        _regularSerializerProvider = new(this, typeSerializers);
     }
 
-    private static object CreateSerializer(Type type)
+    private object CreateSerializer(Type type)
     {
         DebugTools.Assert(!type.IsGenericTypeDefinition);
         DebugTools.Assert(!type.IsAbstract);
 
-        return Activator.CreateInstance(type)!;
+        var result = Activator.CreateInstance(type)!;
+        DependencyCollection.InjectDependencies(result);
+        if (result is BaseTypeSerializer ser)
+        {
+            ser.SerMan = this;
+            ser.Log = _serializerSawmill;
+        }
+        return result;
     }
 
     [Obsolete]
@@ -91,21 +102,20 @@ public sealed partial class SerializationManager
 
     public sealed class SerializerProvider
     {
-        public SerializerProvider(IEnumerable<Type> typeSerializers)
-        {
-            foreach (var serializerInterface in SerializerInterfaces)
-            {
-                RegisterSerializerInterface(serializerInterface);
-            }
+        private SerializationManager _ser;
 
+        public SerializerProvider(ISerializationManager ser, IEnumerable<Type> typeSerializers) : this(ser)
+        {
             foreach (var typeSerializer in typeSerializers)
             {
                 RegisterSerializer(typeSerializer);
             }
         }
 
-        public SerializerProvider()
+        public SerializerProvider(ISerializationManager ser)
         {
+            // cast it here so every user of this can just directly pass it from a [Dependency] without casting it themselves
+            _ser = (SerializationManager) ser;
             foreach (var serializerInterface in SerializerInterfaces)
             {
                 RegisterSerializerInterface(serializerInterface);
@@ -388,7 +398,7 @@ public sealed partial class SerializationManager
                     return null;
                 }
 
-                return RegisterSerializer(type, CreateSerializer(type));
+                return RegisterSerializer(type, _ser.CreateSerializer(type));
             }
         }
 

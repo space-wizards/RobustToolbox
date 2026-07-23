@@ -83,7 +83,7 @@ public partial class PrototypeManager
             }
         }
 
-        var ctx = new YamlValidationContext();
+        var ctx = new YamlValidationContext(_serializationManager);
         var errors = new List<ErrorNode>();
         foreach (var (type, instances) in prototypes)
         {

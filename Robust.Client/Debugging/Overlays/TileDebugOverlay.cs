@@ -38,7 +38,7 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
     protected Font Font = default!;
     protected List<Entity<MapGridComponent>> Grids = new();
 
-    public void PostInject()
+    void IPostInjectInit.PostInject()
     {
         Transform = Entity.System<SharedTransformSystem>();
         Map = Entity.System<MapSystem>();

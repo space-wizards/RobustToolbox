@@ -956,7 +956,7 @@ namespace Robust.Shared
         /// outside of our viewport.
         /// </remarks>
         public static readonly CVarDef<float> MaxLightRadius =
-            CVarDef.Create("light.max_radius", 32.1f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("light.max_radius", 32.1f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Maximum number of lights that the client will draw.
@@ -1011,6 +1011,14 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> LookupEnlargementRange =
             CVarDef.Create("lookup.enlargement_range", 10.0f, CVar.ARCHIVE | CVar.REPLICATED | CVar.CHEAT);
+
+        /// <summary>
+        /// Whether to enable the server-side point light lookup tree. To help with performance, this should only be
+        /// enabled if the server needs to be able to compute light levels.
+        /// This is only read during system startup; changing it at runtime does not initialize or shut down the tree.
+        /// </summary>
+        public static readonly CVarDef<bool> LookupEnableServerLightTree =
+            CVarDef.Create("lookup.enable_server_light_tree", false, CVar.ARCHIVE | CVar.SERVERONLY);
 
         /*
          * LOKI

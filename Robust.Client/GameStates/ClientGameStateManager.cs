@@ -639,9 +639,8 @@ namespace Robust.Client.GameStates
                             }
                         }
 
-                        // If the entity wasn't modified OR if we predicted it detached (e.g. deletion)
-                        // but have no state to rollback to
-                        if ((!predictedDetached && comp.LastModifiedTick <= _timing.LastRealTick) ||
+                        // If the component wasn't modified, or if we have no state to roll back to.
+                        if (comp.LastModifiedTick <= _timing.LastRealTick ||
                             !last.TryGetValue(netId, out var compState))
                         {
                             continue;

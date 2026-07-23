@@ -101,6 +101,14 @@ namespace Robust.Client.GameObjects
                 LogManager.RootSawmill.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid.Value)}. Trace: {Environment.StackTrace}");
         }
 
+        public override void DeleteEntity(EntityUid? uid)
+        {
+            if (uid != null)
+                ClearPredictedDeletion(uid.Value);
+
+            base.DeleteEntity(uid);
+        }
+
         /// <inheritdoc />
         public override void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
@@ -253,6 +261,7 @@ namespace Robust.Client.GameObjects
                 var xform = TransformQuery.GetComponentInternal(uid);
                 if (meta.NetEntity.IsClientSide())
                 {
+                    ClearPredictedDeletion(uid);
                     DeleteEntity(uid, meta, xform);
                 }
                 else
@@ -355,6 +364,7 @@ namespace Robust.Client.GameObjects
 
             if (ent.Comp1.NetEntity.IsClientSide())
             {
+                ClearPredictedDeletion(ent.Owner);
                 DeleteEntity(ent, ent.Comp1, ent.Comp2);
             }
             else
@@ -379,14 +389,17 @@ namespace Robust.Client.GameObjects
             if (!_predictedDetachedEntities.Add(uid))
                 return;
 
-            _xforms.DetachEntity(uid, xform, meta, null);
             // base call bypasses IGameTiming.InPrediction check. Predicted queue deletes are processed after prediction,
             // but reset still needs to see the detached entity as dirty and restore it from the last server state.
             base.Dirty(uid, xform, meta);
+            _xforms.DetachEntity(uid, xform, meta, null);
+            meta.Flags |= MetaDataFlags.Detached;
         }
 
         public override bool IsQueuedForDeletion(EntityUid uid)
-            => QueuedDeletionsSet.Contains(uid) || _queuedPredictedDeletionsSet.Contains(uid);
+            => QueuedDeletionsSet.Contains(uid)
+               || _queuedPredictedDeletionsSet.Contains(uid)
+               || _predictedDetachedEntities.Contains(uid);
 
         /// <inheritdoc />
         public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?> ent)

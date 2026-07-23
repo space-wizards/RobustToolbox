@@ -1371,7 +1371,7 @@ namespace Robust.Shared
             CVarDef.Create("audio.default_concurrent", 16, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<int> AudioAttenuation =
-            CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
+            CVarDef.Create("audio.attenuation", (int) Attenuation.InverseDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Whether to enable HRTF (head-related transfer function) support for positional audio.
@@ -1415,7 +1415,7 @@ namespace Robust.Shared
             CVarDef.Create("audio.tick_rate", 30, CVar.CLIENTONLY);
 
         public static readonly CVarDef<float> AudioZOffset =
-            CVarDef.Create("audio.z_offset", -5f, CVar.REPLICATED);
+            CVarDef.Create("audio.z_offset", -2f, CVar.REPLICATED);
 
         /*
          * PLAYER

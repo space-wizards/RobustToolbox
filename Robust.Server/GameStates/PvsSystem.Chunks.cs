@@ -345,7 +345,7 @@ internal sealed partial class PvsSystem
         DebugTools.Assert(_chunks.Values.All(x => locations.Contains(x.Location) || x.Root.Owner != grid.Owner));
         if (grid.Comp1.MapUid is not { } map || !TryComp(map, out MetaDataComponent? meta))
         {
-            if (grid.Comp2.EntityLifeStage < EntityLifeStage.Terminating)
+            if (grid.Comp1.MapUid != null && grid.Comp2.EntityLifeStage < EntityLifeStage.Terminating)
                 Log.Error($"Grid {ToPrettyString(grid)} has no map?");
             RemoveRoot(grid.Owner);
             return;

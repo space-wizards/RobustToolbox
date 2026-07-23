@@ -251,26 +251,34 @@ public abstract partial class SharedMapSystem
         if (meta.EntityLifeStage < EntityLifeStage.Initialized || args.Component.LifeStage == ComponentLifeStage.Starting)
             return;
 
-        // yipeee grids are being spontaneously moved to nullspace.
         Log.Info($"Grid {ToPrettyString(uid, meta)} changed parent. Old parent: {ToPrettyString(args.OldPosition.EntityId)}. New parent: {ToPrettyString(xform.ParentUid)}");
-        if (xform.MapUid == null && meta.EntityLifeStage < EntityLifeStage.Terminating && _netManager.IsServer)
-            Log.Error($"Grid {ToPrettyString(uid, meta)} was moved to nullspace! AAAAAAAAAAAAAAAAAAAAAAAAA! {Environment.StackTrace}");
 
         DebugTools.Assert(!_mapQuery.HasComponent(uid));
 
-        if (xform.ParentUid != xform.MapUid && meta.EntityLifeStage < EntityLifeStage.Terminating  && _netManager.IsServer)
+        if (xform.MapUid != null &&
+            xform.ParentUid != xform.MapUid &&
+            meta.EntityLifeStage < EntityLifeStage.Terminating &&
+            _netManager.IsServer)
         {
             Log.Error($"Grid {ToPrettyString(uid, meta)} is parented to {ToPrettyString(xform._parent)} which is not a map.  y'all need jesus. {Environment.StackTrace}");
             return;
         }
 
-        // Make sure we cleanup old map for moved grid stuff.
-        var oldMap = _transform.ToMapCoordinates(args.OldPosition);
-        var oldMapUid = GetMapOrInvalid(oldMap.MapId);
         if (component.MapProxy != DynamicTree.Proxy.Free)
         {
-            _physics.MovedGrids.Remove(uid);
-            RemoveGrid(uid, component, oldMapUid);
+            // Make sure we cleanup old map for moved grid stuff. When returning from nullspace there is no old map
+            // proxy to remove.
+            if (args.OldPosition.EntityId.IsValid())
+            {
+                var oldMap = _transform.ToMapCoordinates(args.OldPosition);
+                var oldMapUid = GetMapOrInvalid(oldMap.MapId);
+                _physics.MovedGrids.Remove(uid);
+                RemoveGrid(uid, component, oldMapUid);
+            }
+            else
+            {
+                component.MapProxy = DynamicTree.Proxy.Free;
+            }
         }
 
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);

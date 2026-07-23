@@ -29,6 +29,7 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private SharedPhysicsSystem _physics = default!;
         private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<FixturesComponent> _fixtureQuery;
+        private EntityQuery<TransformComponent> _xformQuery;
 
         public override void Initialize()
         {
@@ -39,19 +40,26 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
             _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _fixtureQuery = GetEntityQuery<FixturesComponent>();
+            _xformQuery = GetEntityQuery<TransformComponent>();
         }
 
         private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
         {
-            // TODO: Need a better solution to this because the only reason I don't throw is that allcomponents test
-            // Yes it is actively making the game buggier but I would essentially double the size of this PR trying to fix it
-            // my best solution rn is move the broadphase property onto FixturesComponent and then refactor
-            // SharedBroadphaseSystem a LOT.
-            if (!_physicsQuery.TryGetComponent(uid, out var body))
-                return;
+            _physicsQuery.TryGetComponent(uid, out var body);
+            _xformQuery.TryGetComponent(uid, out var xform);
 
-            // Can't just get physicscomp on shutdown as it may be touched completely independently.
-            _physics.DestroyContacts(body);
+            foreach (var fixture in component.Fixtures.Values)
+            {
+                foreach (var contact in fixture.Contacts.Values.ToArray())
+                {
+                    _physics.DestroyContact(contact);
+                }
+
+                _lookup.ReleaseProxies(uid, fixture, xform);
+            }
+
+            if (body != null)
+                _physics.DestroyContacts(body);
         }
 
         #region Public
@@ -178,11 +186,13 @@ namespace Robust.Shared.Physics.Systems
             // TODO: Assert world locked
             DebugTools.Assert(manager.FixtureCount > 0);
 
-            if (!manager.Fixtures.Remove(fixtureId))
+            if (!manager.Fixtures.ContainsKey(fixtureId))
             {
                 Log.Error($"Tried to remove fixture from {ToPrettyString(uid)} that was already removed.");
                 return;
             }
+
+            var proxyTree = _lookup.GetProxyBroadphaseTree(uid, xform);
 
             // Temporary debug block for trying to help catch a bug where grid fixtures disappear without the chunk's
             // fixture set being updated
@@ -201,11 +211,9 @@ namespace Robust.Shared.Physics.Systems
                 _physics.DestroyContact(contact);
             }
 
-            if (_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
-            {
-                DebugTools.Assert(xform.MapUid == Transform(broadphase.Owner).MapUid);
-                _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
-            }
+            _lookup.ReleaseProxies(fixture, proxyTree);
+
+            manager.Fixtures.Remove(fixtureId);
 
             if (updates)
             {

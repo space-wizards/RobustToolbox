@@ -50,7 +50,8 @@ namespace Robust.Shared.CompNetworkGenerator
             TypeDeclarationSyntax classSyntax,
             CSharpCompilation comp,
             bool raiseAfterAutoHandle,
-            bool fieldDeltas)
+            bool fieldDeltas,
+            bool excludeReplays)
         {
             var partialInfo = PartialTypeInfo.FromSymbol(classSymbol, classSyntax);
             var componentName = classSymbol.Name;
@@ -596,6 +597,18 @@ namespace Robust.Shared.CompNetworkGenerator
             }}{eventRaise}";
             }
 
+            var excludeReplaysStr = string.Empty;
+            if (excludeReplays)
+            {
+                excludeReplaysStr = @"
+            if (args.ReplayState)
+            {
+                args.ExcludeReplays = true;
+                return;
+            }
+";
+            }
+
             var outSb = new StringBuilder();
 
             outSb.Append("""
@@ -643,6 +656,7 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         private void OnGetState(EntityUid uid, {{componentName}} component, ref ComponentGetState args)
                         {
+                            {{excludeReplaysStr}}
                             {{deltaGetState}}
 
                             // Get full state
@@ -685,14 +699,16 @@ namespace Robust.Shared.CompNetworkGenerator
                 {
                     var raiseEv = false;
                     var fieldDeltas = false;
-                    if (attribute.ConstructorArguments is [{Value: bool raise}, {Value: bool fields}])
+                    var excludeReplays = false;
+                    if (attribute.ConstructorArguments is [{Value: bool raise}, {Value: bool fields}, {Value: bool exclude}])
                     {
                         // Get the afterautohandle bool, which is first constructor arg
                         raiseEv = raise;
                         fieldDeltas = fields;
+                        excludeReplays = exclude;
                     }
 
-                    var source = GenerateSource(context, classType, classSyntax, comp, raiseEv, fieldDeltas);
+                    var source = GenerateSource(context, classType, classSyntax, comp, raiseEv, fieldDeltas, excludeReplays);
                     // can be null if no members marked with network field, which already has a diagnostic, so
                     // just continue
                     if (source == null)

@@ -8,6 +8,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.GameState;
 
@@ -172,6 +173,28 @@ internal sealed partial class AutoNetworkingTests : RobustIntegrationTest
             Assert.That(cmpClient3?.Parent, Is.EqualTo(4)); // unchanged
         });
 
+        await server.WaitPost(() =>
+        {
+            var ent = server.EntMan.Spawn(null, MapCoordinates.Nullspace);
+            var noExclude = server.EntMan.EnsureComponent<AutoNetworkingTestNoExcludeReplaysComponent>(ent);
+            var ev = new ComponentGetState(null, GameTick.Zero);
+            server.EntMan.EventBus.RaiseComponentEvent(ent, noExclude, ref ev);
+
+            // No exclusion comp returns a state for replay states (no player)
+            Assert.That(ev.ReplayState, Is.True);
+            Assert.That(ev.State, Is.Not.Null);
+            Assert.That(ev.ExcludeReplays, Is.False);
+
+            var exclude = server.EntMan.EnsureComponent<AutoNetworkingTestExcludeReplaysComponent>(ent);
+            ev = new ComponentGetState(null, GameTick.Zero);
+            server.EntMan.EventBus.RaiseComponentEvent(ent, exclude, ref ev);
+
+            // Exclusion comp returns null state for replay states (no player)
+            Assert.That(ev.ReplayState, Is.True);
+            Assert.That(ev.State, Is.Null);
+            Assert.That(ev.ExcludeReplays, Is.True);
+        });
+
         async Task RunTicks()
         {
             for (int i = 0; i < 10; i++)
@@ -219,4 +242,18 @@ public abstract partial class AutoNetworkingTestParentComponent : Component
 
     [DataField]
     public int Parent = 4;
+}
+
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+public sealed partial class AutoNetworkingTestNoExcludeReplaysComponent : Component
+{
+    [DataField, AutoNetworkedField]
+    public int DummyField;
+}
+
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(excludeReplays: true)]
+public sealed partial class AutoNetworkingTestExcludeReplaysComponent : Component
+{
+    [DataField, AutoNetworkedField]
+    public int DummyField;
 }

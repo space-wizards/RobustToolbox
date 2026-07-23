@@ -51,7 +51,10 @@ internal sealed partial class PvsSystem
             if (component.SessionSpecific && player != null && !EntityManager.CanGetComponentState(component, player))
                 continue;
 
-            var state = ComponentState(entityUid, component, netId, ref stateEv);
+            var state = ComponentState(entityUid, component, netId, ref stateEv, out var excludeReplays);
+            if (excludeReplays && player == null)
+                continue;
+
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (state != null)
@@ -68,12 +71,13 @@ internal sealed partial class PvsSystem
         return entState;
     }
 
-    private IComponentState? ComponentState(EntityUid uid, IComponent comp, ushort netId, ref ComponentGetState stateEv)
+    private IComponentState? ComponentState(EntityUid uid, IComponent comp, ushort netId, ref ComponentGetState stateEv, out bool excludeReplays)
     {
         DebugTools.Assert(comp.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {comp.GetType()}");
         stateEv.State = null;
         _getStateHandlers![netId]?.Invoke(uid, comp, ref Unsafe.As<ComponentGetState, EntityEventBus.Unit>(ref stateEv));
         var state = stateEv.State;
+        excludeReplays = stateEv.ExcludeReplays;
         return state;
     }
 
@@ -98,7 +102,7 @@ internal sealed partial class PvsSystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = ComponentState(entityUid, component, netId, ref stateEv);
+            var state = ComponentState(entityUid, component, netId, ref stateEv, out _);
             DebugTools.Assert(state is not IComponentDeltaState);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
             netComps.Add(netId);

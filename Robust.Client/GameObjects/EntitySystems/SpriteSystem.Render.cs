@@ -88,13 +88,18 @@ public sealed partial class SpriteSystem
 
     /// <summary>
     /// Pre-step before rendering a sprite's layers, ensuring the order is overriden if <see cref="SpriteComponent.LayersOrderOverride"/> is set.
-    /// Layers with parents are skipped here, as they are assumed to be rendered as child layers instead.
     /// </summary>
-    /// <remarks>This should never run with duplicate layers, or layers being skipped over (fine if out of order though).</remarks>
+    /// <remarks>This should never run with duplicate layers, or layers being skipped over (fine if out of order though!).</remarks>
     private void RenderLayersWithOverride(Entity<SpriteComponent> sprite, DrawingHandleWorld drawingHandle, ref readonly LayerRenderingStrategyMatrices matrices, Angle angle, Direction? overrideDirection)
     {
+
+#if DEBUG
+        HashSet<int> seenLayers = new HashSet<int>();
+#endif
+
         if (sprite.Comp.LayersOrderOverride != null)
         {
+
             var highestIndex = 0;
             foreach (var index in sprite.Comp.LayersOrderOverride)
             {
@@ -104,13 +109,18 @@ public sealed partial class SpriteSystem
                     continue;
                 }
 
-                if (highestIndex < index)
+                if (highestIndex <= index)
                     highestIndex = index + 1;
 
                 var layer = sprite.Comp.Layers[index];
 
-                if (layer.ParentLayer != null)
-                    continue;
+                // Overrides indexes may in certain instances be child layers.
+                // This tends to be the case when a layer has a CopyToShaderParameters layer that needs to run before it.
+                // Layers should never be rendered twice, so to account for parentage we simply move up the tree and render from there.
+                while (layer.ParentLayer != null)
+                {
+                    layer = sprite.Comp.Layers[layer.ParentLayer.Value];
+                }
 
                 RenderLayerWithChildren(sprite, layer, drawingHandle, in matrices, angle, overrideDirection);
             }
@@ -130,8 +140,14 @@ public sealed partial class SpriteSystem
             }
 
 #if DEBUG
-            ValidateLayersWithOverride(sprite);
+            for (int i = 0; i < sprite.Comp.Layers.Count; i++)
+            {
+                //if (!seenLayers.Contains(i))  // A less disruptive error message, useful when debugging for multiple layers.
+                    //Log.Error($"SpriteComponent of entity {ToPrettyString(sprite)} somehow skipped rendering a layer with index {i}; incorrectly applied LayersOrderOverride?");
+                DebugTools.Assert(seenLayers.Contains(i), $"SpriteComponent of entity {ToPrettyString(sprite)} somehow skipped rendering a layer with index {i}; incorrectly applied LayersOrderOverride?");
+            }
 #endif
+
         }
         else
         {
@@ -143,49 +159,56 @@ public sealed partial class SpriteSystem
                 RenderLayerWithChildren(sprite, layer, drawingHandle, in matrices, angle, overrideDirection);
             }
         }
-    }
 
-    /// <summary>
-    /// Pre-step before rendering a sprite's layer, first rendering the given layer using the set rendering strategy and then recursively rendering any child layers after.
-    /// </summary>
-    private void RenderLayerWithChildren(Entity<SpriteComponent> sprite, Layer layer, DrawingHandleWorld drawingHandle, ref readonly LayerRenderingStrategyMatrices matrices, Angle angle, Direction? overrideDirection)
-    {
-        if (sprite.Comp.GranularLayersRendering || layer.RenderingStrategy == LayerRenderingStrategy.UseSpriteStrategy)
+        return;
+
+        // Pre-step before rendering a sprite's layer, first rendering the given layer using the set rendering strategy and then recursively rendering any child layers after.
+        void RenderLayerWithChildren(Entity<SpriteComponent> sprite, Layer layer, DrawingHandleWorld drawingHandle, ref readonly LayerRenderingStrategyMatrices matrices, Angle angle, Direction? overrideDirection)
         {
-            RenderLayer(layer, drawingHandle, in matrices.UseSpriteStrategy, angle, overrideDirection);
-        }
-        else
-        {
-            switch (layer.RenderingStrategy)
+            if (sprite.Comp.GranularLayersRendering || layer.RenderingStrategy == LayerRenderingStrategy.UseSpriteStrategy)
             {
-                case LayerRenderingStrategy.UseSpriteStrategy:
-                case var _ when sprite.Comp.GranularLayersRendering:
-                    RenderLayer(layer, drawingHandle, in matrices.UseSpriteStrategy, angle, overrideDirection);
-                    break;
-                case LayerRenderingStrategy.Default:
-                    RenderLayer(layer, drawingHandle, in matrices.Default, angle, overrideDirection);
-                    break;
-                case LayerRenderingStrategy.NoRotation:
-                    RenderLayer(layer, drawingHandle, in matrices.NoRotation, angle, overrideDirection);
-                    break;
-                case LayerRenderingStrategy.SnapToCardinals:
-                    RenderLayer(layer, drawingHandle, in matrices.SnapToCardinals, angle, overrideDirection);
-                    break;
-                default:
-                    Log.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
-                    break;
+                RenderLayer(layer, drawingHandle, in matrices.UseSpriteStrategy, angle, overrideDirection);
             }
-        }
-
-        foreach (var childIndex in layer.ChildLayers)
-        {
-            if (childIndex >= sprite.Comp.Layers.Count || childIndex < 0)
+            else
             {
-                Log.Error($"Tried to access a child layer with an index '{childIndex}' outside the bounds of the layer list for entity {ToPrettyString(sprite)}");
-                continue;
+                switch (layer.RenderingStrategy)
+                {
+                    case LayerRenderingStrategy.UseSpriteStrategy:
+                    case var _ when sprite.Comp.GranularLayersRendering:
+                        RenderLayer(layer, drawingHandle, in matrices.UseSpriteStrategy, angle, overrideDirection);
+                        break;
+                    case LayerRenderingStrategy.Default:
+                        RenderLayer(layer, drawingHandle, in matrices.Default, angle, overrideDirection);
+                        break;
+                    case LayerRenderingStrategy.NoRotation:
+                        RenderLayer(layer, drawingHandle, in matrices.NoRotation, angle, overrideDirection);
+                        break;
+                    case LayerRenderingStrategy.SnapToCardinals:
+                        RenderLayer(layer, drawingHandle, in matrices.SnapToCardinals, angle, overrideDirection);
+                        break;
+                    default:
+                        Log.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
+                        break;
+                }
             }
 
-            RenderLayerWithChildren(sprite, sprite.Comp.Layers[childIndex], drawingHandle, in matrices, angle, overrideDirection); // Recursion scares me.
+            foreach (var childIndex in layer.ChildLayers)
+            {
+                if (childIndex >= sprite.Comp.Layers.Count || childIndex < 0)
+                {
+                    Log.Error($"Tried to access a child layer with an index '{childIndex}' outside the bounds of the layer list for entity {ToPrettyString(sprite)}");
+                    continue;
+                }
+
+                RenderLayerWithChildren(sprite, sprite.Comp.Layers[childIndex], drawingHandle, in matrices, angle, overrideDirection); // Recursion scares me.
+            }
+
+#if DEBUG
+            //if (!seenLayers.Add(layer.Index)) // A less disruptive error message, useful when debugging for multiple layers.
+                //Log.Error($"SpriteComponent of entity {ToPrettyString(sprite)} tried to render the same layer with index {layer.Index} more than once; looping recursion?");
+            DebugTools.Assert(seenLayers.Add(layer.Index), $"SpriteComponent of entity {ToPrettyString(sprite)} tried to render the same layer with index {layer.Index} more than once; looping recursion?");
+#endif
+
         }
     }
 
@@ -275,75 +298,6 @@ public sealed partial class SpriteSystem
         var uv = new Vector4(sr.Left, sr.Bottom, sr.Right, sr.Top);
         shader.SetParameter(paramUV, uv);
     }
-
-    #if DEBUG
-    /// <summary>
-    /// Debug check to see that:
-    /// - All layers on a sprite go through the renderer
-    /// - No layer is gone through more than once
-    /// </summary>
-    private void ValidateLayersWithOverride(Entity<SpriteComponent> sprite)
-    {
-        HashSet<int> seenLayers = new HashSet<int>();
-
-        if (sprite.Comp.LayersOrderOverride == null)
-            return;
-
-        var highestIndex = 0;
-        foreach (var index in sprite.Comp.LayersOrderOverride)
-        {
-            if (index >= sprite.Comp.Layers.Count || index < 0)
-            {
-                Log.Error($"Tried to override the layer render order with an index '{index}' outside the bounds of the layer list for {ToPrettyString(sprite)}");
-                continue;
-            }
-
-            if (highestIndex < index)
-                highestIndex = index + 1;
-
-            var layer = sprite.Comp.Layers[index];
-
-            if (layer.ParentLayer != null)
-                continue;
-
-            RecursiveLayerCheck(layer);
-        }
-
-        if (highestIndex == sprite.Comp.Layers.Count)
-            return;
-
-        foreach (var layer in sprite.Comp.Layers[highestIndex..])
-        {
-            if (layer.ParentLayer != null)
-                continue;
-
-            RecursiveLayerCheck(layer);
-        }
-
-        for (int i = 0; i <= sprite.Comp.Layers.Count; i++)
-        {
-            DebugTools.Assert(seenLayers.Contains(i), $"SpriteComponent of entity {sprite.ToString()} somehow skipped rendering a layer with index {i}; incorrectly applied LayersOrderOverride?");
-        }
-
-        return;
-
-        void RecursiveLayerCheck(Layer layer)
-        {
-            foreach (var childIndex in layer.ChildLayers)
-            {
-                if (childIndex >= sprite.Comp.Layers.Count || childIndex < 0)
-                {
-                    Log.Error($"Tried to access a child layer with an index '{childIndex}' outside the bounds of the layer list for entity {ToPrettyString(sprite)}");
-                    continue;
-                }
-
-                RecursiveLayerCheck(sprite.Comp.Layers[childIndex]);
-            }
-
-            DebugTools.Assert(seenLayers.Add(layer.Index), $"SpriteComponent of entity {sprite.ToString()} tried to render the same layer with index {layer.Index} more than once; looping recursion?");
-        }
-    }
-    #endif
 }
 
 /// <summary>

@@ -65,6 +65,7 @@ public sealed partial class SpriteSystem
 
         sprite.Comp.Layers.RemoveAt(index);
 
+        // Adjust indexes for child/parent tracking
         foreach (var otherLayer in sprite.Comp.Layers)
         {
             if (index < otherLayer.Index)
@@ -73,9 +74,13 @@ public sealed partial class SpriteSystem
             // Reverse for loop to allow element removal
             for (var i = otherLayer.ChildLayers.Count - 1; i >= 0; i--)
             {
+                // This layer is the parent of the removed layer
                 if (index == otherLayer.ChildLayers[i])
                 {
                     otherLayer.ChildLayers.RemoveAt(i);
+                    // If the removed layer has children, we merge them into this layer
+                    otherLayer.ChildLayers.InsertRange(i, layer.ChildLayers);
+                    i += layer.ChildLayers.Count;
                     continue;
                 }
 
@@ -84,7 +89,7 @@ public sealed partial class SpriteSystem
             }
 
             if (index == otherLayer.ParentLayer)
-                otherLayer.ParentLayer = null;
+                otherLayer.ParentLayer = layer.ParentLayer;
             else if (index < otherLayer.ParentLayer)
                 otherLayer.ParentLayer--;
         }
@@ -135,6 +140,7 @@ public sealed partial class SpriteSystem
 
         if (index is { } i && i != sprite.Comp.Layers.Count)
         {
+            // Adjust indexes for child/parent tracking
             foreach (var otherLayer in sprite.Comp.Layers)
             {
                 if (i <= otherLayer.Index)

@@ -292,7 +292,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // PlayerAttachedEvent will catch some of these.
         foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
         {
-            ent.Comp.States.TryGetValue(key, out var state);
+            var state = ent.Comp.States.GetValueOrDefault(key);
             AddQueued(bui, QueuedUpdate.Open, state);
         }
     }

@@ -350,6 +350,9 @@ namespace Robust.Client.Graphics
 
             public OutlinedGlyph? GetOutlinedChar(Rune codePoint, float scale, float thickness)
             {
+                if (thickness <= 0)
+                    return null;
+
                 var glyph = GetGlyph(codePoint);
                 if (glyph == 0)
                     return null;

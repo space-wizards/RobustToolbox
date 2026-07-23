@@ -1097,7 +1097,7 @@ public class Generator : IIncrementalGenerator
     {
         var builder = new StringBuilder();
 
-        if (GetFirstDataDefinitionBaseType(definition.Type) is { } baseType)
+        if (definition.GetFirstDataDefinitionBaseType() is { } baseType)
         {
             builder.AppendLine($$"""
                 if (!{{baseType.ToDisplayString()}}.AreEqual(left, right, serialization, context))

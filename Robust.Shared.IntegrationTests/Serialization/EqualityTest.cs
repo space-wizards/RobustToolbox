@@ -26,7 +26,7 @@ internal sealed class EqualityTest : OurSerializationTest
 
         Assert.That(left.Equals(right), Is.True);
         Assert.That(Serialization.DataFieldEquals(left, right), Is.False);
-        Assert.That(Serialization.DataFieldEquals([left], [right]), Is.False);
+        Assert.That(Serialization.DataFieldEquals<EqualityOverride[]>([left], [right]), Is.False);
     }
 }
 

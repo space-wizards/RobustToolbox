@@ -64,6 +64,9 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [PublicAPI]
     public event Func<MapCoordinates, Vector2, float, EntityUid?, float>? GetOcclusionOverride;
 
+    public event Action<Entity<CaptionComponent, TransformComponent>>? OnSubtitledAudioStart;
+    public event Action<Entity<CaptionComponent, TransformComponent>>? OnSubtitledAudioEnd;
+
     /// <summary>
     /// Per-tick cache of relevant streams.
     /// </summary>
@@ -74,6 +77,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private float _audioFrameTimeRemaining;
 
     private EntityQuery<PhysicsComponent> _physicsQuery;
+    private EntityQuery<CaptionComponent> _captionQuery;
 
     private float _maxRayLength;
     private float _zOffset;
@@ -117,6 +121,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         UpdatesAfter.Add(typeof(EyeSystem));
 
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
+        _captionQuery = GetEntityQuery<CaptionComponent>();
 
         Subs.CVar(CfgManager, CVars.AudioEndBuffer, OnAudioBuffer, true);
         Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
@@ -205,11 +210,15 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [SubscribeLocalEvent]
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)
     {
+        if (_captionQuery.TryGetComponent(uid, out var caption) && EntityManager.TryGetComponent(uid, out TransformComponent? xform))
+            OnSubtitledAudioEnd?.Invoke((uid, caption, xform));
         component.Pause();
     }
 
     protected override void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
     {
+        if (_captionQuery.TryGetComponent(uid, out var caption) && EntityManager.TryGetComponent(uid, out TransformComponent? xform))
+            OnSubtitledAudioStart?.Invoke((uid, caption, xform));
         base.OnAudioUnpaused(uid, component, ref args);
         component.StartPlaying();
     }
@@ -217,6 +226,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [SubscribeLocalEvent]
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
     {
+        if (_captionQuery.TryGetComponent(uid, out var caption) && EntityManager.TryGetComponent(uid, out TransformComponent? xform))
+            OnSubtitledAudioStart?.Invoke((uid, caption, xform));
         if (!Timing.ApplyingState && !Timing.IsFirstTimePredicted)
         {
             return;
@@ -293,6 +304,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Source.Dispose();
 
         RemoveAudioLimit(component.FileName);
+        if (_captionQuery.TryGetComponent(uid, out var caption) && EntityManager.TryGetComponent(uid, out TransformComponent? xform))
+            OnSubtitledAudioEnd?.Invoke((uid, caption, xform));
     }
 
     private void OnAudioAttenuation(int obj)

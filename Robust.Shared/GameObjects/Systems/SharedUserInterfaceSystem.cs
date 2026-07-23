@@ -48,7 +48,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Defer BUIs during state handling so client doesn't spam a BUI constantly during prediction.
     /// </summary>
-    private readonly List<(BoundUserInterface bui, QueuedUpdate updateType)> _queuedBuis = new();
+    private readonly List<(BoundUserInterface bui, QueuedUpdate updateType, BoundUserInterfaceState? state)> _queuedBuis = new();
 
     public override void Initialize()
     {
@@ -91,9 +91,9 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentShutdown>(OnActorShutdown);
     }
 
-    private void AddQueued(BoundUserInterface bui, QueuedUpdate type)
+    private void AddQueued(BoundUserInterface bui, QueuedUpdate type, BoundUserInterfaceState? state = null)
     {
-        _queuedBuis.Add((bui, type));
+        _queuedBuis.Add((bui, type, state));
     }
 
     /// <summary>
@@ -292,7 +292,8 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // PlayerAttachedEvent will catch some of these.
         foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
         {
-            AddQueued(bui, QueuedUpdate.Open);
+            var state = ent.Comp.States.GetValueOrDefault(key);
+            AddQueued(bui, QueuedUpdate.Open, state);
         }
     }
 
@@ -312,7 +313,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             DebugTools.Assert(!ent.Comp.Actors.ContainsKey(key));
         }
 
-        DebugTools.Assert(ent.Comp.ClientOpenInterfaces.Values.All(x => _queuedBuis.Contains((x, QueuedUpdate.Close))));
+        DebugTools.Assert(ent.Comp.ClientOpenInterfaces.Values.All(x => _queuedBuis.Contains((x, QueuedUpdate.Close, null))));
     }
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
@@ -500,7 +501,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                 if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui) || !cBui.IsOpened)
                     continue;
 
-                AddQueued(cBui, QueuedUpdate.ApplyState);
+                AddQueued(cBui, QueuedUpdate.ApplyState, buiState);
             }
         }
 
@@ -528,7 +529,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // Existing BUI just keep it.
         if (entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var existing))
         {
-            _queuedBuis.Remove((existing, QueuedUpdate.Close));
+            _queuedBuis.Remove((existing, QueuedUpdate.Close, null));
             return;
         }
 
@@ -764,11 +765,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // Predict the change on client
         if (state != null && _netManager.IsClient && entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var bui))
         {
-            if (bui.State?.Equals(state) != true)
-            {
-                bui.UpdateState(state);
-                bui.Update();
-            }
+            AddQueued(bui, QueuedUpdate.ApplyState, state);
         }
 
         DirtyField(entity, nameof(UserInterfaceComponent.States));
@@ -1110,7 +1107,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     {
         if (_timing.IsFirstTimePredicted)
         {
-            foreach (var (bui, updateType) in _queuedBuis)
+            foreach (var (bui, updateType, state) in _queuedBuis)
             {
                 if (updateType == QueuedUpdate.Open || updateType == QueuedUpdate.ApplyState)
                 {
@@ -1123,26 +1120,23 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                         bui.Open();
                     }
 
-                    if (UIQuery.TryComp(bui.Owner, out var uiComp))
+                    if (state != null)
                     {
-                        if (uiComp.States.TryGetValue(bui.UiKey, out var buiState))
-                        {
-                            bui.State = buiState;
-                            bui.UpdateState(buiState);
-                            bui.Update();
-                        }
+                        bui.State = state;
+                        bui.UpdateState(state);
+                        bui.Update();
                     }
 #if EXCEPTION_TOLERANCE
                     }
                     catch (Exception e)
                     {
+                        var operationType = updateType == QueuedUpdate.Open ? "create" : "update";
                         Log.Error(
-                            $"Caught exception while attempting to create a BUI {bui.UiKey} with type {bui.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
+                            $"Caught exception while attempting to {operationType} a BUI {bui.UiKey} with type {bui.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
                     }
 #endif
                 }
-                // Close BUI
-                else
+                else // Close BUI
                 {
                     if (UIQuery.TryComp(bui.Owner, out var uiComp))
                     {

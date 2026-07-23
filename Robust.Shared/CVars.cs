@@ -62,6 +62,12 @@ namespace Robust.Shared
             CVarDef.Create("net.max_rapid_connections", 3, CVar.ARCHIVE);
 
         /// <summary>
+        /// Whether Lidgren should send disconnection reasons when rejecting connections due to internal limits.
+        /// </summary>
+        public static readonly CVarDef<bool> NetSendConnectionRejectionReasons =
+            CVarDef.Create("net.send_connection_rejection_reasons", true, CVar.ARCHIVE);
+
+        /// <summary>
         /// How many seconds until connection count decays for <c>net.max_rapid_connections</c>.
         /// </summary>
         public static readonly CVarDef<double> NetRapidConnectionWindow =
@@ -145,6 +151,18 @@ namespace Robust.Shared
         /// <seealso cref="NetMtuExpand"/>
         public static readonly CVarDef<int> NetMtuExpandFailAttempts =
             CVarDef.Create("net.mtu_expand_fail_attempts", 5, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum bytes used by incomplete Lidgren fragment groups for one connection.
+        /// </summary>
+        public static readonly CVarDef<int> NetMaxFragmentReassemblyBytesPerConnection =
+            CVarDef.Create("net.max_fragment_reassembly_bytes_per_connection", 32 * 1024 * 1024, CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many seconds Lidgren keeps an incomplete fragment group alive.
+        /// </summary>
+        public static readonly CVarDef<float> NetFragmentGroupTimeout =
+            CVarDef.Create("net.fragment_group_timeout", 30.0f, CVar.ARCHIVE);
 
         /// <summary>
         /// Whether to enable verbose debug logging in Lidgren.

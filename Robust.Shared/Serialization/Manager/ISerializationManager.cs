@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Reflection;
@@ -13,6 +15,8 @@ namespace Robust.Shared.Serialization.Manager
     public interface ISerializationManager
     {
         public delegate T InstantiationDelegate<out T>();
+
+        bool IsServer { get; }
 
         /// <summary>
         ///     Initializes the serialization manager.
@@ -109,12 +113,41 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T">The type of object to create and populate.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
         T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
+
         T Read<T>(
             DataNode node,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             InstantiationDelegate<T>? instanceProvider = null,
             [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
+
+        T[] ReadArray<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T[]>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
+
+        T ReadDefinition<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : ISerializationGenerated<T>;
+
+        T ReadEnum<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : struct, Enum;
+
+        T ReadStructDefinition<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            InstantiationDelegate<T>? instanceProvider = null,
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where T : struct, ISerializationGenerated<T>;
 
 
         /// <summary>

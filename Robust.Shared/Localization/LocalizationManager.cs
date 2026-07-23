@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -13,6 +12,7 @@ using Linguini.Shared.Types.Bundle;
 using Linguini.Syntax.Ast;
 using Linguini.Syntax.Parser;
 using Linguini.Syntax.Parser.Error;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -35,6 +35,8 @@ namespace Robust.Shared.Localization
         [Dependency] private IPrototypeManager _prototype = default!;
         [Dependency] private IEntityManager _entMan = default!;
 
+        private ResourceManifestData _manifest = ResourceManifestData.Default;
+
         private ISawmill _logSawmill = default!;
         private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();
 
@@ -46,6 +48,7 @@ namespace Robust.Shared.Localization
         public virtual void Initialize()
         {
             _logSawmill = _log.GetSawmill("loc");
+            _manifest = ResourceManifestData.LoadResourceManifest(_res);
             _prototype.PrototypesReloaded += OnPrototypesReloaded;
         }
 
@@ -332,7 +335,7 @@ namespace Robust.Shared.Localization
         {
             foreach (var (culture, context) in _contexts.ToArray())
             {
-                _loadData(_res, culture, context);
+                _loadData(_res, culture, context, _manifest);
             }
 
             FlushEntityCache();
@@ -389,7 +392,7 @@ namespace Robust.Shared.Localization
             _contexts.Add(culture, bundle);
             AddBuiltInFunctions(bundle);
 
-            _initData(_res, culture, bundle);
+            _initData(_res, culture, bundle, _manifest);
             DefaultCulture ??= culture;
         }
 
@@ -461,9 +464,9 @@ namespace Robust.Shared.Localization
             */
         }
 
-        private void _loadData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context)
+        private void _loadData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context, ResourceManifestData manifest)
         {
-            var resources = ReadLocaleFolder(resourceManager, culture);
+            var resources = ReadLocaleFolder(resourceManager, culture, manifest);
 
             foreach (var (path, resource, data) in resources)
             {
@@ -473,9 +476,9 @@ namespace Robust.Shared.Localization
             }
         }
 
-        private void _initData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context)
+        private void _initData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context, ResourceManifestData manifest)
         {
-            var resources = ReadLocaleFolder(resourceManager, culture);
+            var resources = ReadLocaleFolder(resourceManager, culture, manifest);
 
             var resErrors = new List<LocError>();
             foreach (var (path, resource, data) in resources)
@@ -486,7 +489,6 @@ namespace Robust.Shared.Localization
                 {
                     resErrors.AddRange(errs);
                 }
-
             }
 
             if (resErrors.Count > 0)
@@ -496,19 +498,9 @@ namespace Robust.Shared.Localization
         }
 
         private static ParallelQuery<(ResPath path, Resource resource, string contents)> ReadLocaleFolder(
-            IResourceManager resourceManager, CultureInfo culture)
+            IResourceManager resourceManager, CultureInfo culture, ResourceManifestData manifest)
         {
-            // Load data from .ftl files.
-            // Data is loaded from /Locale/<language-code>/*
-            // and from /Uploaded/**/Locale/<language-code>/*
-
-            var root = LocaleDirPath / culture.Name;
-
-            var files = resourceManager.ContentFindFiles(root)
-                .Concat(resourceManager.ContentFindFiles(UploadedDirPath)
-                    .Where(c => c.CanonPath.Contains($"/Locale/{culture.Name}/", StringComparison.InvariantCultureIgnoreCase)))
-                .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase))
-                .ToArray();
+            var files = FindLocaleFiles(resourceManager, culture, manifest);
 
             var resources = files.AsParallel().Select(path =>
             {
@@ -525,6 +517,40 @@ namespace Robust.Shared.Localization
                 return (path, resource, contents);
             });
             return resources;
+        }
+
+        private static ResPath[] FindLocaleFiles(IResourceManager resourceManager, CultureInfo culture, ResourceManifestData manifest)
+        {
+            // Load data from .ftl files.
+            // Data is loaded from /Locale/<language-code>/*
+            // from /Uploaded/**/Locale/<language-code>/*
+            // and from all modular resource folders (if exist) /ModuleResources/Locale/<language-code>/*
+
+            var root = LocaleDirPath / culture.Name;
+            if (manifest.ModularResources == null)
+            {
+                return resourceManager.ContentFindFiles(root)
+                    .Concat(resourceManager.ContentFindFiles(UploadedDirPath)
+                        .Where(c => c.CanonPath.Contains($"/Locale/{culture.Name}/",
+                            StringComparison.InvariantCultureIgnoreCase)))
+                    .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase))
+                    .ToArray();
+            }
+
+            var roots = new ResPath[manifest.ModularResources.Count + 1];
+            roots[0] = root;
+            var i = 1;
+            foreach (var key in manifest.ModularResources.Keys)
+            {
+                roots[i] = (new ResPath(key) / root.ToRelativePath()).ToRootedPath();
+                i++;
+            }
+
+            return roots.SelectMany(rootPath => resourceManager.ContentFindFiles(rootPath))
+                .Concat(resourceManager.ContentFindFiles(UploadedDirPath)
+                    .Where(c => c.CanonPath.Contains($"/Locale/{culture.Name}/", StringComparison.InvariantCultureIgnoreCase)))
+                .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
         }
 
         private void WriteWarningForErrs(ResPath path, List<ParseError> errs, string resource)

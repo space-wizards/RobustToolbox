@@ -264,6 +264,16 @@ public partial interface IEntityManager
     public NetCoordinates?[] GetNetCoordinatesArray(EntityCoordinates?[] entities);
 
     /// <summary>
+    /// Lets you intentionally desync a component, or undo it.
+    /// On the client, ignores all future states sent by the server for this component.
+    /// On the server, this does nothing.
+    /// </summary>
+    /// <remarks>
+    /// You should not use this unless you have exhausted every other option...
+    /// </remarks>
+    public void SetComponentNetSync(Entity<MetaDataComponent?> ent, Component comp, bool synced);
+
+    /// <summary>
     /// Returns the corresponding local <see cref="EntityUid"/> along with the metdata component.
     /// throws an exception if the net entity does not exist.
     /// </summary>

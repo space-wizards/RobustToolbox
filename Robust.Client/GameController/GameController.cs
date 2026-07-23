@@ -424,6 +424,9 @@ namespace Robust.Client
                 _configurationManager.OverrideConVars(_commandLineArgs.CVars);
             }
 
+
+            _configurationManager.OnValueChanged(CVars.DisplayPixelsPerMeter, EyeManager.SetPixelsPerMeter, invokeImmediately: true);
+
             ProfileOptSetup.Setup(_configurationManager);
 
             _prof.Initialize();

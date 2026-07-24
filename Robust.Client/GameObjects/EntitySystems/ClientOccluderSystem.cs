@@ -120,19 +120,19 @@ internal sealed partial class ClientOccluderSystem : OccluderSystem
             return;
         }
 
-        DirtyNeighbours(_mapSystem.GetAnchoredEntitiesEnumerator(gridId, grid, pos + new Vector2i(0, 1)), query);
-        DirtyNeighbours(_mapSystem.GetAnchoredEntitiesEnumerator(gridId, grid, pos + new Vector2i(0, -1)), query);
-        DirtyNeighbours(_mapSystem.GetAnchoredEntitiesEnumerator(gridId, grid, pos + new Vector2i(1, 0)), query);
-        DirtyNeighbours(_mapSystem.GetAnchoredEntitiesEnumerator(gridId, grid, pos + new Vector2i(-1, 0)), query);
+        DirtyNeighbours(_mapSystem.GetAnchoredEntities(gridId, grid, pos + new Vector2i(0, 1)), query);
+        DirtyNeighbours(_mapSystem.GetAnchoredEntities(gridId, grid, pos + new Vector2i(0, -1)), query);
+        DirtyNeighbours(_mapSystem.GetAnchoredEntities(gridId, grid, pos + new Vector2i(1, 0)), query);
+        DirtyNeighbours(_mapSystem.GetAnchoredEntities(gridId, grid, pos + new Vector2i(-1, 0)), query);
     }
 
     private void DirtyNeighbours(AnchoredEntitiesEnumerator enumerator, EntityQuery<OccluderComponent> occluderQuery)
     {
-        while (enumerator.MoveNext(out var entity))
+        foreach (var entity in enumerator)
         {
-            if (occluderQuery.TryGetComponent(entity.Value, out var occluder))
+            if (occluderQuery.TryGetComponent(entity, out var occluder))
             {
-                _dirtyEntities.Add(entity.Value);
+                _dirtyEntities.Add(entity);
                 occluder.Occluding = OccluderDir.None;
             }
         }

@@ -147,10 +147,10 @@ namespace Robust.Server.Placement
                     if (_entityManager.TryGetComponent<MapGridComponent>(gridUid, out var grid))
                     {
                         var replacementQuery = _entityManager.GetEntityQuery<PlacementReplacementComponent>();
-                        var anc = _maps.GetAnchoredEntitiesEnumerator(gridUid.Value, grid, _maps.LocalToTile(gridUid.Value, grid, coordinates));
+                        var anc = _maps.GetAnchoredEntities(gridUid.Value, grid, _maps.LocalToTile(gridUid.Value, grid, coordinates));
                         var toDelete = new ValueList<EntityUid>();
 
-                        while (anc.MoveNext(out var ent))
+                        foreach (var ent in anc)
                         {
                             if (!replacementQuery.TryGetComponent(ent, out var repl) ||
                                 repl.Key != key)
@@ -158,7 +158,7 @@ namespace Robust.Server.Placement
                                 continue;
                             }
 
-                            toDelete.Add(ent.Value);
+                            toDelete.Add(ent);
                         }
 
                         foreach (var ent in toDelete)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
@@ -833,24 +834,9 @@ public abstract partial class SharedMapSystem
         return new TileRef(uid, indices, mapChunk.GetTile(xIndex, yIndex));
     }
 
-    public IEnumerable<TileRef> GetAllTiles(EntityUid uid, MapGridComponent grid, bool ignoreEmpty = true)
+    public GridTileEnumerator GetAllTiles(EntityUid uid, MapGridComponent grid, bool ignoreEmpty = true)
     {
-        foreach (var chunk in grid.Chunks.Values)
-        {
-            for (ushort x = 0; x < grid.ChunkSize; x++)
-            {
-                for (ushort y = 0; y < grid.ChunkSize; y++)
-                {
-                    var tile = chunk.GetTile(x, y);
-
-                    if (ignoreEmpty && tile.IsEmpty)
-                        continue;
-
-                    var (gridX, gridY) = new Vector2i(x, y) + chunk.Indices * grid.ChunkSize;
-                    yield return new TileRef(uid, gridX, gridY, tile);
-                }
-            }
-        }
+        return new GridTileEnumerator(uid, grid.Chunks.GetEnumerator(), grid.ChunkSize, ignoreEmpty);
     }
 
     /// <summary>
@@ -865,9 +851,10 @@ public abstract partial class SharedMapSystem
         return ent.Comp.Chunks.Values.Sum(chunk => chunk.FilledTiles);
     }
 
+    [Obsolete("Use GetAllTiles instead.")]
     public GridTileEnumerator GetAllTilesEnumerator(EntityUid uid, MapGridComponent grid, bool ignoreEmpty = true)
     {
-        return new GridTileEnumerator(uid, grid.Chunks.GetEnumerator(), grid.ChunkSize, ignoreEmpty);
+        return GetAllTiles(uid, grid, ignoreEmpty);
     }
 
     public void SetTile(Entity<MapGridComponent> grid, EntityCoordinates coordinates, Tile tile)
@@ -959,125 +946,76 @@ public abstract partial class SharedMapSystem
         SuppressOnTileChanged = false;
     }
 
+    [Obsolete("Use GetLocalTilesIntersecting instead.")]
     public TilesEnumerator GetLocalTilesEnumerator(EntityUid uid, MapGridComponent grid, Box2 aabb,
         bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
-        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, aabb);
-        return enumerator;
+        return GetLocalTilesIntersecting(uid, grid, aabb, ignoreEmpty, predicate);
     }
 
+    [Obsolete("Use GetTilesIntersecting instead.")]
     public TilesEnumerator GetTilesEnumerator(EntityUid uid, MapGridComponent grid, Box2 aabb, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
-        var invMatrix = _transform.GetInvWorldMatrix(uid);
-        var localAABB = invMatrix.TransformBox(aabb);
-        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
-        return enumerator;
+        return GetTilesIntersecting(uid, grid, aabb, ignoreEmpty, predicate);
     }
 
+    [Obsolete("Use GetTilesIntersecting instead.")]
     public TilesEnumerator GetTilesEnumerator(EntityUid uid, MapGridComponent grid, Box2Rotated bounds, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
-        var invMatrix = _transform.GetInvWorldMatrix(uid);
-        var localAABB = invMatrix.TransformBox(bounds);
-        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
-        return enumerator;
+        return GetTilesIntersecting(uid, grid, bounds, ignoreEmpty, predicate);
     }
 
-    public IEnumerable<TileRef> GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2 localAABB, bool ignoreEmpty = true,
+    public TilesEnumerator GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2 localAABB, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
-        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
-
-        while (enumerator.MoveNext(out var tileRef))
-        {
-            yield return tileRef;
-        }
+        return new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
     }
 
-    public IEnumerable<TileRef> GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2Rotated localArea, bool ignoreEmpty = true,
+    public TilesEnumerator GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2Rotated localArea, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
         var localAABB = localArea.CalcBoundingBox();
-
-        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
-
-        while (enumerator.MoveNext(out var tileRef))
-        {
-            yield return tileRef;
-        }
+        return new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localAABB);
     }
 
-    public IEnumerable<TileRef> GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2Rotated worldArea, bool ignoreEmpty = true,
+    public TilesEnumerator GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2Rotated worldArea, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
         var localArea = matrix.TransformBox(worldArea);
-
-        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localArea);
-
-        while (enumerator.MoveNext(out var tileRef))
-        {
-            yield return tileRef;
-        }
+        return new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localArea);
     }
 
-    public IEnumerable<TileRef> GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2 worldArea, bool ignoreEmpty = true,
+    public TilesEnumerator GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2 worldArea, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
         var localArea = matrix.TransformBox(worldArea);
-
-        var enumerator = new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localArea);
-
-        while (enumerator.MoveNext(out var tileRef))
-        {
-            yield return tileRef;
-        }
+        return new TilesEnumerator(this, ignoreEmpty, predicate, uid, grid, localArea);
     }
 
-    public IEnumerable<TileRef> GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Circle localCircle, bool ignoreEmpty = true,
+    public CircleTilesEnumerator GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Circle localCircle, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
         var aabb = new Box2(localCircle.Position.X - localCircle.Radius, localCircle.Position.Y - localCircle.Radius,
             localCircle.Position.X + localCircle.Radius, localCircle.Position.Y + localCircle.Radius);
 
-        var tileEnumerator = GetLocalTilesEnumerator(uid, grid, aabb, ignoreEmpty, predicate);
-
-        while (tileEnumerator.MoveNext(out var tile))
-        {
-            var tileCenter = tile.GridIndices + grid.TileSizeHalfVector;
-            var direction = tileCenter - localCircle.Position;
-
-            if (direction.IsShorterThanOrEqualTo(localCircle.Radius))
-            {
-                yield return tile;
-            }
-        }
+        var tileEnumerator = GetLocalTilesIntersecting(uid, grid, aabb, ignoreEmpty, predicate);
+        return new CircleTilesEnumerator(tileEnumerator, grid, localCircle.Position, localCircle.Radius);
     }
 
-    public IEnumerable<TileRef> GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Circle worldArea, bool ignoreEmpty = true,
+    public CircleTilesEnumerator GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Circle worldArea, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
-        var aabb = new Box2(worldArea.Position.X - worldArea.Radius, worldArea.Position.Y - worldArea.Radius,
-            worldArea.Position.X + worldArea.Radius, worldArea.Position.Y + worldArea.Radius);
-        var circleGridPos = new EntityCoordinates(uid, WorldToLocal(uid, grid, worldArea.Position));
+        var localPosition = WorldToLocal(uid, grid, worldArea.Position);
+        var aabb = new Box2(localPosition.X - worldArea.Radius, localPosition.Y - worldArea.Radius,
+            localPosition.X + worldArea.Radius, localPosition.Y + worldArea.Radius);
 
-        foreach (var tile in GetTilesIntersecting(uid, grid, aabb, ignoreEmpty, predicate))
-        {
-            var local = GridTileToLocal(uid, grid, tile.GridIndices);
-
-            if (!local.TryDistance(EntityManager, _transform, circleGridPos, out var distance))
-            {
-                continue;
-            }
-
-            if (distance <= worldArea.Radius)
-            {
-                yield return tile;
-            }
-        }
+        var tileEnumerator = GetLocalTilesIntersecting(uid, grid, aabb, ignoreEmpty, predicate);
+        return new CircleTilesEnumerator(tileEnumerator, grid, localPosition, worldArea.Radius);
     }
 
     private bool TryGetTile(EntityUid uid, MapGridComponent grid, Vector2i indices, bool ignoreEmpty, [NotNullWhen(true)] out TileRef? tileRef, Predicate<TileRef>? predicate = null)
@@ -1199,42 +1137,45 @@ public abstract partial class SharedMapSystem
         return chunk.GetSnapGrid((ushort)x, (ushort)y)?.Count ?? 0; // ?
     }
 
-    public IEnumerable<EntityUid> GetAnchoredEntities(Entity<MapGridComponent> grid, MapCoordinates coords)
+    public AnchoredEntitiesEnumerator GetAnchoredEntities(Entity<MapGridComponent> grid, MapCoordinates coords)
     {
         return GetAnchoredEntities(grid.Owner, grid.Comp, coords);
     }
 
-    public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, MapCoordinates coords)
+    public AnchoredEntitiesEnumerator GetAnchoredEntities(EntityUid uid, MapGridComponent grid, MapCoordinates coords)
     {
         return GetAnchoredEntities(uid, grid, TileIndicesFor(uid, grid, coords));
     }
 
-    public IEnumerable<EntityUid> GetAnchoredEntities(Entity<MapGridComponent> grid, EntityCoordinates coords)
+    public AnchoredEntitiesEnumerator GetAnchoredEntities(Entity<MapGridComponent> grid, EntityCoordinates coords)
     {
         return GetAnchoredEntities(grid.Owner, grid.Comp, coords);
     }
 
-    public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
+    public AnchoredEntitiesEnumerator GetAnchoredEntities(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
     {
         return GetAnchoredEntities(uid, grid, TileIndicesFor(uid, grid, coords));
     }
 
-    public IEnumerable<EntityUid> GetAnchoredEntities(Entity<MapGridComponent> grid, Vector2i pos)
+    public AnchoredEntitiesEnumerator GetAnchoredEntities(Entity<MapGridComponent> grid, Vector2i pos)
     {
         return GetAnchoredEntities(grid.Owner, grid.Comp, pos);
     }
 
-    public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, Vector2i pos)
+    public AnchoredEntitiesEnumerator GetAnchoredEntities(EntityUid uid, MapGridComponent grid, Vector2i pos)
     {
         // Because some content stuff checks neighboring tiles (which may not actually exist) we won't just
         // create an entire chunk for it.
         var gridChunkPos = GridTileToChunkIndices(uid, grid, pos);
 
         if (!grid.Chunks.TryGetValue(gridChunkPos, out var chunk))
-            return Enumerable.Empty<EntityUid>();
+            return AnchoredEntitiesEnumerator.Empty;
 
         var chunkTile = chunk.GridTileToChunkTile(pos);
-        return chunk.GetSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y);
+        var snapgrid = chunk.GetSnapGrid((ushort)chunkTile.X, (ushort)chunkTile.Y);
+        return snapgrid == null
+            ? AnchoredEntitiesEnumerator.Empty
+            : new AnchoredEntitiesEnumerator(snapgrid.GetEnumerator());
     }
 
     public void GetAnchoredEntities(Entity<MapGridComponent> grid, Vector2i pos, List<EntityUid> list)
@@ -1249,61 +1190,30 @@ public abstract partial class SharedMapSystem
             list.AddRange(anchored);
     }
 
+    [Obsolete("Use GetAnchoredEntities instead.")]
     public AnchoredEntitiesEnumerator GetAnchoredEntitiesEnumerator(EntityUid uid, MapGridComponent grid, Vector2i pos)
     {
-        var gridChunkPos = GridTileToChunkIndices(uid, grid, pos);
-
-        if (!grid.Chunks.TryGetValue(gridChunkPos, out var chunk)) return AnchoredEntitiesEnumerator.Empty;
-
-        var chunkTile = chunk.GridTileToChunkTile(pos);
-        var snapgrid = chunk.GetSnapGrid((ushort)chunkTile.X, (ushort)chunkTile.Y);
-
-        return snapgrid == null
-            ? AnchoredEntitiesEnumerator.Empty
-            : new AnchoredEntitiesEnumerator(snapgrid.GetEnumerator());
+        return GetAnchoredEntities(uid, grid, pos);
     }
 
-    public IEnumerable<EntityUid> GetLocalAnchoredEntities(EntityUid uid, MapGridComponent grid, Box2 localAABB)
+    public AnchoredEntitiesInTilesEnumerator GetLocalAnchoredEntities(EntityUid uid, MapGridComponent grid, Box2 localAABB)
     {
         var enumerator = new TilesEnumerator(this, true, null, uid, grid, localAABB);
-
-        while (enumerator.MoveNext(out var tileRef))
-        {
-            var anchoredEnumerator = GetAnchoredEntitiesEnumerator(uid, grid, tileRef.GridIndices);
-
-            while (anchoredEnumerator.MoveNext(out var ent))
-            {
-                yield return ent.Value;
-            }
-        }
+        return new AnchoredEntitiesInTilesEnumerator(this, uid, grid, enumerator);
     }
 
-    public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, Box2 worldAABB)
+    public AnchoredEntitiesInTilesEnumerator GetAnchoredEntities(EntityUid uid, MapGridComponent grid, Box2 worldAABB)
     {
         var invWorldMatrix = _transform.GetInvWorldMatrix(uid);
         var localAABB = invWorldMatrix.TransformBox(worldAABB);
         var enumerator = new TilesEnumerator(this, true, null, uid, grid, localAABB);
-
-        while (enumerator.MoveNext(out var tileRef))
-        {
-            var anchoredEnumerator = GetAnchoredEntitiesEnumerator(uid, grid, tileRef.GridIndices);
-
-            while (anchoredEnumerator.MoveNext(out var ent))
-            {
-                yield return ent.Value;
-            }
-        }
+        return new AnchoredEntitiesInTilesEnumerator(this, uid, grid, enumerator);
     }
 
-    public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, Box2Rotated worldBounds)
+    public AnchoredEntitiesInTilesEnumerator GetAnchoredEntities(EntityUid uid, MapGridComponent grid, Box2Rotated worldBounds)
     {
-        foreach (var tile in GetTilesIntersecting(uid, grid, worldBounds))
-        {
-            foreach (var ent in GetAnchoredEntities(uid, grid, tile.GridIndices))
-            {
-                yield return ent;
-            }
-        }
+        var tiles = GetTilesIntersecting(uid, grid, worldBounds);
+        return new AnchoredEntitiesInTilesEnumerator(this, uid, grid, tiles);
     }
 
     public Vector2i TileIndicesFor(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
@@ -1402,19 +1312,19 @@ public abstract partial class SharedMapSystem
         return true;
     }
 
-    public IEnumerable<EntityUid> GetInDir(EntityUid uid, MapGridComponent grid, EntityCoordinates position, Direction dir)
+    public AnchoredEntitiesEnumerator GetInDir(EntityUid uid, MapGridComponent grid, EntityCoordinates position, Direction dir)
     {
         var pos = GetDirection(TileIndicesFor(uid, grid, position), dir);
         return GetAnchoredEntities(uid, grid, pos);
     }
 
-    public IEnumerable<EntityUid> GetOffset(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, Vector2i offset)
+    public AnchoredEntitiesEnumerator GetOffset(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, Vector2i offset)
     {
         var pos = TileIndicesFor(uid, grid, coords) + offset;
         return GetAnchoredEntities(uid, grid, pos);
     }
 
-    public IEnumerable<EntityUid> GetLocal(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
+    public AnchoredEntitiesEnumerator GetLocal(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
     {
         return GetAnchoredEntities(uid, grid, TileIndicesFor(uid, grid, coords));
     }
@@ -1424,34 +1334,219 @@ public abstract partial class SharedMapSystem
         return GridTileToLocal(uid, grid, GetDirection(TileIndicesFor(uid, grid, coords), direction));
     }
 
-    public IEnumerable<EntityUid> GetCardinalNeighborCells(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
+    public AnchoredEntitiesInTileOffsetsEnumerator GetCardinalNeighborCells(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
     {
         var position = TileIndicesFor(uid, grid, coords);
-        foreach (var cell in GetAnchoredEntities(uid, grid, position))
-            yield return cell;
-        foreach (var cell in GetAnchoredEntities(uid, grid, position + new Vector2i(0, 1)))
-            yield return cell;
-        foreach (var cell in GetAnchoredEntities(uid, grid, position + new Vector2i(0, -1)))
-            yield return cell;
-        foreach (var cell in GetAnchoredEntities(uid, grid, position + new Vector2i(1, 0)))
-            yield return cell;
-        foreach (var cell in GetAnchoredEntities(uid, grid, position + new Vector2i(-1, 0)))
-            yield return cell;
+        return AnchoredEntitiesInTileOffsetsEnumerator.Cardinal(this, uid, grid, position);
     }
 
-    public IEnumerable<EntityUid> GetCellsInSquareArea(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, int n)
+    public AnchoredEntitiesInTileOffsetsEnumerator GetCellsInSquareArea(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, int n)
     {
         var position = TileIndicesFor(uid, grid, coords);
+        return AnchoredEntitiesInTileOffsetsEnumerator.Square(this, uid, grid, position, n);
+    }
 
-        for (var y = -n; y <= n; ++y)
-        for (var x = -n; x <= n; ++x)
+    public struct AnchoredEntitiesInTileOffsetsEnumerator : IEnumerable<EntityUid>, IEnumerator<EntityUid>
+    {
+        private readonly SharedMapSystem _map;
+        private readonly EntityUid _uid;
+        private readonly MapGridComponent _grid;
+        private readonly Vector2i _position;
+        private readonly int _n;
+        private readonly bool _cardinal;
+        private int _index;
+        private int _x;
+        private int _y;
+        private AnchoredEntitiesEnumerator _anchored;
+        private EntityUid _current;
+
+        private AnchoredEntitiesInTileOffsetsEnumerator(
+            SharedMapSystem map,
+            EntityUid uid,
+            MapGridComponent grid,
+            Vector2i position,
+            int n,
+            bool cardinal)
         {
-            var enumerator = GetAnchoredEntitiesEnumerator(uid, grid, position + new Vector2i(x, y));
+            _map = map;
+            _uid = uid;
+            _grid = grid;
+            _position = position;
+            _n = n;
+            _cardinal = cardinal;
+            _index = -1;
+            _x = -n - 1;
+            _y = -n;
+            _anchored = default;
+            _current = default;
+        }
 
-            while (enumerator.MoveNext(out var cell))
+        internal static AnchoredEntitiesInTileOffsetsEnumerator Cardinal(
+            SharedMapSystem map,
+            EntityUid uid,
+            MapGridComponent grid,
+            Vector2i position)
+        {
+            return new AnchoredEntitiesInTileOffsetsEnumerator(map, uid, grid, position, 0, true);
+        }
+
+        internal static AnchoredEntitiesInTileOffsetsEnumerator Square(
+            SharedMapSystem map,
+            EntityUid uid,
+            MapGridComponent grid,
+            Vector2i position,
+            int n)
+        {
+            return new AnchoredEntitiesInTileOffsetsEnumerator(map, uid, grid, position, n, false);
+        }
+
+        public readonly AnchoredEntitiesInTileOffsetsEnumerator GetEnumerator() => this;
+
+        public readonly EntityUid Current => _current;
+
+        readonly object IEnumerator.Current => Current;
+
+        public bool MoveNext()
+        {
+            while (true)
             {
-                yield return cell.Value;
+                if (_anchored.MoveNext(out var current))
+                {
+                    _current = current.Value;
+                    return true;
+                }
+
+                if (!TryGetNextOffset(out var offset))
+                    return false;
+
+                _anchored = _map.GetAnchoredEntities(_uid, _grid, _position + offset);
             }
+        }
+
+        private bool TryGetNextOffset(out Vector2i offset)
+        {
+            if (_cardinal)
+            {
+                _index++;
+                offset = _index switch
+                {
+                    0 => Vector2i.Zero,
+                    1 => new Vector2i(0, 1),
+                    2 => new Vector2i(0, -1),
+                    3 => new Vector2i(1, 0),
+                    4 => new Vector2i(-1, 0),
+                    _ => default,
+                };
+
+                return _index < 5;
+            }
+
+            _x++;
+            if (_x > _n)
+            {
+                _x = -_n;
+                _y++;
+            }
+
+            if (_y > _n)
+            {
+                offset = default;
+                return false;
+            }
+
+            offset = new Vector2i(_x, _y);
+            return true;
+        }
+
+        readonly IEnumerator<EntityUid> IEnumerable<EntityUid>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        readonly IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public readonly void Dispose()
+        {
+        }
+
+        public void Reset()
+        {
+            throw new NotSupportedException();
+        }
+    }
+
+    [Obsolete("Use AnchoredEntitiesInTileOffsetsEnumerator instead.")]
+    public struct CardinalNeighborCellsEnumerator
+    {
+    }
+
+    [Obsolete("Use AnchoredEntitiesInTileOffsetsEnumerator instead.")]
+    public struct SquareAreaCellsEnumerator
+    {
+    }
+
+    public struct AnchoredEntitiesInTilesEnumerator : IEnumerable<EntityUid>, IEnumerator<EntityUid>
+    {
+        private readonly SharedMapSystem _map;
+        private readonly EntityUid _uid;
+        private readonly MapGridComponent _grid;
+        private TilesEnumerator _tiles;
+        private AnchoredEntitiesEnumerator _anchored;
+        private EntityUid _current;
+
+        internal AnchoredEntitiesInTilesEnumerator(SharedMapSystem map, EntityUid uid, MapGridComponent grid, TilesEnumerator tiles)
+        {
+            _map = map;
+            _uid = uid;
+            _grid = grid;
+            _tiles = tiles;
+            _anchored = default;
+            _current = default;
+        }
+
+        public readonly AnchoredEntitiesInTilesEnumerator GetEnumerator() => this;
+
+        public readonly EntityUid Current => _current;
+
+        readonly object IEnumerator.Current => Current;
+
+        public bool MoveNext()
+        {
+            while (true)
+            {
+                if (_anchored.MoveNext(out var current))
+                {
+                    _current = current.Value;
+                    return true;
+                }
+
+                if (!_tiles.MoveNext(out var tile))
+                    return false;
+
+                _anchored = _map.GetAnchoredEntities(_uid, _grid, tile.GridIndices);
+            }
+        }
+
+        readonly IEnumerator<EntityUid> IEnumerable<EntityUid>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        readonly IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public readonly void Dispose()
+        {
+        }
+
+        public void Reset()
+        {
+            throw new NotSupportedException();
         }
     }
 
@@ -1731,7 +1826,7 @@ public abstract partial class SharedMapSystem
     /// <summary>
     /// Iterates the local tiles of the specified data.
     /// </summary>
-    public struct TilesEnumerator
+    public struct TilesEnumerator : IEnumerable<TileRef>, IEnumerator<TileRef>
     {
         private readonly SharedMapSystem _mapSystem;
 
@@ -1746,6 +1841,7 @@ public abstract partial class SharedMapSystem
 
         private int _x;
         private int _y;
+        private TileRef _current;
 
         public TilesEnumerator(
             SharedMapSystem mapSystem,
@@ -1773,6 +1869,18 @@ public abstract partial class SharedMapSystem
             _lowerY = gridTileLb.Y;
             _upperX = gridTileRt.X;
             _upperY = gridTileRt.Y;
+            _current = default;
+        }
+
+        public readonly TilesEnumerator GetEnumerator() => this;
+
+        public readonly TileRef Current => _current;
+
+        readonly object IEnumerator.Current => Current;
+
+        public bool MoveNext()
+        {
+            return MoveNext(out _);
         }
 
         public bool MoveNext(out TileRef tile)
@@ -1807,6 +1915,7 @@ public abstract partial class SharedMapSystem
 
                     if (_predicate == null || _predicate(tile))
                     {
+                        _current = tile;
                         return true;
                     }
                 }
@@ -1816,10 +1925,90 @@ public abstract partial class SharedMapSystem
 
                     if (_predicate == null || _predicate(tile))
                     {
+                        _current = tile;
                         return true;
                     }
                 }
             }
+        }
+
+        readonly IEnumerator<TileRef> IEnumerable<TileRef>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        readonly IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public readonly void Dispose()
+        {
+        }
+
+        public void Reset()
+        {
+            throw new NotSupportedException();
+        }
+    }
+
+    public struct CircleTilesEnumerator : IEnumerable<TileRef>, IEnumerator<TileRef>
+    {
+        private TilesEnumerator _tiles;
+        private readonly MapGridComponent _grid;
+        private readonly Vector2 _center;
+        private readonly float _radius;
+        private TileRef _current;
+
+        internal CircleTilesEnumerator(TilesEnumerator tiles, MapGridComponent grid, Vector2 center, float radius)
+        {
+            _tiles = tiles;
+            _grid = grid;
+            _center = center;
+            _radius = radius;
+            _current = default;
+        }
+
+        public readonly CircleTilesEnumerator GetEnumerator() => this;
+
+        public readonly TileRef Current => _current;
+
+        readonly object IEnumerator.Current => Current;
+
+        public bool MoveNext()
+        {
+            while (_tiles.MoveNext(out var tile))
+            {
+                var tileCenter = tile.GridIndices + _grid.TileSizeHalfVector;
+                var direction = tileCenter - _center;
+
+                if (!direction.IsShorterThanOrEqualTo(_radius))
+                    continue;
+
+                _current = tile;
+                return true;
+            }
+
+            return false;
+        }
+
+        readonly IEnumerator<TileRef> IEnumerable<TileRef>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        readonly IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public readonly void Dispose()
+        {
+        }
+
+        public void Reset()
+        {
+            throw new NotSupportedException();
         }
     }
 }

@@ -44,6 +44,57 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(result, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9,-1), new Tile(typeId: 1, flags: 1, variant: 1))));
         }
 
+        [Test]
+        public void MapEnumeratorsHandleEmptyAndNonEmptyResults()
+        {
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapSystem = entMan.System<SharedMapSystem>();
+            var transformSystem = entMan.System<SharedTransformSystem>();
+            var mapId = sim.CreateMap().MapId;
+            var grid = mapSystem.CreateGridEntity(mapId);
+            var tile = new Vector2i(0, 0);
+            var emptyTile = new Vector2i(10, 10);
+
+            mapSystem.SetTile(grid, tile, new Tile(1));
+            var anchored = entMan.SpawnEntity(null, mapSystem.GridTileToLocal(grid.Owner, grid.Comp, tile));
+            Assert.That(transformSystem.AnchorEntity(anchored), Is.True);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(mapSystem.GetAllMapIds(), Does.Contain(mapId));
+                Assert.That(mapSystem.GetAllGrids(mapId).Select(x => x.Owner), Does.Contain(grid.Owner));
+                Assert.That(mapSystem.GetAllGrids(mapId).Select(x => x.Comp), Does.Contain(grid.Comp));
+
+                Assert.That(mapSystem.GetAllTiles(grid.Owner, grid.Comp).Select(x => x.GridIndices), Does.Contain(tile));
+                Assert.That(mapSystem.GetLocalTilesIntersecting(grid.Owner, grid.Comp, new Box2(-1, -1, 2, 2)).Select(x => x.GridIndices), Does.Contain(tile));
+                Assert.That(mapSystem.GetLocalTilesIntersecting(grid.Owner, grid.Comp, new Box2Rotated(new Box2(-1, -1, 2, 2), Angle.Zero, Vector2.Zero)).Select(x => x.GridIndices), Does.Contain(tile));
+                Assert.That(mapSystem.GetTilesIntersecting(grid.Owner, grid.Comp, new Box2(-1, -1, 2, 2)).Select(x => x.GridIndices), Does.Contain(tile));
+                Assert.That(mapSystem.GetTilesIntersecting(grid.Owner, grid.Comp, new Box2Rotated(new Box2(-1, -1, 2, 2), Angle.Zero, Vector2.Zero)).Select(x => x.GridIndices), Does.Contain(tile));
+                Assert.That(mapSystem.GetLocalTilesIntersecting(grid.Owner, grid.Comp, new Circle(Vector2.Zero, 2)).Select(x => x.GridIndices), Does.Contain(tile));
+                Assert.That(mapSystem.GetTilesIntersecting(grid.Owner, grid.Comp, new Circle(Vector2.Zero, 2)).Select(x => x.GridIndices), Does.Contain(tile));
+
+                Assert.That(mapSystem.GetAnchoredEntities(grid, tile), Does.Contain(anchored));
+                Assert.That(mapSystem.GetAnchoredEntities(grid.Owner, grid.Comp, tile), Does.Contain(anchored));
+                Assert.That(mapSystem.GetAnchoredEntities(grid, mapSystem.GridTileToLocal(grid.Owner, grid.Comp, tile)), Does.Contain(anchored));
+                Assert.That(mapSystem.GetAnchoredEntities(grid.Owner, grid.Comp, mapSystem.GridTileToLocal(grid.Owner, grid.Comp, tile)), Does.Contain(anchored));
+                Assert.That(mapSystem.GetAnchoredEntities(grid, mapSystem.GridTileToWorld(grid.Owner, grid.Comp, tile)), Does.Contain(anchored));
+                Assert.That(mapSystem.GetAnchoredEntities(grid.Owner, grid.Comp, mapSystem.GridTileToWorld(grid.Owner, grid.Comp, tile)), Does.Contain(anchored));
+                Assert.That(mapSystem.GetLocalAnchoredEntities(grid.Owner, grid.Comp, new Box2(-1, -1, 2, 2)), Does.Contain(anchored));
+                Assert.That(mapSystem.GetAnchoredEntities(grid.Owner, grid.Comp, new Box2(-1, -1, 2, 2)), Does.Contain(anchored));
+                Assert.That(mapSystem.GetAnchoredEntities(grid.Owner, grid.Comp, new Box2Rotated(new Box2(-1, -1, 2, 2), Angle.Zero, Vector2.Zero)), Does.Contain(anchored));
+                Assert.That(mapSystem.GetLocal(grid.Owner, grid.Comp, mapSystem.GridTileToLocal(grid.Owner, grid.Comp, tile)), Does.Contain(anchored));
+                Assert.That(mapSystem.GetInDir(grid.Owner, grid.Comp, mapSystem.GridTileToLocal(grid.Owner, grid.Comp, new Vector2i(0, -1)), Direction.North), Does.Contain(anchored));
+                Assert.That(mapSystem.GetOffset(grid.Owner, grid.Comp, mapSystem.GridTileToLocal(grid.Owner, grid.Comp, new Vector2i(-1, 0)), new Vector2i(1, 0)), Does.Contain(anchored));
+                Assert.That(mapSystem.GetCardinalNeighborCells(grid.Owner, grid.Comp, mapSystem.GridTileToLocal(grid.Owner, grid.Comp, tile)), Does.Contain(anchored));
+                Assert.That(mapSystem.GetCellsInSquareArea(grid.Owner, grid.Comp, mapSystem.GridTileToLocal(grid.Owner, grid.Comp, tile), 1), Does.Contain(anchored));
+
+                Assert.That(mapSystem.GetAnchoredEntities(grid, emptyTile), Is.Empty);
+                Assert.That(mapSystem.GetCardinalNeighborCells(grid.Owner, grid.Comp, mapSystem.GridTileToLocal(grid.Owner, grid.Comp, emptyTile)), Is.Empty);
+                Assert.That(mapSystem.GetCellsInSquareArea(grid.Owner, grid.Comp, mapSystem.GridTileToLocal(grid.Owner, grid.Comp, emptyTile), 1), Is.Empty);
+            });
+        }
+
         /// <summary>
         ///     Verifies that the world Bounds of the grid properly expand when tiles are placed.
         /// </summary>

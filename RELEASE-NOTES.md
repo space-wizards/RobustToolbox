@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 285.0.0
+
+### Breaking changes
+
 - XamlX has been upgraded, and has a new style class syntax.
   The syntax for multiple style classes has changed from:
   ```xaml
@@ -54,18 +77,12 @@ END TEMPLATE-->
 ### New features
 
 * Add chunk-based entity support to PVS. The API is accessed via ChunkEntitySystem. This can be used instead of manually handling streaming chunk-based data.
+* Allow passing a reason to the shutdown command.
+* Exposed CVar for AL's doppler factor.
 
 ### Bugfixes
 
-*None yet*
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
+* Fix last state passed in for EnsureClientBui on UI system.
 
 
 ## 284.0.0

@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
+using Robust.Client.Input;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
@@ -26,6 +27,18 @@ namespace Robust.Client.Graphics
         Vector2i ScreenSize { get; }
 
         bool IsFocused { get; }
+
+        /// <summary>
+        ///     Enables relative mouse mode on the main window.
+        ///     The cursor is hidden and captured, and motion arrives as raw
+        ///     deltas via <see cref="MouseMove"/>'s <see cref="MouseMoveEventArgs.Relative"/>.
+        /// </summary>
+        bool RelativeMouseMode { get; set; }
+
+        /// <summary>
+        ///     Raised on mouse motion.
+        /// </summary>
+        event Action<MouseMoveEventArgs> MouseMove;
 
         IEnumerable<IClydeWindow> AllWindows { get; }
 

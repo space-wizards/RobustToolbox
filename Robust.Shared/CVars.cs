@@ -1374,6 +1374,17 @@ namespace Robust.Shared
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
+        /// Scales listener & source velocities, which (if less than 1) de-emphasizes the doppler pitch-shifting effect
+        /// and (if more than 1) exaggerates the effect. Setting this to 0 will disable the doppler effect.
+        /// </summary>
+        /// <remarks>
+        /// This is replicated rather than client-only because it makes more sense to control this on a server-level depending on
+        /// what the game in question requires: servers with fast-moving grids may want to de-emphasize doppler even more than usual, etc.
+        /// </remarks>
+        public static readonly CVarDef<float> AudioDopplerFactor =
+            CVarDef.Create("audio.doppler_factor", 1f, CVar.REPLICATED | CVar.ARCHIVE);
+
+        /// <summary>
         /// Whether to enable HRTF (head-related transfer function) support for positional audio.
         /// </summary>
         /// <remarks>

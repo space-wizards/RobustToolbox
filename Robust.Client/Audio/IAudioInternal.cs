@@ -44,6 +44,11 @@ internal interface IAudioInternal : IAudioManager
 
     void SetAttenuation(Attenuation attenuation);
 
+    /// <summary>
+    /// Sets doppler factor, which scales listener and source velocities with regards to the doppler effect.
+    /// </summary>
+    void SetDopplerFactor(float factor);
+
     void Remove(AudioStream stream);
 
     /// <summary>

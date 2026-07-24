@@ -38,8 +38,8 @@ namespace Robust.Shared.Physics.Components;
 [RegisterComponent, NetworkedComponent]
 public sealed partial class PhysicsComponent : Component, IComponentDelta
 {
-    public GameTick LastFieldUpdate { get; set; }
-    public GameTick[] LastModifiedFields { get; set; } = [];
+    public GameTick LastUnclassifiedDirty { get; set; }
+    public GameTick[] LastModifiedFields { get; set; }
 
     /// <summary>
     ///     Has this body been added to an island previously in this tick.

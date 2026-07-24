@@ -54,44 +54,31 @@ END TEMPLATE-->
 *None yet*
 
 
-## 282.0.0
-
-### Breaking changes
-
-* Serv5 has been merged, re-doing the internals of DataDefinition serialization.
-  * It can now write into readonly fields.
-  * DataFields defined on objects that don't have DataDefinitions will cause errors in the analyzer and require the attribute.
-  * Value types will now be copied directly where possible rather than round-tripping through TryCustomCopy if no custom serializer is specified.
-  * It no longer uses as many expression trees so more tests should be able to run concurrently
-
-
-## 281.0.0
-
-### Breaking changes
-
-* Updated Lidgren.Network to `04678d057cc503f14f49801a725e61cfe27790a0` with additional fixes around MTU handling, NAT handling, and malformed packets.
+## 284.0.0
 
 ### New features
 
-* Exposed new Lidgren properties/CVARs for the above-mentioned fixes and previous updates around rate-limit settings.
+* Serializers can now take [Dependency] fields.
+* Added a SplitCenterChangingEventArgs to SplitContainer for when it's being moved around.
+* Added a LightLevelSystem to measure how lit-up entities are.
 
 ### Bugfixes
 
-* Fixed `EntitySystemSubscriptionsGenerator` not targeting server-side `SubscribeLocalEvent`/`SubscribeNetworkEvent` attributes.
-
-
-## 280.0.1
-
-### Bugfixes
-
-* Fix DynamicTree.Clear not removing node references.
-* Reverted validation for `UiBox2i` `ctor`s as it was causing regressions in debug UIs.
-* Fix command completions not being ordered. The list will still populate by any commands that contain the supplied arg.
-* Lidgren rate-limit settings were tweaked to make it less likely that players will unintentionally trigger it
+* Fix PredictedQueueDel not rolling back properly on the client.
+* Fix sprites jittering on grids due to matrix imprecision.
 
 ### Other
 
-* `EyeComponent.DrawLight` is now serialized.
+* EntityManager.IsDefault now fast-paths with direct datafield equality methods
+* Updated Lidgren to f7ecb5aa384013d920f7925340cc4608ed156e83
+
+### Internal
+
+* Added profiling zones to the physics update, splitting it into broadphase, collision, solver (island build/solve) and per-controller pre/post-solve phases.
+* Added profiling zones splitting entity rendering into sprite gathering and drawing.
+* Cache component net IDs and component changes in ClientGameStateManager.
+* Optimise entities being detached + re-inserted during PVS.
+* Moved the release build to the end of the content test action so tests are still run in debug.
 
 
 ## 280.0.0

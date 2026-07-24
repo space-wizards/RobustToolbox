@@ -266,6 +266,21 @@ namespace Robust.Shared.Serialization.Manager
 
         #endregion
 
+        #region Equality
+
+        /// <summary>
+        /// Compares serialized data fields structurally, including generated data definitions and collections.
+        /// </summary>
+        bool DataFieldEquals<T>(T left, T right, ISerializationContext? context = null);
+
+        /// <summary>
+        /// Compares serialized data fields structurally when their type is only known at runtime.
+        /// </summary>
+        [PreferGenericVariant]
+        bool DataFieldEquals(Type type, object? left, object? right, ISerializationContext? context = null);
+
+        #endregion
+
         #region Copy
 
         /// <summary>

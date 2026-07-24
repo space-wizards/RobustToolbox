@@ -403,18 +403,6 @@ internal static class Types
         return setsRequired;
     }
 
-    internal static ITypeSymbol? GetFirstDataDefinitionBaseType(ITypeSymbol type)
-    {
-        var parent = type;
-        while ((parent = parent.BaseType) != null)
-        {
-            if (IsDataDefinition(parent, out _))
-                return parent;
-        }
-
-        return null;
-    }
-
     internal static IEnumerable<(ISymbol Field, ITypeSymbol Type, DataFieldAttribute Attribute)> GetAllDataFields(ITypeSymbol? definition, bool isDataRecord)
     {
         while (definition != null)

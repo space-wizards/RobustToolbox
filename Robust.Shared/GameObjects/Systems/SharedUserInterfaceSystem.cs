@@ -92,20 +92,20 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     }
 
     /// <summary>
-    /// Enqueues a BUI command to be processed in the next Update call.
+    /// Enqueues a BUI command to be processed in the next Update call,
+    /// getting the last available state for the given UserInterfaceComponent at the last state.
     /// </summary>
-    private void AddQueued(BoundUserInterface bui, QueuedUpdate type, BoundUserInterfaceState? state = null)
+    private void AddQueued(BoundUserInterface bui, QueuedUpdate type, Entity<UserInterfaceComponent> ent, Enum key)
     {
+        var state = ent.Comp.States.GetValueOrDefault(key);
         _queuedBuis.Add((bui, type, state));
     }
 
     /// <summary>
-    /// Enqueues a BUI command to be processed in the next Update call,
-    /// getting the last available state for the given UserInterfaceComponent at the last state.
+    /// Enqueues a BUI command to be processed in the next Update call.
     /// </summary>
-    private void AddQueuedState(BoundUserInterface bui, QueuedUpdate type, Entity<UserInterfaceComponent> ent, Enum key)
+    private void AddQueued(BoundUserInterface bui, QueuedUpdate type, BoundUserInterfaceState? state = null)
     {
-        var state = ent.Comp.States.GetValueOrDefault(key);
         _queuedBuis.Add((bui, type, state));
     }
 
@@ -305,7 +305,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // PlayerAttachedEvent will catch some of these.
         foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
         {
-            AddQueuedState(bui, QueuedUpdate.Open, ent, key);
+            AddQueued(bui, QueuedUpdate.Open, ent, key);
         }
     }
 
@@ -566,7 +566,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         if (!open)
             return;
 
-        AddQueuedState(boundUserInterface, QueuedUpdate.Open, entity, key);
+        AddQueued(boundUserInterface, QueuedUpdate.Open, entity, key);
     }
 
     /// <summary>

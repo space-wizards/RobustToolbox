@@ -15,9 +15,7 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
     {
         base.Initialize();
         SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
-        //SubscribeLocalEvent<PointLightComponent, EntInsertedIntoContainerMessage>(OnInserted);
-        SubscribeLocalEvent<PointLightComponent, EntGotInsertedIntoContainerMessage>(OnInserted);
-        SubscribeLocalEvent<PointLightComponent, EntGotRemovedFromContainerMessage>(OnRemoved);
+        SubscribeLocalEvent<PointLightComponent, EntContainerHierarchyChangedMessage>(OnContainerHierarchyChanged);
         SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
         SubscribeLocalEvent<PointLightComponent, ComponentShutdown>(OnLightShutdown);
         SubscribeLocalEvent<PointLightComponent, MetaFlagRemoveAttemptEvent>(OnFlagRemoveAttempt);
@@ -48,12 +46,7 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
         return comp is { Enabled: true, CastShadows: true, Radius: > 7, LifeStage: <= ComponentLifeStage.Running };
     }
 
-    private void OnInserted(EntityUid uid, PointLightComponent component, EntGotInsertedIntoContainerMessage args)
-    {
-        SetContainerOccluded(uid, IsContainerOrParentOccluder(args.Container), component);
-    }
-
-    private void OnRemoved(EntityUid uid, PointLightComponent component, EntGotRemovedFromContainerMessage args)
+    private void OnContainerHierarchyChanged(EntityUid uid, PointLightComponent component, ref EntContainerHierarchyChangedMessage args)
     {
         SetContainerOccluded(uid, IsCurrentContainerOrParentOccluder(uid), component);
     }
@@ -131,4 +124,5 @@ public sealed partial class PointLightSystem : SharedPointLightSystem
     {
         return _container.TryGetContainingContainer(uid, out var container) && IsContainerOrParentOccluder(container);
     }
+
 }

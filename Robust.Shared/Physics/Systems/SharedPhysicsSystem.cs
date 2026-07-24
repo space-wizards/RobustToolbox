@@ -116,7 +116,7 @@ namespace Robust.Shared.Physics.Systems
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
-            SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
+            SubscribeLocalEvent<PhysicsComponent, EntContainerHierarchyChangedMessage>(HandleContainerHierarchyChanged);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
@@ -246,8 +246,11 @@ namespace Robust.Shared.Physics.Systems
             ShutdownContacts();
         }
 
-        private void HandleContainerRemoved(EntityUid uid, PhysicsComponent physics, EntGotRemovedFromContainerMessage message)
+        private void HandleContainerHierarchyChanged(EntityUid uid, PhysicsComponent physics, ref EntContainerHierarchyChangedMessage message)
         {
+            if (message.Added || _containerSystem.IsEntityOrParentInContainer(uid))
+                return;
+
             // If entity being deleted then the parent change will already be handled elsewhere and we don't want to re-add it to the map.
             if (MetaData(uid).EntityLifeStage >= EntityLifeStage.Terminating) return;
 

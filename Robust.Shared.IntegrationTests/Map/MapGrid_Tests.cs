@@ -44,6 +44,181 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(result, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9,-1), new Tile(typeId: 1, flags: 1, variant: 1))));
         }
 
+        [TestCaseSource(nameof(MapEnumeratorCases))]
+        public void MapEnumeratorsHandleNonEmptyResults(Func<MapEnumeratorTestContext, bool> containsExpected)
+        {
+            var ctx = SetupMapEnumeratorTest();
+            Assert.That(containsExpected(ctx), Is.True);
+        }
+
+        [TestCaseSource(nameof(TileEnumeratorCases))]
+        public void TileEnumeratorsHandleNonEmptyResults(Func<MapEnumeratorTestContext, bool> containsExpected)
+        {
+            var ctx = SetupMapEnumeratorTest();
+            Assert.That(containsExpected(ctx), Is.True);
+        }
+
+        [TestCaseSource(nameof(AnchoredEnumeratorCases))]
+        public void AnchoredEnumeratorsHandleNonEmptyResults(Func<MapEnumeratorTestContext, bool> containsExpected)
+        {
+            var ctx = SetupMapEnumeratorTest();
+            Assert.That(containsExpected(ctx), Is.True);
+        }
+
+        [TestCaseSource(nameof(EmptyAnchoredEnumeratorCases))]
+        public void AnchoredEnumeratorsHandleEmptyResults(Func<MapEnumeratorTestContext, bool> isEmpty)
+        {
+            var ctx = SetupMapEnumeratorTest();
+            Assert.That(isEmpty(ctx), Is.True);
+        }
+
+        private static MapEnumeratorTestContext SetupMapEnumeratorTest()
+        {
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapSystem = entMan.System<SharedMapSystem>();
+            var transformSystem = entMan.System<SharedTransformSystem>();
+            var mapId = sim.CreateMap().MapId;
+            var grid = mapSystem.CreateGridEntity(mapId);
+            var tile = new Vector2i(0, 0);
+            var emptyTile = new Vector2i(10, 10);
+
+            mapSystem.SetTile(grid, tile, new Tile(1));
+            var anchored = entMan.SpawnEntity(null, mapSystem.GridTileToLocal(grid.Owner, grid.Comp, tile));
+            Assert.That(transformSystem.AnchorEntity(anchored), Is.True);
+
+            return new MapEnumeratorTestContext(sim, mapSystem, grid, mapId, anchored, tile, emptyTile);
+        }
+
+        private static IEnumerable<TestCaseData> MapEnumeratorCases()
+        {
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAllMapIds().Contains(ctx.MapId)))
+                .SetName($"{nameof(MapEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAllMapIds)})");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAllGrids(ctx.MapId).Select(x => x.Owner).Contains(ctx.Grid.Owner)))
+                .SetName($"{nameof(MapEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAllGrids)} owner)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAllGrids(ctx.MapId).Select(x => x.Comp).Contains(ctx.Grid.Comp)))
+                .SetName($"{nameof(MapEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAllGrids)} comp)");
+        }
+
+        private static IEnumerable<TestCaseData> TileEnumeratorCases()
+        {
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAllTiles(ctx.Grid.Owner, ctx.Grid.Comp).Select(x => x.GridIndices).Contains(ctx.Tile)))
+                .SetName($"{nameof(TileEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAllTiles)})");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetLocalTilesIntersecting(ctx.Grid.Owner, ctx.Grid.Comp, new Box2(-1, -1, 2, 2)).Select(x => x.GridIndices).Contains(ctx.Tile)))
+                .SetName($"{nameof(TileEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetLocalTilesIntersecting)} Box2)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetLocalTilesIntersecting(ctx.Grid.Owner, ctx.Grid.Comp, new Box2Rotated(new Box2(-1, -1, 2, 2), Angle.Zero, Vector2.Zero)).Select(x => x.GridIndices).Contains(ctx.Tile)))
+                .SetName($"{nameof(TileEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetLocalTilesIntersecting)} Box2Rotated)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetTilesIntersecting(ctx.Grid.Owner, ctx.Grid.Comp, new Box2(-1, -1, 2, 2)).Select(x => x.GridIndices).Contains(ctx.Tile)))
+                .SetName($"{nameof(TileEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetTilesIntersecting)} Box2)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetTilesIntersecting(ctx.Grid.Owner, ctx.Grid.Comp, new Box2Rotated(new Box2(-1, -1, 2, 2), Angle.Zero, Vector2.Zero)).Select(x => x.GridIndices).Contains(ctx.Tile)))
+                .SetName($"{nameof(TileEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetTilesIntersecting)} Box2Rotated)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetLocalTilesIntersecting(ctx.Grid.Owner, ctx.Grid.Comp, new Circle(Vector2.Zero, 2)).Select(x => x.GridIndices).Contains(ctx.Tile)))
+                .SetName($"{nameof(TileEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetLocalTilesIntersecting)} Circle)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetTilesIntersecting(ctx.Grid.Owner, ctx.Grid.Comp, new Circle(Vector2.Zero, 2)).Select(x => x.GridIndices).Contains(ctx.Tile)))
+                .SetName($"{nameof(TileEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetTilesIntersecting)} Circle)");
+        }
+
+        private static IEnumerable<TestCaseData> AnchoredEnumeratorCases()
+        {
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAnchoredEntities(ctx.Grid, ctx.Tile).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAnchoredEntities)} Entity<Vector2i>)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAnchoredEntities(ctx.Grid.Owner, ctx.Grid.Comp, ctx.Tile).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAnchoredEntities)} Vector2i)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAnchoredEntities(ctx.Grid, ctx.MapSystem.GridTileToLocal(ctx.Grid.Owner, ctx.Grid.Comp, ctx.Tile)).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAnchoredEntities)} EntityCoordinates entity)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAnchoredEntities(ctx.Grid.Owner, ctx.Grid.Comp, ctx.MapSystem.GridTileToLocal(ctx.Grid.Owner, ctx.Grid.Comp, ctx.Tile)).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAnchoredEntities)} EntityCoordinates)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAnchoredEntities(ctx.Grid, ctx.MapSystem.GridTileToWorld(ctx.Grid.Owner, ctx.Grid.Comp, ctx.Tile)).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAnchoredEntities)} MapCoordinates entity)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAnchoredEntities(ctx.Grid.Owner, ctx.Grid.Comp, ctx.MapSystem.GridTileToWorld(ctx.Grid.Owner, ctx.Grid.Comp, ctx.Tile)).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAnchoredEntities)} MapCoordinates)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetLocalAnchoredEntities(ctx.Grid.Owner, ctx.Grid.Comp, new Box2(-1, -1, 2, 2)).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetLocalAnchoredEntities)} Box2)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAnchoredEntities(ctx.Grid.Owner, ctx.Grid.Comp, new Box2(-1, -1, 2, 2)).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAnchoredEntities)} Box2)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetAnchoredEntities(ctx.Grid.Owner, ctx.Grid.Comp, new Box2Rotated(new Box2(-1, -1, 2, 2), Angle.Zero, Vector2.Zero)).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetAnchoredEntities)} Box2Rotated)");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetLocal(ctx.Grid.Owner, ctx.Grid.Comp, ctx.MapSystem.GridTileToLocal(ctx.Grid.Owner, ctx.Grid.Comp, ctx.Tile)).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetLocal)})");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetInDir(ctx.Grid.Owner, ctx.Grid.Comp, ctx.MapSystem.GridTileToLocal(ctx.Grid.Owner, ctx.Grid.Comp, new Vector2i(0, -1)), Direction.North).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetInDir)})");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetOffset(ctx.Grid.Owner, ctx.Grid.Comp, ctx.MapSystem.GridTileToLocal(ctx.Grid.Owner, ctx.Grid.Comp, new Vector2i(-1, 0)), new Vector2i(1, 0)).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetOffset)})");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetCardinalNeighborCells(ctx.Grid.Owner, ctx.Grid.Comp, ctx.MapSystem.GridTileToLocal(ctx.Grid.Owner, ctx.Grid.Comp, ctx.Tile)).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetCardinalNeighborCells)})");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    ctx.MapSystem.GetCellsInSquareArea(ctx.Grid.Owner, ctx.Grid.Comp, ctx.MapSystem.GridTileToLocal(ctx.Grid.Owner, ctx.Grid.Comp, ctx.Tile), 1).Contains(ctx.Anchored)))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleNonEmptyResults)}({nameof(SharedMapSystem.GetCellsInSquareArea)})");
+        }
+
+        private static IEnumerable<TestCaseData> EmptyAnchoredEnumeratorCases()
+        {
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    !ctx.MapSystem.GetAnchoredEntities(ctx.Grid, ctx.EmptyTile).Any()))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleEmptyResults)}({nameof(SharedMapSystem.GetAnchoredEntities)})");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    !ctx.MapSystem.GetCardinalNeighborCells(ctx.Grid.Owner, ctx.Grid.Comp, ctx.MapSystem.GridTileToLocal(ctx.Grid.Owner, ctx.Grid.Comp, ctx.EmptyTile)).Any()))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleEmptyResults)}({nameof(SharedMapSystem.GetCardinalNeighborCells)})");
+
+            yield return new TestCaseData(new Func<MapEnumeratorTestContext, bool>(ctx =>
+                    !ctx.MapSystem.GetCellsInSquareArea(ctx.Grid.Owner, ctx.Grid.Comp, ctx.MapSystem.GridTileToLocal(ctx.Grid.Owner, ctx.Grid.Comp, ctx.EmptyTile), 1).Any()))
+                .SetName($"{nameof(AnchoredEnumeratorsHandleEmptyResults)}({nameof(SharedMapSystem.GetCellsInSquareArea)})");
+        }
+
+        public sealed record MapEnumeratorTestContext(
+            ISimulation Simulation,
+            SharedMapSystem MapSystem,
+            Entity<MapGridComponent> Grid,
+            MapId MapId,
+            EntityUid Anchored,
+            Vector2i Tile,
+            Vector2i EmptyTile);
+
         /// <summary>
         ///     Verifies that the world Bounds of the grid properly expand when tiles are placed.
         /// </summary>

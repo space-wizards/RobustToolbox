@@ -69,7 +69,18 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(CheckNotNullableFlag, OperationKind.Invocation);
+        context.RegisterCompilationStartAction(compilationContext =>
+        {
+            var attribute = compilationContext.Compilation.GetTypeByMetadataName(Attribute);
+            if (attribute is null)
+                return;
+
+            var @bool = compilationContext.Compilation.GetSpecialType(SpecialType.System_Boolean);
+
+            compilationContext.RegisterOperationAction(
+                operationContext => CheckNotNullableFlag(operationContext, attribute, @bool),
+                OperationKind.Invocation);
+        });
     }
 
     private bool TryGetTypeArgument(IMethodSymbol methodSymbol, string typeParamName, out ITypeSymbol typeArgument)
@@ -87,13 +98,10 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private void CheckNotNullableFlag(OperationAnalysisContext context)
+    private void CheckNotNullableFlag(OperationAnalysisContext context, INamedTypeSymbol attribute, INamedTypeSymbol @bool)
     {
         if (context.Operation is not IInvocationOperation invocationOperation || !invocationOperation.TargetMethod.IsGenericMethod)
             return;
-
-        var attribute = context.Compilation.GetTypeByMetadataName(Attribute);
-        var @bool = context.Compilation.GetSpecialType(SpecialType.System_Boolean);
 
         foreach (var argument in invocationOperation.Arguments)
         {

@@ -43,11 +43,53 @@ namespace Robust.Analyzers
         {
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.None);
             context.EnableConcurrentExecution();
-            context.RegisterSyntaxNodeAction(AnalyzeNode, SyntaxKind.MethodDeclaration);
-            context.RegisterSyntaxNodeAction(AnalyzeNode, SyntaxKind.PropertyDeclaration);
+            context.RegisterCompilationStartAction(compilationContext =>
+            {
+                var attrSymbol = compilationContext.Compilation.GetTypeByMetadataName(RequiresExplicitImplementationAttributeMetadataName);
+                if (attrSymbol is null)
+                    return;
+
+                compilationContext.RegisterSymbolStartAction(symbolContext =>
+                {
+                    if (symbolContext.Symbol is not INamedTypeSymbol typeSymbol)
+                        return;
+
+                    var explicitInterfaceImplementations = GetExplicitInterfaceImplementations(typeSymbol, attrSymbol);
+                    if (explicitInterfaceImplementations.Count == 0)
+                        return;
+
+                    symbolContext.RegisterSyntaxNodeAction(
+                        nodeContext => AnalyzeNode(nodeContext, explicitInterfaceImplementations),
+                        SyntaxKind.MethodDeclaration);
+                    symbolContext.RegisterSyntaxNodeAction(
+                        nodeContext => AnalyzeNode(nodeContext, explicitInterfaceImplementations),
+                        SyntaxKind.PropertyDeclaration);
+                }, SymbolKind.NamedType);
+            });
         }
 
-        private void AnalyzeNode(SyntaxNodeAnalysisContext context)
+        private static HashSet<ISymbol> GetExplicitInterfaceImplementations(
+            INamedTypeSymbol typeSymbol,
+            INamedTypeSymbol attrSymbol)
+        {
+            var explicitInterfaceImplementations = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
+
+            foreach (var interfaceSymbol in typeSymbol.AllInterfaces)
+            {
+                if (!interfaceSymbol.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attrSymbol)))
+                    continue;
+
+                foreach (var member in interfaceSymbol.GetMembers())
+                {
+                    if (typeSymbol.FindImplementationForInterfaceMember(member) is { } implementation)
+                        explicitInterfaceImplementations.Add(implementation);
+                }
+            }
+
+            return explicitInterfaceImplementations;
+        }
+
+        private void AnalyzeNode(SyntaxNodeAnalysisContext context, HashSet<ISymbol> explicitInterfaceImplementations)
         {
             ISymbol symbol;
             Location location;
@@ -72,15 +114,7 @@ namespace Robust.Analyzers
                     return;
             }
 
-            var attrSymbol = context.Compilation.GetTypeByMetadataName(RequiresExplicitImplementationAttributeMetadataName);
-
-            var isInterfaceMember = symbol?.ContainingType.AllInterfaces.Any(
-                i =>
-                    i.GetMembers().Any(m => SymbolEqualityComparer.Default.Equals(symbol, symbol.ContainingType.FindImplementationForInterfaceMember(m)))
-                    && i.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attrSymbol))
-            ) ?? false;
-
-            if (isInterfaceMember)
+            if (symbol != null && explicitInterfaceImplementations.Contains(symbol))
             {
                 //we do not have an explicit interface specified. bad!
                 var diagnostic = Diagnostic.Create(

@@ -55,14 +55,31 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics | GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(CheckForGenericVariant, OperationKind.Invocation);
+        context.RegisterCompilationStartAction(compilationContext =>
+        {
+            var preferGenericAttribute = compilationContext.Compilation.GetTypeByMetadataName(AttributeType);
+            if (preferGenericAttribute is null)
+                return;
+
+            var typeTypeSymbol = compilationContext.Compilation.GetTypeByMetadataName("System.Type");
+            if (typeTypeSymbol is null)
+                return;
+
+            var objType = compilationContext.Compilation.GetSpecialType(SpecialType.System_Object);
+
+            compilationContext.RegisterOperationAction(
+                operationContext => CheckForGenericVariant(operationContext, preferGenericAttribute, typeTypeSymbol, objType),
+                OperationKind.Invocation);
+        });
     }
 
-    private void CheckForGenericVariant(OperationAnalysisContext obj)
+    private void CheckForGenericVariant(
+        OperationAnalysisContext obj,
+        INamedTypeSymbol preferGenericAttribute,
+        INamedTypeSymbol typeTypeSymbol,
+        INamedTypeSymbol objType)
     {
         if(obj.Operation is not IInvocationOperation invocationOperation) return;
-
-        var preferGenericAttribute = obj.Compilation.GetTypeByMetadataName(AttributeType);
 
         string genericVariant = null;
         AttributeData foundAttribute = null;
@@ -79,7 +96,6 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
         if(genericVariant == null) return;
 
         var maxTypeParams = 0;
-        var typeTypeSymbol = obj.Compilation.GetTypeByMetadataName("System.Type");
         foreach (var parameter in invocationOperation.TargetMethod.Parameters)
         {
             if(!SymbolEqualityComparer.Default.Equals(parameter.Type, typeTypeSymbol)) break;
@@ -107,7 +123,6 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
 
             var typeParamCount = methodSymbol.TypeParameters.Length;
             var failedParamComparison = false;
-            var objType = obj.Compilation.GetSpecialType(SpecialType.System_Object);
             for (int i = 0; i < methodSymbol.Parameters.Length; i++)
             {
                 if (methodSymbol.Parameters[i].Type is ITypeParameterSymbol && SymbolEqualityComparer.Default.Equals(invocationOperation.TargetMethod.Parameters[i + typeParamCount].Type, objType))
@@ -152,10 +167,7 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
         obj.ReportDiagnostic(Diagnostic.Create(
             UseGenericVariantDescriptor,
             invocationOperation.Syntax.GetLocation(),
-            ImmutableDictionary.CreateRange(new Dictionary<string, string>()
-            {
-                {"typeOperands", string.Join(",", typeOperands)}
-            })));
+            ImmutableDictionary.Create<string, string>().Add("typeOperands", string.Join(",", typeOperands))));
     }
 }
 

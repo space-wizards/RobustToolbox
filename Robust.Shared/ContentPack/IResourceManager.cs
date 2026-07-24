@@ -20,6 +20,11 @@ namespace Robust.Shared.ContentPack
         IWritableDirProvider UserData { get; }
 
         /// <summary>
+        ///     Name of the manifest YAML file to search for to get <see cref="ResourceManifestData"/>.
+        /// </summary>
+        string ManifestFileName { get; }
+
+        /// <summary>
         ///     Provides a way to mount a <see cref="IContentRoot"/> implementation to the VFS.
         /// </summary>
         /// <param name="prefix"></param>

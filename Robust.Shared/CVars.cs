@@ -1370,15 +1370,11 @@ namespace Robust.Shared
         /// and (if more than 1) exaggerates the effect. Setting this to 0 will disable the doppler effect.
         /// </summary>
         /// <remarks>
-        /// The default value for OpenAL is 1, but here we use 0.25, which was chosen sort of arbitrarily to better tune the effect
-        /// to velocity ranges actually common in RT projects. In SS14, with a value of 1, it was common to hear noticeable dopplering
-        /// even while just moving around as a ghost, which sounded pretty bad.
-        ///
         /// This is replicated rather than client-only because it makes more sense to control this on a server-level depending on
         /// what the game in question requires: servers with fast-moving grids may want to de-emphasize doppler even more than usual, etc.
         /// </remarks>
         public static readonly CVarDef<float> AudioDopplerFactor =
-            CVarDef.Create("audio.doppler_factor", 0.25f, CVar.REPLICATED | CVar.ARCHIVE);
+            CVarDef.Create("audio.doppler_factor", 1f, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Whether to enable HRTF (head-related transfer function) support for positional audio.

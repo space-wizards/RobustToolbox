@@ -88,7 +88,6 @@ public sealed record ResourceManifestData(
 
         var clientAssemblies = ReadStringArray(mapping, "clientAssemblies");
 
-        // Use the new Dictionary reader
         var modularResources = ReadResourceMods(mapping, "resources");
 
         return new ResourceManifestData(
@@ -120,6 +119,7 @@ public sealed record ResourceManifestData(
 
         return array;
     }
+
     static Dictionary<string, string>? ReadResourceMods(YamlMappingNode mapping, string key)
     {
         if (!mapping.TryGetNode(key, out var node))
@@ -135,7 +135,10 @@ public sealed record ResourceManifestData(
             var moduleName = child.Key.AsString();
             var diskPath = child.Value.AsString();
 
-            dict[moduleName] = diskPath;
+            // Sanitize the path right away so it never escapes the root.
+            var resPath = new ResPath(diskPath).Clean().ToString();
+
+            dict[moduleName] = resPath;
         }
         return dict;
     }

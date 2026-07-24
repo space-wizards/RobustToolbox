@@ -168,7 +168,8 @@ namespace Robust.Client.Input
                     Type = p.BindingType,
                     CanFocus = p.CanFocus,
                     CanRepeat = p.CanRepeat,
-                    AllowSubCombs = p.AllowSubCombs
+                    AllowSubCombs = p.AllowSubCombs,
+                    StrictModifiers = p.StrictModifiers
                 }).ToArray();
 
             var leaveEmpty = _modifiedKeyFunctions
@@ -252,6 +253,9 @@ namespace Robust.Client.Input
                         PackedContainsKey(binding.PackedKeyCombo, args.Key))
                     {
                         matchedCombo = binding.PackedKeyCombo;
+
+                        if (binding.StrictModifiers && HasUnexpectedModifiers(binding, args))
+                            continue;
 
                         bindsDown.Add(binding);
 
@@ -494,6 +498,43 @@ namespace Robust.Client.Input
             return true;
         }
 
+        /// <summary>
+        ///     Returns True when a modifier outside this binding's declared mods is active.
+        /// </summary>
+        private bool HasUnexpectedModifiers(KeyBinding binding, KeyEventArgs args)
+        {
+            for (var key = Key.Control; key < Key.LSystem; key++)
+            {
+                if (key == binding.BaseKey ||
+                    key == binding.Mod1 ||
+                    key == binding.Mod2 ||
+                    key == binding.Mod3)
+                {
+                    continue;
+                }
+
+                if (IsModifierActive(key, args))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool IsModifierActive(Key key, KeyEventArgs args)
+        {
+            if (_keysPressed[(int)key])
+                return true;
+
+            // fallback
+            return key switch
+            {
+                Key.Control => args.Control,
+                Key.Shift => args.Shift,
+                Key.Alt => args.Alt,
+                _ => false
+            };
+        }
+
         private static bool PackedContainsKey(PackedKeyCombo packed, Key key)
         {
             var (baseKey, mod1, mod2, mod3) = packed;
@@ -597,7 +638,7 @@ namespace Robust.Client.Input
             Key baseKey, Key? mod1, Key? mod2, Key? mod3)
         {
             var binding = new KeyBinding(this, function.FunctionName, bindingType, baseKey, false, false, false,
-                0, true, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
+                0, true, false, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
 
             RegisterBinding(binding);
 
@@ -608,7 +649,7 @@ namespace Robust.Client.Input
             Key baseKey, Key? mod1, Key? mod2, Key? mod3)
         {
             var binding = new KeyBinding(this, function, bindingType, baseKey, false, false, false,
-                0, true, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
+                0, true, false, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
 
             RegisterBinding(binding);
 
@@ -618,7 +659,7 @@ namespace Robust.Client.Input
         public IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified = true, bool invalid = false)
         {
             var binding = new KeyBinding(this, reg.Function.FunctionName, reg.Type, reg.BaseKey, reg.CanFocus, reg.CanRepeat,
-                reg.AllowSubCombs, reg.Priority, reg.CommandWhenUIFocused, reg.Mod1, reg.Mod2, reg.Mod3);
+                reg.AllowSubCombs, reg.Priority, reg.CommandWhenUIFocused, reg.StrictModifiers, reg.Mod1, reg.Mod2, reg.Mod3);
 
             RegisterBinding(binding, markModified);
 
@@ -792,13 +833,19 @@ namespace Robust.Client.Input
 
             [ViewVariables] public int Priority { get; internal set; }
 
+            /// <summary>
+            ///     Whether the Bound Key Combination works when ONLY the specified modifier keys are pressed (prevents altgr clashes).
+            /// </summary>
+            [ViewVariables]
+            public bool StrictModifiers {get; internal set; }
+
             public KeyBinding(
                 InputManager inputManager,
                 string function,
                 KeyBindingType bindingType,
                 Key baseKey,
                 bool canFocus, bool canRepeat, bool allowSubCombs, int priority,
-                bool commandWhenUIFocused,
+                bool commandWhenUIFocused, bool strictModifiers,
                 Key mod1 = Key.Unknown,
                 Key mod2 = Key.Unknown,
                 Key mod3 = Key.Unknown)
@@ -810,6 +857,7 @@ namespace Robust.Client.Input
                 AllowSubCombs = allowSubCombs;
                 Priority = priority;
                 CommandWhenUIFocused = commandWhenUIFocused;
+                StrictModifiers = strictModifiers;
                 _inputManager = inputManager;
 
                 PackedKeyCombo = new PackedKeyCombo(baseKey, mod1, mod2, mod3);

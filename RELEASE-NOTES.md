@@ -57,7 +57,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* TimeOffsetSerializer now applies on copy and not on read, fixing time offsets when loaded.
 
 ### Other
 

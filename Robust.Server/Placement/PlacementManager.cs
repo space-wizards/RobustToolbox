@@ -245,10 +245,13 @@ namespace Robust.Server.Placement
         /// <param name="msg"></param>
         private void HandleRectRemoveReq(MsgPlacement msg)
         {
-            var start = _entityManager.GetCoordinates(msg.NetCoordinates);
-            var rectSize = msg.RectSize;
+            var centerCoords = _xformSystem.ToMapCoordinates(msg.NetCoordinates);
+            var centerPos = centerCoords.Position;
 
-            foreach (var entity in _lookup.GetEntitiesIntersecting(_xformSystem.GetMapId(start), new Box2(start.Position, start.Position + rectSize)))
+            var box = Box2.CenteredAround(centerPos, msg.RectSize);
+            var boxRotated = new Box2Rotated(box, msg.RectRotation, centerPos);
+
+            foreach (var entity in _lookup.GetEntitiesIntersecting(centerCoords.MapId, boxRotated))
             {
                 if (_entityManager.Deleted(entity)
                     || _entityManager.HasComponent<MapGridComponent>(entity)

@@ -231,6 +231,20 @@ namespace Robust.Client.GameObjects
         [DataField]
         public bool RaiseShaderEvent;
 
+        /// <summary>
+        ///     If set, overrides the default start-to-end rendering order of the <see cref="Layers"/> List with the provided index order for the given directions.
+        ///     Layers may not be skipped over when rendered. If layers have a parent/child relationship, only one layer in the chain must be included in the override.
+        ///     Any layers after the highest provided override index will be rendered on top, to account for overlay layers added during runtime.
+        /// </summary>
+        [ViewVariables]
+        public Dictionary<RsiDirection, List<int>>? LayersOrderOverride;
+
+        /// <summary>
+        ///     The directions to check <see cref="LayersOrderOverride"/> for when rendering, if it is set.
+        /// </summary>
+        [ViewVariables]
+        public RsiDirectionType LayersOrderOverrideDirectionType = RsiDirectionType.Dir4;
+
         [ViewVariables] internal Dictionary<object, int> LayerMap { get; set; } = new();
         [ViewVariables] internal List<Layer> Layers = new();
 
@@ -1110,6 +1124,16 @@ namespace Robust.Client.GameObjects
             [ViewVariables] public ShaderInstance? Shader;
             [ViewVariables] public Texture? Texture;
 
+            /// <summary>
+            /// If this belongs to a parent layer and should be rendered after the parent.
+            /// </summary>
+            [ViewVariables] internal int? ParentLayer;
+
+            /// <summary>
+            /// If this layer has child layers that should be rendered after it.
+            /// </summary>
+            [ViewVariables] internal List<int> ChildLayers = new();
+
             internal RSI? _rsi;
 
             /// <summary>
@@ -1341,6 +1365,8 @@ namespace Robust.Client.GameObjects
                 UnShaded = toClone.UnShaded;
                 ShaderPrototype = toClone.ShaderPrototype;
                 Texture = toClone.Texture;
+                ParentLayer = toClone.ParentLayer;
+                ChildLayers = toClone.ChildLayers;
                 RSI = toClone.RSI;
                 State = toClone.State;
                 AnimationTimeLeft = toClone.AnimationTimeLeft;

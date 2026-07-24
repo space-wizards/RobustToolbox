@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -10,12 +11,82 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
+using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Server.GameStates;
 
 public sealed class ChunkEntityPvsTest : RobustIntegrationTest
 {
+    [Test]
+    public async Task ChunkEntityLeaveBeforeCreateDetachesOlderInitialState()
+    {
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
+
+        var sEntMan = server.ResolveDependency<IEntityManager>();
+        var cEntMan = client.ResolveDependency<IEntityManager>();
+        var confMan = server.ResolveDependency<IConfigurationManager>();
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
+        var cNetMan = client.ResolveDependency<IClientNetManager>();
+
+        server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
+        await RunTicksSync(server, client, 10);
+
+        NetEntity mapNet = default;
+        EntityUid map = default;
+        EntityUid playerUid = default;
+        EntityCoordinates origin = default;
+
+        await server.WaitPost(() =>
+        {
+            map = server.System<SharedMapSystem>().CreateMap();
+            origin = new EntityCoordinates(map, default);
+            mapNet = sEntMan.GetNetEntity(map);
+
+            playerUid = sEntMan.SpawnEntity(null, origin);
+            var session = sPlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, playerUid);
+            sPlayerMan.JoinGame(session);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        NetEntity chunkEntity = default;
+        GameTick leaveTick = default;
+
+        await server.WaitPost(() =>
+        {
+            var chunk = sEntMan.System<ChunkEntitySystem>().GetOrCreateChunk(map, Vector2i.Zero);
+            chunkEntity = sEntMan.GetNetEntity(chunk.Owner);
+
+            // Pick a tick newer than the first entity state the client will receive for this chunk.
+            leaveTick = new GameTick(server.Timing.CurTick.Value + 100);
+        });
+
+        await client.WaitPost(() =>
+        {
+            Assert.That(cEntMan.TryGetEntityData(chunkEntity, out _, out _), Is.False);
+            cNetMan.DispatchLocalNetMessage(new MsgStateLeavePvs
+            {
+                Tick = leaveTick,
+                ChunkEntities = new List<NetEntity> { chunkEntity },
+            });
+        });
+
+        await RunTicksSync(server, client, 20);
+
+        await client.WaitPost(() =>
+        {
+            Assert.That(cEntMan.TryGetEntityData(chunkEntity, out _, out var chunkMeta), Is.True);
+            Assert.That(chunkMeta!.Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.Detached));
+
+            Assert.That(cEntMan.TryGetEntity(mapNet, out var cMap), Is.True);
+            Assert.That(cEntMan.System<ChunkEntitySystem>().TryGetChunk(cMap!.Value, Vector2i.Zero, out _), Is.False);
+        });
+    }
+
     /// <summary>
     /// Verifies that chunk entities follow normal PVS visibility: they are exposed while in range, filtered while
     /// detached, and exposed again after re-entering range.

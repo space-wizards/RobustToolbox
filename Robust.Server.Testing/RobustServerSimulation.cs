@@ -336,7 +336,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
             entitySystemMan.LoadExtraSystemType<PvsSystem>();
-            entitySystemMan.LoadExtraSystemType<ChunkEntitySystem>();
+            entitySystemMan.LoadExtraSystemType<ServerChunkEntitySystem>();
             entitySystemMan.LoadExtraSystemType<InputSystem>();
             entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();
 

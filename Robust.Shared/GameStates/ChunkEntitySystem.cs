@@ -22,7 +22,7 @@ namespace Robust.Shared.GameStates;
 /// <remarks>
 /// You will need to handle <see cref="PostGridSplitEvent"/> yourself.
 /// </remarks>
-public sealed partial class ChunkEntitySystem : EntitySystem
+public abstract partial class ChunkEntitySystem : EntitySystem
 {
     public const int ChunkSize = MapGridComponent.DefaultChunkSize;
     private static readonly EntProtoId ChunkEntityPrototype = "ChunkEntity";

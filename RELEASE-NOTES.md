@@ -35,11 +35,25 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+- XamlX has been upgraded, and has a new style class syntax.
+  The syntax for multiple style classes has changed from:
+  ```xaml
+  <Control.StyleClasses>
+    <system:String>Hello</system:String>
+    <system:String>World</system:String>
+  </Control.StyleClasses>
+  ```
+  to
+  ```xaml
+  <Control StyleClasses="Hello World" />
+  ```
+
+- Setting `StyleClasses` in XAML now overrides all of the style classes with the provided list, instead of concatenating the given style class with any existing style classes.
+  The stock Button controls have modified setters to provide compatibility with older stylesheets, but user-defined controls may need to watch out for this.
 
 ### New features
 
-*None yet*
+* Add chunk-based entity support to PVS. The API is accessed via ChunkEntitySystem. This can be used instead of manually handling streaming chunk-based data.
 
 ### Bugfixes
 

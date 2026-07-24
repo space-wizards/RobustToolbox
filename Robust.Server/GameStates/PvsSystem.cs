@@ -134,7 +134,8 @@ internal sealed partial class PvsSystem : EntitySystem
         SubscribeLocalEvent<MapRemovedEvent>(OnMapChanged);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
         SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
-
+        SubscribeLocalEvent<ChunkEntityAddedEvent>(OnChunkEntityAdded);
+        SubscribeLocalEvent<ChunkEntityRemovedEvent>(OnChunkEntityRemoved);
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         _transform.OnBeforeMoveEvent += OnEntityMove;
         EntityManager.EntityAdded += OnEntityAdded;

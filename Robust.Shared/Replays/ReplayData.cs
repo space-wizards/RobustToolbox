@@ -233,11 +233,13 @@ public sealed class ReplayMessage
     public sealed class LeavePvs
     {
         public readonly List<NetEntity> Entities;
+        public readonly List<NetEntity> ChunkEntities;
         public readonly GameTick Tick;
 
-        public LeavePvs(List<NetEntity> entities, GameTick tick)
+        public LeavePvs(List<NetEntity> entities, GameTick tick, List<NetEntity>? chunkEntities = null)
         {
-            Entities = entities;
+            Entities = new(entities);
+            ChunkEntities = chunkEntities != null ? new(chunkEntities) : new List<NetEntity>();
             Tick = tick;
         }
     }

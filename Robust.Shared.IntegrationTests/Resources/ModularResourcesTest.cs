@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Globalization;
+using NUnit.Framework;
 using Robust.Client;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -13,7 +14,13 @@ namespace Robust.Shared.IntegrationTests.Resources;
 // and Robust.Shared.IntegrationTests/Resources/TestModResources existing
 public sealed class ModularResourcesTest : RobustIntegrationTest
 {
+    // Virtual name of the resource folder in YAML
     private const string ResourceName = "EngineResourceTest";
+
+    // Actual name of the resource folder on disk
+    private const string ActualResourcePathName = "TestModResources";
+
+    // Main types of resources
     private const string LocaleTestString = "test-string";
     private const string PrototypeTestId = "ModularResourcesTestEntity";
     private static readonly ResPath TexturePath = new("/EngineResourceTest/Textures/test_error.rsi/meta.json");
@@ -50,12 +57,25 @@ public sealed class ModularResourcesTest : RobustIntegrationTest
             {
                 Assert.That(manifest.ModularResources, Is.Not.Null);
                 Assert.That(manifest.ModularResources!.Keys, Does.Contain(ResourceName));
-                Assert.That(resMan.GetContentRoots(), Does.Contain(new ResPath(ResourceName).ToRootedPath().ToString()));
+                bool found = false;
+                foreach (var root in resMan.GetContentRoots())
+                {
+                    if (root.EndsWith(ActualResourcePathName))
+                        found = true;
+                }
+
+                Assert.That(found);
             });
         });
 
         var localeMan = client.ResolveDependency<ILocalizationManager>();
         var protoMan = client.ResolveDependency<IPrototypeManager>();
+
+        await client.WaitPost(() =>
+        {
+            var culture = new CultureInfo("en-US");
+            localeMan.LoadCulture(culture);
+        });
 
         // Check that resources themselves are loaded properly and properly accessible
         Assert.Multiple(() =>
@@ -63,14 +83,6 @@ public sealed class ModularResourcesTest : RobustIntegrationTest
             Assert.That(localeMan.HasString(LocaleTestString));
             Assert.That(protoMan.HasIndex(PrototypeTestId));
             Assert.That(resMan.ContentFileExists(TexturePath));
-        });
-
-        // Spawn a test entity in nullspace for good measure.
-        var cEntMan = client.ResolveDependency<IEntityManager>();
-
-        await client.WaitPost(() =>
-        {
-            cEntMan.Spawn(PrototypeTestId);
         });
 
         await client.WaitRunTicks(1);

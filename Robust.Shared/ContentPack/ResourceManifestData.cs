@@ -24,7 +24,7 @@ public sealed record ResourceManifestData(
 
     public static ResourceManifestData LoadResourceManifest(IResourceManager res)
     {
-        if (!res.TryContentFileRead(new ResPath(res.ManifestFileName).ToRootedPath(), out var stream))
+        if (!res.TryContentFileRead(new ResPath(res.ManifestFileName).ToRootedPath().ToString(), out var stream))
             return Default;
 
         using (stream)

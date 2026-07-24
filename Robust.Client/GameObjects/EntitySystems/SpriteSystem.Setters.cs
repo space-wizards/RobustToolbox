@@ -163,4 +163,27 @@ public sealed partial class SpriteSystem
         _tree.QueueTreeUpdate(sprite!);
         DirtyBounds(sprite!);
     }
+
+    /// <summary>
+    /// Adds an additional post-shader to the end of a sprite's post-shader chain.
+    /// The primary <see cref="SpriteComponent.PostShader"/> is applied before this chain.
+    /// </summary>
+    public bool AddPostShader(Entity<SpriteComponent?> sprite, ShaderInstance shader)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp) ||
+            sprite.Comp._postShaderChain.Contains(shader))
+            return false;
+
+        sprite.Comp._postShaderChain.Add(shader);
+        return true;
+    }
+
+    /// <summary>
+    /// Removes the first matching additional post-shader from a sprite's post-shader chain.
+    /// </summary>
+    public bool RemovePostShader(Entity<SpriteComponent?> sprite, ShaderInstance shader)
+    {
+        return _query.Resolve(sprite.Owner, ref sprite.Comp) &&
+               sprite.Comp._postShaderChain.Remove(shader);
+    }
 }

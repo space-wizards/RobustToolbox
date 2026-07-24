@@ -85,6 +85,13 @@ public sealed partial class SpriteSystem
         target.Comp.PostShader = source.Comp.PostShader is {Mutable: true}
             ? source.Comp.PostShader.Duplicate()
             : source.Comp.PostShader;
+        target.Comp._postShaderChain.Clear();
+        foreach (var postShader in source.Comp._postShaderChain)
+        {
+            target.Comp._postShaderChain.Add(postShader.Mutable
+                ? postShader.Duplicate()
+                : postShader);
+        }
 
         target.Comp.RenderOrder = source.Comp.RenderOrder;
         target.Comp.GranularLayersRendering = source.Comp.GranularLayersRendering;

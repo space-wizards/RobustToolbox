@@ -123,8 +123,15 @@ internal partial class Clyde
                 case ET.SDL_EVENT_WINDOW_MINIMIZED:
                     window.IsMinimized = true;
                     break;
+                case ET.SDL_EVENT_WINDOW_MAXIMIZED:
+                    window.IsMinimized = false;
+                    window.IsMaximized = true;
+                    _clyde.UpdateMainWindowMaximizedCVar(window, true);
+                    break;
                 case ET.SDL_EVENT_WINDOW_RESTORED:
                     window.IsMinimized = false;
+                    window.IsMaximized = false;
+                    _clyde.UpdateMainWindowMaximizedCVar(window, false);
                     break;
                 case ET.SDL_EVENT_WINDOW_FOCUS_GAINED:
                     window.IsFocused = true;
@@ -136,6 +143,7 @@ internal partial class Clyde
                     break;
                 case ET.SDL_EVENT_WINDOW_MOVED:
                     window.WindowPos = (ev.Data1, ev.Data2);
+                    _clyde.UpdateMainWindowPositionCVar(window);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

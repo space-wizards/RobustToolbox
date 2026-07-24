@@ -213,6 +213,7 @@ namespace Robust.Client.Graphics.Clyde
             FlushRenderTargetDispose();
             FlushTextureDispose();
             FlushViewportDispose();
+            SaveMainWindowSettingsIfDue();
         }
 
         public void Ready()
@@ -579,6 +580,11 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Shutdown()
         {
+            if (_mainWindow != null)
+                SaveMainWindowSettings(_mainWindow);
+            else
+                SaveMainWindowSize();
+
             _glContext?.Shutdown();
             ShutdownWindowing();
         }

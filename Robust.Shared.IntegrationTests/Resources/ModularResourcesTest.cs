@@ -31,7 +31,9 @@ public sealed class ModularResourcesTest : RobustIntegrationTest
         {
             Options = new GameControllerOptions
             {
-                ManifestOverride = "manifest_mod_testing.yml"
+                ManifestOverride = "manifest_mod_testing.yml",
+                LoadContentResources = false,
+                LoadConfigAndUserData = false
             }
         };
 

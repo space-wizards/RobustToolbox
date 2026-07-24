@@ -85,9 +85,17 @@ internal sealed partial class ReplayPlaybackManager
                 // Maybe track our own detach queue and use _gameState.DetachImmediate()?
                 // That way we don't have to clone this. Downside would be that all entities will be immediately
                 // detached. I.e., the detach budget cvar will simply be ignored.
-                var clone = new List<NetEntity>(leavePvs.Entities);
+                if (leavePvs.Entities.Count != 0)
+                    _gameState.QueuePvsDetach(new List<NetEntity>(leavePvs.Entities), leavePvs.Tick);
 
-                _gameState.QueuePvsDetach(clone, leavePvs.Tick);
+                if (leavePvs.ChunkEntities.Count != 0)
+                {
+                    _netMan.DispatchLocalNetMessage(new MsgStateLeavePvs
+                    {
+                        Tick = leavePvs.Tick,
+                        ChunkEntities = new List<NetEntity>(leavePvs.ChunkEntities),
+                    });
+                }
                 continue;
             }
 

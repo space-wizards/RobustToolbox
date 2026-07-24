@@ -24,6 +24,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
@@ -308,6 +309,8 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<OccluderTreeComponent>();
             compFactory.RegisterClass<CollideOnAnchorComponent>();
             compFactory.RegisterClass<ActorComponent>();
+            compFactory.RegisterClass<ChunkEntityComponent>();
+            compFactory.RegisterClass<ChunkContainerComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -333,6 +336,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
             entitySystemMan.LoadExtraSystemType<PvsSystem>();
+            entitySystemMan.LoadExtraSystemType<ServerChunkEntitySystem>();
             entitySystemMan.LoadExtraSystemType<InputSystem>();
             entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();
 

@@ -1367,7 +1367,7 @@ namespace Robust.Shared
 
         /// <summary>
         /// Scales listener & source velocities, which (if less than 1) de-emphasizes the doppler pitch-shifting effect
-        /// and (if more than 1) exaggerates the effect.
+        /// and (if more than 1) exaggerates the effect. Setting this to 0 will disable the doppler effect.
         /// </summary>
         /// <remarks>
         /// The default value for OpenAL is 1, but here we use 0.25, which was chosen sort of arbitrarily to better tune the effect

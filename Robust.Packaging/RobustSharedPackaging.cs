@@ -86,7 +86,7 @@ public sealed class RobustSharedPackaging
 
     public static Task DoModularResourceCopy(string contentDir, AssetPass pass, HashSet<string> ignoreSet)
     {
-        var manifest = ResourceManifestData.LoadFromFile(contentDir, new ResPath("Resources/manifest.yml"));
+        var manifest = ResourceManifestData.LoadFromFile(contentDir, new ResPath($"Resources/{ResourceManifestData.DefaultManifestName}"));
         if (manifest.ModularResources == null) return Task.CompletedTask;
 
         foreach (var (vfsPath, diskName) in manifest.ModularResources)

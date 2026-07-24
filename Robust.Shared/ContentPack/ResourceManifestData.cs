@@ -19,12 +19,18 @@ public sealed record ResourceManifestData(
     Dictionary<string, string>? ModularResources
 )
 {
+    public const string DefaultManifestName = "manifest.yml";
+
     public static readonly ResourceManifestData Default =
         new ResourceManifestData(Array.Empty<string>(), null, null, null, null, null, true, null, null);
 
     public static ResourceManifestData LoadResourceManifest(IResourceManager res)
     {
-        if (!res.TryContentFileRead(new ResPath(res.ManifestFileName).ToRootedPath().ToString(), out var stream))
+        if (!res.TryContentFileRead(
+                string.IsNullOrEmpty(res.ManifestFileName)
+                ? new ResPath(DefaultManifestName).ToRootedPath().ToString()
+                : new ResPath(res.ManifestFileName).ToRootedPath().ToString(),
+                out var stream))
             return Default;
 
         using (stream)
@@ -57,7 +63,7 @@ public sealed record ResourceManifestData(
 
         if (yamlStream.Documents.Count != 1 || yamlStream.Documents[0].RootNode is not YamlMappingNode mapping)
         {
-            throw new InvalidOperationException("Expected a single YAML document with root mapping for manifest.yml");
+            throw new InvalidOperationException($"Expected a single YAML document with root mapping for {DefaultManifestName}");
         }
 
         var modules = ReadStringArray(mapping, "modules") ?? Array.Empty<string>();

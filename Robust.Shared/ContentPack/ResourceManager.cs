@@ -39,7 +39,7 @@ namespace Robust.Shared.ContentPack
         public IWritableDirProvider UserData { get; private set; } = default!;
 
         /// <inheritdoc />
-        public string ManifestFileName { get; private set; } = "manifest.yml";
+        public string ManifestFileName { get; private set; } = ResourceManifestData.DefaultManifestName;
 
         /// <inheritdoc />
         public virtual void Initialize(string? userData, bool hideRootDir, string? manifestOverride)

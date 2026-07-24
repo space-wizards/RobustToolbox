@@ -87,5 +87,6 @@
     <PackageVersion Include="System.Text.Json" Version="10.0.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.0.0" />
+    <PackageVersion Include="runtime.freebsd-x64.Microsoft.NETCore.DotNetAppHost" Version="3.0.0-preview-27122-01" />
   </ItemGroup>
 </Project>

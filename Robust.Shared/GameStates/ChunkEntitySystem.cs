@@ -79,7 +79,10 @@ public abstract partial class ChunkEntitySystem : EntitySystem
         if (!_mapQuery.HasComp(root) && !_gridQuery.HasComp(root))
             throw new ArgumentException($"Chunk entity root {ToPrettyString(root)} is not a map or grid.", nameof(root));
 
-        var uid = EntityManager.PredictedSpawn(ChunkEntityPrototype);
+        var rootMeta = _metaQuery.GetComponent(root);
+        var uid = EntityManager.PredictedSpawn(
+            ChunkEntityPrototype,
+            doMapInit: rootMeta.EntityLifeStage == EntityLifeStage.MapInitialized);
 
         // TODO: compreg / faster addcomp
         var comp = new ChunkEntityComponent

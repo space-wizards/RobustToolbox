@@ -57,6 +57,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
+    [DenseComponent]
     [RegisterComponent, NetworkedComponent]
     public sealed partial class MetaDataComponent : Component
     {

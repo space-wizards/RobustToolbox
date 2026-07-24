@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
@@ -114,11 +115,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            var path = TextureRoot / node.Value;
+            var path = PathHelpers.ApparentPath(new ResPath(node.Value), TextureRoot);
             if (path.ToString().Contains(".rsi/"))
                 return new ErrorNode(node, "Texture paths may not be inside RSI files.");
 
-            return serializationManager.ValidateNode<ResPath>(new ValueDataNode(path.ToString()), context);
+            return serializationManager.ValidateNode<ResPath>(new ValueDataNode($"{path}"), context);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, MappingDataNode>.Validate(

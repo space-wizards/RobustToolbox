@@ -1,14 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Log;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared;
@@ -84,18 +80,30 @@ internal static class ProgramShared
         {
             var contentRootDir = FindContentRootDir(startType);
             // System.Console.WriteLine($"CONTENT DIR IS {Path.GetFullPath(contentRootDir)}");
-            if (startType == StartType.ContentAppBundle)
-            {
-                res.MountContentDirectory("./", assembliesPath);
-            }
-            else
-            {
-                res.MountContentDirectory($@"{contentRootDir}bin/{contentBuildDir}/", assembliesPath);
-            }
+            res.MountContentDirectory(startType == StartType.ContentAppBundle
+                    ? "./"
+                    : $@"{contentRootDir}bin/{contentBuildDir}/",
+                assembliesPath);
 
             res.MountContentDirectory($@"{contentRootDir}Resources/");
         }
 #endif
+        var manifest = ResourceManifestData.LoadResourceManifest(res);
+        if (manifest.ModularResources != null)
+        {
+            foreach (var (vfsPath, diskPath) in manifest.ModularResources)
+            {
+                var virtualPath = new ResPath($"/{vfsPath}/");
+                var cleanDiskPath = diskPath.Trim('/', '\\');
+#if FULL_RELEASE
+                res.MountContentDirectory($@"{diskPath}/", virtualPath);
+#else
+                var contentRootDir = FindContentRootDir(startType);
+                res.MountContentDirectory($@"{contentRootDir}/{cleanDiskPath}/", virtualPath);
+#endif
+            }
+        }
+
 
         if (options == null)
             return;

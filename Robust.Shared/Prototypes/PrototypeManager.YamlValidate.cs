@@ -23,8 +23,7 @@ public partial class PrototypeManager
     public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
         out Dictionary<Type, HashSet<string>> protos)
     {
-        var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
-            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
+        var streams = FindAllPaths(path);
 
         var dict = new Dictionary<string, HashSet<ErrorNode>>();
         var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
@@ -236,5 +235,23 @@ public partial class PrototypeManager
             type,
             data.ParentMappings,
             data.Mapping);
+    }
+
+    private ParallelQuery<ResPath> FindAllPaths(ResPath path)
+    {
+        // Normal Resources folder
+        var rootRes = Resources.ContentFindFiles(path)
+            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith('.'));
+
+        if (_manifest.ModularResources == null)
+            return rootRes.ToList().AsParallel();
+
+        // Modular resource folders
+        return _manifest.ModularResources.Keys
+            .SelectMany(root => Resources.ContentFindFiles((new ResPath(root) / path.ToRelativePath()).ToRootedPath())
+            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith('.')))
+            .Concat(rootRes)
+            .ToList()
+            .AsParallel();
     }
 }

@@ -4,11 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Audio;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
-using Robust.Shared.Audio;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -52,7 +50,8 @@ namespace Robust.Client.ResourceManagement
             var sw = Stopwatch.StartNew();
             var resList = GetTypeData<TextureResource>().Resources;
 
-            var texList = _manager.ContentFindFiles("/Textures/")
+            var texList = GetTextureSearchPaths()
+                .SelectMany(path => _manager.ContentFindFiles(path))
                 // Skip PNG files inside RSIs.
                 .Where(p => p.Extension == "png" && !p.ToString().Contains(".rsi/") && !resList.ContainsKey(p))
                 .Select(p => new TextureResource.LoadStepData {Path = p})
@@ -139,11 +138,15 @@ namespace Robust.Client.ResourceManagement
             var sw = Stopwatch.StartNew();
             var resList = GetTypeData<RSIResource>().Resources;
 
-            var foundRsiList = _manager.ContentFindFiles("/Textures/")
+            var searchPaths = GetTextureSearchPaths().ToArray();
+
+            var foundRsiList = searchPaths
+                .SelectMany(path => _manager.ContentFindFiles(path))
                 .Where(p => p.ToString().EndsWith(".rsi/meta.json"))
                 .Select(c => c.Directory);
 
-            var foundRsicList = _manager.ContentFindFiles("/Textures/")
+            var foundRsicList = searchPaths
+                .SelectMany(path => _manager.ContentFindFiles(path))
                 .Where(p => p.Extension == "rsic")
                 .Select(c => c.WithExtension("rsi"));
 
@@ -406,6 +409,19 @@ namespace Robust.Client.ResourceManagement
         private static bool ShouldMetaAtlas(RSIResource.LoadStepData rsi)
         {
             return rsi.MetaAtlas && rsi.LoadParameters == TextureLoadParameters.Default;
+        }
+
+        private IEnumerable<ResPath> GetTextureSearchPaths()
+        {
+            yield return new ResPath("/Textures/");
+
+            var manifest = ResourceManifestData.LoadResourceManifest(_manager);
+            if (manifest.ModularResources == null) yield break;
+            foreach (var path in manifest.ModularResources.Keys)
+            {
+
+                yield return new ResPath(path).ToRootedPath() / "Textures";
+            }
         }
     }
 

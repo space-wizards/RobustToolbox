@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -21,8 +20,8 @@ public sealed partial class ResPathSerializer : ITypeSerializer<ResPath, ValueDa
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null)
     {
+        // 1. Normalize separators (fixes Windows backslashes)
         var path = ResPath.FromRelativeSystemPath(node.Value);
-
         if (path.Extension.Equals("rsi"))
         {
             path /= "meta.json";
@@ -32,8 +31,6 @@ public sealed partial class ResPathSerializer : ITypeSerializer<ResPath, ValueDa
         {
             path = SpriteSpecifierSerializer.TextureRoot / path;
         }
-
-        path = path.ToRootedPath();
 
         try
         {

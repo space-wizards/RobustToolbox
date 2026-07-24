@@ -37,6 +37,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private IComponentFactory _factory = default!;
         [Dependency] private IEntityManager _entMan = default!;
         [Dependency] private IRobustRandom _random = default!;
+        private ResourceManifestData _manifest = ResourceManifestData.Default;
 
         private readonly Dictionary<string, FrozenDictionary<string, MappingDataNode>> _prototypeDataCache = new();
 
@@ -66,6 +67,7 @@ namespace Robust.Shared.Prototypes
             _initialized = true;
             ReloadPrototypeKinds();
             PrototypesReloaded += OnReload;
+            _manifest = ResourceManifestData.LoadResourceManifest(Resources);
         }
 
         /// <inheritdoc />
@@ -1237,6 +1239,15 @@ namespace Robust.Shared.Prototypes
             }
 
             throw new ArgumentOutOfRangeException($"Unable to pick valid prototype for {typeof(T)}?");
+        }
+
+        public void LoadModularPrototypes(ResPath protoDir, Dictionary<Type, HashSet<string>>? changed)
+        {
+            if (_manifest.ModularResources == null) return;
+            foreach (var path in _manifest.ModularResources.Keys)
+            {
+                LoadDirectory(new ResPath($"/{path}{protoDir}"), changed: changed);
+            }
         }
     }
 }

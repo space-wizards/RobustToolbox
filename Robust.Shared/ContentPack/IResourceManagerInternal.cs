@@ -19,7 +19,10 @@ namespace Robust.Shared.ContentPack
         /// If true, <see cref="IWritableDirProvider.RootDir"/> will be hidden on
         /// <see cref="IResourceManager.UserData"/>.
         /// </param>
-        void Initialize(string? userData, bool hideUserDataDir);
+        /// <param name="manifestOverride">
+        /// If not null, overrides the default manifest file name.
+        /// </param>
+        void Initialize(string? userData, bool hideUserDataDir, string? manifestOverride);
 
         /// <summary>
         ///     Mounts a single stream as a content file. Useful for unit testing.

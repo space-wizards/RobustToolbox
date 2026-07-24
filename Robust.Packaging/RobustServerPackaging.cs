@@ -40,5 +40,7 @@ public sealed class RobustServerPackaging
             pass,
             ignoreSet,
             cancel: cancel);
+
+        await RobustSharedPackaging.DoModularResourceCopy(contentDir, pass, ignoreSet);
     }
 }

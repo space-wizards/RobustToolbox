@@ -91,6 +91,7 @@ namespace Robust.Shared.Configuration
             return ValidateTomlTable(tblRoot);
         }
 
+        /// <inheritdoc />
         private HashSet<string> LoadFromTomlTable(TomlTable table)
         {
             var loaded = new HashSet<string>();
@@ -115,9 +116,7 @@ namespace Robust.Shared.Configuration
             return loaded;
         }
 
-        /// <summary>
-        /// Validates a TomlTable and returns the set of cvars contained.
-        /// </summary>
+        /// <inheritdoc />
         private HashSet<string> ValidateTomlTable(TomlTable table)
         {
             var loaded = new HashSet<string>();

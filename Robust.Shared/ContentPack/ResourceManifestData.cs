@@ -142,9 +142,14 @@ public sealed record ResourceManifestData(
             var diskPath = child.Value.AsString();
 
             // Sanitize the path right away so it never escapes the root.
-            var resPath = new ResPath(diskPath).Clean().ToString();
+            if (diskPath.Contains("\\..")
+                || diskPath.Contains("/..")
+                || diskPath.StartsWith(".."))
+            {
+                throw new InvalidOperationException($"Manifest data specified incorrectly: This branch should never be reached. Path: {diskPath}");
+            }
 
-            dict[moduleName] = resPath;
+            dict[moduleName] = diskPath;
         }
         return dict;
     }

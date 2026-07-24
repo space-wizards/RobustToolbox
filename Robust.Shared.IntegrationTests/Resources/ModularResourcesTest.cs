@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using Robust.Client;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
@@ -30,7 +29,7 @@ public sealed class ModularResourcesTest : RobustIntegrationTest
     /// and that the Prototypes and Localization are loaded automatically.
     /// </summary>
     [Test]
-    [TestOf(typeof(ResourceManager))]
+    [TestOf(typeof(ResourceManifestData))]
     public async Task TestModularFileReading()
     {
         // Override the manifest to include the TestModResources folder
@@ -38,7 +37,7 @@ public sealed class ModularResourcesTest : RobustIntegrationTest
         {
             Options = new GameControllerOptions
             {
-                ManifestOverride = "manifest_mod_testing.yml",
+                ManifestOverride = "EngineManifests/manifest_mod_testing.yml",
                 LoadContentResources = false,
                 LoadConfigAndUserData = false
             }
@@ -86,5 +85,29 @@ public sealed class ModularResourcesTest : RobustIntegrationTest
         });
 
         await client.WaitRunTicks(1);
+    }
+
+    /// <summary>
+    /// Tests that manifest with a bad path pointing to an external folder throws an exception on launch.
+    /// </summary>
+    [Test]
+    [TestOf(typeof(ResourceManifestData))]
+    public async Task TestBadManifestWithExternalPath()
+    {
+        var options = new ClientIntegrationOptions
+        {
+            Options = new GameControllerOptions
+            {
+                ManifestOverride = "EngineManifests/manifest_mod_testing_bad.yml",
+                LoadContentResources = false,
+                LoadConfigAndUserData = false
+            }
+        };
+
+        Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            var client = StartClient(options);
+            await client.WaitIdleAsync();
+        });
     }
 }

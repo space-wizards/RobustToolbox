@@ -30,7 +30,7 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            _server.Shutdown(null);
+            _server.Shutdown(argStr[$"{Command} ".Length..].Trim());
         }
     }
 

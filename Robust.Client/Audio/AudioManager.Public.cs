@@ -284,6 +284,13 @@ internal partial class AudioManager
         OpenALSawmill.Info($"Set audio attenuation to {attenuation.ToString()}");
     }
 
+    public void SetDopplerFactor(float factor)
+    {
+        factor = Math.Max(factor, 0f);
+        AL.DopplerFactor(factor);
+        OpenALSawmill.Info($"Set doppler factor to {factor:F2}");
+    }
+
     internal void RemoveAudioSource(int handle)
     {
         _audioSources.Remove(handle);

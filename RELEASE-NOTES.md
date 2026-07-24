@@ -54,6 +54,33 @@ END TEMPLATE-->
 *None yet*
 
 
+## 284.0.0
+
+### New features
+
+* Serializers can now take [Dependency] fields.
+* Added a SplitCenterChangingEventArgs to SplitContainer for when it's being moved around.
+* Added a LightLevelSystem to measure how lit-up entities are.
+
+### Bugfixes
+
+* Fix PredictedQueueDel not rolling back properly on the client.
+* Fix sprites jittering on grids due to matrix imprecision.
+
+### Other
+
+* EntityManager.IsDefault now fast-paths with direct datafield equality methods
+* Updated Lidgren to f7ecb5aa384013d920f7925340cc4608ed156e83
+
+### Internal
+
+* Added profiling zones to the physics update, splitting it into broadphase, collision, solver (island build/solve) and per-controller pre/post-solve phases.
+* Added profiling zones splitting entity rendering into sprite gathering and drawing.
+* Cache component net IDs and component changes in ClientGameStateManager.
+* Optimise entities being detached + re-inserted during PVS.
+* Moved the release build to the end of the content test action so tests are still run in debug.
+
+
 ## 280.0.0
 
 ### Breaking changes

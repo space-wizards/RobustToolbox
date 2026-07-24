@@ -32,6 +32,7 @@
     <PackageReference Include="prometheus-net" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Tracy-CSharp" />
+    <PackageReference Include="runtime.freebsd-x64.Microsoft.NETCore.DotNetAppHost" />
 
     <!-- Needed to pin transitive dependency versions. -->
     <PackageReference Include="System.Text.Json" />

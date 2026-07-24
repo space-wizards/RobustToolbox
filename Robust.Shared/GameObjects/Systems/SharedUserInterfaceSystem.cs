@@ -554,7 +554,8 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         if (!open)
             return;
 
-        AddQueued(boundUserInterface, QueuedUpdate.Open);
+        var state = entity.Comp.States.GetValueOrDefault(key);
+        AddQueued(boundUserInterface, QueuedUpdate.Open, state);
     }
 
     /// <summary>

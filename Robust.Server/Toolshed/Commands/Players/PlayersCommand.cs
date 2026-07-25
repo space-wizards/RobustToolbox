@@ -57,6 +57,12 @@ public sealed partial class PlayerCommand : ToolshedCommand
     {
         return sessions.AttachedEntity ?? default;
     }
+
+    [CommandImplementation("entity")]
+    public EntityUid GetPlayerEntity(IInvocationContext ctx, ICommonSession sessions)
+    {
+        return sessions.AttachedEntity ?? default;
+    }
 }
 
 public record struct NoSuchPlayerError(string Username) : IConError

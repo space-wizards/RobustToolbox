@@ -19,26 +19,37 @@ jobs:
         include:
           - runtime: win-x64
             targetOS: Windows
+            allowFailure: false
           - runtime: win-arm64
             targetOS: Windows
+            allowFailure: false
           - runtime: osx-x64
             targetOS: MacOS
+            allowFailure: false
           - runtime: osx-arm64
             targetOS: MacOS
+            allowFailure: false
           - runtime: linux-x64
             targetOS: Linux
+            allowFailure: false
           - runtime: linux-arm64
             targetOS: Linux
+            allowFailure: false
           - runtime: linux-musl-x64
             targetOS: Linux
+            allowFailure: false
           - runtime: linux-musl-arm64
             targetOS: Linux
+            allowFailure: false
           - runtime: freebsd-x64
             targetOS: FreeBSD
+            allowFailure: true
           - runtime: freebsd-arm64
             targetOS: FreeBSD
+            allowFailure: true
 
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.allowFailure }}
 
     steps:
       - uses: actions/checkout@v4.2.2

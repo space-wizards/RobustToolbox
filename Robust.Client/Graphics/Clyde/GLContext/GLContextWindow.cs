@@ -219,7 +219,8 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     window.BlitDoneEvent?.Set();
                 }
-                Clyde._windowing!.WindowSwapBuffers(window.Reg);
+                // Single buffered secondary windows, Steam overlay triggers memory leak with secondary double buffers
+                GL.Finish();
                 if (!window.UnlockBeforeSwap)
                 {
                     window.BlitDoneEvent?.Set();

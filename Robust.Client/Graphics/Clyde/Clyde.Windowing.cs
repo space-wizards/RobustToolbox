@@ -332,6 +332,7 @@ namespace Robust.Client.Graphics.Clyde
             if (parameters.Owner != null)
                 owner = ((WindowHandle)parameters.Owner).Reg;
 
+            parameters.Main = isMain;
             var (reg, error) = _windowing!.WindowCreate(glSpec, parameters, share, owner);
 
             if (reg != null)

@@ -102,6 +102,16 @@ namespace Robust.Shared.GameObjects
             return dict.Count;
         }
 
+        /// <summary>
+        /// Required for <see cref="Robust.Shared.Threading.IParallelEnumerateEntitiesRobustJob`1>"/>
+        /// Dictionary<>.Enumerator uses dict._count, not dict.Count
+        /// </summary>
+        internal int DictionaryInternalCount<T>() where T : IComponent
+        {
+            var dict = _entTraitDict[typeof(T)];
+            return DictionaryHelper.GetCount(dict);
+        }
+
         /// <inheritdoc />
         public int Count(Type component)
         {
@@ -1229,6 +1239,13 @@ namespace Robust.Shared.GameObjects
         /// Internal variant of <see cref="GetComponents"/> that directly returns the actual component set.
         /// </summary>
         internal IReadOnlyCollection<IComponent> GetComponentsInternal(EntityUid uid) => _entCompIndex[uid];
+
+        internal Dictionary<EntityUid, IComponent> GetComponentsDictionaryInternal<TComp>() where TComp : IComponent
+        {
+            var comps = _entTraitArray[CompIdx.ArrayIndex<TComp>()];
+            DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp).Name}");
+            return comps;
+        }
 
         /// <inheritdoc />
         public int ComponentCount(EntityUid uid)

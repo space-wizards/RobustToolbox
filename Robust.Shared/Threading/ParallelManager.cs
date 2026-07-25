@@ -2,6 +2,7 @@
 using System.Threading;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Configuration;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 
@@ -63,6 +64,21 @@ public interface IParallelManager
     /// <param name="amount">The total number of elements to process.</param>
     /// <returns>A wait handle that signals when the job is complete.</returns>
     WaitHandle Process(IParallelBulkRobustJob jobs, int amount);
+
+    /// <summary>
+    /// Takes in a parallel job and runs it
+    /// </summary>
+    public void ProcessNow<TComp>(IParallelEnumerateEntitiesRobustJob<TComp> jobs) where TComp : IComponent;
+
+    /// <summary>
+    /// Processes a robust job sequentially if desired.
+    /// </summary>
+    void ProcessSerialNow<TComp>(IParallelEnumerateEntitiesRobustJob<TComp> jobs) where TComp : IComponent;
+
+    /// <summary>
+    /// Takes in a parallel job and runs it without blocking.
+    /// </summary>
+    WaitHandle Process<TComp>(IParallelEnumerateEntitiesRobustJob<TComp> jobs) where TComp : IComponent;
 }
 
 internal interface IParallelManagerInternal : IParallelManager
@@ -74,6 +90,7 @@ internal sealed partial class ParallelManager : IParallelManagerInternal
 {
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private ILogManager _logs = default!;
+    [Dependency] private EntityManager _entityManager = default!;
 
     public event Action? ParallelCountChanged;
     public int ParallelProcessCount { get; private set; }
@@ -163,17 +180,26 @@ internal sealed partial class ParallelManager : IParallelManagerInternal
     public void ProcessNow(IParallelBulkRobustJob jobs, int amount) =>
         ProcessNow((IParallelRangeRobustJob) jobs, amount);
 
+    public void ProcessNow<TComp>(IParallelEnumerateEntitiesRobustJob<TComp> jobs) where TComp : IComponent =>
+        ProcessNow((IParallelRangeRobustJob) jobs, _entityManager.DictionaryInternalCount<TComp>());
+
     public void ProcessSerialNow(IParallelRobustJob jobs, int amount) =>
         ProcessSerialNow((IParallelRangeRobustJob) jobs, amount);
 
     public void ProcessSerialNow(IParallelBulkRobustJob jobs, int amount) =>
         ProcessSerialNow((IParallelRangeRobustJob) jobs, amount);
 
+    public void ProcessSerialNow<TComp>(IParallelEnumerateEntitiesRobustJob<TComp> jobs) where TComp : IComponent =>
+        ProcessSerialNow((IParallelRangeRobustJob) jobs, _entityManager.DictionaryInternalCount<TComp>());
+
     public WaitHandle Process(IParallelRobustJob jobs, int amount) =>
         Process((IParallelRangeRobustJob) jobs, amount);
 
     public WaitHandle Process(IParallelBulkRobustJob jobs, int amount) =>
         Process((IParallelRangeRobustJob) jobs, amount);
+
+    public WaitHandle Process<TComp>(IParallelEnumerateEntitiesRobustJob<TComp> jobs) where TComp : IComponent =>
+        Process((IParallelRangeRobustJob) jobs, _entityManager.DictionaryInternalCount<TComp>());
 
     public void ProcessNow(IParallelRangeRobustJob job, int amount)
     {

@@ -1,3 +1,5 @@
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Threading;
 
 // ReSharper disable once CheckNamespace
@@ -70,6 +72,24 @@ public sealed class TestingParallelManager : IParallelManagerInternal
     public WaitHandle Process(IParallelBulkRobustJob jobs, int amount)
     {
         ProcessSerialNow(jobs, amount);
+        var ev = new ManualResetEventSlim();
+        ev.Set();
+        return ev.WaitHandle;
+    }
+
+    public void ProcessNow<TComp>(IParallelEnumerateEntitiesRobustJob<TComp> jobs) where TComp : IComponent
+    {
+        jobs.ExecuteRange(0, IoCManager.Instance?.Resolve<EntityManager>()?.DictionaryInternalCount<TComp>() ?? 0);
+    }
+
+    public void ProcessSerialNow<TComp>(IParallelEnumerateEntitiesRobustJob<TComp> jobs) where TComp : IComponent
+    {
+        jobs.ExecuteRange(0, IoCManager.Instance?.Resolve<EntityManager>()?.DictionaryInternalCount<TComp>() ?? 0);
+    }
+
+    public WaitHandle Process<TComp>(IParallelEnumerateEntitiesRobustJob<TComp> jobs) where TComp : IComponent
+    {
+        ProcessSerialNow(jobs);
         var ev = new ManualResetEventSlim();
         ev.Set();
         return ev.WaitHandle;

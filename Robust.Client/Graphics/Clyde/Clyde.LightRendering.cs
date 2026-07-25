@@ -636,7 +636,7 @@ namespace Robust.Client.Graphics.Clyde
             return true;
         }
 
-        internal struct LightRenderData
+        private struct LightRenderData
         {
             public PointLightComponent Light;
             public Vector2 Position;
@@ -656,16 +656,6 @@ namespace Robust.Client.Graphics.Clyde
                 DistanceSquared = distanceSquared;
                 Rotation = rotation;
                 CastShadows = light.CastShadows;
-                ShadowMapIndex = -1;
-            }
-
-            internal LightRenderData(bool castShadows)
-            {
-                Light = default!;
-                Position = Vector2.Zero;
-                DistanceSquared = 0f;
-                Rotation = Angle.Zero;
-                CastShadows = castShadows;
                 ShadowMapIndex = -1;
             }
         }
@@ -741,7 +731,7 @@ namespace Robust.Client.Graphics.Clyde
             return (state.count, expandedBounds);
         }
 
-        internal static int AssignShadowMapRows(Span<LightRenderData> lights, int maxShadowcastingLights)
+        private static int AssignShadowMapRows(Span<LightRenderData> lights, int maxShadowcastingLights)
         {
             var shadowMapIndex = 0;
 
@@ -1096,7 +1086,7 @@ namespace Robust.Client.Graphics.Clyde
             _drawQuad(Vector2.Zero, Vector2.One, Matrix3x2.Identity, fovShader);
         }
 
-        internal static int BuildOccluderEdges(
+        private static int BuildOccluderEdges(
             ReadOnlySpan<Vector2> polygon,
             Matrix3x2 worldTransform,
             Span<Vector4> edges)
@@ -1152,7 +1142,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        internal static void BuildVisibleBoundaryVertices(
+        private static void BuildVisibleBoundaryVertices(
             IReadOnlyList<Vector4> boundarySegments,
             IReadOnlySet<OccluderEdgeKey> sharedBoundaryEdges,
             Vector2 eyePosition,
@@ -1170,7 +1160,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        internal static void BuildConvexBoundaryVertices(
+        private static void BuildConvexBoundaryVertices(
             IReadOnlyList<Vector4> boundarySegments,
             IReadOnlySet<OccluderEdgeKey> sharedBoundaryEdges,
             Dictionary<OccluderVertexKey, BoundaryVertexDirections> boundaryVertexDirections,
@@ -1211,7 +1201,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        internal static void BuildSharedVertexEdges(
+        private static void BuildSharedVertexEdges(
             IReadOnlyList<Vector4> boundarySegments,
             IReadOnlySet<OccluderEdgeKey> sharedBoundaryEdges,
             Dictionary<OccluderVertexKey, List<Vector4>> sharedVertexEdges,
@@ -1265,16 +1255,7 @@ namespace Robust.Client.Graphics.Clyde
             edges.Add(edge);
         }
 
-        internal static bool ShouldSuppressSharedOccluderEdge(
-            Vector4 edge,
-            IReadOnlySet<OccluderEdgeKey> sharedBoundaryEdges)
-        {
-            // Boundary keys are direction-independent, so reversed windings still match.
-            var key = OccluderEdgeKey.From(edge);
-            return sharedBoundaryEdges.Contains(key);
-        }
-
-        internal static bool OccluderOverlapsPoint(
+        private static bool OccluderOverlapsPoint(
             FixtureSystem fixtures,
             Vector2[] polygon,
             in Transform occluderTransform,
@@ -1292,30 +1273,7 @@ namespace Robust.Client.Graphics.Clyde
             return Vector2.DistanceSquared(a, b) <= SharedOccluderEdgeToleranceSquared;
         }
 
-        internal static bool ShouldSuppressSharedOccluderEdge(
-            int edgeIndex,
-            ReadOnlySpan<Vector4> edges,
-            ReadOnlySpan<bool> sharedEdges,
-            Vector2 eyePosition)
-        {
-            if (!sharedEdges[edgeIndex])
-                return false;
-
-            var previous = edgeIndex == 0 ? edges.Length - 1 : edgeIndex - 1;
-            var next = edgeIndex + 1 == edges.Length ? 0 : edgeIndex + 1;
-
-            // visible edge = unshared adjacent edge facing the eye;
-            // visible vertex = either adjacent visible edge;
-            // shared face renders only when both its vertices are not visible.
-            if (EdgeViewedAsCap(edges[edgeIndex], eyePosition))
-                return false;
-
-            var startVisible = !sharedEdges[previous] && EdgeFacesPoint(edges[previous], eyePosition);
-            var endVisible = !sharedEdges[next] && EdgeFacesPoint(edges[next], eyePosition);
-            return startVisible || endVisible;
-        }
-
-        internal static bool ShouldSuppressSharedOccluderEdge(
+        private static bool ShouldSuppressSharedOccluderEdge(
             int edgeIndex,
             ReadOnlySpan<Vector4> edges,
             ReadOnlySpan<bool> sharedEdges,
@@ -1440,7 +1398,7 @@ namespace Robust.Client.Graphics.Clyde
                             continue;
 
                         // The shared edge is one side of a shared corner. If the eye is opposite the corner's
-                        // outgoing wedge, this edge is behind wall volume and must render as a cap.
+                        // outgoing wedge, this edge is behind a wall.
                         var wedgeDirection = currentFromJunction + candidateFromJunction;
                         if (wedgeDirection.LengthSquared() <= SharedOccluderEdgeToleranceSquared)
                             continue;
@@ -1548,14 +1506,14 @@ namespace Robust.Client.Graphics.Clyde
             return Vector2.Cross(a, b) > 0f;
         }
 
-        internal readonly record struct OccluderEdgeKey(long AX, long AY, long BX, long BY)
+        private readonly record struct OccluderEdgeKey(long AX, long AY, long BX, long BY)
         {
             public static OccluderEdgeKey From(Vector4 edge)
             {
                 return From(new Vector2(edge.X, edge.Y), new Vector2(edge.Z, edge.W));
             }
 
-            public static OccluderEdgeKey From(Vector2 a, Vector2 b)
+            private static OccluderEdgeKey From(Vector2 a, Vector2 b)
             {
                 var ax = Quantize(a.X);
                 var ay = Quantize(a.Y);
@@ -1576,7 +1534,7 @@ namespace Robust.Client.Graphics.Clyde
 
         }
 
-        internal readonly record struct OccluderVertexKey(long X, long Y)
+        private readonly record struct OccluderVertexKey(long X, long Y)
         {
             public static OccluderVertexKey From(Vector2 vertex)
             {
@@ -1589,7 +1547,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        internal struct BoundaryVertexDirections
+        private struct BoundaryVertexDirections
         {
             public Vector2 Incoming;
             public Vector2 Outgoing;
@@ -1881,6 +1839,11 @@ namespace Robust.Client.Graphics.Clyde
                          * In our case there are some exceptions where we don't in fact want to do that because it doesn't look good.
                          * e.g. connecting walls, but only sometimes like if not a corner, or only want to do that at specific angles.
                          * Hence you get the hell that is ShouldSuppressSharedOccluderEdge.
+                         *
+                         * A lot of this was implicitly handled before but now that we allow entirely arbitrary occluders
+                         * this needs to be handled explicitly.
+                         *
+                         * If you know trig you'll be right mate.
                          */
 
                         var suppressSharedEdge = ShouldSuppressSharedOccluderEdge(

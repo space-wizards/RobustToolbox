@@ -227,7 +227,7 @@ public sealed partial class ClientOccluderSystem : OccluderSystem
         return Matrix3Helpers.CreateTransform(position, rotation);
     }
 
-    internal static byte CalculateSharedEdgeMask(ReadOnlySpan<Vector4> edges, ReadOnlySpan<Vector4> otherEdges)
+    private static byte CalculateSharedEdgeMask(ReadOnlySpan<Vector4> edges, ReadOnlySpan<Vector4> otherEdges)
     {
         Span<OccluderEdgeKey> edgeKeys = stackalloc OccluderEdgeKey[PhysicsConstants.MaxPolygonVertices];
         Span<OccluderEdgeKey> otherEdgeKeys = stackalloc OccluderEdgeKey[PhysicsConstants.MaxPolygonVertices];

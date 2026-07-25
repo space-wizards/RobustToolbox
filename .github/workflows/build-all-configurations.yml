@@ -51,10 +51,16 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Install dependencies
-        run: dotnet restore
-      - name: Build Debug
-        run: dotnet build --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
-      - name: Build Tools
-        run: dotnet build --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
-      - name: Build Release
-        run: dotnet build --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+        run: dotnet restore --runtime ${{ matrix.runtime }} /p:TargetOS=${{ matrix.targetOS }}
+      - name: Build Debug Client
+        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+      - name: Build Debug Server
+        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+      - name: Build Tools Client
+        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+      - name: Build Tools Server
+        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+      - name: Build Release Client
+        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+      - name: Build Release Server
+        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}

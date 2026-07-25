@@ -349,6 +349,31 @@ namespace Robust.Client.Input
                 RaiseRawKeyInput(args, rawInput, RawKeyAction.Up);
         }
 
+        /// <inheritdoc />
+        public void SynchronizeKeyStates()
+        {
+            if (!UpdatePhysicalKeyStates(_keysPressed))
+                return;
+
+            foreach (var binding in _bindings.ToArray())
+            {
+                if (binding.State == BoundKeyState.Up ||
+                    binding.BindingType != KeyBindingType.State ||
+                    PackedContainsMouseKey(binding.PackedKeyCombo) ||
+                    PackedMatchesPressedState(binding.PackedKeyCombo))
+                {
+                    continue;
+                }
+
+                UpBind(binding);
+            }
+        }
+
+        protected virtual bool UpdatePhysicalKeyStates(bool[] keyStates)
+        {
+            return false;
+        }
+
         private bool DownBind(KeyBinding binding, bool uiOnly, bool isRepeat)
         {
             if (binding.State == BoundKeyState.Down)
@@ -492,6 +517,16 @@ namespace Robust.Client.Input
             if (mod3 != Key.Unknown && !_keysPressed[(int)mod3]) return false;
 
             return true;
+        }
+
+        private static bool PackedContainsMouseKey(PackedKeyCombo packed)
+        {
+            var (baseKey, mod1, mod2, mod3) = packed;
+
+            return baseKey.IsMouseKey() ||
+                   mod1.IsMouseKey() ||
+                   mod2.IsMouseKey() ||
+                   mod3.IsMouseKey();
         }
 
         private static bool PackedContainsKey(PackedKeyCombo packed, Key key)

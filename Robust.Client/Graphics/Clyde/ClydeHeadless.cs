@@ -86,6 +86,8 @@ namespace Robust.Client.Graphics.Clyde
 
         public string GetKeyName(Keyboard.Key key) => string.Empty;
 
+        public bool UpdateKeyboardState(bool[] keyStates) => false;
+
         public void Shutdown()
         {
             // Nada.

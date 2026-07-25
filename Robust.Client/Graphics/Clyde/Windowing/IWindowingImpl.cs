@@ -50,6 +50,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Keyboard
             string? KeyGetName(Keyboard.Key key);
+            void UpdateKeyboardState(bool[] keyStates);
 
             // Clipboard
             Task<string> ClipboardGetText(WindowReg mainWindow);

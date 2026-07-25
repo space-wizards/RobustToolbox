@@ -1,4 +1,3 @@
-﻿using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using SDL3;
@@ -14,7 +13,6 @@ internal partial class Clyde
     {
         // Indices are values of SDL_Scancode
         private static readonly Key[] KeyMap;
-        private static readonly FrozenDictionary<Key, SC> KeyMapReverse;
         private static readonly Button[] MouseButtonMap;
 
         // TODO: to avoid having to ask the windowing thread, key names are cached.
@@ -68,6 +66,28 @@ internal partial class Clyde
                     return name;
 
                 return null;
+            }
+        }
+
+        public void UpdateKeyboardState(bool[] keyStates)
+        {
+            var keyboardState = SDL.SDL_GetKeyboardState();
+
+            for (var i = (int) Key.A; i < keyStates.Length; i++)
+            {
+                keyStates[i] = false;
+            }
+
+            var length = System.Math.Min(KeyMap.Length, keyboardState.Length);
+
+            for (var i = 0; i < length; i++)
+            {
+                if (!keyboardState[i])
+                    continue;
+
+                var key = KeyMap[i];
+                if (key != Key.Unknown)
+                    keyStates[(int) key] = true;
             }
         }
 
@@ -205,17 +225,6 @@ internal partial class Clyde
             MapKey(SC.SDL_SCANCODE_PAUSE, Key.Pause);
             MapKey(SC.SDL_SCANCODE_CAPSLOCK, Key.CapsLock);
             MapKey(SC.SDL_SCANCODE_SCROLLLOCK, Key.ScrollLock);
-
-            var keyMapReverse = new Dictionary<Key, SC>();
-
-            for (var code = 0; code < KeyMap.Length; code++)
-            {
-                var key = KeyMap[code];
-                if (key != Key.Unknown)
-                    keyMapReverse[key] = (SC) code;
-            }
-
-            KeyMapReverse = keyMapReverse.ToFrozenDictionary();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             static void MapKey(SC code, Key key)

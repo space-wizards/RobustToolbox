@@ -41,6 +41,11 @@ namespace Robust.Client.Input
         void KeyDown(KeyEventArgs e);
         void KeyUp(KeyEventArgs e);
 
+        /// <summary>
+        ///     Synchronizes tracked key state with physical keyboard state, if available.
+        /// </summary>
+        void SynchronizeKeyStates();
+
         IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified=true, bool invalid=false);
 
         void RemoveBinding(IKeyBinding binding, bool markModified=true);

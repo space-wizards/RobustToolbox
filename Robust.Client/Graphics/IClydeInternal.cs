@@ -61,6 +61,8 @@ namespace Robust.Client.Graphics
 
         string GetKeyName(Keyboard.Key key);
 
+        bool UpdateKeyboardState(bool[] keyStates);
+
         void Shutdown();
 
         /// <returns>Null if not running on X11.</returns>

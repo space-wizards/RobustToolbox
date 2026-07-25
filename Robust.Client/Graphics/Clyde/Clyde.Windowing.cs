@@ -393,6 +393,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             _windowing?.ProcessEvents();
             DispatchEvents();
+            _inputManager.SynchronizeKeyStates();
         }
 
         private void SwapAllBuffers()

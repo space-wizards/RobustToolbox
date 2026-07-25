@@ -15,5 +15,10 @@ namespace Robust.Client.Input
         {
             return _clyde.GetKeyName(key);
         }
+
+        protected override bool UpdatePhysicalKeyStates(bool[] keyStates)
+        {
+            return _clyde.UpdateKeyboardState(keyStates);
+        }
     }
 }

@@ -47,4 +47,12 @@ internal sealed partial class Clyde
 
         return textInfo.ToTitleCase(name);
     }
+
+    public bool UpdateKeyboardState(bool[] keyStates)
+    {
+        DebugTools.AssertNotNull(_windowing);
+
+        _windowing!.UpdateKeyboardState(keyStates);
+        return true;
+    }
 }

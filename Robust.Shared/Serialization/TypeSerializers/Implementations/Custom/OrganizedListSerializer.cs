@@ -17,7 +17,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 /// Should be used on a Datafield with the <see cref="AlwaysPushInheritanceAttribute"/>
 /// </summary>
 /// <typeparam name="T">An object which implements <see cref="IOrganizeableCollection{T}"/></typeparam>
-public sealed class OrganizedListSerializer<T> : ITypeSerializer<List<T>, SequenceDataNode> where T : IOrganizeableCollection<T>
+public sealed class OrganizedListSerializer<T> : BaseTypeSerializer, ITypeSerializer<List<T>, SequenceDataNode> where T : IOrganizeableCollection<T>
 {
     public ValidationNode Validate(ISerializationManager serializationManager,
         SequenceDataNode node,
@@ -41,10 +41,7 @@ public sealed class OrganizedListSerializer<T> : ITypeSerializer<List<T>, Sequen
         ISerializationManager.InstantiationDelegate<List<T>>? instanceProvider = null)
     {
         if (instanceProvider != null)
-        {
-            var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
-            sawmill.Warning($"Provided value to a Read-call for a {nameof(List<T>)}. Ignoring...");
-        }
+            Log.Warning($"Provided value to a Read-call for a {nameof(List<T>)}. Ignoring...");
 
         var list = new List<T>(node.Count);
 

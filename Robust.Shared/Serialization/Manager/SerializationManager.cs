@@ -125,6 +125,7 @@ namespace Robust.Shared.Serialization.Manager
             });
 
             var sawmill = Logger.GetSawmill(LogCategory);
+            _serializerSawmill = Logger.GetSawmill("szr");
 
             Parallel.ForEach(registrations, type =>
             {

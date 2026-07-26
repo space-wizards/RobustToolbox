@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List
 {
@@ -28,7 +29,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     continue;
                 }
 
-                list.Add(PrototypeSerializer.Validate(serializationManager, value, dependencies, context));
+                list.Add(ProtoIdSerializer<T>.Validate(dependencies, value));
             }
 
             return new ValidatedSequenceNode(list);

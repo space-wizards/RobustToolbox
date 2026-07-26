@@ -42,7 +42,7 @@ public sealed partial class EntityDeserializer :
 
     public const int NewestSupportedVersion = EntitySerializer.MapFormatVersion;
 
-    public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
+    public SerializationManager.SerializerProvider SerializerProvider { get; }
 
     [Dependency] public EntityManager EntMan = default!;
     [Dependency] public IGameTiming Timing = default!;
@@ -126,6 +126,7 @@ public sealed partial class EntityDeserializer :
         deps.InjectDependencies(this);
         _log = _logMan.GetSawmill("entity_deserializer");
         _log.Level = LogLevel.Info;
+        SerializerProvider = new(_seriMan);
         SerializerProvider.RegisterSerializer(this);
         Data = data;
         Options = options;

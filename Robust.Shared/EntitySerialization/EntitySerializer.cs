@@ -48,7 +48,7 @@ public sealed partial class EntitySerializer : ISerializationContext,
     // v3->v4: PR #3913 - Grouped entities by prototype
     // v2->v3: PR #3468
 
-    public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
+    public SerializationManager.SerializerProvider SerializerProvider { get; }
 
     [Dependency] public EntityManager EntMan = default!;
     [Dependency] public IGameTiming Timing = default!;
@@ -167,6 +167,7 @@ public sealed partial class EntitySerializer : ISerializationContext,
         dependency.InjectDependencies(this);
 
         _log = _logMan.GetSawmill("entity_serializer");
+        SerializerProvider = new(_serialization);
         SerializerProvider.RegisterSerializer(this);
 
         _metaName = _factory.GetComponentName<MetaDataComponent>();

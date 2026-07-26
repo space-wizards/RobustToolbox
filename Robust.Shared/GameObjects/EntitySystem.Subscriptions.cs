@@ -262,7 +262,7 @@ namespace Robust.Shared.GameObjects
         {
             public override void Unsubscribe(EntitySystem sys, IEventBus bus)
             {
-                bus.UnsubscribeLocalEvent<TComp, TBase>();
+                bus.UnsubscribeLocalEvent<TComp, TBase>(sys.GetType());
             }
         }
 

@@ -67,15 +67,20 @@ namespace Robust.Shared.GameObjects
                 regs = regs.Concat(comps
                     .Select(c => _eventSubs[c.Value])
                     .Where(c => c != null)
-                    .Select(c => c![eventType]));
+                    .SelectMany(c => EnumerateChain(c![eventType])));
             }
 
             // A hard problem in EventBus' design is that ordering is keyed on a single Type instance
             // (probably just the type of the EntitySystem).
-            // This is problematic if a system listens to the same directed event multiple times for the same component,
-            // as there are now two distinct subscriptions with the same key.
+            // This is problematic if a system listens to the same directed event on several components,
+            // as there are now multiple distinct subscriptions with the same key.
             // To solve this, I decided that *this is allowed*, but all ordering on the same key must be the same.
             // So you can't have different Before/After on two subscriptions to an event on the same system.
+            //
+            // The corollary is that two subscriptions sharing a key cannot be ordered relative to each other, and
+            // nothing can be slotted in between them. That is why a single registrar may not subscribe twice to the
+            // same component & event pair, and why registrars that do stack on one pair must order themselves
+            // explicitly. Both are enforced at subscription time, see EntAddSubscription.
             //
             // Group by ordering types, also filter out un-ordered ones.
 

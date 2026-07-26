@@ -59,7 +59,24 @@ namespace Robust.Shared.GameObjects
 
         #endregion
 
+        /// <summary>
+        /// Removes <b>every</b> subscription to <typeparamref name="TEvent"/> on <typeparamref name="TComp"/>,
+        /// no matter which registrar added them.
+        /// </summary>
+        /// <seealso cref="UnsubscribeLocalEvent{TComp,TEvent}(Type)"/>
         void UnsubscribeLocalEvent<TComp, TEvent>()
+            where TComp : IComponent
+            where TEvent : notnull;
+
+        /// <summary>
+        /// Removes only the subscription that <paramref name="owner"/> registered, leaving subscriptions that other
+        /// registrars made to the same component &amp; event pair intact. Does nothing if that registrar has no
+        /// subscription.
+        /// </summary>
+        /// <param name="owner">
+        /// The <c>orderType</c> that was passed when subscribing, generally the subscribing system's type.
+        /// </param>
+        void UnsubscribeLocalEvent<TComp, TEvent>(Type owner)
             where TComp : IComponent
             where TEvent : notnull;
 
@@ -313,6 +330,23 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : notnull
         {
+            EntRemoveSubscription<TComp, TEvent>(null);
+        }
+
+        /// <inheritdoc />
+        public void UnsubscribeLocalEvent<TComp, TEvent>(Type owner)
+            where TComp : IComponent
+            where TEvent : notnull
+        {
+            ArgumentNullException.ThrowIfNull(owner);
+            EntRemoveSubscription<TComp, TEvent>(owner);
+        }
+
+        /// <param name="owner">Registrar whose subscription to remove, or null to remove all of them.</param>
+        private void EntRemoveSubscription<TComp, TEvent>(Type? owner)
+            where TComp : IComponent
+            where TEvent : notnull
+        {
             if (!_comFac.TryGetRegistration(typeof(TComp), out _))
             {
                 if (!IgnoreUnregisteredComponents)
@@ -325,12 +359,60 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Subscription locked.");
 
             var i = CompIdx.ArrayIndex<TComp>();
+            var eventType = typeof(TEvent);
+            var compSubs = _eventSubsUnfrozen[i]!;
+            var compEventSubs = _compEventSubsUnfrozen[i]!;
 
-            _eventSubsUnfrozen[i]!.Remove(typeof(TEvent));
-            _compEventSubsUnfrozen[i]!.Remove(typeof(TEvent));
+            if (owner == null)
+            {
+                compSubs.Remove(eventType);
+                compEventSubs.Remove(eventType);
+            }
+            else
+            {
+                if (compEventSubs.TryGetValue(eventType, out var compEvent) && compEvent.Owner == owner)
+                    compEventSubs.Remove(eventType);
 
-            if (_eventSubsInv.TryGetValue(typeof(TEvent), out var t))
+                RemoveOwnedSubscription(compSubs, eventType, owner);
+            }
+
+            // Other registrars may still be subscribed in which case the component has to stay in the inverse map
+            if (!compSubs.ContainsKey(eventType) && _eventSubsInv.TryGetValue(eventType, out var t))
                 t.Remove(CompIdx.Index<TComp>());
+        }
+
+        /// <summary>
+        /// Unlink the registration belonging to <paramref name="owner"/> from a chain leaving the rest of it alone
+        /// </summary>
+        private static void RemoveOwnedSubscription(
+            Dictionary<Type, DirectedRegistration> compSubs,
+            Type eventType,
+            Type owner)
+        {
+            if (!compSubs.TryGetValue(eventType, out var head))
+                return;
+
+            if (head.Owner == owner)
+            {
+                if (head.Next == null)
+                    compSubs.Remove(eventType);
+                else
+                    compSubs[eventType] = head.Next;
+
+                head.Next = null;
+                return;
+            }
+
+            for (var reg = head; reg.Next != null; reg = reg.Next)
+            {
+                if (reg.Next.Owner != owner)
+                    continue;
+
+                var removed = reg.Next;
+                reg.Next = removed.Next;
+                removed.Next = null;
+                return;
+            }
         }
 
         private void ComFacOnComponentsAdded(ComponentRegistration[] regs)
@@ -370,7 +452,7 @@ namespace Robust.Shared.GameObjects
                 .ToArray();
 
             _compEventSubs = TrimNull(_compEventSubsUnfrozen)
-                .Select(dict => dict?.ToFrozenDictionary()!)
+                .Select(dict => dict?.ToFrozenDictionary(x => x.Key, x => x.Value.Handler)!)
                 .ToArray();
 
             CalcOrdering();
@@ -403,8 +485,8 @@ namespace Robust.Shared.GameObjects
 
             if (eventType.GetCustomAttribute<ComponentEventAttribute>() is { } attr)
             {
-                if (!_compEventSubsUnfrozen[compType.Value]!.TryAdd(eventType, handler))
-                    throw new InvalidOperationException($"Duplicate Subscriptions for comp={compTypeObj}, event={eventType.Name}");
+                if (!_compEventSubsUnfrozen[compType.Value]!.TryAdd(eventType, new CompEventRegistration(handler, orderType)))
+                    throw new InvalidOperationException(DuplicateSubMessage(compTypeObj, eventType, orderType));
 
                 // An exclusive component-event is only raised via RaiseComponentEvent, hence it don't need a normal
                 // directed event subscription
@@ -413,13 +495,96 @@ namespace Robust.Shared.GameObjects
             }
 
             var orderData = orderType == null ? null : CreateOrderingData(orderType, before, after);
-            var reg = new DirectedRegistration(orderData, handler);
+            var reg = new DirectedRegistration(orderData, handler, orderType);
 
-            if (!_eventSubsUnfrozen[compType.Value]!.TryAdd(eventType, reg))
-                throw new InvalidOperationException($"Duplicate Subscriptions for comp={compTypeObj}, event={eventType.Name}");
+            var compSubs = _eventSubsUnfrozen[compType.Value]!;
+            if (compSubs.TryGetValue(eventType, out var head))
+                AppendSubscription(head, reg, compTypeObj, eventType);
+            else
+                compSubs.Add(eventType, reg);
 
             RegisterCommon(eventType, reg.Ordering, out _);
             _eventSubsInv.GetOrNew(eventType).Add(compType);
+        }
+
+        /// <summary>
+        /// Append a registration to the end of an existing chain for the same component &amp; event pair.
+        /// </summary>
+        /// <remarks>
+        /// Several registrars stacking on one pair is allowed, but every pair of them must declare an explicit order,
+        /// as a chain's dispatch order would otherwise silently depend on system initialization order. Only the first
+        /// registrar may omit ordering, which leaves it running first unless a later one asks to go before it.
+        /// A single registrar may not stack on itself at all, ordering is keyed on the registrar type, so its two
+        /// subscriptions could neither be told apart nor be ordered relative to each other. Subscriptions made
+        /// straight on the bus without an order type have no identity either, and likewise never stack.
+        /// </remarks>
+        private static void AppendSubscription(
+            DirectedRegistration head,
+            DirectedRegistration reg,
+            Type compTypeObj,
+            Type eventType)
+        {
+            var last = head;
+            while (true)
+            {
+                if (reg.Owner == null || last.Owner == null || last.Owner == reg.Owner)
+                    throw new InvalidOperationException(DuplicateSubMessage(compTypeObj, eventType, reg.Owner));
+
+                if (!DeclaresOrder(reg, last))
+                    throw new InvalidOperationException(UnorderedSubMessage(compTypeObj, eventType, reg, last));
+
+                if (last.Next == null)
+                    break;
+
+                last = last.Next;
+            }
+
+            last.Next = reg;
+        }
+
+        /// <summary>
+        /// Whether the relative order of two registrations is pinned down by either one's Before/After.
+        /// </summary>
+        private static bool DeclaresOrder(DirectedRegistration a, DirectedRegistration b)
+        {
+            return References(a.Ordering, b.Owner) || References(b.Ordering, a.Owner);
+
+            static bool References(OrderingData? ordering, Type? owner)
+            {
+                return ordering != null
+                       && (Array.IndexOf(ordering.Before, owner) >= 0
+                           || Array.IndexOf(ordering.After, owner) >= 0);
+            }
+        }
+
+        private static string DuplicateSubMessage(Type componentType, Type eventType, Type? owner)
+        {
+            var registrar = owner?.Name ?? "unordered subscription";
+            return $"Duplicate subscription: comp={componentType.Name}, event={eventType.Name}, registrar={registrar}.";
+        }
+
+        private static string UnorderedSubMessage(
+            Type componentType,
+            Type eventType,
+            DirectedRegistration registration,
+            DirectedRegistration existing)
+        {
+            return
+                $"{registration.Owner!.Name} and {existing.Owner!.Name} subscribe to " +
+                $"comp={componentType.Name}, event={eventType.Name} without declaring an order. " +
+                $"Specify before/after: typeof({existing.Owner.Name}).";
+        }
+
+        /// <summary>
+        /// Walk a chain of directed registrations, starting at <paramref name="reg"/>
+        /// </summary>
+        private static IEnumerable<DirectedRegistration> EnumerateChain(DirectedRegistration? reg)
+        {
+            while (reg != null)
+            {
+                yield return reg;
+                reg = reg.Next;
+            }
         }
 
         private void EntAddEntity(EntityUid euid)
@@ -569,8 +734,19 @@ namespace Robust.Shared.GameObjects
             {
                 if (!_entMan.TryGetComponent(euid, compIdx, out var comp))
                     continue;
+
                 var compSubs = _eventSubs[compIdx.Value];
-                compSubs[eventType].Handler(euid, comp, ref args);
+
+                // Requiring explicit ordering on stacked subscriptions means any chain longer than one makes its
+                // event ordered, so in practice this loop only ever walks a single registration here. It stays a
+                // loop anyway: it costs one null check on a hot path and keeps dispatch correct either way.
+                // Deleted is re-checked between handlers, as an earlier one may have removed the component.
+                DirectedRegistration? reg = compSubs[eventType];
+                do
+                {
+                    reg.Handler(euid, comp, ref args);
+                    reg = reg.Next;
+                } while (reg != null && !comp.Deleted);
             }
         }
 
@@ -594,15 +770,18 @@ namespace Robust.Shared.GameObjects
                 idx = entry.Next;
                 var comp = _entMan.GetComponentInternal(euid, entry.Component);
                 var compSubs = _eventSubs[entry.Component.Value];
-                var reg = compSubs[eventType];
 
-                found.Add(new OrderedEventDispatch(
-                    (ref Unit ev) =>
-                    {
-                        if (!comp.Deleted)
-                            reg.Handler(euid, comp, ref ev);
-                    },
-                    reg.Order));
+                for (DirectedRegistration? reg = compSubs[eventType]; reg != null; reg = reg.Next)
+                {
+                    var current = reg;
+                    found.Add(new OrderedEventDispatch(
+                        (ref Unit ev) =>
+                        {
+                            if (!comp.Deleted)
+                                current.Handler(euid, comp, ref ev);
+                        },
+                        current.Order));
+                }
             }
         }
 
@@ -641,10 +820,22 @@ namespace Robust.Shared.GameObjects
             _eventSubsInv = null!;
         }
 
-        internal sealed class DirectedRegistration(OrderingData? ordering, DirectedEventHandler handler)
+        internal sealed class DirectedRegistration(OrderingData? ordering, DirectedEventHandler handler, Type? owner)
             : OrderedRegistration(ordering)
         {
             public readonly DirectedEventHandler Handler = handler;
+
+            /// <summary>
+            /// The type that registered this subscription, generally the subscribing <see cref="EntitySystem"/>.
+            /// Used to stop a registrar from subscribing twice and to let it unsubscribe without clobbering the
+            /// other registrars. Null for subscriptions made straight on the bus with no ordering info.
+            /// </summary>
+            public readonly Type? Owner = owner;
+
+            /// <summary>
+            /// Next registration for the same component &amp; event pair, in subscription order. Null at the tail.
+            /// </summary>
+            public DirectedRegistration? Next;
 
             public void SetOrder(int order)
             {

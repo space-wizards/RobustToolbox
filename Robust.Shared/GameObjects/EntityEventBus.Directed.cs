@@ -737,16 +737,14 @@ namespace Robust.Shared.GameObjects
 
                 var compSubs = _eventSubs[compIdx.Value];
 
-                // Requiring explicit ordering on stacked subscriptions means any chain longer than one makes its
-                // event ordered, so in practice this loop only ever walks a single registration here. It stays a
-                // loop anyway: it costs one null check on a hot path and keeps dispatch correct either way.
-                // Deleted is re-checked between handlers, as an earlier one may have removed the component.
-                DirectedRegistration? reg = compSubs[eventType];
-                do
-                {
-                    reg.Handler(euid, comp, ref args);
-                    reg = reg.Next;
-                } while (reg != null && !comp.Deleted);
+                // Stacked subscriptions have to declare an order, which marks their event ordered, so a chain longer
+                // than one is only ever reached through EntCollectOrdered and there is nothing to walk here. Were that
+                // to stop holding, the extra handlers would silently never run, hence the assert. It is deliberately
+                // kept off the dispatch line, so that this method compiles down to exactly what it was before
+                // stacking existed; the repeated lookup only happens in DEBUG.
+                DebugTools.AssertNull(compSubs[eventType].Next);
+
+                compSubs[eventType].Handler(euid, comp, ref args);
             }
         }
 

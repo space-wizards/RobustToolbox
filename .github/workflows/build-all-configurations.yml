@@ -16,40 +16,9 @@ jobs:
   build:
     strategy:
       matrix:
-        include:
-          - runtime: win-x64
-            targetOS: Windows
-            allowFailure: false
-          - runtime: win-arm64
-            targetOS: Windows
-            allowFailure: false
-          - runtime: osx-x64
-            targetOS: MacOS
-            allowFailure: false
-          - runtime: osx-arm64
-            targetOS: MacOS
-            allowFailure: false
-          - runtime: linux-x64
-            targetOS: Linux
-            allowFailure: false
-          - runtime: linux-arm64
-            targetOS: Linux
-            allowFailure: false
-          - runtime: linux-musl-x64
-            targetOS: Linux
-            allowFailure: false
-          - runtime: linux-musl-arm64
-            targetOS: Linux
-            allowFailure: false
-          - runtime: freebsd-x64
-            targetOS: FreeBSD
-            allowFailure: true
-          - runtime: freebsd-arm64
-            targetOS: FreeBSD
-            allowFailure: true
+        targetOS: [Windows, Linux, MacOS]
 
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.allowFailure }}
 
     steps:
       - uses: actions/checkout@v4.2.2
@@ -62,16 +31,32 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Install dependencies
-        run: dotnet restore --runtime ${{ matrix.runtime }} /p:TargetOS=${{ matrix.targetOS }}
-      - name: Build Debug Client
-        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
-      - name: Build Debug Server
-        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
-      - name: Build Tools Client
-        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
-      - name: Build Tools Server
-        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
-      - name: Build Release Client
-        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
-      - name: Build Release Server
-        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+        run: dotnet restore
+      - name: Build Debug
+        run: dotnet build --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
+      - name: Build Tools
+        run: dotnet build --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
+      - name: Build Release
+        run: dotnet build --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
+
+  cross-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse version
+        id: parse_version
+        shell: pwsh
+        run: |
+          $ver = [regex]::Match($env:GITHUB_REF, "refs/tags/v?(.+)").Groups[1].Value
+          echo ("::set-output name=version::{0}" -f $ver)
+
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: true
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4.1.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Package client
+        run: Tools/package_client_build.py

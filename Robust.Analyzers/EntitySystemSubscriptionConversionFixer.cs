@@ -112,7 +112,7 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         InvocationExpressionSyntax invocationSyntax)
     {
         // Remove the SubscribeWhateverEvent invocation from the Initialize method.
-        editor.RemoveNode(invocationSyntax.Parent!, SyntaxRemoveOptions.KeepNoTrivia);
+        editor.RemoveNode(invocationSyntax.Parent!, SyntaxRemoveOptions.KeepUnbalancedDirectives);
     }
 
     /// <summary>

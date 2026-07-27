@@ -125,7 +125,7 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
     }
 
     [Test]
-    [Description("Tests that subscriptions using anonymous delegates are not flagged as elligible for conversion.")]
+    [Description("Tests that a subscription using an anonymous delegate is not flagged as elligible for conversion.")]
     public async Task IgnoreAnonymousDelegate()
     {
         const string code = """
@@ -141,6 +141,35 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
                 }
 
                 private void OnTest(EntityUid uid, TestComponent comp) { }
+            }
+            """;
+
+        await Verifier(code, []);
+    }
+
+    [Test]
+    [Description("Tests that a subscription in a method containing preprocessor directives is not flagged as elligible for conversion.")]
+    public async Task IgnoreWithPreprocessorDirectives()
+    {
+        const string code = """
+            
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+
+            #if DEBUG
+                    SubscribeLocalEvent<TestComponent, TestEvent>(OnTest);
+            #else
+                    SubscribeLocalEvent<TestComponent, TestEvent>(OnTest2);
+            #endif
+                }
+
+                private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args) { }
+                private void OnTest2(EntityUid uid, TestComponent comp, ref TestEvent args) { }
             }
             """;
 

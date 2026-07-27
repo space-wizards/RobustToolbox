@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
@@ -75,6 +76,11 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
             return;
 
         if (method.BlockBody is null)
+            return;
+
+        // If the Initialize method contains any sort of conditional directives,
+        // we consider it too complicated for automatic conversion.
+        if (method.Syntax.ContainsDirective(SyntaxKind.IfDirectiveTrivia | SyntaxKind.ElseDirectiveTrivia | SyntaxKind.ElifDirectiveTrivia | SyntaxKind.EndIfDirectiveTrivia))
             return;
 
         // Examine each operation within the Initialize method body

@@ -38,3 +38,25 @@ jobs:
         run: dotnet build --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
       - name: Build Release
         run: dotnet build --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
+
+  cross-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse version
+        id: parse_version
+        shell: pwsh
+        run: |
+          $ver = [regex]::Match($env:GITHUB_REF, "refs/tags/v?(.+)").Groups[1].Value
+          echo ("::set-output name=version::{0}" -f $ver)
+
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: true
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4.1.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Package client
+        run: Tools/package_client_build.py

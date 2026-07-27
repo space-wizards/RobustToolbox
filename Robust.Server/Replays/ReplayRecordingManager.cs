@@ -9,9 +9,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.Replays;
 
-internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, IServerReplayRecordingManager
+internal sealed partial class ReplayRecordingManager : SharedReplayRecordingManager, IServerReplayRecordingManager
 {
-    [Dependency] private readonly IEntitySystemManager _sysMan = default!;
+    [Dependency] private IEntitySystemManager _sysMan = default!;
 
     private PvsSystem _pvs = default!;
     private PvsSession _pvsSession = new(default!, new ResizableMemoryRegion<PvsData>(1)) { DisableCulling = true };
@@ -47,7 +47,7 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, ISe
 
         _pvs.ComputeSessionState(_pvsSession);
         Update(_pvsSession.State);
-        _pvsSession.ClearState();
+        _pvs.ClearSessionState(_pvsSession);
         _pvsSession.LastReceivedAck = Timing.CurTick;
     }
 
@@ -55,6 +55,6 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, ISe
     {
         base.Reset();
         _pvsSession.LastReceivedAck = GameTick.Zero;
-        _pvsSession.ClearState();
+        _pvs.ClearSessionState(_pvsSession);
     }
 }

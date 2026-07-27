@@ -11,4 +11,12 @@
         This is also preferable if you may have already looked up the component, saving on lookup time.
     </remarks>
   </entry>
+  <entry name="SingletonPauseRemark">
+    <remarks>
+      <para>
+        This API does not obey <see cref="MetaDataComponent.EntityPaused"/>.
+        If you need to "pause" singleton entities, use an extra marker component that you remove when "pausing" them.
+      </para>
+    </remarks>
+  </entry>
 </entries>

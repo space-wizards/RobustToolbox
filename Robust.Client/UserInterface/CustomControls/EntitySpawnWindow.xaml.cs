@@ -19,8 +19,8 @@ namespace Robust.Client.UserInterface.CustomControls
     {
         private static readonly LocId NoDescriptionMessage = "entity-spawn-window-no-description";
 
-        [Dependency] private readonly ILocalizationManager _loc = default!;
-        [Dependency] private readonly IPlacementManager _placement = default!;
+        [Dependency] private ILocalizationManager _loc = default!;
+        [Dependency] private IPlacementManager _placement = default!;
 
         public EntitySpawnButton? SelectedButton;
         public EntityPrototype? SelectedPrototype;

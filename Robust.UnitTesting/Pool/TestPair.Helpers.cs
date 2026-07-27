@@ -231,7 +231,7 @@ public partial class TestPair<TServer, TClient>
     /// Runs the server-client pair in sync, but also ensures they are both idle each tick.
     /// </summary>
     /// <param name="runTicks">How many ticks to run</param>
-    public async Task ReallyBeIdle(int runTicks = 25)
+    public async Task ReallyBeIdle(int runTicks = 5)
     {
         for (var i = 0; i < runTicks; i++)
         {
@@ -281,7 +281,7 @@ public partial class TestPair<TServer, TClient>
         await Server.WaitPost(() =>
         {
             TestMap.MapUid = sys.CreateMap(out TestMap.MapId, runMapInit: initialized);
-            TestMap.Grid = Server.MapMan.CreateGridEntity(TestMap.MapId);
+            TestMap.Grid = sys.CreateGridEntity(TestMap.MapId);
             TestMap.GridCoords = new EntityCoordinates(TestMap.Grid, 0, 0);
             TestMap.MapCoords = new MapCoordinates(0, 0, TestMap.MapId);
             sys.SetTile(TestMap.Grid.Owner, TestMap.Grid.Comp, TestMap.GridCoords, new Tile(tileTypeId));

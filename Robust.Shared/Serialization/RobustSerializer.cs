@@ -15,9 +15,9 @@ namespace Robust.Shared.Serialization
 {
     internal abstract partial class RobustSerializer : IRobustSerializerInternal
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] protected readonly IRobustMappedStringSerializer MappedStringSerializer = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] protected IRobustMappedStringSerializer MappedStringSerializer = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private readonly Dictionary<Type, Dictionary<string, Type?>> _cachedSerialized = new();
 

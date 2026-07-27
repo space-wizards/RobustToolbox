@@ -9,6 +9,34 @@ namespace Robust.Shared.Analyzers;
 ///     will automatically be replicated using component states to clients. Systems which need to have more intelligent
 ///     component state replication beyond just directly setting variables should not use this attribute.
 /// </summary>
+/// <example>
+/// <code>
+///     // In shared code...
+///     [RegisterComponent, AutoGenerateComponentState]
+///     public sealed class MyComponent : Component
+///     {
+///         // Indicate to the generator we want to network this field.
+///         // Doesn't need to be a DataField for this to work!
+///         [AutoNetworkedField]
+///         public int Counter;
+///     }
+///     <br/>
+///     public sealed class MySystem : EntitySystem
+///     {
+///         public void AddToCounter(Entity&lt;MyComponent&gt; entity)
+///         {
+///             entity.Comp.Counter += 1;
+///             <br/>
+///             // Dirty the entity, and the auto-generated state handling will do the rest to ensure
+///             // all our AutoNetworkedFields are sent to the client.
+///             Dirty(entity);
+///         }
+///     }
+/// </code>
+/// </example>
+/// <seealso cref="AutoNetworkedFieldAttribute"/>
+/// <seealso cref="AfterAutoHandleStateEvent"/>
+/// <seealso cref="ComponentState"/>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 [BaseTypeRequired(typeof(IComponent))]
 public sealed class AutoGenerateComponentStateAttribute : Attribute

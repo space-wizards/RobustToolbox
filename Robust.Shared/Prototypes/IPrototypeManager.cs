@@ -176,19 +176,6 @@ public interface IPrototypeManager
     bool Resolve([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
 
     /// <summary>
-    /// Retrieve an <see cref="EntityPrototype"/> by ID, optionally logging an error if it does not exist.
-    /// </summary>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if it does not.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex(
-        [ForbidLiteral] EntProtoId id,
-        [NotNullWhen(true)] out EntityPrototype? prototype,
-        bool logError = true);
-
-    /// <summary>
     /// Resolve an <see cref="EntityPrototype"/> by ID.
     /// </summary>
     /// <remarks>
@@ -235,17 +222,6 @@ public interface IPrototypeManager
     /// <returns>True if the prototype exists, false if it does not.</returns>
     /// <seealso cref="TryIndex{T}(ProtoId{T},out T?)"/>
     bool Resolve<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
-
-    /// <summary>
-    /// Retrieve a prototype by ID, optionally logging an error if it does not exist.
-    /// </summary>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if it does not.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-        where T : class, IPrototype;
 
     /// <summary>
     /// Resolve a prototype by ID.
@@ -300,25 +276,6 @@ public interface IPrototypeManager
     bool Resolve([ForbidLiteral] EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
 
     /// <summary>
-    /// Retrieve an <see cref="EntityPrototype"/> by ID, gracefully handling null,
-    /// and optionally logging an error if it does not exist.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// No error is logged if <paramref name="id"/> is null.
-    /// </para>
-    /// </remarks>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex(
-        [ForbidLiteral] EntProtoId? id,
-        [NotNullWhen(true)] out EntityPrototype? prototype,
-        bool logError = true);
-
-    /// <summary>
     /// Resolve an <see cref="EntityPrototype"/> by ID, gracefully handling null.
     /// </summary>
     /// <remarks>
@@ -370,22 +327,6 @@ public interface IPrototypeManager
     bool Resolve<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
 
     /// <summary>
-    /// Retrieve a prototype by ID, gracefully handling null,
-    /// and optionally logging an error if it does not exist.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// No error is logged if <paramref name="id"/> is null.
-    /// </para>
-    /// </remarks>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype;
-
-    /// <summary>
     /// Resolve a prototype by ID, gracefully handling null.
     /// </summary>
     /// <remarks>
@@ -413,7 +354,10 @@ public interface IPrototypeManager
     // ReSharper restore MethodOverloadWithOptionalParameter
 
     bool HasMapping<T>(string id);
+
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
+
+    bool TryGetMapping<T>(string id, [NotNullWhen(true)] out MappingDataNode? mappings);
 
     /// <summary>
     ///     Returns whether a prototype kind <param name="kind"/> exists.
@@ -490,7 +434,8 @@ public interface IPrototypeManager
     /// This will validate all known to <see cref="IReflectionManager"/>
     /// </summary>
     /// <remarks>
-    /// This will validate any field that has either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
+    /// This will validate any field that uses <see cref="ProtoId"/> or <see cref="EntProtoId"/>.
+    /// It also looks for these obsolete attributes: either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
     /// <see cref="DataFieldAttribute"/> with a <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.
     /// </remarks>
     /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection

@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
@@ -30,9 +34,18 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<T>? instanceProvider = null);
 
+        private delegate object? ReadDelegate(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            bool notNullableOverride = false
+        );
+
+        private MethodInfo _read = default!;
         private readonly ConcurrentDictionary<(Type type, bool notNullableOverride), ReadBoxingDelegate> _readBoxingDelegates = new();
         private readonly ConcurrentDictionary<(Type baseType, Type actualType, Type node, bool notNullableOverride), object> _readGenericBaseDelegates = new();
         private readonly ConcurrentDictionary<(Type value, Type node, bool notNullableOverride), object> _readGenericDelegates = new();
+        private readonly ConcurrentDictionary<Type, Func<DataNode, SerializationHookContext, ISerializationContext?, bool, object>> _reads = new();
 
         public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false)
         {
@@ -42,6 +55,492 @@ namespace Robust.Shared.Serialization.Manager
                 context,
                 instanceProvider,
                 notNullableOverride);
+        }
+
+        public T[] ReadArray<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<T[]>? instanceProvider = null,
+            bool notNullableOverride = false)
+        {
+            var baseType = typeof(T);
+            var nullable = baseType.IsNullable();
+            var isValueType = baseType.IsValueType;
+
+            T[]? val = null;
+            if (instanceProvider != null)
+                val ??= [];
+
+            if (context != null)
+            {
+                switch (node)
+                {
+                    case MappingDataNode mapping:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializerArray<ITypeReader<T[], MappingDataNode>, T, MappingDataNode>(
+                                out var serializer))
+                        {
+                            val = serializer.Read(this, mapping, DependencyCollection, hookCtx, context, instanceProvider);
+                            if (notNullableOverride)
+                                Debug.Assert(val != null, "Reader call returned null value! Forbidden!");
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+                        break;
+                    }
+                    case SequenceDataNode sequence:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializerArray<ITypeReader<T[], SequenceDataNode>, T, SequenceDataNode>(
+                                out var serializer))
+                        {
+                            val = serializer.Read(this, sequence, DependencyCollection, hookCtx, context, instanceProvider);
+                            if (notNullableOverride)
+                                Debug.Assert(val != null, "Reader call returned null value! Forbidden!");
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+                        break;
+                    }
+                    case ValueDataNode value:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializerArray<ITypeReader<T[], ValueDataNode>, T, ValueDataNode>(
+                                out var serializer))
+                        {
+                            val = serializer.Read(this, value, DependencyCollection, hookCtx, context, instanceProvider);
+                            if (notNullableOverride)
+                                Debug.Assert(val != null, "Reader call returned null value! Forbidden!");
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                RegularRead();
+            }
+
+            if (node.IsNull)
+            {
+                if (nullable && !notNullableOverride)
+                    val = null;
+                else
+                    throw new NullNotAllowedException();
+            }
+
+            if (!nullable && !isValueType && val == null)
+                throw new ReadCallReturnedNullException();
+
+            return val!;
+
+            void RegularRead()
+            {
+                switch (node)
+                {
+                    case MappingDataNode mapping:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializerArray<ITypeReader<T[], MappingDataNode>, T, MappingDataNode>(out var reader))
+                        {
+                            val = Read<T[], MappingDataNode>(reader, mapping, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                    case SequenceDataNode sequence:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializerArray<ITypeReader<T[], SequenceDataNode>, T, SequenceDataNode>(out var reader))
+                        {
+                            val = Read<T[], SequenceDataNode>(reader, sequence, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                    case ValueDataNode value:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializerArray<ITypeReader<T[], ValueDataNode>, T, ValueDataNode>(out var reader))
+                        {
+                            val = Read<T[], ValueDataNode>(reader, value, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                }
+
+                val = node switch
+                {
+                    SequenceDataNode sequence => ReadArraySequence<T>(sequence, hookCtx, context),
+                    ValueDataNode value => ReadArrayValue<T>(value, hookCtx, context),
+                    _ => throw new ArgumentException($"Cannot read array from data node type {node.GetType()}")
+                };
+            }
+        }
+
+        public T ReadStructDefinition<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<T>? instanceProvider = null,
+            bool notNullableOverride = false)
+            where T : struct, ISerializationGenerated<T>
+        {
+            var baseType = typeof(T);
+            var nullable = baseType.IsNullable();
+
+            T val = default!;
+
+            if (instanceProvider != null)
+                val = instanceProvider.Invoke();
+
+            if (context != null)
+            {
+                switch (node)
+                {
+                    case MappingDataNode mapping:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, MappingDataNode>, T, MappingDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, MappingDataNode>(
+                                serializer,
+                                mapping,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+                        break;
+                    }
+                    case SequenceDataNode sequence:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, SequenceDataNode>, T, SequenceDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, SequenceDataNode>(
+                                serializer,
+                                sequence,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+                        break;
+                    }
+                    case ValueDataNode value:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, ValueDataNode>, T, ValueDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, ValueDataNode>(
+                                serializer,
+                                value,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                RegularRead();
+            }
+
+            if (node.IsNull)
+            {
+                if (nullable && !notNullableOverride)
+                    val = default!;
+                else if (baseType == typeof(EntityUid))
+                    val = default!;
+                else
+                    throw new NullNotAllowedException();
+            }
+
+            return val;
+
+            void RegularRead()
+            {
+                var hasSerializer = false;
+                switch (node)
+                {
+                    case MappingDataNode mapping:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, MappingDataNode>, T, MappingDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, MappingDataNode>(reader, mapping, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                    case SequenceDataNode sequence:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, SequenceDataNode>, T, SequenceDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, SequenceDataNode>(reader, sequence, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                    case ValueDataNode value:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, ValueDataNode>, T, ValueDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, ValueDataNode>(reader, value, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                }
+
+                if (!hasSerializer)
+                {
+                    if (baseType.IsArray)
+                    {
+                        val = node switch
+                        {
+                            SequenceDataNode sequence => (T)(object)ReadArraySequence<T>(sequence, hookCtx, context),
+                            ValueDataNode value => (T)(object)ReadArrayValue<T>(value, hookCtx, context),
+                            _ => throw new ArgumentException($"Cannot read array from data node type {node.GetType()}")
+                        };
+                    }
+                    else if (baseType.IsEnum)
+                    {
+                        val = node switch
+                        {
+                            SequenceDataNode sequence => ReadEnumSequence<T>(sequence),
+                            ValueDataNode value => ReadEnumValue<T>(value),
+                            _ => throw new InvalidNodeTypeException(
+                                $"Cannot serialize node as {baseType}, unsupported node type {node.GetType()}")
+                        };
+                    }
+                    else if (baseType.IsAssignableTo(typeof(ISelfSerialize)))
+                    {
+                        switch (node)
+                        {
+                            case ValueDataNode value:
+                            {
+                                instanceProvider ??= T.StaticInstantiate;
+                                val = instanceProvider();
+                                var selfSerialize = (ISelfSerialize) val;
+                                selfSerialize.Deserialize(value.Value);
+                                val = (T) selfSerialize;
+                                break;
+                            }
+                            default:
+                                throw new InvalidNodeTypeException($"Cannot read {nameof(ISelfSerialize)} from node type {node.GetType()}. Expected {nameof(ValueDataNode)}");
+                        }
+                    }
+                    else
+                    {
+                        switch (node)
+                        {
+                            case MappingDataNode mapping:
+                            {
+                                instanceProvider ??= T.StaticInstantiate;
+                                val = instanceProvider();
+                                T.Read(ref val, mapping, this, hookCtx, context);
+                                break;
+                            }
+                            case ValueDataNode value:
+                            {
+                                instanceProvider ??= T.StaticInstantiate;
+                                val = instanceProvider();
+                                if (value.Value != string.Empty)
+                                    throw new ArgumentException($"No mapping node provided for type {typeof(T)} at line: {node.Start.Line}");
+
+                                break;
+                            }
+                            default:
+                                throw new ArgumentException($"No mapping or value node provided for type {baseType}.");
+                        }
+
+                        RunAfterHook(val, hookCtx);
+                    }
+                }
+            }
+        }
+
+        public T ReadEnum<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<T>? instanceProvider = null,
+            bool notNullableOverride = false)
+            where T : struct, Enum
+        {
+            var baseType = typeof(T);
+            var nullable = baseType.IsNullable();
+
+            T val = default!;
+
+            if (instanceProvider != null)
+                val = instanceProvider.Invoke();
+
+            if (context != null)
+            {
+                switch (node)
+                {
+                    case MappingDataNode mapping:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, MappingDataNode>, T, MappingDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, MappingDataNode>(
+                                serializer,
+                                mapping,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+                        break;
+                    }
+                    case SequenceDataNode sequence:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, SequenceDataNode>, T, SequenceDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, SequenceDataNode>(
+                                serializer,
+                                sequence,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+                        break;
+                    }
+                    case ValueDataNode value:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, ValueDataNode>, T, ValueDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, ValueDataNode>(
+                                serializer,
+                                value,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                RegularRead();
+            }
+
+            if (node.IsNull)
+            {
+                if (nullable && !notNullableOverride)
+                    val = default!;
+                else
+                    throw new NullNotAllowedException();
+            }
+
+            return val;
+
+            void RegularRead()
+            {
+                var hasSerializer = false;
+                switch (node)
+                {
+                    case MappingDataNode mapping:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, MappingDataNode>, T, MappingDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, MappingDataNode>(reader, mapping, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                    case SequenceDataNode sequence:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, SequenceDataNode>, T, SequenceDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, SequenceDataNode>(reader, sequence, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                    case ValueDataNode value:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, ValueDataNode>, T, ValueDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, ValueDataNode>(reader, value, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                }
+
+                if (hasSerializer)
+                    return;
+
+                val = node switch
+                {
+                    SequenceDataNode sequence => ReadEnumSequence<T>(sequence),
+                    ValueDataNode value => ReadEnumValue<T>(value),
+                    _ => throw new InvalidNodeTypeException(
+                        $"Cannot serialize node as {baseType}, unsupported node type {node.GetType()}")
+                };
+            }
+        }
+
+        private object? ReadObject<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            bool notNullableOverride = false)
+        {
+            return Read<T>(node, hookCtx, context, null, notNullableOverride);
         }
 
         public T Read<T>(
@@ -64,10 +563,12 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     if (instanceProvider != null)
                     {
-                        var val = instanceProvider();
+                        var instantiatedVal = instanceProvider();
                         //make this debug-only? -<paul
-                        if (val?.GetType() != type) throw new InvalidInstanceReturnedException(type, val?.GetType());
-                        return val;
+                        if (instantiatedVal?.GetType() != type)
+                            throw new InvalidInstanceReturnedException(type, instantiatedVal?.GetType());
+
+                        return instantiatedVal;
                     }
 
                     return GetOrCreateInstantiator<T>(false, type)();
@@ -79,13 +580,431 @@ namespace Robust.Shared.Serialization.Manager
                     this))(node, hookCtx, context, instanceProvider);
             }
 
-            return ((ReadGenericDelegate<T>)_readGenericDelegates.GetOrAdd((typeof(T), node.GetType()!, notNullableOverride),
-                static (tuple, manager) => ReadDelegateValueFactory(tuple.value, tuple.value, tuple.node, tuple.notNullableOverride, manager), this))(node, hookCtx, context, instanceProvider);
+            var baseType = typeof(T);
+            if (baseType.IsEnum || baseType.IsArray ||
+                (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(Nullable<>)))
+            {
+                return ((ReadGenericDelegate<T>)_readGenericDelegates.GetOrAdd((typeof(T), node.GetType()!, notNullableOverride),
+                    static (tuple, manager) => ReadDelegateValueFactory(tuple.value, tuple.value, tuple.node, tuple.notNullableOverride, manager), this))(node, hookCtx, context, instanceProvider);
+            }
 
+            var nullable = baseType.IsNullable();
+
+            T val = default!;
+            if (node.IsNull)
+            {
+                if (nullable && !notNullableOverride)
+                    return default!;
+
+                if (baseType == typeof(EntityUid))
+                    return (T) (object) EntityUid.Invalid;
+
+                throw new NullNotAllowedException();
+            }
+
+            if (instanceProvider != null)
+                val = instanceProvider.Invoke();
+
+            if (context != null)
+            {
+                switch (node)
+                {
+                    // TODO actual type for type tag
+                    case MappingDataNode mapping:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, MappingDataNode>, T, MappingDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, MappingDataNode>(
+                                serializer,
+                                mapping,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+
+                        break;
+                    }
+                    case SequenceDataNode sequence:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, SequenceDataNode>, T, SequenceDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, SequenceDataNode>(
+                                serializer,
+                                sequence,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+
+                        break;
+                    }
+                    case ValueDataNode value:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, ValueDataNode>, T, ValueDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, ValueDataNode>(
+                                serializer,
+                                value,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                RegularRead();
+            }
+
+            var isValueType = baseType.IsValueType;
+            if (!nullable && !isValueType && val == null)
+                throw new ReadCallReturnedNullException();
+
+            return val;
+
+            void RegularRead()
+            {
+                var hasSerializer = false;
+                switch (node)
+                {
+                    case MappingDataNode mapping:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, MappingDataNode>, T, MappingDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, MappingDataNode>(reader, mapping, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                    case SequenceDataNode sequence:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, SequenceDataNode>, T, SequenceDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, SequenceDataNode>(reader, sequence, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                    case ValueDataNode value:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, ValueDataNode>, T, ValueDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, ValueDataNode>(reader, value, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                }
+
+                if (!hasSerializer)
+                {
+                    if (baseType.IsAssignableTo(typeof(ISelfSerialize)))
+                    {
+                        switch (node)
+                        {
+                            case ValueDataNode value:
+                            {
+                                instanceProvider ??= GetOrCreateInstantiator<T>(false);
+                                val = instanceProvider();
+                                var selfSerialize = (ISelfSerialize?) val;
+                                selfSerialize!.Deserialize(value.Value);
+                                val = (T) selfSerialize;
+                                break;
+                            }
+                            default:
+                                throw new InvalidNodeTypeException($"Cannot read {nameof(ISelfSerialize)} from node type {node.GetType()}. Expected {nameof(ValueDataNode)}");
+                        }
+                    }
+                    else
+                    {
+                        switch (node)
+                        {
+                            case MappingDataNode mapping:
+                            {
+                                var definition = GetDefinition(typeof(T));
+                                if (definition == null)
+                                    throw new ArgumentException($"No data definition found for type {baseType} with node type {node.GetType()} when reading");
+
+                                var valObj = instanceProvider == null ? definition.InstantiateObj() : instanceProvider.Invoke()!;
+                                definition.PopulateObj(ref valObj, mapping, this, hookCtx, context);
+                                val = (T) valObj;
+
+                                break;
+                            }
+                            case ValueDataNode value:
+                            {
+                                instanceProvider ??= GetOrCreateInstantiator<T>(false);
+                                val = instanceProvider();
+                                if (value.Value != string.Empty)
+                                    throw new ArgumentException($"No mapping node provided for type {baseType} at line: {node.Start.Line}");
+
+                                break;
+                            }
+                            default:
+                                throw new ArgumentException($"No mapping or value node provided for type {baseType}.");
+                        }
+
+                        RunAfterHook(val, hookCtx);
+                    }
+                }
+            }
         }
 
-        public T Read<T, TNode>(ITypeReader<T, TNode> reader, TNode node, ISerializationContext? context = null,
-            bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false)
+        public T ReadDefinition<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<T>? instanceProvider = null,
+            bool notNullableOverride = false) where T : ISerializationGenerated<T>
+        {
+            if (node.Tag?.StartsWith("!type:") ?? false)
+            {
+                var type = ResolveConcreteType(typeof(T), node.Tag.Substring(6));
+                if (type.IsInterface || type.IsAbstract)
+                {
+                    throw new ArgumentException($"Interface or abstract type used for !type node. Type: {type}");
+                }
+
+                //!type tag overrides null value on default. i did this because i couldnt come up with a usecase where you'd specify the type but have a null value. yell at me if you found one -paul
+                if (node.IsEmpty || node.IsNull)
+                {
+                    if (instanceProvider != null)
+                    {
+                        var instantiatedVal = instanceProvider();
+                        //make this debug-only? -<paul
+                        if (instantiatedVal.GetType() != type)
+                            throw new InvalidInstanceReturnedException(type, instantiatedVal?.GetType());
+
+                        return instantiatedVal;
+                    }
+
+                    return GetOrCreateInstantiator<T>(false, type)();
+                }
+
+                return ((ReadGenericDelegate<T>)_readGenericBaseDelegates.GetOrAdd(
+                    (typeof(T), type, node.GetType()!, notNullableOverride),
+                    static (tuple, manager) => ReadDelegateValueFactory(tuple.baseType, tuple.actualType, tuple.node, tuple.notNullableOverride, manager),
+                    this))(node, hookCtx, context, instanceProvider);
+            }
+
+            var baseType = typeof(T);
+            var nullable = baseType.IsNullable();
+
+            T val = default!;
+            if (node.IsNull)
+            {
+                if (nullable && !notNullableOverride)
+                    return default!;
+
+                if (baseType == typeof(EntityUid))
+                    return (T) (object) EntityUid.Invalid;
+
+                throw new NullNotAllowedException();
+            }
+
+            if (instanceProvider != null)
+                val = instanceProvider.Invoke();
+
+            if (context != null)
+            {
+                switch (node)
+                {
+                    case MappingDataNode mapping:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, MappingDataNode>, T, MappingDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, MappingDataNode>(
+                                serializer,
+                                mapping,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+
+                        break;
+                    }
+                    case SequenceDataNode sequence:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, SequenceDataNode>, T, SequenceDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, SequenceDataNode>(
+                                serializer,
+                                sequence,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+
+                        break;
+                    }
+                    case ValueDataNode value:
+                    {
+                        if (context.SerializerProvider
+                            .TryGetTypeNodeSerializer<ITypeReader<T, ValueDataNode>, T, ValueDataNode>(
+                                out var serializer))
+                        {
+                            val = Read<T, ValueDataNode>(
+                                serializer,
+                                value,
+                                hookCtx,
+                                context,
+                                instanceProvider,
+                                notNullableOverride
+                            );
+                        }
+                        else
+                        {
+                            RegularRead();
+                        }
+
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                RegularRead();
+            }
+
+            var isValueType = baseType.IsValueType;
+            if (!nullable && !isValueType && val == null)
+                throw new ReadCallReturnedNullException();
+
+            return val;
+
+            void RegularRead()
+            {
+                var hasSerializer = false;
+                switch (node)
+                {
+                    case MappingDataNode mapping:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, MappingDataNode>, T, MappingDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, MappingDataNode>(reader, mapping, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                    case SequenceDataNode sequence:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, SequenceDataNode>, T, SequenceDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, SequenceDataNode>(reader, sequence, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                    case ValueDataNode value:
+                    {
+                        if (_regularSerializerProvider.TryGetTypeNodeSerializer<ITypeReader<T, ValueDataNode>, T, ValueDataNode>(out var reader))
+                        {
+                            hasSerializer = true;
+                            val = Read<T, ValueDataNode>(reader, value, hookCtx, context, instanceProvider, notNullableOverride);
+                        }
+                        break;
+                    }
+                }
+
+                if (!hasSerializer)
+                {
+                    if (baseType.IsAssignableTo(typeof(ISelfSerialize)))
+                    {
+                        switch (node)
+                        {
+                            case ValueDataNode value:
+                            {
+                                instanceProvider ??= T.StaticInstantiate;
+                                val = instanceProvider();
+                                var selfSerialize = (ISelfSerialize) val;
+                                selfSerialize.Deserialize(value.Value);
+                                val = (T) selfSerialize;
+                                break;
+                            }
+                            default:
+                                throw new InvalidNodeTypeException($"Cannot read {nameof(ISelfSerialize)} from node type {node.GetType()}. Expected {nameof(ValueDataNode)}");
+                        }
+                    }
+                    else
+                    {
+                        switch (node)
+                        {
+                            case MappingDataNode mapping:
+                            {
+                                instanceProvider ??= T.StaticInstantiate;
+                                val = instanceProvider();
+                                T.Read(ref val, mapping, this, hookCtx, context);
+                                break;
+                            }
+                            case ValueDataNode value:
+                            {
+                                instanceProvider ??= T.StaticInstantiate;
+                                val = instanceProvider();
+                                if (value.Value != string.Empty)
+                                    throw new ArgumentException($"No mapping node provided for type {baseType} at line: {node.Start.Line}");
+
+                                break;
+                            }
+                            default:
+                                throw new ArgumentException($"No mapping or value node provided for type {baseType}.");
+                        }
+
+                        RunAfterHook(val, hookCtx);
+                    }
+                }
+            }
+        }
+
+        public T Read<T, TNode>(
+            ITypeReader<T, TNode> reader,
+            TNode node,
+            ISerializationContext? context = null,
+            bool skipHook = false,
+            ISerializationManager.InstantiationDelegate<T>? instanceProvider = null,
+            bool notNullableOverride = false)
             where TNode : DataNode
         {
             return Read<T, TNode>(
@@ -328,18 +1247,29 @@ namespace Robust.Shared.Serialization.Manager
                 }
                 else if (nodeType == typeof(MappingDataNode))
                 {
-                    var definition = manager.GetDefinition(actualType);
-                    var definitionConst = Expression.Constant(definition, typeof(DataDefinition<>).MakeGenericType(actualType));
+                    if (actualType.IsAssignableTo(typeof(ISerializationGenerated<>).MakeGenericType(actualType)))
+                    {
+                        var definition = manager.GetDefinition(actualType);
+                        var definitionConst = Expression.Constant(definition, typeof(DataDefinition<>).MakeGenericType(actualType));
 
-                    call = Expression.Call(
-                        managerConst,
-                        nameof(ReadGenericMapping),
-                        new[] { actualType },
-                        Expression.Convert(nodeParam, typeof(MappingDataNode)),
-                        definitionConst,
-                        hookCtxParam,
-                        contextParam,
-                        instantiatorVariable);
+                        call = Expression.Call(
+                            managerConst,
+                            nameof(ReadGenericMapping),
+                            new[] { actualType },
+                            Expression.Convert(nodeParam, typeof(MappingDataNode)),
+                            definitionConst,
+                            hookCtxParam,
+                            contextParam,
+                            instantiatorVariable);
+                    }
+                    else
+                    {
+                        call = Expression.Call(
+                            managerConst,
+                            nameof(ReadNoSerializer),
+                            new[] { actualType },
+                            nodeParam);
+                    }
                 }
                 else
                 {
@@ -508,20 +1438,23 @@ namespace Robust.Shared.Serialization.Manager
             SerializationHookContext hookCtx,
             ISerializationContext? context,
             ISerializationManager.InstantiationDelegate<TValue> instanceProvider)
-            where TValue : notnull
+            where TValue : ISerializationGenerated<TValue>
         {
             if (definition == null)
-            {
                 throw new ArgumentException($"No data definition found for type {typeof(TValue)} with node type {node.GetType()} when reading");
-            }
 
             var instance = instanceProvider();
 
-            definition.Populate(ref instance, node, hookCtx, context);
+            definition.Populate(ref instance, node, this, hookCtx, context);
 
             RunAfterHook(instance, hookCtx);
 
             return instance;
+        }
+
+        private TValue ReadNoSerializer<TValue>(DataNode node)
+        {
+            throw new ArgumentException($"No type serializer or data definition found for type {typeof(TValue)} with node type {node.GetType()} when reading");
         }
     }
 }

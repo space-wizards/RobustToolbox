@@ -4,9 +4,9 @@ using Robust.Shared.Network;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class DumpStringTableCommand : IConsoleCommand
+internal sealed partial class DumpStringTableCommand : IConsoleCommand
 {
-    [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private INetManager _netManager = default!;
 
     public string Command  => "net_dumpstringtable";
     public string Description  => "";

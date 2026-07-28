@@ -33,19 +33,6 @@ public sealed class ValueArrayTypeParser<T> : TypeParser<ValueArray<T>>
         {
             ctx.ConsumeWhitespace();
 
-            if (ctx.EatMatch(']'))
-            {
-                if (values.Count < minLength)
-                {
-                    ctx.Error = new NotEnoughElementsError(minLength);
-                    result = new ValueArray<T>([], true);
-                    return false;
-                }
-
-                result = new ValueArray<T>(values.ToArray());
-                return true;
-            }
-
             if (!Toolshed.TryParse(ctx, out T? value))
             {
                 result = new ValueArray<T>([], true);

@@ -152,7 +152,7 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
     public async Task IgnoreWithPreprocessorDirectives()
     {
         const string code = """
-            
+
             using Robust.Shared.GameObjects;
 
             public sealed partial class InitalizeBasedSystem : EntitySystem
@@ -166,6 +166,34 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
             #else
                     SubscribeLocalEvent<TestComponent, TestEvent>(OnTest2);
             #endif
+                }
+
+                private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args) { }
+                private void OnTest2(EntityUid uid, TestComponent comp, ref TestEvent args) { }
+            }
+            """;
+
+        await Verifier(code, []);
+    }
+
+    [Test]
+    [Description("Tests that subscriptions within if statement blocks are not flagged as elligible for conversion.")]
+    public async Task IgnoreWithIfStatement()
+    {
+        const string code = """
+
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+
+                    if (true)
+                        SubscribeLocalEvent<TestComponent, TestEvent>(OnTest);
+                    else
+                        SubscribeLocalEvent<TestComponent, TestEvent>(OnTest2);
                 }
 
                 private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args) { }

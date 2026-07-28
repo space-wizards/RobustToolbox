@@ -66,9 +66,6 @@ namespace Robust.Client
             deps.Register<IClientGameTiming, ClientGameTiming>();
             deps.Register<IPrototypeManager, ClientPrototypeManager>();
             deps.Register<IPrototypeManagerInternal, ClientPrototypeManager>();
-            deps.Register<IMapManager, NetworkedMapManager>();
-            deps.Register<IMapManagerInternal, NetworkedMapManager>();
-            deps.Register<INetworkedMapManager, NetworkedMapManager>();
             deps.Register<IEntityManager, ClientEntityManager>();
             deps.Register<FontTagHijackHolder>();
             deps.Register<IReflectionManager, ClientReflectionManager>();

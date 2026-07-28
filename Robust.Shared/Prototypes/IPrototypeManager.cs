@@ -354,7 +354,10 @@ public interface IPrototypeManager
     // ReSharper restore MethodOverloadWithOptionalParameter
 
     bool HasMapping<T>(string id);
+
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
+
+    bool TryGetMapping<T>(string id, [NotNullWhen(true)] out MappingDataNode? mappings);
 
     /// <summary>
     ///     Returns whether a prototype kind <param name="kind"/> exists.
@@ -431,7 +434,8 @@ public interface IPrototypeManager
     /// This will validate all known to <see cref="IReflectionManager"/>
     /// </summary>
     /// <remarks>
-    /// This will validate any field that has either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
+    /// This will validate any field that uses <see cref="ProtoId"/> or <see cref="EntProtoId"/>.
+    /// It also looks for these obsolete attributes: either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
     /// <see cref="DataFieldAttribute"/> with a <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.
     /// </remarks>
     /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection

@@ -22,7 +22,7 @@ public static class Diagnostics
     public const string IdValueEventRaisedByRef = "RA0016";
     public const string IdDataDefinitionPartial = "RA0017";
     public const string IdNestedDataDefinitionPartial = "RA0018";
-    public const string IdDataFieldWritable = "RA0019";
+    public const string IdDataFieldWritable = "RA0019"; // No longer used.
     public const string IdDataFieldPropertyWritable = "RA0020";
     public const string IdComponentPauseNotComponent = "RA0021";
     public const string IdComponentPauseNoFields = "RA0022";
@@ -57,6 +57,10 @@ public static class Diagnostics
     public const string IdHasDependenciesReadOnly = "RA0051";
     public const string IdHasDependenciesPropertyField = "RA0052";
     public const string IdExclusiveVirtual = "RA0053";
+    public const string IdInvalidAMethodSignatureForGeneratedSubscription = "RA0054";
+    public const string IdInvalidContainingTypeForGeneratedSubscription = "RA0055";
+    public const string IdNonPartialContainingTypeForGeneratedSubscription = "RA0056";
+    public const string IdDataFieldOutsideDefinition = "RA0057";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

@@ -307,15 +307,23 @@ namespace Robust.Shared.Maths
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public readonly bool Contains(Vector2 point, bool closedRegion = true)
+        public readonly bool Contains(Vector2 point, bool closedRegion)
         {
-            var xOk = closedRegion
-                ? point.X >= Left ^ point.X > Right
-                : point.X > Left ^ point.X >= Right;
-            var yOk = closedRegion
-                ? point.Y >= Bottom ^ point.Y > Top
-                : point.Y > Bottom ^ point.Y >= Top;
-            return xOk && yOk;
+            return closedRegion ? Contains(point) : ContainsOpen(point);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public readonly bool Contains(Vector2 point)
+        {
+            return (point.X >= Left ^ point.X > Right) && (point.Y >= Bottom ^ point.Y > Top);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public readonly bool ContainsOpen(Vector2 point)
+        {
+            return (point.X > Left ^ point.X >= Right) && (point.Y > Bottom ^ point.Y >= Top);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

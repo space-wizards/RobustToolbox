@@ -78,9 +78,10 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
         if (method.BlockBody is null)
             return;
 
-        // If the Initialize method contains any sort of conditional directives,
+        // If the class contains any sort of conditional directives,
         // we consider it too complicated for automatic conversion.
-        if (method.Syntax.ContainsDirective(SyntaxKind.IfDirectiveTrivia | SyntaxKind.ElseDirectiveTrivia | SyntaxKind.ElifDirectiveTrivia | SyntaxKind.EndIfDirectiveTrivia))
+        var classSyntax = method.Syntax.Ancestors().OfType<ClassDeclarationSyntax>().First();
+        if (classSyntax.ContainsDirective(SyntaxKind.IfDirectiveTrivia | SyntaxKind.ElseDirectiveTrivia | SyntaxKind.ElifDirectiveTrivia | SyntaxKind.EndIfDirectiveTrivia))
             return;
 
         // Examine each operation within the Initialize method body

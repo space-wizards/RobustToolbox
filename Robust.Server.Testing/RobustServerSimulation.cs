@@ -90,19 +90,19 @@ namespace Robust.UnitTesting.Server
             return simulation.Resolve<IEntitySystemManager>().GetEntitySystem<T>();
         }
 
-        public static bool HasComp<T>(this ISimulation simulation, EntityUid entity) where T : IComponent
+        public static bool HasComp<T>(this ISimulation simulation, EntityUid entity, IEntityManager entMan) where T : IComponent
         {
-            return simulation.Resolve<IEntityManager>().HasComponent<T>(entity);
+            return entMan.HasComponent<T>(entity);
         }
 
-        public static T Comp<T>(this ISimulation simulation, EntityUid entity) where T : IComponent
+        public static T Comp<T>(this ISimulation simulation, EntityUid entity, IEntityManager entMan) where T : IComponent
         {
-            return simulation.Resolve<IEntityManager>().GetComponent<T>(entity);
+            return entMan.GetComponent<T>(entity);
         }
 
-        public static TransformComponent Transform(this ISimulation simulation, EntityUid entity)
+        public static TransformComponent Transform(this ISimulation simulation, EntityUid entity, IEntityManager entMan)
         {
-            return simulation.Comp<TransformComponent>(entity);
+            return simulation.Comp<TransformComponent>(entity, entMan);
         }
     }
 

@@ -95,6 +95,12 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
             // Check if the invoked method is one of the SubscribeWhateverEvent methods
             if (SubscribeMethods.Contains(invocation.TargetMethod.Name))
             {
+                // If any of the type arguments of the invocation is a type parameter (rather than a distinct Type),
+                // the attribute can't handle it, so we skip it.
+                // For example, RaiseLocalEvent<TTreeComp, ComponentAdd>(), where TTreeComp is a type arg to the containing class.
+                if (invocation.TargetMethod.TypeArguments.OfType<ITypeParameterSymbol>().Any())
+                    continue;
+
                 // We (currently) don't support the before and after parameters with attribute subscriptions
                 // so we skip any invocations that use them.
                 // If we do support them in the future (and the code fixer is improved to convert to them), this check should be removed.

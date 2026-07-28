@@ -177,6 +177,31 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
     }
 
     [Test]
+    [Description("Tests that a subscription using a generic type parameter is not flagged as elligible for conversion.")]
+    public async Task IgnoreWithGenericComponent()
+    {
+        const string code = """
+
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem<TComp> : EntitySystem
+                where TComp : Component
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+
+                    SubscribeLocalEvent<TComp, TestEvent>(OnTest);
+                }
+
+                private void OnTest(EntityUid uid, TComp comp, ref TestEvent args) { }
+            }
+            """;
+
+        await Verifier(code, []);
+    }
+
+    [Test]
     [Description("Tests that subscriptions within if statement blocks are not flagged as elligible for conversion.")]
     public async Task IgnoreWithIfStatement()
     {

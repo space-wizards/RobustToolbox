@@ -66,6 +66,7 @@ internal sealed partial class PvsSystem
     private void UpdateSession(PvsSession session)
     {
         DebugTools.AssertEqual(session.LeftView.Count, 0);
+        DebugTools.AssertEqual(session.LeftViewChunkEntities.Count, 0);
         DebugTools.AssertEqual(session.PlayerStates.Count, 0);
         DebugTools.AssertEqual(session.States.Count, 0);
         DebugTools.Assert(CullingEnabled && !session.DisableCulling || session.Chunks.Count == 0);

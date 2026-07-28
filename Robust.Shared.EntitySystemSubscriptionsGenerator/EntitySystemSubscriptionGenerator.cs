@@ -30,10 +30,19 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        var annotatedRelayEvents = context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                fullyQualifiedMetadataName: RelayEventAttributeName,
+                predicate:
+                static (s, _) => s is ClassDeclarationSyntax or StructDeclarationSyntax or InterfaceDeclarationSyntax,
+                transform: static (ctx, _) => (INamedTypeSymbol)ctx.TargetSymbol)
+            .Collect();
+
         var annotatedEntitySystems = Aggregate(
                 GetEntityTypeCandidatesContainingAnnotatedMethods(context, AllSubscriptionMemberAttributeName),
                 GetEntityTypeCandidatesContainingAnnotatedMethods(context, NetworkSubscriptionMemberAttributeName),
-                GetEntityTypeCandidatesContainingAnnotatedMethods(context, LocalSubscriptionMemberAttributeName)
+                GetEntityTypeCandidatesContainingAnnotatedMethods(context, LocalSubscriptionMemberAttributeName),
+                GetEntityTypeCandidatesContainingAnnotatedMethods(context, SubscribeRelayEventAttributeName)
             ) // Get all candidate types containing subscription annotated methods
             .SelectMany((array, _) =>
                 array.ToImmutableHashSet(PartialTypeInfo.WithoutLocationEqualityComparer)) // Dedupe
@@ -64,16 +73,36 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
 
         context.RegisterImplementationSourceOutput(
             // Only deal with types that have subscriptions.
-            annotatedEntitySystems.Where(it => !it.Subscriptions.IsEmpty),
-            (productionContext, info) =>
+            annotatedEntitySystems.Combine(annotatedRelayEvents).Where(tuple => !tuple.Left.Subscriptions.IsEmpty),
+            (productionContext, tuple) =>
             {
-                var (partialTypeInfo, subscriptions) = info;
+                var (partialTypeInfo, subscriptions) = tuple.Left;
                 if (partialTypeInfo.CheckPartialDiagnostic(productionContext, NotPartial))
                     return;
 
                 var subscriptionsSyntax = new StringBuilder();
                 foreach (var method in subscriptions)
                 {
+                    if (method.Type is SubscriptionType.Relay)
+                    {
+                        var subscriptionRelayMethod = SubscriptionType.Local.ToSubscriptionMethod();
+                        foreach (var type in tuple.Right)
+                        {
+                            if (!TypeSymbolHelper.Inherits(type, method.GenericConstraintName!)
+                                && !TypeSymbolHelper.ImplementsInterface(type, method.GenericConstraintName!))
+                                continue;
+
+                            productionContext.CancellationToken.ThrowIfCancellationRequested();
+
+                            var relayTypeArgs = string.Join(", ",
+                                method.TypeArgs.Select(arg =>
+                                arg == method.GenericParameterName ? type.ToString() : arg));
+
+                            subscriptionsSyntax.AppendLine($"        {subscriptionRelayMethod}<{relayTypeArgs}>({method.MethodName});");
+                        }
+                        continue;
+                    }
+
                     productionContext.CancellationToken.ThrowIfCancellationRequested();
                     var subscriptionMethod = method.Type.ToSubscriptionMethod();
                     var typeArgs = string.Join(", ", method.TypeArgs);
@@ -151,6 +180,10 @@ using JetBrains.Annotations;
                  TryParseEntitySessionEventHandler(m) ??
                  TryParseComponentEventHandler(m) ??
                  TryParseEntityEventRefHandler(m)
+        ) ?? TryParseSubscriptionGeneric(
+            method,
+            SubscribeRelayEventAttributeName,
+            TryParseEntityEventRefHandlerRelay
         );
     }
 
@@ -198,6 +231,24 @@ using JetBrains.Annotations;
         return [componentType.ToString(), eventType.ToString()];
     }
 
+    /// Tries to parse <paramref name="method"/>'s signature as <c>Robust.Shared.GameObjects.EntityEventRefHandler</c>.
+    /// <returns>The type argument syntax to include in the subscription function call.</returns>
+    public static ImmutableArray<string>? TryParseEntityEventRefHandlerRelay(IMethodSymbol method)
+    {
+        if (method.Parameters.Length != 2 ||
+            method.Parameters[0].Type is not INamedTypeSymbol entityType ||
+            method.Parameters[1].Type is not ITypeParameterSymbol eventType ||
+            method.Parameters[1].RefKind != RefKind.Ref)
+            return null;
+
+        if (entityType.OriginalDefinition.ToDisplayString() != EntityTypeName ||
+            entityType.TypeArguments is not [INamedTypeSymbol componentType] ||
+            !TypeSymbolHelper.ImplementsInterface(componentType, IComponentTypeName))
+            return null;
+
+        return [componentType.ToString(), eventType.ToString()];
+    }
+
     /// Tries to parse <paramref name="method"/>'s signature as <c>Robust.Shared.GameObjects.ComponentEventHandler</c>.
     /// <returns>The type argument syntax to include in the subscription function call.</returns>
     public static ImmutableArray<string>? TryParseComponentEventHandler(IMethodSymbol method)
@@ -227,6 +278,25 @@ using JetBrains.Annotations;
         return new SubscriptionInfo(method.Name, subType, parameters);
     }
 
+    private static SubscriptionInfo? TryParseSubscriptionGeneric(
+        IMethodSymbol method,
+        string annotationName,
+        Func<IMethodSymbol, ImmutableArray<string>?> parseFunc
+    )
+    {
+        if (!AttributeHelper.HasAttribute(method, annotationName, out _) ||
+            parseFunc(method) is not { } parameters)
+            return null;
+
+        if (method.TypeParameters.Length != 1 ||
+            method.TypeParameters[0] is not { } typeParameter ||
+            method.TypeParameters[0].ConstraintTypes.Length != 1 ||
+            method.TypeParameters[0].ConstraintTypes[0] is not INamedTypeSymbol reflectType)
+            return null;
+
+        return new SubscriptionInfo(method.Name, SubscriptionType.Relay, parameters, typeParameter.ToString(), reflectType.ToString());
+    }
+
     /// Aggregates all of the <typeparamref name="T"/>s across all the given providers into a single array value
     /// provided by the returned provider.
     private static IncrementalValueProvider<ImmutableArray<T>> Aggregate<T>(
@@ -244,5 +314,10 @@ using JetBrains.Annotations;
 
     private record struct EntitySystemInfo(PartialTypeInfo Type, EquatableArray<SubscriptionInfo> Subscriptions);
 
-    private record struct SubscriptionInfo(string MethodName, SubscriptionType Type, EquatableArray<string> TypeArgs);
+    private record struct SubscriptionInfo(
+        string MethodName,
+        SubscriptionType Type,
+        EquatableArray<string> TypeArgs,
+        string? GenericParameterName = null,
+        string? GenericConstraintName = null);
 }

@@ -16,6 +16,10 @@ public static class KnownTypes
 
     public const string AllSubscriptionMemberAttributeName = "Robust.Shared.Analyzers.EventSubscriptionAttribute";
 
+    public const string SubscribeRelayEventAttributeName = "Robust.Shared.Analyzers.SubscribeRelayEventAttribute";
+
+    public const string RelayEventAttributeName = "Robust.Shared.Analyzers.RelayEventAttribute";
+
     public static readonly string ComponentSubscriptionHandlerTypes = string.Join(
         ", ",
         "Robust.Shared.GameObjects.ComponentEventHandler",
@@ -55,4 +59,5 @@ public enum SubscriptionType
     All,
     Network,
     Local,
+    Relay,
 }

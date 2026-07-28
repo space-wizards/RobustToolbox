@@ -18,10 +18,12 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
     [TestFixture, Parallelizable]
     internal sealed partial class AnchoredSystemTests
     {
-        private const string Prototypes = @"
+        private const string AnchoredProto = "anchoredEnt";
+
+        private const string Prototypes = $@"
 - type: entity
   name: anchoredEnt
-  id: anchoredEnt
+  id: {AnchoredProto}
   components:
   - type: Transform
     anchored: true";
@@ -444,7 +446,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var (sim, grid, coords, _, mapSys) = SimulationFactory();
 
             // Act
-            var ent1 = sim.SpawnEntity("anchoredEnt", coords);
+            var ent1 = sim.SpawnEntity(AnchoredProto, coords);
 
             var tileIndices = mapSys.TileIndicesFor(grid, sim.Transform(ent1).Coordinates);
             Assert.That(mapSys.GetAnchoredEntities(grid, tileIndices).Count(), Is.EqualTo(0));
@@ -513,7 +515,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // can only be anchored to a tile
             mapSys.SetTile(grid, mapSys.TileIndicesFor(grid, coordinates), new Tile(1));
-            var ent1 = entMan.SpawnEntity("anchoredEnt", mapSys.MapToGrid(grid, coordinates));
+            var ent1 = entMan.SpawnAttachedTo(AnchoredProto, mapSys.MapToGrid(grid, coordinates));
 
             xformSys.Unanchor(ent1);
 

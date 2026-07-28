@@ -97,7 +97,7 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
             {
                 // We (currently) don't support the before and after parameters with attribute subscriptions
                 // so we skip any invocations that use them.
-                // If we do support them in the future, this check should be removed.
+                // If we do support them in the future (and the code fixer is improved to convert to them), this check should be removed.
                 if (invocation.Arguments.Any(
                     arg => (arg.Parameter?.Name == "before" || arg.Parameter?.Name == "after")
                     && arg.Value is not IDefaultValueOperation))

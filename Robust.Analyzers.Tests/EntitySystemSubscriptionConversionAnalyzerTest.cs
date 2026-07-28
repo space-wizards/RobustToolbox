@@ -98,7 +98,7 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
 
     [Test]
     [Description("Tests that subscriptions with before/after parameters are not flagged as elligible for conversion.")]
-    // TODO: Remove this test if event subscription attributes get support for before/after parameters
+    // TODO: Remove this test if event subscription attributes get support for before/after parameters (and the code fixer is made to convert to them)
     public async Task IgnoreBeforeAfter()
     {
         const string code = """

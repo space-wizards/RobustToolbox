@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* ISimulation no longer has SpawnEntity methods, resolve IEntityManager and call the spawn methods directly instead.
 
 
 ## 285.0.0

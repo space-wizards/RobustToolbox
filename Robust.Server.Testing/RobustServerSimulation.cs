@@ -76,8 +76,6 @@ namespace Robust.UnitTesting.Server
         /// Adds a new map directly to the map manager.
         /// </summary>
         (EntityUid Uid, MapId MapId) CreateMap();
-        EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates);
-        EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates);
     }
 
     /// <summary>
@@ -132,18 +130,6 @@ namespace Robust.UnitTesting.Server
         {
             var uid = Collection.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var mapId);
             return (uid, mapId);
-        }
-
-        public EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates)
-        {
-            var entMan = Collection.Resolve<IEntityManager>();
-            return entMan.SpawnEntity(protoId, coordinates);
-        }
-
-        public EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates)
-        {
-            var entMan = Collection.Resolve<IEntityManager>();
-            return entMan.SpawnEntity(protoId, coordinates);
         }
 
         private RobustServerSimulation() { }

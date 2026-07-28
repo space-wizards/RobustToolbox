@@ -388,7 +388,6 @@ namespace Robust.Client
     /// </summary>
     public sealed class ServerInfo(string serverName, int serverMaxPlayers)
     {
-
         /// <summary>
         ///     Current name of the server.
         /// </summary>

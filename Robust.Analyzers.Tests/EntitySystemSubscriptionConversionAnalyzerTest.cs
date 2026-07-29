@@ -202,6 +202,35 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
     }
 
     [Test]
+    [Description("Tests that subscriptions using generic methods as event handlers are not flagged as elligible for conversion.")]
+    public async Task IgnoreWithGenericHandler()
+    {
+        const string code = """
+
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+
+                    SubscribeLocalEvent<TestComponent, TestEventClassA>(OnTest);
+                    SubscribeLocalEvent<TestComponent, TestEventClassB>(OnTest);
+                }
+
+                private void OnTest<T>(EntityUid uid, TestComponent comp, ref T args) where T : TestEventArgs { }
+            }
+
+            public class TestEventArgs;
+            public sealed class TestEventClassA : TestEventArgs;
+            public sealed class TestEventClassB : TestEventArgs;
+            """;
+
+        await Verifier(code, []);
+    }
+
+    [Test]
     [Description("Tests that subscriptions within if statement blocks are not flagged as elligible for conversion.")]
     public async Task IgnoreWithIfStatement()
     {

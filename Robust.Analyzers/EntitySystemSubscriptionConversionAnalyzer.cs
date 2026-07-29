@@ -114,6 +114,16 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
                     || handlerArg.Value.Syntax is not IdentifierNameSyntax)
                     continue;
 
+                // Get the symbol for the event handler method.
+                // We use OriginalDefinition to get the generic form if it's a generic method.
+                // So we get MyEventHandler<MyComp, T> instead of MyEventHandler<MyComp, SomeSpecificEvent>.
+                if (((handlerArg.Value as IDelegateCreationOperation)?.Target as IMethodReferenceOperation)?.Method.OriginalDefinition is not { } handlerMethod)
+                    continue;
+
+                // If the target method is generic, we can't subscribe using the attribute.
+                if (handlerMethod.IsGenericMethod)
+                    continue;
+
                 var props = new Dictionary<string, string?>
                 {
                     { AttributeNameKey, ToAttributeName(invocation.TargetMethod.Name) }

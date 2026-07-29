@@ -182,9 +182,11 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
         public void BaseContainer_InsertGrid_False()
         {
             var sim = SimulationFactory();
-            var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapSys = entMan.System<SharedMapSystem>();
+            var containerSys = entMan.System<ContainerSystem>();
 
-            var grid = sim.Resolve<IMapManager>().CreateGridEntity(new MapId(1)).Owner;
+            var grid = mapSys.CreateGridEntity(new MapId(1)).Owner;
             var entity = sim.SpawnEntity(null,_coords);
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 

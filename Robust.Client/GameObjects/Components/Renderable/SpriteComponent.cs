@@ -39,10 +39,10 @@ namespace Robust.Client.GameObjects
     {
         public const string LogCategory = "go.comp.sprite";
 
-        [Dependency] private readonly IResourceCache resourceCache = default!;
-        [Dependency] private readonly IPrototypeManager prototypes = default!;
-        [Dependency] private readonly EntityManager entities = default!;
-        [Dependency] private readonly IReflectionManager reflection = default!;
+        [Dependency] private IResourceCache resourceCache = default!;
+        [Dependency] private IPrototypeManager prototypes = default!;
+        [Dependency] private EntityManager entities = default!;
+        [Dependency] private IReflectionManager reflection = default!;
 
         /// <summary>
         ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
@@ -1336,11 +1336,10 @@ namespace Robust.Client.GameObjects
             public Layer(Layer toClone, SpriteComponent parent) : this(parent)
             {
                 if (toClone.Shader != null)
-                {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
-                    UnShaded = toClone.UnShaded;
-                    ShaderPrototype = toClone.ShaderPrototype;
-                }
+
+                UnShaded = toClone.UnShaded;
+                ShaderPrototype = toClone.ShaderPrototype;
                 Texture = toClone.Texture;
                 RSI = toClone.RSI;
                 State = toClone.State;

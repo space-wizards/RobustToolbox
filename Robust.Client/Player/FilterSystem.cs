@@ -4,13 +4,13 @@ using Robust.Shared.Player;
 
 namespace Robust.Client.Player
 {
-    internal sealed class FilterSystem : SharedFilterSystem
+    internal sealed partial class FilterSystem : SharedFilterSystem
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
 
         public override Filter FromEntities(Filter filter, params EntityUid[] entities)
         {
-            if (_playerManager.LocalEntity is not {Valid: true} attachedUid)
+            if (_playerManager.LocalEntity is not { Valid: true } attachedUid)
                 return filter;
 
             foreach (var uid in entities)

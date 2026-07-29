@@ -1,8 +1,6 @@
 #nullable enable
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using Robust.Roslyn.Shared;
@@ -29,16 +27,15 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
     {
         context.EnableConcurrentExecution();
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
-        context.RegisterSyntaxNodeAction(AnalyzeExpression, SyntaxKind.InvocationExpression);
+        context.RegisterOperationAction(AnalyzeOperation, OperationKind.Invocation);
     }
 
-    private void AnalyzeExpression(SyntaxNodeAnalysisContext context)
+    private void AnalyzeOperation(OperationAnalysisContext context)
     {
-        if (context.Node is not InvocationExpressionSyntax node)
+        if (context.Operation is not IInvocationOperation node)
             return;
 
-        if (context.SemanticModel.GetSymbolInfo(node.Expression).Symbol is not IMethodSymbol methodSymbol)
-            return;
+        var methodSymbol = node.TargetMethod;
 
         // We need at least one type argument for context
         if (methodSymbol.TypeArguments.Length < 1)
@@ -48,16 +45,12 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
         if (methodSymbol.TypeArguments[0] is not INamedTypeSymbol targetType)
             return;
 
-        // We defer building this set until we need it later, so we don't have to build it for every single method invocation!
-        ImmutableHashSet<ISymbol>? members = null;
-
         // Check each parameter of the method
-        foreach (var parameterContext in node.ArgumentList.Arguments)
+        foreach (var op in node.Arguments)
         {
-
-            // Get the symbol for this parameter
-            if (context.SemanticModel.GetOperation(parameterContext) is not IArgumentOperation op || op.Parameter is null)
+            if (op.Parameter is null)
                 continue;
+
             var parameterSymbol = op.Parameter.OriginalDefinition;
 
             // Make sure the parameter has the ValidateMember attribute
@@ -66,15 +59,12 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
 
             // Find the value passed for this parameter.
             // We use GetConstantValue to resolve compile-time values - i.e. the result of nameof()
-            if (context.SemanticModel.GetConstantValue(parameterContext.Expression).Value is not string fieldName)
+            if (op.Value.ConstantValue is not { HasValue: true, Value: string fieldName})
                 continue;
-
-            // Get a set containing all the members of the target type and its ancestors
-            members ??= targetType.GetBaseTypesAndThis().SelectMany(n => n.GetMembers()).ToImmutableHashSet(SymbolEqualityComparer.Default);
 
             // Check each member of the target type to see if it matches our passed in value
             var found = false;
-            foreach (var member in members)
+            foreach (var member in targetType.GetMembers())
             {
                 if (member.Name == fieldName)
                 {
@@ -84,12 +74,14 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
             }
             // If we didn't find it, report the violation
             if (!found)
+            {
                 context.ReportDiagnostic(Diagnostic.Create(
                     ValidateMemberDescriptor,
-                    parameterContext.GetLocation(),
+                    op.Syntax.GetLocation(),
                     fieldName,
                     targetType.Name
-                    ));
+                ));
+            }
         }
     }
 }

@@ -77,12 +77,11 @@ internal sealed class Broadphase_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var mapSys = entManager.System<SharedMapSystem>();
         var xformSys = entManager.System<SharedTransformSystem>();
 
         var (mapEnt, mapId) = sim.CreateMap();
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSys.CreateGridEntity(mapId);
 
         mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
         Assert.That(entManager.HasComponent<BroadphaseComponent>(grid));
@@ -111,14 +110,13 @@ internal sealed class Broadphase_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var fixturesSystem = entManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = entManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
         var mapSys = entManager.System<SharedMapSystem>();
         var xformSys = entManager.System<SharedTransformSystem>();
 
         var (mapEnt, mapId) = sim.CreateMap();
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSys.CreateGridEntity(mapId);
         var gridUid = grid.Owner;
 
         mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
@@ -163,13 +161,12 @@ internal sealed class Broadphase_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var mapSys = entManager.System<SharedMapSystem>();
         var xformSys = entManager.System<SharedTransformSystem>();
 
         var (map1, mapId1) = sim.CreateMap();
         var (map2, _) = sim.CreateMap();
-        var grid = mapManager.CreateGridEntity(mapId1);
+        var grid = mapSys.CreateGridEntity(mapId1);
 
         mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
         var mapBroadphase1 = entManager.GetComponent<BroadphaseComponent>(map1);
@@ -194,14 +191,13 @@ internal sealed class Broadphase_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var system = entManager.EntitySysManager;
         var physicsSystem = system.GetEntitySystem<SharedPhysicsSystem>();
         var lookup = system.GetEntitySystem<EntityLookupSystem>();
         var mapSys = entManager.System<SharedMapSystem>();
 
         var (map, mapId) = sim.CreateMap();
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSys.CreateGridEntity(mapId);
 
         mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid);
@@ -234,6 +230,85 @@ internal sealed class Broadphase_Test
         Assert.That(lookup.FindBroadphase(child2), Is.EqualTo(mapBroadphase));
     }
 
+    [Test]
+    public void BroadphaseRecursiveReinsert()
+    {
+        var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+        var entManager = sim.Resolve<IEntityManager>();
+        var system = entManager.EntitySysManager;
+        var lookup = system.GetEntitySystem<EntityLookupSystem>();
+        var xforms = system.GetEntitySystem<SharedTransformSystem>();
+        var physics = system.GetEntitySystem<SharedPhysicsSystem>();
+        var fixtures = system.GetEntitySystem<FixtureSystem>();
+        var mapSys = entManager.System<SharedMapSystem>();
+
+        var (map, mapId) = sim.CreateMap();
+        var grid = mapSys.CreateGridEntity(mapId);
+        var gridUid = grid.Owner;
+        mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
+        xforms.SetCoordinates(gridUid, new EntityCoordinates(map, new Vector2(10f, 10f)));
+        xforms.SetLocalRotation(gridUid, Angle.FromDegrees(90));
+
+        var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(gridUid);
+        var broadphaseData = new BroadphaseData(gridUid, false, false);
+
+        var parent = entManager.SpawnEntity(null, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)));
+        var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, new Vector2(0.2f, 0f)));
+        var collidableChild = entManager.SpawnEntity(null, new EntityCoordinates(child, new Vector2(0.1f, 0f)));
+        var parentXform = entManager.GetComponent<TransformComponent>(parent);
+        var childXform = entManager.GetComponent<TransformComponent>(child);
+        var collidableXform = entManager.GetComponent<TransformComponent>(collidableChild);
+        var collidableBody = entManager.AddComponent<PhysicsComponent>(collidableChild);
+
+        var shape = new PolygonShape();
+        shape.SetAsBox(0.25f, 0.25f);
+        fixtures.CreateFixture(
+            collidableChild,
+            "fix1",
+            new Fixture(shape, 0, 0, false),
+            body: collidableBody,
+            xform: collidableXform);
+        physics.SetCanCollide(collidableChild, true, body: collidableBody);
+        lookup.FindAndAddToEntityTree(collidableChild, false, collidableXform);
+
+        Assert.That(parentXform.Broadphase, Is.EqualTo(broadphaseData));
+        Assert.That(childXform.Broadphase, Is.EqualTo(broadphaseData));
+        Assert.That(collidableXform.Broadphase, Is.EqualTo(new BroadphaseData(gridUid, true, true)));
+        Assert.That(gridBroadphase.SundriesTree, Does.Contain(parent));
+        Assert.That(gridBroadphase.SundriesTree, Does.Contain(child));
+        Assert.That(gridBroadphase.StaticTree.Count, Is.EqualTo(1));
+
+        lookup.RemoveFromEntityTree(parent, parentXform);
+        Assert.That(parentXform.Broadphase, Is.Null);
+        Assert.That(childXform.Broadphase, Is.Null);
+        Assert.That(collidableXform.Broadphase, Is.Null);
+        Assert.That(gridBroadphase.SundriesTree, Does.Not.Contain(parent));
+        Assert.That(gridBroadphase.SundriesTree, Does.Not.Contain(child));
+        Assert.That(gridBroadphase.StaticTree.Count, Is.EqualTo(0));
+
+        lookup.FindAndAddToEntityTree(parent, true, parentXform);
+
+        Assert.That(parentXform.Broadphase, Is.EqualTo(broadphaseData));
+        Assert.That(childXform.Broadphase, Is.EqualTo(broadphaseData));
+        Assert.That(collidableXform.Broadphase, Is.EqualTo(new BroadphaseData(gridUid, true, true)));
+        Assert.That(gridBroadphase.SundriesTree, Does.Contain(parent));
+        Assert.That(gridBroadphase.SundriesTree, Does.Contain(child));
+        Assert.That(gridBroadphase.StaticTree.Count, Is.EqualTo(1));
+
+        var parentWorld = xforms.GetWorldPosition(parent);
+        var childWorld = xforms.GetWorldPosition(child);
+        var collidableWorld = xforms.GetWorldPosition(collidableChild);
+
+        var found = lookup.GetEntitiesIntersecting(mapId, Box2.CenteredAround(parentWorld, Vector2.One));
+        Assert.That(found, Does.Contain(parent));
+
+        found = lookup.GetEntitiesIntersecting(mapId, Box2.CenteredAround(childWorld, Vector2.One));
+        Assert.That(found, Does.Contain(child));
+
+        found = lookup.GetEntitiesIntersecting(mapId, Box2.CenteredAround(collidableWorld, Vector2.One));
+        Assert.That(found, Does.Contain(collidableChild));
+    }
+
     /// <summary>
     /// Check that broadphases properly recursively update when entities move between maps and grids. The broadphase
     /// updating handles grids separately from other entities, this is intended to be an exhaustive check that the
@@ -244,7 +319,6 @@ internal sealed class Broadphase_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var system = entManager.EntitySysManager;
         var lookup = system.GetEntitySystem<EntityLookupSystem>();
         var xforms = system.GetEntitySystem<SharedTransformSystem>();
@@ -257,9 +331,9 @@ internal sealed class Broadphase_Test
         var (mapB, mapBId) = sim.CreateMap();
 
         // setup grids
-        var gridAComp = mapManager.CreateGridEntity(mapAId);
-        var gridBComp = mapManager.CreateGridEntity(mapBId);
-        var gridCComp = mapManager.CreateGridEntity(mapAId);
+        var gridAComp = mapSys.CreateGridEntity(mapAId);
+        var gridBComp = mapSys.CreateGridEntity(mapBId);
+        var gridCComp = mapSys.CreateGridEntity(mapAId);
         var gridA = gridAComp.Owner;
         var gridB = gridBComp.Owner;
         var gridC = gridCComp.Owner;

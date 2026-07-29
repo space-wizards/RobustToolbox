@@ -243,6 +243,16 @@ internal static class HappyEyeballsHttp
                 allTasks.Where(x => x.IsFaulted).SelectMany(x => x.Exception!.InnerExceptions));
         }
 
+        // Wait for losing tasks to finish before cleanup.
+        try
+        {
+            await Task.WhenAll(allTasks.Where(t => t != successTask)).ConfigureAwait(false);
+        }
+        catch
+        {
+            // We don't care if losing tasks throw.
+        }
+
         // I don't know if this is possible but MAKE SURE that we don't get two sockets completing at once.
         // Just a safety measure.
         foreach (var task in allTasks)

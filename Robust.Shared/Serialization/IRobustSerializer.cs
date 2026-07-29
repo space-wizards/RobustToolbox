@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 
 namespace Robust.Shared.Serialization
@@ -9,6 +11,21 @@ namespace Robust.Shared.Serialization
     [NotContentImplementable]
     public interface IRobustSerializer
     {
+        /// <summary>
+        /// Specifies how the serializer should handle read floating point values.
+        /// </summary>
+        /// <remarks>
+        /// Both sides of the network need not have the same float handling flags.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if set after the serializer has already been initialized.
+        /// (must be done from <see cref="ModRunLevel.PreInit"/>)
+        /// </exception>
+        SerializerFloatFlags FloatFlags { get; set; }
+
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if called twice.
+        /// </exception>
         void Initialize();
         void Serialize(Stream stream, object toSerialize);
 
@@ -69,5 +86,26 @@ namespace Robust.Shared.Serialization
         Type? LargestObjectDeserializedType { get; }
         long BytesDeserialized { get; }
         long ObjectsDeserialized { get; }
+    }
+
+    /// <summary>
+    /// Flags for <see cref="IRobustSerializer"/> float handling.
+    /// </summary>
+    /// <remarks>
+    /// These flags have no effect on values passed in a <see cref="UnsafeFloat"/>, <see cref="UnsafeHalf"/> or
+    /// <see cref="UnsafeDouble"/>.
+    /// </remarks>
+    [Flags]
+    public enum SerializerFloatFlags
+    {
+        /// <summary>
+        /// No special behavior: floating point values are read exactly as sent over the network.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// Read NaN values will be cleared to zero.
+        /// </summary>
+        RemoveReadNan = 1 << 0,
     }
 }

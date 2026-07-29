@@ -18,10 +18,10 @@ namespace Robust.Client.GameObjects;
 // Whereas the tree stuff is precise.
 // Also I just realized this and I cba to refactor this again.
 [UsedImplicitly]
-internal sealed class ClientOccluderSystem : OccluderSystem
+internal sealed partial class ClientOccluderSystem : OccluderSystem
 {
     private readonly HashSet<EntityUid> _dirtyEntities = new();
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
 
     /// <inheritdoc />
     public override void Initialize()
@@ -173,7 +173,7 @@ internal sealed class ClientOccluderSystem : OccluderSystem
 
         // TODO: Sub to parent changes instead or something.
         // DebugTools.Assert(occluder.LastPosition == null
-            // || occluder.LastPosition.Value.Grid == xform.GridUid && occluder.LastPosition.Value.Tile == tile);
+        // || occluder.LastPosition.Value.Grid == xform.GridUid && occluder.LastPosition.Value.Tile == tile);
         occluder.LastPosition = (xform.GridUid.Value, tile);
 
         // dir starts at the relative effective south direction;

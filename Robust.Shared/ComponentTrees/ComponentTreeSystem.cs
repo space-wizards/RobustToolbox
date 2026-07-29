@@ -19,14 +19,13 @@ namespace Robust.Shared.ComponentTrees;
 ///     Keeps track of <see cref="DynamicTree{T}"/>s for various rendering-related components.
 /// </summary>
 [UsedImplicitly]
-public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
+public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     where TTreeComp : Component, IComponentTreeComponent<TComp>, new()
     where TComp : Component, IComponentTreeEntry<TComp>
 {
-    [Dependency] private readonly RecursiveMoveSystem _recursiveMoveSys = default!;
-    [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
+    [Dependency] private RecursiveMoveSystem _recursiveMoveSys = default!;
+    [Dependency] protected SharedTransformSystem XformSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
 
     private readonly Queue<ComponentTreeEntry<TComp>> _updateQueue = new();
     protected EntityQuery<TComp> Query;
@@ -76,8 +75,13 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         SubscribeLocalEvent<MapCreatedEvent>(MapManagerOnMapCreated);
         SubscribeLocalEvent<GridInitializeEvent>(MapManagerOnGridCreated);
 
-        SubscribeLocalEvent<TComp, ComponentStartup>(OnCompStartup);
-        SubscribeLocalEvent<TComp, ComponentRemove>(OnCompRemoved);
+        // Yipeee point light
+        if (!typeof(TComp).IsAbstract)
+        {
+            SubscribeLocalEvent<TComp, ComponentStartup>(OnCompStartup);
+            SubscribeLocalEvent<TComp, ComponentRemove>(OnCompRemoved);
+            Query = GetEntityQuery<TComp>();
+        }
 
         if (Recursive)
         {
@@ -94,8 +98,6 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         SubscribeLocalEvent<TTreeComp, EntityTerminatingEvent>(OnTerminating);
         SubscribeLocalEvent<TTreeComp, ComponentAdd>(OnTreeAdd);
         SubscribeLocalEvent<TTreeComp, ComponentRemove>(OnTreeRemove);
-
-        Query = GetEntityQuery<TComp>();
     }
 
     public override void Shutdown()
@@ -205,60 +207,67 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     /// </summary>
     public void UpdateTreePositions()
     {
-        if (!CheckEnabled())
-            return;
-
-        if (_updateQueue.Count == 0)
-            return;
-
-        var trees = GetEntityQuery<TTreeComp>();
-
-        while (_updateQueue.TryDequeue(out var entry))
+        try
         {
-            var (comp, xform) = entry;
-
-            // Was this entity queued multiple times?
-            DebugTools.Assert(comp.TreeUpdateQueued, "Entity was queued multiple times?");
-
-            comp.TreeUpdateQueued = false;
-            if (!comp.Running)
-                continue;
-
-            if (!comp.AddToTree || comp.Deleted || xform.MapUid == null)
-            {
-                RemoveFromTree(comp);
-                continue;
-            }
-
-            var newTree = xform.GridUid ?? xform.MapUid;
-            if (!trees.TryGetComponent(newTree, out var newTreeComp) && comp.TreeUid == null)
-                continue;
-
-            Vector2 pos;
-            Angle rot;
-            if (comp.TreeUid == newTree)
-            {
-                (pos, rot) = XformSystem.GetRelativePositionRotation(
-                    entry.Transform,
-                    newTree!.Value);
-
-                newTreeComp!.Tree.Update(entry, ExtractAabb(entry, pos, rot));
-                continue;
-            }
-
-            RemoveFromTree(comp);
-
-            if (newTreeComp == null)
+            if (!CheckEnabled())
                 return;
 
-            comp.TreeUid = newTree;
-            comp.Tree = newTreeComp.Tree;
+            if (_updateQueue.Count == 0)
+                return;
 
-            (pos, rot) = XformSystem.GetRelativePositionRotation(
-                entry.Transform,
-                newTree!.Value);
+            var trees = GetEntityQuery<TTreeComp>();
 
-            newTreeComp.Tree.Add(entry, ExtractAabb(entry, pos, rot));
+            while (_updateQueue.TryDequeue(out var entry))
+            {
+                var (comp, xform) = entry;
+
+                // Was this entity queued multiple times?
+                DebugTools.Assert(comp.TreeUpdateQueued, "Entity was queued multiple times?");
+
+                comp.TreeUpdateQueued = false;
+                if (!comp.Running)
+                    continue;
+
+                if (!comp.AddToTree || comp.Deleted || xform.MapUid == null)
+                {
+                    RemoveFromTree(comp);
+                    continue;
+                }
+
+                var newTree = xform.GridUid ?? xform.MapUid;
+                if (!trees.TryGetComponent(newTree, out var newTreeComp) && comp.TreeUid == null)
+                    continue;
+
+                Vector2 pos;
+                Angle rot;
+                if (comp.TreeUid == newTree)
+                {
+                    (pos, rot) = XformSystem.GetRelativePositionRotation(
+                        entry.Transform,
+                        newTree.Value);
+
+                    newTreeComp?.Tree.Update(entry, ExtractAabb(entry, pos, rot));
+                    continue;
+                }
+
+                RemoveFromTree(comp);
+
+                if (newTreeComp == null)
+                    return;
+
+                comp.TreeUid = newTree;
+                comp.Tree = newTreeComp.Tree;
+
+                (pos, rot) = XformSystem.GetRelativePositionRotation(
+                    entry.Transform,
+                    newTree.Value);
+
+                newTreeComp.Tree.Add(entry, ExtractAabb(entry, pos, rot));
+            }
+        }
+        finally
+        {
+            _updateQueue.Clear();
         }
     }
 
@@ -291,21 +300,26 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         => GetIntersectingTrees(mapId, worldBounds.CalcBoundingBox());
 
     public IEnumerable<(EntityUid Uid, TTreeComp Comp)> GetIntersectingTrees(MapId mapId, Box2 worldAABB)
+        => GetIntersectingTreesInternal(mapId, worldAABB);
+
+    internal ValueList<(EntityUid Uid, TTreeComp Comp)> GetIntersectingTreesInternal(MapId mapId, Box2 worldAABB)
     {
         if (!CheckEnabled())
             return [];
         // Anything that queries these trees should only do so if there are no queued updates, otherwise it can lead to
-        // errors. Currently there is no easy way to enforce this, but this should work as long as nothing queries the
+        // errors. Currently, there is no easy way to enforce this, but this should work as long as nothing queries the
         // trees directly:
         UpdateTreePositions();
+
         var trees = new ValueList<(EntityUid Uid, TTreeComp Comp)>();
 
         if (mapId == MapId.Nullspace)
             return trees;
 
+        // TODO LOOKUPS pass in entity query, not entity manager.
         var state = (EntityManager, trees);
 
-        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+        _mapSystem.FindGridsIntersecting(mapId, worldAABB, ref state,
             (EntityUid uid, MapGridComponent grid,
                 ref (EntityManager EntityManager, ValueList<(EntityUid, TTreeComp)> trees) tuple) =>
             {
@@ -317,7 +331,9 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
                 return true;
             }, includeMap: false);
 
-        if (_mapSystem.TryGetMap(mapId, out var mapUid) && TryComp(mapUid, out TTreeComp? mapTreeComp))
+        if (_mapSystem.TryGetMap(mapId, out var mapUid)
+            && TryComp(mapUid, out TTreeComp? mapTreeComp)
+            && mapTreeComp.Tree.Count != 0) // TODO LOOKUPS why does space have an occluder tree?
         {
             state.trees.Add((mapUid.Value, mapTreeComp));
         }

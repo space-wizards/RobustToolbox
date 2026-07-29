@@ -9,11 +9,13 @@ using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Localization;
+using Robust.Server.Network.Transfer;
 using Robust.Server.Physics;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
 using Robust.Server.Replays;
+using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
@@ -22,12 +24,14 @@ using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
@@ -198,6 +202,9 @@ namespace Robust.UnitTesting.Server
             container.Register<HttpClientHolder>();
             container.Register<IHttpClientHolder, HttpClientHolder>();
             container.Register<IHWId, DummyHWId>();
+            container.Register<IServerNetManager, NetManager>();
+            container.Register<IStatusHost, StatusHost>();
+            container.Register<ITransferManager, ServerTransferManager>();
 
             var realReflection = new ServerReflectionManager();
             realReflection.LoadAssemblies(new List<Assembly>(2)
@@ -242,9 +249,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntityManager, ServerEntityManager>();
             container.Register<IServerEntityNetworkManager, ServerEntityManager>();
             container.Register<EntityManager, ServerEntityManager>();
-            container.Register<IMapManager, NetworkedMapManager>();
-            container.Register<INetworkedMapManager, NetworkedMapManager>();
-            container.Register<IMapManagerInternal, NetworkedMapManager>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IRobustRandom, RobustRandom>();
             container.Register<IPrototypeManager, ServerPrototypeManager>();
@@ -262,7 +266,6 @@ namespace Robust.UnitTesting.Server
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();
-            container.Register<IServerNetManager, NetManager>();
             // god help you if you actually need to test pvs functions
             container.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);
             container.RegisterInstance<ISharedPlayerManager>(new Mock<ISharedPlayerManager>().Object);
@@ -306,6 +309,8 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<OccluderTreeComponent>();
             compFactory.RegisterClass<CollideOnAnchorComponent>();
             compFactory.RegisterClass<ActorComponent>();
+            compFactory.RegisterClass<ChunkEntityComponent>();
+            compFactory.RegisterClass<ChunkContainerComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -331,16 +336,13 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
             entitySystemMan.LoadExtraSystemType<PvsSystem>();
+            entitySystemMan.LoadExtraSystemType<ServerChunkEntitySystem>();
             entitySystemMan.LoadExtraSystemType<InputSystem>();
             entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 
-            var mapManager = container.Resolve<IMapManager>();
-            mapManager.Initialize();
-
             entityMan.Startup();
-            mapManager.Startup();
 
             container.Resolve<INetManager>().Initialize(true);
             container.Resolve<ISerializationManager>().Initialize();

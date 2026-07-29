@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Robust.Server.Configuration;
@@ -88,7 +85,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             deps.RegisterInstance<IModLoader>(new Mock<IModLoader>().Object);
             deps.Register<IEntitySystemManager, EntitySystemManager>();
-            deps.RegisterInstance<IEntityManager>(new Mock<IEntityManager>().Object);
             // WHEN WILL THE SUFFERING END
             deps.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
 
@@ -103,6 +99,15 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 });
 
             deps.RegisterInstance<IReflectionManager>(reflectionMock.Object);
+
+            // Never
+            var componentFactoryMock = new Mock<IComponentFactory>();
+            componentFactoryMock.Setup(p => p.AllRegisteredTypes).Returns(Enumerable.Empty<Type>());
+            deps.RegisterInstance<IComponentFactory>(componentFactoryMock.Object);
+
+            var entityManagerMock = new Mock<IEntityManager>();
+            entityManagerMock.Setup(p => p.ComponentFactory).Returns(componentFactoryMock.Object);
+            deps.RegisterInstance<IEntityManager>(entityManagerMock.Object);
 
             deps.BuildGraph();
 

@@ -13,11 +13,11 @@ namespace Robust.Client.Graphics;
 /// Implementation of <see cref="ISystemFontManager"/> that proxies to platform-specific implementations,
 /// and adds additional logging.
 /// </summary>
-internal sealed class SystemFontManager : ISystemFontManagerInternal, IPostInjectInit
+internal sealed partial class SystemFontManager : ISystemFontManagerInternal, IPostInjectInit
 {
-    [Dependency] private readonly IFontManagerInternal _fontManager = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IFontManagerInternal _fontManager = default!;
+    [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     private ISawmill _sawmill = default!;
 

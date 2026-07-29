@@ -14,12 +14,9 @@ namespace Robust.Shared.ContentPack;
 internal sealed partial class AssemblyTypeChecker
 {
     // This part of the code tries to find the originator of bad sandbox references.
-
-    private void ReportBadReferences(PEReader peReader, MetadataReader reader, IEnumerable<EntityHandle> reference)
+    private IEnumerable<(EntityHandle Referenced, MethodDefinitionHandle SourceMethod, int InstructionOffset)> FindReference(PEReader peReader, MetadataReader reader, params IEnumerable<EntityHandle> handles)
     {
-        _sawmill.Info("Started search for originator of bad references...");
-
-        var refs = reference.ToHashSet();
+        var refs = handles.ToHashSet();
         ExpandReferences(reader, refs);
 
         foreach (var methodDefHandle in reader.MethodDefinitions)
@@ -27,8 +24,6 @@ internal sealed partial class AssemblyTypeChecker
             var methodDef = reader.GetMethodDefinition(methodDefHandle);
             if (methodDef.RelativeVirtualAddress == 0)
                 continue;
-
-            var methodName = reader.GetString(methodDef.Name);
 
             var body = peReader.GetMethodBody(methodDef.RelativeVirtualAddress);
             var bytes = body.GetILBytes()!;
@@ -41,14 +36,25 @@ internal sealed partial class AssemblyTypeChecker
                 {
                     if (refs.Overlaps(ExpandHandle(reader, handle)))
                     {
-                        var type = GetTypeFromDefinition(reader, methodDef.GetDeclaringType());
-                        _sawmill.Error(
-                            $"Found reference to {DisplayHandle(reader, handle)} in method {type}.{methodName} at IL 0x{prefPosition:X4}");
+                        yield return (handle, methodDefHandle, prefPosition);
                     }
                 }
 
                 prefPosition = ilReader.Position;
             }
+        }
+    }
+
+    private void ReportBadReferences(PEReader peReader, MetadataReader reader, IEnumerable<EntityHandle> reference)
+    {
+        foreach (var (referenced, method, ilOffset) in FindReference(peReader, reader, reference))
+        {
+            var methodDef = reader.GetMethodDefinition(method);
+            var methodName = reader.GetString(methodDef.Name);
+
+            var type = GetTypeFromDefinition(reader, methodDef.GetDeclaringType());
+            _sawmill.Error(
+                $"Found reference to {DisplayHandle(reader, referenced)} in method {type}.{methodName} at IL 0x{ilOffset:X4}");
         }
     }
 

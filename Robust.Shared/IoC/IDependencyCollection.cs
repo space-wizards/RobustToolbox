@@ -133,6 +133,15 @@ namespace Robust.Shared.IoC
         void RegisterInstance(Type type, object implementation, bool overwrite = false);
 
         /// <summary>
+        ///     Adds a callback to be called when attempting to resolve an unresolved type that matches the specified
+        ///     base generic type, making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
+        ///     This instance will only be created the first time that it is attempted to be resolved.
+        /// </summary>
+        /// <param name="genericType">The base generic type of the type that will be resolvable.</param>
+        /// <param name="factory">The callback to call to get an instance of the implementation for that generic type.</param>
+        void RegisterBaseGenericLazy(Type genericType, DependencyFactoryBaseGenericLazyDelegate<object> factory);
+
+        /// <summary>
         /// Clear all services and types.
         /// Use this between unit tests and on program shutdown.
         /// If a service implements <see cref="IDisposable"/>, <see cref="IDisposable.Dispose"/> will be called on it.
@@ -212,5 +221,21 @@ namespace Robust.Shared.IoC
         /// </exception>
         /// <seealso cref="DependencyCollection.BuildGraph"/>
         void InjectDependencies(object obj, bool oneOff=false);
+
+        /// <summary>
+        ///     Creates a new, empty dependency collection.
+        /// </summary>
+        public static IDependencyCollection Create()
+        {
+            return new DependencyCollection();
+        }
+
+        /// <summary>
+        ///     Creates a new dependency collection, copying the contents of its parent.
+        /// </summary>
+        public static IDependencyCollection CreateFrom(IDependencyCollection parent)
+        {
+            return new DependencyCollection(parent);
+        }
     }
 }

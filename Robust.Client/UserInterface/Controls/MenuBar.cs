@@ -235,6 +235,7 @@ namespace Robust.Client.UserInterface.Controls
             public MenuTopButton(Menu menu)
             {
                 MouseFilter = MouseFilterMode.Pass;
+                DefaultCursorShape = CursorShape.Pointer;
                 ChildMenu = menu;
             }
 

@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="prototypeName">Name of the <see cref="EntityPrototype"/> to spawn.</param>
         /// <param name="coordinates">Coordinates to place the newly spawned entity.</param>
         /// <param name="overrides">Overrides to add or remove components that differ from the prototype.</param>
-        /// <param name="rotation">Local rotation to set the newly spawned entity to.</param>
+        /// <param name="rotation">World rotation to set the newly spawned entity to.</param>
         /// <returns>A new uninitialized entity.</returns>
         /// <remarks>If there is a grid at the <paramref name="coordinates"/>, the entity will be parented to the grid.
         /// Otherwise, it will be parented to the map.</remarks>
@@ -130,9 +130,6 @@ namespace Robust.Shared.GameObjects
         IEnumerable<EntityUid> GetEntities();
 
         public void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null);
-
-        [Obsolete("use override with an EntityUid")]
-        public void Dirty(IComponent component, MetaDataComponent? metadata = null);
 
         public void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null);
 
@@ -198,6 +195,11 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="uid">Uid of entity to remove.</param>
         void DeleteEntity(EntityUid? uid);
+
+        /// <summary>
+        /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.
+        /// </summary>
+        void DeleteEntity(EntityUid uid, MetaDataComponent meta);
 
         /// <summary>
         /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.

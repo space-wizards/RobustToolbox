@@ -2,6 +2,7 @@
 using System.Numerics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using SDL3;
 
 namespace Robust.Client.Graphics
 {
@@ -43,6 +44,8 @@ namespace Robust.Client.Graphics
         /// </summary>
         event Action<WindowResizedEventArgs> Resized;
 
+        internal void SetWindowProgress(WindowProgressState state, float value);
+
         /// <summary>
         /// Set the active text input area in window pixel coordinates.
         /// </summary>
@@ -66,6 +69,15 @@ namespace Robust.Client.Graphics
         /// </summary>
         /// <seealso cref="TextInputStart"/>
         void TextInputStop();
+    }
+
+    internal enum WindowProgressState : byte
+    {
+        None = SDL.SDL_ProgressState.SDL_PROGRESS_STATE_NONE,
+        Indeterminate = SDL.SDL_ProgressState.SDL_PROGRESS_STATE_INDETERMINATE,
+        Normal = SDL.SDL_ProgressState.SDL_PROGRESS_STATE_NORMAL,
+        Paused = SDL.SDL_ProgressState.SDL_PROGRESS_STATE_PAUSED,
+        Error = SDL.SDL_ProgressState.SDL_PROGRESS_STATE_ERROR
     }
 
     [NotContentImplementable]

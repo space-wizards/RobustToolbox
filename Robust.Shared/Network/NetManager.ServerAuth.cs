@@ -140,7 +140,12 @@ namespace Robust.Shared.Network
                     var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
 
-                    var url = $"{authServer}api/session/hasJoined?hash={authHash}&userId={msgEncResponse.UserId}";
+                    var url = $"{authServer}api/session/hasJoined" +
+                              $"?hash={authHash}&" +
+                              $"userId={msgEncResponse.UserId}";
+                    var serverUrl = _config.GetCVar(CVars.HubServerUrl);
+                    if (!string.IsNullOrWhiteSpace(serverUrl))
+                        url += $"&serverUrl={Uri.EscapeDataString(serverUrl)}";
                     var joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
 
                     if (joinedRespJson is not {IsValid: true})
@@ -174,7 +179,8 @@ namespace Robust.Shared.Network
                         HWId = legacyHwid,
                         ModernHWIds = modernHWIds,
                         Trust = joinedRespJson.ConnectionData!.Trust,
-                        CreatedTime = joinedRespJson.UserData.CreatedTime
+                        CreatedTime = joinedRespJson.UserData.CreatedTime,
+                        IsLocal = isLocal
                     };
                     padSuccessMessage = false;
                     type = LoginType.LoggedIn;
@@ -215,10 +221,15 @@ namespace Robust.Shared.Network
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: Assigned user ID: {userId}");
 
+                    var localTrust = _config.GetCVar(CVars.AuthLocalTrust);
+                    var guestTrust = _config.GetCVar(CVars.AuthGuestTrust);
+
                     userData = new NetUserData(userId, name)
                     {
                         HWId = [],
-                        ModernHWIds = []
+                        ModernHWIds = [],
+                        Trust = isLocal ? localTrust : guestTrust,
+                        IsLocal = isLocal
                     };
                 }
 

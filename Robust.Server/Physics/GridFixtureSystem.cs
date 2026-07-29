@@ -25,13 +25,12 @@ namespace Robust.Server.Physics
     /// </summary>
     public sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IConGroupController _conGroup = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedMapSystem _maps = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IConGroupController _conGroup = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private SharedMapSystem _maps = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private SharedTransformSystem _xformSystem = default!;
 
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, ChunkNodeGroup>> _nodes = new();
 
@@ -262,7 +261,7 @@ namespace Robust.Server.Physics
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
                     var group = grids[i];
-                    var newGrid = _mapManager.CreateGridEntity(mapId);
+                    var newGrid = _maps.CreateGridEntity(mapId);
                     var newGridUid = newGrid.Owner;
                     var newGridXform = _xformQuery.GetComponent(newGridUid);
                     newGrids[i] = newGridUid;

@@ -42,7 +42,7 @@ public sealed partial class SpriteSystem
             return;
         }
 
-        layer.AnimationTimeLeft = (float) -(time % state.TotalDelay);
+        layer.AnimationTimeLeft = (float)-(time % state.TotalDelay);
         layer.AnimationFrame = 0;
     }
 
@@ -82,11 +82,12 @@ public sealed partial class SpriteSystem
 
         target.Comp.IsInert = source.Comp.IsInert;
         target.Comp.LayerMap = source.Comp.LayerMap.ShallowClone();
-        target.Comp.PostShader = source.Comp.PostShader is {Mutable: true}
+        target.Comp.PostShader = source.Comp.PostShader is { Mutable: true }
             ? source.Comp.PostShader.Duplicate()
             : source.Comp.PostShader;
 
         target.Comp.RenderOrder = source.Comp.RenderOrder;
+        target.Comp.DrawOverFov = source.Comp.DrawOverFov;
         target.Comp.GranularLayersRendering = source.Comp.GranularLayersRendering;
         target.Comp.Loop = source.Comp.Loop;
 
@@ -107,5 +108,5 @@ public sealed partial class SpriteSystem
     }
 
     [Obsolete("Use QueueUpdateIsInert")]
-    public void QueueUpdateInert(EntityUid uid, SpriteComponent sprite) => QueueUpdateIsInert(new (uid, sprite));
+    public void QueueUpdateInert(EntityUid uid, SpriteComponent sprite) => QueueUpdateIsInert(new(uid, sprite));
 }

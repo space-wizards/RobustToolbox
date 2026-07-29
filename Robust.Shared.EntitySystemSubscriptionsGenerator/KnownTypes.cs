@@ -16,9 +16,7 @@ public static class KnownTypes
 
     public const string AllSubscriptionMemberAttributeName = "Robust.Shared.Analyzers.EventSubscriptionAttribute";
 
-    public const string SubscribeRelayEventAttributeName = "Robust.Shared.Analyzers.SubscribeRelayEventAttribute";
-
-    public const string RelayEventAttributeName = "Robust.Shared.Analyzers.RelayEventAttribute";
+    public const string GenericEventAttributeName = "Robust.Shared.Analyzers.GenericEventAttribute";
 
     public static readonly string ComponentSubscriptionHandlerTypes = string.Join(
         ", ",

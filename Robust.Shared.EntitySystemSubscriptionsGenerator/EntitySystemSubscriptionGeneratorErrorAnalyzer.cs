@@ -115,7 +115,8 @@ public class EntitySystemSubscriptionGeneratorErrorAnalyzer : DiagnosticAnalyzer
                 EntitySystemSubscriptionGenerator.TryParseEntityEventHandler(m) ??
                 EntitySystemSubscriptionGenerator.TryParseEntitySessionEventHandler(m) ??
                 EntitySystemSubscriptionGenerator.TryParseComponentEventHandler(m) ??
-                EntitySystemSubscriptionGenerator.TryParseEntityEventRefHandler(m)
+                EntitySystemSubscriptionGenerator.TryParseEntityEventRefHandler(m) ??
+                EntitySystemSubscriptionGenerator.TryParseEntityEventRefHandlerGeneric(m)
             ) is not null,
             string.Join(", ",
                 KnownTypes.NonComponentSubscriptionHandlerTypes,

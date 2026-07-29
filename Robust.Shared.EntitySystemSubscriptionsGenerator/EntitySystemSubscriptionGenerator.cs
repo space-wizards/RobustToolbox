@@ -32,7 +32,7 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
     {
         var annotatedRelayEvents = context.SyntaxProvider
             .ForAttributeWithMetadataName(
-                fullyQualifiedMetadataName: RelayEventAttributeName,
+                fullyQualifiedMetadataName: GenericEventAttributeName,
                 predicate:
                 static (s, _) => s is ClassDeclarationSyntax or StructDeclarationSyntax or InterfaceDeclarationSyntax,
                 transform: static (ctx, _) => (INamedTypeSymbol)ctx.TargetSymbol)
@@ -41,8 +41,7 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
         var annotatedEntitySystems = Aggregate(
                 GetEntityTypeCandidatesContainingAnnotatedMethods(context, AllSubscriptionMemberAttributeName),
                 GetEntityTypeCandidatesContainingAnnotatedMethods(context, NetworkSubscriptionMemberAttributeName),
-                GetEntityTypeCandidatesContainingAnnotatedMethods(context, LocalSubscriptionMemberAttributeName),
-                GetEntityTypeCandidatesContainingAnnotatedMethods(context, SubscribeRelayEventAttributeName)
+                GetEntityTypeCandidatesContainingAnnotatedMethods(context, LocalSubscriptionMemberAttributeName)
             ) // Get all candidate types containing subscription annotated methods
             .SelectMany((array, _) =>
                 array.ToImmutableHashSet(PartialTypeInfo.WithoutLocationEqualityComparer)) // Dedupe
@@ -83,28 +82,27 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
                 var subscriptionsSyntax = new StringBuilder();
                 foreach (var method in subscriptions)
                 {
-                    if (method.Type is SubscriptionType.Relay)
+                    productionContext.CancellationToken.ThrowIfCancellationRequested();
+                    var subscriptionMethod = method.Type.ToSubscriptionMethod();
+
+                    if (method.Generic != null)
                     {
-                        var subscriptionRelayMethod = SubscriptionType.Local.ToSubscriptionMethod();
                         foreach (var type in tuple.Right)
                         {
-                            if (!TypeSymbolHelper.Inherits(type, method.GenericConstraintName!)
-                                && !TypeSymbolHelper.ImplementsInterface(type, method.GenericConstraintName!))
-                                continue;
-
-                            productionContext.CancellationToken.ThrowIfCancellationRequested();
-
-                            var relayTypeArgs = string.Join(", ",
-                                method.TypeArgs.Select(arg =>
-                                arg == method.GenericParameterName ? type.ToString() : arg));
-
-                            subscriptionsSyntax.AppendLine($"        {subscriptionRelayMethod}<{relayTypeArgs}>({method.MethodName});");
+                            foreach (var (typeParam, constraints) in method.Generic.Value.typeParameters)
+                            {
+                                RecursiveFillGenericTypes(method,
+                                    type,
+                                    typeParam,
+                                    constraints,
+                                    ref subscriptionsSyntax,
+                                    subscriptionMethod,
+                                    tuple.Right);
+                            }
                         }
                         continue;
                     }
 
-                    productionContext.CancellationToken.ThrowIfCancellationRequested();
-                    var subscriptionMethod = method.Type.ToSubscriptionMethod();
                     var typeArgs = string.Join(", ", method.TypeArgs);
                     subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{typeArgs}>({method.MethodName});");
                 }
@@ -160,6 +158,97 @@ using JetBrains.Annotations;
             .Select((it, _) => it ?? throw new("Unreachable"));
     }
 
+    private static void RecursiveFillGenericTypes(
+        SubscriptionInfo method,
+        INamedTypeSymbol type,
+        string typeParam,
+        ImmutableArray<ITypeSymbol> constraints,
+        ref StringBuilder subscriptionsSyntax,
+        string subscriptionMethod,
+        ImmutableArray<INamedTypeSymbol> allTypes)
+    {
+        if (Enumerable.Any(constraints, constraint =>
+                !TypeSymbolHelper.Inherits(type, constraint) &&
+                !TypeSymbolHelper.ImplementsInterface(type, constraint.ToString())))
+            return;
+
+        // Resolve all valid closed types
+        var validTypes = GetValidClosedTypes(type, allTypes);
+
+        foreach (var closedTypeStr in validTypes)
+        {
+            var newArgs = method.TypeArgs
+                .Select(arg => arg == typeParam ? closedTypeStr : arg) // Replace all single type arguments
+                .Select(arg => arg.Replace($"<{typeParam}>", $"<{closedTypeStr}>")); // Replace all nested type parameters
+
+            var genericTypeArgs = string.Join(", ", newArgs);
+
+            subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{genericTypeArgs}>({method.MethodName});");
+        }
+    }
+
+        // Helper method to recursively build all valid closed generic types
+    private static IEnumerable<string> GetValidClosedTypes(
+        INamedTypeSymbol type,
+        ImmutableArray<INamedTypeSymbol> allTypes)
+    {
+        // If it's not generic, there's nothing to fill. Just return its name.
+        if (!type.IsGenericType)
+        {
+            yield return type.ToString();
+            yield break;
+        }
+
+        var typeArgumentsOptions = new List<List<string>>();
+
+        // For each type parameter, find all candidate types from 'allTypes' that satisfy its constraints
+        foreach (var typeParam in type.TypeParameters)
+        {
+            var optionsForThisParam = new List<string>();
+
+            foreach (var candidate in allTypes)
+            {
+                // Check if candidate meets the constraints of the nested type parameter
+                bool meetsConstraints = !typeParam.ConstraintTypes.Any(constraint =>
+                    !TypeSymbolHelper.Inherits(candidate, constraint) &&
+                    !TypeSymbolHelper.ImplementsInterface(candidate, constraint.ToString()));
+
+                if (meetsConstraints)
+                {
+                    // Recursively get closed types for this candidate (in case the candidate itself is generic)
+                    optionsForThisParam.AddRange(GetValidClosedTypes(candidate, allTypes));
+                }
+            }
+
+            // No valid types for this parameter!
+            if (optionsForThisParam.Count == 0)
+                yield break;
+
+            typeArgumentsOptions.Add(optionsForThisParam);
+        }
+
+        // Isolate the base name
+        var baseTypeName = type.OriginalDefinition.ToString().Split('<')[0];
+
+        // Generate all possible combinations using a Cartesian product and yield the fully constructed strings
+        foreach (var combination in CartesianProduct(typeArgumentsOptions))
+        {
+            yield return $"{baseTypeName}<{string.Join(", ", combination)}>";
+        }
+    }
+
+    private static IEnumerable<IEnumerable<string>> CartesianProduct(IReadOnlyList<List<string>> sequences)
+    {
+        IEnumerable<IEnumerable<string>> emptyProduct = new[] { Enumerable.Empty<string>() };
+
+        return sequences.Aggregate(
+            emptyProduct,
+            (accumulator, sequence) =>
+                from accseq in accumulator
+                from item in sequence
+                select accseq.Concat(new[] { item }));
+    }
+
     /// Tries to parse <paramref name="method"/>'s signature as an even subscription, returning the information required
     /// to make the subscription function call in the generated code. Returns <c>null</c> if the method is not a
     /// subscription, or is a subscription and its signature is invalid.
@@ -179,11 +268,8 @@ using JetBrains.Annotations;
             m => TryParseEntityEventHandler(m) ??
                  TryParseEntitySessionEventHandler(m) ??
                  TryParseComponentEventHandler(m) ??
-                 TryParseEntityEventRefHandler(m)
-        ) ?? TryParseSubscriptionGeneric(
-            method,
-            SubscribeRelayEventAttributeName,
-            TryParseEntityEventRefHandlerRelay
+                 TryParseEntityEventRefHandler(m) ??
+                 TryParseEntityEventRefHandlerGeneric(m)
         );
     }
 
@@ -233,7 +319,7 @@ using JetBrains.Annotations;
 
     /// Tries to parse <paramref name="method"/>'s signature as <c>Robust.Shared.GameObjects.EntityEventRefHandler</c>.
     /// <returns>The type argument syntax to include in the subscription function call.</returns>
-    public static ImmutableArray<string>? TryParseEntityEventRefHandlerRelay(IMethodSymbol method)
+    public static ImmutableArray<string>? TryParseEntityEventRefHandlerGeneric(IMethodSymbol method)
     {
         if (method.Parameters.Length != 2 ||
             method.Parameters[0].Type is not INamedTypeSymbol entityType ||
@@ -275,26 +361,24 @@ using JetBrains.Annotations;
             parseFunc(method) is not { } parameters)
             return null;
 
-        return new SubscriptionInfo(method.Name, subType, parameters);
+        var genericInfo = TryParseGeneric(method);
+        return new SubscriptionInfo(method.Name, subType, parameters, genericInfo);
     }
 
-    private static SubscriptionInfo? TryParseSubscriptionGeneric(
-        IMethodSymbol method,
-        string annotationName,
-        Func<IMethodSymbol, ImmutableArray<string>?> parseFunc
-    )
+    private static GenericInfo? TryParseGeneric(IMethodSymbol method)
     {
-        if (!AttributeHelper.HasAttribute(method, annotationName, out _) ||
-            parseFunc(method) is not { } parameters)
+        if (method.TypeParameters.Length < 1)
             return null;
 
-        if (method.TypeParameters.Length != 1 ||
-            method.TypeParameters[0] is not { } typeParameter ||
-            method.TypeParameters[0].ConstraintTypes.Length != 1 ||
-            method.TypeParameters[0].ConstraintTypes[0] is not INamedTypeSymbol reflectType)
-            return null;
+        // Only works on type parameters that have constraints.
+        // We don't turn constraint types into strings because when generating subscriptions
+        // if any of the types will have type parameters, we will also need to fill them in.
+        var result = method.TypeParameters
+            .Where(typeParam => typeParam.ConstraintTypes.Length > 0)
+            .Select(typeParam => (typeParam.ToString(), typeParam.ConstraintTypes))
+            .ToImmutableArray();
 
-        return new SubscriptionInfo(method.Name, SubscriptionType.Relay, parameters, typeParameter.ToString(), reflectType.ToString());
+        return new GenericInfo(result);
     }
 
     /// Aggregates all of the <typeparamref name="T"/>s across all the given providers into a single array value
@@ -318,6 +402,7 @@ using JetBrains.Annotations;
         string MethodName,
         SubscriptionType Type,
         EquatableArray<string> TypeArgs,
-        string? GenericParameterName = null,
-        string? GenericConstraintName = null);
+        GenericInfo? Generic);
+
+    private record struct GenericInfo(ImmutableArray<(string GenericParameterName, ImmutableArray<ITypeSymbol> GenericConstraintTypes)> typeParameters);
 }

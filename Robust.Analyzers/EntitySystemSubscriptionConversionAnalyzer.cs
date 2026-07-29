@@ -13,6 +13,7 @@ namespace Robust.Analyzers;
 public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnalyzer
 {
     private const string EntitySystemTypeName = "Robust.Shared.GameObjects.EntitySystem";
+    private const string SubscribeLocalEventAttributeTypeName = "Robust.Shared.Analyzers.SubscribeLocalEventAttribute";
     private const string InitializeMethodName = "Initialize";
     private const string SubscribeLocalEventMethodName = "SubscribeLocalEvent";
     private const string SubscribeNetworkEventMethodName = "SubscribeNetworkEvent";
@@ -47,6 +48,10 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
 
         context.RegisterCompilationStartAction(ctx =>
         {
+            // If the subscription attribute isn't available in this compilation, we can't do anything.
+            if (ctx.Compilation.GetTypeByMetadataName(SubscribeLocalEventAttributeTypeName) is null)
+                return;
+
             if (ctx.Compilation.GetTypeByMetadataName(EntitySystemTypeName) is not { } entitySystemType)
                 return;
 

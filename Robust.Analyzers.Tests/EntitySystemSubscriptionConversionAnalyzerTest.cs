@@ -61,6 +61,11 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
             }
         }
 
+        namespace Robust.Shared.Analyzers
+        {
+            public sealed class SubscribeLocalEventAttribute : Attribute;
+        }
+
         public readonly struct TestEvent;
         public readonly struct TestEvent2;
         public readonly struct TestEvent3;

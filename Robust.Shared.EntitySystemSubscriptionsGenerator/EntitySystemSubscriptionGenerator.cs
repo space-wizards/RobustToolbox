@@ -30,11 +30,10 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var annotatedRelayEvents = context.SyntaxProvider
+        var annotatedGenericEvents = context.SyntaxProvider
             .ForAttributeWithMetadataName(
                 fullyQualifiedMetadataName: GenericEventAttributeName,
-                predicate:
-                static (s, _) => s is ClassDeclarationSyntax or StructDeclarationSyntax or InterfaceDeclarationSyntax,
+                predicate: static (s, _) => s is TypeDeclarationSyntax,
                 transform: static (ctx, _) => (INamedTypeSymbol)ctx.TargetSymbol)
             .Collect();
 
@@ -72,7 +71,7 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
 
         context.RegisterImplementationSourceOutput(
             // Only deal with types that have subscriptions.
-            annotatedEntitySystems.Combine(annotatedRelayEvents).Where(tuple => !tuple.Left.Subscriptions.IsEmpty),
+            annotatedEntitySystems.Combine(annotatedGenericEvents).Where(tuple => !tuple.Left.Subscriptions.IsEmpty),
             (productionContext, tuple) =>
             {
                 var (partialTypeInfo, subscriptions) = tuple.Left;
@@ -323,8 +322,11 @@ using JetBrains.Annotations;
     {
         if (method.Parameters.Length != 2 ||
             method.Parameters[0].Type is not INamedTypeSymbol entityType ||
-            method.Parameters[1].Type is not ITypeParameterSymbol eventType ||
             method.Parameters[1].RefKind != RefKind.Ref)
+            return null;
+
+        if (method.Parameters[1].Type is not ITypeParameterSymbol &&
+            method.Parameters[1].Type is not INamedTypeSymbol { IsGenericType: true })
             return null;
 
         if (entityType.OriginalDefinition.ToDisplayString() != EntityTypeName ||
@@ -332,7 +334,10 @@ using JetBrains.Annotations;
             !TypeSymbolHelper.ImplementsInterface(componentType, IComponentTypeName))
             return null;
 
-        return [componentType.ToString(), eventType.ToString()];
+        var eventType = method.Parameters[1].Type as ITypeParameterSymbol;
+        var eventTypeNamed = method.Parameters[1].Type as INamedTypeSymbol;
+
+        return [componentType.ToString(), eventType?.ToString() ?? eventTypeNamed?.ToString()];
     }
 
     /// Tries to parse <paramref name="method"/>'s signature as <c>Robust.Shared.GameObjects.ComponentEventHandler</c>.

@@ -129,6 +129,11 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
                 if (handlerMethod.IsGenericMethod)
                     continue;
 
+                // If the handler is a virtual or abstract method, we can't use the attribute
+                // since we would have to add it to the base class
+                if (handlerMethod.IsVirtual || handlerMethod.IsAbstract)
+                    continue;
+
                 var props = new Dictionary<string, string?>
                 {
                     { AttributeNameKey, ToAttributeName(invocation.TargetMethod.Name) }

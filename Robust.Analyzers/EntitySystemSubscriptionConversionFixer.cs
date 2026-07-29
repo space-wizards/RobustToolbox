@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.Simplification;
 using static Robust.Roslyn.Shared.Diagnostics;
 
 namespace Robust.Analyzers;
@@ -13,6 +14,8 @@ namespace Robust.Analyzers;
 [ExportCodeFixProvider(LanguageNames.CSharp)]
 public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
 {
+    private const string AttributeNamespace = "Robust.Shared.Analyzers";
+
     public override ImmutableArray<string> FixableDiagnosticIds =>
     [
         IdEntitySystemSubscriptionConversionPossible
@@ -127,11 +130,18 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         IMethodSymbol handlerMethodSymbol,
         string attributeName)
     {
+        // var root = editor.OriginalRoot as CompilationUnitSyntax;
+        // if (!root!.Usings.Any(u => u.Name?.ToString() == AttributeNamespace))
+        // {
+        //     var newRoot = root.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(AttributeNamespace)));
+        // }
+        // editor.ReplaceNode
+
         // Get the syntax node for the event handler method.
         var handlerMethodSyntax = handlerMethodSymbol.DeclaringSyntaxReferences.First().GetSyntax() as MethodDeclarationSyntax;
 
         // Generate the SubscribeWhateverEvent attribute.
-        var attr = SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeName));
+        var attr = editor.Generator.Attribute(SyntaxFactory.IdentifierName(attributeName).WithAdditionalAnnotations(new SyntaxAnnotation("SymbolId", $"{AttributeNamespace}.{attributeName}Attribute"), Simplifier.AddImportsAnnotation)).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation);
 
         // Add the attribute to the event handler method.
         editor.AddAttribute(handlerMethodSyntax!, attr);

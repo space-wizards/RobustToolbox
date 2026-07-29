@@ -86,6 +86,8 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
 using Robust.Shared.GameObjects;
 using JetBrains.Annotations;
 
+#pragma warning disable CS0618 // Type or member is obsolete: event handlers will have their own obsoletion warnings, dont need to dupe them
+
 ");
                 partialTypeInfo.WriteHeader(builder);
                 builder.AppendLine($@"

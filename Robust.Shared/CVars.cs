@@ -36,6 +36,50 @@ namespace Robust.Shared
             CVarDef.Create("net.max_connections", 256, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
+        /// How many seconds after the last message from the server or a client before we consider it timed out.
+        /// </summary>
+        public static readonly CVarDef<float> NetConnectionTimeout =
+            CVarDef.Create("net.connection_timeout", 25.0f, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Hard max-cap of concurrent connections per client IP address.
+        /// Clients will always get a disconnection packet.
+        /// </summary>
+        /// <remarks>
+        /// This cannot be bypassed in any way, since it is used by Lidgren internally.
+        /// </remarks>
+        public static readonly CVarDef<int> NetMaxIpConnections =
+            CVarDef.Create("net.max_ip_connections", 8, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Hard max-cap of connections a single client IP address can attempt in a window of <c>net.rapid_connection_window</c>.
+        /// Clients will only get a disconnection packet the first time, their packets are dropped afterwards.
+        /// </summary>
+        /// <remarks>
+        /// This cannot be bypassed in any way, since it is used by Lidgren internally.
+        /// </remarks>
+        public static readonly CVarDef<int> NetMaxRapidConnections =
+            CVarDef.Create("net.max_rapid_connections", 3, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Whether Lidgren should send disconnection reasons when rejecting connections due to internal limits.
+        /// </summary>
+        public static readonly CVarDef<bool> NetSendConnectionRejectionReasons =
+            CVarDef.Create("net.send_connection_rejection_reasons", true, CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many seconds until connection count decays for <c>net.max_rapid_connections</c>.
+        /// </summary>
+        public static readonly CVarDef<double> NetRapidConnectionWindow =
+            CVarDef.Create("net.rapid_connection_window", 60.0, CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many connections are "forgotten" every <c>net.rapid_connection_window</c> seconds.
+        /// </summary>
+        public static readonly CVarDef<int> NetRapidConnectionDecay =
+            CVarDef.Create("net.rapid_connection_decay", 1, CVar.ARCHIVE);
+
+        /// <summary>
         /// UDP port to bind to for main game networking.
         /// Each address specified in <c>net.bindto</c> is bound with this port.
         /// </summary>
@@ -107,6 +151,18 @@ namespace Robust.Shared
         /// <seealso cref="NetMtuExpand"/>
         public static readonly CVarDef<int> NetMtuExpandFailAttempts =
             CVarDef.Create("net.mtu_expand_fail_attempts", 5, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum bytes used by incomplete Lidgren fragment groups for one connection.
+        /// </summary>
+        public static readonly CVarDef<int> NetMaxFragmentReassemblyBytesPerConnection =
+            CVarDef.Create("net.max_fragment_reassembly_bytes_per_connection", 32 * 1024 * 1024, CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many seconds Lidgren keeps an incomplete fragment group alive.
+        /// </summary>
+        public static readonly CVarDef<float> NetFragmentGroupTimeout =
+            CVarDef.Create("net.fragment_group_timeout", 30.0f, CVar.ARCHIVE);
 
         /// <summary>
         /// Whether to enable verbose debug logging in Lidgren.
@@ -297,12 +353,6 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> NetTimeStartOffset =
             CVarDef.Create("net.time_start_offset", 0, CVar.SERVERONLY);
-
-        /// <summary>
-        /// How many seconds after the last message from the server before we consider it timed out.
-        /// </summary>
-        public static readonly CVarDef<float> ConnectionTimeout =
-            CVarDef.Create("net.connection_timeout", 25.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// When doing the connection handshake, how long to wait before initial connection attempt packets.
@@ -906,7 +956,7 @@ namespace Robust.Shared
         /// outside of our viewport.
         /// </remarks>
         public static readonly CVarDef<float> MaxLightRadius =
-            CVarDef.Create("light.max_radius", 32.1f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("light.max_radius", 32.1f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Maximum number of lights that the client will draw.
@@ -961,6 +1011,14 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> LookupEnlargementRange =
             CVarDef.Create("lookup.enlargement_range", 10.0f, CVar.ARCHIVE | CVar.REPLICATED | CVar.CHEAT);
+
+        /// <summary>
+        /// Whether to enable the server-side point light lookup tree. To help with performance, this should only be
+        /// enabled if the server needs to be able to compute light levels.
+        /// This is only read during system startup; changing it at runtime does not initialize or shut down the tree.
+        /// </summary>
+        public static readonly CVarDef<bool> LookupEnableServerLightTree =
+            CVarDef.Create("lookup.enable_server_light_tree", false, CVar.ARCHIVE | CVar.SERVERONLY);
 
         /*
          * LOKI
@@ -1314,6 +1372,17 @@ namespace Robust.Shared
 
         public static readonly CVarDef<int> AudioAttenuation =
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Scales listener & source velocities, which (if less than 1) de-emphasizes the doppler pitch-shifting effect
+        /// and (if more than 1) exaggerates the effect. Setting this to 0 will disable the doppler effect.
+        /// </summary>
+        /// <remarks>
+        /// This is replicated rather than client-only because it makes more sense to control this on a server-level depending on
+        /// what the game in question requires: servers with fast-moving grids may want to de-emphasize doppler even more than usual, etc.
+        /// </remarks>
+        public static readonly CVarDef<float> AudioDopplerFactor =
+            CVarDef.Create("audio.doppler_factor", 1f, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Whether to enable HRTF (head-related transfer function) support for positional audio.

@@ -303,13 +303,18 @@ namespace Robust.Client.Graphics.Clyde
             var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
 
             var spriteSystem = _entityManager.System<SpriteSystem>();
-            GetSprites(mapId, viewport, eye, worldBounds, out var indexList);
+            int[] indexList;
+            using (_prof.Group("Gather Sprites"))
+            {
+                GetSprites(mapId, viewport, eye, worldBounds, out indexList);
+            }
 
             var screenSize = viewport.Size;
             var overlayIndex = 0;
 
             RenderTexture? entityPostRenderTarget = null;
             bool flushed = false;
+            using var _drawZone = _prof.Group("Draw");
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];

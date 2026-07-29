@@ -22,10 +22,10 @@ internal sealed partial class PvsSystem
     /// <returns>New entity State for the given entity.</returns>
     private EntityState GetEntityState(ICommonSession? player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
     {
-        var changed = new List<ComponentChange>();
+        var changed = GetComponentChangeList(meta.NetComponents.Count);
 
         bool sendCompList = meta.LastComponentRemoved > fromTick;
-        HashSet<ushort>? netComps = sendCompList ? new() : null;
+        HashSet<ushort>? netComps = sendCompList ? GetNetComponentSet() : null;
         var stateEv = new ComponentGetState(player, fromTick);
 
         foreach (var (netId, component) in meta.NetComponents)
@@ -83,10 +83,10 @@ internal sealed partial class PvsSystem
     private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta)
     {
         var bus = EntityManager.EventBusInternal;
-        var changed = new List<ComponentChange>();
+        var changed = GetComponentChangeList(meta.NetComponents.Count);
         var stateEv = new ComponentGetState(player, GameTick.Zero);
 
-        HashSet<ushort> netComps = new();
+        HashSet<ushort> netComps = GetNetComponentSet();
 
         foreach (var (netId, component) in meta.NetComponents)
         {
@@ -197,6 +197,7 @@ Entity: {ToPrettyString(uid)}
 Last modified: {md.EntityLastModifiedTick}
 Metadata last modified: {md.LastModifiedTick}
 Transform last modified: {Transform(uid).LastModifiedTick}");
+                        ReturnEntityState(state);
                         continue;
                     }
 
@@ -217,6 +218,8 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                     var state = GetEntityState(session, uid, fromTick, md);
                     if (!state.Empty)
                         pvsSession.States.Add(state);
+                    else
+                        ReturnEntityState(state);
                 }
             }
         }

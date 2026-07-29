@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -6,26 +7,17 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Dictionary
 {
-
-    public sealed class AbstractPrototypeIdValueDictionarySerializer<TValue, TPrototype> : PrototypeIdValueDictionarySerializer<TValue,
-            TPrototype> where TPrototype : class, IPrototype, IInheritingPrototype where TValue : notnull
-    {
-        protected override PrototypeIdSerializer<TPrototype> PrototypeSerializer =>
-            new AbstractPrototypeIdSerializer<TPrototype>();
-    }
-
-    [Virtual]
-    public class PrototypeIdValueDictionarySerializer<TValue, TPrototype> :
+    [Obsolete("Use ProtoId instead")]
+    public sealed class PrototypeIdValueDictionarySerializer<TValue, TPrototype> :
         ITypeValidator<Dictionary<TValue, string>, MappingDataNode>,
         ITypeValidator<SortedDictionary<TValue, string>, MappingDataNode>,
         ITypeValidator<IReadOnlyDictionary<TValue, string>, MappingDataNode>
         where TPrototype : class, IPrototype where TValue : notnull
     {
-        protected virtual PrototypeIdSerializer<TPrototype> PrototypeSerializer => new();
-
         private ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             var mapping = new Dictionary<ValidationNode, ValidationNode>();
@@ -39,7 +31,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     continue;
                 }
 
-                mapping.Add(PrototypeSerializer.Validate(serializationManager, value, dependencies, context), serializationManager.ValidateNode<TValue>(key, context));
+                mapping.Add(ProtoIdSerializer<TPrototype>.Validate(dependencies, value), serializationManager.ValidateNode<TValue>(key, context));
             }
 
             return new ValidatedMappingNode(mapping);

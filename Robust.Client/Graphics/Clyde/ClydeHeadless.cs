@@ -33,6 +33,7 @@ namespace Robust.Client.Graphics.Clyde
         public IEnumerable<IClydeWindow> AllWindows => _windows;
         public Vector2 DefaultWindowScale => new Vector2(1, 1);
         public bool IsFocused => true;
+        public bool RelativeMouseMode { get; set; }
         private readonly List<IClydeWindow> _windows = new();
         private int _nextWindowId = 2;
         private long _nextViewportId = 1;

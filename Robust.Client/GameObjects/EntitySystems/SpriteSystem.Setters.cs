@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects;
@@ -160,6 +162,26 @@ public sealed partial class SpriteSystem
             return;
 
         sprite.Comp.GranularLayersRendering = value;
+        _tree.QueueTreeUpdate(sprite!);
+        DirtyBounds(sprite!);
+    }
+
+    /// <summary>
+    /// Sets <see cref="SpriteComponent.LayersOrderOverride"/> and optionally updates <see cref="SpriteComponent.LayersOrderOverrideDirectionType"/>>.
+    /// </summary>
+    public void SetLayersOrderOverride(Entity<SpriteComponent?> sprite, Dictionary<RsiDirection, List<int>> value, RsiDirectionType? directionType)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (value == sprite.Comp.LayersOrderOverride)
+            return;
+
+        sprite.Comp.LayersOrderOverride = value;
+
+        if (directionType != sprite.Comp.LayersOrderOverrideDirectionType && directionType != null)
+            sprite.Comp.LayersOrderOverrideDirectionType = directionType.Value;
+
         _tree.QueueTreeUpdate(sprite!);
         DirtyBounds(sprite!);
     }

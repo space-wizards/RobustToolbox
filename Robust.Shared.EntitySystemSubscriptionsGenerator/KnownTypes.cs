@@ -56,6 +56,5 @@ public enum SubscriptionType
 {
     All,
     Network,
-    Local,
-    Relay,
+    Local
 }

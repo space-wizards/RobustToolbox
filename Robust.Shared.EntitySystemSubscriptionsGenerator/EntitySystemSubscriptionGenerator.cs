@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Robust.Roslyn.Shared;
@@ -84,20 +85,56 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
                     productionContext.CancellationToken.ThrowIfCancellationRequested();
                     var subscriptionMethod = method.Type.ToSubscriptionMethod();
 
+                    // Handle methods with generic types
                     if (method.Generic != null)
                     {
-                        foreach (var type in tuple.Right)
+                        var typeParameters = method.Generic.Value.TypeParameters;
+                        var optionsPerTypeParam = new List<List<string>>();
+
+                        // Gather all valid types for each type parameter based on constraints
+                        foreach (var (_, constraints) in typeParameters)
                         {
-                            foreach (var (typeParam, constraints) in method.Generic.Value.typeParameters)
+                            var validSubstitutions = new List<string>();
+
+                            foreach (var type in tuple.Right)
                             {
-                                RecursiveFillGenericTypes(method,
-                                    type,
-                                    typeParam,
-                                    constraints,
-                                    ref subscriptionsSyntax,
-                                    subscriptionMethod,
-                                    tuple.Right);
+                                if (constraints.Any(constraint =>
+                                        !TypeSymbolHelper.Inherits(type, constraint) &&
+                                        !TypeSymbolHelper.ImplementsInterface(type, constraint.ToString())))
+                                {
+                                    continue;
+                                }
+
+                                validSubstitutions.AddRange(GetValidClosedTypes(type, tuple.Right));
                             }
+
+                            optionsPerTypeParam.Add(validSubstitutions);
+                        }
+
+                        // If any type parameter has no valid replacements, we can't generate generic combinations
+                        if (optionsPerTypeParam.Any(opts => opts.Count == 0))
+                            continue;
+
+                        // Generate Cartesian Product of all substitutions to satisfy multi-parameter combinations
+                        foreach (var combination in CartesianProduct(optionsPerTypeParam))
+                        {
+                            var combinationList = combination.ToList();
+                            IEnumerable<string> newArgs = method.TypeArgs;
+
+                            // Replace each type parameter
+                            for (int i = 0; i < typeParameters.Length; i++)
+                            {
+                                var typeParam = typeParameters[i].GenericParameterName;
+                                var closedTypeStr = combinationList[i];
+
+                                newArgs = newArgs.Select(arg =>
+                                    arg == typeParam
+                                        ? closedTypeStr
+                                        : Regex.Replace(arg, $@"\b{typeParam}\b", closedTypeStr));
+                            }
+
+                            var genericTypeArgs = string.Join(", ", newArgs);
+                            subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{genericTypeArgs}>({method.MethodName});");
                         }
                         continue;
                     }
@@ -157,41 +194,12 @@ using JetBrains.Annotations;
             .Select((it, _) => it ?? throw new("Unreachable"));
     }
 
-    private static void RecursiveFillGenericTypes(
-        SubscriptionInfo method,
-        INamedTypeSymbol type,
-        string typeParam,
-        ImmutableArray<ITypeSymbol> constraints,
-        ref StringBuilder subscriptionsSyntax,
-        string subscriptionMethod,
-        ImmutableArray<INamedTypeSymbol> allTypes)
-    {
-        if (Enumerable.Any(constraints, constraint =>
-                !TypeSymbolHelper.Inherits(type, constraint) &&
-                !TypeSymbolHelper.ImplementsInterface(type, constraint.ToString())))
-            return;
-
-        // Resolve all valid closed types
-        var validTypes = GetValidClosedTypes(type, allTypes);
-
-        foreach (var closedTypeStr in validTypes)
-        {
-            var newArgs = method.TypeArgs
-                .Select(arg => arg == typeParam ? closedTypeStr : arg) // Replace all single type arguments
-                .Select(arg => arg.Replace($"<{typeParam}>", $"<{closedTypeStr}>")); // Replace all nested type parameters
-
-            var genericTypeArgs = string.Join(", ", newArgs);
-
-            subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{genericTypeArgs}>({method.MethodName});");
-        }
-    }
-
-        // Helper method to recursively build all valid closed generic types
+    // Helper method to recursively build all valid closed generic types
     private static IEnumerable<string> GetValidClosedTypes(
         INamedTypeSymbol type,
         ImmutableArray<INamedTypeSymbol> allTypes)
     {
-        // If it's not generic, there's nothing to fill. Just return its name.
+        // If it's not generic, there's nothing to fill. Phew.
         if (!type.IsGenericType)
         {
             yield return type.ToString();
@@ -203,27 +211,24 @@ using JetBrains.Annotations;
         // For each type parameter, find all candidate types from 'allTypes' that satisfy its constraints
         foreach (var typeParam in type.TypeParameters)
         {
-            var optionsForThisParam = new List<string>();
+            var recursiveOptions = new List<string>();
 
             foreach (var candidate in allTypes)
             {
-                // Check if candidate meets the constraints of the nested type parameter
-                bool meetsConstraints = !typeParam.ConstraintTypes.Any(constraint =>
-                    !TypeSymbolHelper.Inherits(candidate, constraint) &&
-                    !TypeSymbolHelper.ImplementsInterface(candidate, constraint.ToString()));
-
-                if (meetsConstraints)
+                if (!typeParam.ConstraintTypes.Any(constraint =>
+                        !TypeSymbolHelper.Inherits(candidate, constraint) &&
+                        !TypeSymbolHelper.ImplementsInterface(candidate, constraint.ToString())))
                 {
                     // Recursively get closed types for this candidate (in case the candidate itself is generic)
-                    optionsForThisParam.AddRange(GetValidClosedTypes(candidate, allTypes));
+                    recursiveOptions.AddRange(GetValidClosedTypes(candidate, allTypes));
                 }
             }
 
             // No valid types for this parameter!
-            if (optionsForThisParam.Count == 0)
+            if (recursiveOptions.Count == 0)
                 yield break;
 
-            typeArgumentsOptions.Add(optionsForThisParam);
+            typeArgumentsOptions.Add(recursiveOptions);
         }
 
         // Isolate the base name
@@ -409,5 +414,5 @@ using JetBrains.Annotations;
         EquatableArray<string> TypeArgs,
         GenericInfo? Generic);
 
-    private record struct GenericInfo(ImmutableArray<(string GenericParameterName, ImmutableArray<ITypeSymbol> GenericConstraintTypes)> typeParameters);
+    private record struct GenericInfo(ImmutableArray<(string GenericParameterName, ImmutableArray<ITypeSymbol> GenericConstraintTypes)> TypeParameters);
 }

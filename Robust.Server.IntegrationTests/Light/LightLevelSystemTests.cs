@@ -5,6 +5,7 @@ using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.Configuration;
+//using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Light;
@@ -158,7 +159,7 @@ public sealed class LightLevelSystemTests
         var sim = NewSimulation(false);
         var map = sim.CreateMap();
         var entMan = sim.Resolve<IEntityManager>();
-        var containers = Sys<SharedContainerSystem>(sim);
+        var containers = entMan.System<SharedContainerSystem>();
         var lightUid = AddLight(sim, map.MapId, Vector2.Zero, castShadows: false);
         var light = entMan.GetComponent<PointLightComponent>(lightUid);
         var outerA = entMan.Spawn(null, new MapCoordinates(Vector2.Zero, map.MapId));

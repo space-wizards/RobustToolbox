@@ -28,7 +28,6 @@ namespace Robust.Server.Placement
         [Dependency] private IPlayerManager _playerManager = default!;
         [Dependency] private IPrototypeManager _prototype = default!;
         [Dependency] private IServerEntityManager _entityManager = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private ILogManager _logManager = default!;
         [Dependency] private Robust.Shared.Timing.IGameTiming _timing = default!;
 
@@ -224,13 +223,13 @@ namespace Robust.Server.Placement
             // Step 3: Fallback — try to find any grid at the exact position or nearby.
             if (grid == null)
             {
-                if (_mapManager.TryFindGridAt(mapCoords, out gridId, out grid))
+                if (_maps.TryFindGridAt(mapCoords, out gridId, out grid))
                 {
                 }
                 else
                 {
                     var searchBox = Box2.CenteredAround(mapCoords.Position, new Vector2(2.0f, 2.0f));
-                    foreach (var nearbyGrid in _mapManager.FindGridsIntersecting(mapCoords.MapId, searchBox))
+                    foreach (var nearbyGrid in _maps.FindGridsIntersecting(mapCoords.MapId, searchBox))
                     {
                         grid = nearbyGrid;
                         gridId = nearbyGrid.Owner;
@@ -252,7 +251,7 @@ namespace Robust.Server.Placement
             }
             else if (tileType != 0) // create a new grid
             {
-                var newGrid = _mapManager.CreateGridEntity(_xformSystem.GetMapId(coordinates));
+                var newGrid = _maps.CreateGridEntity(_xformSystem.GetMapId(coordinates));
                 var newGridXform = new Entity<TransformComponent>(
                     newGrid.Owner,
                     _entityManager.GetComponent<TransformComponent>(newGrid));

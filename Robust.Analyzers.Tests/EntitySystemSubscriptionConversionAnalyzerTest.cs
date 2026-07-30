@@ -20,11 +20,6 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
             },
         };
 
-        TestHelper.AddEmbeddedSources(
-            test.TestState//,
-            //"Robust.Shared.IoC.DependencyAttribute.cs"
-        );
-
         test.TestState.Sources.Add(("TestTypeDefs.cs", TestTypeDefs));
 
         // ExpectedDiagnostics cannot be set, so we need to AddRange here...

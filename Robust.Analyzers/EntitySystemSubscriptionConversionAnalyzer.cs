@@ -135,6 +135,8 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
                 if (handlerMethod.IsVirtual || handlerMethod.IsAbstract)
                     continue;
 
+                // Find the name of the attribute we need to use to replace the invocation and
+                // pass it to the code fixer.
                 var props = new Dictionary<string, string?>
                 {
                     { AttributeNameKey, ToAttributeName(invocation.TargetMethod.Name) }

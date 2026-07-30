@@ -130,13 +130,6 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         IMethodSymbol handlerMethodSymbol,
         string attributeName)
     {
-        // var root = editor.OriginalRoot as CompilationUnitSyntax;
-        // if (!root!.Usings.Any(u => u.Name?.ToString() == AttributeNamespace))
-        // {
-        //     var newRoot = root.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(AttributeNamespace)));
-        // }
-        // editor.ReplaceNode
-
         // Get the syntax node for the event handler method.
         var handlerMethodSyntax = handlerMethodSymbol.DeclaringSyntaxReferences.First().GetSyntax() as MethodDeclarationSyntax;
 

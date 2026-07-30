@@ -229,11 +229,12 @@ namespace Robust.Server.Placement
                 else
                 {
                     var searchBox = Box2.CenteredAround(mapCoords.Position, new Vector2(2.0f, 2.0f));
-                    foreach (var nearbyGrid in _maps.FindGridsIntersecting(mapCoords.MapId, searchBox))
+                    var nearbyGrids = new List<Entity<MapGridComponent>>();
+                    _maps.FindGridsIntersecting(mapCoords.MapId, searchBox, ref nearbyGrids);
+                    if (nearbyGrids.Count > 0)
                     {
-                        grid = nearbyGrid;
-                        gridId = nearbyGrid.Owner;
-                        break;
+                        grid = nearbyGrids[0].Comp;
+                        gridId = nearbyGrids[0].Owner;
                     }
                 }
             }

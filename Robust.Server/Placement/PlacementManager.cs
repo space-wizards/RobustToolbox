@@ -28,7 +28,11 @@ namespace Robust.Server.Placement
         [Dependency] private IPlayerManager _playerManager = default!;
         [Dependency] private IPrototypeManager _prototype = default!;
         [Dependency] private IServerEntityManager _entityManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private Robust.Shared.Timing.IGameTiming _timing = default!;
+
+        private readonly Dictionary<NetUserId, (EntityUid Grid, Vector2 Position, TimeSpan Time)> _lastPlacement = new();
 
         private EntityLookupSystem _lookup => _entityManager.System<EntityLookupSystem>();
         private SharedMapSystem _maps => _entityManager.System<SharedMapSystem>();
@@ -189,29 +193,75 @@ namespace Robust.Server.Placement
         {
             if (!coordinates.IsValid(_entityManager)) return;
 
-            var mapSystem = _maps;
-
-            MapGridComponent? grid;
-
+            MapGridComponent? grid = null;
             EntityUid gridId = coordinates.EntityId;
-            if (_entityManager.TryGetComponent(coordinates.EntityId, out grid)
-                || mapSystem.TryFindGridAt(_xformSystem.ToMapCoordinates(coordinates), out gridId, out grid))
+            var mapCoords = _xformSystem.ToMapCoordinates(coordinates);
+            var tile = new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0)));
+
+            // Step 1: If coordinates already reference a grid entity, use it directly.
+            if (_entityManager.TryGetComponent(coordinates.EntityId, out grid))
             {
-                mapSystem.SetTile(gridId, grid, coordinates, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
+                gridId = coordinates.EntityId;
+            }
+            // Step 2: Check _lastPlacement FIRST — this is the key to preventing
+            // grid fragmentation during drag-fill. Once we start placing on a grid,
+            // all subsequent tiles within 2 seconds go to the same grid, regardless
+            // of what TryFindGridAt might return (it can find wrong small grids
+            // after broadphase updates between ticks).
+
+            else if (_lastPlacement.TryGetValue(placingUserId, out var last)
+                     && _timing.CurTime - last.Time < TimeSpan.FromSeconds(2.0)
+                     && _entityManager.TryGetComponent(last.Grid, out MapGridComponent? lastGridComp))
+            {
+                var lastXform = _entityManager.GetComponent<TransformComponent>(last.Grid);
+                if (lastXform.MapID == mapCoords.MapId)
+                {
+                    grid = lastGridComp;
+                    gridId = last.Grid;
+                }
+            }
+
+            // Step 3: Fallback — try to find any grid at the exact position or nearby.
+            if (grid == null)
+            {
+                if (_mapManager.TryFindGridAt(mapCoords, out gridId, out grid))
+                {
+                }
+                else
+                {
+                    var searchBox = Box2.CenteredAround(mapCoords.Position, new Vector2(2.0f, 2.0f));
+                    foreach (var nearbyGrid in _mapManager.FindGridsIntersecting(mapCoords.MapId, searchBox))
+                    {
+                        grid = nearbyGrid;
+                        gridId = nearbyGrid.Owner;
+                        break;
+                    }
+                }
+            }
+
+            if (grid != null)
+            {
+                // Use WorldToTile for correct coordinate conversion regardless of
+                // which entity the original coordinates were relative to.
+                var tilePos = _maps.WorldToTile(gridId, grid, mapCoords.Position);
+                _maps.SetTile(gridId, grid, tilePos, tile);
+                _lastPlacement[placingUserId] = (gridId, mapCoords.Position, _timing.CurTime);
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
             }
             else if (tileType != 0) // create a new grid
             {
-                var newGrid = mapSystem.CreateGridEntity(_xformSystem.GetMapId(coordinates));
+                var newGrid = _mapManager.CreateGridEntity(_xformSystem.GetMapId(coordinates));
                 var newGridXform = new Entity<TransformComponent>(
                     newGrid.Owner,
                     _entityManager.GetComponent<TransformComponent>(newGrid));
 
-                _xformSystem.SetWorldPosition(newGridXform, coordinates.Position - newGrid.Comp.TileSizeHalfVector); // assume bottom left tile origin
-                var tilePos = mapSystem.WorldToTile(newGrid.Owner, newGrid.Comp, coordinates.Position);
-                mapSystem.SetTile(newGrid.Owner, newGrid.Comp, tilePos, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
+                _xformSystem.SetWorldPosition(newGridXform, mapCoords.Position - newGrid.Comp.TileSizeHalfVector);
+                var tilePos = _maps.WorldToTile(newGrid.Owner, newGrid.Comp, mapCoords.Position);
+                _maps.SetTile(newGrid.Owner, newGrid.Comp, tilePos, tile);
+
+                _lastPlacement[placingUserId] = (newGrid.Owner, mapCoords.Position, _timing.CurTime);
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);

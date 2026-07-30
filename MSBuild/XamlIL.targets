@@ -15,10 +15,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client.NameGenerator\Robust.Client.NameGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client.NameGenerator\Robust.Client.NameGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
+      <GlobalPropertiesToRemove>RuntimeIdentifier</GlobalPropertiesToRemove>
+    </ProjectReference>
     <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\Robust.Client.Injectors.csproj" ReferenceOutputAssembly="false">
       <SetConfiguration Condition="'$(Configuration)' == 'DebugOpt'">Configuration=Debug</SetConfiguration>
       <SetConfiguration Condition="'$(Configuration)' == 'Tools'">Configuration=Release</SetConfiguration>
+      <GlobalPropertiesToRemove>RuntimeIdentifier</GlobalPropertiesToRemove>
     </ProjectReference>
   </ItemGroup>
 

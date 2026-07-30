@@ -133,8 +133,17 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         // Get the syntax node for the event handler method.
         var handlerMethodSyntax = handlerMethodSymbol.DeclaringSyntaxReferences.First().GetSyntax() as MethodDeclarationSyntax;
 
+        // Generate an annotation containing the full name of the attribute we're adding.
+        // The magic string "SymbolId" makes this a SymbolAnnotation for Simplifier.AddImportsAnnotation to use.
+        var symbolAnnotation = new SyntaxAnnotation("SymbolId", $"{AttributeNamespace}.{attributeName}Attribute");
+        
+        // Create the identifier for the attribute, annotating it with the full class name and AddImportsAnnotation.
+        // When Roslyn applies this code fix, AddImportsAnnotation tells it to add any missing using directives,
+        // but it needs the full name of the class to be able to do so.
+        var identifier = SyntaxFactory.IdentifierName(attributeName).WithAdditionalAnnotations(symbolAnnotation, Simplifier.AddImportsAnnotation);
+        
         // Generate the SubscribeWhateverEvent attribute.
-        var attr = editor.Generator.Attribute(SyntaxFactory.IdentifierName(attributeName).WithAdditionalAnnotations(new SyntaxAnnotation("SymbolId", $"{AttributeNamespace}.{attributeName}Attribute"), Simplifier.AddImportsAnnotation)).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation);
+        var attr = editor.Generator.Attribute(identifier);
 
         // Add the attribute to the event handler method.
         editor.AddAttribute(handlerMethodSyntax!, attr);

@@ -136,7 +136,7 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
                     continue;
 
                 // Find the name of the attribute we need to use to replace the invocation and
-                // pass it to the code fixer.
+                // add it to the diagnostic so the code fixer can easily get it.
                 var props = new Dictionary<string, string?>
                 {
                     { AttributeNameKey, ToAttributeName(invocation.TargetMethod.Name) }

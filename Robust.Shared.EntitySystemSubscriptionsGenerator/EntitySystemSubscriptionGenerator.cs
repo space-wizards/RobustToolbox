@@ -89,36 +89,30 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
                     if (method.Generic != null)
                     {
                         var typeParameters = method.Generic.Value.TypeParameters;
-                        var optionsPerTypeParam = new List<List<string>>();
+                        var optionsPerTypeParam = new List<ImmutableArray<string>>(typeParameters.Length);
 
                         // Gather all valid types for each type parameter based on constraints
                         foreach (var (_, constraints) in typeParameters)
                         {
-                            var validSubstitutions = new List<string>();
+                            var filteredTypes = tuple.Right.Where(type => !constraints.Any(constraint =>
+                                !TypeSymbolHelper.Inherits(type, constraint) &&
+                                !TypeSymbolHelper.ImplementsInterface(type, constraint.ToString())));
 
-                            foreach (var type in tuple.Right)
-                            {
-                                if (constraints.Any(constraint =>
-                                        !TypeSymbolHelper.Inherits(type, constraint) &&
-                                        !TypeSymbolHelper.ImplementsInterface(type, constraint.ToString())))
-                                {
-                                    continue;
-                                }
-
-                                validSubstitutions.AddRange(GetValidClosedTypes(type, tuple.Right));
-                            }
+                            var validSubstitutions = filteredTypes
+                                .SelectMany(type => GetValidClosedTypes(type, tuple.Right))
+                                .ToImmutableArray();
 
                             optionsPerTypeParam.Add(validSubstitutions);
                         }
 
                         // If any type parameter has no valid replacements, we can't generate generic combinations
-                        if (optionsPerTypeParam.Any(opts => opts.Count == 0))
+                        if (optionsPerTypeParam.Any(opts => opts.Length == 0))
                             continue;
 
                         // Generate Cartesian Product of all substitutions to satisfy multi-parameter combinations
                         foreach (var combination in CartesianProduct(optionsPerTypeParam))
                         {
-                            var combinationList = combination.ToList();
+                            var combinationList = combination.ToImmutableArray();
                             IEnumerable<string> newArgs = method.TypeArgs;
 
                             // Replace each type parameter
@@ -206,51 +200,47 @@ using JetBrains.Annotations;
             yield break;
         }
 
-        var typeArgumentsOptions = new List<List<string>>();
+        var optionsPerTypeParam = new List<ImmutableArray<string>>(type.TypeParameters.Length);
 
-        // For each type parameter, find all candidate types from 'allTypes' that satisfy its constraints
+        // Gather all valid types for each type parameter based on constraints
         foreach (var typeParam in type.TypeParameters)
         {
-            var recursiveOptions = new List<string>();
+            var constraints = typeParam.ConstraintTypes;
+            var filteredTypes = allTypes.Where(t => !constraints.Any(constraint =>
+                !TypeSymbolHelper.Inherits(t, constraint) &&
+                !TypeSymbolHelper.ImplementsInterface(t, constraint.ToString())));
 
-            foreach (var candidate in allTypes)
-            {
-                if (!typeParam.ConstraintTypes.Any(constraint =>
-                        !TypeSymbolHelper.Inherits(candidate, constraint) &&
-                        !TypeSymbolHelper.ImplementsInterface(candidate, constraint.ToString())))
-                {
-                    // Recursively get closed types for this candidate (in case the candidate itself is generic)
-                    recursiveOptions.AddRange(GetValidClosedTypes(candidate, allTypes));
-                }
-            }
+            var validSubstitutions = filteredTypes
+                .SelectMany(t => GetValidClosedTypes(t, allTypes))
+                .ToImmutableArray();
 
-            // No valid types for this parameter!
-            if (recursiveOptions.Count == 0)
-                yield break;
-
-            typeArgumentsOptions.Add(recursiveOptions);
+            optionsPerTypeParam.Add(validSubstitutions);
         }
+
+        // If any type parameter has no valid replacements, we can't generate generic combinations
+        if (optionsPerTypeParam.Any(opts => opts.Length == 0))
+            yield break;
 
         // Isolate the base name
         var baseTypeName = type.OriginalDefinition.ToString().Split('<')[0];
 
         // Generate all possible combinations using a Cartesian product and yield the fully constructed strings
-        foreach (var combination in CartesianProduct(typeArgumentsOptions))
+        foreach (var combination in CartesianProduct(optionsPerTypeParam))
         {
             yield return $"{baseTypeName}<{string.Join(", ", combination)}>";
         }
     }
 
-    private static IEnumerable<IEnumerable<string>> CartesianProduct(IReadOnlyList<List<string>> sequences)
+    private static IEnumerable<IEnumerable<string>> CartesianProduct(IReadOnlyList<ImmutableArray<string>> sequences)
     {
-        IEnumerable<IEnumerable<string>> emptyProduct = new[] { Enumerable.Empty<string>() };
+        IEnumerable<IEnumerable<string>> emptyProduct = [[]];
 
         return sequences.Aggregate(
             emptyProduct,
             (accumulator, sequence) =>
                 from accseq in accumulator
                 from item in sequence
-                select accseq.Concat(new[] { item }));
+                select accseq.Concat([item]));
     }
 
     /// Tries to parse <paramref name="method"/>'s signature as an even subscription, returning the information required
@@ -321,7 +311,7 @@ using JetBrains.Annotations;
         return [componentType.ToString(), eventType.ToString()];
     }
 
-    /// Tries to parse <paramref name="method"/>'s signature as <c>Robust.Shared.GameObjects.EntityEventRefHandler</c>.
+    /// Tries to parse <paramref name="method"/>'s signature as <c>Robust.Shared.GameObjects.EntityEventRefHandler</c> with type parameters.
     /// <returns>The type argument syntax to include in the subscription function call.</returns>
     public static ImmutableArray<string>? TryParseEntityEventRefHandlerGeneric(IMethodSymbol method)
     {
@@ -342,7 +332,14 @@ using JetBrains.Annotations;
         var eventType = method.Parameters[1].Type as ITypeParameterSymbol;
         var eventTypeNamed = method.Parameters[1].Type as INamedTypeSymbol;
 
-        return [componentType.ToString(), eventType?.ToString() ?? eventTypeNamed?.ToString()];
+        var evStr = string.Empty;
+
+        if (eventType != null)
+            evStr = eventType.ToString();
+        if (eventTypeNamed != null)
+            evStr = eventTypeNamed.ToString();
+
+        return [componentType.ToString(), evStr];
     }
 
     /// Tries to parse <paramref name="method"/>'s signature as <c>Robust.Shared.GameObjects.ComponentEventHandler</c>.

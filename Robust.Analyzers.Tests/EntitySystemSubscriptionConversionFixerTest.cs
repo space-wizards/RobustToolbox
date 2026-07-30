@@ -68,6 +68,7 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
                 where TComp : IComponent
                 where TEvent : notnull;
             public delegate void EntityEventHandler<in T>(T ev);
+            public delegate void EntitySessionEventHandler<in T>(T msg, string foo);
 
             public abstract class EntitySystem
             {
@@ -82,6 +83,11 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
                     Type[]? before = null, Type[]? after = null)
                     where T : notnull
                 { }
+                protected void SubscribeAllEvent<T>(
+                    EntitySessionEventHandler<T> handler,
+                    Type[]? before = null, Type[]? after = null)
+                    where T : notnull
+                { }
             }
         }
 
@@ -89,7 +95,7 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
         {
             public sealed class SubscribeLocalEventAttribute : Attribute;
             public sealed class SubscribeNetworkEventAttribute : Attribute;
-            public sealed class SubscribeAllEventAttribute : Attribute;
+            public sealed class EventSubscriptionAttribute : Attribute;
         }
 
         public readonly struct TestEvent;
@@ -470,6 +476,55 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
         await Verifier(code, fixedCode,
             // /0/Test0.cs(10,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
             VerifyCS.Diagnostic().WithSpan(10, 9, 10, 56)
+        );
+    }
+
+    [Test]
+    [Description("Tests that a SubscribeAllEvent invocation is correctly converted to an attribute.")]
+    public async Task ConvertAllEvent()
+    {
+        const string code = """
+            using Robust.Shared.Analyzers;
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+
+                    SubscribeAllEvent<TestNetworkEvent>(OnTest); // Comment here
+                }
+
+                private void OnTest(TestNetworkEvent args, string foo)
+                {
+                    // Do something
+                }
+            }
+            """;
+
+        const string fixedCode = """
+            using Robust.Shared.Analyzers;
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+                }
+
+                [EventSubscription]
+                private void OnTest(TestNetworkEvent args, string foo)
+                {
+                    // Do something
+                }
+            }
+            """;
+
+        await Verifier(code, fixedCode,
+            // /0/Test0.cs(10,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
+            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 52)
         );
     }
 

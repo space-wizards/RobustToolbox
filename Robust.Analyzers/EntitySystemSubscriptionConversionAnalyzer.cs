@@ -18,6 +18,7 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
     private const string SubscribeLocalEventMethodName = "SubscribeLocalEvent";
     private const string SubscribeNetworkEventMethodName = "SubscribeNetworkEvent";
     private const string SubscribeAllEventMethodName = "SubscribeAllEvent";
+    private const string SubscribeAllEventAttributeName = "EventSubscription";
     private static readonly string[] SubscribeMethods =
     [
         SubscribeLocalEventMethodName,
@@ -154,8 +155,10 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
     /// </summary>
     public static string ToAttributeName(string methodName)
     {
-        // This is currently a 1:1 match, but if it weren't,
-        // this would be the place to implement the remapping.
-        return methodName;
+        return methodName switch
+        {
+            SubscribeAllEventMethodName => SubscribeAllEventAttributeName,
+            _ => methodName
+        };
     }
 }

@@ -300,13 +300,19 @@ public static class CompletionHelper
             yield break;
 
         var isTextFilterEmpty = string.IsNullOrWhiteSpace(filterWith);
-        for(var i = 0; i < limit && i < found.Count; i++)
+        var index = 0;
+        var returnedCount = 0;
+        while (returnedCount < limit && index < found.Count)
         {
-            var current = found[i];
+            var current = found[index];
+            index++;
             var description = current.Description;
-            if (!isTextFilterEmpty && !description.StartsWith(filterWith!) && !current.ID.StartsWith(filterWith!))
+            if (!isTextFilterEmpty
+                && !description.Contains(filterWith!, StringComparison.InvariantCultureIgnoreCase)
+                && !current.ID.Contains(filterWith!, StringComparison.InvariantCultureIgnoreCase))
                 continue;
 
+            returnedCount++;
             yield return new CompletionOption(current.ID, description);
         }
     }

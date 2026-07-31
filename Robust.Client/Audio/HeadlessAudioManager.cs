@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using Robust.Shared.Audio;
@@ -13,6 +14,8 @@ namespace Robust.Client.Audio;
 /// </summary>
 internal sealed class HeadlessAudioManager : IAudioInternal
 {
+
+    private readonly IReadOnlyList<string> _emptyDevices = Array.Empty<string>();
     private int _audioBuffer;
 
     /// <inheritdoc />
@@ -34,6 +37,16 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     public IAudioSource CreateAudioSource(AudioStream stream)
     {
         return DummyAudioSource.Instance;
+    }
+
+    public IReadOnlyList<string> GetAudioDevices()
+    {
+        return _emptyDevices;
+    }
+
+    public string? GetDefaultAudioDevice()
+    {
+        return null;
     }
 
     /// <inheritdoc />

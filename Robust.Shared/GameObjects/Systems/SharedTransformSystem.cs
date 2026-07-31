@@ -19,7 +19,6 @@ namespace Robust.Shared.GameObjects
     public abstract partial class SharedTransformSystem : EntitySystem
     {
         [Dependency] private IGameTiming _gameTiming = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private EntityLookupSystem _lookup = default!;
         [Dependency] private SharedMapSystem _map = default!;
         [Dependency] private MetaDataSystem _metaData = default!;

@@ -11,6 +11,9 @@ internal sealed partial class PvsSystem
 {
     private void OnEntityMove(ref MoveEvent ev)
     {
+        if (ev.OnlyRotation)
+            return;
+
         UpdatePosition(ev.Entity.Owner, ev.Entity.Comp1, ev.Entity.Comp2, ev.OldPosition.EntityId);
     }
 

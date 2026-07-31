@@ -161,7 +161,6 @@ namespace Robust.UnitTesting
             }
 
             var entMan = deps.Resolve<IEntityManager>();
-            var mapMan = deps.Resolve<IMapManager>();
 
             // Avoid discovering EntityCommands since they may depend on systems
             // that aren't available in a unit test context.
@@ -193,7 +192,6 @@ namespace Robust.UnitTesting
             // RobustUnitTest is complete hot garbage.
             // This makes EventTables ignore *all* the screwed up component abuse it causes.
             entMan.EventBus.OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();  // The nightmare never ends
-            mapMan.Initialize();
             systems.Initialize();
 
             deps.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
@@ -203,7 +201,6 @@ namespace Robust.UnitTesting
             modLoader.TryLoadModulesFrom(ResPath.Root, "");
 
             entMan.Startup();
-            mapMan.Startup();
         }
 
         [OneTimeTearDown]

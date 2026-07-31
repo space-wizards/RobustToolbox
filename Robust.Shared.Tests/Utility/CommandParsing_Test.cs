@@ -33,5 +33,22 @@ namespace Robust.Shared.Tests.Utility
 
             Assert.That(escaped, Is.EqualTo(expected));
         }
+
+        [TestCase("foo;bar")]
+        [TestCase("\"foo;bar")]
+        [TestCase("f oo;bar")]
+        [TestCase("f\\ oo;bar")]
+        public void TestEscapeCommand(string source)
+        {
+            var args = source.Split(';');
+
+            var result = new List<string>();
+            var escapedCommand = CommandParsing.EscapeCommand(args);
+            TestContext.Out.WriteLine($"Escaped command: {escapedCommand}");
+
+            CommandParsing.ParseArguments(escapedCommand, result);
+
+            Assert.That(result, Is.EquivalentTo(args));
+        }
     }
 }

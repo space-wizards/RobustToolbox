@@ -211,7 +211,8 @@ namespace Robust.Shared.Network
                         HWId = legacyHwid,
                         ModernHWIds = modernHWIds,
                         Trust = joinedRespJson.ConnectionData!.Trust,
-                        CreatedTime = joinedRespJson.UserData.CreatedTime
+                        CreatedTime = joinedRespJson.UserData.CreatedTime,
+                        IsLocal = isLocal
                     };
                     padSuccessMessage = false;
                     type = LoginType.LoggedIn;
@@ -252,10 +253,15 @@ namespace Robust.Shared.Network
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: Assigned user ID: {userId}");
 
+                    var localTrust = _config.GetCVar(CVars.AuthLocalTrust);
+                    var guestTrust = _config.GetCVar(CVars.AuthGuestTrust);
+
                     userData = new NetUserData(userId, name)
                     {
                         HWId = [],
-                        ModernHWIds = []
+                        ModernHWIds = [],
+                        Trust = isLocal ? localTrust : guestTrust,
+                        IsLocal = isLocal
                     };
                 }
 

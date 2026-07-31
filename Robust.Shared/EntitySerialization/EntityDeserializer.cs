@@ -617,8 +617,9 @@ public sealed partial class EntityDeserializer :
                 }
 
                 var datanode = compData;
-                if (proto != null && proto.Components.TryGetValue(name, out var protoData))
-                    datanode = _seriMan.CombineMappings(compData, protoData.Mapping);
+
+                if (proto != null && _proto.GetPrototypeData(proto).TryGetValue(name, out var protoData))
+                    datanode = _seriMan.CombineMappings(compData, protoData);
 
                 _components.Add(name, datanode);
             }
@@ -689,7 +690,6 @@ public sealed partial class EntityDeserializer :
             // I'm scared turning over this rock will reveal a lot of bugs. So leaving that to a future PR.
             // I.e., creating "temp" here just unnecessarily slows everything down.
             var temp = (IComponent) _seriMan.Read(compReg.Type, data, this)!;
-
             _seriMan.CopyTo(temp, ref existing, this, notNullableOverride: true);
         }
 

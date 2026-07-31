@@ -17,7 +17,7 @@ namespace Robust.Client.Placement.Modes
             // Go over diagonal size so when placing in a line it doesn't stop snapping.
             const float searchBoxSize = 2f; // size of search box in meters
 
-            MouseCoords = ScreenToCursorGrid(mouseScreen).AlignWithClosestGridTile(searchBoxSize, pManager.EntityManager, pManager.MapManager);
+            MouseCoords = ScreenToCursorGrid(mouseScreen).AlignWithClosestGridTile(searchBoxSize, pManager.EntityManager);
 
             var gridId = pManager.EntityManager.System<SharedTransformSystem>().GetGrid(MouseCoords);
 

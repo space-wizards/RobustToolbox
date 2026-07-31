@@ -3,6 +3,7 @@ using System.Numerics;
 using NUnit.Framework;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -241,6 +242,43 @@ namespace Robust.UnitTesting.Client.UserInterface
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
 
             control.Orphan();
+        }
+
+        /// <summary>
+        ///     Assert that windows correctly re-position themselves if their parent is re-sized.
+        /// </summary>
+        [Test]
+        public void TestWindowTracksRelativePositionOnResize()
+        {
+            _userInterfaceManager.RootControl.Arrange(new UIBox2(0, 0, 100, 100));
+
+            var window = new TestWindow
+            {
+                SetSize = new Vector2(20, 20),
+            };
+
+            _userInterfaceManager.WindowRoot.AddChild(window);
+
+            var initialPos = new Vector2(40, 40);
+
+            LayoutContainer.SetPosition(window, initialPos);
+            Assert.That(window.Position, Is.EqualTo(initialPos));
+
+            _userInterfaceManager.WindowRoot.InvalidateArrange();
+            _userInterfaceManager.RootControl.Arrange(new UIBox2(0, 0, 200, 200));
+
+            // 40,40 x 2 + 10
+            Assert.That(window.Position, Is.EqualTo(new Vector2(90, 90)));
+
+            window.Orphan();
+        }
+
+        private sealed class TestWindow : BaseWindow
+        {
+            protected override DragMode GetDragModeFor(Vector2 relativeMousePos)
+            {
+                return DragMode.None;
+            }
         }
     }
 }

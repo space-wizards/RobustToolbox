@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -565,6 +565,14 @@ public interface IPrototypeManager
     /// Entity prototypes grouped by their categories.
     /// </summary>
     FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; }
+
+    /// <summary>
+    /// Tries to get list of <see cref="EntityPrototype"/> with provided category.
+    /// </summary>
+    /// <param name="category">Category to search for.</param>
+    /// <param name="prototypes">List of prototypes with category or null.</param>
+    /// <returns>True if provided category have respective list of prototypes, otherwise false.</returns>
+    bool TryGetEntityPrototypesByCategory(ProtoId<EntityCategoryPrototype> category, [NotNullWhen(true)]out IReadOnlyList<EntityPrototype>? prototypes);
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

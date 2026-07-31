@@ -275,12 +275,12 @@ public static class CompletionHelper
     }
 
     /// <summary>
-    /// Gets AutoComplete options from list of all loaded <see cref="EntityPrototypes"/>
+    /// Gets AutoComplete options from list of all loaded <see cref="EntityPrototype"/>
     /// filtered by provided <see cref="EntityCategoryPrototype"/>
     /// and substring (filter by StartsWith on <see cref="EntityPrototype.Description"/>
     /// and <see cref="EntityPrototype.ID"/>).
     /// </summary>
-    /// <param name="substring">
+    /// <param name="filterWith">
     /// Substring, by which to filter entity prototypes Id and description.
     /// Will not do filtering in case null was provided.
     /// </param>
@@ -288,7 +288,7 @@ public static class CompletionHelper
     /// <param name="prototype">Prototype manager to be used (in case it was provided).</param>
     /// <param name="limit">Amount of rows to return (in case source collection will have more rows after filtering applied).</param>
     public static IEnumerable<CompletionOption> EntityPrototypes(
-        string? substring,
+        string? filterWith,
         ProtoId<EntityCategoryPrototype> category,
         IPrototypeManager? prototype = null,
         int limit = 20
@@ -296,19 +296,17 @@ public static class CompletionHelper
     {
         IoCManager.Resolve(ref prototype);
 
-        if (!prototype.Categories.TryGetValue(category, out var found))
+        if (!prototype.TryGetEntityPrototypesByCategory(category, out var found))
             yield break;
 
-        var isEmpty = string.IsNullOrWhiteSpace(substring);
-        var i = 0;
-        while (i < limit)
+        var isTextFilterEmpty = string.IsNullOrWhiteSpace(filterWith);
+        for(var i = 0; i < limit && i < found.Count; i++)
         {
             var current = found[i];
             var description = current.Description;
-            if (!isEmpty && !description.StartsWith(substring!) && !current.ID.StartsWith(substring!))
+            if (!isTextFilterEmpty && !description.StartsWith(filterWith!) && !current.ID.StartsWith(filterWith!))
                 continue;
 
-            i++;
             yield return new CompletionOption(current.ID, description);
         }
     }

@@ -43,11 +43,23 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
                 where TComp : IComponent
                 where TEvent : notnull;
 
+            public delegate void ComponentEventHandler<in TComp, in TEvent>(EntityUid uid, TComp component, TEvent args)
+                where TComp : IComponent
+                where TEvent : notnull;
+
             public abstract class EntitySystem
             {
                 public virtual void Initialize() { }
                 public void SubscribeLocalEvent<TComp, TEvent>(
                     ComponentEventRefHandler<TComp, TEvent> handler,
+                    Type[]? before = null,
+                    Type[]? after = null)
+                    where TComp : IComponent
+                    where TEvent : notnull
+                { }
+
+                public void SubscribeLocalEvent<TComp, TEvent>(
+                    ComponentEventHandler<TComp, TEvent> handler,
                     Type[]? before = null,
                     Type[]? after = null)
                     where TComp : IComponent
@@ -223,6 +235,35 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
             }
 
             public class TestEventArgs;
+            public sealed class TestEventClassA : TestEventArgs;
+            public sealed class TestEventClassB : TestEventArgs;
+            """;
+
+        await Verifier(code, []);
+    }
+
+    [Test]
+    [Description("Tests that subscriptions using event handlers with abstract event types are not flagged as elligible for conversion.")]
+    public async Task IgnoreWithAbstractHandler()
+    {
+        const string code = """
+
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+
+                    SubscribeLocalEvent<TestComponent, TestEventClassA>(OnTest);
+                    SubscribeLocalEvent<TestComponent, TestEventClassB>(OnTest);
+                }
+
+                private void OnTest(EntityUid uid, TestComponent comp, TestEventArgs args) { }
+            }
+
+            public abstract class TestEventArgs;
             public sealed class TestEventClassA : TestEventArgs;
             public sealed class TestEventClassB : TestEventArgs;
             """;

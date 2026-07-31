@@ -125,6 +125,12 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
                 if (handlerMethod.IsGenericMethod)
                     continue;
 
+                // If the target method's event type is abstract, we can't subscribe using the attribute,
+                // since the subscription needs the exact type.
+                var handlerEventType = handlerMethod.Parameters.Last().Type;
+                if (handlerEventType.IsAbstract)
+                    continue;
+
                 // If the handler is a virtual or abstract method, we can't use the attribute
                 // since we would have to add it to the base class
                 if (handlerMethod.IsVirtual || handlerMethod.IsAbstract)

@@ -14,7 +14,6 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
 {
     private const string EntitySystemTypeName = "Robust.Shared.GameObjects.EntitySystem";
     private const string SubscribeLocalEventAttributeTypeName = "Robust.Shared.Analyzers.SubscribeLocalEventAttribute";
-    private const string InitializeMethodName = "Initialize";
     private const string SubscribeLocalEventMethodName = "SubscribeLocalEvent";
     private const string SubscribeNetworkEventMethodName = "SubscribeNetworkEvent";
     private const string SubscribeAllEventMethodName = "SubscribeAllEvent";
@@ -75,10 +74,6 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
     private static void AnalyzeMethod(OperationAnalysisContext context)
     {
         if (context.Operation is not IMethodBodyOperation method)
-            return;
-
-        // We're only looking for the Initialize method
-        if (context.ContainingSymbol.Name != InitializeMethodName)
             return;
 
         if (method.BlockBody is null)

@@ -42,15 +42,13 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
 
     private static async Task RegisterSubscriptionConversion(CodeFixContext context, Diagnostic diagnostic)
     {
-        var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken);
-        var root = await semanticModel!.SyntaxTree.GetRootAsync(context.CancellationToken);
+        var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
 
         var span = diagnostic.Location.SourceSpan;
         var invocationSyntax = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<InvocationExpressionSyntax>().First();
         var classSyntax = invocationSyntax?.AncestorsAndSelf().OfType<ClassDeclarationSyntax>().First();
-        var classSymbol = semanticModel.GetDeclaredSymbol(classSyntax!);
 
-        if (invocationSyntax is null || classSyntax is null || classSymbol is null)
+        if (invocationSyntax is null || classSyntax is null)
             return;
 
         // Get the name of the Attribute we need to add to the event handler method.
@@ -59,7 +57,7 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
 
         context.RegisterCodeFix(CodeAction.Create(
             "Convert subscription to attribute",
-            c => ConvertSubscription(context.Document, invocationSyntax, classSymbol, classSyntax, attributeName, c),
+            c => ConvertSubscription(context.Document, invocationSyntax, classSyntax, attributeName, c),
             "Convert subscription to attribute"
         ), diagnostic);
     }
@@ -67,7 +65,6 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
     private static async Task<Solution> ConvertSubscription(
         Document document,
         InvocationExpressionSyntax invocationSyntax,
-        INamedTypeSymbol classSymbol,
         ClassDeclarationSyntax classSyntax,
         string attributeName,
         CancellationToken c)
@@ -79,6 +76,9 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         var model = await document.GetSemanticModelAsync(c);
         if (model.GetSymbolInfo(handlerMethodIdentifer, c).Symbol is not IMethodSymbol handlerMethodSymbol)
             throw new InvalidOperationException($"Failed to find event handler method {handlerMethodIdentifer}");
+
+        if (model.GetDeclaredSymbol(classSyntax) is not { } classSymbol)
+            throw new InvalidOperationException($"Failed to find symbol for class {classSyntax.Identifier}");
 
         // Create a SolutionEditor to edit multiple documents without worrying about immutability.
         // The Initialize method might be in a different document than the handler, thanks to partial classes.
@@ -136,12 +136,12 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         // Generate an annotation containing the full name of the attribute we're adding.
         // The magic string "SymbolId" makes this a SymbolAnnotation for Simplifier.AddImportsAnnotation to use.
         var symbolAnnotation = new SyntaxAnnotation("SymbolId", $"{AttributeNamespace}.{attributeName}Attribute");
-        
+
         // Create the identifier for the attribute, annotating it with the full class name and AddImportsAnnotation.
         // When Roslyn applies this code fix, AddImportsAnnotation tells it to add any missing using directives,
         // but it needs the full name of the class to be able to do so.
         var identifier = SyntaxFactory.IdentifierName(attributeName).WithAdditionalAnnotations(symbolAnnotation, Simplifier.AddImportsAnnotation);
-        
+
         // Generate the SubscribeWhateverEvent attribute.
         var attr = editor.Generator.Attribute(identifier);
 

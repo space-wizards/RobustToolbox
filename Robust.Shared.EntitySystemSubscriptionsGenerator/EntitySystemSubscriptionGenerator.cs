@@ -210,7 +210,7 @@ using JetBrains.Annotations;
             !TypeSymbolHelper.ImplementsInterface(componentType, IComponentTypeName))
             return null;
 
-        return [componentType.ToString(), eventType.ToString()];
+        return [componentType.WithNullableAnnotation(NullableAnnotation.NotAnnotated).ToString(), eventType.ToString()];
     }
 
     private static SubscriptionInfo? TryParseSubscription(

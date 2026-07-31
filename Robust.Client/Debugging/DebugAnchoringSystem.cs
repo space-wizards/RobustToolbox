@@ -17,7 +17,6 @@ namespace Robust.Client.Debugging
     {
         [Dependency] private IEyeManager _eyeManager = default!;
         [Dependency] private IInputManager _inputManager = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private IUserInterfaceManager _userInterface = default!;
         [Dependency] private MapSystem _mapSystem = default!;
 
@@ -64,7 +63,7 @@ namespace Robust.Client.Debugging
             var mouseSpot = _inputManager.MouseScreenPosition;
             var spot = _eyeManager.PixelToMap(mouseSpot);
 
-            if (!_mapManager.TryFindGridAt(spot, out var gridUid, out var grid))
+            if (!_mapSystem.TryFindGridAt(spot, out var gridUid, out var grid))
             {
                 _label.Text = string.Empty;
                 _hovered = null;

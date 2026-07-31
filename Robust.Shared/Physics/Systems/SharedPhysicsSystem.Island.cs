@@ -332,7 +332,7 @@ public abstract partial class SharedPhysicsSystem
             // when contact broke so if you want to try that then GOOD LUCK.
             if (seed.Island) continue;
 
-            var seedUid = seed.Owner;
+            var seedUid = ent.Owner;
             var mapUid = xform.MapUid;
 
             // TODO: Handle this on client.
@@ -377,7 +377,7 @@ public abstract partial class SharedPhysicsSystem
                 if (body.BodyType == BodyType.Static) continue;
 
                 // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                SetAwake(bodyUid, body, true, updateSleepTime: false);
+                SetAwake(bodyEnt, true, updateSleepTime: false);
 
                 var node = body.Contacts.First;
 
@@ -1139,7 +1139,7 @@ public abstract partial class SharedPhysicsSystem
 
             var body = island.Bodies[i];
 
-            SetAwake(body.Owner, body, false);
+            SetAwake(body, false);
         }
     }
 }

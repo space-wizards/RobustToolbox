@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -29,6 +30,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         {
             var factory = dependencies.Resolve<IComponentFactory>();
             var components = instanceProvider != null ? instanceProvider() : new ComponentRegistry();
+            var referenceTypes = node.Count <= 1024 ? stackalloc CompIdx[node.Count] : new CompIdx[node.Count];
+            var refIdx = 0;
 
             foreach (var sequenceEntry in node.Sequence)
             {
@@ -61,29 +64,24 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                     continue;
                 }
 
+                var registration = factory.GetRegistration(compType);
+                var compIdx = registration.Idx;
+
+                if (referenceTypes[..refIdx].Contains(compIdx))
+                {
+                    throw new InvalidOperationException(
+                        $"Duplicate component reference in prototype: '{compIdx}'");
+                }
+
+                referenceTypes[refIdx++] = compIdx;
+
                 var copy = componentMapping.Copy()!;
                 copy.Remove("type");
 
-                var type = factory.GetRegistration(compType).Type;
-                var read = (IComponent)serializationManager.Read(type, copy, hookCtx, context)!;
+                var read = (IComponent)serializationManager.Read(registration.Type, copy, hookCtx, context)!;
 
-                components[compType] = new ComponentRegistryEntry(read, copy);
-            }
-
-            var referenceTypes = new List<CompIdx>();
-            // Assert that there are no conflicting component references.
-            foreach (var componentName in components.Keys)
-            {
-                var registration = factory.GetRegistration(componentName);
-                var compType = registration.Idx;
-
-                if (referenceTypes.Contains(compType))
-                {
-                    throw new InvalidOperationException(
-                        $"Duplicate component reference in prototype: '{compType}'");
-                }
-
-                referenceTypes.Add(compType);
+                // The full YAML mapping is already retained by PrototypeManager.
+                components[compType] = new ComponentRegistryEntry(read);
             }
 
             return components;
@@ -95,8 +93,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             var factory = dependencies.Resolve<IComponentFactory>();
-            var components = new ComponentRegistry();
+            var componentNames = new HashSet<string>();
             var list = new List<ValidationNode>();
+            var referenceTypes = node.Count <= 1024 ? stackalloc CompIdx[node.Count] : new CompIdx[node.Count];
+            var refIdx = 0;
 
             foreach (var sequenceEntry in node.Sequence)
             {
@@ -122,34 +122,27 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 }
 
                 // Has this type already been added?
-                if (components.ContainsKey(compType))
+                if (!componentNames.Add(compType))
                 {
                     list.Add(new ErrorNode(componentMapping, "Duplicate Component."));
                     continue;
                 }
 
-                var copy = componentMapping.Copy()!;
-                copy.Remove("type");
+                var registration = factory.GetRegistration(compType);
+                var compIdx = registration.Idx;
 
-                var type = factory.GetRegistration(compType).Type;
-
-                list.Add(serializationManager.ValidateNode(type, copy, context));
-            }
-
-            var referenceTypes = new List<CompIdx>();
-
-            // Assert that there are no conflicting component references.
-            foreach (var componentName in components.Keys)
-            {
-                var registration = factory.GetRegistration(componentName);
-                var compType = registration.Idx;
-
-                if (referenceTypes.Contains(compType))
+                if (referenceTypes[..refIdx].Contains(compIdx))
                 {
-                    return new ErrorNode(node, "Duplicate ComponentReference.");
+                    list.Add(new ErrorNode(componentMapping, "Duplicate ComponentReference."));
+                    continue;
                 }
 
-                referenceTypes.Add(compType);
+                referenceTypes[refIdx++] = compIdx;
+
+                var copy = componentMapping.Copy();
+                copy.Remove("type");
+
+                list.Add(serializationManager.ValidateNode(registration.Type, copy, context));
             }
 
             return new ValidatedSequenceNode(list);
@@ -186,7 +179,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             foreach (var (id, component) in source)
             {
-                target.Add(id, serializationManager.CreateCopy(component, context, notNullableOverride: true));
+                var copy = serializationManager.CreateCopy(component.Component, context, notNullableOverride: true);
+                target.Add(id, new ComponentRegistryEntry(copy));
             }
         }
 

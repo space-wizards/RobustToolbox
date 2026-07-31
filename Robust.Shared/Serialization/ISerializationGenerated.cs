@@ -1,5 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Definition;
+using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 #pragma warning disable CS0612 // Type or member is obsolete
 
@@ -7,6 +13,24 @@ namespace Robust.Shared.Serialization;
 
 public interface ISerializationGenerated<T> : ISerializationGenerated
 {
+    /// <seealso cref="ISerializationManager.CreateCopy"/>
+    [Obsolete("Use ISerializationManager.CreateCopy instead")]
+    T Instantiate();
+
+    /// <seealso cref="ISerializationManager.CreateCopy"/>
+    [Obsolete("Use ISerializationManager.CreateCopy instead")]
+    static virtual T StaticInstantiate()
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <seealso cref="ISerializationManager.CreateCopy"/>
+    [Obsolete("Use ISerializationManager.CreateCopy instead")]
+    static virtual object StaticInstantiateObject()
+    {
+        throw new NotImplementedException();
+    }
+
     /// <seealso cref="ISerializationManager.CopyTo"/>
     [Obsolete("Use ISerializationManager.CopyTo instead")]
     void Copy(
@@ -15,17 +39,47 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         SerializationHookContext hookCtx,
         ISerializationContext? context = null);
 
-    /// <seealso cref="ISerializationManager.CopyTo"/>
-    [Obsolete("Use ISerializationManager.CopyTo instead")]
-    void InternalCopy(
+    /// <seealso cref="ISerializationManager.Read"/>
+    [Obsolete("Use ISerializationManager.Read instead")]
+    static virtual void Read(
         ref T target,
+        MappingDataNode mappingDataNode,
         ISerializationManager serialization,
         SerializationHookContext hookCtx,
-        ISerializationContext? context = null);
+        ISerializationContext? context)
+    {
+        throw new NotImplementedException();
+    }
 
-    /// <seealso cref="ISerializationManager.CreateCopy"/>
-    [Obsolete("Use ISerializationManager.CreateCopy instead")]
-    T Instantiate();
+    /// <seealso cref="ISerializationManager.Write"/>
+    [Obsolete("Use ISerializationManager.Write instead")]
+    static virtual void Write(
+        T obj,
+        MappingDataNode mapping,
+        ISerializationManager serialization,
+        ISerializationContext? context,
+        bool alwaysWrite,
+        ImmutableDictionary<string, object?> defaultValues)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <seealso cref="ISerializationManager.ValidateNode"/>
+    [Obsolete("Use ISerializationManager.ValidateNode instead")]
+    static virtual void Validate(
+        Dictionary<string, ValidationNode> nodes,
+        MappingDataNode node,
+        ISerializationManager serialization,
+        ISerializationContext? context = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    [Obsolete("Used only in serialization source generation internally")]
+    static virtual void GetFieldDefinitions(T? instance, List<DataFieldDefinition> fields, string[]? fieldsParsed = null)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public interface ISerializationGenerated
@@ -37,4 +91,16 @@ public interface ISerializationGenerated
         ISerializationManager serialization,
         SerializationHookContext hookCtx,
         ISerializationContext? context = null);
+}
+
+[Obsolete("Used only in serialization source generation internally")]
+public enum ISerializationGeneratedRead
+{
+    Default = 0
+}
+
+[Obsolete("Used only in serialization source generation internally")]
+public enum ISerializationGeneratedCopy
+{
+    Default = 0
 }

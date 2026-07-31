@@ -73,7 +73,6 @@ public record struct WorldAABBEvent
 public sealed partial class EntityLookupSystem : EntitySystem
 {
     [Dependency] private IManifoldManager _manifoldManager = default!;
-    [Dependency] private IMapManager _mapManager = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private INetManager _netMan = default!;
     [Dependency] private SharedContainerSystem _container = default!;

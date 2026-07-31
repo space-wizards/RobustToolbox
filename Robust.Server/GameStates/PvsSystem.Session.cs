@@ -149,6 +149,9 @@ internal sealed partial class PvsSystem
 
     private void ClearSendHistory(PvsSession session)
     {
+        session.StateStream?.Dispose();
+        session.StateStream = null;
+
         if (session.Overflow != null)
             _entDataListPool.Return(session.Overflow.Value.SentEnts);
         session.Overflow = null;

@@ -8,6 +8,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -21,8 +22,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private ITileDefinitionManager _tileMan = default!;
         [Dependency] private IGameTiming _timing = default!;
-        [Dependency] protected IMapManager MapManager = default!;
-        [Dependency] private IMapManagerInternal _mapInternal = default!;
+        [Dependency] private IManifoldManager _manifolds = default!;
         [Dependency] private INetManager _netManager = default!;
         [Dependency] private FixtureSystem _fixtures = default!;
         [Dependency] private SharedPhysicsSystem _physics = default!;
@@ -34,8 +34,17 @@ namespace Robust.Shared.GameObjects
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
         private EntityQuery<TransformComponent> _xformQuery;
+        [Dependency] EntityQuery<GridTreeComponent> _gridTreeQuery;
 
         internal Dictionary<MapId, EntityUid> Maps { get; } = new();
+
+        /// <summary>
+        /// If set, this prevents the <see cref="TileChangedEvent"/> from being raised when modifying grids.
+        /// </summary>
+        /// <remarks>
+        /// Useful if you want to create a new grid, delete an existing grid, or bulk-modify tiles and don't want to spam ten billion individual tile-changed events.
+        /// </remarks>
+        internal bool SuppressOnTileChanged { get; set; }
 
         /// <summary>
         /// This hashset is used to try prevent MapId re-use. This is mainly for auto-assigned map ids.

@@ -25,7 +25,6 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
 {
     [Dependency] protected IEntityManager Entity = default!;
     [Dependency] protected IEyeManager Eye = default!;
-    [Dependency] protected IMapManager MapMan = default!;
     [Dependency] protected IInputManager Input = default!;
     [Dependency] protected IUserInterfaceManager Ui = default!;
     [Dependency] protected IResourceCache Cache = default!;
@@ -59,7 +58,7 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
         if (args.Viewport.Eye?.Position.MapId is not {} map || map == MapId.Nullspace)
             return;
 
-        MapMan.FindGridsIntersecting(map, args.WorldBounds, ref Grids);
+        Map.FindGridsIntersecting(map, args.WorldBounds, ref Grids);
 
         foreach (var grid in Grids)
         {
@@ -108,7 +107,7 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
 
         var coords = viewport.PixelToMap(mousePos.Position);
 
-        if (!MapMan.TryFindGridAt(coords, out var grid, out var comp))
+        if (!Map.TryFindGridAt(coords, out var grid, out var comp))
             return;
 
         var local = Map.WorldToLocal(grid, comp, coords.Position);

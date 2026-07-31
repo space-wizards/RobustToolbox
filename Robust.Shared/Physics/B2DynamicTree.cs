@@ -251,7 +251,8 @@ namespace Robust.Shared.Physics
             capacity = Math.Max(MinimumCapacity, capacity);
 
             _root = Proxy.Free;
-            _nodes = new Node[capacity];
+            // Maximum node count for a full binary tree is 2 * leafCount - 1.
+            _nodes = new Node[2 * capacity - 1];
 
             // Build a linked list for the free list.
             ref var node = ref _nodes[0];
@@ -294,6 +295,10 @@ namespace Robust.Shared.Physics
             _freeList = allocNode.Next;
             Assert(_freeList == -1 || _nodes[_freeList].IsFree);
             allocNode = default;
+            allocNode.Parent = Proxy.Free;
+            allocNode.Next = Proxy.Free;
+            allocNode.Child1 = Proxy.Free;
+            allocNode.Child2 = Proxy.Free;
             ++NodeCount;
             proxy = alloc;
             return ref allocNode;
@@ -1897,7 +1902,7 @@ namespace Robust.Shared.Physics
 
 	        var nodeIndex = _root;
             ref var baseRef = ref _nodes[0];
-	        var node = baseRef;
+	        ref var node = ref Unsafe.Add(ref baseRef, nodeIndex);
 
 	        // These are the nodes that get sorted to rebuild the tree.
 	        // I'm using indices because the node pool may grow during the build.
@@ -1942,7 +1947,7 @@ namespace Robust.Shared.Physics
                         stack.Push(node.Child2);
 			        }
 
-                    node = Unsafe.Add(ref baseRef, nodeIndex);
+                    node = ref Unsafe.Add(ref baseRef, nodeIndex);
 
 			        // Remove doomed node
 			        FreeNode(doomedNodeIndex);
@@ -1956,7 +1961,7 @@ namespace Robust.Shared.Physics
 		        }
 
                 nodeIndex = stack.Pop();
-		        node = Unsafe.Add(ref baseRef, nodeIndex);
+		        node = ref Unsafe.Add(ref baseRef, nodeIndex);
 	        }
 
         #if B2_VALIDATE
@@ -2068,6 +2073,9 @@ namespace Robust.Shared.Physics
             var p1 = input.Origin;
             var d = input.Translation;
 
+            if (d.LengthSquared() < float.Epsilon)
+                return;
+
             var r = d.Normalized();
 
 	        // v is perpendicular to the segment.
@@ -2084,7 +2092,7 @@ namespace Robust.Shared.Physics
 	        // Build a bounding box for the segment.
 	        var segmentAABB = new Box2(Vector2.Min(p1, p2), Vector2.Max(p1, p2));
 
-	        var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+	        var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
             ref var baseRef = ref _nodes[0];
 	        stack.Push(_root);
 
@@ -2141,15 +2149,10 @@ namespace Robust.Shared.Physics
 		        }
 		        else
                 {
-                    var stackCount = stack.GetCount();
-			        Assert( stackCount < 256 - 1 );
-			        if (stackCount < 256 - 1 )
-			        {
-				        // TODO_ERIN just put one node on the stack, continue on a child node
-				        // TODO_ERIN test ordering children by nearest to ray origin
-				        stack.Push(node.Child1);
-				        stack.Push(node.Child2);
-			        }
+			        // TODO_ERIN just put one node on the stack, continue on a child node
+			        // TODO_ERIN test ordering children by nearest to ray origin
+			        stack.Push(node.Child1);
+			        stack.Push(node.Child2);
 		        }
 	        }
         }
@@ -2205,7 +2208,7 @@ namespace Robust.Shared.Physics
 	        var subInput = input;
 
             ref var baseRef = ref _nodes[0];
-            var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
 	        stack.Push(_root);
 
 	        while (stack.GetCount() > 0)
@@ -2258,16 +2261,10 @@ namespace Robust.Shared.Physics
 		        }
 		        else
 		        {
-                    var stackCount = stack.GetCount();
-			        Assert(stackCount < 256 - 1);
-
-			        if (stackCount < 255)
-			        {
-				        // TODO_ERIN just put one node on the stack, continue on a child node
-				        // TODO_ERIN test ordering children by nearest to ray origin
-				        stack.Push(node.Child1);
-				        stack.Push(node.Child2);
-			        }
+			        // TODO_ERIN just put one node on the stack, continue on a child node
+			        // TODO_ERIN test ordering children by nearest to ray origin
+			        stack.Push(node.Child1);
+			        stack.Push(node.Child2);
 		        }
 	        }
         }

@@ -30,7 +30,7 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
     public static readonly DiagnosticDescriptor EntitySystemSubscriptionConversionPossible = new(
         Diagnostics.IdEntitySystemSubscriptionConversionPossible,
         "Convert to attribute-based subscription",
-        "Initialize-based event subscription can be converted to attribute-based",
+        "Event subscription using {0} can be converted to use {1}",
         "Usage",
         DiagnosticSeverity.Info,
         true
@@ -138,16 +138,19 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
 
                 // Find the name of the attribute we need to use to replace the invocation and
                 // add it to the diagnostic so the code fixer can easily get it.
+                var attributeName = ToAttributeName(invocation.TargetMethod.Name);
                 var props = new Dictionary<string, string?>
                 {
-                    { AttributeNameKey, ToAttributeName(invocation.TargetMethod.Name) }
+                    { AttributeNameKey, attributeName }
                 };
 
                 // Flag this subscription as elligible for conversion
                 context.ReportDiagnostic(Diagnostic.Create(
                     EntitySystemSubscriptionConversionPossible,
                     invocation.Syntax.GetLocation(),
-                    props.ToImmutableDictionary()
+                    props.ToImmutableDictionary(),
+                    invocation.TargetMethod.Name,
+                    $"{attributeName}Attribute"
                 ));
             }
         }

@@ -103,8 +103,8 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(9,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(9, 9, 9, 62)
+            // /0/Test0.cs(9,9): info RA0058: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(9, 9, 9, 62).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute")
         );
     }
 

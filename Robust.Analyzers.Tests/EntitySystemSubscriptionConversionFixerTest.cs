@@ -148,8 +148,8 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
             """;
 
         await Verifier(code, fixedCode,
-            // /0/Test0.cs(10,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 62)
+            // /0/Test0.cs(10,9): info RA0058: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 62).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute")
         );
     }
 
@@ -209,10 +209,10 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
             """;
 
         await Verifier(code, fixedCode,
-            // /0/Test0.cs(10,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 62),
-            // /0/Test0.cs(11,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(11, 9, 11, 64)
+            // /0/Test0.cs(10,9): info RA0057: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 62).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute"),
+            // /0/Test0.cs(11,9): info RA0057: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(11, 9, 11, 64).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute")
         );
     }
 
@@ -273,10 +273,10 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
             """;
 
         await Verifier(code, fixedCode,
-            // /0/Test0.cs(10,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 62),
-            // /0/Test0.cs(11,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(12, 9, 12, 64)
+            // /0/Test0.cs(10,9): info RA0057: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 62).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute"),
+            // /0/Test0.cs(12,9): info RA0057:Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(12, 9, 12, 64).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute")
         );
     }
 
@@ -324,8 +324,8 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
             """;
 
         await Verifier(code, fixedCode,
-            // /0/Test0.cs(10,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 62)
+            // /0/Test0.cs(10,9): info RA0057: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 62).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute")
         );
     }
 
@@ -372,8 +372,8 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
             """;
 
         await Verifier(code, fixedCode,
-            // /0/Test0.cs(9,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(9, 9, 9, 62)
+            // /0/Test0.cs(9,9): info RA0057: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(9, 9, 9, 62).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute")
         );
     }
 
@@ -425,8 +425,8 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
             """;
 
         await Verifier(code, fixedCode,
-            // /0/Test0.cs(10,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 62)
+            // /0/Test0.cs(10,9): info RA0057: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 62).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute")
         );
     }
 
@@ -474,8 +474,8 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
             """;
 
         await Verifier(code, fixedCode,
-            // /0/Test0.cs(10,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 56)
+            // /0/Test0.cs(10,9): info RA0058: Event subscription using SubscribeNetworkEvent can be converted to use SubscribeNetworkEventAttribute
+            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 56).WithArguments("SubscribeNetworkEvent", "SubscribeNetworkEventAttribute")
         );
     }
 
@@ -523,8 +523,8 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
             """;
 
         await Verifier(code, fixedCode,
-            // /0/Test0.cs(10,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 52)
+            // /0/Test0.cs(10,9): info RA0058: Event subscription using SubscribeAllEvent can be converted to use EventSubscriptionAttribute
+            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 52).WithArguments("SubscribeAllEvent", "EventSubscriptionAttribute")
         );
     }
 
@@ -585,8 +585,8 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
             """;
 
         await Verifier([code1, code2], [fixed1, fixed2],
-            // /0/Test0.cs(9,9): info RA0057: Initialize-based event subscription can be converted to attribute-based
-            VerifyCS.Diagnostic().WithSpan(9, 9, 9, 62)
+            // /0/Test0.cs(9,9): info RA0057: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(9, 9, 9, 62).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute")
         );
     }
 }

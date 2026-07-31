@@ -616,6 +616,17 @@ internal partial class Clyde
             SDL.SDL_SetTextInputArea(cmdTextInput.Window, ref rect, cmdTextInput.Cursor);
         }
 
+        public bool SetRelativeMouseMode(WindowReg reg, bool enabled)
+        {
+            SendCmd(new CmdSetRelativeMouseMode { Window = WinPtr(reg), Enabled = enabled });
+            return true;
+        }
+
+        private static void WinThreadSetRelativeMouseMode(CmdSetRelativeMouseMode cmd)
+        {
+            SDL.SDL_SetWindowRelativeMouseMode(cmd.Window, cmd.Enabled);
+        }
+
         public void TextInputStart(WindowReg reg)
         {
             SendCmd(new CmdTextInputStart { Window = WinPtr(reg) });

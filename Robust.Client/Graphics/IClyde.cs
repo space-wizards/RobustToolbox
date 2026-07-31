@@ -122,6 +122,8 @@ namespace Robust.Client.Graphics
         /// <exception cref="ObjectDisposedException">Thrown if the cursor object passed has been disposed.</exception>
         void SetCursor(ICursor? cursor);
 
+        bool SetRelativeMouseMode(bool enabled);
+
         /// <summary>
         ///     Make a screenshot of the game, next render frame.
         /// </summary>

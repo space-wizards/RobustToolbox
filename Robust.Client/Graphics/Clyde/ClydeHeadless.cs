@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
@@ -237,6 +237,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             // Nada.
         }
+
+        public bool SetRelativeMouseMode(bool enabled) => false;
 
         public void Screenshot(ScreenshotType type, CopyPixelsDelegate<Rgb24> callback, UIBox2i? subRegion = null)
         {

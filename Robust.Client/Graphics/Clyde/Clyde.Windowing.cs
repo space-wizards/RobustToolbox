@@ -455,6 +455,14 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.CursorSet(_mainWindow!, cursor);
         }
 
+        public bool SetRelativeMouseMode(bool enabled)
+        {
+            if (_windowing == null || _mainWindow == null)
+                return false;
+
+            return _windowing.SetRelativeMouseMode(_mainWindow, enabled);
+        }
+
         private void SetWindowSize(WindowReg reg, Vector2i size)
         {
             DebugTools.AssertNotNull(_windowing);

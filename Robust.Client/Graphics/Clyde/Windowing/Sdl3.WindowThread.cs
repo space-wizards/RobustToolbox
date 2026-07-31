@@ -136,6 +136,10 @@ internal partial class Clyde
                 case CmdTextInputStop cmd:
                     WinThreadStopTextInput(cmd);
                     break;
+
+                case CmdSetRelativeMouseMode cmd:
+                    WinThreadSetRelativeMouseMode(cmd);
+                    break;
             }
         }
 
@@ -332,6 +336,12 @@ internal partial class Clyde
         private sealed class CmdTextInputStop : CmdBase
         {
             public nint Window;
+        }
+
+        private sealed class CmdSetRelativeMouseMode : CmdBase
+        {
+            public nint Window;
+            public bool Enabled;
         }
 
         private sealed class CmdTextInputSetRect : CmdBase

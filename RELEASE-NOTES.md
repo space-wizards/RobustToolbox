@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `IClyde.SetRelativeMouseMode`, which puts the primary window into SDL's relative mouse mode: the cursor is hidden and locked in place while mouse motion keeps being reported as deltas.
 
 ### Bugfixes
 

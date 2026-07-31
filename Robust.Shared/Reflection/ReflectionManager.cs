@@ -1,10 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization;
@@ -32,21 +32,19 @@ namespace Robust.Shared.Reflection
 
         [ViewVariables] public IReadOnlyList<Assembly> Assemblies => assemblies;
 
-        private readonly Dictionary<(Type baseType, string typeName), Type?> _yamlTypeTagCache = new();
+        private readonly ConcurrentDictionary<(Type baseType, string typeName), Type?> _yamlTypeTagCache = new();
 
         private readonly Dictionary<string, Type> _looseTypeCache = new();
 
-        private readonly Dictionary<string, Enum> _enumCache = new();
-        private readonly Dictionary<Enum, string> _reverseEnumCache = new();
-
-        private readonly ReaderWriterLockSlim _enumCacheLock = new();
-        private readonly ReaderWriterLockSlim _yamlTypeTagCacheLock = new();
+        private readonly ConcurrentDictionary<string, Enum?> _enumCache = new();
+        private readonly ConcurrentDictionary<Enum, string> _reverseEnumCache = new();
 
         private readonly List<Type> _getAllTypesCache = new();
-        private readonly Dictionary<(Type BaseType, bool Inclusive), Type[]> _getAllChildrenCache = new();
+        private readonly ConcurrentDictionary<(Type BaseType, bool Inclusive), Type[]> _getAllChildrenCache = new();
         private ISawmill _sawmill = default!;
 
-        private readonly List<Type> _childrenCache = new();
+        private readonly ObjectPool<List<Type>> _childrenCache =
+            new DefaultObjectPool<List<Type>>(new ListPolicy<Type>(), 128);
 
         public void Initialize()
         {
@@ -65,25 +63,25 @@ namespace Robust.Shared.Reflection
             EnsureGetAllTypesCache();
 
             var key = (baseType, inclusive);
-            if (_getAllChildrenCache.TryGetValue(key, out var cached))
-                return cached;
+            return _getAllChildrenCache.GetOrAdd(key,
+                _ =>
+                {
+                    var cache = _childrenCache.Get();
+                    foreach (var type in _getAllTypesCache)
+                    {
+                        if (!baseType.IsAssignableFrom(type) || type.IsAbstract)
+                            continue;
 
-            _childrenCache.Clear();
+                        if (baseType == type && !inclusive)
+                            continue;
 
-            foreach (var type in _getAllTypesCache)
-            {
-                if (!baseType.IsAssignableFrom(type) || type.IsAbstract)
-                    continue;
+                        cache.Add(type);
+                    }
 
-                if (baseType == type && !inclusive)
-                    continue;
-
-                _childrenCache.Add(type);
-            }
-
-            cached = _childrenCache.ToArray();
-            _getAllChildrenCache.Add(key, cached);
-            return cached;
+                    var cached = cache.ToArray();
+                    _childrenCache.Return(cache);
+                    return cached;
+                });
         }
 
         private void EnsureGetAllTypesCache()
@@ -239,40 +237,29 @@ namespace Robust.Shared.Reflection
         /// <inheritdoc />
         public string GetEnumReference(Enum @enum)
         {
-            using (_enumCacheLock.ReadGuard())
-            {
-                if (_reverseEnumCache.TryGetValue(@enum, out var reference))
-                    return reference;
-            }
-
-            using (_enumCacheLock.WriteGuard())
-            {
-                if (_reverseEnumCache.TryGetValue(@enum, out var reference))
-                    return reference;
-
-                // if there is more than one enum with the same basic name, the reference may need to be the fully qualified name.
-                // but if possible we want to avoid that and use a shorter string.
-
-                var fullName = @enum.GetType().FullName!;
-                var dotIndex = fullName.LastIndexOf('.');
-                if (dotIndex > 0 && dotIndex != fullName.Length)
+            return _reverseEnumCache.GetOrAdd(@enum,
+                _ =>
                 {
-                    var name = fullName.Substring(dotIndex + 1);
-                    reference = $"enum.{name}.{@enum}";
+                    // if there is more than one enum with the same basic name, the reference may need to be the fully qualified name.
+                    // but if possible we want to avoid that and use a shorter string.
 
-                    if (_enumCache.TryAdd(reference, @enum))
+                    string reference;
+                    var fullName = @enum.GetType().FullName!;
+                    var dotIndex = fullName.LastIndexOf('.');
+                    if (dotIndex > 0 && dotIndex != fullName.Length)
                     {
-                        _reverseEnumCache.Add(@enum, reference);
-                        return reference;
-                    }
-                }
+                        var name = fullName.Substring(dotIndex + 1);
+                        reference = $"enum.{name}.{@enum}";
 
-                // If that failed, just use the full name.
-                reference = $"enum.{fullName}.{@enum}";
-                _reverseEnumCache.Add(@enum, reference);
-                _enumCache.Add(reference, @enum);
-                return reference;
-            }
+                        if (_enumCache.TryAdd(reference, @enum))
+                            return reference;
+                    }
+
+                    // If that failed, just use the full name.
+                    reference = $"enum.{fullName}.{@enum}";
+                    _enumCache.TryAdd(reference, @enum);
+                    return reference;
+                });
         }
 
         /// <inheritdoc />
@@ -285,46 +272,45 @@ namespace Robust.Shared.Reflection
                 return false;
             }
 
-            using (_enumCacheLock.ReadGuard())
-            {
-                if (_enumCache.TryGetValue(reference, out @enum))
-                    return true;
-            }
-
-            using var _ = _enumCacheLock.WriteGuard();
-            if (_enumCache.TryGetValue(reference, out @enum))
-                return true;
-
-            var cropped = reference.Substring(5);
-
-            // Doesn't exist, add it.
-            var dotIndex = cropped.LastIndexOf('.');
-            var typeName = cropped.Substring(0, dotIndex);
-
-            var value = cropped.Substring(dotIndex + 1);
-
-            foreach (var assembly in assemblies)
-            {
-                foreach (var type in assembly.DefinedTypes)
+            @enum = _enumCache.GetOrAdd(reference,
+                r =>
                 {
-                    if (!type.IsEnum || !TypeNameMatchesEnumReference(type.FullName!, typeName))
+                    var cropped = r.Substring(5);
+
+                    // Doesn't exist, add it.
+                    var dotIndex = cropped.LastIndexOf('.');
+                    var typeName = cropped.Substring(0, dotIndex);
+
+                    var value = cropped.Substring(dotIndex + 1);
+
+                    foreach (var assembly in assemblies)
                     {
-                        continue;
+                        foreach (var type in assembly.DefinedTypes)
+                        {
+                            if (!type.IsEnum || !TypeNameMatchesEnumReference(type.FullName!, typeName))
+                            {
+                                continue;
+                            }
+
+                            var e = (Enum)Enum.Parse(type, value);
+                            if (!_reverseEnumCache.TryAdd(e, r) &&
+                                r != _reverseEnumCache[e])
+                            {
+                                _sawmill.Warning(
+                                    $"Conflicting enum references encountered. Enum: {e}. Existing: {_reverseEnumCache[e]}. New: {r}");
+                            }
+
+                            return e;
+                        }
                     }
 
-                    @enum = (Enum)Enum.Parse(type, value);
-                    if (!_reverseEnumCache.TryAdd(@enum, reference))
-                    {
-                        _sawmill.Warning($"Conflicting enum references encountered. Enum: {@enum}. Existing: {_reverseEnumCache[@enum]}. New: {reference}");
-                    }
-                    _enumCache.Add(reference, @enum);
-                    return true;
-                }
-            }
+                    if (shouldThrow)
+                        throw new ArgumentException($"Could not resolve enum reference: {r}.");
 
-            if (shouldThrow)
-                throw new ArgumentException($"Could not resolve enum reference: {reference}.");
-            return false;
+                    return null;
+                });
+
+            return @enum != null;
         }
 
         private static bool TypeNameMatchesEnumReference(string fullName, string typeName)
@@ -344,53 +330,45 @@ namespace Robust.Shared.Reflection
 
         public Type? YamlTypeTagLookup(Type baseType, string typeName)
         {
-            using (_yamlTypeTagCacheLock.ReadGuard())
-            {
-                if (_yamlTypeTagCache.TryGetValue((baseType, typeName), out var type))
-                    return type;
-            }
-
-            using (_yamlTypeTagCacheLock.WriteGuard())
-            {
-                if (_yamlTypeTagCache.TryGetValue((baseType, typeName), out var type))
-                    return type;
-                Type? found = null;
-                foreach (var derivedType in GetAllChildren(baseType))
+            return _yamlTypeTagCache.GetOrAdd((baseType, typeName),
+                _ =>
                 {
-                    if (!derivedType.IsPublic)
+                    Type? found = null;
+                    foreach (var derivedType in GetAllChildren(baseType))
                     {
-                        continue;
+                        if (!derivedType.IsPublic)
+                        {
+                            continue;
+                        }
+
+                        if (derivedType.Name == typeName)
+                        {
+                            found = derivedType;
+                            break;
+                        }
+
+                        var serializedAttribute = derivedType.GetCustomAttribute<SerializedTypeAttribute>();
+
+                        if (serializedAttribute != null &&
+                            serializedAttribute.SerializeName == typeName)
+                        {
+                            found = derivedType;
+                            break;
+                        }
                     }
 
-                    if (derivedType.Name == typeName)
+                    // Fallback
+                    if (found == null)
                     {
-                        found = derivedType;
-                        break;
+                        TryLooseGetType(typeName, out found);
+
+                        // If we may have gotten the type but it's still abstract then don't return it.
+                        if (found == null || found.IsAbstract || !found.IsAssignableTo(baseType))
+                            found = null;
                     }
 
-                    var serializedAttribute = derivedType.GetCustomAttribute<SerializedTypeAttribute>();
-
-                    if (serializedAttribute != null &&
-                        serializedAttribute.SerializeName == typeName)
-                    {
-                        found = derivedType;
-                        break;
-                    }
-                }
-
-                // Fallback
-                if (found == null)
-                {
-                    TryLooseGetType(typeName, out found);
-
-                    // If we may have gotten the type but it's still abstract then don't return it.
-                    if (found == null || found.IsAbstract || !found.IsAssignableTo(baseType))
-                        found = null;
-                }
-
-                _yamlTypeTagCache.Add((baseType, typeName), found);
-                return found;
-            }
+                    return found;
+                });
         }
     }
 }

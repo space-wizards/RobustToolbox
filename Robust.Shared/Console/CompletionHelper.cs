@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
-using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -274,5 +272,44 @@ public static class CompletionHelper
     {
         IoCManager.Resolve(ref entManager);
         return GetComponents<T>(text, entManager, limit).Select(o => new CompletionOption(o.NetString, o.EntityName));
+    }
+
+    /// <summary>
+    /// Gets AutoComplete options from list of all loaded <see cref="EntityPrototypes"/>
+    /// filtered by provided <see cref="EntityCategoryPrototype"/>
+    /// and substring (filter by StartsWith on <see cref="EntityPrototype.Description"/>
+    /// and <see cref="EntityPrototype.ID"/>).
+    /// </summary>
+    /// <param name="substring">
+    /// Substring, by which to filter entity prototypes Id and description.
+    /// Will not do filtering in case null was provided.
+    /// </param>
+    /// <param name="category">Get entity prototypes that belong to this category.</param>
+    /// <param name="prototype">Prototype manager to be used (in case it was provided).</param>
+    /// <param name="limit">Amount of rows to return (in case source collection will have more rows after filtering applied).</param>
+    public static IEnumerable<CompletionOption> EntityPrototypes(
+        string? substring,
+        ProtoId<EntityCategoryPrototype> category,
+        IPrototypeManager? prototype = null,
+        int limit = 20
+    )
+    {
+        IoCManager.Resolve(ref prototype);
+
+        if (!prototype.Categories.TryGetValue(category, out var found))
+            yield break;
+
+        var isEmpty = string.IsNullOrWhiteSpace(substring);
+        var i = 0;
+        while (i < limit)
+        {
+            var current = found[i];
+            var description = current.Description;
+            if (!isEmpty && !description.StartsWith(substring!) && !current.ID.StartsWith(substring!))
+                continue;
+
+            i++;
+            yield return new CompletionOption(current.ID, description);
+        }
     }
 }

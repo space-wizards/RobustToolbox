@@ -59,12 +59,38 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         }
 
         [Test]
+        public void ValidationAcceptsValidBox2Bounds()
+        {
+            var node = new ValueDataNode("0,1,2,3");
+            var validation = Serialization.ValidateNode<Box2, ValueDataNode, Box2Serializer>(node);
+
+            Assert.That(validation.GetErrors(), Is.Empty);
+        }
+
+        [Test]
         public void ValidationRejectsInvalidBox2iBounds()
         {
             var node = new ValueDataNode("0,1,1,0");
             var validation = Serialization.ValidateNode<Box2i, ValueDataNode, Box2Serializer>(node);
 
             Assert.That(validation.GetErrors(), Is.Not.Empty);
+        }
+    }
+
+    [TestFixture]
+    [TestOf(typeof(UIBox2Serializer))]
+    internal sealed class UIBox2SerializerTest : OurSerializationTest
+    {
+        [TestCase("1,0,3,2")]
+        [TestCase("1,2,3,0")]
+        [TestCase("3,0,1,2")]
+        public void ValidationChecksBounds(string value)
+        {
+            var node = new ValueDataNode(value);
+            var validation = Serialization.ValidateNode<UIBox2, ValueDataNode, UIBox2Serializer>(node);
+
+            Assert.That(validation.GetErrors(),
+                value == "1,0,3,2" ? Is.Empty : Is.Not.Empty);
         }
     }
 }

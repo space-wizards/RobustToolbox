@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -26,10 +27,8 @@ public struct Box2i : IEquatable<Box2i>, ISpanFormattable
         readonly get => _left;
         set
         {
-            if (value > _right)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "Left cannot be greater than Right.");
-
-            _left = value;
+            Debug.Assert(!(value > _right), "Left cannot be greater than Right.");
+            _left = Math.Min(value, _right);
         }
     }
 
@@ -38,10 +37,8 @@ public struct Box2i : IEquatable<Box2i>, ISpanFormattable
         readonly get => _bottom;
         set
         {
-            if (value > _top)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "Bottom cannot be greater than Top.");
-
-            _bottom = value;
+            Debug.Assert(!(value > _top), "Bottom cannot be greater than Top.");
+            _bottom = Math.Min(value, _top);
         }
     }
 
@@ -50,10 +47,8 @@ public struct Box2i : IEquatable<Box2i>, ISpanFormattable
         readonly get => _right;
         set
         {
-            if (value < _left)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "Right cannot be less than Left.");
-
-            _right = value;
+            Debug.Assert(!(value < _left), "Right cannot be less than Left.");
+            _right = Math.Max(value, _left);
         }
     }
 
@@ -62,10 +57,8 @@ public struct Box2i : IEquatable<Box2i>, ISpanFormattable
         readonly get => _top;
         set
         {
-            if (value < _bottom)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "Top cannot be less than Bottom.");
-
-            _top = value;
+            Debug.Assert(!(value < _bottom), "Top cannot be less than Bottom.");
+            _top = Math.Max(value, _bottom);
         }
     }
 
@@ -74,13 +67,9 @@ public struct Box2i : IEquatable<Box2i>, ISpanFormattable
         readonly get => _bottomLeft;
         set
         {
-            if (value.X > _right)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "BottomLeft.X cannot be greater than Right.");
-
-            if (value.Y > _top)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "BottomLeft.Y cannot be greater than Top.");
-
-            _bottomLeft = value;
+            Debug.Assert(!(value.X > _right), "BottomLeft.X cannot be greater than Right.");
+            Debug.Assert(!(value.Y > _top), "BottomLeft.Y cannot be greater than Top.");
+            _bottomLeft = Vector2i.ComponentMin(value, _topRight);
         }
     }
 
@@ -89,13 +78,9 @@ public struct Box2i : IEquatable<Box2i>, ISpanFormattable
         readonly get => _topRight;
         set
         {
-            if (value.X < _left)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "TopRight.X cannot be less than Left.");
-
-            if (value.Y < _bottom)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "TopRight.Y cannot be less than Bottom.");
-
-            _topRight = value;
+            Debug.Assert(!(value.X < _left), "TopRight.X cannot be less than Left.");
+            Debug.Assert(!(value.Y < _bottom), "TopRight.Y cannot be less than Bottom.");
+            _topRight = Vector2i.ComponentMax(value, _bottomLeft);
         }
     }
 
@@ -114,11 +99,8 @@ public struct Box2i : IEquatable<Box2i>, ISpanFormattable
 
     private static void Validate(int left, int bottom, int right, int top)
     {
-        if (left > right)
-            throw new ArgumentException("Left cannot be greater than Right.", nameof(left));
-
-        if (bottom > top)
-            throw new ArgumentException("Bottom cannot be greater than Top.", nameof(bottom));
+        Debug.Assert(!(left > right), "Left cannot be greater than Right.");
+        Debug.Assert(!(bottom > top), "Bottom cannot be greater than Top.");
     }
 
     public Box2i(Vector2i bottomLeft, Vector2i topRight)
@@ -128,7 +110,7 @@ public struct Box2i : IEquatable<Box2i>, ISpanFormattable
         Validate(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y);
 
         _bottomLeft = bottomLeft;
-        _topRight = topRight;
+        _topRight = Vector2i.ComponentMax(bottomLeft, topRight);
     }
 
     public Box2i(int left, int bottom, int right, int top)
@@ -138,8 +120,8 @@ public struct Box2i : IEquatable<Box2i>, ISpanFormattable
         Validate(left, bottom, right, top);
 
         _left = left;
-        _right = right;
-        _top = top;
+        _right = Math.Max(left, right);
+        _top = Math.Max(bottom, top);
         _bottom = bottom;
     }
 

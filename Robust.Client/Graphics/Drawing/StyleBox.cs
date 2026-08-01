@@ -286,6 +286,9 @@ namespace Robust.Client.Graphics
             var right = baseBox.Right - GetContentMargin(Margin.Right) * uiScale;
             var bottom = baseBox.Bottom - GetContentMargin(Margin.Bottom) * uiScale;
 
+            right = MathF.Max(left, right);
+            bottom = MathF.Max(top, bottom);
+
             return new UIBox2(left, top, right, bottom);
         }
 

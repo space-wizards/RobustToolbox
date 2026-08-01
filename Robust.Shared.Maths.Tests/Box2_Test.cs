@@ -114,12 +114,12 @@ namespace Robust.Shared.Maths.Tests
 
         private static TestCaseData[] InvalidSetterCases =
         [
-            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Left = 2)),
-            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Right = -2)),
-            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Bottom = 2)),
-            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Top = -2)),
-            new TestCaseData((Box2Setter) ((ref Box2 box) => box.BottomLeft = new Vector2(2, 0))),
-            new TestCaseData((Box2Setter) ((ref Box2 box) => box.TopRight = new Vector2(0, -2))),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Left = 2), new Box2(1, -1, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Right = -2), new Box2(-1, -1, -1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Bottom = 2), new Box2(-1, 1, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Top = -2), new Box2(-1, -1, 1, -1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.BottomLeft = new Vector2(2, 0)), new Box2(1, 0, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.TopRight = new Vector2(0, -2)), new Box2(-1, -1, 0, -1)),
         ];
 
         private static TestCaseData[] ValidSetterCases =
@@ -172,6 +172,20 @@ namespace Robust.Shared.Maths.Tests
             Assert.That(box.Top, Is.EqualTo(top));
             Assert.That(box.Right, Is.EqualTo(right));
             Assert.That(box.Bottom, Is.EqualTo(bottom));
+        }
+
+        [Test]
+        public void Box2InvalidConstruction()
+        {
+#if DEBUG
+            Assert.That(() => new Box2(3, 4, -1, -2), Throws.Exception);
+            Assert.That(() => new Box2(new Vector2(3, 4), new Vector2(-1, -2)), Throws.Exception);
+#else
+            var expected = new Box2(3, 4, 3, 4);
+
+            Assert.That(new Box2(3, 4, -1, -2), Is.EqualTo(expected));
+            Assert.That(new Box2(new Vector2(3, 4), new Vector2(-1, -2)), Is.EqualTo(expected));
+#endif
         }
 
         [Test]
@@ -325,11 +339,17 @@ namespace Robust.Shared.Maths.Tests
         }
 
         [Test, TestCaseSource(nameof(InvalidSetterCases))]
-        public void Box2RejectsInvalidSetters(Box2Setter setter)
+        public void Box2InvalidSetters(Box2Setter setter, Box2 expected)
         {
             var box = new Box2(-1, -1, 1, 1);
 
-            Assert.That(() => setter(ref box), Throws.TypeOf<ArgumentOutOfRangeException>());
+#if DEBUG
+            Assert.That(() => setter(ref box), Throws.Exception);
+#else
+            setter(ref box);
+
+            Assert.That(box, Is.EqualTo(expected));
+#endif
         }
 
         [Test, TestCaseSource(nameof(ValidSetterCases))]

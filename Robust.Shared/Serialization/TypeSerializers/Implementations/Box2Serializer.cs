@@ -171,13 +171,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         private static bool ValidateBounds<T>(T left, T bottom, T right, T top, [NotNullWhen(false)] out string? error)
             where T : IComparisonOperators<T, T, bool>
         {
-            if (!(right <= left))
+            if (left > right)
             {
                 error = "Left cannot be greater than Right.";
                 return false;
             }
 
-            if (!(top <= bottom))
+            if (bottom > top)
             {
                 error = "Bottom cannot be greater than Top.";
                 return false;

@@ -36,5 +36,21 @@ namespace Robust.Client.Tests.Graphics
                 styleBox.GetEnvelopBox(new Vector2(10, 10), new Vector2(50, 50), 2.0f),
                 Is.EqualTo(new UIBox2(10, 10, 80, 92)));
         }
+
+        [Test]
+        public void TestGetContentBoxClampsWhenMarginsExceedBaseBox()
+        {
+            var styleBox = new StyleBoxFlat
+            {
+                ContentMarginLeftOverride = 10,
+                ContentMarginTopOverride = 20,
+                ContentMarginRightOverride = 30,
+                ContentMarginBottomOverride = 40,
+            };
+
+            var contentBox = styleBox.GetContentBox(new UIBox2(0, 0, 5, 5), 1);
+
+            Assert.That(contentBox, Is.EqualTo(new UIBox2(10, 20, 10, 20)));
+        }
     }
 }

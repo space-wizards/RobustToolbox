@@ -14,6 +14,11 @@ concurrency:
 
 jobs:
   build:
+    # The .NET SDK recognizes FreeBSD RIDs, but Microsoft does not publish their
+    # runtime to nuget.org so we can't pass in --runtime
+    # See https://learn.microsoft.com/en-us/dotnet/core/rid-catalog
+    env:
+      DOTNET_RUNTIME_ARGUMENT: ${{ matrix.targetOS != 'FreeBSD' && format('--runtime {0}', matrix.runtime) || '' }}
     strategy:
       matrix:
         include:
@@ -62,16 +67,16 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Install dependencies
-        run: dotnet restore --runtime ${{ matrix.runtime }} /p:TargetOS=${{ matrix.targetOS }}
+        run: dotnet restore $DOTNET_RUNTIME_ARGUMENT /p:TargetOS=${{ matrix.targetOS }}
       - name: Build Debug Client
-        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} $DOTNET_RUNTIME_ARGUMENT
       - name: Build Debug Server
-        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} $DOTNET_RUNTIME_ARGUMENT
       - name: Build Tools Client
-        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} $DOTNET_RUNTIME_ARGUMENT
       - name: Build Tools Server
-        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} $DOTNET_RUNTIME_ARGUMENT
       - name: Build Release Client
-        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+        run: dotnet build Robust.Client/Robust.Client.csproj --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} $DOTNET_RUNTIME_ARGUMENT
       - name: Build Release Server
-        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} --runtime ${{ matrix.runtime }}
+        run: dotnet build Robust.Server/Robust.Server.csproj --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }} $DOTNET_RUNTIME_ARGUMENT

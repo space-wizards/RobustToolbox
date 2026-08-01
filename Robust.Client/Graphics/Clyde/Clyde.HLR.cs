@@ -423,8 +423,10 @@ namespace Robust.Client.Graphics.Clyde
 
                     var box = Box2i.FromDimensions(rounded, entityPostRenderTarget.Size);
 
+                    // Render targets have an inverted Y axis relative to regular textures. Flip the destination
+                    // vertices to compensate when blitting the post-shader result back to the screen.
                     _renderHandle.DrawTextureScreen(entityPostRenderTarget.Texture,
-                        box.BottomLeft, box.BottomRight, box.TopLeft, box.TopRight,
+                        box.TopLeft, box.TopRight, box.BottomLeft, box.BottomRight,
                         Color.White, null);
 
                     _renderHandle.SetProjView(oldProj, oldView);

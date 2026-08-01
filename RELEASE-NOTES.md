@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -55,6 +55,10 @@ END TEMPLATE-->
 
 
 ## 285.0.1
+
+### New features
+
+* `IPrototypeManager `now has a new method, `TryGetEntityPrototypesByCategory `. It returns a set of serialized entity prototypes that form part of the given entity category
 
 ### Bugfixes
 

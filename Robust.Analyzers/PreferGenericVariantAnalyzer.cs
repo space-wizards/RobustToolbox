@@ -20,6 +20,8 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
 {
     private const string AttributeType = "Robust.Shared.Analyzers.PreferGenericVariantAttribute";
 
+    public const string TypeSymbolName = "System.Type";
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         UseGenericVariantDescriptor, UseGenericVariantInvalidUsageDescriptor,
         UseGenericVariantAttributeValueErrorDescriptor);
@@ -61,7 +63,7 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
             if (preferGenericAttribute is null)
                 return;
 
-            var typeTypeSymbol = compilationContext.Compilation.GetTypeByMetadataName("System.Type");
+            var typeTypeSymbol = compilationContext.Compilation.GetTypeByMetadataName(TypeSymbolName);
             if (typeTypeSymbol is null)
                 return;
 

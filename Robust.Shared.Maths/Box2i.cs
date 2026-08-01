@@ -411,9 +411,11 @@ public struct Box2i : IEquatable<Box2i>, ISpanFormattable
             MathHelper.Clamp(position.Y, Bottom, Top));
     }
 
+    [Pure]
     public static int Perimeter(in Box2i box)
         => (box.Width + box.Height) * 2;
 
+    [Pure]
     public static int UnionPerimeter(in Box2i a, in Box2i b)
     {
         var left = Math.Min(a._left, b._left);

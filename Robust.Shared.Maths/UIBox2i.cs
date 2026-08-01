@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -121,21 +122,25 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
         _bottom = Math.Max(top, bottom);
     }
 
+    [Pure]
     public static UIBox2i FromDimensions(int left, int top, int width, int height)
     {
         return new UIBox2i(left, top, left + width, top + height);
     }
 
+    [Pure]
     public static UIBox2i FromDimensions(Vector2i position, Vector2i size)
     {
         return FromDimensions(position.X, position.Y, size.X, size.Y);
     }
 
+    [Pure]
     public readonly bool Contains(int x, int y)
     {
         return Contains(new Vector2i(x, y));
     }
 
+    [Pure]
     public readonly bool Contains(Vector2i point, bool closedRegion = true)
     {
         var xOk = closedRegion
@@ -148,6 +153,7 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
     }
 
     /// <summary>Returns a UIBox2 translated by the given amount.</summary>
+    [Pure]
     public readonly UIBox2i Translated(Vector2i point)
     {
         return new UIBox2i(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);
@@ -161,6 +167,7 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
     /// <returns>
     ///     <c>null</c> if there is no intersection, otherwise the smallest region that fits in both boxes.
     /// </returns>
+    [Pure]
     public readonly UIBox2i? Intersection(in UIBox2i other)
     {
         if (!Intersects(other))
@@ -173,6 +180,7 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
             Vector2i.ComponentMin(BottomRight, other.BottomRight));
     }
 
+    [Pure]
     public readonly bool Intersects(in UIBox2i other)
     {
         return other._bottom >= _top

@@ -259,6 +259,7 @@ namespace Robust.Shared.Maths
             return new Box2(min, max);
         }
 
+        [Pure]
         public readonly bool HasNan()
         {
             var vector = _asVector4.AsVector128();
@@ -315,6 +316,7 @@ namespace Robust.Shared.Maths
             return surfaceIntersect / (Area(this) + Area(other) - surfaceIntersect);
         }
 
+        [Pure]
         public readonly bool IsValid()
         {
             var d = Vector2.Subtract(TopRight, BottomLeft);
@@ -547,14 +549,17 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public static float Area(in Box2 box)
             => box.Width * box.Height;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public static float Perimeter(in Box2 box)
             => (box.Width + box.Height) * 2;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public static float UnionPerimeter(in Box2 a, in Box2 b)
         {
             var left = MathF.Min(a._left, b._left);
@@ -615,6 +620,7 @@ namespace Robust.Shared.Maths
             return new Vector2(cx, cy);
         }
 
+        [Pure]
         public readonly bool EqualsApprox(Box2 other)
         {
             return MathHelper.CloseToPercent(Left, other.Left)
@@ -623,6 +629,7 @@ namespace Robust.Shared.Maths
                    && MathHelper.CloseToPercent(Top, other.Top);
         }
 
+        [Pure]
         public readonly bool EqualsApprox(Box2 other, double tolerance)
         {
             return MathHelper.CloseToPercent(Left, other.Left, tolerance)

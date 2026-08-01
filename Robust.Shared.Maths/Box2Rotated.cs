@@ -94,6 +94,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Calculates the smallest AABB that will encompass the rotated box. The AABB is in local space.
         /// </summary>
+        [Pure]
         public readonly Box2 CalcBoundingBox()
         {
             GetVertices(out var x, out var y);
@@ -143,6 +144,7 @@ namespace Robust.Shared.Maths
             topLeft = new Vector2(x.GetElement(3), y.GetElement(3));
         }
 
+        [Pure]
         public readonly bool Contains(Vector2 worldPoint)
         {
             // Get the worldpoint in our frame of reference so we can do a faster AABB check.
@@ -153,6 +155,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Convert a point in world-space coordinates to our local coordinates.
         /// </summary>
+        [Pure]
         private readonly Vector2 GetLocalPoint(Vector2 point)
         {
             return Origin + (-Rotation).RotateVec(point - Origin);
@@ -166,6 +169,7 @@ namespace Robust.Shared.Maths
             return Box.Equals(other.Box) && Rotation.Equals(other.Rotation) && Origin.Equals(other.Origin);
         }
 
+        [Pure]
         public readonly bool EqualsApprox(Box2Rotated other)
         {
             return Box.EqualsApprox(other.Box)
@@ -173,6 +177,7 @@ namespace Robust.Shared.Maths
                    && Origin.EqualsApprox(other.Origin);
         }
 
+        [Pure]
         public readonly bool EqualsApprox(Box2Rotated other, double tolerance)
         {
             return Box.EqualsApprox(other.Box, tolerance)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -147,38 +148,45 @@ namespace Robust.Shared.Maths
             _bottom = MathF.Max(top, bottom);
         }
 
+        [Pure]
         public static UIBox2 FromDimensions(float left, float top, float width, float height)
         {
             return new(left, top, left + width, top + height);
         }
 
+        [Pure]
         public static UIBox2 FromDimensions(Vector2 leftTopPosition, Vector2 size)
         {
             return FromDimensions(leftTopPosition.X, leftTopPosition.Y, size.X, size.Y);
         }
 
+        [Pure]
         public readonly bool Intersects(UIBox2 other)
         {
             return other.Bottom >= this.Top && other.Top <= this.Bottom && other.Right >= this.Left &&
                    other.Left <= this.Right;
         }
 
+        [Pure]
         public readonly bool IsEmpty()
         {
             return MathHelper.CloseToPercent(Width, 0.0f) && MathHelper.CloseToPercent(Height, 0.0f);
         }
 
+        [Pure]
         public readonly bool Encloses(UIBox2 inner)
         {
             return this.Left < inner.Left && this.Bottom > inner.Bottom && this.Right > inner.Right &&
                    this.Top < inner.Top;
         }
 
+        [Pure]
         public readonly bool Contains(float x, float y)
         {
             return Contains(new Vector2(x, y));
         }
 
+        [Pure]
         public readonly bool Contains(Vector2 point, bool closedRegion = true)
         {
             var xOk = closedRegion
@@ -197,6 +205,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="scalar">Value to scale the box by.</param>
         /// <returns>Scaled box.</returns>
+        [Pure]
         public readonly UIBox2 Scale(float scalar)
         {
             if (scalar < 0)
@@ -212,6 +221,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>Returns a UIBox2 translated by the given amount.</summary>
+        [Pure]
         public readonly UIBox2 Translated(Vector2 point)
         {
             return new(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);

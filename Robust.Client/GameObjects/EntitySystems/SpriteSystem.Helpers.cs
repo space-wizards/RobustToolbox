@@ -56,7 +56,7 @@ public sealed partial class SpriteSystem
     /// </summary>
     public IRsiStateLike GetPrototypeIcon(string prototype)
     {
-        if (!_proto.TryIndex<EntityPrototype>(prototype, out var entityPrototype))
+        if (!ProtoMan.TryIndex<EntityPrototype>(prototype, out var entityPrototype))
         {
             // The specified prototype doesn't exist, return the fallback "error" sprite.
             _sawmill.Error("Failed to load PrototypeIcon {0}", prototype);
@@ -82,7 +82,7 @@ public sealed partial class SpriteSystem
     private IRsiStateLike GetPrototypeIconInternal(EntityPrototype prototype)
     {
         // IconComponent takes precedence. If it has a valid icon, return that. Otherwise, continue as normal.
-        if (prototype.TryGetComponent(out IconComponent? icon, _factory))
+        if (prototype.TryComp(out IconComponent? icon, Factory))
             return GetIcon(icon);
 
         // If the prototype doesn't have a SpriteComponent, then there's nothing we can do but return the fallback.
@@ -108,7 +108,7 @@ public sealed partial class SpriteSystem
         var results = new List<IDirectionalTextureProvider>();
         noRot = false;
 
-        if (proto.TryGetComponent(out IconComponent? icon, _factory))
+        if (proto.TryComp(out IconComponent? icon, Factory))
         {
             results.Add(GetIcon(icon));
             return results;

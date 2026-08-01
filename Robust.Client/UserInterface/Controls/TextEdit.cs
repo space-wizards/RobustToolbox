@@ -100,7 +100,7 @@ public sealed partial class TextEdit : Control
         CanKeyboardFocus = true;
         KeyboardFocusOnClick = true;
         MouseFilter = MouseFilterMode.Stop;
-        DefaultCursorShape = CursorShape.IBeam;
+        DefaultCursorShape = Editable ? CursorShape.IBeam : CursorShape.NotAllowed;
     }
 
     /// <summary>
@@ -171,7 +171,7 @@ public sealed partial class TextEdit : Control
         set
         {
             _editable = value;
-            DefaultCursorShape = _editable ? CursorShape.IBeam : CursorShape.Arrow;
+            DefaultCursorShape = _editable ? CursorShape.IBeam : CursorShape.NotAllowed;
             UpdatePseudoClass();
         }
     }

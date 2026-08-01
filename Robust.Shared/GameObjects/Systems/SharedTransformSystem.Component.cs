@@ -45,7 +45,7 @@ public abstract partial class SharedTransformSystem
         var oldRot = xform._localRotation;
         var oldMap = xform.MapUid;
         xform._localPosition = tilePos + newGrid.TileSizeHalfVector;
-        xform._localRotation += rotation;
+        xform._localRotation = NormalizeRotation(xform._localRotation + rotation);
 
         var meta = MetaData(uid);
         SetGridId((uid, xform, meta), newGridUid);
@@ -283,7 +283,7 @@ public abstract partial class SharedTransformSystem
             // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordinates)
             // in that case, we attempt to attach to a grid.
             var pos = new MapCoordinates(GetWorldPosition(component), component.MapID);
-            if (_mapManager.TryFindGridAt(pos, out var gridUid, out gridComp))
+            if (_map.TryFindGridAt(pos, out var gridUid, out gridComp))
                 grid = (gridUid, gridComp);
         }
 
@@ -428,7 +428,7 @@ public abstract partial class SharedTransformSystem
         if (!XformQuery.Resolve(uid, ref xform))
             return;
 
-#pragma warning disable CS0618
+#pragma warning disable CS0618 // TODO: move LocalRotation/Position manipulation into TransformSystem (don't piggyback off TransformComponent)
         xform.LocalPosition = value;
 #pragma warning restore CS0618
     }
@@ -437,12 +437,19 @@ public abstract partial class SharedTransformSystem
 
     #region Local Rotation
 
+    internal static Angle NormalizeRotation(Angle rotation)
+    {
+        return rotation.Reduced();
+    }
+
     public void SetLocalRotationNoLerp(EntityUid uid, Angle value, TransformComponent? xform = null)
     {
         if (!XformQuery.Resolve(uid, ref xform))
             return;
 
+#pragma warning disable CS0618 // TODO: move LocalRotation/Position manipulation into TransformSystem (don't piggyback off TransformComponent)
         xform.LocalRotation = value;
+#pragma warning restore CS0618
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -453,6 +460,27 @@ public abstract partial class SharedTransformSystem
     public void SetLocalRotation(TransformComponent xform, Angle value)
     {
         SetLocalRotation(xform.Owner, value, xform);
+    }
+
+    #endregion
+
+    #region No Local Rotation
+
+    public void SetNoLocalRotation(EntityUid uid, bool value, TransformComponent? xform = null)
+    {
+        if (!XformQuery.Resolve(uid, ref xform))
+            return;
+
+        SetNoLocalRotation((uid, xform), value);
+    }
+
+    public void SetNoLocalRotation(Entity<TransformComponent> entity, bool value)
+    {
+        if (value)
+            SetLocalRotation(entity.Owner, Angle.Zero, entity.Comp);
+
+        entity.Comp._noLocalRotation = value;
+        Dirty(entity);
     }
 
     #endregion
@@ -519,7 +547,7 @@ public abstract partial class SharedTransformSystem
         xform._localPosition = value.Position;
 
         if (rotation != null && !xform.NoLocalRotation)
-            xform._localRotation = rotation.Value;
+            xform._localRotation = NormalizeRotation(rotation.Value);
 
         DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
 
@@ -621,7 +649,7 @@ public abstract partial class SharedTransformSystem
             {
                 // preserve world rotation
                 if (rotation == null && oldParent != null && newParent != null && !xform.NoLocalRotation)
-                    xform._localRotation += GetWorldRotation(oldParent) - GetWorldRotation(newParent);
+                    xform._localRotation = NormalizeRotation(xform._localRotation + GetWorldRotation(oldParent) - GetWorldRotation(newParent));
 
                 DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
             }
@@ -861,7 +889,9 @@ public abstract partial class SharedTransformSystem
             }
             else
             {
+#pragma warning disable CS0618 // AnchorEntity/Unanchored can't be used from uninitialized states.
                 xform.Anchored = newState.Anchored;
+#pragma warning restore CS0618
             }
 
             if (oldAnchored != newState.Anchored && xform.Initialized)
@@ -990,7 +1020,7 @@ public abstract partial class SharedTransformSystem
     {
         var mapUid = _map.GetMap(coordinates.MapId);
         if (!_gridQuery.HasComponent(entity) &&
-            _mapManager.TryFindGridAt(mapUid, coordinates.Position, out var targetGrid, out _))
+            _map.TryFindGridAt(mapUid, coordinates.Position, out var targetGrid, out _))
         {
             var invWorldMatrix = GetInvWorldMatrix(targetGrid);
             SetCoordinates((entity.Owner, entity.Comp, MetaData(entity.Owner)), new EntityCoordinates(targetGrid, Vector2.Transform(coordinates.Position, invWorldMatrix)));
@@ -1233,7 +1263,7 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        if (component.GridUid != uid && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
+        if (component.GridUid != uid && _map.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
         {
             var targetGridXform = XformQuery.GetComponent(targetGrid);
             var invLocalMatrix = targetGridXform.InvLocalMatrix;
@@ -1277,7 +1307,7 @@ public abstract partial class SharedTransformSystem
             xform._localPosition = pos;
 
         if (!xform.NoLocalRotation)
-            xform._localRotation = rot;
+            xform._localRotation = NormalizeRotation(rot);
 
         DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
 
@@ -1487,7 +1517,7 @@ public abstract partial class SharedTransformSystem
             return false;
 
         var oldPos = GetWorldPosition(xform);
-        if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _) && !TerminatingOrDeleted(gridUid))
+        if (_map.TryFindGridAt(map, oldPos, out var gridUid, out _) && !TerminatingOrDeleted(gridUid))
         {
             coordinates = gridUid == xform.ParentUid
                 ? new EntityCoordinates(gridUid, xform.LocalPosition)
@@ -1747,7 +1777,7 @@ public abstract partial class SharedTransformSystem
         {
             var mapUid = _map.GetMapOrInvalid(pos2.Value.MapId);
 
-            if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos2.Value.Position, out var targetGrid, out _))
+            if (!_gridQuery.HasComponent(entity1) && _map.TryFindGridAt(mapUid, pos2.Value.Position, out var targetGrid, out _))
             {
                 var invWorldMatrix = GetInvWorldMatrix(targetGrid);
                 SetCoordinates(entity1, new EntityCoordinates(targetGrid, Vector2.Transform(pos2.Value.Position, invWorldMatrix)));
@@ -1770,7 +1800,7 @@ public abstract partial class SharedTransformSystem
         {
             var mapUid = _map.GetMapOrInvalid(pos1.Value.MapId);
 
-            if (!_gridQuery.HasComponent(entity1) && _mapManager.TryFindGridAt(mapUid, pos1.Value.Position, out var targetGrid, out _))
+            if (!_gridQuery.HasComponent(entity1) && _map.TryFindGridAt(mapUid, pos1.Value.Position, out var targetGrid, out _))
             {
                 var invWorldMatrix = GetInvWorldMatrix(targetGrid);
                 SetCoordinates(entity2, new EntityCoordinates(targetGrid, Vector2.Transform(pos1.Value.Position, invWorldMatrix)));

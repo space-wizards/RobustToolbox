@@ -167,6 +167,14 @@ namespace Robust.Client.UserInterface
         /// Exists so that control don't have to inject dependencies or otherwise obtain an <see cref="ILogManager"/> instance just to log errors.
         /// </remarks>
         ISawmill ControlSawmill { get; }
+
+        /// <summary>
+        /// Get the UI root responsible for the current mouse position.
+        /// </summary>
+        /// <remarks>
+        /// This is useful to open popups or similar on the current active window.
+        /// </remarks>
+        UIRoot GetRootForMouse();
     }
 
     public readonly struct PostDrawUIRootEventArgs

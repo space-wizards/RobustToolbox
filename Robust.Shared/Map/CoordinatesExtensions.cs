@@ -8,9 +8,9 @@ namespace Robust.Shared.Map
 {
     public static class CoordinatesExtensions
     {
-        public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
+        public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null)
         {
-            IoCManager.Resolve(ref entityManager, ref mapManager);
+            IoCManager.Resolve(ref entityManager);
 
             var xform = entityManager.System<SharedTransformSystem>();
             var gridId = xform.GetGrid(coords);
@@ -23,7 +23,7 @@ namespace Robust.Shared.Map
 
             var mapCoords = xform.ToMapCoordinates(coords);
 
-            if (mapManager.TryFindGridAt(mapCoords, out var gridUid, out mapGrid))
+            if (mapSystem.TryFindGridAt(mapCoords, out var gridUid, out mapGrid))
             {
                 return mapSystem.GridTileToLocal(gridUid, mapGrid, mapSystem.CoordinatesToTile(gridUid, mapGrid, coords));
             }
@@ -34,7 +34,7 @@ namespace Robust.Shared.Map
             // find grids in search box
             var gridsInArea = new List<Entity<MapGridComponent>>();
 
-            mapManager.FindGridsIntersecting(mapCoords.MapId, gridSearchBox, ref gridsInArea);
+            mapSystem.FindGridsIntersecting(mapCoords.MapId, gridSearchBox, ref gridsInArea);
 
             // find closest grid intersecting our search box.
             gridUid = EntityUid.Invalid;

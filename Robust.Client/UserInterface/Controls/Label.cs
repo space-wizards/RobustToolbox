@@ -220,6 +220,7 @@ namespace Robust.Client.UserInterface.Controls
             var newlines = 0;
             var font = ActualFont;
             var actualFontColor = ActualFontColor;
+            var actualFontOutline = ActualFontOutline;
 
             Vector2 CalcBaseline()
             {
@@ -255,7 +256,7 @@ namespace Robust.Client.UserInterface.Controls
                     baseLine = CalcBaseline();
                 }
 
-                var advance = font.DrawChar(handle, rune, baseLine, UIScale, actualFontColor, outline: ActualFontOutline);
+                var advance = font.DrawChar(handle, rune, baseLine, UIScale, actualFontColor, outline: actualFontOutline);
                 baseLine += new Vector2(advance, 0);
             }
         }

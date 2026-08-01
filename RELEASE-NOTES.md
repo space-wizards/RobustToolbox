@@ -26,7 +26,7 @@ Don't change the format without looking at the script!
 
 ### Internal
 
-*None yet*
+* Pool sprite post-shader render targets in Clyde. ([#6657](https://github.com/space-wizards/RobustToolbox/pull/6657))
 
 
 END TEMPLATE-->

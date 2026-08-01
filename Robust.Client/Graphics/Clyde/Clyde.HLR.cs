@@ -570,7 +570,7 @@ namespace Robust.Client.Graphics.Clyde
                     var finalBox = Box2i.FromDimensions(rounded, source.Size);
 
                     _renderHandle.DrawTextureScreen(source.Texture,
-                        finalBox.BottomLeft, finalBox.BottomRight, finalBox.TopLeft, finalBox.TopRight,
+                        finalBox.TopLeft, finalBox.TopRight, finalBox.BottomLeft, finalBox.BottomRight,
                         Color.White, null);
                     continue;
                 }

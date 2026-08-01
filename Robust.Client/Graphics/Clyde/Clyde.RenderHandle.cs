@@ -308,7 +308,7 @@ namespace Robust.Client.Graphics.Clyde
                     screenCenter,
                     screenScale);
                 var entityPostRenderTargetSize = Clyde.GetPostShaderTargetSize(spriteScreenBounds);
-                var entityPostRenderTarget = _clyde.RentEntityPostRenderTarget(entityPostRenderTargetSize);
+                var entityPostRenderTarget = _clyde.RentPostShaderRenderTarget(entityPostRenderTargetSize);
 
                 if (entityPostRenderTarget == null)
                 {
@@ -320,7 +320,7 @@ namespace Robust.Client.Graphics.Clyde
                 try
                 {
                     entityPostRenderTarget2 = postShaders.Count > 1
-                        ? _clyde.RentEntityPostRenderTarget(entityPostRenderTargetSize)
+                        ? _clyde.RentPostShaderRenderTarget(entityPostRenderTargetSize)
                         : null;
 
                     if (PostShadersNeedScreenTexture(postShaders))
@@ -370,8 +370,10 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 finally
                 {
-                    _clyde.ReturnEntityPostRenderTarget(entityPostRenderTarget2);
-                    _clyde.ReturnEntityPostRenderTarget(entityPostRenderTarget);
+                    if (entityPostRenderTarget2 != null)
+                        _clyde.ReturnPostShaderRenderTarget(entityPostRenderTarget2);
+
+                    _clyde.ReturnPostShaderRenderTarget(entityPostRenderTarget);
                 }
             }
 

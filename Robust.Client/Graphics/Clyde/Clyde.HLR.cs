@@ -267,9 +267,6 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture? ScreenBufferTexture;
         private GLHandle screenBufferHandle;
         private Vector2 lastFrameSize;
-        private const int EntityPostRenderTargetPoolMax = 16;
-        private const int EntityPostRenderTargetPoolMinSize = 32;
-        private readonly List<RenderTexture> _entityPostRenderTargetPool = new();
         private readonly List<SpriteComponent.PostShaderEntry> _postShaderEventEntries = new();
 
         /// <summary>
@@ -406,7 +403,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             var entityPostRenderTargetSize = GetPostShaderTargetSize(spriteScreenBounds);
-            entityPostRenderTarget = RentEntityPostRenderTarget(entityPostRenderTargetSize);
+            entityPostRenderTarget = RentPostShaderRenderTarget(entityPostRenderTargetSize);
 
             if (entityPostRenderTarget == null)
             {
@@ -417,7 +414,7 @@ namespace Robust.Client.Graphics.Clyde
             try
             {
                 entityPostRenderTarget2 = postShaders.Count > 1
-                    ? RentEntityPostRenderTarget(entityPostRenderTargetSize)
+                    ? RentPostShaderRenderTarget(entityPostRenderTargetSize)
                     : null;
 
                 _renderHandle.UseRenderTarget(entityPostRenderTarget);
@@ -474,8 +471,10 @@ namespace Robust.Client.Graphics.Clyde
             }
             finally
             {
-                ReturnEntityPostRenderTarget(entityPostRenderTarget2);
-                ReturnEntityPostRenderTarget(entityPostRenderTarget);
+                if (entityPostRenderTarget2 != null)
+                    ReturnPostShaderRenderTarget(entityPostRenderTarget2);
+
+                ReturnPostShaderRenderTarget(entityPostRenderTarget);
             }
         }
 
@@ -493,86 +492,6 @@ namespace Robust.Client.Graphics.Clyde
                 screenSpriteSize.Y++;
 
             return screenSpriteSize;
-        }
-
-        private RenderTexture? RentEntityPostRenderTarget(Vector2i minSize)
-        {
-            if (minSize.X <= 0 || minSize.Y <= 0)
-                return null;
-
-            var bucket = BucketEntityPostRenderTargetSize(minSize);
-            var bestIndex = -1;
-            var bestArea = long.MaxValue;
-
-            for (var i = 0; i < _entityPostRenderTargetPool.Count; i++)
-            {
-                var renderTarget = _entityPostRenderTargetPool[i];
-                if (renderTarget.Size.X < bucket.X || renderTarget.Size.Y < bucket.Y)
-                    continue;
-
-                var area = (long) renderTarget.Size.X * renderTarget.Size.Y;
-                if (area >= bestArea)
-                    continue;
-
-                bestArea = area;
-                bestIndex = i;
-            }
-
-            if (bestIndex >= 0)
-            {
-                var rented = _entityPostRenderTargetPool[bestIndex];
-                _entityPostRenderTargetPool.RemoveAt(bestIndex);
-                return rented;
-            }
-
-            return CreateRenderTarget(
-                bucket,
-                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
-                name: "entity-post-render-target");
-        }
-
-        private void ReturnEntityPostRenderTarget(RenderTexture? renderTarget)
-        {
-            if (renderTarget == null)
-                return;
-
-            if (_entityPostRenderTargetPool.Count >= EntityPostRenderTargetPoolMax)
-            {
-                renderTarget.DisposeDeferred();
-                return;
-            }
-
-            _entityPostRenderTargetPool.Add(renderTarget);
-        }
-
-        private void ClearEntityPostRenderTargetPool()
-        {
-            foreach (var renderTarget in _entityPostRenderTargetPool)
-            {
-                renderTarget.Dispose();
-            }
-
-            _entityPostRenderTargetPool.Clear();
-        }
-
-        private static Vector2i BucketEntityPostRenderTargetSize(Vector2i size)
-        {
-            return new(NextEntityPostRenderTargetPowerOfTwo(size.X), NextEntityPostRenderTargetPowerOfTwo(size.Y));
-        }
-
-        private static int NextEntityPostRenderTargetPowerOfTwo(int value)
-        {
-            var rounded = Math.Max(value, EntityPostRenderTargetPoolMinSize);
-            if ((rounded & (rounded - 1)) == 0)
-                return rounded;
-
-            rounded--;
-            rounded |= rounded >> 1;
-            rounded |= rounded >> 2;
-            rounded |= rounded >> 4;
-            rounded |= rounded >> 8;
-            rounded |= rounded >> 16;
-            return rounded + 1;
         }
 
         private static bool PostShadersNeedScreenTexture(IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders)

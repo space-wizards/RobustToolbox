@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -27,6 +28,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private const int PostShaderRenderTargetPoolMax = 16;
         private const int PostShaderRenderTargetMinSize = 32;
+        private const int PostShaderRenderTargetBytesPerPixel = 8;
 
         private static readonly RenderTargetFormatParameters PostShaderRenderTargetFormat =
             new(RenderTargetColorFormat.Rgba8Srgb, true);
@@ -311,8 +313,11 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private RenderTexture RentPostShaderRenderTarget(Vector2i minSize)
+        private RenderTexture? RentPostShaderRenderTarget(Vector2i minSize)
         {
+            if (minSize.X <= 0 || minSize.Y <= 0)
+                return null;
+
             var bucket = BucketPostShaderRenderTargetSize(minSize);
 
             var bestIdx = -1;
@@ -344,7 +349,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private void ReturnPostShaderRenderTarget(RenderTexture rt)
         {
-            if (_postShaderRenderTargetPool.Count >= PostShaderRenderTargetPoolMax)
+            var maxSize = Math.Max(0, _cfg.GetCVar(CVars.DisplayPostShaderRenderTargetPoolMaxSize));
+            if (_postShaderRenderTargetPool.Count >= PostShaderRenderTargetPoolMax ||
+                EstimatePostShaderRenderTargetSize(rt.Size) > maxSize)
             {
                 rt.DisposeDeferred();
                 return;
@@ -360,6 +367,11 @@ namespace Robust.Client.Graphics.Clyde
 
             _postShaderRenderTargetPool.Clear();
             FlushRenderTargetDispose();
+        }
+
+        private static long EstimatePostShaderRenderTargetSize(Vector2i size)
+        {
+            return (long) size.X * size.Y * PostShaderRenderTargetBytesPerPixel;
         }
 
         private static Vector2i BucketPostShaderRenderTargetSize(Vector2i size)

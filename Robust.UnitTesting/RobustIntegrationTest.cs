@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -913,7 +915,21 @@ namespace Robust.UnitTesting
                 _dummySessions.Add(userId, session);
 
                 session.ConnectedTime = DateTime.UtcNow;
-                await WaitPost(() => man.SetStatus(session, SessionStatus.Connected));
+                await WaitPost(() =>
+                {
+                    var userData = new NetUserData(userId, userName)
+                    {
+                        HWId = ImmutableArray<byte>.Empty,
+                        ModernHWIds = []
+                    };
+
+                    (NetMan as IntegrationNetManager)?.OnConnecting(
+                        new IPEndPoint(IPAddress.Loopback, 1212),
+                        userData,
+                        LoginType.GuestAssigned
+                    );
+                    man.SetStatus(session, SessionStatus.Connected);
+                });
 
                 return session;
             }

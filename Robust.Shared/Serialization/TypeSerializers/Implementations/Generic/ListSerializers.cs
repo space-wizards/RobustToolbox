@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -14,6 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 {
     [TypeSerializer]
     public sealed class ListSerializers<T> :
+        BaseTypeSerializer,
         ITypeSerializer<List<T>, SequenceDataNode>,
         ITypeSerializer<IReadOnlyList<T>, SequenceDataNode>,
         ITypeSerializer<IReadOnlyCollection<T>, SequenceDataNode>,
@@ -129,8 +129,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         {
             if (instanceProvider != null)
             {
-                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
-                sawmill.Warning($"Provided value to a Read-call for a {nameof(IReadOnlySet<T>)}. Ignoring...");
+                Log.Warning($"Provided value to a Read-call for a {nameof(IReadOnlySet<T>)}. Ignoring...");
             }
 
             var list = new List<T>();
@@ -151,8 +150,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         {
             if (instanceProvider != null)
             {
-                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
-                sawmill.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyCollection<T>)}. Ignoring...");
+                Log.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyCollection<T>)}. Ignoring...");
             }
 
             var list = new List<T>();
@@ -173,8 +171,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         {
             if (instanceProvider != null)
             {
-                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
-                sawmill.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<T>)}. Ignoring...");
+                Log.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<T>)}. Ignoring...");
             }
 
             var list = ImmutableList.CreateBuilder<T>();

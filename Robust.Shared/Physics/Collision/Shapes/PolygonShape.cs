@@ -209,10 +209,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public void Set(Box2Rotated bounds)
         {
             Span<Vector2> verts = stackalloc Vector2[4];
-            verts[0] = bounds.BottomLeft;
-            verts[1] = bounds.BottomRight;
-            verts[2] = bounds.TopRight;
-            verts[3] = bounds.TopLeft;
+            bounds.GetCorners(out verts[0], out verts[1], out verts[2], out verts[3]);
 
             var hull = new InternalPhysicsHull(verts, 4);
             Set(hull);

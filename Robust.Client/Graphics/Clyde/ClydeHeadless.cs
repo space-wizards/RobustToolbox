@@ -588,6 +588,11 @@ namespace Robust.Client.Graphics.Clyde
             public event Action<WindowDestroyedEventArgs>? Destroyed;
             public event Action<WindowResizedEventArgs>? Resized { add { } remove { } }
 
+            public void SetRelativeMouseMode(bool enabled)
+            {
+                // Nop.
+            }
+
             public void SetWindowProgress(WindowProgressState state, float value)
             {
                 // Nop.

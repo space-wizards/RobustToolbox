@@ -35,17 +35,47 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 286.0.0
+
+### Breaking changes
+
 * Box2 and Box2Rotated now validate their inputs and no longer accepts negative sizes.
+* Multiple PostShaders are now supported for SpriteComponent. The rendering paths for sprites also optionally take in post-shaders as well.
 
 ### New features
 
 * `Thickness` is now serializable.
 * Added support for text outlines in `Font`, `DrawingHandleScreen`, `Label`, `RichTextLabel`, and overlays.
+* `IPrototypeManager `now has a new method, `TryGetEntityPrototypesByCategory `. It returns a set of serialized entity prototypes that form part of the given entity category
+* Expose relative mouse mode for windows.
 
 ### Bugfixes
 
 * Fix Box2.EnlargeAabb's top bounds check.
 * Fix the NaN check for Box2.
+* Fix MoveBuffer not dropping proxies that move across maps in some cases.
+* Fix some serv5 edge cases.
+* Fix RobustIntegrationTest not raising an OnConnecting event for dummy sessions.
+* Fix server max player count on Discord RPC.
 
 ### Other
 
@@ -54,13 +84,13 @@ END TEMPLATE-->
 ### Internal
 
 * Speedup many hotpaths on Box2 and Box2Rotated.
+* Cleanup ContainerSystem internally.
+* Standardize Roslyn analyzers and speed up some of them.
+* Make ComponentTreeEntry faster with GetHashCode.
+* Mark Direction extensions as Pure.
 
 
 ## 285.0.1
-
-### New features
-
-* `IPrototypeManager `now has a new method, `TryGetEntityPrototypesByCategory `. It returns a set of serialized entity prototypes that form part of the given entity category
 
 ### Bugfixes
 

@@ -54,6 +54,14 @@ END TEMPLATE-->
 * ISimulation no longer has SpawnEntity methods, resolve IEntityManager and call the spawn methods directly instead.
 
 
+## 285.0.1
+
+### Bugfixes
+
+* Fix FreeBSD builds and align CI with packaged builds.
+* Fix sRGB framebuffer for linux in GLES compatibility mode.
+
+
 ## 285.0.0
 
 ### Breaking changes

@@ -100,6 +100,8 @@ public abstract partial class SharedContainerSystem
         // Raise container events (after re-parenting and internal remove).
         RaiseLocalEvent(container.Owner, new EntRemovedFromContainerMessage(toRemove, container), true);
         RaiseLocalEvent(toRemove, new EntGotRemovedFromContainerMessage(toRemove, container), false);
+        var hierarchyChanged = new EntContainerHierarchyChangedMessage(container.Owner, false);
+        RaiseContainerHierarchyChanged(toRemove, ref hierarchyChanged);
 
         DebugTools.Assert(destination == null || xform.Coordinates.Equals(destination.Value), $"Failed to set coordinates of {ToPrettyString(toRemove, meta)} to be inside {ToPrettyString(container.Owner)} container '{container.ID}'");
 

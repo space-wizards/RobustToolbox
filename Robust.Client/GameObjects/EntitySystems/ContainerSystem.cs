@@ -18,6 +18,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private IRobustSerializer _serializer = default!;
         [Dependency] private IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private PointLightSystem _lightSys = default!;
+        [Dependency] private SpriteSystem _spriteSys = default!;
 
         private EntityQuery<PointLightComponent> _pointLightQuery;
         private EntityQuery<SpriteComponent> _spriteQuery;
@@ -35,6 +36,8 @@ namespace Robust.Client.GameObjects
 
             EntityManager.EntityInitialized += HandleEntityInitialized;
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
+            SubscribeLocalEvent<SpriteComponent, EntContainerHierarchyChangedMessage>(OnSpriteContainerHierarchyChanged);
+            SubscribeLocalEvent<PointLightComponent, EntContainerHierarchyChangedMessage>(OnPointLightContainerHierarchyChanged);
 
             UpdatesBefore.Add(typeof(SpriteSystem));
         }
@@ -234,6 +237,18 @@ namespace Robust.Client.GameObjects
             Insert(message.Entity, container, force: true);
         }
 
+        private void OnSpriteContainerHierarchyChanged(EntityUid uid, SpriteComponent component, ref EntContainerHierarchyChangedMessage args)
+        {
+            var (spriteOccluded, _) = GetContainerOcclusion(uid);
+            _spriteSys.SetContainerOccluded((uid, component), spriteOccluded);
+        }
+
+        private void OnPointLightContainerHierarchyChanged(EntityUid uid, PointLightComponent component, ref EntContainerHierarchyChangedMessage args)
+        {
+            var (_, lightOccluded) = GetContainerOcclusion(uid);
+            _lightSys.SetContainerOccluded(uid, lightOccluded, component);
+        }
+
         public void AddExpectedEntity(NetEntity netEntity, BaseContainer container)
         {
 #if DEBUG
@@ -293,24 +308,8 @@ namespace Robust.Client.GameObjects
             // Recursively go up parents and containers to see whether both sprites and lights need to be occluded
             // Could maybe optimise this more by checking nearest parent that has sprite / light and whether it's container
             // occluded but this probably isn't a big perf issue.
+            var (spriteOccluded, lightOccluded) = GetContainerOcclusion(entity);
             var xform = TransformQuery.GetComponent(entity);
-            var parent = xform.ParentUid;
-            var child = entity;
-            var spriteOccluded = false;
-            var lightOccluded = false;
-
-            while (parent.IsValid() && (!spriteOccluded || !lightOccluded))
-            {
-                var parentXform = TransformQuery.GetComponent(parent);
-                if (TryComp<ContainerManagerComponent>(parent, out var manager) && TryGetContainingContainer(parent, child, out var container, manager))
-                {
-                    spriteOccluded = spriteOccluded || !container.ShowContents;
-                    lightOccluded = lightOccluded || container.OccludesLight;
-                }
-
-                child = parent;
-                parent = parentXform.ParentUid;
-            }
 
             // Alright so
             // This is the CBT bit.
@@ -327,7 +326,7 @@ namespace Robust.Client.GameObjects
         {
             if (_spriteQuery.TryGetComponent(entity, out var sprite))
             {
-                sprite.ContainerOccluded = spriteOccluded;
+                _spriteSys.SetContainerOccluded((entity, sprite), spriteOccluded);
             }
 
             if (_pointLightQuery.TryGetComponent(entity, out var light))
@@ -359,6 +358,34 @@ namespace Robust.Client.GameObjects
                     UpdateEntity(child, TransformQuery.GetComponent(child), spriteOccluded, lightOccluded);
                 }
             }
+        }
+
+        private (bool SpriteOccluded, bool LightOccluded) GetContainerOcclusion(EntityUid entity)
+        {
+            var meta = MetaQuery.GetComponent(entity);
+            if ((meta.Flags & MetaDataFlags.InContainer) == 0)
+                return (false, false);
+
+            var xform = TransformQuery.GetComponent(entity);
+            var parent = xform.ParentUid;
+            var child = entity;
+            var spriteOccluded = false;
+            var lightOccluded = false;
+
+            while (parent.IsValid() && (!spriteOccluded || !lightOccluded))
+            {
+                var parentXform = TransformQuery.GetComponent(parent);
+                if (TryComp<ContainerManagerComponent>(parent, out var manager) && TryGetContainingContainer(parent, child, out var container, manager))
+                {
+                    spriteOccluded = spriteOccluded || !container.ShowContents;
+                    lightOccluded = lightOccluded || container.OccludesLight;
+                }
+
+                child = parent;
+                parent = parentXform.ParentUid;
+            }
+
+            return (spriteOccluded, lightOccluded);
         }
     }
 }

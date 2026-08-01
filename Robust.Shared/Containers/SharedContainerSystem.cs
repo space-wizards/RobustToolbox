@@ -667,6 +667,22 @@ public abstract partial class SharedContainerSystem
         return false;
     }
 
+    private void RaiseContainerHierarchyChanged(EntityUid uid, ref EntContainerHierarchyChangedMessage args)
+    {
+        RaiseLocalEvent(uid, ref args);
+
+        if (!_managerQuery.TryComp(uid, out var manager))
+            return;
+
+        foreach (var container in manager.Containers.Values)
+        {
+            foreach (var contained in container.ContainedEntities)
+            {
+                RaiseContainerHierarchyChanged(contained, ref args);
+            }
+        }
+    }
+
     #endregion
 
     protected virtual void OnParentChanged(ref EntParentChangedMessage message)

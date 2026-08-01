@@ -123,6 +123,8 @@ public abstract partial class SharedContainerSystem
         // Raise container events (after re-parenting and internal remove).
         RaiseLocalEvent(container.Owner, new EntInsertedIntoContainerMessage(toInsert, oldParent, container), true);
         RaiseLocalEvent(toInsert, new EntGotInsertedIntoContainerMessage(toInsert, container), true);
+        var hierarchyChanged = new EntContainerHierarchyChangedMessage(container.Owner, true);
+        RaiseContainerHierarchyChanged(toInsert, ref hierarchyChanged);
 
         // The sheer number of asserts tells you about how little I trust container and parenting code.
         DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0, "invalid metadata flags after events");

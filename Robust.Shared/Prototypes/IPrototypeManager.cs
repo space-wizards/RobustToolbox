@@ -567,12 +567,12 @@ public interface IPrototypeManager
     FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; }
 
     /// <summary>
-    /// Tries to get list of <see cref="EntityPrototype"/> with provided category.
+    /// Attempts to get a list of <see cref="EntityPrototype"/> that belongs to the provided <see cref="EntityCategoryPrototype"/>.
     /// </summary>
-    /// <param name="category">Category to search for.</param>
-    /// <param name="prototypes">List of prototypes with category or null.</param>
-    /// <returns>True if provided category have respective list of prototypes, otherwise false.</returns>
-    bool TryGetEntityPrototypesByCategory(ProtoId<EntityCategoryPrototype> category, [NotNullWhen(true)]out IReadOnlyList<EntityPrototype>? prototypes);
+    /// <param name="category">Category id of the entity prototypes we want to get.</param>
+    /// <param name="prototypes">List of entity prototypes that form part category or null.</param>
+    /// <returns>True if the provided <see cref="EntityCategoryPrototype"/> id has a matching list of <see cref="EntityPrototype"/> False otherwise.</returns>
+    bool TryGetEntityPrototypesByCategory(ProtoId<EntityCategoryPrototype> category, [NotNullWhen(true)] out IReadOnlyList<EntityPrototype>? prototypes);
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

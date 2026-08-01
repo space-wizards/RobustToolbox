@@ -281,8 +281,8 @@ public static class CompletionHelper
     /// and <see cref="EntityPrototype.ID"/>).
     /// </summary>
     /// <param name="filterWith">
-    /// Substring, by which to filter entity prototypes Id and description.
-    /// Will not do filtering in case null was provided.
+    /// Text to be used for filtering entity prototypes by <see cref="EntityPrototype.ID"/>
+    /// and <see cref="EntityPrototype.Description"/>. Will not do filtering in case null was provided.
     /// </param>
     /// <param name="category">Get entity prototypes that belong to this category.</param>
     /// <param name="prototype">Prototype manager to be used (in case it was provided).</param>

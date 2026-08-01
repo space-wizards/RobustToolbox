@@ -23,7 +23,13 @@ public abstract partial class PrototypeManager : IPrototypeManagerInternal
     /// <inheritdoc/>
     public bool TryGetEntityPrototypesByCategory(ProtoId<EntityCategoryPrototype> category, [NotNullWhen(true)] out IReadOnlyList<EntityPrototype>? prototypes)
     {
-        return Categories.TryGetValue(category, out prototypes);
+        var found = Categories.TryGetValue(category, out prototypes);
+        if (!found)
+        {
+            Sawmill.Error("Attempted to find entity prototypes with category '{Category}', but found no such category pre-cached.", category);
+        }
+
+        return found;
     }
 
     private void UpdateCategories()

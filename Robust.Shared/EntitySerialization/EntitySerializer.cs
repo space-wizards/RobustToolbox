@@ -581,7 +581,8 @@ public sealed partial class EntitySerializer : ISerializationContext,
         {
             // try comp instead of has-comp as it checks whether the component is supposed to have been
             // deleted.
-            if (EntMan.TryGetComponent(uid, comp.Component.GetType(), out _))
+            if (EntMan.TryGetComponent(uid, comp.Component.GetType(), out var component)
+                && !EntMan.IsComponentPendingRemoval(component))
                 continue;
 
             missingComponents ??= new();
@@ -629,6 +630,9 @@ public sealed partial class EntitySerializer : ISerializationContext,
     {
         foreach (var component in EntMan.GetComponentsInternal(uid))
         {
+            if (EntMan.IsComponentPendingRemoval(component))
+                continue;
+
             var compType = component.GetType();
 
             var reg = _factory.GetRegistration(compType);

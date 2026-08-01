@@ -518,6 +518,14 @@ namespace Robust.Shared.GameObjects
             RemoveComponentDeferred(component, owner, false);
         }
 
+        /// <summary>
+        /// Returns whether a component is being removed or is queued for deferred removal.
+        /// </summary>
+        internal bool IsComponentPendingRemoval(IComponent component)
+        {
+            return component.LifeStage >= ComponentLifeStage.Stopping || _deleteSet.Contains(component);
+        }
+
         private static IEnumerable<IComponent> InSafeOrder(IEnumerable<IComponent> comps, bool forCreation = false)
         {
             static int Sequence(IComponent x)

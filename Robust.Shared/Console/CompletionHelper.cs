@@ -282,7 +282,7 @@ public static class CompletionHelper
     /// </summary>
     /// <param name="filterWith">
     /// Text to be used for filtering entity prototypes by <see cref="EntityPrototype.ID"/>
-    /// and <see cref="EntityPrototype.Description"/>. Will not do filtering in case null was provided.
+    /// and <see cref="EntityPrototype.Name"/>. Will not do filtering in case null was provided.
     /// </param>
     /// <param name="category">Get entity prototypes that belong to this category.</param>
     /// <param name="prototype">Prototype manager to be used (in case it was provided).</param>
@@ -306,14 +306,14 @@ public static class CompletionHelper
         {
             var current = found[index];
             index++;
-            var description = current.Description;
+            var name = current.Name;
             if (!isTextFilterEmpty
-                && !description.Contains(filterWith!, StringComparison.InvariantCultureIgnoreCase)
-                && !current.ID.Contains(filterWith!, StringComparison.InvariantCultureIgnoreCase))
+                && !current.ID.Contains(filterWith!, StringComparison.InvariantCultureIgnoreCase)
+                && !name.Contains(filterWith!, StringComparison.InvariantCultureIgnoreCase))
                 continue;
 
             returnedCount++;
-            yield return new CompletionOption(current.ID, description);
+            yield return new CompletionOption(current.ID, name);
         }
     }
 }

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added support for text outlines in `Font`, `DrawingHandleScreen`, `Label`, `RichTextLabel`, and overlays.
 
 ### Bugfixes
 

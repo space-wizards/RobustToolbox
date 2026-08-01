@@ -229,7 +229,9 @@ public sealed partial class SpriteSystem
             if (existing.Id != args.Id)
                 continue;
 
+            existing.Prototype = default!;
             existing.Shader = args.Shader;
+            existing.Mutable = args.Shader.Mutable;
             existing.GetScreenTexture = args.GetScreenTexture;
             existing.RaiseShaderEvent = args.RaiseShaderEvent;
             existing.Before = beforeArray;
@@ -351,7 +353,7 @@ public sealed partial class SpriteSystem
         }
         catch (InvalidOperationException)
         {
-            _sawmill.Warning("Post-shader dependency cycle detected on sprite {0}; keeping insertion order.", sprite.Owner);
+            Log.Warning("Post-shader dependency cycle detected on sprite {0}; keeping insertion order.", sprite.Owner);
             shaders.Sort(PostShaderInsertionComparison);
         }
     }

@@ -206,7 +206,11 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Ordered post-shaders to apply. These get run on the final entity sprite.
         /// </summary>
+        /// <remarks>
+        /// Read-only as these should be constructed from base prototype + runtime.
+        /// </remarks>
         [ViewVariables]
+        [DataField(readOnly: true)]
         internal List<PostShaderEntry> PostShaders = new();
 
         [ViewVariables]
@@ -1792,28 +1796,39 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        ///     A post-shader currently applied to this sprite.
+        ///     A post-shader applied to this sprite.
         /// </summary>
-        public sealed class PostShaderEntry
+        [DataDefinition]
+        public sealed partial class PostShaderEntry
         {
             /// <summary>
             ///     Stable id used by systems to replace or remove their own post-shader.
             /// </summary>
-            public readonly string Id;
+            [DataField(required: true)]
+            public string Id = default!;
 
             /// <summary>
-            ///     Shader instance to run for this post-shader pass.
+            ///     Shader prototype to run for this post-shader pass.
             /// </summary>
-            public ShaderInstance Shader;
+            [DataField(required: true)]
+            public ProtoId<ShaderPrototype> Prototype;
+
+            /// <summary>
+            ///     Whether to create a per-sprite mutable shader instance.
+            /// </summary>
+            [DataField]
+            public bool Mutable = true;
 
             /// <summary>
             ///     Whether this post-shader needs the current viewport texture assigned as SCREEN_TEXTURE.
             /// </summary>
+            [DataField]
             public bool GetScreenTexture;
 
             /// <summary>
             ///     Whether to raise BeforePostShaderRenderEvent before rendering this sprite.
             /// </summary>
+            [DataField]
             public bool RaiseShaderEvent;
 
             /// <summary>
@@ -1822,7 +1837,8 @@ namespace Robust.Client.GameObjects
             /// <remarks>
             ///     Missing ids are ignored.
             /// </remarks>
-            public string[] Before;
+            [DataField]
+            public string[] Before = Array.Empty<string>();
 
             /// <summary>
             ///     Post-shader ids that this entry should run after.
@@ -1830,7 +1846,13 @@ namespace Robust.Client.GameObjects
             /// <remarks>
             ///     Missing ids are ignored.
             /// </remarks>
-            public string[] After;
+            [DataField]
+            public string[] After = Array.Empty<string>();
+
+            /// <summary>
+            ///     Shader instance to run for this post-shader pass.
+            /// </summary>
+            public ShaderInstance Shader = default!;
 
             /// <summary>
             ///     Original insertion position, used as the tie-breaker for unrelated post-shaders.
@@ -1840,6 +1862,10 @@ namespace Robust.Client.GameObjects
             /// <summary>
             ///     Creates a post-shader entry.
             /// </summary>
+            private PostShaderEntry()
+            {
+            }
+
             public PostShaderEntry(
                 string id,
                 ShaderInstance shader,
@@ -1850,6 +1876,7 @@ namespace Robust.Client.GameObjects
             {
                 Id = id;
                 Shader = shader;
+                Mutable = shader.Mutable;
                 GetScreenTexture = getScreenTexture;
                 RaiseShaderEvent = raiseShaderEvent;
                 Before = before ?? Array.Empty<string>();
@@ -1862,6 +1889,8 @@ namespace Robust.Client.GameObjects
             public PostShaderEntry(PostShaderEntry toClone)
             {
                 Id = toClone.Id;
+                Prototype = toClone.Prototype;
+                Mutable = toClone.Mutable;
                 Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
                 GetScreenTexture = toClone.GetScreenTexture;
                 RaiseShaderEvent = toClone.RaiseShaderEvent;

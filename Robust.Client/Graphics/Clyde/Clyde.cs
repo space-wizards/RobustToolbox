@@ -586,6 +586,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _entityPostRenderTargets.Clear();
             _staleEntityPostRenderTargets.Clear();
+            _postShaderEventEntries.Clear();
 
             _glContext?.Shutdown();
             ShutdownWindowing();

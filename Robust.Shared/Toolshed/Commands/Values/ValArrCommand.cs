@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Content.Shared.Toolshed;
 using Robust.Shared.Toolshed.TypeParsers;
 
@@ -11,5 +12,5 @@ public sealed class ValArrCommand : ToolshedCommand
     public override Type[] TypeParameterParsers => _parsers;
 
     [CommandImplementation]
-    public ValueArray<T> ValArr<T>(ValueArray<T> array) => array;
+    public List<T> ValArr<T>(List<T> array) => array;
 }

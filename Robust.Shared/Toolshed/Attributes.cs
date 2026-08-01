@@ -1,5 +1,5 @@
 ﻿using System;
-using Content.Shared.Toolshed;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
@@ -96,11 +96,11 @@ public sealed class CommandInvocationContextAttribute : Attribute;
 public sealed class TakesPipedTypeAsGenericAttribute : Attribute;
 
 /// <summary>
-/// Sets the min/max length for a <see cref="ValueArray{T}"/>
+/// Sets the min/max length for a <see cref="List{T}"/> in a bit cleaner of a way than the existing attributes for doing so.
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]
-public sealed class ValueArrayAttribute : Attribute
+public sealed class ListLengthAttribute : Attribute
 {
     public int MinLength { get; init; }
-    public int MaxLength { get; init; }
+    public int MaxLength { get; init; } = -1; // -1 = no max length
 }

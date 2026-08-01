@@ -12,16 +12,16 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared.Toolshed;
 
-public sealed class ValueArrayTypeParser<T> : TypeParser<ValueArray<T>>
+public sealed class ListTypeParser<T> : TypeParser<List<T>>
 {
-    public override bool TryParse(ParserContext ctx, out ValueArray<T> result)
+    public override bool TryParse(ParserContext ctx, out List<T> result)
     {
         ctx.ConsumeWhitespace();
 
         if (!ctx.EatMatch('['))
         {
             ctx.Error = new ExpectedTokenError(["["]);
-            result = new ValueArray<T>([], true);
+            result = [];
             return false;
         }
 
@@ -35,7 +35,7 @@ public sealed class ValueArrayTypeParser<T> : TypeParser<ValueArray<T>>
 
             if (!Toolshed.TryParse(ctx, out T? value))
             {
-                result = new ValueArray<T>([], true);
+                result = [];
                 return false;
             }
 
@@ -44,7 +44,7 @@ public sealed class ValueArrayTypeParser<T> : TypeParser<ValueArray<T>>
             if (maxLength >= 0 && values.Count > maxLength)
             {
                 ctx.Error = new TooManyElementsError(maxLength);
-                result = new ValueArray<T>([], true);
+                result = [];
                 return false;
             }
 
@@ -58,23 +58,23 @@ public sealed class ValueArrayTypeParser<T> : TypeParser<ValueArray<T>>
                 if (values.Count < minLength)
                 {
                     ctx.Error = new NotEnoughElementsError(minLength);
-                    result = new ValueArray<T>([], true);
+                    result = [];
                     return false;
                 }
 
-                result = new ValueArray<T>(values.ToArray());
+                result = new List<T>(values.ToArray());
                 return true;
             }
 
             ctx.Error = new ExpectedTokenError([",", "]"]);
-            result = new ValueArray<T>([], true);
+            result = [];
             return false;
         }
     }
 
     public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
-        var hint = ToolshedCommand.GetArgHint(arg, typeof(T));
+        var hint = ToolshedCommand.GetArgHint(arg, typeof(List<T>));
 
         ctx.ConsumeWhitespace();
 
@@ -165,7 +165,7 @@ public sealed class ValueArrayTypeParser<T> : TypeParser<ValueArray<T>>
 
         var argIndex = ctx.Bundle.Arguments?.Count ?? 0;
 
-        var attr = parameters[argIndex].GetCustomAttribute<ValueArrayAttribute>();
+        var attr = parameters[argIndex].GetCustomAttribute<ListLengthAttribute>();
 
         return (
             attr?.MinLength ?? 0,
@@ -191,5 +191,3 @@ public sealed class NotEnoughElementsError(int min) : ConError
     public override FormattedMessage DescribeInner() =>
         FormattedMessage.FromUnformatted($"Not enough elements, minimum length is {min}.");
 }
-
-public readonly record struct ValueArray<T>(T[] Array, bool Invalid = false);

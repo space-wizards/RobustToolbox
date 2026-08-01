@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
@@ -191,7 +192,8 @@ namespace Robust.Client.Graphics.Clyde
                 Direction? overrideDirection = null,
                 SpriteComponent? sprite = null,
                 TransformComponent? xform = null,
-                SharedTransformSystem? xformSystem = null)
+                SharedTransformSystem? xformSystem = null,
+                IReadOnlyList<SpriteComponent.PostShaderEntry>? postShaders = null)
             {
                 if (_entities.Deleted(entity))
                 {
@@ -200,12 +202,40 @@ namespace Robust.Client.Graphics.Clyde
 
                 sprite ??= _entities.GetComponent<SpriteComponent>(entity);
 
+                if (worldRot == null)
+                {
+                    xformSystem ??= _entities.System<SharedTransformSystem>();
+                    var query = _entities.GetEntityQuery<TransformComponent>();
+                    xform ??= query.GetComponent(entity);
+                    worldRot = xformSystem.GetWorldRotation(xform, query);
+                }
+
+                if (postShaders is { Count: > 0 })
+                {
+                    DrawEntityPostShaders(entity, position, scale, worldRot.Value, eyeRot, overrideDirection, sprite, postShaders);
+                    return;
+                }
+
+                DrawEntityRaw(entity, position, scale, worldRot.Value, eyeRot, overrideDirection, sprite);
+            }
+
+            private void DrawEntityRaw(
+                EntityUid entity,
+                Vector2 position,
+                Vector2 scale,
+                Angle worldRot,
+                Angle eyeRot,
+                Direction? overrideDirection,
+                SpriteComponent sprite,
+                bool applyModelTranslation = true)
+            {
                 var oldProj = _clyde._currentMatrixProj;
                 var oldView = _clyde._currentMatrixView;
                 var oldModel = _clyde._currentMatrixModel;
 
                 var newModel = oldModel;
-                position += new Vector2(oldModel.M31, oldModel.M32);
+                if (applyModelTranslation)
+                    position += new Vector2(oldModel.M31, oldModel.M32);
                 newModel.M31 = 0;
                 newModel.M32 = 0;
                 SetModelTransform(newModel);
@@ -226,24 +256,138 @@ namespace Robust.Client.Graphics.Clyde
                     SetProjView(proj, view);
                 }
 
-                if (worldRot == null)
-                {
-                    xformSystem ??= _entities.System<SharedTransformSystem>();
-                    var query = _entities.GetEntityQuery<TransformComponent>();
-                    xform ??= query.GetComponent(entity);
-                    worldRot = xformSystem.GetWorldRotation(xform, query);
-                }
-
                 // Draw the entity.
                 sprite.Render(
                     DrawingHandleWorld,
                     eyeRot,
-                    worldRot.Value,
+                    worldRot,
                     overrideDirection);
 
                 // Reset to screen space
                 SetProjView(oldProj, oldView);
                 SetModelTransform(oldModel);
+            }
+
+            private void DrawEntityPostShaders(
+                EntityUid entity,
+                Vector2 position,
+                Vector2 scale,
+                Angle worldRot,
+                Angle eyeRot,
+                Direction? overrideDirection,
+                SpriteComponent sprite,
+                IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders)
+            {
+                var oldModel = _clyde._currentMatrixModel;
+                var finalPosition = position + new Vector2(oldModel.M31, oldModel.M32);
+                var screenScale = scale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
+
+                if (screenScale.X == 0 || screenScale.Y == 0 ||
+                    !_clyde._currentRenderTarget.Instance.TryGetTarget(out var finalTarget))
+                {
+                    DrawEntityRaw(entity, position, scale, worldRot, eyeRot, overrideDirection, sprite);
+                    return;
+                }
+
+                var spriteSystem = _entities.System<SpriteSystem>();
+                var finalRotation = sprite.NoRotation
+                    ? sprite.Rotation
+                    : sprite.Rotation + worldRot + eyeRot;
+                var screenCenter = finalPosition / screenScale;
+                if (sprite.Offset != Vector2.Zero)
+                {
+                    var spriteOffset = sprite.NoRotation
+                        ? (-eyeRot).RotateVec(sprite.Offset)
+                        : worldRot.RotateVec(sprite.Offset);
+                    screenCenter += eyeRot.RotateVec(spriteOffset);
+                }
+
+                var spriteScreenBounds = Clyde.TransformCenteredBox(
+                    spriteSystem.GetLocalBounds((entity, sprite)),
+                    (float) finalRotation.Theta,
+                    screenCenter,
+                    screenScale);
+                var entityPostRenderTargetSize = Clyde.GetPostShaderTargetSize(spriteScreenBounds);
+                var entityPostRenderTarget = _clyde.GetEntityPostRenderTarget(entityPostRenderTargetSize, true);
+                var entityPostRenderTarget2 = postShaders.Count > 1
+                    ? _clyde.GetEntityPostRenderTarget(entityPostRenderTargetSize, false)
+                    : null;
+
+                if (entityPostRenderTarget == null)
+                {
+                    DrawEntityRaw(entity, position, scale, worldRot, eyeRot, overrideDirection, sprite);
+                    return;
+                }
+
+                if (PostShadersNeedScreenTexture(postShaders))
+                {
+                    if (finalTarget is not RenderTexture screenTarget)
+                    {
+                        DrawEntityRaw(entity, position, scale, worldRot, eyeRot, overrideDirection, sprite);
+                        return;
+                    }
+
+                    _clyde.FlushRenderQueue();
+                    var screenTexture = _clyde.CopyScreenTexture(screenTarget);
+                    if (screenTexture == null)
+                    {
+                        DrawEntityRaw(entity, position, scale, worldRot, eyeRot, overrideDirection, sprite);
+                        return;
+                    }
+
+                    foreach (var postShader in postShaders)
+                    {
+                        if (postShader.GetScreenTexture)
+                            postShader.Shader.SetParameter("SCREEN_TEXTURE", screenTexture);
+                    }
+                }
+
+                UseRenderTarget(entityPostRenderTarget);
+                Clear(default, 0, ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
+                Viewport(Box2i.FromDimensions(Vector2i.Zero, entityPostRenderTarget.Size));
+
+                var sourcePosition = finalPosition + entityPostRenderTarget.Size / 2f - spriteScreenBounds.Center;
+                DrawEntityRaw(entity, sourcePosition, scale, worldRot, eyeRot, overrideDirection, sprite, false);
+
+                var oldProj = _clyde._currentMatrixProj;
+                var oldView = _clyde._currentMatrixView;
+                _clyde.DrawEntityPostShaders(
+                    finalTarget,
+                    finalTarget.Size,
+                    (Vector2i) spriteScreenBounds.Center,
+                    entityPostRenderTarget,
+                    entityPostRenderTarget2,
+                    postShaders);
+
+                SetProjView(oldProj, oldView);
+                UseShader(null);
+                SetModelTransform(oldModel);
+            }
+
+            public void RenderSpritePostShaders(
+                Entity<SpriteComponent> sprite,
+                IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders,
+                Angle eyeRotation,
+                Angle worldRotation,
+                Vector2 worldPosition,
+                Direction? overrideDirection)
+            {
+                if (_clyde._currentViewport is not { } viewport)
+                    throw new InvalidOperationException("Post-shader sprites must be rendered with a viewport.");
+
+                var spriteSystem = _entities.System<SpriteSystem>();
+                var screenBounds = viewport.GetWorldToLocalMatrix().TransformBox(
+                    spriteSystem.CalculateBounds(sprite, worldPosition, worldRotation, eyeRotation));
+
+                _clyde.RenderSpritePostShaders(
+                    sprite,
+                    postShaders,
+                    eyeRotation,
+                    worldRotation,
+                    worldPosition,
+                    overrideDirection,
+                    screenBounds,
+                    spriteSystem);
             }
 
             public void DrawLine(Vector2 a, Vector2 b, Color color)
@@ -589,6 +733,23 @@ namespace Robust.Client.Graphics.Clyde
                 public override void DrawTextureRectsUnmodulated(Texture texture, ReadOnlySpan<WorldTextureRect> rects)
                 {
                     _renderHandle.DrawTextureWorldBatchUnmodulated(texture, rects);
+                }
+
+                public override void RenderSpritePostShaders(
+                    Entity<SpriteComponent> sprite,
+                    IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders,
+                    Angle eyeRotation,
+                    Angle worldRotation,
+                    Vector2 worldPosition,
+                    Direction? overrideDirection)
+                {
+                    _renderHandle.RenderSpritePostShaders(
+                        sprite,
+                        postShaders,
+                        eyeRotation,
+                        worldRotation,
+                        worldPosition,
+                        overrideDirection);
                 }
 
                 public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,

@@ -579,6 +579,15 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Shutdown()
         {
+            foreach (var cached in _entityPostRenderTargets.Values)
+            {
+                cached.Texture.Dispose();
+            }
+
+            _entityPostRenderTargets.Clear();
+            _staleEntityPostRenderTargets.Clear();
+            _postShaderEventEntries.Clear();
+
             _glContext?.Shutdown();
             ShutdownWindowing();
         }

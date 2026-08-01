@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
+using Robust.Client.GameObjects;
 using Robust.Shared.Graphics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -81,6 +84,17 @@ namespace Robust.Client.Graphics
         /// Draws multiple rotated rectangles for the same texture without multiplying by the handle modulation color.
         /// </summary>
         public abstract void DrawTextureRectsUnmodulated(Texture texture, ReadOnlySpan<WorldTextureRect> rects);
+
+        /// <summary>
+        /// Renders a sprite through the supplied post-shader passes.
+        /// </summary>
+        public abstract void RenderSpritePostShaders(
+            Entity<SpriteComponent> sprite,
+            IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders,
+            Angle eyeRotation,
+            Angle worldRotation,
+            Vector2 worldPosition,
+            Direction? overrideDirection);
 
         private Box2 GetQuad(Texture texture, Vector2 position)
         {

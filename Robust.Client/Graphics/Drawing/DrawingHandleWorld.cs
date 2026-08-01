@@ -94,8 +94,7 @@ namespace Robust.Client.Graphics
             Angle eyeRotation,
             Angle worldRotation,
             Vector2 worldPosition,
-            Direction? overrideDirection,
-            Box2? spriteScreenBounds);
+            Direction? overrideDirection);
 
         private Box2 GetQuad(Texture texture, Vector2 position)
         {

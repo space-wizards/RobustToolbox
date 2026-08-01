@@ -363,15 +363,14 @@ namespace Robust.Client.Graphics.Clyde
                     RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
                 }
 
-                spriteSystem.RenderSpritePostShaders(
+                spriteSystem.RenderSprite(
                     new(entry.Uid, entry.Sprite),
-                    postShaders,
+                    _renderHandle.DrawingHandleWorld,
                     eye.Rotation,
                     entry.WorldRot,
                     entry.WorldPos,
                     entry.Sprite.EnableDirectionOverride ? entry.Sprite.DirectionOverride : null,
-                    _renderHandle.DrawingHandleWorld,
-                    entry.SpriteScreenBB);
+                    postShaders);
             }
 
             // draw remainder of overlays

@@ -370,14 +370,13 @@ namespace Robust.Client.Graphics.Clyde
                 Angle eyeRotation,
                 Angle worldRotation,
                 Vector2 worldPosition,
-                Direction? overrideDirection,
-                Box2? spriteScreenBounds)
+                Direction? overrideDirection)
             {
-                if (_clyde._currentViewport == null)
+                if (_clyde._currentViewport is not { } viewport)
                     throw new InvalidOperationException("Post-shader sprites must be rendered with a viewport.");
 
                 var spriteSystem = _entities.System<SpriteSystem>();
-                var screenBounds = spriteScreenBounds ?? _clyde._currentViewport.GetWorldToLocalMatrix().TransformBox(
+                var screenBounds = viewport.GetWorldToLocalMatrix().TransformBox(
                     spriteSystem.CalculateBounds(sprite, worldPosition, worldRotation, eyeRotation));
 
                 _clyde.RenderSpritePostShaders(
@@ -742,8 +741,7 @@ namespace Robust.Client.Graphics.Clyde
                     Angle eyeRotation,
                     Angle worldRotation,
                     Vector2 worldPosition,
-                    Direction? overrideDirection,
-                    Box2? spriteScreenBounds)
+                    Direction? overrideDirection)
                 {
                     _renderHandle.RenderSpritePostShaders(
                         sprite,
@@ -751,8 +749,7 @@ namespace Robust.Client.Graphics.Clyde
                         eyeRotation,
                         worldRotation,
                         worldPosition,
-                        overrideDirection,
-                        spriteScreenBounds);
+                        overrideDirection);
                 }
 
                 public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,

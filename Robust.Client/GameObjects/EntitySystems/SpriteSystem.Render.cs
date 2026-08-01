@@ -19,120 +19,16 @@ public sealed partial class SpriteSystem
         DrawingHandleWorld drawingHandle,
         Angle eyeRotation,
         Angle worldRotation,
-        Vector2 worldPosition)
+        Vector2 worldPosition,
+        IReadOnlyList<SpriteComponent.PostShaderEntry>? postShaders = null)
     {
         RenderSprite(sprite,
             drawingHandle,
             eyeRotation,
             worldRotation,
             worldPosition,
-            sprite.Comp.EnableDirectionOverride ? sprite.Comp.DirectionOverride : null);
-    }
-
-    /// <summary>
-    /// Renders a sprite through a caller-selected list of post-shader passes.
-    /// </summary>
-    /// <remarks>
-    /// The viewport must be the one currently being drawn with <paramref name="drawingHandle"/>.
-    /// Use <see cref="GetPostShaders(Robust.Client.GameObjects.SpriteComponent)"/> to render every pass attached to the sprite,
-    /// or provide a filtered list to omit or reorder passes for this render.
-    /// </remarks>
-    public void RenderSpritePostShaders(
-        Entity<SpriteComponent> sprite,
-        IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders,
-        Angle eyeRotation,
-        Angle worldRotation,
-        Vector2 worldPosition,
-        DrawingHandleWorld drawingHandle)
-    {
-        RenderSpritePostShaders(
-            sprite,
-            postShaders,
-            eyeRotation,
-            worldRotation,
-            worldPosition,
             sprite.Comp.EnableDirectionOverride ? sprite.Comp.DirectionOverride : null,
-            drawingHandle);
-    }
-
-    /// <summary>
-    /// Renders a sprite through a caller-selected list of post-shader passes into the current screen render target.
-    /// </summary>
-    /// <remarks>
-    /// This overload is intended for entity views and other UI rendering. World-space overlays should use the
-    /// <see cref="RenderSpritePostShaders(Entity{SpriteComponent},IReadOnlyList{SpriteComponent.PostShaderEntry},Angle,Angle,Vector2,DrawingHandleWorld)"/>
-    /// overload so the renderer can apply viewport-dependent effects.
-    /// </remarks>
-    public void RenderSpritePostShaders(
-        Entity<SpriteComponent> sprite,
-        IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders,
-        Vector2 position,
-        Vector2 scale,
-        Angle? worldRotation,
-        Angle eyeRotation,
-        IRenderHandle renderHandle,
-        Direction? overrideDirection = null,
-        TransformComponent? xform = null,
-        SharedTransformSystem? xformSystem = null)
-    {
-        renderHandle.DrawEntity(
-            sprite.Owner,
-            position,
-            scale,
-            worldRotation,
-            eyeRotation,
-            overrideDirection,
-            sprite.Comp,
-            xform,
-            xformSystem,
-            postShaders: postShaders);
-    }
-
-    /// <inheritdoc cref="RenderSpritePostShaders(Entity{SpriteComponent},IReadOnlyList{SpriteComponent.PostShaderEntry},Angle,Angle,Vector2,DrawingHandleWorld)"/>
-    public void RenderSpritePostShaders(
-        Entity<SpriteComponent> sprite,
-        IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders,
-        Angle eyeRotation,
-        Angle worldRotation,
-        Vector2 worldPosition,
-        Direction? overrideDirection,
-        DrawingHandleWorld drawingHandle)
-    {
-        RenderSpritePostShaders(
-            sprite,
-            postShaders,
-            eyeRotation,
-            worldRotation,
-            worldPosition,
-            overrideDirection,
-            drawingHandle,
-            null);
-    }
-
-    internal void RenderSpritePostShaders(
-        Entity<SpriteComponent> sprite,
-        IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders,
-        Angle eyeRotation,
-        Angle worldRotation,
-        Vector2 worldPosition,
-        Direction? overrideDirection,
-        DrawingHandleWorld drawingHandle,
-        Box2? spriteScreenBounds)
-    {
-        if (postShaders.Count == 0)
-        {
-            RenderSprite(sprite, drawingHandle, eyeRotation, worldRotation, worldPosition, overrideDirection);
-            return;
-        }
-
-        drawingHandle.RenderSpritePostShaders(
-            sprite,
-            postShaders,
-            eyeRotation,
-            worldRotation,
-            worldPosition,
-            overrideDirection,
-            spriteScreenBounds);
+            postShaders);
     }
 
     public void RenderSprite(
@@ -141,8 +37,21 @@ public sealed partial class SpriteSystem
         Angle eyeRotation,
         Angle worldRotation,
         Vector2 worldPosition,
-        Direction? overrideDirection)
+        Direction? overrideDirection,
+        IReadOnlyList<PostShaderEntry>? postShaders = null)
     {
+        if (postShaders is { Count: > 0 })
+        {
+            drawingHandle.RenderSpritePostShaders(
+                sprite,
+                postShaders,
+                eyeRotation,
+                worldRotation,
+                worldPosition,
+                overrideDirection);
+            return;
+        }
+
         // TODO SPRITE RENDERING
         // Add fast path for simple sprites.
         // I.e., when a sprite is modified, check if it is "simple". If it is. cache texture information in a struct

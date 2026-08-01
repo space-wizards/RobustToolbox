@@ -1,11 +1,12 @@
+using Robust.Shared.Serialization.Markdown.Sequence;
+using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Utility;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Robust.Shared.Serialization.Markdown.Sequence;
-using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes;
 
@@ -51,7 +52,8 @@ public abstract partial class PrototypeManager : IPrototypeManagerInternal
         // Ensure all categories have an entry in the dictionary, even if it is empty.
         foreach (var category in EnumeratePrototypes<EntityCategoryPrototype>())
         {
-            categories.GetOrNew(category.ID);
+            var list = categories.GetOrNew(category.ID);
+            list.Sort((x, y) => string.Compare(x.ID, y.ID, StringComparison.Ordinal));
         }
 
         DebugTools.Assert(categories.Values.All(x => x.ToHashSet().Count == x.Count));

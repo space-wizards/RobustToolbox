@@ -620,7 +620,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var intermediateBox = Box2i.FromDimensions(Vector2i.Zero, source.Size);
                 _renderHandle.DrawTextureScreen(source.Texture,
-                    intermediateBox.BottomLeft, intermediateBox.BottomRight, intermediateBox.TopLeft, intermediateBox.TopRight,
+                    intermediateBox.TopLeft, intermediateBox.TopRight, intermediateBox.BottomLeft, intermediateBox.BottomRight,
                     Color.White, null);
 
                 source = destination;

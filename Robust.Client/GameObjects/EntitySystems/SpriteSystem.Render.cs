@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
@@ -18,14 +19,16 @@ public sealed partial class SpriteSystem
         DrawingHandleWorld drawingHandle,
         Angle eyeRotation,
         Angle worldRotation,
-        Vector2 worldPosition)
+        Vector2 worldPosition,
+        IReadOnlyList<SpriteComponent.PostShaderEntry>? postShaders = null)
     {
         RenderSprite(sprite,
             drawingHandle,
             eyeRotation,
             worldRotation,
             worldPosition,
-            sprite.Comp.EnableDirectionOverride ? sprite.Comp.DirectionOverride : null);
+            sprite.Comp.EnableDirectionOverride ? sprite.Comp.DirectionOverride : null,
+            postShaders);
     }
 
     public void RenderSprite(
@@ -34,8 +37,21 @@ public sealed partial class SpriteSystem
         Angle eyeRotation,
         Angle worldRotation,
         Vector2 worldPosition,
-        Direction? overrideDirection)
+        Direction? overrideDirection,
+        IReadOnlyList<PostShaderEntry>? postShaders = null)
     {
+        if (postShaders is { Count: > 0 })
+        {
+            drawingHandle.RenderSpritePostShaders(
+                sprite,
+                postShaders,
+                eyeRotation,
+                worldRotation,
+                worldPosition,
+                overrideDirection);
+            return;
+        }
+
         // TODO SPRITE RENDERING
         // Add fast path for simple sprites.
         // I.e., when a sprite is modified, check if it is "simple". If it is. cache texture information in a struct

@@ -24,7 +24,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         private const string LoadStringTestDummyId = "LoadStringTestDummy";
         private IPrototypeManager manager = default!;
 
-        protected override Type[] ExtraComponents => new[] {typeof(TestBasicPrototypeComponent), typeof(PointLightComponent)};
+        protected override Type[] ExtraComponents => new[] {typeof(TestBasicPrototypeComponent)};
 
         [OneTimeSetUp]
         public void Setup()

@@ -30,5 +30,47 @@ namespace Robust.Shared.Tests.Utility
             Assert.That(new[] {1}.FirstOrNull(p => p == 2), Is.Null);
             Assert.That(new[] {1, 2, 3}.FirstOrNull(p => p == 2), Is.EqualTo(2));
         }
+
+        [Test]
+        public void DictionaryEqualsTest()
+        {
+            var dict = new Dictionary<string, int>
+            {
+                ["one"] = 1,
+                ["two"] = 2,
+            };
+
+            var same = new Dictionary<string, int>
+            {
+                ["two"] = 2,
+                ["one"] = 1,
+            };
+
+            var differentCount = new Dictionary<string, int>
+            {
+                ["one"] = 1,
+            };
+
+            var differentKey = new Dictionary<string, int>
+            {
+                ["one"] = 1,
+                ["three"] = 2,
+            };
+
+            var differentValue = new Dictionary<string, int>
+            {
+                ["one"] = 1,
+                ["two"] = 3,
+            };
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(dict.DictionaryEquals(dict), Is.True);
+                Assert.That(dict.DictionaryEquals(same), Is.True);
+                Assert.That(dict.DictionaryEquals(differentCount), Is.False);
+                Assert.That(dict.DictionaryEquals(differentKey), Is.False);
+                Assert.That(dict.DictionaryEquals(differentValue), Is.False);
+            });
+        }
     }
 }

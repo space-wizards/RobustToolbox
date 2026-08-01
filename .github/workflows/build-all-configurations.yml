@@ -31,7 +31,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore /p:TargetOS=${{ matrix.targetOS }}
       - name: Build Debug
         run: dotnet build --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
       - name: Build Tools

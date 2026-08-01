@@ -55,6 +55,129 @@ END TEMPLATE-->
 * Speedup many hotpaths on Box2 and Box2Rotated.
 
 
+## 285.0.1
+
+### Bugfixes
+
+* Fix FreeBSD builds and align CI with packaged builds.
+* Fix sRGB framebuffer for linux in GLES compatibility mode.
+
+
+## 285.0.0
+
+### Breaking changes
+
+- XamlX has been upgraded, and has a new style class syntax.
+  The syntax for multiple style classes has changed from:
+  ```xaml
+  <Control.StyleClasses>
+    <system:String>Hello</system:String>
+    <system:String>World</system:String>
+  </Control.StyleClasses>
+  ```
+  to
+  ```xaml
+  <Control StyleClasses="Hello World" />
+  ```
+
+- Setting `StyleClasses` in XAML now overrides all of the style classes with the provided list, instead of concatenating the given style class with any existing style classes.
+  The stock Button controls have modified setters to provide compatibility with older stylesheets, but user-defined controls may need to watch out for this.
+
+### New features
+
+* Add chunk-based entity support to PVS. The API is accessed via ChunkEntitySystem. This can be used instead of manually handling streaming chunk-based data.
+* Allow passing a reason to the shutdown command.
+* Exposed CVar for AL's doppler factor.
+
+### Bugfixes
+
+* Fix last state passed in for EnsureClientBui on UI system.
+
+
+## 284.0.0
+
+### New features
+
+* Serializers can now take [Dependency] fields.
+* Added a SplitCenterChangingEventArgs to SplitContainer for when it's being moved around.
+* Added a LightLevelSystem to measure how lit-up entities are.
+
+### Bugfixes
+
+* Fix PredictedQueueDel not rolling back properly on the client.
+* Fix sprites jittering on grids due to matrix imprecision.
+
+### Other
+
+* EntityManager.IsDefault now fast-paths with direct datafield equality methods
+* Updated Lidgren to f7ecb5aa384013d920f7925340cc4608ed156e83
+
+### Internal
+
+* Added profiling zones to the physics update, splitting it into broadphase, collision, solver (island build/solve) and per-controller pre/post-solve phases.
+* Added profiling zones splitting entity rendering into sprite gathering and drawing.
+* Cache component net IDs and component changes in ClientGameStateManager.
+* Optimise entities being detached + re-inserted during PVS.
+* Moved the release build to the end of the content test action so tests are still run in debug.
+
+
+## 280.0.0
+
+### Breaking changes
+
+* Validate UIBox2i inputs
+* IMapManager has been completely nuked from the codebase. Almost all of its content-facing functionality was ported to `SharedMapSystem` in https://github.com/space-wizards/RobustToolbox/pull/6579 beforehand.
+
+### New features
+
+* Lidgren now rate-limits logging. You can control this via the `net.lidgren_log_rate_...` CVars.
+
+### Bugfixes
+
+* Fixed Lidgren.ChatClient/ChatServer not building properly.
+* Fixed multiple sources of memory exhaustion/DOS attack surfaces in Lidgren.
+
+
+## 279.0.1
+
+### Bugfixes
+
+* Fix SubscribeLocalEvent name and added `MeansImplicitUse` attribute to the sourcegenned eventbus methods.
+
+
+## 279.0.0
+
+### Breaking changes
+
+* Validate Box2i inputs to ensure no negative-sized boxes.
+* Removed QuadTree due to lack of maintenance, test coverage, and usage.
+* Partivally reverted the additional mouse cursors on button hovers.
+* Changed SpawnAtPosition EntityCoordinates overload to use the attached entity's rotation, and also added a rotation override argument.
+* Reduced the default ReallyBeIdle tick count from 25 to 5.
+
+### New features
+
+* Added DictionaryEquals helper method to compare elements to determine if 2 dictionaries are identical.
+* Tracy integration is now supported for profiling.
+* SubscribeLocalEvent and SubscribeNetworkEvent can now be replaced with the similarly named attributes on methods.
+* Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
+* Added a DictionaryEquals extension method to check equality between two dictionaries.
+* Added support for uploading .ftl files. Format is: /<your-uploaded-folder>/<language-code>.ftl - Example: /TestUpload/en-US.ftl , you can have multiple files, so long they are on different subfolders, they will all be loaded.
+
+### Bugfixes
+
+* Fix IsHardCollidable mask check.
+* Fix Robust.Benchmarks not compiling in some instances.
+* Fix ApplyLinearImpulse not correctly using world-space.
+* Fix OnClientRequestFull throwing an error when logging deleted entities.
+
+### Internal
+
+* Unnecessary prototypemanager dependencies were removed from engine systems.
+* Added a 30m timeout to engine test workflows.
+* Cleaned up ContainerSystems and PlayerManagers code-files.
+
+
 ## 278.0.0
 
 ### Breaking changes

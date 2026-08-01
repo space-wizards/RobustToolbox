@@ -43,7 +43,10 @@ namespace Robust.Shared.Reflection
         private readonly ReaderWriterLockSlim _yamlTypeTagCacheLock = new();
 
         private readonly List<Type> _getAllTypesCache = new();
+        private readonly Dictionary<(Type BaseType, bool Inclusive), Type[]> _getAllChildrenCache = new();
         private ISawmill _sawmill = default!;
+
+        private readonly List<Type> _childrenCache = new();
 
         public void Initialize()
         {
@@ -61,6 +64,12 @@ namespace Robust.Shared.Reflection
         {
             EnsureGetAllTypesCache();
 
+            var key = (baseType, inclusive);
+            if (_getAllChildrenCache.TryGetValue(key, out var cached))
+                return cached;
+
+            _childrenCache.Clear();
+
             foreach (var type in _getAllTypesCache)
             {
                 if (!baseType.IsAssignableFrom(type) || type.IsAbstract)
@@ -69,8 +78,12 @@ namespace Robust.Shared.Reflection
                 if (baseType == type && !inclusive)
                     continue;
 
-                yield return type;
+                _childrenCache.Add(type);
             }
+
+            cached = _childrenCache.ToArray();
+            _getAllChildrenCache.Add(key, cached);
+            return cached;
         }
 
         private void EnsureGetAllTypesCache()
@@ -114,6 +127,7 @@ namespace Robust.Shared.Reflection
 
             this.assemblies.AddRange(assembliesArray);
             _getAllTypesCache.Clear();
+            _getAllChildrenCache.Clear();
             OnAssemblyAdded?.Invoke(this, new ReflectionUpdateEventArgs(this));
         }
 

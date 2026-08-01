@@ -96,4 +96,18 @@ public static class TypeSymbolHelper
         }
         return false;
     }
+
+    /// <summary>
+    /// Checks if the given <paramref name="type"/> inherits from a type with the given metadata name.
+    /// </summary>
+    public static bool Inherits(ITypeSymbol type, string otherTypeName)
+    {
+        foreach (var baseType in GetBaseTypes(type))
+        {
+            if (ShittyTypeMatch(baseType, otherTypeName))
+                return true;
+        }
+
+        return false;
+    }
 }

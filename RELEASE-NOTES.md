@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The client will not remember last window position and whether it was maximized.
 
 ### New features
 

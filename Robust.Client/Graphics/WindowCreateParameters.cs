@@ -6,6 +6,8 @@ namespace Robust.Client.Graphics
     {
         public int Width = 1280;
         public int Height = 720;
+        public int? X;
+        public int? Y;
         public string Title = "";
         public bool Maximized;
         public bool Visible = true;

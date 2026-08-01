@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 285.0.1
+
+### Bugfixes
+
+* Fix FreeBSD builds and align CI with packaged builds.
+* Fix sRGB framebuffer for linux in GLES compatibility mode.
+
+
 ## 285.0.0
 
 ### Breaking changes

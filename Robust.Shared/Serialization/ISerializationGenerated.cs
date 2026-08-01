@@ -64,6 +64,16 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         throw new NotImplementedException();
     }
 
+    [Obsolete("Used only in serialization source generation internally")]
+    static virtual bool AreEqual(
+        T left,
+        T right,
+        ISerializationManager serialization,
+        ISerializationContext? context = null)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <seealso cref="ISerializationManager.ValidateNode"/>
     [Obsolete("Use ISerializationManager.ValidateNode instead")]
     static virtual void Validate(

@@ -54,6 +54,72 @@ END TEMPLATE-->
 *None yet*
 
 
+## 285.0.1
+
+### Bugfixes
+
+* Fix FreeBSD builds and align CI with packaged builds.
+* Fix sRGB framebuffer for linux in GLES compatibility mode.
+
+
+## 285.0.0
+
+### Breaking changes
+
+- XamlX has been upgraded, and has a new style class syntax.
+  The syntax for multiple style classes has changed from:
+  ```xaml
+  <Control.StyleClasses>
+    <system:String>Hello</system:String>
+    <system:String>World</system:String>
+  </Control.StyleClasses>
+  ```
+  to
+  ```xaml
+  <Control StyleClasses="Hello World" />
+  ```
+
+- Setting `StyleClasses` in XAML now overrides all of the style classes with the provided list, instead of concatenating the given style class with any existing style classes.
+  The stock Button controls have modified setters to provide compatibility with older stylesheets, but user-defined controls may need to watch out for this.
+
+### New features
+
+* Add chunk-based entity support to PVS. The API is accessed via ChunkEntitySystem. This can be used instead of manually handling streaming chunk-based data.
+* Allow passing a reason to the shutdown command.
+* Exposed CVar for AL's doppler factor.
+
+### Bugfixes
+
+* Fix last state passed in for EnsureClientBui on UI system.
+
+
+## 284.0.0
+
+### New features
+
+* Serializers can now take [Dependency] fields.
+* Added a SplitCenterChangingEventArgs to SplitContainer for when it's being moved around.
+* Added a LightLevelSystem to measure how lit-up entities are.
+
+### Bugfixes
+
+* Fix PredictedQueueDel not rolling back properly on the client.
+* Fix sprites jittering on grids due to matrix imprecision.
+
+### Other
+
+* EntityManager.IsDefault now fast-paths with direct datafield equality methods
+* Updated Lidgren to f7ecb5aa384013d920f7925340cc4608ed156e83
+
+### Internal
+
+* Added profiling zones to the physics update, splitting it into broadphase, collision, solver (island build/solve) and per-controller pre/post-solve phases.
+* Added profiling zones splitting entity rendering into sprite gathering and drawing.
+* Cache component net IDs and component changes in ClientGameStateManager.
+* Optimise entities being detached + re-inserted during PVS.
+* Moved the release build to the end of the content test action so tests are still run in debug.
+
+
 ## 283.1.0
 
 ### New features

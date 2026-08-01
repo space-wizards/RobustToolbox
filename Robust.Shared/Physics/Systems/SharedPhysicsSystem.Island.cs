@@ -305,6 +305,27 @@ public abstract partial class SharedPhysicsSystem
 
     private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
     {
+        List<IslandData> islands;
+        using (_prof.Group("Build Islands"))
+        {
+            islands = BuildIslands(prediction);
+        }
+
+        using (_prof.Group("Solve Islands"))
+        {
+            SolveIslands(islands, frameTime, dtRatio, invDt, prediction);
+        }
+
+        foreach (var island in islands)
+        {
+            ReturnIsland(island);
+        }
+
+        Cleanup(frameTime);
+    }
+
+    private List<IslandData> BuildIslands(bool prediction)
+    {
         // Build and simulated islands from awake bodies.
         _bodyStack.EnsureCapacity(AwakeBodies.Count);
         _islandSet.EnsureCapacity(AwakeBodies.Count);
@@ -548,14 +569,7 @@ public abstract partial class SharedPhysicsSystem
             ReturnIsland(loneIsland);
         }
 
-        SolveIslands(islands, frameTime, dtRatio, invDt, prediction);
-
-        foreach (var island in islands)
-        {
-            ReturnIsland(island);
-        }
-
-        Cleanup(frameTime);
+        return islands;
     }
 
     private void ReturnIsland(in IslandData island)

@@ -91,19 +91,6 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentShutdown>(OnActorShutdown);
     }
 
-    /// <summary>
-    /// Enqueues a BUI command to be processed in the next Update call,
-    /// getting the last available state for the given UserInterfaceComponent at the last state.
-    /// </summary>
-    private void AddQueued(BoundUserInterface bui, QueuedUpdate type, Entity<UserInterfaceComponent> ent, Enum key)
-    {
-        var state = ent.Comp.States.GetValueOrDefault(key);
-        _queuedBuis.Add((bui, type, state));
-    }
-
-    /// <summary>
-    /// Enqueues a BUI command to be processed in the next Update call.
-    /// </summary>
     private void AddQueued(BoundUserInterface bui, QueuedUpdate type, BoundUserInterfaceState? state = null)
     {
         _queuedBuis.Add((bui, type, state));
@@ -305,7 +292,8 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // PlayerAttachedEvent will catch some of these.
         foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
         {
-            AddQueued(bui, QueuedUpdate.Open, ent, key);
+            var state = ent.Comp.States.GetValueOrDefault(key);
+            AddQueued(bui, QueuedUpdate.Open, state);
         }
     }
 
@@ -566,7 +554,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         if (!open)
             return;
 
-        AddQueued(boundUserInterface, QueuedUpdate.Open, entity, key);
+        AddQueued(boundUserInterface, QueuedUpdate.Open);
     }
 
     /// <summary>

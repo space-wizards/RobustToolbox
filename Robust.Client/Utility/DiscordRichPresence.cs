@@ -7,7 +7,6 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
-using Robust.Shared.Timing;
 using LogLevel = DiscordRPC.Logging.LogLevel;
 
 namespace Robust.Client.Utility
@@ -29,9 +28,10 @@ namespace Robust.Client.Utility
         [Dependency] private IConfigurationManager _configurationManager = default!;
         [Dependency] private ILogManager _logManager = default!;
         [Dependency] private ILocalizationManager _loc = default!;
-        [Dependency] private IGameTiming _timing = default!;
 
         private bool _initialized;
+
+        private bool _active;
 
         public void Initialize()
         {
@@ -39,10 +39,7 @@ namespace Robust.Client.Utility
             var largeImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceSecondIconId);
             var largeImageText = _loc.GetString("discord-rpc-in-main-menu-logo-text");
 
-            var startTimestamp = new Timestamps()
-            {
-                Start = DateTime.UtcNow - _timing.RealTime
-            };
+            var startTimestamp = Timestamps.Now;
 
             _defaultPresence.State = Truncate(state, 128);
             _defaultPresence.Assets.LargeImageKey = Truncate(largeImageKey, 32);
@@ -101,7 +98,7 @@ namespace Robust.Client.Utility
             _client.Initialize();
 
             // == Set the presence
-            _client.SetPresence(_activePresence ?? _defaultPresence);
+            _client.SetPresence(_active ? _activePresence : _defaultPresence);
         }
 
         private void _stop()
@@ -130,6 +127,7 @@ namespace Robust.Client.Utility
                 _activePresence.Assets.LargeImageText = Truncate(largeImageText, 128);
                 _activePresence.Assets.SmallImageKey = Truncate(smallImageKey, 32);
 
+                _active = true;
                 _client.SetPresence(_activePresence);
             }
             catch (Exception ex)
@@ -165,6 +163,7 @@ namespace Robust.Client.Utility
 
         public void ClearPresence()
         {
+            _active = false;
             _client?.SetPresence(_defaultPresence);
         }
 

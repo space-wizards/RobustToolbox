@@ -52,7 +52,7 @@ public sealed partial class ReplayLoadManager
         var (checkpoints, serverTime) = await GenerateCheckpointsAsync(
             initData,
             metaData.CVars,
-            StreamHistory(fileReader, totalData, blocks, stats, callback),
+            StreamHistory(fileReader, totalData, blocks, stats),
             stats,
             callback);
 
@@ -107,22 +107,20 @@ public sealed partial class ReplayLoadManager
     /// Lazily decodes the replay history one data block at a time, yielding (state, messages) pairs in tick
     /// order. Builds the <see cref="BufferedReplayDataProvider.BlockMeta"/> index as a side effect. Blocks
     /// become garbage as soon as the consumer moves past them, keeping the load-time memory peak flat.
+    /// Loading-screen progress is reported solely by the consumer (checkpoint generation) so that the UI
+    /// does not flip between the reading/processing phases every block.
     /// </summary>
-    [SuppressMessage("ReSharper", "UseAwaitUsing")]
-    private async IAsyncEnumerable<(GameState State, ReplayMessage Messages)> StreamHistory(
+    private IEnumerable<(GameState State, ReplayMessage Messages)> StreamHistory(
         IReplayFileReader fileReader,
         int totalData,
         List<BufferedReplayDataProvider.BlockMeta> blocks,
-        HistoryStreamStats stats,
-        LoadReplayCallback callback)
+        HistoryStreamStats stats)
     {
         var i = 0;
         var intBuf = new byte[4];
         var name = new ResPath($"{DataFilePrefix}{i++}.{Ext}");
         while (fileReader.Exists(name))
         {
-            await callback(i + 1, totalData, LoadingState.ReadingFiles, false);
-
             var blockStart = stats.TickCount;
             var blockFile = name;
 
@@ -162,8 +160,6 @@ public sealed partial class ReplayLoadManager
         // Could happen if there's gaps in the numbers of the data.
         if (i - 1 != totalData)
             throw new Exception("Could not read expected amount of data files from replay");
-
-        await callback(totalData, totalData, LoadingState.ReadingFiles, false);
     }
 
     private ReplayMessage? LoadInitFile(

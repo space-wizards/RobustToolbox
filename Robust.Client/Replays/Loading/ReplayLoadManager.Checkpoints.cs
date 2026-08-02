@@ -48,7 +48,7 @@ public sealed partial class ReplayLoadManager
     private async Task<(CheckpointState[], TimeSpan[])> GenerateCheckpointsAsync(
         ReplayMessage? initMessages,
         HashSet<string> initialCvars,
-        IAsyncEnumerable<(GameState State, ReplayMessage Messages)> history,
+        IEnumerable<(GameState State, ReplayMessage Messages)> history,
         HistoryStreamStats stats,
         LoadReplayCallback callback)
     {
@@ -94,8 +94,8 @@ public sealed partial class ReplayLoadManager
 
         // The history arrives as a lazy block-by-block stream (see StreamHistory); it is consumed exactly
         // once, strictly in tick order, so nothing behind the cursor stays reachable from here.
-        await using var historyEnumerator = history.GetAsyncEnumerator();
-        if (!await historyEnumerator.MoveNextAsync())
+        using var historyEnumerator = history.GetEnumerator();
+        if (!historyEnumerator.MoveNext())
             throw new Exception("Replay contains no game states");
 
         var (state0, messages0) = historyEnumerator.Current;
@@ -171,11 +171,13 @@ public sealed partial class ReplayLoadManager
 
         var modifiedEntities = new Dictionary<NetEntity, UpdateScratchData>();
         var i = 0;
-        while (await historyEnumerator.MoveNextAsync())
+        while (historyEnumerator.MoveNext())
         {
             i++;
+            // Progress is reported in data-block units: the total tick count is unknown while streaming.
+            // BlocksRead is incremented once a block's last tick has been yielded, so +1 = the current block.
             if (i % 10 == 0)
-                await callback(stats.BlocksRead, stats.TotalBlocks, LoadingState.ProcessingFiles, false);
+                await callback(Math.Min(stats.BlocksRead + 1, stats.TotalBlocks), stats.TotalBlocks, LoadingState.ProcessingFiles, false);
 
             var lastState = curState;
             (curState, var curMessages) = historyEnumerator.Current;

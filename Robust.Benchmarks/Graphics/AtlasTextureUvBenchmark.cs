@@ -54,7 +54,7 @@ public class AtlasTextureUvBenchmark
 
     private static DrawCall DrawCached(AtlasTexture texture)
     {
-        return new DrawCall((long) texture.ClydeTexture.TextureId, texture.NormalizedSubRegion);
+        return new DrawCall((long) texture.ClydeTexture!.TextureId, texture.NormalizedSubRegion);
     }
 
     private static ClydeRenderer.ClydeTexture ExtractTexture(Texture texture, in UIBox2? subRegion, out UIBox2 region)

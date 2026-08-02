@@ -29,10 +29,13 @@ namespace Robust.Client.Graphics
 
     }
 
+    internal readonly record struct OutlinedGlyph(Texture Texture, int Left, int Top);
+
     internal interface IFontInstanceHandle
     {
         Texture? GetCharTexture(Rune codePoint, float scale);
         Texture? GetCharTexture(char chr, float scale) => GetCharTexture((Rune) chr, scale);
+        OutlinedGlyph? GetOutlinedChar(Rune codePoint, float scale, float thickness);
         CharMetrics? GetCharMetrics(Rune codePoint, float scale);
         CharMetrics? GetCharMetrics(char chr, float scale) => GetCharMetrics((Rune) chr, scale);
 

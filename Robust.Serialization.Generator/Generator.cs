@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -420,7 +419,7 @@ public class Generator : IIncrementalGenerator
 
         var value = parameter.ExplicitDefaultValue;
         if (value == null)
-            return "null!";
+            return parameter.Type.IsValueType ? "default!" : "null!";
 
         var literal = parameter.Type.SpecialType switch
         {
@@ -653,7 +652,7 @@ public class Generator : IIncrementalGenerator
 
                 public static object StaticInstantiateObject()
                 {
-                    return (object) {{definition.GenericTypeName}}.StaticInstantiate();
+                    return (object) global::{{definition.Type.ToDisplayString()}}.StaticInstantiate();
                 }
                 """);
         }
@@ -819,7 +818,7 @@ public class Generator : IIncrementalGenerator
                 }
                 """);
         }
-        else if (definition.Type.IsValueType || definition.IsRecord)
+        else if (!definition.Type.IsAbstract && (definition.Type.IsValueType || definition.IsRecord))
         {
             builder.AppendLine($$"""
                 {
@@ -842,6 +841,7 @@ public class Generator : IIncrementalGenerator
                       target = ({{definition.GenericTypeName}})definitionCast;
                   """
                 : string.Empty;
+
 
             var instantiate = isAbstract
                 ? $$"""
@@ -1227,7 +1227,7 @@ public class Generator : IIncrementalGenerator
 
         var instance = definition.Type.IsAbstract
             ? string.Empty
-            : $"instance = {definition.GenericTypeName}.StaticInstantiate();";
+            : $"instance = global::{definition.Type.ToDisplayString()}.StaticInstantiate();";
 
         return $$"""
             public static void GetFieldDefinitions({{definition.GenericTypeName}}{{nullConditional}} instance, List<DataFieldDefinition> fields, string[]? fieldsParsed = null)

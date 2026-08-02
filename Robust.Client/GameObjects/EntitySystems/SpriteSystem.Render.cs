@@ -141,7 +141,17 @@ public sealed partial class SpriteSystem
             dir = overrideDirection.Value.Convert(state.RsiDirections);
         dir = dir.OffsetRsiDir(layer.DirOffset);
 
-        var texture = state?.GetFrame(dir, layer.AnimationFrame) ?? layer.Texture ?? GetFallbackTexture();
+        AtlasTexture? atlasTexture = null;
+        Texture texture;
+        if (state != null)
+        {
+            atlasTexture = state.GetAtlasFrame(dir, layer.AnimationFrame);
+            texture = atlasTexture;
+        }
+        else
+        {
+            texture = layer.Texture ?? GetFallbackTexture();
+        }
 
         // TODO SPRITE
         // Refactor shader-param-layers to a separate layer type after layers are split into types & collections.
@@ -174,7 +184,10 @@ public sealed partial class SpriteSystem
             layerColor = new(new Vector4(-1) - layerColor.RGBA);
         }
 
-        drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
+        if (atlasTexture != null)
+            drawingHandle.DrawTextureRect(atlasTexture, quad, layerColor);
+        else
+            drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
 
         if (layer.Shader != null)
             drawingHandle.UseShader(null);

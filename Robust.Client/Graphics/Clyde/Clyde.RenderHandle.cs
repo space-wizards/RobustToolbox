@@ -770,6 +770,15 @@ namespace Robust.Client.Graphics.Clyde
                         quad.TopLeft, quad.TopRight, color, in subRegion);
                 }
 
+                public override void DrawTextureRect(AtlasTexture texture, Box2 quad, Color? modulate = null)
+                {
+                    CheckDisposed();
+
+                    var color = (modulate ?? Color.White) * Modulate;
+                    _renderHandle.DrawTextureWorld(texture, quad.BottomLeft, quad.BottomRight,
+                        quad.TopLeft, quad.TopRight, color);
+                }
+
                 /// <summary>
                 /// Draws a sprite to the world. The coordinate system is right handed.
                 /// Make sure to set <see cref="DrawSetModelTransform"/>

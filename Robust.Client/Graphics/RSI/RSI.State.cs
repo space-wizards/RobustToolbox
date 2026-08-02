@@ -26,8 +26,10 @@ namespace Robust.Client.Graphics
 
             // 2D array for the texture to use for each animation frame at each direction.
             public readonly Texture[][] Icons;
+            private readonly AtlasTexture[][] _atlasIcons;
 
-            internal State(Vector2i size, RSI rsi, StateId stateId, RsiDirectionType rsiDirection, float[] delays, Texture[][] icons)
+            internal State(Vector2i size, RSI rsi, StateId stateId, RsiDirectionType rsiDirection, float[] delays,
+                AtlasTexture[][] icons)
             {
                 DebugTools.Assert(size.X > 0);
                 DebugTools.Assert(size.Y > 0);
@@ -40,6 +42,7 @@ namespace Robust.Client.Graphics
                 Delays = delays;
                 TotalDelay = delays.Sum();
                 Icons = icons;
+                _atlasIcons = icons;
 
                 foreach (var delay in delays)
                 {
@@ -95,6 +98,11 @@ namespace Robust.Client.Graphics
             public Texture GetFrame(RsiDirection rsiDirection, int frame)
             {
                 return Icons[(int) rsiDirection][frame];
+            }
+
+            internal AtlasTexture GetAtlasFrame(RsiDirection rsiDirection, int frame)
+            {
+                return _atlasIcons[(int) rsiDirection][frame];
             }
 
             public Texture[] GetFrames(RsiDirection rsiDirection)

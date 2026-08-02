@@ -7,21 +7,29 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
+using Robust.Shared.Timing;
 using LogLevel = DiscordRPC.Logging.LogLevel;
 
 namespace Robust.Client.Utility
 {
     internal sealed partial class DiscordRichPresence : IDiscordRichPresence
     {
-        private static RichPresence _defaultPresence = new() { };
+        private readonly static RichPresence _defaultPresence = new()
+        {
+            Assets = new Assets()
+        };
 
-        private RichPresence? _activePresence;
+        private readonly static RichPresence _activePresence = new()
+        {
+            Assets = new Assets()
+        };
 
         private DiscordRpcClient? _client;
 
         [Dependency] private IConfigurationManager _configurationManager = default!;
         [Dependency] private ILogManager _logManager = default!;
         [Dependency] private ILocalizationManager _loc = default!;
+        [Dependency] private IGameTiming _timing = default!;
 
         private bool _initialized;
 
@@ -31,15 +39,18 @@ namespace Robust.Client.Utility
             var largeImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceSecondIconId);
             var largeImageText = _loc.GetString("discord-rpc-in-main-menu-logo-text");
 
-            _defaultPresence = new()
+            var startTimestamp = new Timestamps()
             {
-                State = Truncate(state, 128),
-                Assets = new Assets
-                {
-                    LargeImageKey = Truncate(largeImageKey, 32),
-                    LargeImageText = Truncate(largeImageText, 128),
-                }
+                Start = DateTime.UtcNow - _timing.RealTime
             };
+
+            _defaultPresence.State = Truncate(state, 128);
+            _defaultPresence.Assets.LargeImageKey = Truncate(largeImageKey, 32);
+            _defaultPresence.Assets.LargeImageText = Truncate(largeImageText, 128);
+            _defaultPresence.Timestamps = startTimestamp;
+
+            _activePresence.Timestamps = startTimestamp;
+
             _configurationManager.OnValueChanged(CVars.DiscordEnabled, newValue =>
             {
                 if (!_initialized)
@@ -113,17 +124,12 @@ namespace Robust.Client.Utility
                 var smallImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceSecondIconId);
 
                 // Strings are limited by byte count. See the setters in RichPresence. Hence the truncate calls.
-                _activePresence = new RichPresence
-                {
-                    Details = Truncate(details, 128),
-                    State = Truncate(state, 128),
-                    Assets = new Assets
-                    {
-                        LargeImageKey = Truncate(largeImageKey, 32),
-                        LargeImageText = Truncate(largeImageText, 128),
-                        SmallImageKey = Truncate(smallImageKey, 32)
-                    }
-                };
+                _activePresence.Details = Truncate(details, 128);
+                _activePresence.State = Truncate(state, 128);
+                _activePresence.Assets.LargeImageKey = Truncate(largeImageKey, 32);
+                _activePresence.Assets.LargeImageText = Truncate(largeImageText, 128);
+                _activePresence.Assets.SmallImageKey = Truncate(smallImageKey, 32);
+
                 _client.SetPresence(_activePresence);
             }
             catch (Exception ex)
@@ -159,7 +165,6 @@ namespace Robust.Client.Utility
 
         public void ClearPresence()
         {
-            _activePresence = null;
             _client?.SetPresence(_defaultPresence);
         }
 

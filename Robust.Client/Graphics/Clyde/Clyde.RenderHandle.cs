@@ -308,10 +308,7 @@ namespace Robust.Client.Graphics.Clyde
                     screenCenter,
                     screenScale);
                 var entityPostRenderTargetSize = Clyde.GetPostShaderTargetSize(spriteScreenBounds);
-                var entityPostRenderTarget = _clyde.GetEntityPostRenderTarget(entityPostRenderTargetSize, true);
-                var entityPostRenderTarget2 = postShaders.Count > 1
-                    ? _clyde.GetEntityPostRenderTarget(entityPostRenderTargetSize, false)
-                    : null;
+                var entityPostRenderTarget = _clyde.RentPostShaderRenderTarget(entityPostRenderTargetSize);
 
                 if (entityPostRenderTarget == null)
                 {
@@ -319,49 +316,65 @@ namespace Robust.Client.Graphics.Clyde
                     return;
                 }
 
-                if (PostShadersNeedScreenTexture(postShaders))
+                RenderTexture? entityPostRenderTarget2 = null;
+                try
                 {
-                    if (finalTarget is not RenderTexture screenTarget)
+                    entityPostRenderTarget2 = postShaders.Count > 1
+                        ? _clyde.RentPostShaderRenderTarget(entityPostRenderTargetSize)
+                        : null;
+
+                    if (PostShadersNeedScreenTexture(postShaders))
                     {
-                        DrawEntityRaw(entity, position, scale, worldRot, eyeRot, overrideDirection, sprite);
-                        return;
+                        if (finalTarget is not RenderTexture screenTarget)
+                        {
+                            DrawEntityRaw(entity, position, scale, worldRot, eyeRot, overrideDirection, sprite);
+                            return;
+                        }
+
+                        _clyde.FlushRenderQueue();
+                        var screenTexture = _clyde.CopyScreenTexture(screenTarget);
+                        if (screenTexture == null)
+                        {
+                            DrawEntityRaw(entity, position, scale, worldRot, eyeRot, overrideDirection, sprite);
+                            return;
+                        }
+
+                        foreach (var postShader in postShaders)
+                        {
+                            if (postShader.GetScreenTexture)
+                                postShader.Shader.SetParameter("SCREEN_TEXTURE", screenTexture);
+                        }
                     }
 
-                    _clyde.FlushRenderQueue();
-                    var screenTexture = _clyde.CopyScreenTexture(screenTarget);
-                    if (screenTexture == null)
-                    {
-                        DrawEntityRaw(entity, position, scale, worldRot, eyeRot, overrideDirection, sprite);
-                        return;
-                    }
+                    UseRenderTarget(entityPostRenderTarget);
+                    Clear(default, 0, ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
+                    Viewport(Box2i.FromDimensions(Vector2i.Zero, entityPostRenderTarget.Size));
 
-                    foreach (var postShader in postShaders)
-                    {
-                        if (postShader.GetScreenTexture)
-                            postShader.Shader.SetParameter("SCREEN_TEXTURE", screenTexture);
-                    }
+                    var sourcePosition = finalPosition + entityPostRenderTarget.Size / 2f - spriteScreenBounds.Center;
+                    DrawEntityRaw(entity, sourcePosition, scale, worldRot, eyeRot, overrideDirection, sprite, false);
+
+                    var oldProj = _clyde._currentMatrixProj;
+                    var oldView = _clyde._currentMatrixView;
+                    _clyde.DrawEntityPostShaders(
+                        finalTarget,
+                        finalTarget.Size,
+                        (Vector2i) spriteScreenBounds.Center,
+                        entityPostRenderTargetSize,
+                        entityPostRenderTarget,
+                        entityPostRenderTarget2,
+                        postShaders);
+
+                    SetProjView(oldProj, oldView);
+                    UseShader(null);
+                    SetModelTransform(oldModel);
                 }
+                finally
+                {
+                    if (entityPostRenderTarget2 != null)
+                        _clyde.ReturnPostShaderRenderTarget(entityPostRenderTarget2);
 
-                UseRenderTarget(entityPostRenderTarget);
-                Clear(default, 0, ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
-                Viewport(Box2i.FromDimensions(Vector2i.Zero, entityPostRenderTarget.Size));
-
-                var sourcePosition = finalPosition + entityPostRenderTarget.Size / 2f - spriteScreenBounds.Center;
-                DrawEntityRaw(entity, sourcePosition, scale, worldRot, eyeRot, overrideDirection, sprite, false);
-
-                var oldProj = _clyde._currentMatrixProj;
-                var oldView = _clyde._currentMatrixView;
-                _clyde.DrawEntityPostShaders(
-                    finalTarget,
-                    finalTarget.Size,
-                    (Vector2i) spriteScreenBounds.Center,
-                    entityPostRenderTarget,
-                    entityPostRenderTarget2,
-                    postShaders);
-
-                SetProjView(oldProj, oldView);
-                UseShader(null);
-                SetModelTransform(oldModel);
+                    _clyde.ReturnPostShaderRenderTarget(entityPostRenderTarget);
+                }
             }
 
             public void RenderSpritePostShaders(

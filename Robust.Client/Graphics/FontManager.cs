@@ -117,7 +117,7 @@ namespace Robust.Client.Graphics
             var descent = -ftFace.Size.Metrics.Descender.ToInt32();
             var lineHeight = ftFace.Size.Metrics.Height.ToInt32();
 
-            var data = new ScaledFontData(ascent, descent, ascent + descent, lineHeight);
+            var data = new ScaledFontData(ascent, descent, ascent + descent, lineHeight, _library);
 
 
             return data;
@@ -165,8 +165,9 @@ namespace Robust.Client.Graphics
             face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
 
             using var sourceGlyph = face.Glyph.GetGlyph();
-            using var stroker = new Stroker(_library);
+            var stroker = scaled.Stroker;
             stroker.Set(radius, StrokerLineCap.Round, StrokerLineJoin.Round, Fixed16Dot16.FromInt32(0));
+            stroker.Rewind();
             using var strokedGlyph = sourceGlyph.StrokeBorder(stroker, false, true);
             strokedGlyph.ToBitmap(RenderMode.Normal, new FTVector26Dot6(0, 0), true);
 
@@ -334,6 +335,8 @@ namespace Robust.Client.Graphics
                     {
                         ownedTexture.Dispose();
                     }
+
+                    scaleData.Value.Stroker.Dispose();
                 }
                 _scaledData.Clear();
             }
@@ -462,17 +465,19 @@ namespace Robust.Client.Graphics
 
         private sealed class ScaledFontData
         {
-            public ScaledFontData(int ascent, int descent, int height, int lineHeight)
+            public ScaledFontData(int ascent, int descent, int height, int lineHeight, Library library)
             {
                 Ascent = ascent;
                 Descent = descent;
                 Height = height;
                 LineHeight = lineHeight;
+                Stroker = new Stroker(library);
             }
 
             public readonly List<OwnedTexture> AtlasTextures = new();
             public readonly Dictionary<uint, GlyphInfo> GlyphInfos = new();
             public readonly Dictionary<(uint Glyph, int Radius), OutlinedGlyphInfo> OutlinedGlyphInfos = new();
+            public readonly Stroker Stroker;
             public readonly int Ascent;
             public readonly int Descent;
             public readonly int Height;

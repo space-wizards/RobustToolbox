@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Robust.Shared.Collections;
 using Robust.Shared.Random;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -14,6 +15,8 @@ namespace Robust.Shared.Prototypes;
 
 public partial class PrototypeManager
 {
+    private readonly StringInterner _prototypeStringInterner = new(8192, 128);
+
     /// <summary>
     ///     Which files to force all prototypes within to be abstract.
     /// </summary>
@@ -53,7 +56,7 @@ public partial class PrototypeManager
 
                     var extractedList = new List<ExtractedMappingData>();
                     var i = 0;
-                    foreach (var document in DataNodeParser.ParseYamlStream(reader, internStrings: true))
+                    foreach (var document in DataNodeParser.ParseYamlStream(reader, _prototypeStringInterner))
                     {
                         i += 1;
                         LoadedData?.Invoke(document);
@@ -152,7 +155,7 @@ public partial class PrototypeManager
                 return;
 
             var i = 0;
-            foreach (var document in DataNodeParser.ParseYamlStream(reader, internStrings: true))
+            foreach (var document in DataNodeParser.ParseYamlStream(reader, _prototypeStringInterner))
             {
                 LoadedData?.Invoke(document);
 
@@ -254,7 +257,7 @@ public partial class PrototypeManager
         _hasEverBeenReloaded = true;
 
         var i = 0;
-        foreach (var document in DataNodeParser.ParseYamlStream(stream, internStrings: true))
+        foreach (var document in DataNodeParser.ParseYamlStream(stream, _prototypeStringInterner))
         {
             LoadedData?.Invoke(document);
 

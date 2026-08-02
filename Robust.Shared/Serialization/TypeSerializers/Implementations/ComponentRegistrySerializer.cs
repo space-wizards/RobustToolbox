@@ -181,7 +181,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             SequenceDataNode parent,
             IDependencyCollection dependencies, ISerializationContext? context)
         {
-            var newCompReg = child.Copy();
+            // Only the sequence entries that match a parent component are replaced below. Keeping
+            // the component mappings shared avoids retaining a deep clone for every inheriting
+            // entity prototype.
+            var newCompReg = child.ShallowClone();
             var newCompRegDict = ToTypeIndexedDictionary(newCompReg);
             var parentDict = ToTypeIndexedDictionary(parent);
 

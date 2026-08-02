@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using ClydeTextureImpl = Robust.Client.Graphics.Clyde.Clyde.ClydeTexture;
 
 namespace Robust.Client.Graphics
 {
@@ -20,18 +21,35 @@ namespace Robust.Client.Graphics
             DebugTools.Assert(SubRegion.Top >= 0);
 
             SubRegion = subRegion;
-            SourceTexture = texture;
+            ClydeTexture = (ClydeTextureImpl) texture;
+
+            var (width, height) = texture.Size;
+            NormalizedSubRegion = new Box2(
+                subRegion.Left / width,
+                (height - subRegion.Bottom) / height,
+                subRegion.Right / width,
+                (height - subRegion.Top) / height);
         }
 
         /// <summary>
         ///     The texture this texture is a sub region of.
         /// </summary>
-        public Texture SourceTexture { get; }
+        public Texture SourceTexture => ClydeTexture;
+
+        /// <summary>
+        ///     The Clyde texture backing this atlas texture.
+        /// </summary>
+        internal ClydeTextureImpl ClydeTexture { get; }
 
         /// <summary>
         ///     Our sub region within our source, in pixel coordinates.
         /// </summary>
         public UIBox2 SubRegion { get; }
+
+        /// <summary>
+        ///     Our sub region within the source texture, normalized for rendering.
+        /// </summary>
+        internal Box2 NormalizedSubRegion { get; }
 
         public override Color GetPixel(int x, int y)
         {

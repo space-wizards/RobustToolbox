@@ -21,7 +21,8 @@ namespace Robust.Client.Graphics
             DebugTools.Assert(SubRegion.Top >= 0);
 
             SubRegion = subRegion;
-            ClydeTexture = (ClydeTextureImpl) texture;
+            SourceTexture = texture;
+            ClydeTexture = texture as ClydeTextureImpl;
 
             var (width, height) = texture.Size;
             NormalizedSubRegion = new Box2(
@@ -34,12 +35,14 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///     The texture this texture is a sub region of.
         /// </summary>
-        public Texture SourceTexture => ClydeTexture;
+        public Texture SourceTexture { get; }
 
         /// <summary>
         ///     The Clyde texture backing this atlas texture.
         /// </summary>
-        internal ClydeTextureImpl ClydeTexture { get; }
+        // Headless Clyde uses dummy textures. They are never drawn through the regular renderer,
+        // but atlas creation must still work for resources loaded by headless tests.
+        internal ClydeTextureImpl? ClydeTexture { get; }
 
         /// <summary>
         ///     Our sub region within our source, in pixel coordinates.

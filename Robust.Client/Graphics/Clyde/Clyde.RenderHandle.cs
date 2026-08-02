@@ -86,7 +86,7 @@ namespace Robust.Client.Graphics.Clyde
                 in Color modulate)
             {
                 var texCoords = texture.NormalizedSubRegion;
-                _clyde.DrawTexture(texture.ClydeTexture.TextureId, bl, br, tl, tr, in modulate,
+                _clyde.DrawTexture(texture.ClydeTexture!.TextureId, bl, br, tl, tr, in modulate,
                     in texCoords);
             }
 
@@ -122,7 +122,7 @@ namespace Robust.Client.Graphics.Clyde
                 Color modulate)
             {
                 var texCoords = texture.NormalizedSubRegion;
-                _clyde.DrawTexture(texture.ClydeTexture.TextureId, bl, br, tl, tr, in modulate,
+                _clyde.DrawTexture(texture.ClydeTexture!.TextureId, bl, br, tl, tr, in modulate,
                     in texCoords);
             }
 
@@ -143,7 +143,7 @@ namespace Robust.Client.Graphics.Clyde
                 Color modulate)
             {
                 var texCoords = texture.NormalizedSubRegion;
-                _clyde.DrawTextureBatch(texture.ClydeTexture.TextureId, rects, modulate,
+                _clyde.DrawTextureBatch(texture.ClydeTexture!.TextureId, rects, modulate,
                     in texCoords);
             }
 
@@ -163,7 +163,7 @@ namespace Robust.Client.Graphics.Clyde
             public void DrawTextureWorldBatchUnmodulated(AtlasTexture texture, ReadOnlySpan<WorldTextureRect> rects)
             {
                 var texCoords = texture.NormalizedSubRegion;
-                _clyde.DrawTextureBatchUnmodulated(texture.ClydeTexture.TextureId, rects,
+                _clyde.DrawTextureBatchUnmodulated(texture.ClydeTexture!.TextureId, rects,
                     in texCoords);
             }
 
@@ -202,7 +202,7 @@ namespace Robust.Client.Graphics.Clyde
                         sr = atlas.SubRegion;
                     }
 
-                    return atlas.ClydeTexture;
+                    return atlas.ClydeTexture!;
                 }
 
                 sr = subRegion ?? new UIBox2(0, 0, texture.Width, texture.Height);

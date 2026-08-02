@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.Prototypes
 {
@@ -28,12 +29,18 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         private void RebuildEntityComponentCache()
         {
+            var stopwatch = RStopwatch.StartNew();
             if (!_kinds.TryGetValue(typeof(EntityPrototype), out var entityKind))
             {
                 _entityComponentCache = FrozenDictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>.Empty;
+                Sawmill.Info($"Rebuilding empty entity prototype component cache took {stopwatch.Elapsed.TotalMilliseconds:f2}ms");
                 return;
             }
 
+            // We re-use the cache across reloads so old unchanged components can still get re-used.
+            // Anything not re-used gets GC'd when the new cache gets set.
+            // Realistically we don't even need to keep the dictionary but it's using a tiny amount of memory ATM compared
+            // to the non-interned approach.
             var cache = new Dictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>(ComponentMappingNodeComparer);
 
             foreach (var (id, mapping) in entityKind.Results)
@@ -66,6 +73,8 @@ namespace Robust.Shared.Prototypes
             }
 
             _entityComponentCache = cache.ToFrozenDictionary(ComponentMappingNodeComparer);
+            Sawmill.Info($"Rebuilding entity prototype component cache took {stopwatch.Elapsed.TotalMilliseconds:f2}ms " +
+                          $"({cache.Count} unique component mappings)");
         }
 
         private sealed class ComponentMappingComparer : IEqualityComparer<MappingDataNode>

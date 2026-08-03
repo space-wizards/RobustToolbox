@@ -515,56 +515,65 @@ namespace Robust.Client.Graphics.Clyde
             IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders)
         {
             var source = entityPostRenderTarget;
+            var screenUvRect = GetEntityPostShaderScreenUvRect(screenSize, roundedPos, spriteRenderTargetSize);
+            var oldScreenUvRect = _queuedScreenUvRect;
 
-            for (var i = 0; i < postShaders.Count; i++)
+            DrawSetScreenUvRect(screenUvRect);
+            try
             {
-                var finalPass = i == postShaders.Count - 1;
-                var shader = postShaders[i].Shader;
-
-                if (finalPass)
+                for (var i = 0; i < postShaders.Count; i++)
                 {
-                    DrawRenderTarget(renderTarget.Handle);
-                    _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
-                    // The sprite has already been drawn into a transparent RT, so its color is already multiplied
-                    // by alpha. Use premultiplied blending for the final viewport composite to avoid applying
-                    // translucent sprite alpha twice. Stuff like an interaction outline would make the entire sprite double transparent.
-                    _renderHandle.UseShader(GetPremultipliedBlendShaderInstance(shader));
-                    CalcScreenMatrices(screenSize, out var finalProj, out var finalView);
-                    _renderHandle.SetProjView(finalProj, finalView);
+                    var finalPass = i == postShaders.Count - 1;
+                    var shader = postShaders[i].Shader;
+
+                    if (finalPass)
+                    {
+                        DrawRenderTarget(renderTarget.Handle);
+                        _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
+                        // The sprite has already been drawn into a transparent RT, so its color is already multiplied
+                        // by alpha. Use premultiplied blending for the final viewport composite to avoid applying
+                        // translucent sprite alpha twice. Stuff like an interaction outline would make the entire sprite double transparent.
+                        _renderHandle.UseShader(GetPremultipliedBlendShaderInstance(shader));
+                        CalcScreenMatrices(screenSize, out var finalProj, out var finalView);
+                        _renderHandle.SetProjView(finalProj, finalView);
+                        _renderHandle.SetModelTransform(Matrix3x2.Identity);
+
+                        var rounded = roundedPos - spriteRenderTargetSize / 2;
+                        var finalBox = Box2i.FromDimensions(rounded, spriteRenderTargetSize);
+
+                        _renderHandle.DrawTextureScreen(source.Texture,
+                            finalBox.TopLeft, finalBox.TopRight, finalBox.BottomLeft, finalBox.BottomRight,
+                            Color.White, GetEntityPostRenderTargetSubRegion(source, spriteRenderTargetSize));
+                        continue;
+                    }
+
+                    DebugTools.AssertNotNull(entityPostRenderTarget2);
+                    var destination = source == entityPostRenderTarget ? entityPostRenderTarget2! : entityPostRenderTarget;
+
+                    _renderHandle.UseRenderTarget(destination);
+                    _renderHandle.Clear(default, 0, ClearBufferMask.ColorBufferBit);
+                    _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, destination.Size));
+                    // Intermediate post-shader passes are texture transforms. Write the
+                    // shader output directly so stuff like alpha-cut passes do not get alpha-applied before the final viewport draw.
+                    // The easiest way to know if this happens is your sprite getting darker / changing from the multiple passes when it shouldn't be.
+                    _renderHandle.UseShader(GetNoBlendShaderInstance(shader));
+                    CalcScreenMatrices(destination.Size, out var intermediateProj, out var intermediateView);
+                    _renderHandle.SetProjView(intermediateProj, intermediateView);
                     _renderHandle.SetModelTransform(Matrix3x2.Identity);
 
-                    var rounded = roundedPos - spriteRenderTargetSize / 2;
-                    var finalBox = Box2i.FromDimensions(rounded, spriteRenderTargetSize);
-
+                    var intermediateBox = GetEntityPostRenderTargetBox(destination, spriteRenderTargetSize);
                     _renderHandle.DrawTextureScreen(source.Texture,
-                        finalBox.TopLeft, finalBox.TopRight, finalBox.BottomLeft, finalBox.BottomRight,
+                        intermediateBox.TopLeft, intermediateBox.TopRight, intermediateBox.BottomLeft, intermediateBox.BottomRight,
                         Color.White, GetEntityPostRenderTargetSubRegion(source, spriteRenderTargetSize));
-                    continue;
+
+                    source = destination;
                 }
-
-                DebugTools.AssertNotNull(entityPostRenderTarget2);
-                var destination = source == entityPostRenderTarget ? entityPostRenderTarget2! : entityPostRenderTarget;
-
-                _renderHandle.UseRenderTarget(destination);
-                _renderHandle.Clear(default, 0, ClearBufferMask.ColorBufferBit);
-                _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, destination.Size));
-                // Intermediate post-shader passes are texture transforms. Write the
-                // shader output directly so stuff like alpha-cut passes do not get alpha-applied before the final viewport draw.
-                // The easiest way to know if this happens is your sprite getting darker / changing from the multiple passes when it shouldn't be.
-                _renderHandle.UseShader(GetNoBlendShaderInstance(shader));
-                CalcScreenMatrices(destination.Size, out var intermediateProj, out var intermediateView);
-                _renderHandle.SetProjView(intermediateProj, intermediateView);
-                _renderHandle.SetModelTransform(Matrix3x2.Identity);
-
-                var intermediateBox = GetEntityPostRenderTargetBox(destination, spriteRenderTargetSize);
-                _renderHandle.DrawTextureScreen(source.Texture,
-                    intermediateBox.TopLeft, intermediateBox.TopRight, intermediateBox.BottomLeft, intermediateBox.BottomRight,
-                    Color.White, GetEntityPostRenderTargetSubRegion(source, spriteRenderTargetSize));
-
-                source = destination;
+            }
+            finally
+            {
+                DrawSetScreenUvRect(oldScreenUvRect);
             }
         }
-
         private static UIBox2? GetEntityPostRenderTargetSubRegion(RenderTexture renderTarget, Vector2i size)
         {
             if (renderTarget.Size == size)
@@ -578,6 +587,20 @@ namespace Robust.Client.Graphics.Clyde
         {
             var offset = (renderTarget.Size - size) / 2;
             return Box2i.FromDimensions(offset, size);
+        }
+
+        private static Vector4 GetEntityPostShaderScreenUvRect(Vector2i screenSize, Vector2i roundedPos, Vector2i size)
+        {
+            var topLeft = roundedPos - size / 2;
+            var bottomRight = topLeft + size;
+
+            // SCREEN_UV follows gl_FragCoord / screenSize, so the y origin is bottom-left.
+            // SCREEN_UV_RECT is bottom-left/top-right because UV2.y is 0 at the quad bottom and 1 at the top.
+            return new Vector4(
+                topLeft.X / (float) screenSize.X,
+                1f - bottomRight.Y / (float) screenSize.Y,
+                bottomRight.X / (float) screenSize.X,
+                1f - topLeft.Y / (float) screenSize.Y);
         }
 
         private void DrawLoadingScreen(IRenderHandle handle)

@@ -77,9 +77,11 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
                     productionContext.CancellationToken.ThrowIfCancellationRequested();
                     var subscriptionMethod = method.Type.ToSubscriptionMethod();
                     var typeArgs = string.Join(", ", method.TypeArgs);
-                    var before = string.Join(", ", method.Before.Select(t => $"typeof({t})"));
-                    var after = string.Join(", ", method.After.Select(t => $"typeof({t})"));
-                    subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{typeArgs}>({method.MethodName}, [{before}], [{after}]);");
+
+                    var before = method.Before.HasValue ? ("[" + string.Join(", ", method.Before.Value.Select(t => $"typeof({t})")) + "]") : "null";
+                    var after = method.After.HasValue ? ("[" + string.Join(", ", method.After.Value.Select(t => $"typeof({t})")) + "]") : "null";
+
+                    subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{typeArgs}>({method.MethodName}, {before}, {after});");
                 }
 
                 var builder = new StringBuilder(@"
@@ -233,10 +235,10 @@ using JetBrains.Annotations;
     /// <summary>
     /// Gets an array of type names from the typed constant.
     /// </summary>
-    private static ImmutableArray<string> GetTypes(TypedConstant constant)
+    private static ImmutableArray<string>? GetTypes(TypedConstant constant)
     {
         if (constant.IsNull || constant.Kind != TypedConstantKind.Array)
-            return [];
+            return null;
 
         return [.. constant.Values.Select(v => (v.Value as ITypeSymbol)!.ToDisplayString())];
     }
@@ -258,5 +260,5 @@ using JetBrains.Annotations;
 
     private record struct EntitySystemInfo(PartialTypeInfo Type, EquatableArray<SubscriptionInfo> Subscriptions);
 
-    private record struct SubscriptionInfo(string MethodName, SubscriptionType Type, EquatableArray<string> TypeArgs, EquatableArray<string> Before, EquatableArray<string> After);
+    private record struct SubscriptionInfo(string MethodName, SubscriptionType Type, EquatableArray<string> TypeArgs, EquatableArray<string>? Before, EquatableArray<string>? After);
 }

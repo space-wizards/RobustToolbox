@@ -25,6 +25,9 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
         SubscribeAllEventMethodName,
     ];
 
+    /// <summary>
+    /// The key used to access the needed replacement attribute name in the diagnostic's Properties dictionary.
+    /// </summary>
     public const string AttributeNameKey = "attribute";
 
     public static readonly DiagnosticDescriptor EntitySystemSubscriptionConversionPossible = new(
@@ -61,6 +64,7 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
                 if (symbolContext.Symbol is not INamedTypeSymbol typeSymbol || typeSymbol.TypeKind != TypeKind.Class)
                     return;
 
+                // Filter out anything that isn't an EntitySystem
                 if (!typeSymbol.AllInterfaces.Contains(entitySystemType))
                     return;
 
@@ -126,12 +130,14 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
 
                 // If the target method's event type is abstract, we can't subscribe using the attribute,
                 // since the subscription needs the exact type.
+                // This assumes that the event is the last parameter in the handler's signature,
+                // which seems like a reasonable assumption at the time of writing.
                 var handlerEventType = handlerMethod.Parameters.Last().Type;
                 if (handlerEventType.IsAbstract)
                     continue;
 
                 // If the handler is a virtual or abstract method, we can't use the attribute
-                // since we would have to add it to the base class
+                // since we would have to add it to the base class.
                 if (handlerMethod.IsVirtual || handlerMethod.IsAbstract)
                     continue;
 

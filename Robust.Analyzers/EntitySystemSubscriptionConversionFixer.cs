@@ -93,7 +93,8 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         var handlerDocId = editor.OriginalSolution.GetDocumentId(handlerMethodSymbol.DeclaringSyntaxReferences.First().SyntaxTree);
 
         // Get an editor for the document containing the event handler method.
-        var handlerEditor = await editor.GetDocumentEditorAsync(handlerDocId, c);
+        // If the event handler is in the same document as the Initialize method, just reuse the same editor.
+        var handlerEditor = (handlerDocId == document.Id) ? initializeEditor : await editor.GetDocumentEditorAsync(handlerDocId, c);
         // Make our changes to the document containing the event handler method.
         ModifyHandler(handlerEditor, handlerMethodSymbol, attributeName);
 

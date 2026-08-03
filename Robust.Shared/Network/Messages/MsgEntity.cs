@@ -18,8 +18,6 @@ namespace Robust.Shared.Network.Messages
         public EntityMessageType Type { get; set; }
 
         public EntityEventArgs SystemMessage { get; set; }
-        public EntityUid EntityUid { get; set; }
-        public uint NetId { get; set; }
         public uint Sequence { get; set; }
         public GameTick SourceTick { get; set; }
 

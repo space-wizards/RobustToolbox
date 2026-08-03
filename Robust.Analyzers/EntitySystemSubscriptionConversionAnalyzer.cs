@@ -12,7 +12,7 @@ namespace Robust.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnalyzer
 {
-    private const string EntitySystemTypeName = "Robust.Shared.GameObjects.EntitySystem";
+    private const string EntitySystemTypeName = "Robust.Shared.GameObjects.IEntitySystem";
     private const string SubscribeLocalEventAttributeTypeName = "Robust.Shared.Analyzers.SubscribeLocalEventAttribute";
     private const string SubscribeLocalEventMethodName = "SubscribeLocalEvent";
     private const string SubscribeNetworkEventMethodName = "SubscribeNetworkEvent";
@@ -48,7 +48,7 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
 
         context.RegisterCompilationStartAction(ctx =>
         {
-            // If the subscription attribute isn't available in this compilation, we can't do anything.
+            // If the subscription attributes aren't available in this compilation, we can't do anything.
             if (ctx.Compilation.GetTypeByMetadataName(SubscribeLocalEventAttributeTypeName) is null)
                 return;
 
@@ -61,8 +61,7 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
                 if (symbolContext.Symbol is not INamedTypeSymbol typeSymbol || typeSymbol.TypeKind != TypeKind.Class)
                     return;
 
-                // Must inherit from EntitySystem
-                if (!TypeSymbolHelper.Inherits(typeSymbol, entitySystemType))
+                if (!typeSymbol.AllInterfaces.Contains(entitySystemType))
                     return;
 
                 // Check each method definition in the class

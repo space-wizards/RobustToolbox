@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
@@ -70,7 +69,8 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
             public delegate void EntityEventHandler<in T>(T ev);
             public delegate void EntitySessionEventHandler<in T>(T msg, string foo);
 
-            public abstract class EntitySystem
+            public interface IEntitySystem;
+            public abstract class EntitySystem : IEntitySystem
             {
                 public virtual void Initialize() { }
                 public void SubscribeLocalEvent<TComp, TEvent>(

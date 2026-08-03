@@ -47,7 +47,8 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
                 where TComp : IComponent
                 where TEvent : notnull;
 
-            public abstract class EntitySystem
+            public interface IEntitySystem;
+            public abstract class EntitySystem : IEntitySystem
             {
                 public virtual void Initialize() { }
                 public void SubscribeLocalEvent<TComp, TEvent>(

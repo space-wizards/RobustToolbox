@@ -404,17 +404,52 @@ namespace Robust.Client
 
             if (Options.LoadConfigAndUserData)
             {
-                var configFile = Path.Combine(userDataDir, Options.ConfigFileName);
-                if (File.Exists(configFile))
+                var userData = new WritableDirProvider(Directory.CreateDirectory(userDataDir), hideRootDir: true);
+                var configPath = new ResPath(Options.ConfigFileName).ToRootedPath();
+                var legacyConfigPath = new ResPath("/client_config.toml");
+                if (userData.Exists(configPath))
                 {
                     // Load config from user data if available.
-                    _configurationManager.LoadFromFile(configFile);
+                    _configurationManager.LoadFromFile(userData, configPath);
+                    _configurationManager.SetSaveFile(userData, configPath);
+                }
+                else if (userData.Exists(legacyConfigPath))
+                {
+                    // Load the old root-level config for backwards compatibility, but save to the new location.
+                    _logManager.GetSawmill("cfg").Info(
+                        "Migrating client configuration from '{0}' to '{1}'.",
+                        legacyConfigPath,
+                        configPath);
+                    _configurationManager.LoadFromFile(userData, legacyConfigPath);
+                    _configurationManager.SetSaveFile(userData, configPath);
+                    _configurationManager.SaveToFile();
+
+                    if (userData.Exists(configPath))
+                    {
+                        _logManager.GetSawmill("cfg").Info(
+                            "Removing migrated legacy client configuration file '{0}'.",
+                            legacyConfigPath);
+                        userData.Delete(legacyConfigPath);
+                    }
                 }
                 else
                 {
                     // Else we just use code-defined defaults and let it save to file when the user changes things.
-                    _configurationManager.SetSaveFile(configFile);
+                    _configurationManager.SetSaveFile(userData, configPath);
                 }
+
+                var forkId = _configurationManager.GetCVar(CVars.BuildForkId);
+                var forkConfigName = string.IsNullOrWhiteSpace(forkId)
+                    ? "unspecified"
+                    : ResPath.SanitizeFilename(forkId);
+                var forkConfigPath = new ResPath($"/Config/{forkConfigName}_config.toml");
+                if (userData.Exists(forkConfigPath))
+                {
+                    _configurationManager.LoadFromFile(userData, forkConfigPath);
+                    _configurationManager.SetSaveFile(userData, configPath);
+                }
+
+                _configurationManager.SetForkSaveFile(userData, forkConfigPath);
             }
 
             _configurationManager.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());

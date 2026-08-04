@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
@@ -39,16 +37,20 @@ namespace Robust.Shared.Reflection
         private readonly ConcurrentDictionary<string, Enum?> _enumCache = new();
         private readonly ConcurrentDictionary<Enum, string> _reverseEnumCache = new();
 
-        private readonly List<Type> _getAllTypesCache = new();
-        private readonly ConcurrentDictionary<(Type BaseType, bool Inclusive), Type[]> _getAllChildrenCache = new();
-        private ISawmill _sawmill = default!;
+        private ImmutableArray<Type> _getAllTypesCache = ImmutableArray<Type>.Empty;
 
-        private readonly ObjectPool<List<Type>> _childrenCache =
-            new DefaultObjectPool<List<Type>>(new ListPolicy<Type>(), 128);
+        private ImmutableDictionary<Type, ImmutableArray<Type>> _getAllTypesInheritanceCache =
+            ImmutableDictionary<Type, ImmutableArray<Type>>.Empty;
+
+        private ImmutableDictionary<Type, ImmutableHashSet<Type>> _getAllTypesAttributeCache =
+            ImmutableDictionary<Type, ImmutableHashSet<Type>>.Empty;
+
+        private ISawmill _sawmill = default!;
 
         public void Initialize()
         {
             _sawmill = _logMan.GetSawmill("Reflection");
+            EnsureGetAllTypesCache();
         }
 
         /// <inheritdoc />
@@ -62,31 +64,22 @@ namespace Robust.Shared.Reflection
         {
             EnsureGetAllTypesCache();
 
-            var key = (baseType, inclusive);
-            return _getAllChildrenCache.GetOrAdd(key,
-                _ =>
-                {
-                    var cache = _childrenCache.Get();
-                    foreach (var type in _getAllTypesCache)
-                    {
-                        if (!baseType.IsAssignableFrom(type) || type.IsAbstract)
-                            continue;
+            if (inclusive)
+                yield return baseType;
 
-                        if (baseType == type && !inclusive)
-                            continue;
+            if (!_getAllTypesInheritanceCache.TryGetValue(baseType, out var inheritors))
+                yield break;
 
-                        cache.Add(type);
-                    }
-
-                    var cached = cache.ToArray();
-                    _childrenCache.Return(cache);
-                    return cached;
-                });
+            foreach (var inheritor in inheritors)
+            {
+                if (!inheritor.IsAbstract)
+                    yield return inheritor;
+            }
         }
 
         private void EnsureGetAllTypesCache()
         {
-            if (_getAllTypesCache.Count != 0)
+            if (_getAllTypesCache.Length != 0)
                 return;
 
             var totalLength = 0;
@@ -99,7 +92,9 @@ namespace Robust.Shared.Reflection
                 totalLength += types.Length;
             }
 
-            _getAllTypesCache.Capacity = totalLength;
+            var typesCache = ImmutableArray.CreateBuilder<Type>(totalLength);
+            var inheritanceCache = ImmutableDictionary.CreateBuilder<Type, (List<Type> List, HashSet<Type> Set)>();
+            var attributeCache = ImmutableDictionary.CreateBuilder<Type, HashSet<Type>>();
 
             foreach (var typeSet in typeSets)
             {
@@ -110,9 +105,83 @@ namespace Robust.Shared.Reflection
                     if (!(attribute?.Discoverable ?? ReflectAttribute.DEFAULT_DISCOVERABLE))
                         continue;
 
-                    _getAllTypesCache.Add(type);
+                    typesCache.Add(type);
+
+                    var baseType = type.BaseType;
+                    foreach (var @interface in type.GetInterfaces())
+                    {
+                        if (!inheritanceCache.TryGetValue(@interface, out var interfaces))
+                        {
+                            interfaces = ([], []);
+                            inheritanceCache[@interface] = interfaces;
+                        }
+
+                        if (interfaces.Set.Add(type))
+                            interfaces.List.Add(type);
+                    }
+
+                    while (baseType != null)
+                    {
+                        if (!inheritanceCache.TryGetValue(baseType, out var subTypes))
+                        {
+                            subTypes = ([], []);
+                            inheritanceCache[baseType] = subTypes;
+                        }
+
+                        if (subTypes.Set.Add(type))
+                            subTypes.List.Add(type);
+
+                        foreach (var @interface in baseType.GetInterfaces())
+                        {
+                            if (!inheritanceCache.TryGetValue(@interface, out var interfaces))
+                            {
+                                interfaces = ([], []);
+                                inheritanceCache[@interface] = interfaces;
+                            }
+
+                            if (interfaces.Set.Add(type))
+                                interfaces.List.Add(type);
+                        }
+
+                        baseType = baseType.BaseType;
+                    }
+
+                    foreach (var typeAttribute in type.CustomAttributes)
+                    {
+                        if (!attributeCache.TryGetValue(typeAttribute.AttributeType, out var attributes))
+                        {
+                            attributes = [];
+                            attributeCache[typeAttribute.AttributeType] = attributes;
+                        }
+
+                        attributes.Add(type);
+                    }
                 }
             }
+
+            var toAdd = new HashSet<Type>();
+            foreach (var (attributeType, types) in attributeCache)
+            {
+                if (attributeType.GetCustomAttribute<AttributeUsageAttribute>() is not { Inherited: true })
+                {
+                    continue;
+                }
+
+                toAdd.Clear();
+                foreach (var type in types)
+                {
+                    if (inheritanceCache.TryGetValue(type, out var inheritors))
+                        toAdd.UnionWith(inheritors.Set);
+                }
+
+                types.UnionWith(toAdd);
+            }
+
+            _getAllTypesCache = typesCache.ToImmutable();
+            _getAllTypesInheritanceCache = inheritanceCache
+                .ToImmutableDictionary(kvp => kvp.Key, kvp => kvp.Value.List.ToImmutableArray());
+            _getAllTypesAttributeCache = attributeCache
+                .ToImmutableDictionary(kvp => kvp.Key, kvp => kvp.Value.ToImmutableHashSet());
         }
 
         public void LoadAssemblies(params Assembly[] args) => LoadAssemblies(args.AsEnumerable());
@@ -124,8 +193,8 @@ namespace Robust.Shared.Reflection
                 throw new InvalidOperationException("Attempted to load the same assembly multiple times!");
 
             this.assemblies.AddRange(assembliesArray);
-            _getAllTypesCache.Clear();
-            _getAllChildrenCache.Clear();
+            _getAllTypesCache = ImmutableArray<Type>.Empty;
+            _getAllTypesInheritanceCache = ImmutableDictionary<Type, ImmutableArray<Type>>.Empty;
             OnAssemblyAdded?.Invoke(this, new ReflectionUpdateEventArgs(this));
         }
 
@@ -225,7 +294,7 @@ namespace Robust.Shared.Reflection
         public IEnumerable<Type> FindTypesWithAttribute(Type attributeType)
         {
             EnsureGetAllTypesCache();
-            return _getAllTypesCache.Where(type => Attribute.IsDefined(type, attributeType));
+            return _getAllTypesAttributeCache.GetValueOrDefault(attributeType) ?? Enumerable.Empty<Type>();
         }
 
         public IEnumerable<Type> FindAllTypes()
@@ -263,7 +332,9 @@ namespace Robust.Shared.Reflection
         }
 
         /// <inheritdoc />
-        public bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum,
+        public bool TryParseEnumReference(
+            string reference,
+            [NotNullWhen(true)] out Enum? @enum,
             bool shouldThrow = true)
         {
             if (!reference.StartsWith("enum."))
@@ -275,13 +346,13 @@ namespace Robust.Shared.Reflection
             @enum = _enumCache.GetOrAdd(reference,
                 r =>
                 {
-                    var cropped = r.Substring(5);
+                    var cropped = r.AsSpan(5);
 
                     // Doesn't exist, add it.
                     var dotIndex = cropped.LastIndexOf('.');
-                    var typeName = cropped.Substring(0, dotIndex);
+                    var typeName = cropped[..dotIndex];
 
-                    var value = cropped.Substring(dotIndex + 1);
+                    var value = cropped[(dotIndex + 1)..];
 
                     foreach (var assembly in assemblies)
                     {
@@ -313,9 +384,9 @@ namespace Robust.Shared.Reflection
             return @enum != null;
         }
 
-        private static bool TypeNameMatchesEnumReference(string fullName, string typeName)
+        private static bool TypeNameMatchesEnumReference(ReadOnlySpan<char> fullName, ReadOnlySpan<char> typeName)
         {
-            if (fullName.Equals(typeName))
+            if (fullName == typeName)
                 return true;
 
             if (fullName.Length <= typeName.Length)
@@ -324,8 +395,8 @@ namespace Robust.Shared.Reflection
             var prefixIndex = fullName.Length - typeName.Length - 1;
             var separator = fullName[prefixIndex];
 
-            return (separator == '.' || separator == '+')
-                   && fullName.AsSpan(prefixIndex + 1).SequenceEqual(typeName);
+            return separator is '.' or '+'
+                   && fullName[(prefixIndex + 1)..].SequenceEqual(typeName);
         }
 
         public Type? YamlTypeTagLookup(Type baseType, string typeName)
@@ -346,15 +417,6 @@ namespace Robust.Shared.Reflection
                             found = derivedType;
                             break;
                         }
-
-                        var serializedAttribute = derivedType.GetCustomAttribute<SerializedTypeAttribute>();
-
-                        if (serializedAttribute != null &&
-                            serializedAttribute.SerializeName == typeName)
-                        {
-                            found = derivedType;
-                            break;
-                        }
                     }
 
                     // Fallback
@@ -369,6 +431,18 @@ namespace Robust.Shared.Reflection
 
                     return found;
                 });
+        }
+
+        internal bool IsAttributeDefined(Type type, Type attribute)
+        {
+            return _getAllTypesAttributeCache.TryGetValue(attribute, out var attributes) &&
+                   attributes.Contains(type);
+        }
+
+        internal ImmutableHashSet<Type> FindTypesWithAttributeSet<T>()
+        {
+            EnsureGetAllTypesCache();
+            return _getAllTypesAttributeCache.GetValueOrDefault(typeof(T)) ?? ImmutableHashSet<Type>.Empty;
         }
     }
 }

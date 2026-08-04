@@ -19,12 +19,14 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
-    public sealed partial class SerializationManager : ISerializationManager
+    public sealed partial class SerializationManager : ISerializationManager, IPostInjectInit
     {
         [Dependency] private readonly INetManager _net = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         public IReflectionManager ReflectionManager => _reflectionManager;
+
+        private ReflectionManager _reflectionManagerInternal = default!;
 
         public const string LogCategory = "serialization";
 
@@ -33,8 +35,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly ConcurrentDictionary<Type, DataDefinition> _dataDefinitions = new();
 
-        // Always has a dummy value of 0 for any types that should be copied by ref
-        private readonly ConcurrentDictionary<Type, byte> _copyByRefRegistrations = new();
+        private ImmutableHashSet<Type> _copyByRefRegistrations = ImmutableHashSet<Type>.Empty;
 
         [field: Dependency]
         public IDependencyCollection DependencyCollection { get; } = default!;
@@ -62,15 +63,14 @@ namespace Robust.Shared.Serialization.Manager
                                     typeof(bool)
                                 ]));
 
-            var flagsTypes = new ConcurrentBag<Type>();
-            var constantsTypes = new ConcurrentBag<Type>();
-            var typeSerializers = new ConcurrentBag<Type>();
-            var meansDataDef = new ConcurrentBag<Type>();
-            var meansDataRecord = new ConcurrentBag<Type>();
-            var implicitDataDef = new ConcurrentBag<Type>();
-            var implicitDataRecord = new ConcurrentBag<Type>();
-
-            CollectAttributedTypes(flagsTypes, constantsTypes, typeSerializers, meansDataDef, meansDataRecord, implicitDataDef, implicitDataRecord);
+            var flagsTypes = _reflectionManager.FindTypesWithAttribute<FlagsForAttribute>();
+            var constantsTypes = _reflectionManager.FindTypesWithAttribute<ConstantsForAttribute>();
+            var typeSerializers = _reflectionManager.FindTypesWithAttribute<TypeSerializerAttribute>();
+            var meansDataDef = _reflectionManager.FindTypesWithAttribute<MeansDataDefinitionAttribute>();
+            var meansDataRecord = _reflectionManager.FindTypesWithAttribute<MeansDataRecordAttribute>();
+            var implicitDataDef = _reflectionManager.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>();
+            var implicitDataRecord = _reflectionManager.FindTypesWithAttribute<ImplicitDataRecordAttribute>();
+            _copyByRefRegistrations = _reflectionManagerInternal.FindTypesWithAttributeSet<CopyByRefAttribute>();
 
             InitializeFlagsAndConstants(flagsTypes, constantsTypes);
             InitializeTypeSerializers(typeSerializers);
@@ -117,11 +117,38 @@ namespace Robust.Shared.Serialization.Manager
 
             Parallel.ForEach(_reflectionManager.FindAllTypes(), type =>
             {
-                if (meansDataDef.Any(type.IsDefined))
+                var meansDef = false;
+                foreach (var meansAttr in meansDataDef)
+                {
+                    if (!_reflectionManagerInternal.IsAttributeDefined(type, meansAttr))
+                        continue;
+
+                    meansDef = true;
+                    break;
+                }
+
+                if (meansDef)
                     registrations.Add(type);
 
-                if (type.IsDefined(typeof(DataRecordAttribute)) || meansDataRecord.Any(type.IsDefined))
+                if (_reflectionManagerInternal.IsAttributeDefined(type, typeof(DataRecordAttribute)))
+                {
                     records[type] = 0;
+                }
+                else
+                {
+                    var meansRecord = false;
+                    foreach (var meansAttr in meansDataRecord)
+                    {
+                        if (!_reflectionManagerInternal.IsAttributeDefined(type, meansAttr))
+                            continue;
+
+                        meansRecord = true;
+                        break;
+                    }
+
+                    if (meansRecord)
+                        records[type] = 0;
+                }
             });
 
             var sawmill = Logger.GetSawmill(LogCategory);
@@ -137,7 +164,9 @@ namespace Robust.Shared.Serialization.Manager
                 }
 
                 var isRecord = records.ContainsKey(type);
-                if (!type.IsValueType && !isRecord && !type.HasParameterlessConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                if (!type.IsValueType &&
+                    !isRecord &&
+                    !type.HasParameterlessConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                 {
                     // If someone attempts to save or load an entity that uses this DataDefinition, this will lead to errors.
                     sawmill.Warning(
@@ -216,7 +245,7 @@ namespace Robust.Shared.Serialization.Manager
                 }
             }
 
-            _copyByRefRegistrations[typeof(Type)] = 0;
+            _copyByRefRegistrations = _copyByRefRegistrations.Add(typeof(Type));
 
             _initialized = true;
             _initializing = false;
@@ -249,44 +278,6 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             return true;
-        }
-
-        private void CollectAttributedTypes(
-            ConcurrentBag<Type> flagsTypes,
-            ConcurrentBag<Type> constantsTypes,
-            ConcurrentBag<Type> typeSerializers,
-            ConcurrentBag<Type> meansDataDef,
-            ConcurrentBag<Type> meansDataRecord,
-            ConcurrentBag<Type> implicitDataDef,
-            ConcurrentBag<Type> implicitDataRecord)
-        {
-            // IsDefined is extremely slow. Great.
-            Parallel.ForEach(_reflectionManager.FindAllTypes(), type =>
-            {
-                if (type.IsDefined(typeof(FlagsForAttribute), false))
-                    flagsTypes.Add(type);
-
-                if (type.IsDefined(typeof(ConstantsForAttribute), false))
-                    constantsTypes.Add(type);
-
-                if (type.IsDefined(typeof(TypeSerializerAttribute)))
-                    typeSerializers.Add(type);
-
-                if (type.IsDefined(typeof(MeansDataDefinitionAttribute)))
-                    meansDataDef.Add(type);
-
-                if (type.IsDefined(typeof(MeansDataRecordAttribute)))
-                    meansDataRecord.Add(type);
-
-                if (type.IsDefined(typeof(ImplicitDataDefinitionForInheritorsAttribute), true))
-                    implicitDataDef.Add(type);
-
-                if (type.IsDefined(typeof(ImplicitDataRecordAttribute), true))
-                    implicitDataRecord.Add(type);
-
-                if (type.IsDefined(typeof(CopyByRefAttribute)))
-                    _copyByRefRegistrations[type] = 0;
-            });
         }
 
         private DataDefinition CreateDataDefinition(Type t, bool isRecord)
@@ -399,5 +390,10 @@ namespace Robust.Shared.Serialization.Manager
                         : p.ParameterType);
         }
 #pragma warning restore CS0618
+
+        public void PostInject()
+        {
+            _reflectionManagerInternal = (ReflectionManager) _reflectionManager;
+        }
     }
 }

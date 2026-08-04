@@ -379,10 +379,7 @@ namespace Robust.Shared.IoC
         [System.Diagnostics.Contracts.Pure]
         public T Resolve<T>()
         {
-#pragma warning disable CS0618 // Type or member is obsolete
             var index = DependencyType<T>.Index;
-#pragma warning restore CS0618 // Type or member is obsolete
-
             if (index < _servicesArray.Length &&
                 _servicesArray.TryGetValue(index, out var service) &&
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract

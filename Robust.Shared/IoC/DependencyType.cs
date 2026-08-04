@@ -16,10 +16,9 @@ internal static class DependencyType
     }
 }
 
-[Obsolete("Used only in source generation internally.")]
+// ReSharper disable once UnusedTypeParameter
 internal static class DependencyType<T>
 {
     // ReSharper disable once StaticMemberInGenericType
-    [Obsolete("Used only in source generation internally.")]
     internal static readonly int Index = Interlocked.Increment(ref DependencyType.Index);
 }

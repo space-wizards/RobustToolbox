@@ -378,22 +378,12 @@ internal sealed class ToolshedCommandImplementor
             argType = argType.GetElementType()!;
         }
 
-        var defaultValue = arg.DefaultValue;
-
-        if (argType.IsGenericType && argType.GetGenericTypeDefinition() == typeof(OptionalValue<>))
-        {
-            if (!arg.IsOptional)
-                throw new ArgumentException("Missing [Optional] attribute on OptionalValue<T> parameter.");
-
-            defaultValue = Activator.CreateInstance(argType)!;
-        }
-
         return new CommandArgument(
             arg.Name!,
             argType,
             GetArgumentParser(arg, argType),
             arg.IsOptional,
-            defaultValue,
+            arg.DefaultValue,
             isParamsCollection);
     }
 

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Definition;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 
@@ -11,6 +11,7 @@ using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization;
 
+[NotContentImplementable]
 public interface ISerializationGenerated<T> : ISerializationGenerated
 {
     /// <seealso cref="ISerializationManager.CreateCopy"/>
@@ -43,6 +44,18 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
     [Obsolete("Use ISerializationManager.Read instead")]
     static virtual void Read(
         ref T target,
+        MappingDataNode mappingDataNode,
+        ISerializationManager serialization,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <seealso cref="ISerializationManager.Read"/>
+    [Obsolete("Use ISerializationManager.Read instead")]
+    void ReadComp(
+        ref Component target,
         MappingDataNode mappingDataNode,
         ISerializationManager serialization,
         SerializationHookContext hookCtx,
@@ -92,6 +105,7 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
     }
 }
 
+[NotContentImplementable]
 public interface ISerializationGenerated
 {
     /// <seealso cref="ISerializationManager.CopyTo"/>

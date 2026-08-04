@@ -18,9 +18,13 @@ using static Robust.Shared.Prototypes.EntityPrototype;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed partial class ComponentRegistrySerializer : BaseTypeSerializer, ITypeSerializer<ComponentRegistry, SequenceDataNode>, ITypeInheritanceHandler<ComponentRegistry, SequenceDataNode>, ITypeCopier<ComponentRegistry>
+    public sealed partial class ComponentRegistrySerializer : BaseTypeSerializer, ITypeSerializer<ComponentRegistry, SequenceDataNode>, ITypeInheritanceHandler<ComponentRegistry, SequenceDataNode>, ITypeCopier<ComponentRegistry>,
+        IPostInjectInit
     {
+        [Dependency] private IDynamicTypeFactory _dynamicTypeFactory = default!;
         [Dependency] private IComponentFactory _factory = default!;
+
+        private IDynamicTypeFactoryInternal _dynamicTypeFactoryInternal = default!;
 
         public ComponentRegistry Read(ISerializationManager serializationManager,
             SequenceDataNode node,
@@ -36,7 +40,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             foreach (var sequenceEntry in node.Sequence)
             {
                 var componentMapping = (MappingDataNode)sequenceEntry;
-                string compType = ((ValueDataNode) componentMapping.Get("type")).Value;
+                var compType = ((ValueDataNode) componentMapping.Get("type")).Value;
                 // See if type exists to detect errors.
                 switch (_factory.GetComponentAvailability(compType))
                 {
@@ -51,16 +55,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                         continue;
                 }
 
-                // Has this type already been added?
-                if (components.ContainsKey(compType))
-                {
-                    Log.Error($"Component of type '{compType}' defined twice in prototype!");
-                    continue;
-                }
-
                 var registration = _factory.GetRegistration(compType);
                 var compIdx = registration.Idx;
 
+                // Has this type already been added?
                 if (referenceTypes[..refIdx].Contains(compIdx))
                 {
                     throw new InvalidOperationException(
@@ -69,13 +67,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
                 referenceTypes[refIdx++] = compIdx;
 
-                var copy = componentMapping.Copy()!;
-                copy.Remove("type");
-
-                var read = (IComponent)serializationManager.Read(registration.Type, copy, hookCtx, context)!;
+                var comp = (Component) _dynamicTypeFactoryInternal.CreateInstanceUnchecked(registration.Type, inject: false);
+#pragma warning disable CS0618 // Type or member is obsolete
+                comp = comp.Instantiate();
+#pragma warning restore CS0618 // Type or member is obsolete
+                comp.ReadComp(ref comp, componentMapping, serializationManager, hookCtx, context);
+                SerializationManager.TryRunAfterHook(comp, hookCtx);
 
                 // The full YAML mapping is already retained by PrototypeManager.
-                components[compType] = new ComponentRegistryEntry(read);
+                components[compType] = new ComponentRegistryEntry(comp);
             }
 
             return components;
@@ -227,6 +227,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             }
 
             return dict;
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _dynamicTypeFactoryInternal = (IDynamicTypeFactoryInternal) _dynamicTypeFactory;
         }
     }
 }

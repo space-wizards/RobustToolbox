@@ -21,7 +21,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         [Test]
         public void SerializeTypeTest()
         {
-            ITestType type = new TestTypeOne();
+            ITestType type = new TestType1();
             var serMan = IoCManager.Resolve<ISerializationManager>();
             var mapping = serMan.WriteValue(type, notNullableOverride: true);
 
@@ -57,15 +57,14 @@ test:
             var type = serMan.Read<ITestType>(new MappingDataNode(mapping)["test"], notNullableOverride: true);
 
             Assert.That(type, Is.Not.Null);
-            Assert.That(type, Is.InstanceOf<TestTypeOne>());
+            Assert.That(type, Is.InstanceOf<TestType1>());
         }
     }
 
     public interface ITestType { }
 
-    [SerializedType("testtype1")]
     [DataDefinition]
-    public sealed partial class TestTypeOne : ITestType
+    public sealed partial class TestType1 : ITestType
     {
     }
 }

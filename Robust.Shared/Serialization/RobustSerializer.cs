@@ -193,21 +193,6 @@ namespace Robust.Shared.Serialization
             if (assigned.TryGetValue(serializedTypeName, out var resolved))
                 return resolved;
 
-            var types = _reflectionManager.GetAllChildren(assignableType);
-            foreach (var type in types)
-            {
-                var serializedAttribute = type.GetCustomAttribute<SerializedTypeAttribute>();
-
-                if(serializedAttribute is null)
-                    continue;
-
-                if (serializedAttribute.SerializeName == serializedTypeName)
-                {
-                    assigned[serializedTypeName] = type;
-                    return type;
-                }
-            }
-
             assigned[serializedTypeName] = null;
             return null;
         }

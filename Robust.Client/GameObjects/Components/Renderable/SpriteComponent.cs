@@ -166,8 +166,8 @@ namespace Robust.Client.GameObjects
             set => Sys.SetBaseRsi((Owner, this), value);
         }
 
-        [DataField("sprite", readOnly: true)] private string? rsi;
-        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
+        [DataField("sprite", readOnly: true)] internal string? rsi;
+        [DataField("layers", readOnly: true)] internal List<PrototypeLayerData> layerDatums = new();
 
         [DataField(readOnly: true)] private string? state;
         [DataField(readOnly: true)] private string? texture;
@@ -276,14 +276,6 @@ namespace Robust.Client.GameObjects
             // Why has no one answered my prayers.
 
             IoCManager.InjectDependencies(this);
-            if (!string.IsNullOrWhiteSpace(rsi))
-            {
-                var rsiPath = TextureRoot / rsi;
-                if (resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
-                    _baseRsi = resource.RSI;
-                else
-                    Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
-            }
 
             if (layerDatums.Count == 0)
             {
@@ -302,19 +294,6 @@ namespace Robust.Client.GameObjects
                     state = null;
                     texture = null;
                 }
-            }
-
-            if (layerDatums.Count != 0)
-            {
-                LayerMap.Clear();
-                Layers.Clear();
-                foreach (var datum in layerDatums)
-                {
-                    var layer = new Layer((Owner, this), Layers.Count);
-                    Layers.Add(layer);
-                    LayerSetData(layer, datum);
-                }
-
             }
 
             BoundsDirty = true;

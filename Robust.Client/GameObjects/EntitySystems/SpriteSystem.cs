@@ -72,6 +72,27 @@ namespace Robust.Client.GameObjects
 
         private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
         {
+            if (!string.IsNullOrWhiteSpace(component.rsi))
+            {
+                var rsiPath = TextureRoot / component.rsi;
+                if (_resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
+                    component._baseRsi = resource.RSI;
+                else
+                    Log.Error($"Unable to load RSI '{rsiPath}'.");
+            }
+
+            if (component.layerDatums.Count != 0)
+            {
+                component.LayerMap.Clear();
+                component.Layers.Clear();
+                foreach (var datum in component.layerDatums)
+                {
+                    var layer = new Layer((uid, component), component.Layers.Count);
+                    component.Layers.Add(layer);
+                    LayerSetData(layer, datum);
+                }
+            }
+
             try
             {
                 for (var i = 0; i < component.PostShaders.Count; i++)

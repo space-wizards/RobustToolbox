@@ -1200,8 +1200,7 @@ namespace Robust.Shared.Prototypes
                         continue;
                     }
 
-                    var copy = componentMapping.Copy();
-                    copy.Remove("type");
+                    var copy = componentMapping.CopyNoType();
                     _tempMappingData[type.Value] = copy;
                 }
             }

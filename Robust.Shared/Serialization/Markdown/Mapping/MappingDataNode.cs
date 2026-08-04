@@ -266,6 +266,25 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return newMapping;
         }
 
+        internal MappingDataNode CopyNoType()
+        {
+            var newMapping = new MappingDataNode(_children.Count)
+            {
+                Tag = Tag,
+                Start = Start,
+                End = End
+            };
+
+            foreach (var (key, val) in _list)
+            {
+                if (key != "type")
+                    newMapping.Add(key, val.Copy());
+            }
+
+            newMapping._keyNodes = _keyNodes;
+            return newMapping;
+        }
+
         /// <summary>
         /// Variant of <see cref="Copy"/> that doesn't clone the keys or values.
         /// </summary>

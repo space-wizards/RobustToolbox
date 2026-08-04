@@ -1032,7 +1032,7 @@ namespace Robust.Shared.Prototypes
             {
                 throw new InvalidImplementationException(kind,
                     typeof(IPrototype),
-                    $"Duplicate prototype type ID: {attribute.Type}. Current: {existing}");
+                    $"Duplicate prototype type ID: {name}. Current: {existing}");
             }
 
             var foundIdAttribute = false;

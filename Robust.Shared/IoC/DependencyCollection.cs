@@ -379,10 +379,6 @@ namespace Robust.Shared.IoC
         [System.Diagnostics.Contracts.Pure]
         public T Resolve<T>()
         {
-            if (typeof(T) == typeof(IDependencyCollection))
-            {
-
-            }
             var index = DependencyType<T>.Index;
             if (index < _servicesArray.Length &&
                 _servicesArray.TryGetValue(index, out var service) &&

@@ -69,10 +69,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
                 referenceTypes[refIdx++] = compIdx;
 
-                var copy = componentMapping.Copy()!;
-                copy.Remove("type");
-
-                var read = (IComponent)serializationManager.Read(registration.Type, copy, hookCtx, context)!;
+                var read = (IComponent)serializationManager.Read(registration.Type, componentMapping, hookCtx, context)!;
 
                 // The full YAML mapping is already retained by PrototypeManager.
                 components[compType] = new ComponentRegistryEntry(read);
@@ -132,9 +129,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
                 referenceTypes[refIdx++] = compIdx;
 
-                var copy = componentMapping.Copy();
-                copy.Remove("type");
-
+                var copy = componentMapping.CopyNoType();
                 list.Add(serializationManager.ValidateNode(registration.Type, copy, context));
             }
 

@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.Simplification;
 using static Robust.Roslyn.Shared.Diagnostics;
 
@@ -80,6 +81,12 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         if (model.GetDeclaredSymbol(classSyntax) is not { } classSymbol)
             throw new InvalidOperationException($"Failed to find symbol for class {classSyntax.Identifier}");
 
+        if (model?.GetOperation(invocationSyntax) is not IInvocationOperation invocationOperation)
+            throw new InvalidOperationException($"Failed to find invocation operation");
+
+        var beforeTypes = GetTypesList(invocationOperation, "before");
+        var afterTypes = GetTypesList(invocationOperation, "after");
+
         // Create a SolutionEditor to edit multiple documents without worrying about immutability.
         // The Initialize method might be in a different document than the handler, thanks to partial classes.
         var editor = new SolutionEditor(document.Project.Solution);
@@ -96,7 +103,7 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         // If the event handler is in the same document as the Initialize method, just reuse the same editor.
         var handlerEditor = (handlerDocId == document.Id) ? initializeEditor : await editor.GetDocumentEditorAsync(handlerDocId, c);
         // Make our changes to the document containing the event handler method.
-        ModifyHandler(handlerEditor, handlerMethodSymbol, attributeName);
+        ModifyHandler(handlerEditor, handlerMethodSymbol, attributeName, beforeTypes, afterTypes);
 
         // Make sure the class is marked as partial.
         EnsureClassPartial(initializeEditor, classSymbol, classSyntax);
@@ -129,7 +136,10 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
     private static void ModifyHandler(
         DocumentEditor editor,
         IMethodSymbol handlerMethodSymbol,
-        string attributeName)
+        string attributeName,
+        IEnumerable<ExpressionSyntax> beforeTypes,
+        IEnumerable<ExpressionSyntax> afterTypes
+        )
     {
         // Get the syntax node for the event handler method.
         var handlerMethodSyntax = handlerMethodSymbol.DeclaringSyntaxReferences.First().GetSyntax() as MethodDeclarationSyntax;
@@ -141,10 +151,15 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         // Create the identifier for the attribute, annotating it with the full class name and AddImportsAnnotation.
         // When Roslyn applies this code fix, AddImportsAnnotation tells it to add any missing using directives,
         // but it needs the full name of the class to be able to do so.
-        var identifier = SyntaxFactory.IdentifierName(attributeName).WithAdditionalAnnotations(symbolAnnotation, Simplifier.AddImportsAnnotation);
+        var identifier = editor.Generator.IdentifierName(attributeName).WithAdditionalAnnotations(symbolAnnotation, Simplifier.AddImportsAnnotation);
 
         // Generate the SubscribeWhateverEvent attribute.
         var attr = editor.Generator.Attribute(identifier);
+
+        var before = BuildArgument(beforeTypes, "before");
+        var after = BuildArgument(afterTypes, "after");
+
+        attr = editor.Generator.AddAttributeArguments(attr, [before, after]);
 
         // Add the attribute to the event handler method.
         editor.AddAttribute(handlerMethodSyntax!, attr);
@@ -162,5 +177,37 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         var oldModifiers = DeclarationModifiers.From(classSymbol);
         // Add the partial modifier if it's not already there.
         editor.SetModifiers(classSyntax, oldModifiers.WithPartial(true));
+    }
+
+    private static IEnumerable<ExpressionSyntax> GetTypesList(IInvocationOperation invocationOperation, string parameter)
+    {
+        var arg = invocationOperation.Arguments.Where(arg => arg.Parameter?.Name == parameter).SingleOrDefault();
+        if (arg.Value is IDefaultValueOperation or null)
+            return [];
+        var expression = (arg.Syntax as ArgumentSyntax)?.Expression;
+        return expression switch
+        {
+            CollectionExpressionSyntax collection => collection.Elements.OfType<ExpressionElementSyntax>().Select(e => e.Expression),
+            ArrayCreationExpressionSyntax arrayCreation => arrayCreation.Initializer?.Expressions ?? [],
+            ImplicitArrayCreationExpressionSyntax implicitArrayCreation => implicitArrayCreation.Initializer.Expressions,
+            _ => throw new InvalidOperationException("Invalid types list")
+        };
+        //var node = arg.Value.Syntax;
+        //var node = invocationOperation.Arguments.Where(arg => arg.Parameter?.Name == parameter).Select(arg => arg.Value.Syntax).SingleOrDefault();
+        // return node switch
+        // {
+        //     ImplicitArrayCreationExpressionSyntax implicitArrayCreation => implicitArrayCreation.Initializer.Expressions.Cast<TypeOfExpressionSyntax>(),
+        //     CollectionExpressionSyntax collection => collection.Elements.Select(el => (el as ExpressionElementSyntax)?.Expression).Cast<TypeOfExpressionSyntax>(),
+        //     null => [],
+        //     _ => throw new InvalidOperationException("Invalid types list")
+        // };
+    }
+
+    private static AttributeArgumentSyntax BuildArgument(IEnumerable<ExpressionSyntax> types, string name)
+    {
+        var nameColon = SyntaxFactory.NameColon(name);
+        var syntaxList = SyntaxFactory.SeparatedList<CollectionElementSyntax>(types.Select(SyntaxFactory.ExpressionElement));
+        var collection = SyntaxFactory.CollectionExpression(syntaxList);
+        return SyntaxFactory.AttributeArgument(null, nameColon, collection);
     }
 }

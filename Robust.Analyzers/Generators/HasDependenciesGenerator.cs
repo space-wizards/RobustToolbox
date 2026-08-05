@@ -171,7 +171,7 @@ public sealed class HasDependenciesGenerator : IIncrementalGenerator
         for (var i = 0; i < fields.Length; i++)
         {
             var field = fields[i];
-            sb.AppendLineIndented($"{field.Name} = (global::{field.TypeName})dependencies.Resolve<{field.TypeName}>();");
+            sb.AppendLineIndented($"{field.Name} = dependencies.Resolve<global::{field.TypeName}>();");
         }
 
         if (isOverride)

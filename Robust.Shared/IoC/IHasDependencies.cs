@@ -24,7 +24,7 @@ public interface IHasDependencies
     /// <param name="instances">
     /// The list of services to inject, indexed by <see cref="DependencyType.Index"/>
     /// </param>
-    void Inject(IDependencyCollection instances);
+    void Inject(IDependencyCollection dependencies);
 }
 
 /// <summary>

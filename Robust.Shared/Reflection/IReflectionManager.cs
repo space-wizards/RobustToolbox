@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Robust.Shared.IoC;
@@ -122,5 +123,9 @@ namespace Robust.Shared.Reflection
         IEnumerable<Type> FindAllTypes();
 
         void Initialize();
+
+        bool IsAttributeDefined(Type type, Type attribute);
+
+        ImmutableHashSet<Type> FindTypesWithAttributeSet<T>();
     }
 }

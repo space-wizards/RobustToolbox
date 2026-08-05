@@ -433,13 +433,13 @@ namespace Robust.Shared.Reflection
                 });
         }
 
-        internal bool IsAttributeDefined(Type type, Type attribute)
+        public bool IsAttributeDefined(Type type, Type attribute)
         {
             return _getAllTypesAttributeCache.TryGetValue(attribute, out var attributes) &&
                    attributes.Contains(type);
         }
 
-        internal ImmutableHashSet<Type> FindTypesWithAttributeSet<T>()
+        public ImmutableHashSet<Type> FindTypesWithAttributeSet<T>()
         {
             EnsureGetAllTypesCache();
             return _getAllTypesAttributeCache.GetValueOrDefault(typeof(T)) ?? ImmutableHashSet<Type>.Empty;

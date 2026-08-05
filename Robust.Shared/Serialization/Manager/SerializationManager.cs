@@ -20,14 +20,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
-    public sealed partial class SerializationManager : ISerializationManager, IPostInjectInit
+    public sealed partial class SerializationManager : ISerializationManager
     {
         [Dependency] private readonly INetManager _net = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         public IReflectionManager ReflectionManager => _reflectionManager;
-
-        private ReflectionManager _reflectionManagerInternal = default!;
 
         public const string LogCategory = "serialization";
 
@@ -71,7 +69,7 @@ namespace Robust.Shared.Serialization.Manager
             var meansDataRecord = _reflectionManager.FindTypesWithAttribute<MeansDataRecordAttribute>();
             var implicitDataDef = _reflectionManager.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>();
             var implicitDataRecord = _reflectionManager.FindTypesWithAttribute<ImplicitDataRecordAttribute>();
-            _copyByRefRegistrations = _reflectionManagerInternal.FindTypesWithAttributeSet<CopyByRefAttribute>();
+            _copyByRefRegistrations = _reflectionManager.FindTypesWithAttributeSet<CopyByRefAttribute>();
 
             InitializeFlagsAndConstants(flagsTypes, constantsTypes);
             InitializeTypeSerializers(typeSerializers);
@@ -121,7 +119,7 @@ namespace Robust.Shared.Serialization.Manager
                 var meansDef = false;
                 foreach (var meansAttr in meansDataDef)
                 {
-                    if (!_reflectionManagerInternal.IsAttributeDefined(type, meansAttr))
+                    if (!_reflectionManager.IsAttributeDefined(type, meansAttr))
                         continue;
 
                     meansDef = true;
@@ -131,7 +129,7 @@ namespace Robust.Shared.Serialization.Manager
                 if (meansDef)
                     registrations.Add(type);
 
-                if (_reflectionManagerInternal.IsAttributeDefined(type, typeof(DataRecordAttribute)))
+                if (_reflectionManager.IsAttributeDefined(type, typeof(DataRecordAttribute)))
                 {
                     records[type] = 0;
                 }
@@ -140,7 +138,7 @@ namespace Robust.Shared.Serialization.Manager
                     var meansRecord = false;
                     foreach (var meansAttr in meansDataRecord)
                     {
-                        if (!_reflectionManagerInternal.IsAttributeDefined(type, meansAttr))
+                        if (!_reflectionManager.IsAttributeDefined(type, meansAttr))
                             continue;
 
                         meansRecord = true;
@@ -391,10 +389,5 @@ namespace Robust.Shared.Serialization.Manager
                         : p.ParameterType);
         }
 #pragma warning restore CS0618
-
-        public void PostInject()
-        {
-            _reflectionManagerInternal = (ReflectionManager) _reflectionManager;
-        }
     }
 }

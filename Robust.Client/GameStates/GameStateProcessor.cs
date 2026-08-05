@@ -203,6 +203,7 @@ Had full state: {LastFullState != null}"
             {
                 // Full state.
                 _lastStateFullRep.Clear();
+                _lastStateFullRep.EnsureCapacity(state.EntityStates.Span.Length);
             }
             else
             {
@@ -216,7 +217,8 @@ Had full state: {LastFullState != null}"
             {
                 if (!_lastStateFullRep.TryGetValue(entityState.NetEntity, out var compData))
                 {
-                    compData = new();
+                    var componentCount = entityState.NetComponents?.Count ?? entityState.ComponentChanges.Span.Length;
+                    compData = new(componentCount);
                     _lastStateFullRep.Add(entityState.NetEntity, compData);
                 }
 
@@ -409,6 +411,7 @@ Had full state: {LastFullState != null}"
             foreach (var (netEntity, implicitEntState) in implicitData)
             {
                 var fullRep = _lastStateFullRep[netEntity];
+                fullRep.EnsureCapacity(implicitEntState.Count);
 
                 foreach (var (netId, implicitCompState) in implicitEntState)
                 {

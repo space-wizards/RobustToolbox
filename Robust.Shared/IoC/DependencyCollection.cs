@@ -302,7 +302,7 @@ namespace Robust.Shared.IoC
         {
             lock (_serviceBuildLock)
             {
-                if (!_resolveTypes.ContainsKey(interfaceType))
+                if (!_resolveTypes.TryGetValue(interfaceType, out var type))
                     return;
 
                 if (!overwrite)
@@ -311,7 +311,7 @@ namespace Robust.Shared.IoC
                     (
                         string.Format(
                             "Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
-                            interfaceType, implementationType, _resolveTypes[interfaceType]
+                            interfaceType, implementationType, type
                         ));
                 }
 
@@ -379,6 +379,10 @@ namespace Robust.Shared.IoC
         [System.Diagnostics.Contracts.Pure]
         public T Resolve<T>()
         {
+            if (typeof(T) == typeof(IDependencyCollection))
+            {
+
+            }
             var index = DependencyType<T>.Index;
             if (index < _servicesArray.Length &&
                 _servicesArray.TryGetValue(index, out var service) &&
@@ -531,10 +535,13 @@ namespace Robust.Shared.IoC
                     {
                         var parentService = parent._servicesArray[i];
 
-                        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
                         // We don't want to overwrite our services with null if the parent doesn't have them
-                        if (parentService != null)
+                        // We also don't want to overwite our services with the parent's
+                        // For example, IDependencyCollection
+                        // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+                        if (parentService != null && _servicesArray[i] == null)
                             _servicesArray[i] = parentService;
+                        // ReSharper restore ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
                     }
 
                     parent = parent._parentCollection as DependencyCollection;

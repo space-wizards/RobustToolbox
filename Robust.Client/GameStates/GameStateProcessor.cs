@@ -55,7 +55,11 @@ namespace Robust.Client.GameStates
         {
             get => _maxBufferSize;
             // We place a lower bound on the maximum size to avoid spamming servers with full game state requests.
-            set => _maxBufferSize = Math.Max(value, MinimumMaxBufferSize);
+            set
+            {
+                _maxBufferSize = Math.Max(value, MinimumMaxBufferSize);
+                _stateBuffer.EnsureCapacity(value);
+            }
         }
 
         /// <inheritdoc />
@@ -131,7 +135,7 @@ namespace Robust.Client.GameStates
 
         public void TryAdd(GameState state)
         {
-            if (_stateBuffer.Count <= MaxBufferSize)
+            if (_stateBuffer.Count < MaxBufferSize)
             {
                 _stateBuffer.Add(state);
                 return;

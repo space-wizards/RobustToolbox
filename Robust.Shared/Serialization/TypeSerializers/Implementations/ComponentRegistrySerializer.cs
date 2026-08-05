@@ -132,9 +132,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
                 referenceTypes[refIdx++] = compIdx;
 
-                var copy = componentMapping.Copy();
-                copy.Remove("type");
-
+                var copy = componentMapping.CopyNoType();
                 list.Add(serializationManager.ValidateNode(registration.Type, copy, context));
             }
 

@@ -173,12 +173,12 @@ namespace Robust.Client.ResourceManagement
 
                 var (foldedDelays, foldedIndices) = FoldDelays(stateObject.Delays);
 
-                var textures = new Texture[foldedIndices.Length][];
+                var textures = new AtlasTexture[foldedIndices.Length][];
                 var callbackOffset = new Vector2i[foldedIndices.Length][];
 
                 for (var i = 0; i < textures.Length; i++)
                 {
-                    textures[i] = new Texture[foldedIndices[0].Length];
+                    textures[i] = new AtlasTexture[foldedIndices[0].Length];
                     callbackOffset[i] = new Vector2i[foldedIndices[0].Length];
                 }
 
@@ -420,7 +420,7 @@ namespace Robust.Client.ResourceManagement
 
         internal struct StateReg
         {
-            public Texture[][] Output;
+            public AtlasTexture[][] Output;
             public int[][] Indices;
             public Vector2i[][] Offsets;
         }

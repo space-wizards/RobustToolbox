@@ -59,3 +59,19 @@ public sealed class SubscribeNetworkEventAttribute : Attribute;
 [AttributeUsage(AttributeTargets.Method)]
 [MeansImplicitUse]
 public sealed class EventSubscriptionAttribute : Attribute;
+
+/// <summary>
+/// Marks the target type to be usable as a template for any generic entity system subscription.
+/// The method with type parameters automatically generates a subscription for all types that satisfy the constraints.
+/// </summary>
+/// <remarks>
+/// For this to work, these conditions has to be satisfied:
+/// <list type="bullet">
+/// <item>Event attribute subscription method must have at least one type parameter with at least one constraint type.</item>
+/// <item>The target type with this attribute must satisfy the type constraints.</item>
+/// </list>
+///
+/// </remarks>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct)]
+[MeansImplicitUse]
+public sealed class GenericEventAttribute : Attribute;

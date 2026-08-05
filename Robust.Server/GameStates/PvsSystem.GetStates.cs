@@ -74,11 +74,13 @@ internal sealed partial class PvsSystem
     private IComponentState? ComponentState(EntityUid uid, IComponent comp, ushort netId, ref ComponentGetState stateEv, out bool excludeReplays)
     {
         DebugTools.Assert(comp.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {comp.GetType()}");
-        stateEv.State = null;
-        _getStateHandlers![netId]?.Invoke(uid, comp, ref Unsafe.As<ComponentGetState, EntityEventBus.Unit>(ref stateEv));
-        var state = stateEv.State;
+// Reset the ComponentGetState data.
+stateEv.State = null;
+stateEv.ExcludeReplays = false;
+_getStateHandlers![netId]?.Invoke(uid, comp, ref Unsafe.As<ComponentGetState, EntityEventBus.Unit>(ref stateEv));
+var state = stateEv.State;
         excludeReplays = stateEv.ExcludeReplays;
-        return state;
+return state;
     }
 
     /// <summary>

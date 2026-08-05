@@ -379,6 +379,9 @@ namespace Robust.Shared.IoC
         [System.Diagnostics.Contracts.Pure]
         public T Resolve<T>()
         {
+            if (typeof(T) == typeof(IDependencyCollection))
+                return (T) (IDependencyCollection) this;
+
             var index = DependencyType<T>.Index;
             if (index < _servicesArray.Length &&
                 _servicesArray.TryGetValue(index, out var service) &&
@@ -402,6 +405,18 @@ namespace Robust.Shared.IoC
             }
 
             return resolved;
+        }
+
+        public T ResolveInject<T>(Type owningType)
+        {
+            try
+            {
+                return Resolve<T>();
+            }
+            catch (UnregisteredTypeException)
+            {
+                throw new UnregisteredDependencyException(owningType, typeof(T));
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -508,11 +523,7 @@ namespace Robust.Shared.IoC
                 _services = newDeps.ToFrozenDictionary();
 
                 // Need to account for dependency collections that might not have all services
-                _servicesArray = new object[Math.Max(newDeps.Count + 1, DependencyType.Index + 1)];
-
-                // IDependencyCollection is normally special-cased in TryResolveType
-                // so we account for that here
-                _servicesArray[DependencyType<IDependencyCollection>.Index] = this;
+                _servicesArray = new object[Math.Max(newDeps.Count, DependencyType.Index)];
 
                 foreach (var (type, inst) in _services)
                 {
@@ -533,7 +544,6 @@ namespace Robust.Shared.IoC
 
                         // We don't want to overwrite our services with null if the parent doesn't have them
                         // We also don't want to overwite our services with the parent's
-                        // For example, IDependencyCollection
                         // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
                         if (parentService != null && _servicesArray[i] == null)
                             _servicesArray[i] = parentService;

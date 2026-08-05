@@ -72,28 +72,41 @@ namespace Robust.Client.GameObjects
         [SubscribeLocalEvent]
         private void OnAdd(EntityUid uid, SpriteComponent component, ComponentAdd args)
         {
-            if (!string.IsNullOrWhiteSpace(component.rsi))
-            {
-                var rsiPath = TextureRoot / component.rsi;
-                if (_resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
-                    component._baseRsi = resource.RSI;
-                else
-                    Log.Error($"Unable to load RSI '{rsiPath}'.");
-            }
-
-            if (component.layerDatums.Count != 0)
-            {
-                component.LayerMap.Clear();
-                component.Layers.Clear();
-                foreach (var datum in component.layerDatums)
-                {
-                    var layer = new Layer((uid, component), component.Layers.Count);
-                    component.Layers.Add(layer);
-                    LayerSetData(layer, datum);
-                }
-            }
+            LoadPrototypeData((uid, component));
         }
 
+        private void LoadPrototypeData(Entity<SpriteComponent> sprite)
+        {
+            LoadBaseRsi(sprite.Comp);
+            LoadLayers(sprite);
+        }
+
+        private void LoadBaseRsi(SpriteComponent component)
+        {
+            if (string.IsNullOrWhiteSpace(component.rsi))
+                return;
+
+            var rsiPath = TextureRoot / component.rsi;
+            if (_resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
+                component._baseRsi = resource.RSI;
+            else
+                Log.Error($"Unable to load RSI '{rsiPath}'.");
+        }
+
+        private void LoadLayers(Entity<SpriteComponent> sprite)
+        {
+            if (sprite.Comp.layerDatums.Count == 0)
+                return;
+
+            sprite.Comp.LayerMap.Clear();
+            sprite.Comp.Layers.Clear();
+            foreach (var datum in sprite.Comp.layerDatums)
+            {
+                var layer = new Layer(sprite, sprite.Comp.Layers.Count);
+                sprite.Comp.Layers.Add(layer);
+                LayerSetData(layer, datum);
+            }
+        }
         [SubscribeLocalEvent]
         private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
         {

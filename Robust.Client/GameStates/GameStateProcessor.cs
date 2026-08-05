@@ -210,29 +210,34 @@ Had full state: {LastFullState != null}"
 
             foreach (var entityState in state.EntityStates.Span)
             {
-                if (!_lastStateFullRep.TryGetValue(entityState.NetEntity, out var compData))
-                {
-                    compData = new();
-                    _lastStateFullRep.Add(entityState.NetEntity, compData);
-                }
+                ref var compDataRef = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                    _lastStateFullRep,
+                    entityState.NetEntity,
+                    out var compDataExists);
 
+                if (!compDataExists)
+                    compDataRef = new();
+
+                var compData = compDataRef!;
                 foreach (var change in entityState.ComponentChanges.Span)
                 {
                     var compState = change.State;
+                    ref var old = ref CollectionsMarshal.GetValueRefOrAddDefault(compData, change.NetID, out var oldExists);
 
                     if (compState is not IComponentDeltaState delta)
                     {
-                        compData[change.NetID] = compState;
+                        old = compState;
                         continue;
                     }
 
-                    if (!compData.TryGetValue(change.NetID, out var old))
+                    if (!oldExists)
                     {
                         // Either the server needs to ensure that the initial state it sends to a client is a full
                         // state, or the client needs to be able to construct an implicit full state (i.e., get-state
                         // code needs to be in shared code).
                         //
                         // Without this, the client won't be able to reset predicted changes made to this component.
+                        compData.Remove(change.NetID);
                         DebugTools.Assert("Received delta state without having received or constructed an implicit full state");
                         continue;
                     }
@@ -246,7 +251,7 @@ Had full state: {LastFullState != null}"
                     }
 
                     var newFull = delta.CreateNewFullState(old!);
-                    compData[change.NetID] = newFull;
+                    old = newFull;
                     DebugTools.Assert(newFull is not IComponentDeltaState, "constructed state is not a full state");
                 }
 
@@ -260,7 +265,6 @@ Had full state: {LastFullState != null}"
                 }
             }
         }
-
         private bool TryGetFullState([NotNullWhen(true)] out GameState? curState, out GameState? nextState)
         {
             nextState = null;

@@ -238,6 +238,10 @@ namespace Robust.UnitTesting.Server
                 .Setup(x => x.FindAllTypes())
                 .Returns(() => realReflection.FindAllTypes());
 
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttributeSet<CopyByRefAttribute>())
+                .Returns(realReflection.FindTypesWithAttributeSet<CopyByRefAttribute>);
+
             container.RegisterInstance<IBaseServerInternal>(new Mock<IBaseServerInternal>().Object);
             container.RegisterInstance<IReflectionManager>(reflectionManager.Object); // tests should not be searching for types
             container.RegisterInstance<IRobustSerializer>(new Mock<IRobustSerializer>().Object);

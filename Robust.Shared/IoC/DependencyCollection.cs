@@ -380,7 +380,12 @@ namespace Robust.Shared.IoC
         public T Resolve<T>()
         {
             if (typeof(T) == typeof(IDependencyCollection))
+            {
+                if (TryResolveType(typeof(T), out var collection))
+                    return (T) collection;
+
                 return (T) (IDependencyCollection) this;
+            }
 
             var index = DependencyType<T>.Index;
             if (index < _servicesArray.Length &&
@@ -395,9 +400,8 @@ namespace Robust.Shared.IoC
             lock (_serviceBuildLock)
             {
                 // Re-check after we obtain the lock that this is still relevant
-                // We don't want to accidentally down-size it in a thread race!
-                if (index >= _servicesArray.Length)
-                    Array.Resize(ref _servicesArray, _servicesArray.Length * 2);
+                // We don't want to accidentally down-size it in a thread race.
+                EnsureServicesArrayCapacity(index);
 
                 // This might be a lazy-generated service, such as EntityQuery
                 // In that case, we index it now
@@ -484,6 +488,12 @@ namespace Robust.Shared.IoC
                 var newDeps = _services.ToDictionary();
                 var reverse = new Dictionary<Type, Type>();
 
+                foreach (var serviceType in _services.Keys)
+                {
+                    if (_resolveTypes.TryGetValue(serviceType, out var implementationType))
+                        reverse.TryAdd(implementationType, serviceType);
+                }
+
                 // First we build every type we have registered but isn't yet built.
                 // This allows us to run this after the content assembly has been loaded.
                 while (_pendingResolves.Count > 0)
@@ -523,13 +533,12 @@ namespace Robust.Shared.IoC
                 _services = newDeps.ToFrozenDictionary();
 
                 // Need to account for dependency collections that might not have all services
-                _servicesArray = new object[Math.Max(newDeps.Count, DependencyType.Index)];
+                _servicesArray = new object[Math.Max(newDeps.Count, DependencyType.Index + 1)];
 
                 foreach (var (type, inst) in _services)
                 {
                     var index = DependencyType.GetIndex(type);
-                    if (index >= _servicesArray.Length)
-                        Array.Resize(ref _servicesArray, _servicesArray.Length * 2);
+                    EnsureServicesArrayCapacity(index);
 
                     _servicesArray[index] = inst;
                 }
@@ -545,8 +554,13 @@ namespace Robust.Shared.IoC
                         // We don't want to overwrite our services with null if the parent doesn't have them
                         // We also don't want to overwite our services with the parent's
                         // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-                        if (parentService != null && _servicesArray[i] == null)
-                            _servicesArray[i] = parentService;
+                        if (parentService != null)
+                        {
+                            EnsureServicesArrayCapacity(i);
+
+                            if (_servicesArray[i] == null)
+                                _servicesArray[i] = parentService;
+                        }
                         // ReSharper restore ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
                     }
 
@@ -564,6 +578,15 @@ namespace Robust.Shared.IoC
                     injectedItem.PostInject();
                 }
             }
+        }
+
+        private void EnsureServicesArrayCapacity(int index)
+        {
+            if (index < _servicesArray.Length)
+                return;
+
+            var newLength = Math.Max(index + 1, Math.Max(4, _servicesArray.Length * 2));
+            Array.Resize(ref _servicesArray, newLength);
         }
 
         /// <inheritdoc />
@@ -615,8 +638,8 @@ namespace Robust.Shared.IoC
                 return dep;
             }
 
-            // A hard-coded special case so the DependencyCollection can inject itself.
-            // This is not put into the services so it can be overridden if needed.
+            // IDependencyCollection resolves to this collection by default,
+            // while allowing an explicitly registered service to override it.
             if (fieldType == typeof(IDependencyCollection))
             {
                 return this;
@@ -700,8 +723,8 @@ namespace Robust.Shared.IoC
                 // Not using Resolve<T>() because we're literally building it right now.
                 if (!TryResolveType(field.FieldType, out var service))
                 {
-                    // A hard-coded special case so the DependencyCollection can inject itself.
-                    // This is not put into the services so it can be overridden if needed.
+                    // IDependencyCollection resolves to this collection by default,
+                    // while allowing an explicitly registered service to override it.
                     if (field.FieldType == typeof(IDependencyCollection))
                     {
                         service = this;
@@ -736,9 +759,12 @@ namespace Robust.Shared.IoC
         private CachedInjector CacheInjectorHasDependencies(object obj, Type type)
         {
             DebugTools.Assert(type == obj.GetType());
-            return obj is IHasDependencies
+            var cached = obj is IHasDependencies
                 ? new CachedInjector(null, true, null)
-                : new CachedInjector(null, false, null);
+                : default;
+
+            _injectorCache.Add(type, cached);
+            return cached;
         }
 
         private object[] ResolveServicesArray(Type owningType, Type[] types)

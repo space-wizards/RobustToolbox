@@ -137,8 +137,8 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         DocumentEditor editor,
         IMethodSymbol handlerMethodSymbol,
         string attributeName,
-        IEnumerable<ExpressionSyntax> beforeTypes,
-        IEnumerable<ExpressionSyntax> afterTypes
+        IEnumerable<ExpressionSyntax>? beforeTypes,
+        IEnumerable<ExpressionSyntax>? afterTypes
         )
     {
         // Get the syntax node for the event handler method.
@@ -156,10 +156,17 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         // Generate the SubscribeWhateverEvent attribute.
         var attr = editor.Generator.Attribute(identifier);
 
+        // Generate attribute argument syntax nodes for the before and after arguments.
         var before = GenerateTypesArgument(beforeTypes, "before");
         var after = GenerateTypesArgument(afterTypes, "after");
 
-        attr = editor.Generator.AddAttributeArguments(attr, [before, after]);
+        // Remove either or both if they are null (meaning they weren't in the original invocation).
+        var args = new[]{before, after}.Where(arg => arg is not null);
+
+        // If either or both are non-null, add them as arguments to the attribute.
+        // If both are null, we don't add anything otherwise we get empty parentheses on the attribute.
+        if (args.Any())
+            attr = editor.Generator.AddAttributeArguments(attr, args!);
 
         // Add the attribute to the event handler method.
         editor.AddAttribute(handlerMethodSyntax!, attr);
@@ -189,13 +196,13 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
     /// Thrown if the passed value is not a valid type of expression.
     /// The passed value must be either a collection expression or an array literal.
     /// </exception>
-    private static IEnumerable<ExpressionSyntax> GetTypesList(IInvocationOperation invocationOperation, string parameter)
+    private static IEnumerable<ExpressionSyntax>? GetTypesList(IInvocationOperation invocationOperation, string parameter)
     {
         // Get the operation representing the argument we're looking for.
         var arg = invocationOperation.Arguments.Where(arg => arg.Parameter?.Name == parameter).SingleOrDefault();
         // If the argument is omitted, the operation will be a DefaultValueOperation.
         if (arg.Value is IDefaultValueOperation or null)
-            return [];
+            return null;
         // The way of getting the set of elements varies depending on the syntax that was used.
         var expression = (arg.Syntax as ArgumentSyntax)?.Expression;
         return expression switch
@@ -215,8 +222,10 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
     /// </summary>
     /// <param name="types">The typeof expressions to populate the collection.</param>
     /// <param name="name">The name of the method parameter this argument is being passed to ("before" or "after").</param>
-    private static AttributeArgumentSyntax GenerateTypesArgument(IEnumerable<ExpressionSyntax> types, string name)
+    private static AttributeArgumentSyntax? GenerateTypesArgument(IEnumerable<ExpressionSyntax>? types, string name)
     {
+        if (types is null)
+            return null;
         // Explicitly naming the parameters is much nicer for readability, especially with optional parameters.
         var nameColon = SyntaxFactory.NameColon(name);
         // Throw our list of typeof expressions into a collection expression.

@@ -70,26 +70,32 @@ public sealed partial class SerializationManager
     ];
 
     /// <summary>
-    ///     <see cref="SerializerNodeInterfaces"/>
+    ///     <see cref="SerializerInterfaces"/>
     /// </summary>
     private const int CopyCreatorIndex = 0;
 
     /// <summary>
-    ///     <see cref="SerializerNodeInterfaces"/>
+    ///     <see cref="SerializerInterfaces"/>
     /// </summary>
     private const int CopierIndex = 1;
 
     /// <summary>
-    ///     <see cref="SerializerNodeInterfaces"/>
+    ///     <see cref="SerializerInterfaces"/>
     /// </summary>
     private const int WriterIndex = 2;
 
     /// <summary>
     ///     How many different <see cref="BaseSerializerInterfaces.ITypeInterface{TType}"/> there are.
-    ///     <see cref="SerializerNodeInterfaces"/>
+    ///     <see cref="SerializerInterfaces"/>
     /// </summary>
     private const int NonNodeInterfaces = 3;
 
+    /// <summary>
+    ///     All types that implement <see cref="BaseSerializerInterfaces.ITypeInterface{TType}"/>.
+    ///     <see cref="CopyCreatorIndex"/>
+    ///     <see cref="CopierIndex"/>
+    ///     <see cref="WriterIndex"/>
+    /// </summary>
     private static readonly ImmutableArray<Type> Nodes =
     [
         typeof(MappingDataNode),
@@ -111,6 +117,12 @@ public sealed partial class SerializationManager
     ///     <see cref="Nodes"/>
     /// </summary>
     private const int ValueIndex = 2;
+
+    /// <summary>
+    ///     How many different <see cref="DataNode"/> there are.
+    ///     <see cref="Nodes"/>
+    /// </summary>
+    private const int NodeTypes = 3;
 
     private SerializerProvider _regularSerializerProvider = default!;
 
@@ -693,7 +705,7 @@ public sealed partial class SerializationManager
                 throw new ArgumentException($"Invalid node type: {typeInterface}");
 
             return SerializedType.GetId(type) *
-                   (SerializerNodeInterfaces.Length + Nodes.Length) +
+                   (NodeInterfaces + NodeTypes) +
                    interfaceIndex +
                    nodeIndex;
         }
@@ -705,7 +717,7 @@ public sealed partial class SerializationManager
     {
         // ReSharper disable once StaticMemberInGenericType
         internal static readonly int Index = SerializedType<TType>.Information.Id *
-                                             (SerializerNodeInterfaces.Length + Nodes.Length) +
+                                             (NodeInterfaces + NodeTypes) +
                                              SerializerNodeInterfaces.IndexOf(typeof(TInterface).GetGenericTypeDefinition()) +
                                              Nodes.IndexOf(typeof(TNode));
     }

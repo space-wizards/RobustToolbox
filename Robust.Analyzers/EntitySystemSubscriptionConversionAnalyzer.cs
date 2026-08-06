@@ -105,14 +105,6 @@ public sealed class EntitySystemSubscriptionConversionAnalyzer : DiagnosticAnaly
                 if (invocation.TargetMethod.TypeArguments.OfType<ITypeParameterSymbol>().Any())
                     continue;
 
-                // // We (currently) don't support the before and after parameters with attribute subscriptions
-                // // so we skip any invocations that use them.
-                // // If we do support them in the future (and the code fixer is improved to convert to them), this check should be removed.
-                // if (invocation.Arguments.Any(
-                //     arg => (arg.Parameter?.Name == "before" || arg.Parameter?.Name == "after")
-                //     && arg.Value is not IDefaultValueOperation))
-                //     continue;
-
                 // Ignore anything that isn't a direct method reference, i.e. an anonymous delegate.
                 if (invocation.Arguments.SingleOrDefault(arg => arg.Parameter?.Name == "handler") is not { } handlerArg
                     || handlerArg.Value.Syntax is not IdentifierNameSyntax)

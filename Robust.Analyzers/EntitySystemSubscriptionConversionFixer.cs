@@ -156,8 +156,8 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         // Generate the SubscribeWhateverEvent attribute.
         var attr = editor.Generator.Attribute(identifier);
 
-        var before = BuildArgument(beforeTypes, "before");
-        var after = BuildArgument(afterTypes, "after");
+        var before = GenerateTypesArgument(beforeTypes, "before");
+        var after = GenerateTypesArgument(afterTypes, "after");
 
         attr = editor.Generator.AddAttributeArguments(attr, [before, after]);
 
@@ -179,35 +179,50 @@ public sealed class EntitySystemSubscriptionConversionFixer : CodeFixProvider
         editor.SetModifiers(classSyntax, oldModifiers.WithPartial(true));
     }
 
+    /// <summary>
+    /// Extracts an enumerable containing the <see cref="TypeOfExpressionSyntax"/> nodes passed to the named
+    /// parameter of an invocation.
+    /// </summary>
+    /// <param name="invocationOperation">The method invocation the argument is being passed to.</param>
+    /// <param name="parameter">The name of the parameter ("before" or "after")</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if the passed value is not a valid type of expression.
+    /// The passed value must be either a collection expression or an array literal.
+    /// </exception>
     private static IEnumerable<ExpressionSyntax> GetTypesList(IInvocationOperation invocationOperation, string parameter)
     {
+        // Get the operation representing the argument we're looking for.
         var arg = invocationOperation.Arguments.Where(arg => arg.Parameter?.Name == parameter).SingleOrDefault();
+        // If the argument is omitted, the operation will be a DefaultValueOperation.
         if (arg.Value is IDefaultValueOperation or null)
             return [];
+        // The way of getting the set of elements varies depending on the syntax that was used.
         var expression = (arg.Syntax as ArgumentSyntax)?.Expression;
         return expression switch
         {
+            // SubscribeLocalEvent<MyComp, MyEvent>(MyMethod, before: [typeof(MyOtherSystem)])
             CollectionExpressionSyntax collection => collection.Elements.OfType<ExpressionElementSyntax>().Select(e => e.Expression),
+            // SubscribeLocalEvent<MyComp, MyEvent>(MyMethod, before: new Type[] { typeof(MyOtherSystem) })
             ArrayCreationExpressionSyntax arrayCreation => arrayCreation.Initializer?.Expressions ?? [],
+            // SubscribeLocalEvent<MyComp, MyEvent>(MyMethod, before: new[] { typeof(MyOtherSystem) })
             ImplicitArrayCreationExpressionSyntax implicitArrayCreation => implicitArrayCreation.Initializer.Expressions,
             _ => throw new InvalidOperationException("Invalid types list")
         };
-        //var node = arg.Value.Syntax;
-        //var node = invocationOperation.Arguments.Where(arg => arg.Parameter?.Name == parameter).Select(arg => arg.Value.Syntax).SingleOrDefault();
-        // return node switch
-        // {
-        //     ImplicitArrayCreationExpressionSyntax implicitArrayCreation => implicitArrayCreation.Initializer.Expressions.Cast<TypeOfExpressionSyntax>(),
-        //     CollectionExpressionSyntax collection => collection.Elements.Select(el => (el as ExpressionElementSyntax)?.Expression).Cast<TypeOfExpressionSyntax>(),
-        //     null => [],
-        //     _ => throw new InvalidOperationException("Invalid types list")
-        // };
     }
 
-    private static AttributeArgumentSyntax BuildArgument(IEnumerable<ExpressionSyntax> types, string name)
+    /// <summary>
+    /// Returns a syntax node representing an attribute argument passing a collection expression of typeof expressions.
+    /// </summary>
+    /// <param name="types">The typeof expressions to populate the collection.</param>
+    /// <param name="name">The name of the method parameter this argument is being passed to ("before" or "after").</param>
+    private static AttributeArgumentSyntax GenerateTypesArgument(IEnumerable<ExpressionSyntax> types, string name)
     {
+        // Explicitly naming the parameters is much nicer for readability, especially with optional parameters.
         var nameColon = SyntaxFactory.NameColon(name);
+        // Throw our list of typeof expressions into a collection expression.
         var syntaxList = SyntaxFactory.SeparatedList<CollectionElementSyntax>(types.Select(SyntaxFactory.ExpressionElement));
         var collection = SyntaxFactory.CollectionExpression(syntaxList);
+        // Return the complete argument to be added to the attribute.
         return SyntaxFactory.AttributeArgument(null, nameColon, collection);
     }
 }

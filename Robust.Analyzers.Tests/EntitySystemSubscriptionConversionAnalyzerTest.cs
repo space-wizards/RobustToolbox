@@ -109,34 +109,6 @@ public sealed class EntitySystemSubscriptionConversionAnalyzerTest
         );
     }
 
-    // [Test]
-    // [Description("Tests that subscriptions with before/after parameters are not flagged as elligible for conversion.")]
-    // // TODO: Remove this test if event subscription attributes get support for before/after parameters (and the code fixer is made to convert to them)
-    // public async Task IgnoreBeforeAfter()
-    // {
-    //     const string code = """
-    //         using Robust.Shared.GameObjects;
-
-    //         public sealed partial class InitalizeBasedSystem : EntitySystem
-    //         {
-    //             public override void Initialize()
-    //             {
-    //                 base.Initialize();
-
-    //                 SubscribeLocalEvent<TestComponent, TestEvent>(OnTest, before: [typeof(Component)]);
-    //                 SubscribeLocalEvent<TestComponent, TestEvent2>(OnTest2, after: [typeof(Component)]);
-    //                 SubscribeLocalEvent<TestComponent, TestEvent3>(OnTest3, before: [typeof(Component)], after: [typeof(Component)]);
-    //             }
-
-    //             private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args) { }
-    //             private void OnTest2(EntityUid uid, TestComponent comp, ref TestEvent2 args) { }
-    //             private void OnTest3(EntityUid uid, TestComponent comp, ref TestEvent3 args) { }
-    //         }
-    //         """;
-
-    //     await Verifier(code, []);
-    // }
-
     [Test]
     [Description("Tests that a subscription using an anonymous delegate is not flagged as elligible for conversion.")]
     public async Task IgnoreAnonymousDelegate()

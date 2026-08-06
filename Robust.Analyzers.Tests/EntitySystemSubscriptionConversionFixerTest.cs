@@ -103,6 +103,9 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
         public readonly struct TestEvent2;
         public sealed partial class TestComponent : IComponent;
         public sealed class TestNetworkEvent;
+
+        public sealed class SomeOtherSystemA : EntitySystem;
+        public sealed class SomeOtherSystemB : EntitySystem;
     """;
 
     [Test]
@@ -303,9 +306,6 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
                     // Do something
                 }
             }
-
-            public sealed class SomeOtherSystemA : EntitySystem;
-            public sealed class SomeOtherSystemB : EntitySystem;
             """;
 
         const string fixedCode = """
@@ -325,14 +325,109 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
                     // Do something
                 }
             }
-
-            public sealed class SomeOtherSystemA : EntitySystem;
-            public sealed class SomeOtherSystemB : EntitySystem;
             """;
 
         await Verifier(code, fixedCode,
             // /0/Test0.cs(10,9): info RA0058: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
             VerifyCS.Diagnostic().WithSpan(10, 9, 10, 141).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute")
+        );
+    }
+
+    [Test]
+    [Description("Tests that a SubscribeLocalEvent invocation a before parameter is correctly converted to an attribute.")]
+    public async Task ConvertLocalEvent_WithBefore()
+    {
+        const string code = """
+            using Robust.Shared.Analyzers;
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+
+                    SubscribeLocalEvent<TestComponent, TestEvent>(OnTest, before: new[] { typeof(SomeOtherSystemA) });
+                }
+
+                private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args)
+                {
+                    // Do something
+                }
+            }
+            """;
+
+        const string fixedCode = """
+            using Robust.Shared.Analyzers;
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+                }
+
+                [SubscribeLocalEvent(before: [typeof(SomeOtherSystemA)])]
+                private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args)
+                {
+                    // Do something
+                }
+            }
+            """;
+
+        await Verifier(code, fixedCode,
+            // /0/Test0.cs(10,9): info RA0058: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 106).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute")
+        );
+    }
+
+    [Test]
+    [Description("Tests that a SubscribeLocalEvent invocation an after parameter is correctly converted to an attribute.")]
+    public async Task ConvertLocalEvent_WithAfter()
+    {
+        const string code = """
+            using Robust.Shared.Analyzers;
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+
+                    SubscribeLocalEvent<TestComponent, TestEvent>(OnTest, after: [typeof(SomeOtherSystemA), typeof(SomeOtherSystemB)]);
+                }
+
+                private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args)
+                {
+                    // Do something
+                }
+            }
+            """;
+
+        const string fixedCode = """
+            using Robust.Shared.Analyzers;
+            using Robust.Shared.GameObjects;
+
+            public sealed partial class InitalizeBasedSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+                }
+
+                [SubscribeLocalEvent(after: [typeof(SomeOtherSystemA), typeof(SomeOtherSystemB)])]
+                private void OnTest(EntityUid uid, TestComponent comp, ref TestEvent args)
+                {
+                    // Do something
+                }
+            }
+            """;
+
+        await Verifier(code, fixedCode,
+            // /0/Test0.cs(10,9): info RA0058: Event subscription using SubscribeLocalEvent can be converted to use SubscribeLocalEventAttribute
+            VerifyCS.Diagnostic().WithSpan(10, 9, 10, 123).WithArguments("SubscribeLocalEvent", "SubscribeLocalEventAttribute")
         );
     }
 

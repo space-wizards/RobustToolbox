@@ -6,18 +6,19 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 using System;
+using System.Numerics;
 
 namespace Robust.Shared.GameObjects;
 
 [RegisterComponent]
 [NetworkedComponent()]
-[Access(typeof(OccluderSystem))]
+[Access(typeof(OccluderSystem), Other = AccessPermissions.ReadExecute)]
 public sealed partial class OccluderComponent : Component, IComponentTreeEntry<OccluderComponent>
 {
-    [DataField("enabled")]
+    [DataField]
     public bool Enabled = true;
 
-    [DataField("boundingBox")]
+    [DataField]
     public Box2 BoundingBox = new(-0.5f, -0.5f, 0.5f, 0.5f);
 
     public EntityUid? TreeUid { get; set; }

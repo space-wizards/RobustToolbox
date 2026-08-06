@@ -33,7 +33,7 @@ namespace Robust.Shared.Prototypes
             if (!_kinds.TryGetValue(typeof(EntityPrototype), out var entityKind))
             {
                 _entityComponentCache = FrozenDictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>.Empty;
-                Sawmill.Info($"Rebuilding empty entity prototype component cache took {stopwatch.Elapsed.TotalMilliseconds:f2}ms");
+                Sawmill?.Info($"Rebuilding empty entity prototype component cache took {stopwatch.Elapsed.TotalMilliseconds:f2}ms");
                 return;
             }
 
@@ -73,8 +73,8 @@ namespace Robust.Shared.Prototypes
             }
 
             _entityComponentCache = cache.ToFrozenDictionary(ComponentMappingNodeComparer);
-            Sawmill.Info($"Rebuilding entity prototype component cache took {stopwatch.Elapsed.TotalMilliseconds:f2}ms " +
-                          $"({cache.Count} unique component mappings)");
+            Sawmill?.Info($"Rebuilding entity prototype component cache took {stopwatch.Elapsed.TotalMilliseconds:f2}ms " +
+                           $"({cache.Count} unique component mappings)");
         }
 
         private sealed class ComponentMappingComparer : IEqualityComparer<MappingDataNode>

@@ -46,6 +46,13 @@ internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
   id: second
   number: not an integer";
 
+        const string partiallyBadPrototype = @"- type: prototypeUploadTest
+  id: first
+  number: 10
+- type: prototypeUploadTest
+  id: second
+  number: not an integer";
+
         const string invalidPathPrototype = @"- type: prototypeUploadTest
   id: second
   path: Textures/not-a-real-upload-test-file.png";
@@ -70,6 +77,11 @@ internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
         Assert.That(_prototypeLoad.TryLoad(badSecondPrototype), Is.False);
         Assert.That(_prototypeLoad.LoadedPrototypes, Has.Count.EqualTo(1));
         Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(FirstId), Is.True);
+        Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(SecondId), Is.False);
+
+        Assert.That(_prototypeLoad.TryLoad(partiallyBadPrototype), Is.False);
+        Assert.That(_prototypeLoad.LoadedPrototypes, Has.Count.EqualTo(1));
+        Assert.That(_prototype.Index<PrototypeUploadTestPrototype>(FirstId).Number, Is.EqualTo(5));
         Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(SecondId), Is.False);
 
         Assert.That(_prototypeLoad.TryLoad(invalidPathPrototype), Is.False);

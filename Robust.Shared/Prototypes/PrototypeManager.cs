@@ -370,7 +370,7 @@ namespace Robust.Shared.Prototypes
             var modifiedKinds = new HashSet<KindData>();
             var toProcess = new HashSet<string>();
             var processQueue = new Queue<string>();
-            var validationContext = throwOnFailure ? new YamlValidationContext() : null;
+            var validationContext = throwOnFailure ? new YamlValidationContext(_serializationManager) : null;
 
             foreach (var kind in prototypeTypeOrder)
             {

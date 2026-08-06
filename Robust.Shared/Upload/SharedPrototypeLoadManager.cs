@@ -47,7 +47,7 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
         }
         catch (Exception e)
         {
-            _sawmill.Error($"Failed to load adminbus prototype data. Dropping upload.\n{e}");
+            _sawmill.Error($"Failed to load prototype data. Dropping upload.\n{e}");
             // LoadString can leave partial prototype data behind before failing.
             TryReloadLoadedPrototypeData();
             return false;
@@ -78,7 +78,7 @@ public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadMan
         }
         catch (Exception e)
         {
-            _sawmill.Error($"Failed to reload accepted adminbus prototype data.\n{e}");
+            _sawmill.Error($"Failed to reload accepted prototype data.\n{e}");
         }
     }
 

@@ -10,6 +10,7 @@ using Nett;
 using Robust.Shared.Collections;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -330,6 +331,12 @@ namespace Robust.Shared.Configuration
                             table.Add(keyName, val);
                             break;
                         case double val:
+                            table.Add(keyName, val);
+                            break;
+                        case EntProtoId val:
+                            table.Add(keyName, val);
+                            break;
+                        case IComparable<EntProtoId> val: // EntProtoId<T>
                             table.Add(keyName, val);
                             break;
                         default:
@@ -959,7 +966,15 @@ namespace Robust.Shared.Configuration
                 set
                 {
                     if (value != null && Registered)
-                        DebugTools.AssertEqual(value.GetType(), Type);
+                    {
+#if DEBUG
+                        if (Type != null && Type.IsGenericType && Type.GetGenericTypeDefinition() == typeof(EntProtoId<>))
+                            DebugTools.AssertEqual(value.GetType(), typeof(EntProtoId));
+                        else
+                            DebugTools.AssertEqual(value.GetType(), Type);
+#endif
+                    }
+
                     _value = value;
                 }
             }

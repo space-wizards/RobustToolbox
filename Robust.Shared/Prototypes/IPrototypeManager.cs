@@ -434,18 +434,27 @@ public interface IPrototypeManager
     /// This will validate all known to <see cref="IReflectionManager"/>
     /// </summary>
     /// <remarks>
-    /// This will validate any field that uses <see cref="ProtoId"/> or <see cref="EntProtoId"/>.
+    /// This will validate any field that uses <see cref="ProtoId"/> or <see cref="EntProtoId"/>,
+    /// including the values and default values of CVars typed <see cref="EntProtoId"/> or <see cref="EntProtoId{T}"/>.
     /// It also looks for these obsolete attributes: either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
     /// <see cref="DataFieldAttribute"/> with a <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.
     /// </remarks>
     /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection
     /// will be considered invalid.</param>
+    /// <seealso cref="ValidateCVars"/>
     List<string> ValidateStaticFields(Dictionary<Type, HashSet<string>> prototypes);
 
     /// <summary>
     /// This is a variant of <see cref="ValidateStaticFields(System.Collections.Generic.Dictionary{System.Type,System.Collections.Generic.HashSet{string}})"/> that only validates a single type.
     /// </summary>
     List<string> ValidateStaticFields(Type type, Dictionary<Type, HashSet<string>> prototypes);
+
+    /// <summary>
+    /// Validates the current values and default values of all registered CVars
+    /// typed <see cref="EntProtoId"/> or <see cref="EntProtoId{T}"/>
+    /// </summary>
+    /// <returns>A list containing errors for each file that failed validation.</returns>
+    List<string> ValidateCVars();
 
     /// <summary>
     /// This method will serialize all loaded prototypes into yaml and then validate them. This can be used to ensure

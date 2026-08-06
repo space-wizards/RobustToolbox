@@ -230,7 +230,7 @@ public abstract partial class ToolshedCommand
             var attributeDescription = impl.GetCustomAttribute<CommandDescriptionAttribute>()?.Description;
             var attributeHelp = impl.GetCustomAttribute<CommandHelpAttribute>()?.Help;
             if (!CommandImplementors.ContainsKey(key))
-                CommandImplementors[key] = new ToolshedCommandImplementor(subCmd, attributeDescription, attributeHelp this, Toolshed, Loc);
+                CommandImplementors[key] = new ToolshedCommandImplementor(subCmd, attributeDescription, attributeHelp, this, Toolshed, Loc);
         }
     }
 

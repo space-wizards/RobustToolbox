@@ -508,8 +508,8 @@ namespace Robust.Client.UserInterface.Controls
 
                     if (item.Text != null)
                     {
-                        var textBox = new UIBox2(contentBox.Left + item.IconSize.X * item.IconScale, contentBox.Top, contentBox.Right,
-                            contentBox.Bottom);
+                        var textStart = Math.Min(contentBox.Left + item.IconSize.X * item.IconScale, contentBox.Right);
+                        var textBox = new UIBox2(textStart, contentBox.Top, contentBox.Right, contentBox.Bottom);
                         DrawTextInternal(handle, item.Text, textBox);
                     }
                 }

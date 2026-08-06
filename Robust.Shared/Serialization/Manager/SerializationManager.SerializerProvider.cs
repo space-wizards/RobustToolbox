@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -22,55 +23,79 @@ namespace Robust.Shared.Serialization.Manager;
 public sealed partial class SerializationManager
 {
     /// <summary>
-    ///     <see cref="CopyCreatorIndex"/>
-    ///     <see cref="CopierIndex"/>
+    ///     All interfaces that implement <see cref="BaseSerializerInterfaces.ITypeNodeInterface{TType,TNode}"/>.
+    ///     <see cref="ReaderIndex"/>
+    ///     <see cref="InheritanceHandlerIndex"/>
+    ///     <see cref="ValidatorIndex"/>
     /// </summary>
-    private static readonly ImmutableArray<Type> SerializerInterfaces = new[]
-    {
+    private static readonly ImmutableArray<Type> SerializerNodeInterfaces =
+    [
         typeof(ITypeReader<,>),
         typeof(ITypeInheritanceHandler<,>),
         typeof(ITypeValidator<,>),
-        typeof(ITypeCopyCreator<>),
-        typeof(ITypeCopier<>),
-        typeof(ITypeWriter<>)
-    }.ToImmutableArray();
-
-    private static readonly ImmutableArray<Type> Nodes = new[]
-    {
-        typeof(MappingDataNode),
-        typeof(SequenceDataNode),
-        typeof(ValueDataNode),
-    }.ToImmutableArray();
+    ];
 
     /// <summary>
-    ///     <see cref="SerializerInterfaces"/>
+    ///     <see cref="SerializerNodeInterfaces"/>
     /// </summary>
     private const int ReaderIndex = 0;
 
     /// <summary>
-    ///     <see cref="SerializerInterfaces"/>
+    ///     <see cref="SerializerNodeInterfaces"/>
     /// </summary>
     private const int InheritanceHandlerIndex = 1;
 
     /// <summary>
-    ///     <see cref="SerializerInterfaces"/>
+    ///     <see cref="SerializerNodeInterfaces"/>
     /// </summary>
     private const int ValidatorIndex = 2;
 
     /// <summary>
-    ///     <see cref="SerializerInterfaces"/>
+    ///     How many different <see cref="BaseSerializerInterfaces.ITypeNodeInterface{TType,TNode}"/> there are.
+    ///     <see cref="SerializerNodeInterfaces"/>
     /// </summary>
-    private const int CopyCreatorIndex = 3;
+    private const int NodeInterfaces = 3;
 
     /// <summary>
-    ///     <see cref="SerializerInterfaces"/>
+    ///     All interfaces that implement <see cref="BaseSerializerInterfaces.ITypeInterface{TType}"/>.
+    ///     <see cref="CopyCreatorIndex"/>
+    ///     <see cref="CopierIndex"/>
+    ///     <see cref="WriterIndex"/>
     /// </summary>
-    private const int CopierIndex = 4;
+    private static readonly ImmutableArray<Type> SerializerInterfaces =
+    [
+        typeof(ITypeCopyCreator<>),
+        typeof(ITypeCopier<>),
+        typeof(ITypeWriter<>)
+    ];
 
     /// <summary>
-    ///     <see cref="SerializerInterfaces"/>
+    ///     <see cref="SerializerNodeInterfaces"/>
     /// </summary>
-    private const int WriterIndex = 5;
+    private const int CopyCreatorIndex = 0;
+
+    /// <summary>
+    ///     <see cref="SerializerNodeInterfaces"/>
+    /// </summary>
+    private const int CopierIndex = 1;
+
+    /// <summary>
+    ///     <see cref="SerializerNodeInterfaces"/>
+    /// </summary>
+    private const int WriterIndex = 2;
+
+    /// <summary>
+    ///     How many different <see cref="BaseSerializerInterfaces.ITypeInterface{TType}"/> there are.
+    ///     <see cref="SerializerNodeInterfaces"/>
+    /// </summary>
+    private const int NonNodeInterfaces = 3;
+
+    private static readonly ImmutableArray<Type> Nodes =
+    [
+        typeof(MappingDataNode),
+        typeof(SequenceDataNode),
+        typeof(ValueDataNode)
+    ];
 
     /// <summary>
     ///     <see cref="Nodes"/>
@@ -93,15 +118,39 @@ public sealed partial class SerializationManager
 
     private void InitializeTypeSerializers(IEnumerable<Type> typeSerializers)
     {
-        DebugTools.AssertEqual(ReaderIndex, SerializerInterfaces.IndexOf(typeof(ITypeReader<,>)));
-        DebugTools.AssertEqual(InheritanceHandlerIndex, SerializerInterfaces.IndexOf(typeof(ITypeInheritanceHandler<,>)));
-        DebugTools.AssertEqual(ValidatorIndex, SerializerInterfaces.IndexOf(typeof(ITypeValidator<,>)));
-        DebugTools.AssertEqual(CopyCreatorIndex, SerializerInterfaces.IndexOf(typeof(ITypeCopyCreator<>)));
-        DebugTools.AssertEqual(CopierIndex, SerializerInterfaces.IndexOf(typeof(ITypeCopier<>)));
+        DebugTools.AssertEqual(SerializerNodeInterfaces.IndexOf(typeof(ITypeReader<,>)), ReaderIndex);
+        DebugTools.AssertEqual(SerializerNodeInterfaces.IndexOf(typeof(ITypeInheritanceHandler<,>)), InheritanceHandlerIndex);
+        DebugTools.AssertEqual(SerializerNodeInterfaces.IndexOf(typeof(ITypeValidator<,>)), ValidatorIndex);
 
-        DebugTools.AssertEqual(MappingIndex, Nodes.IndexOf(typeof(MappingDataNode)));
-        DebugTools.AssertEqual(SequenceIndex, Nodes.IndexOf(typeof(SequenceDataNode)));
-        DebugTools.AssertEqual(ValueIndex, Nodes.IndexOf(typeof(ValueDataNode)));
+        DebugTools.AssertEqual(
+            SerializerNodeInterfaces
+                .Count(t =>
+                    t.GetInterfaces()
+                        .Any(i =>
+                            i.IsGenericType &&
+                            i.GetGenericTypeDefinition() ==
+                            typeof(BaseSerializerInterfaces.ITypeNodeInterface<,>))),
+            NodeInterfaces
+        );
+
+        DebugTools.AssertEqual(SerializerInterfaces.IndexOf(typeof(ITypeCopyCreator<>)), CopyCreatorIndex);
+        DebugTools.AssertEqual(SerializerInterfaces.IndexOf(typeof(ITypeCopier<>)), CopierIndex);
+        DebugTools.AssertEqual(SerializerInterfaces.IndexOf(typeof(ITypeWriter<>)), WriterIndex);
+
+        DebugTools.AssertEqual(
+            SerializerInterfaces
+                .Count(t =>
+                    t.GetInterfaces()
+                        .Any(i =>
+                            i.IsGenericType &&
+                            i.GetGenericTypeDefinition() ==
+                            typeof(BaseSerializerInterfaces.ITypeInterface<>))),
+            NonNodeInterfaces
+        );
+
+        DebugTools.AssertEqual(Nodes.IndexOf(typeof(MappingDataNode)), MappingIndex);
+        DebugTools.AssertEqual(Nodes.IndexOf(typeof(SequenceDataNode)), SequenceIndex);
+        DebugTools.AssertEqual(Nodes.IndexOf(typeof(ValueDataNode)), ValueIndex);
 
         _regularSerializerProvider = new(this, typeSerializers);
     }
@@ -176,23 +225,32 @@ public sealed partial class SerializationManager
         {
             // cast it here so every user of this can just directly pass it from a [Dependency] without casting it themselves
             _ser = (SerializationManager) ser;
-            foreach (var serializerInterface in SerializerInterfaces)
+            foreach (var serializerInterface in SerializerNodeInterfaces)
             {
                 RegisterSerializerInterface(serializerInterface);
             }
         }
 
+        /// <summary>
+        ///     Type serializers indexed by their
+        ///     <see cref="BaseSerializerInterfaces.ITypeNodeInterface{TType,TNode}"/> interface,
+        ///     and type that they serialize.
+        ///     See <see cref="SerializationManager.SerializerNodeInterfaces"/> for the first index.
+        ///     See <see cref="_typeNodeSerializersArray"/> for type interfaces that do not have a node.
+        /// </summary>
         private (object? Regular, object? Generic, bool Init)[] _typeNodeSerializersArray = [];
+
+        /// <summary>
+        ///     Type serializers indexed by their
+        ///     <see cref="BaseSerializerInterfaces.ITypeInterface{TType}"/> interface,
+        ///     type that they serialize, and <see cref="DataNode"/> type that they serialize.
+        ///     See <see cref="SerializationManager.SerializerNodeInterfaces"/> for the first index.
+        ///     See <see cref="_typeNodeSerializersArray"/> for type interfaces that have a node.
+        /// </summary>
+        private (object? Regular, object? Generic)[] _typeSerializersArray = [];
+
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<(Type ObjectType, Type NodeType), object>> _typeNodeSerializers = new();
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, object>> _typeSerializers = new();
-
-        // TODO make this a 1d array containing the 6 interfaces
-        /// <summary>
-        ///     Type serializers indexed by their type serializer and type
-        ///     that they serialize.
-        ///     <see cref="SerializationManager.SerializerInterfaces"/> for the first index.
-        /// </summary>
-        private (object? Regular, object? Generic)[]?[] _typeSerializersArray = [];
 
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<(Type ObjectType, Type NodeType), Type>> _genericTypeNodeSerializers = new();
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, Type>> _genericTypeSerializers = new();
@@ -201,6 +259,8 @@ public sealed partial class SerializationManager
         private readonly List<Type> _typeInterfaces = new();
 
         private readonly Lock _lock = new();
+        private readonly Lock _serializerLock = new();
+        private readonly Lock _nodeSerializerLock = new();
 
         #region GetSerializerMethods
 
@@ -340,12 +400,10 @@ public sealed partial class SerializationManager
 
                     var serializerType = val.MakeGenericType(objectType.GetGenericArguments());
                     serializer = RegisterSerializer(serializerType)!;
-                    RegisterIndexedSerializer(
+                    RegisterIndexedSerializer(interfaceType,
                         objectType,
-                        SerializerInterfaces.IndexOf(interfaceType),
                         serializer,
-                        false
-                    );
+                        false);
 
                     return true;
                 }
@@ -360,12 +418,11 @@ public sealed partial class SerializationManager
             copier = null;
             copyCreator = null;
 
-            var information = SerializedType<TType>.Information;
-            if (information.Id < _typeSerializersArray.Length &&
-                _typeSerializersArray[information.Id] is { } serializerArray)
+            var index = SerializedType<TType>.Information.Id;
+            if (index < _typeSerializersArray.Length)
             {
-                var copiers = serializerArray[CopierIndex];
-                var copyCreators = serializerArray[CopyCreatorIndex];
+                var copiers = _typeSerializersArray[index + CopierIndex];
+                var copyCreators = _typeSerializersArray[index + CopyCreatorIndex];
                 copier = Unsafe.As<ITypeCopier<TType>?>(copiers.Regular);
                 copyCreator = Unsafe.As<ITypeCopyCreator<TType>?>(copyCreators.Regular);
 
@@ -417,22 +474,20 @@ public sealed partial class SerializationManager
             {
                 if (!@interface.IsGenericType) continue;
 
-                foreach (var typeInterface in _typeInterfaces)
+                foreach (var interfaceType in _typeInterfaces)
                 {
-                    if (!@interface.GetGenericTypeDefinition().HasSameMetadataDefinitionAs(typeInterface))
+                    if (!@interface.GetGenericTypeDefinition().HasSameMetadataDefinitionAs(interfaceType))
                         continue;
 
                     var arguments = @interface.GetGenericArguments();
                     if (arguments.Length != 1)
                         throw new InvalidGenericParameterCountException();
 
-                    _typeSerializers.GetOrNew(typeInterface).TryAdd(arguments[0], obj);
-                    RegisterIndexedSerializer(
+                    _typeSerializers.GetOrNew(interfaceType).TryAdd(arguments[0], obj);
+                    RegisterIndexedSerializer(interfaceType,
                         arguments[0],
-                        SerializerInterfaces.IndexOf(typeInterface),
                         obj,
-                        true
-                    );
+                        true);
                 }
 
                 foreach (var typeInterface in _typeNodeInterfaces)
@@ -550,32 +605,29 @@ public sealed partial class SerializationManager
             }
         }
 
-        private void RegisterIndexedSerializer(Type elementType, int interfaceIndex, object serializer, bool regular)
+        private void RegisterIndexedSerializer(Type interfaceType, Type elementType, object serializer, bool regular)
         {
-            var id = SerializedType.GetId(elementType);
-            if (id >= _typeSerializersArray.Length)
-                Array.Resize(ref _typeSerializersArray, (id + 1) * 2);
-
-            var array = _typeSerializersArray[id];
-            if (array == null)
+            lock (_serializerLock)
             {
-                array = new (object? Regular, object? Generic)[SerializerInterfaces.Length];
-                _typeSerializersArray[id] = array;
-            }
+                var id = SerializedType.GetId(elementType) + SerializerInterfaces.IndexOf(interfaceType);
+                if (id >= _typeSerializersArray.Length)
+                    Array.Resize(ref _typeSerializersArray, Math.Max(id + NonNodeInterfaces, _typeSerializersArray.Length) * 2);
 
-            if (regular)
-                array[interfaceIndex].Regular = serializer;
-            else
-                array[interfaceIndex].Generic = serializer;
+                ref var serializers = ref _typeSerializersArray[id];
+                if (regular)
+                    serializers.Regular = serializer;
+                else
+                    serializers.Generic = serializer;
+            }
         }
 
         private void RegisterIndexedNodeSerializer(Type interfaceIndex, Type elementType, Type nodeType, object serializer, bool regular)
         {
-            lock (_lock)
+            lock (_nodeSerializerLock)
             {
                 var id = TypeSerializerType.GetId(interfaceIndex, elementType, nodeType);
                 if (id >= _typeNodeSerializersArray.Length)
-                    Array.Resize(ref _typeNodeSerializersArray, (id + 1) * 2);
+                    Array.Resize(ref _typeNodeSerializersArray, Math.Max(id + NodeInterfaces, _typeNodeSerializersArray.Length) * 2);
 
                 ref var tuple = ref _typeNodeSerializersArray[id];
                 if (regular)
@@ -607,7 +659,7 @@ public sealed partial class SerializationManager
         }
     }
 
-    internal static class SerializedType<T>
+    private static class SerializedType<T>
     {
         // ReSharper disable once StaticMemberInGenericType
         internal static readonly TypeInformation Information;
@@ -621,25 +673,18 @@ public sealed partial class SerializationManager
         }
     }
 
-    internal readonly struct TypeInformation
+    private readonly struct TypeInformation(int id, bool returnSource, bool serializationGenerated)
     {
-        internal readonly int Id;
-        internal readonly bool ReturnSource;
-        internal readonly bool SerializationGenerated;
-
-        public TypeInformation(int id, bool returnSource, bool serializationGenerated)
-        {
-            Id = id;
-            ReturnSource = returnSource;
-            SerializationGenerated = serializationGenerated;
-        }
+        internal readonly int Id = id;
+        internal readonly bool ReturnSource = returnSource;
+        internal readonly bool SerializationGenerated = serializationGenerated;
     }
 
-    internal static class TypeSerializerType
+    private static class TypeSerializerType
     {
         internal static int GetId(Type typeInterface, Type type, Type typeNode)
         {
-            var interfaceIndex = SerializerInterfaces.IndexOf(typeInterface.GetGenericTypeDefinition());
+            var interfaceIndex = SerializerNodeInterfaces.IndexOf(typeInterface.GetGenericTypeDefinition());
             if (interfaceIndex == -1)
                 throw new ArgumentException($"Invalid type interface: {typeInterface}");
 
@@ -648,18 +693,20 @@ public sealed partial class SerializationManager
                 throw new ArgumentException($"Invalid node type: {typeInterface}");
 
             return SerializedType.GetId(type) *
-                   (SerializerInterfaces.Length + Nodes.Length) +
+                   (SerializerNodeInterfaces.Length + Nodes.Length) +
                    interfaceIndex +
                    nodeIndex;
         }
     }
 
-    internal static class TypeSerializerType<TInterface, TType, TNode>
+    private static class TypeSerializerType<TInterface, TType, TNode> where TInterface :
+        BaseSerializerInterfaces.ITypeNodeInterface<TType, TNode>
+        where TNode : DataNode
     {
         // ReSharper disable once StaticMemberInGenericType
         internal static readonly int Index = SerializedType<TType>.Information.Id *
-                                             (SerializerInterfaces.Length + Nodes.Length) +
-                                             SerializerInterfaces.IndexOf(typeof(TInterface).GetGenericTypeDefinition()) +
+                                             (SerializerNodeInterfaces.Length + Nodes.Length) +
+                                             SerializerNodeInterfaces.IndexOf(typeof(TInterface).GetGenericTypeDefinition()) +
                                              Nodes.IndexOf(typeof(TNode));
     }
 }

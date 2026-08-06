@@ -501,7 +501,7 @@ namespace Robust.Client.UserInterface.Controls
                         }
                         else
                         {
-                            handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size * item.IconScale),
+                            handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.IconRegion.Size * item.IconScale),
                                 item.IconRegion, item.IconModulate);
                         }
                     }

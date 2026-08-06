@@ -271,85 +271,9 @@ public partial class PrototypeManager
         }
 
         if (existing != null)
-        {
             CombineMapNode(existing, data);
-
-            static void CombineMapNode(MappingDataNode existing, MappingDataNode data)
-            {
-                foreach (var (key, dataNode) in data)
-                {
-                    if (IsRemoveTag(dataNode))
-                    {
-                        existing.Remove(key);
-                        continue;
-                    }
-
-                    if (existing.TryGetValue(key, out var existingNode) &&
-                        Combine(existingNode, dataNode))
-                    {
-                        continue;
-                    }
-
-                    existing[key] = dataNode;
-                }
-            }
-
-            static void CombineSeqNode(SequenceDataNode existing, SequenceDataNode data)
-            {
-                for (var i = 0; i < data.Count; i++)
-                {
-                    var dataNode = data[i];
-                    if (existing.TryGetValue(i, out var existingNode) &&
-                        Combine(existingNode, dataNode))
-                    {
-                        continue;
-                    }
-
-                    switch (dataNode)
-                    {
-                        case ValueDataNode dataValue:
-                            if (IsRemoveTag(dataValue))
-                            {
-                                existing.Remove(dataValue);
-                                continue;
-                            }
-
-                            existing.Add(dataNode);
-                            break;
-                    }
-                }
-            }
-
-            static bool Combine(DataNode existing, DataNode data)
-            {
-                switch (existing, data)
-                {
-                    case (MappingDataNode existingMapping, MappingDataNode dataMapping):
-                        CombineMapNode(existingMapping, dataMapping);
-                        return true;
-                    case (SequenceDataNode existingSequence, SequenceDataNode dataSequence):
-                        CombineSeqNode(existingSequence, dataSequence);
-                        return true;
-                    default:
-                        return false;
-                }
-            }
-
-            static bool IsTag(DataNode node, string tag)
-            {
-                return node.Tag != null &&
-                       node.Tag.Equals(tag, StringComparison.OrdinalIgnoreCase);
-            }
-
-            static bool IsRemoveTag(DataNode node)
-            {
-                return IsTag(node, "!Remove");
-            }
-        }
         else if (partialOnly)
-        {
             return;
-        }
 
         kindData.RawResults[id] = data;
 
@@ -532,6 +456,78 @@ public partial class PrototypeManager
         }
 
         mapping.Add("abstract", "true");
+    }
+
+    private static void CombineMapNode(MappingDataNode existing, MappingDataNode data)
+    {
+        foreach (var (key, dataNode) in data)
+        {
+            if (IsRemoveTag(dataNode))
+            {
+                existing.Remove(key);
+                continue;
+            }
+
+            if (existing.TryGetValue(key, out var existingNode) &&
+                Combine(existingNode, dataNode))
+            {
+                continue;
+            }
+
+            existing[key] = dataNode;
+        }
+    }
+
+    private static void CombineSeqNode(SequenceDataNode existing, SequenceDataNode data)
+    {
+        for (var i = 0; i < data.Count; i++)
+        {
+            var dataNode = data[i];
+            if (existing.TryGetValue(i, out var existingNode) &&
+                Combine(existingNode, dataNode))
+            {
+                continue;
+            }
+
+            switch (dataNode)
+            {
+                case ValueDataNode dataValue:
+                    if (IsRemoveTag(dataValue))
+                    {
+                        existing.Remove(dataValue);
+                        continue;
+                    }
+
+                    existing.Add(dataNode);
+                    break;
+            }
+        }
+    }
+
+    private static bool Combine(DataNode existing, DataNode data)
+    {
+        switch (existing, data)
+        {
+            case (MappingDataNode existingMapping, MappingDataNode dataMapping):
+                CombineMapNode(existingMapping, dataMapping);
+                return true;
+            case (SequenceDataNode existingSequence, SequenceDataNode dataSequence):
+                CombineSeqNode(existingSequence, dataSequence);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool IsTag(DataNode node, string tag)
+    {
+        return node.Tag != null &&
+               node.Tag.Equals(tag, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsRemoveTag(DataNode node)
+    {
+        return IsTag(node, "!Remove");
     }
 
     private static bool NodeHasTag(DataNode node, string tag)

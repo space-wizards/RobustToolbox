@@ -181,15 +181,10 @@ namespace Robust.Shared.GameObjects
                     // which instance to return if we retrieved it by the supertype
                     if (excludedTypes.Contains(baseType)) continue;
 
-                    if (subTypes.ContainsKey(baseType))
-                    {
-                        subTypes.Remove(baseType);
+                    if (subTypes.Remove(baseType))
                         excludedTypes.Add(baseType);
-                    }
                     else
-                    {
                         subTypes.Add(baseType, type);
-                    }
                 }
             }
 

@@ -29,8 +29,6 @@ public sealed partial class DebugBuiltinConnectionScreen : UIScreen
     // ReSharper disable once InconsistentNaming
     private static readonly Regex IPv6Regex = new(@"\[(.*:.*:.*)](?::(\d+))?");
 
-    private bool _isConnecting = false;
-
     public DebugBuiltinConnectionScreen()
     {
         RobustXamlLoader.Load(this);
@@ -46,10 +44,17 @@ public sealed partial class DebugBuiltinConnectionScreen : UIScreen
         _client.RunLevelChanged += RunLevelChanged;
 
         ConnectButton.OnPressed += ConnectButtonOnOnPressed;
+        UpdateConnectButtonState();
     }
 
     private void ConnectButtonOnOnPressed(BaseButton.ButtonEventArgs obj)
     {
+        if (_client.RunLevel >= ClientRunLevel.Connecting)
+        {
+            UpdateConnectButtonState();
+            return;
+        }
+
         var inputName = UsernameEdit.Text.Trim();
         var configName = _cfg.GetCVar(CVars.PlayerName);
 
@@ -69,7 +74,7 @@ public sealed partial class DebugBuiltinConnectionScreen : UIScreen
             _cfg.SaveToFile();
         }
 
-        SetConnectingState(true);
+        UpdateConnectButtonState(true);
         _net.ConnectFailed += OnConnectFailed;
 
         try
@@ -82,7 +87,7 @@ public sealed partial class DebugBuiltinConnectionScreen : UIScreen
             _userInterface.Popup(Loc.GetString("debug-builtin-connection-screen-failed-to-connect", ("reason", e.Message)));
             Logger.Warning(e.ToString());
             _net.ConnectFailed -= OnConnectFailed;
-            SetConnectingState(false);
+            UpdateConnectButtonState();
         }
     }
 
@@ -129,11 +134,15 @@ public sealed partial class DebugBuiltinConnectionScreen : UIScreen
         switch (args.NewLevel)
         {
             case ClientRunLevel.Connecting:
-                SetConnectingState(true);
+                UpdateConnectButtonState(true);
                 break;
             case ClientRunLevel.Connected:
-                SetConnectingState(false);
+            case ClientRunLevel.InGame:
                 _net.ConnectFailed -= OnConnectFailed;
+                UpdateConnectButtonState();
+                break;
+            default:
+                UpdateConnectButtonState();
                 break;
         }
     }
@@ -142,12 +151,11 @@ public sealed partial class DebugBuiltinConnectionScreen : UIScreen
     {
         _userInterface.Popup(Loc.GetString("debug-builtin-connection-screen-failed-to-connect",("reason", args.Reason)));
         _net.ConnectFailed -= OnConnectFailed;
-        SetConnectingState(false);
+        UpdateConnectButtonState();
     }
 
-    private void SetConnectingState(bool state)
+    private void UpdateConnectButtonState(bool connecting = false)
     {
-        _isConnecting = state;
-        ConnectButton.Disabled = state;
+        ConnectButton.Disabled = connecting || _client.RunLevel >= ClientRunLevel.Connecting;
     }
 }

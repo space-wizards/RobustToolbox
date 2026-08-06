@@ -296,6 +296,7 @@ namespace Robust.Shared.Prototypes
             _kindNames.Clear();
             _kinds = FrozenDictionary<Type, KindData>.Empty;
             _prototypeStringInterner.Clear();
+            _entityComponentCache = FrozenDictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>.Empty;
         }
 
         /// <inheritdoc />
@@ -470,6 +471,9 @@ namespace Robust.Shared.Prototypes
 
             Freeze(modifiedKinds);
 
+            if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype)))
+                RebuildEntityComponentCache();
+
             if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
                 UpdateCategories();
 
@@ -528,6 +532,7 @@ namespace Robust.Shared.Prototypes
                 InstantiateKinds(kinds, inheritanceTasks);
             }
 
+            RebuildEntityComponentCache();
             UpdateCategories();
             DiscardResolvedMappings(_kinds.Values);
         }
@@ -1138,7 +1143,7 @@ namespace Robust.Shared.Prototypes
             {
                 throw new InvalidImplementationException(kind,
                     typeof(IPrototype),
-                    $"Duplicate prototype type ID: {attribute.Type}. Current: {existing}");
+                    $"Duplicate prototype type ID: {name}. Current: {existing}");
             }
 
             var foundIdAttribute = false;
@@ -1306,8 +1311,7 @@ namespace Robust.Shared.Prototypes
                         continue;
                     }
 
-                    var copy = componentMapping.Copy();
-                    copy.Remove("type");
+                    var copy = componentMapping.CopyNoType();
                     _tempMappingData[type.Value] = copy;
                 }
             }

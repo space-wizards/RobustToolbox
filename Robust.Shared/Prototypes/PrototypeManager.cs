@@ -20,6 +20,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -30,7 +31,6 @@ namespace Robust.Shared.Prototypes
     {
         [Dependency] private IReflectionManager _reflectionManager = default!;
         [Dependency] protected IResourceManager Resources = default!;
-        [Dependency] protected ITaskManager TaskManager = default!;
         [Dependency] private ISerializationManager _serializationManager = default!;
         [Dependency] private ILogManager _logManager = default!;
         [Dependency] private ILocalizationManager _locMan = default!;
@@ -38,8 +38,9 @@ namespace Robust.Shared.Prototypes
         [Dependency] private IEntityManager _entMan = default!;
         [Dependency] private IRobustRandom _random = default!;
 
-        private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
-        private EntityDiffContext _context = new();
+        private readonly Dictionary<string, FrozenDictionary<string, MappingDataNode>> _prototypeDataCache = new();
+
+        private readonly Dictionary<string, MappingDataNode> _tempMappingData = new();
 
         private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _kindPriorities = new();
@@ -854,14 +855,6 @@ namespace Robust.Shared.Prototypes
             return false;
         }
 
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
-        }
-
         public bool TryIndex([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype)
         {
             return TryIndex(id.Id, out prototype);
@@ -874,15 +867,6 @@ namespace Robust.Shared.Prototypes
 
             Sawmill.Error($"Attempted to resolve invalid ProtoId<{typeof(T).Name}>: {id.Id}\n{Environment.StackTrace}");
             return false;
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-            where T : class, IPrototype
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype)
@@ -900,14 +884,6 @@ namespace Robust.Shared.Prototypes
             }
 
             return Resolve(id.Value, out prototype);
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype)
@@ -930,15 +906,6 @@ namespace Robust.Shared.Prototypes
             }
 
             return Resolve(id.Value, out prototype);
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-            where T : class, IPrototype
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype)
@@ -972,6 +939,11 @@ namespace Robust.Shared.Prototypes
             return _kinds[kind].Results.TryGetValue(id, out mappings);
         }
 
+        public bool TryGetMapping<T>(string id, [NotNullWhen(true)] out MappingDataNode? mappings)
+        {
+            return _kinds[typeof(T)].Results.TryGetValue(id, out mappings);
+        }
+
         public bool HasKind(string kind)
         {
             return _kindNames.ContainsKey(kind);
@@ -1002,7 +974,7 @@ namespace Robust.Shared.Prototypes
             if (TryGetInstances<T>(out var dict))
                 return dict;
 
-            throw new Exception($"Failed to fetch instances for kind {nameof(T)}");
+            throw new Exception($"Failed to fetch instances for kind {typeof(T).Name}");
         }
 
         public bool TryGetInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)
@@ -1113,7 +1085,7 @@ namespace Robust.Shared.Prototypes
             {
                 throw new InvalidImplementationException(kind,
                     typeof(IPrototype),
-                    $"Duplicate prototype type ID: {attribute.Type}. Current: {existing}");
+                    $"Duplicate prototype type ID: {name}. Current: {existing}");
             }
 
             var foundIdAttribute = false;
@@ -1268,28 +1240,25 @@ namespace Robust.Shared.Prototypes
             if (_prototypeDataCache.TryGetValue(prototype.ID, out var data))
                 return data;
 
-            _context.WritingReadingPrototypes = true;
-            data = new();
+            _tempMappingData.Clear();
 
-            var xform = _factory.GetRegistration(typeof(TransformComponent)).Name;
-            try
+            if (TryGetMapping<EntityPrototype>(prototype.ID, out var mapping)
+                && mapping.TryGet<SequenceDataNode>("components", out var components))
             {
-                foreach (var (compType, comp) in prototype.Components)
+                foreach (var component in components)
                 {
-                    if (compType == xform)
+                    if (component is not MappingDataNode componentMapping
+                        || !componentMapping.TryGet<ValueDataNode>("type", out var type))
+                    {
                         continue;
+                    }
 
-                    var node = _serializationManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component,
-                        alwaysWrite: true, context: _context);
-                    data.Add(compType, node);
+                    var copy = componentMapping.CopyNoType();
+                    _tempMappingData[type.Value] = copy;
                 }
             }
-            catch (Exception e)
-            {
-                Sawmill.Error($"Failed to convert prototype {prototype.ID} into yaml. Exception: {e.Message}");
-            }
 
-            _context.WritingReadingPrototypes = false;
+            data = _tempMappingData.ToFrozenDictionary();
             _prototypeDataCache[prototype.ID] = data;
             return data;
         }

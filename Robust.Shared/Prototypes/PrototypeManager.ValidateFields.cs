@@ -177,7 +177,9 @@ public partial class PrototypeManager
     private bool TryGetFieldPrototype(FieldInfo field, [NotNullWhen(true)] out Type? proto)
     {
         // Validate anything with the attribute
+#pragma warning disable CS0618 // This is supporting the attribute, not using it
         var attrib = field.GetCustomAttribute(typeof(ValidatePrototypeIdAttribute<>), false);
+#pragma warning restore CS0618
         if (attrib != null)
         {
             proto = attrib.GetType().GetGenericArguments().First();

@@ -22,6 +22,52 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedMapSystem
 {
+    #region CreateGrid
+
+    /// <summary>
+    /// Creates a new grid entity on a given map.
+    /// </summary>
+    public Entity<MapGridComponent> CreateGridEntity(MapId mapId, GridCreateOptions? options = null)
+    {
+        return CreateGridEntity(GetMap(mapId), options);
+    }
+
+    /// <summary>
+    /// Creates a new grid entity on a given map.
+    /// </summary>
+    public Entity<MapGridComponent> CreateGridEntity(EntityUid mapEnt, GridCreateOptions? options = null)
+    {
+        options ??= GridCreateOptions.Default;
+        return CreateGridInternal(mapEnt, options.Value);
+    }
+
+    protected Entity<MapGridComponent> CreateGridInternal(EntityUid mapEnt, GridCreateOptions options)
+    {
+        var gridEnt = EntityManager.CreateEntityUninitialized(null);
+
+        var grid = EnsureComp<MapGridComponent>(gridEnt);
+        grid.ChunkSize = options.ChunkSize;
+
+        Log.Debug("Binding new grid {gridEnt}");
+
+        //TODO: This is a hack to get TransformComponent.MapId working before entity states
+        //are applied. After they are applied the parent may be different, but the MapId will
+        //be the same. This causes TransformComponent.ParentUid of a grid to be unsafe to
+        //use in transform states anytime before the state parent is properly set.
+        _transform.SetParent(gridEnt, mapEnt);
+
+        var meta = _metaQuery.GetComponent(gridEnt);
+        EntityManager.System<MetaDataSystem>().SetEntityName(gridEnt, $"grid", meta);
+        EntityManager.InitializeComponents(gridEnt, meta);
+        EntityManager.StartComponents(gridEnt);
+        // Note that this does not actually map-initialize the grid entity, even if the map its being spawn on has already been initialized.
+        // I don't know whether that is intentional or not.
+
+        return (gridEnt, grid);
+    }
+
+    #endregion
+
     #region Chunk helpers
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -205,26 +251,34 @@ public abstract partial class SharedMapSystem
         if (meta.EntityLifeStage < EntityLifeStage.Initialized || args.Component.LifeStage == ComponentLifeStage.Starting)
             return;
 
-        // yipeee grids are being spontaneously moved to nullspace.
         Log.Info($"Grid {ToPrettyString(uid, meta)} changed parent. Old parent: {ToPrettyString(args.OldPosition.EntityId)}. New parent: {ToPrettyString(xform.ParentUid)}");
-        if (xform.MapUid == null && meta.EntityLifeStage < EntityLifeStage.Terminating && _netManager.IsServer)
-            Log.Error($"Grid {ToPrettyString(uid, meta)} was moved to nullspace! AAAAAAAAAAAAAAAAAAAAAAAAA! {Environment.StackTrace}");
 
         DebugTools.Assert(!_mapQuery.HasComponent(uid));
 
-        if (xform.ParentUid != xform.MapUid && meta.EntityLifeStage < EntityLifeStage.Terminating  && _netManager.IsServer)
+        if (xform.MapUid != null &&
+            xform.ParentUid != xform.MapUid &&
+            meta.EntityLifeStage < EntityLifeStage.Terminating &&
+            _netManager.IsServer)
         {
             Log.Error($"Grid {ToPrettyString(uid, meta)} is parented to {ToPrettyString(xform._parent)} which is not a map.  y'all need jesus. {Environment.StackTrace}");
             return;
         }
 
-        // Make sure we cleanup old map for moved grid stuff.
-        var oldMap = _transform.ToMapCoordinates(args.OldPosition);
-        var oldMapUid = GetMapOrInvalid(oldMap.MapId);
         if (component.MapProxy != DynamicTree.Proxy.Free)
         {
-            _physics.MovedGrids.Remove(uid);
-            RemoveGrid(uid, component, oldMapUid);
+            // Make sure we cleanup old map for moved grid stuff. When returning from nullspace there is no old map
+            // proxy to remove.
+            if (args.OldPosition.EntityId.IsValid())
+            {
+                var oldMap = _transform.ToMapCoordinates(args.OldPosition);
+                var oldMapUid = GetMapOrInvalid(oldMap.MapId);
+                _physics.MovedGrids.Remove(uid);
+                RemoveGrid(uid, component, oldMapUid);
+            }
+            else
+            {
+                component.MapProxy = DynamicTree.Proxy.Free;
+            }
         }
 
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
@@ -323,7 +377,7 @@ public abstract partial class SharedMapSystem
 
                     var gridIndices = deletedChunk.ChunkTileToGridTile((x, y));
                     var newTileRef = new TileRef(uid, gridIndices, Tile.Empty);
-                    _mapInternal.RaiseOnTileChanged(gridEnt, newTileRef, oldTile, index);
+                    RaiseOnTileChanged(gridEnt, newTileRef, oldTile, index);
                 }
             }
 
@@ -483,6 +537,20 @@ public abstract partial class SharedMapSystem
             DebugTools.Assert(chunk.TileData!.Any(x => !x.IsEmpty));
         }
 #endif
+    }
+
+    /// <summary>
+    /// Prunes tracked grid chunk deletions older than some given game tick.
+    /// </summary>
+    public void CullDeletionHistory(GameTick upToTick)
+    {
+        var query = AllEntityQuery<MapGridComponent>();
+
+        while (query.MoveNext(out var grid))
+        {
+            var chunks = grid.ChunkDeletionHistory;
+            chunks.RemoveAll(t => t.tick < upToTick);
+        }
     }
 
     private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
@@ -859,7 +927,7 @@ public abstract partial class SharedMapSystem
 
         // Suppress sending out events for each tile changed
         // We're going to send them all out together at the end
-        MapManager.SuppressOnTileChanged = true;
+        SuppressOnTileChanged = true;
 
         foreach (var (gridIndices, tile) in tiles)
         {
@@ -896,7 +964,7 @@ public abstract partial class SharedMapSystem
         RegenerateCollision(uid, grid, modified);
 
         // Back to normal
-        MapManager.SuppressOnTileChanged = false;
+        SuppressOnTileChanged = false;
     }
 
     public TilesEnumerator GetLocalTilesEnumerator(EntityUid uid, MapGridComponent grid, Box2 aabb,
@@ -1644,16 +1712,28 @@ public abstract partial class SharedMapSystem
         // The map serializer currently sets tiles of unbound grids as part of the deserialization process
         // It properly sets SuppressOnTileChanged so that the event isn't spammed for every tile on the grid.
         // ParentMapId is not able to be accessed on unbound grids, so we can't even call this function for unbound grids.
-        if (!MapManager.SuppressOnTileChanged)
+        if (!SuppressOnTileChanged)
         {
             var newTileRef = new TileRef(uid, gridTile, newTile);
-            _mapInternal.RaiseOnTileChanged((uid, grid), newTileRef, oldTile, mapChunk.Indices);
+            RaiseOnTileChanged((uid, grid), newTileRef, oldTile, mapChunk.Indices);
         }
 
         if (shapeChanged && !mapChunk.SuppressCollisionRegeneration)
         {
             RegenerateCollision(uid, grid, mapChunk);
         }
+    }
+
+    /// <summary>
+    /// Raises <see cref="TileChangedEvent"/> on the provided grid unless <see cref="SuppressOnTileChanged"/> is set.
+    /// </summary>
+    internal void RaiseOnTileChanged(Entity<MapGridComponent> entity, TileRef tileRef, Tile oldTile, Vector2i chunk)
+    {
+        if (SuppressOnTileChanged)
+            return;
+
+        var ev = new TileChangedEvent(entity, tileRef, oldTile, chunk);
+        EntityManager.EventBus.RaiseLocalEvent(entity.Owner, ref ev, true);
     }
 
     /// <summary>
@@ -1750,4 +1830,13 @@ public abstract partial class SharedMapSystem
             }
         }
     }
+}
+
+/// <summary>
+/// Additional parameters used when creating a new grid entity.
+/// </summary>
+/// <param name="ChunkSize">The number of tiles long/wide the grids chunks should be.</param>
+public record struct GridCreateOptions(ushort ChunkSize)
+{
+    public readonly static GridCreateOptions Default = new(ChunkSize: 16);
 }

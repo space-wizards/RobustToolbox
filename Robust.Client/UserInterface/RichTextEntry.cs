@@ -233,7 +233,8 @@ namespace Robust.Client.UserInterface
             float verticalOffset,
             MarkupDrawingContext context,
             float uiScale,
-            float lineHeightScale = 1)
+            float lineHeightScale = 1,
+            TextOutline? outline = null)
         {
             context.Clear();
             context.Color.Push(_defaultColor);
@@ -274,7 +275,7 @@ namespace Robust.Client.UserInterface
                             skipSpaceBaseline = true;
                     }
 
-                    var advance = font.DrawChar(handle, rune, baseLine, uiScale, color);
+                    var advance = font.DrawChar(handle, rune, baseLine, uiScale, color, outline: outline);
 
                     if (!skipSpaceBaseline)
                         baseLine += new Vector2(advance, 0);

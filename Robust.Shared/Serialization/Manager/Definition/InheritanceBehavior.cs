@@ -2,8 +2,8 @@
 {
     public enum InheritanceBehavior : byte
     {
-        Default,
-        Always,
-        Never
+        Default = 0,
+        Always = 1,
+        Never = 2
     }
 }

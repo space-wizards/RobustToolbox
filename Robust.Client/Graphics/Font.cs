@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Text;
 using Robust.Client.ResourceManagement;
@@ -7,6 +7,31 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {
+    /// <summary>
+    ///     Describes an outline drawn around text.
+    /// </summary>
+    public readonly record struct TextOutline(float Thickness, Color Color)
+    {
+        /// <summary>
+        ///     The default text outline.
+        /// </summary>
+        public static TextOutline Default => new(1f, Color.Black);
+
+        /// <summary>
+        ///     Creates an outline from optional settings.
+        /// </summary>
+        public static TextOutline? FromOverrides(float? thickness, Color? color)
+        {
+            if (thickness is null && color is null)
+                return null;
+
+            var actualThickness = thickness ?? Default.Thickness;
+            return actualThickness > 0
+                ? new TextOutline(actualThickness, color ?? Default.Color)
+                : null;
+        }
+    }
+
     /// <summary>
     ///     A generic font for rendering of text.
     ///     Does not contain properties such as size. Those are specific to children such as <see cref="VectorFont" />
@@ -55,6 +80,17 @@ namespace Robust.Client.Graphics
         public abstract float DrawChar(
             DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale,
             Color color, bool fallback=true);
+
+        /// <summary>
+        ///     Draws a character with an optional outline.
+        /// </summary>
+        /// <inheritdoc cref="DrawChar(DrawingHandleBase, Rune, Vector2, float, Color, bool)"/>
+        public virtual float DrawChar(
+            DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale,
+            Color color, TextOutline? outline, bool fallback=true)
+        {
+            return DrawChar(handle, rune, baseline, scale, color, fallback);
+        }
 
         /// <summary>
         ///     Gets metrics describing the dimensions and positioning of a single glyph in the font.
@@ -116,6 +152,9 @@ namespace Robust.Client.Graphics
         public override int GetLineHeight(float scale) => Handle.GetLineHeight(scale);
 
         public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
+            => DrawChar(handle, rune, baseline, scale, color, null, fallback);
+
+        public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, TextOutline? outline, bool fallback=true)
         {
             var metrics = Handle.GetCharMetrics(rune, scale);
             if (!metrics.HasValue)
@@ -137,12 +176,24 @@ namespace Robust.Client.Graphics
                 return metrics.Value.Advance;
             }
 
-            baseline += new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
-            if(handle is DrawingHandleWorld worldhandle)
-                worldhandle.DrawTextureRect(texture, Box2.FromDimensions(baseline, texture.Size), color);
-            else
-                handle.DrawTexture(texture, baseline, color);
+            var glyphPosition = baseline + new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
+            if (outline is { Thickness: > 0 } settings &&
+                Handle.GetOutlinedChar(rune, scale, settings.Thickness) is { } outlinedGlyph)
+            {
+                var outlinePosition = baseline + new Vector2(outlinedGlyph.Left, -outlinedGlyph.Top);
+                DrawGlyph(handle, outlinedGlyph.Texture, outlinePosition, settings.Color);
+            }
+
+            DrawGlyph(handle, texture, glyphPosition, color);
             return metrics.Value.Advance;
+        }
+
+        private static void DrawGlyph(DrawingHandleBase handle, Texture texture, Vector2 position, Color color)
+        {
+            if (handle is DrawingHandleWorld worldhandle)
+                worldhandle.DrawTextureRect(texture, Box2.FromDimensions(position, texture.Size), color);
+            else
+                handle.DrawTexture(texture, position, color);
         }
 
         public override CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback=true)
@@ -179,16 +230,19 @@ namespace Robust.Client.Graphics
 
         // DrawChar just proxies to the stack, or invokes _main's fallback.
         public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
+            => DrawChar(handle, rune, baseline, scale, color, null, fallback);
+
+        public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, TextOutline? outline, bool fallback=true)
         {
             foreach (var f in Stack)
             {
-                var w = f.DrawChar(handle, rune, baseline, scale, color, fallback: false);
+                var w = f.DrawChar(handle, rune, baseline, scale, color, outline, fallback: false);
                 if (w != 0f)
                     return w;
             }
 
             if (fallback)
-                return _main.DrawChar(handle, rune, baseline, scale, color, fallback: true);
+                return _main.DrawChar(handle, rune, baseline, scale, color, outline, fallback: true);
 
             return 0f;
         }

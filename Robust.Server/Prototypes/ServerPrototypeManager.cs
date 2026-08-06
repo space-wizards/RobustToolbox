@@ -8,7 +8,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
 
 namespace Robust.Server.Prototypes
 {

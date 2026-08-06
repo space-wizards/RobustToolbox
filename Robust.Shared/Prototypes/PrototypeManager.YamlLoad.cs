@@ -24,6 +24,16 @@ public partial class PrototypeManager
     /// </summary>
     private readonly List<ResPath> _abstractDirectories = new();
 
+    /// <summary>
+    ///     Which directories to force all prototypes recursively within to be partial.
+    /// </summary>
+    private readonly List<(ResPath File, int Index)> _partialFiles = new();
+
+    /// <summary>
+    ///     Which directories to force all prototypes recursively within to be partial.
+    /// </summary>
+    private readonly List<ResPath> _partialDirectories = new();
+
     public event Action<DataNodeDocument>? LoadedData;
 
     /// <inheritdoc />
@@ -94,17 +104,43 @@ public partial class PrototypeManager
                 }
             });
 
+        var queue = Array.Empty<Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>>();
         foreach (var (file, result) in results)
         {
+            if (IsFilePartial(file, out var index))
+            {
+                Array.Resize(ref queue, index + 1);
+                queue[index].Enqueue((file, result));
+                continue;
+            }
+
             foreach (var mapping in result)
             {
                 try
                 {
-                    MergeMapping(mapping, overwrite, changed);
+                    MergeMapping(mapping, overwrite, changed, false);
                 }
                 catch (Exception e)
                 {
                     sawmill.Error($"Exception whilst loading prototypes from {file}:\n{e}");
+                }
+            }
+        }
+
+        foreach (var array in queue)
+        {
+            foreach (var (file, result) in array)
+            {
+                foreach (var mapping in result)
+                {
+                    try
+                    {
+                        MergeMapping(mapping, overwrite, changed, true);
+                    }
+                    catch (Exception e)
+                    {
+                        sawmill.Error($"Exception whilst loading prototypes from {file}:\n{e}");
+                    }
                 }
             }
         }
@@ -146,6 +182,7 @@ public partial class PrototypeManager
         try
         {
             var ignored = IsFileAbstract(file);
+            var partial = IsFilePartial(file, out _);
             using var reader = ReadFile(file, !overwrite);
 
             if (reader == null)
@@ -168,7 +205,7 @@ public partial class PrototypeManager
                         if (ignored)
                             AbstractPrototype(extracted.Data);
 
-                        MergeMapping(extracted, overwrite, changed);
+                        MergeMapping(extracted, overwrite, changed, partial);
                     }
                 }
                 catch (Exception e)
@@ -187,7 +224,8 @@ public partial class PrototypeManager
 
     private ExtractedMappingData? ExtractMapping(MappingDataNode dataNode)
     {
-        var type = dataNode.Get<ValueDataNode>("type").Value;
+        var typeNode = dataNode.Get<ValueDataNode>("type");
+        var type = typeNode.Value;
         if (_ignoredPrototypeTypes.Contains(type))
             return null;
 
@@ -212,20 +250,106 @@ public partial class PrototypeManager
             }
         }
 
-        return new ExtractedMappingData(kind, id, parents, dataNode);
+        return new ExtractedMappingData(kind, id, parents, dataNode, NodeHasTag(typeNode, "!PartialOnly"));
     }
 
     private void MergeMapping(
         ExtractedMappingData mapping,
         bool overwrite,
-        Dictionary<Type, HashSet<string>>? changed)
+        Dictionary<Type, HashSet<string>>? changed,
+        bool partial)
     {
-        var (kind, id, parents, data) = mapping;
+        var (kind, id, parents, data, partialOnly) = mapping;
 
         var kindData = _kinds[kind];
 
-        if (!overwrite && kindData.RawResults.ContainsKey(id))
-            throw new PrototypeLoadException($"Duplicate ID: '{id}' for kind '{kind}");
+        if (kindData.RawResults.TryGetValue(id, out var existing) &&
+            !overwrite &&
+            !partial)
+        {
+            throw new PrototypeLoadException($"Duplicate ID: '{id}' for kind '{kind}'");
+        }
+
+        if (existing != null)
+        {
+            CombineMapNode(existing, data);
+
+            static void CombineMapNode(MappingDataNode existing, MappingDataNode data)
+            {
+                foreach (var (key, dataNode) in data)
+                {
+                    if (IsRemoveTag(dataNode))
+                    {
+                        existing.Remove(key);
+                        continue;
+                    }
+
+                    if (existing.TryGetValue(key, out var existingNode) &&
+                        Combine(existingNode, dataNode))
+                    {
+                        continue;
+                    }
+
+                    existing[key] = dataNode;
+                }
+            }
+
+            static void CombineSeqNode(SequenceDataNode existing, SequenceDataNode data)
+            {
+                for (var i = 0; i < data.Count; i++)
+                {
+                    var dataNode = data[i];
+                    if (existing.TryGetValue(i, out var existingNode) &&
+                        Combine(existingNode, dataNode))
+                    {
+                        continue;
+                    }
+
+                    switch (dataNode)
+                    {
+                        case ValueDataNode dataValue:
+                            if (IsRemoveTag(dataValue))
+                            {
+                                existing.Remove(dataValue);
+                                continue;
+                            }
+
+                            existing.Add(dataNode);
+                            break;
+                    }
+                }
+            }
+
+            static bool Combine(DataNode existing, DataNode data)
+            {
+                switch (existing, data)
+                {
+                    case (MappingDataNode existingMapping, MappingDataNode dataMapping):
+                        CombineMapNode(existingMapping, dataMapping);
+                        return true;
+                    case (SequenceDataNode existingSequence, SequenceDataNode dataSequence):
+                        CombineSeqNode(existingSequence, dataSequence);
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            static bool IsTag(DataNode node, string tag)
+            {
+                return node.Tag != null &&
+                       node.Tag.Equals(tag, StringComparison.OrdinalIgnoreCase);
+            }
+
+            static bool IsRemoveTag(DataNode node)
+            {
+                return IsTag(node, "!Remove");
+            }
+        }
+        else if (partialOnly)
+        {
+            return;
+        }
 
         kindData.RawResults[id] = data;
 
@@ -267,7 +391,7 @@ public partial class PrototypeManager
                     if (extracted == null)
                         continue;
 
-                    MergeMapping(extracted, overwrite, changed);
+                    MergeMapping(extracted, overwrite, changed, false);
                 }
 
                 i += 1;
@@ -328,6 +452,18 @@ public partial class PrototypeManager
         _abstractDirectories.Add(path);
     }
 
+    /// <inheritdoc/>
+    public void PartialFile(IEnumerable<(ResPath File, int Index)> path)
+    {
+        _partialFiles.AddRange(path);
+    }
+
+    /// <inheritdoc/>
+    public void PartialDirectory(params ResPath[] paths)
+    {
+        _partialDirectories.AddRange(paths);
+    }
+
     private bool IsFileAbstract(ResPath file)
     {
         if (_abstractFiles.Count > 0)
@@ -351,6 +487,36 @@ public partial class PrototypeManager
         return false;
     }
 
+    private bool IsFilePartial(ResPath file, out int index)
+    {
+        if (_partialFiles.Count > 0)
+        {
+            foreach (var partialFile in _partialFiles)
+            {
+                if (!file.TryRelativeTo(partialFile.File, out _))
+                    continue;
+
+                index = partialFile.Index;
+                return true;
+            }
+        }
+
+        if (_partialDirectories.Count > 0)
+        {
+            for (index = 0; index < _partialDirectories.Count; index++)
+            {
+                var partialDirectory = _partialDirectories[index];
+                if (!file.TryRelativeTo(partialDirectory.Directory, out _))
+                    continue;
+
+                return true;
+            }
+        }
+
+        index = 0;
+        return false;
+    }
+
     private void AbstractPrototype(MappingDataNode mapping)
     {
         if (mapping.TryGet(AbstractDataFieldAttribute.Name, out var abstractNode))
@@ -368,10 +534,18 @@ public partial class PrototypeManager
         mapping.Add("abstract", "true");
     }
 
+    private static bool NodeHasTag(DataNode node, string tag)
+    {
+        return node.Tag != null &&
+               node.Tag.Equals(tag, StringComparison.OrdinalIgnoreCase);
+    }
+
     // All these fields can be null in case the
     private sealed record ExtractedMappingData(
         Type Kind,
         string Id,
         string[]? Parents,
-        MappingDataNode Data);
+        MappingDataNode Data,
+        bool PartialOnly
+    );
 }

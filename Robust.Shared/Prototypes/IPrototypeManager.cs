@@ -562,6 +562,94 @@ public interface IPrototypeManager
     bool TryGetRandom<T>(IRobustRandom random, [NotNullWhen(true)] out IPrototype? prototype) where T : class, IPrototype;
 
     /// <summary>
+    ///     Like <see cref="PartialDirectory"/>, but only for a single file.
+    /// </summary>
+    /// <param name="path">
+    ///     The file to force prototypes to be abstract in.
+    ///     This must start from the Resources-level directory, but not include Resources itself.
+    ///     For example: /Prototypes/Guidebook/antagonist.yml
+    ///     A smaller index will make this file be processed before ones with a larger index.
+    ///     This works the same way as the indexes of the paths argument in <see cref="PartialDirectory"/>.
+    /// </param>
+    /// <seealso cref="PartialDirectory"/>
+    void PartialFile(IEnumerable<(ResPath File, int Index)> path);
+
+    /// <summary>
+    ///     Makes duplicate prototypes found recursively within files in the given <see cref="paths"/>
+    ///     combine with existing prototypes by kind and id, instead of throwing a 'Duplicate id' exception.
+    ///     Calling this method will not retroactively partial prototypes that have already been read.
+    /// </summary>
+    /// <param name="paths">
+    ///     The directories to make prototypes partial in.
+    ///     Each must start from the Resources-level directory, but not include Resources itself.
+    ///     For example: /Prototypes/_MyForkDirectory
+    ///
+    ///     Partials found in these directories are applied in the order in which they appear in
+    ///     this enumerable.
+    ///     For example, this makes it so partials inside _ForkOne are applied first, if any,
+    ///     and then afterward, the ones in _ForkTwo, if any:
+    ///     <code>
+    ///         PartialDirectory(
+    ///             new ResPath("/Prototypes/_ForkOne"),
+    ///             new ResPath("/Prototypes/_ForkTwo")
+    ///         );
+    ///     </code>
+    ///
+    ///     Later calls to this method will make all paths in the call be applied after any
+    ///     earlier calls.
+    ///     For example, this is equivalent to the snippet above:
+    ///     <code>
+    ///         PartialDirectory(new ResPath("/Prototypes/_ForkOne"));
+    ///         PartialDirectory(new ResPath("/Prototypes/_ForkTwo"));
+    ///     </code>
+    /// </param>
+    /// <remarks>
+    ///
+    ///     The snippet below adds one value to a sequence if it exists, or adds the sequence otherwise:
+    ///     <code>
+    ///     - type: myPrototype
+    ///       id: MyPrototypeOne
+    ///       list:
+    ///       - MyValue
+    ///     </code>
+    ///
+    ///     To remove a value or mapping, use the !Remove tag in YML.
+    ///     The snippet below removes one value from a sequence:
+    ///     <code>
+    ///     - type: myPrototype
+    ///       id: MyPrototypeOne
+    ///       list:
+    ///       - !Remove: MyValue
+    ///     </code>
+    ///
+    ///     The snippet below removes the dictionary mapping data node from the prototype:
+    ///     <code>
+    ///     - type: myPrototype
+    ///       id: MyPrototypeOne
+    ///       dictionary: !Remove {}
+    ///     </code>
+    ///
+    ///     The above can be combined, adding and removing at the same time:
+    ///     <code>
+    ///     - type: myPrototype
+    ///       id: MyPrototypeOne
+    ///       list:
+    ///       - MyValue
+    ///       - !Remove: MyValue
+    ///     </code>
+    ///
+    ///     A partial prototype can be marked as partial only, which will ensure that the partial
+    ///     is not read if there is not a non-partial part for that prototype.
+    ///     This is useful for cases where you don't want to add the prototype at all if the original
+    ///     one does not exist.
+    ///     <code>
+    ///     - type: !PartialOnly myPrototype
+    ///       id: MyPrototypeOne
+    ///     </code>
+    /// </remarks>
+    void PartialDirectory(params ResPath[] paths);
+
+    /// <summary>
     /// Entity prototypes grouped by their categories.
     /// </summary>
     FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; }

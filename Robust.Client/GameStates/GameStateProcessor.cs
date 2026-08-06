@@ -221,7 +221,10 @@ Had full state: {LastFullState != null}"
                     out var compDataExists);
 
                 if (!compDataExists)
-                    compDataRef = new();
+                {
+                    var componentCount = entityState.NetComponents?.Count ?? entityState.ComponentChanges.Span.Length;
+                    compDataRef = new(componentCount);
+                }
 
                 var compData = compDataRef!;
                 foreach (var change in entityState.ComponentChanges.Span)

@@ -412,6 +412,17 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return code.ToHashCode();
         }
 
+        internal override int GetCanonicalHashCode()
+        {
+            var entriesHash = 0;
+            foreach (var (key, value) in _list)
+            {
+                entriesHash ^= HashCode.Combine(StringComparer.Ordinal.GetHashCode(key), value.GetCanonicalHashCode());
+            }
+
+            return HashCode.Combine(typeof(MappingDataNode), Tag, Count, entriesHash);
+        }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();

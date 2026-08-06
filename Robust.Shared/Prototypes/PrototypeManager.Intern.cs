@@ -97,15 +97,7 @@ namespace Robust.Shared.Prototypes
             }
 
             public int GetHashCode(MappingDataNode node)
-            {
-                var entriesHash = 0;
-                foreach (var (key, value) in node)
-                {
-                    entriesHash ^= HashCode.Combine(StringComparer.Ordinal.GetHashCode(key), GetDataNodeHashCode(value));
-                }
-
-                return HashCode.Combine(node.Tag, node.Count, entriesHash);
-            }
+                => node.GetCanonicalHashCode();
 
             private static bool DataNodesEqual(DataNode x, DataNode y)
             {
@@ -152,40 +144,6 @@ namespace Robust.Shared.Prototypes
                 return true;
             }
 
-            private static int GetDataNodeHashCode(DataNode node)
-            {
-                return node switch
-                {
-                    ValueDataNode value => HashCode.Combine(typeof(ValueDataNode), value.Tag, value.Value, value.IsNull),
-                    SequenceDataNode sequence => GetSequenceHashCode(sequence),
-                    MappingDataNode mapping => GetMappingHashCode(mapping),
-                    _ => 0
-                };
-            }
-
-            private static int GetSequenceHashCode(SequenceDataNode node)
-            {
-                var hash = new HashCode();
-                hash.Add(typeof(SequenceDataNode));
-                hash.Add(node.Tag);
-                foreach (var child in node)
-                {
-                    hash.Add(GetDataNodeHashCode(child));
-                }
-
-                return hash.ToHashCode();
-            }
-
-            private static int GetMappingHashCode(MappingDataNode node)
-            {
-                var entriesHash = 0;
-                foreach (var (key, value) in node)
-                {
-                    entriesHash ^= HashCode.Combine(StringComparer.Ordinal.GetHashCode(key), GetDataNodeHashCode(value));
-                }
-
-                return HashCode.Combine(typeof(MappingDataNode), node.Tag, node.Count, entriesHash);
-            }
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
@@ -55,6 +56,16 @@ namespace Robust.Shared.Configuration
             if (type == typeof(ushort))
             {
                 return ushort.Parse(input);
+            }
+
+            if (type == typeof(EntProtoId))
+            {
+                return (EntProtoId) input;
+            }
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(EntProtoId<>))
+            {
+                return (EntProtoId) input;
             }
 
             throw new NotSupportedException();

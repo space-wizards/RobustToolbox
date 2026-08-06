@@ -603,33 +603,34 @@ public interface IPrototypeManager
     ///         PartialDirectory(new ResPath("/Prototypes/_ForkTwo"));
     ///     </code>
     /// </param>
-    /// <remarks>
-    ///
-    ///     The snippet below adds one value to a sequence if it exists, or adds the sequence otherwise:
+    /// <example>
+    ///     Add one value to a sequence if it exists, or adds the sequence otherwise:
     ///     <code>
     ///     - type: myPrototype
     ///       id: MyPrototypeOne
     ///       list:
     ///       - MyValue
     ///     </code>
-    ///
-    ///     To remove a value or mapping, use the !Remove tag in YML.
-    ///     The snippet below removes one value from a sequence:
+    /// </example>
+    /// <example>
+    ///     Remove values from a sequence using the !Remove tag:
     ///     <code>
     ///     - type: myPrototype
     ///       id: MyPrototypeOne
     ///       list:
     ///       - !Remove: MyValue
     ///     </code>
-    ///
-    ///     The snippet below removes the dictionary mapping data node from the prototype:
+    /// </example>
+    /// <example>
+    ///     Remove dictionary mapping data nodes using the !Remove tag:
     ///     <code>
     ///     - type: myPrototype
     ///       id: MyPrototypeOne
     ///       dictionary: !Remove {}
     ///     </code>
-    ///
-    ///     The above can be combined, adding and removing at the same time:
+    /// </example>
+    /// <example>
+    ///     Add and remove values at the same time:
     ///     <code>
     ///     - type: myPrototype
     ///       id: MyPrototypeOne
@@ -637,7 +638,8 @@ public interface IPrototypeManager
     ///       - MyValue
     ///       - !Remove: MyValue
     ///     </code>
-    ///
+    /// </example>
+    /// <example>
     ///     A partial prototype can be marked as partial only, which will ensure that the partial
     ///     is not read if there is not a non-partial part for that prototype.
     ///     This is useful for cases where you don't want to add the prototype at all if the original
@@ -646,7 +648,7 @@ public interface IPrototypeManager
     ///     - type: !PartialOnly myPrototype
     ///       id: MyPrototypeOne
     ///     </code>
-    /// </remarks>
+    /// </example>
     void PartialDirectory(params ResPath[] paths);
 
     /// <summary>

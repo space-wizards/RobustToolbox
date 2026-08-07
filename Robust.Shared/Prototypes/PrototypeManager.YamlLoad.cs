@@ -316,6 +316,9 @@ public partial class PrototypeManager
         }
 
         Freeze(modified);
+
+        if (modified.Any(x => x.Type == typeof(EntityPrototype)))
+            RebuildEntityComponentCache();
     }
 
     public void AbstractFile(ResPath path)

@@ -295,6 +295,7 @@ namespace Robust.Shared.Prototypes
         {
             _kindNames.Clear();
             _kinds = FrozenDictionary<Type, KindData>.Empty;
+            _entityComponentCache = FrozenDictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>.Empty;
         }
 
         /// <inheritdoc />
@@ -463,6 +464,9 @@ namespace Robust.Shared.Prototypes
 
             Freeze(modifiedKinds);
 
+            if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype)))
+                RebuildEntityComponentCache();
+
             if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
                 UpdateCategories();
 
@@ -519,6 +523,7 @@ namespace Robust.Shared.Prototypes
                 InstantiateKinds(kinds, inheritanceTasks);
             }
 
+            RebuildEntityComponentCache();
             UpdateCategories();
         }
 

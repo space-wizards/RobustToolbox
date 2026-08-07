@@ -998,7 +998,7 @@ namespace Robust.Client.Graphics.Clyde
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
             if (!Color.TryParse(_cfg.GetCVar(CVars.RenderFOVColor), out var color))
-                color = Color.Black;
+                color = Color.FromHex("#080B10");
 
             fovShader.SetUniformMaybe("occludeColor", color);
             FovSetTransformAndBlit(viewport, eye.Position.Position, fovShader);

@@ -66,8 +66,9 @@ public sealed class PhysicsHullSerializer : ITypeSerializer<Vector2[], SequenceD
         bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        var sequence = new SequenceDataNode(value.Length);
-        foreach (var vertex in value)
+        var hull = PhysicsHull.ComputePoints(value, value.Length);
+        var sequence = new SequenceDataNode(hull.Length);
+        foreach (var vertex in hull)
         {
             sequence.Add(serializationManager.WriteValue(vertex, alwaysWrite, context));
         }

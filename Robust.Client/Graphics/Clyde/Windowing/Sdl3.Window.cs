@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -424,6 +425,13 @@ internal partial class Clyde
         {
             // API isn't really used and kinda wack, don't feel like figuring it out for SDL3 yet.
             _sawmill.Warning("WindowSetMonitor not implemented on SDL3");
+        }
+
+        public IClydeMonitor? WindowGetMonitor(WindowReg window)
+        {
+            var displayId = SDL.SDL_GetDisplayForWindow(WinPtr(window));
+            var monitorId = GetMonitorIdFromDisplayId(displayId);
+            return _clyde._monitorHandles.GetValueOrDefault(monitorId);
         }
 
         public void WindowSetSize(WindowReg window, Vector2i size)

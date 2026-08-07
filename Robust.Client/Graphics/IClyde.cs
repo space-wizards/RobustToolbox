@@ -38,6 +38,11 @@ namespace Robust.Client.Graphics
         void SetWindowMonitor(IClydeMonitor monitor);
 
         /// <summary>
+        ///     Gets the monitor the main game window is currently on.
+        /// </summary>
+        IClydeMonitor? GetWindowMonitor();
+
+        /// <summary>
         ///     This is the magic method to make the game window ping you in the task bar.
         /// </summary>
         void RequestWindowAttention();

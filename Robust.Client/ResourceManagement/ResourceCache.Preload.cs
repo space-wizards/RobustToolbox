@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
@@ -195,33 +196,47 @@ namespace Robust.Client.ResourceManagement
                 .Select(p => new RSIResource.LoadStepData {Path = p})
                 .ToArray();
 
-            Parallel.ForEach(rsiList, data =>
-            {
-                try
+            Parallel.For(
+                0,
+                rsiList.Length,
+                i =>
                 {
-                    RSIResource.LoadPreTexture(_manager, data);
+                    ref var datum = ref rsiList[i];
+                    try
+                    {
+                        RSIResource.LoadPreTexture(_manager, ref datum);
+                    }
+                    catch (Exception e)
+                    {
+                        // Mark failed loads as bad and skip them in the next few stages.
+                        // Avoids any silly array resizing or similar.
+                        sawmill.Error($"Exception while loading RSI {datum.Path}:\n{e}");
+                        datum.Bad = true;
+                    }
                 }
-                catch (Exception e)
-                {
-                    // Mark failed loads as bad and skip them in the next few stages.
-                    // Avoids any silly array resizing or similar.
-                    sawmill.Error($"Exception while loading RSI {data.Path}:\n{e}");
-                    data.Bad = true;
-                }
-            });
+            );
 
-            var atlasLookup = rsiList.ToLookup(ShouldMetaAtlas);
-            var atlasList = atlasLookup[true].ToArray();
-            var nonAtlasList = atlasLookup[false].ToArray();
-
-            foreach (var data in nonAtlasList)
+            var atlasList = new List<int>();
+            var nonAtlasList = new List<int>();
+            var span = rsiList.AsSpan();
+            for (var i = 0; i < span.Length; i++)
             {
+                ref var data = ref span[i];
+                if (ShouldMetaAtlas(data))
+                    atlasList.Add(i);
+                else
+                    nonAtlasList.Add(i);
+            }
+
+            foreach (var i in nonAtlasList)
+            {
+                ref var data = ref rsiList[i];
                 if (data.Bad)
                     continue;
 
                 try
                 {
-                    RSIResource.LoadTexture(Clyde, data);
+                    RSIResource.LoadTexture(Clyde, ref data);
                 }
                 catch (Exception e)
                 {
@@ -257,7 +272,7 @@ namespace Robust.Client.ResourceManagement
             //   -  https://www.dei.unipd.it/~fisch/ricop/tesi/tesi_dottorato_Lodi_1999.pdf
 
             // The array must be sorted from biggest to smallest first.
-            Array.Sort(atlasList, (b, a) => a.AtlasSheet.Height.CompareTo(b.AtlasSheet.Height));
+            atlasList.Sort((b, a) => rsiList[a].AtlasSheet.Height.CompareTo(rsiList[b].AtlasSheet.Height));
 
             #if FULL_RELEASE
             var maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
@@ -291,27 +306,28 @@ namespace Robust.Client.ResourceManagement
             // This allows us to effectively determine how much space we need to allocate for the images.
             var currentHeight = 0;
             var currentAtlasIndex = 0;
-            foreach (var rsi in atlasList)
+            foreach (var i in atlasList)
             {
+                ref var rsi = ref rsiList[i];
                 var insertHeight = rsi.AtlasSheet.Height;
                 var insertWidth = rsi.AtlasSheet.Width;
 
                 var found = false;
-                for (var i = 0; i < levels.Count && !found; i++)
+                for (var j = 0; j < levels.Count && !found; j++)
                 {
-                    var levelPosition = levels[i].Position;
-                    var levelWidth = levels[i].Width;
-                    var levelHeight = levels[i].Height;
+                    var levelPosition = levels[j].Position;
+                    var levelWidth = levels[j].Width;
+                    var levelHeight = levels[j].Height;
 
                     // Check if it can fit in this level.
-                    if (levelHeight < insertHeight || levelWidth + insertWidth > levels[i].MaxWidth)
+                    if (levelHeight < insertHeight || levelWidth + insertWidth > levels[j].MaxWidth)
                         continue;
 
                     found = true;
 
-                    levels[i].Width += insertWidth;
+                    levels[j].Width += insertWidth;
                     rsi.AtlasOffset = levelPosition + new Vector2i(levelWidth, 0);
-                    levels[i].RSIList.Add(rsi);
+                    levels[j].RSIList.Add(i);
 
                     // Creating the extra "free" space above blocks that can be used for inserting more items.
                     // This differs from the FFDH spec which just ignores this space.
@@ -321,7 +337,7 @@ namespace Robust.Client.ResourceManagement
 
                     var freeLevel = new Level
                     {
-                        AtlasId = levels[i].AtlasId,
+                        AtlasId = levels[j].AtlasId,
                         Position = levelPosition + new Vector2i(levelWidth, insertHeight),
                         Height = levelHeight - insertHeight,
                         Width = 0,
@@ -354,7 +370,7 @@ namespace Robust.Client.ResourceManagement
                     Height = insertHeight,
                     Width = insertWidth,
                     MaxWidth = maxSize,
-                    RSIList = [ rsi ]
+                    RSIList = [ i ]
                 };
                 levels.Add(newLevel);
 
@@ -368,8 +384,9 @@ namespace Robust.Client.ResourceManagement
             // Put all textures on the atlases
             foreach (var level in levels)
             {
-                foreach (var rsi in level.RSIList)
+                foreach (var i in level.RSIList)
                 {
+                    ref var rsi = ref rsiList[i];
                     var box = new UIBox2i(0, 0, rsi.AtlasSheet.Width, rsi.AtlasSheet.Height);
 
                     rsi.AtlasSheet.Blit(box, imageAtlases[level.AtlasId], rsi.AtlasOffset);
@@ -397,8 +414,10 @@ namespace Robust.Client.ResourceManagement
             // Finally, reference the actual atlas from the RSIs.
             foreach (var level in levels)
             {
-                foreach (var rsi in level.RSIList)
+                var levelSpan = CollectionsMarshal.AsSpan(level.RSIList);
+                foreach (var i in levelSpan)
                 {
+                    ref var rsi = ref rsiList[i];
                     rsi.AtlasTexture = finalAtlases[level.AtlasId];
                 }
             }
@@ -410,7 +429,7 @@ namespace Robust.Client.ResourceManagement
 
                 try
                 {
-                    RSIResource.LoadPostTexture(data);
+                    RSIResource.LoadPostTexture(ref data);
                 }
                 catch (Exception e)
                 {
@@ -420,7 +439,7 @@ namespace Robust.Client.ResourceManagement
             });
 
             var errors = 0;
-            foreach (var data in rsiList)
+            foreach (ref var data in rsiList.AsSpan())
             {
                 try
                 {
@@ -433,7 +452,7 @@ namespace Robust.Client.ResourceManagement
                     try
                     {
                         var rsiRes = new RSIResource();
-                        rsiRes.LoadFinish(this, data);
+                        rsiRes.LoadFinish(this, ref data);
                         resList[data.Path] = rsiRes;
                     }
                     catch (Exception e)
@@ -453,7 +472,7 @@ namespace Robust.Client.ResourceManagement
                 "Preloaded {CountLoaded} RSIs into {CountAtlas} Atlas(es?) ({CountNotAtlas} not atlassed, {CountErrored} errored) in {LoadTime}",
                 rsiList.Length,
                 finalAtlases.Count,
-                nonAtlasList.Length,
+                nonAtlasList.Count,
                 errors,
                 sw.Elapsed);
         }
@@ -495,6 +514,6 @@ namespace Robust.Client.ResourceManagement
         /// <summary>
         ///     List of all the RSIs stored in this level. RSIs are ordered from tallest to smallest per level.
         /// </summary>
-        public required List<RSIResource.LoadStepData> RSIList;
+        public required List<int> RSIList;
     }
 }

@@ -1,4 +1,4 @@
-name: Update Engine Version
+name: Update Version
 
 on:
   workflow_dispatch:
@@ -17,10 +17,10 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout engine
+      - name: Checkout RobustToolbox
         uses: actions/checkout@v7.0.1
 
-      - name: Configure git
+      - name: Configure Git
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
@@ -60,7 +60,7 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
 
-      - name: Update engine submodule
+      - name: Update RobustToolbox submodule
         run: |
           git checkout -B update/robust-$VERSION
           cd RobustToolbox

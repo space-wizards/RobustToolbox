@@ -386,7 +386,7 @@ namespace Robust.Shared.Reflection
 
         private static bool TypeNameMatchesEnumReference(ReadOnlySpan<char> fullName, ReadOnlySpan<char> typeName)
         {
-            if (fullName == typeName)
+            if (fullName.SequenceEqual(typeName))
                 return true;
 
             if (fullName.Length <= typeName.Length)

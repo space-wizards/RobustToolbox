@@ -48,7 +48,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         {
             var yaml = @"
 - test:
-    !type:testtype2
+    !type:TestType2
     testPropertyOne: A
     testPropertyTwo: 5
 ";

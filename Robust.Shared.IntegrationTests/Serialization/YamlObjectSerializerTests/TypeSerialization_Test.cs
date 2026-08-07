@@ -38,7 +38,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         {
             var yaml = @"
 test:
-  !type:testtype1
+  !type:TestType1
   {}";
 
             using var stream = new MemoryStream();

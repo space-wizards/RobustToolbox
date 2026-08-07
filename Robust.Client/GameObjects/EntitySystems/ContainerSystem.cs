@@ -118,8 +118,8 @@ namespace Robust.Client.GameObjects
                 {
                     var type = data.ContainerType switch
                     {
-                        "Container" => typeof(Container),
-                        "ContainerSlot" => typeof(ContainerSlot),
+                        nameof(Container) => typeof(Container),
+                        nameof(ContainerSlot) => typeof(ContainerSlot),
                         _ => null,
                     };
                     container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type!, inject: false);

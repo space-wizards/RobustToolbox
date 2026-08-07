@@ -9,7 +9,6 @@ on:
 
 env:
   VERSION: ${{ inputs.version }}
-  GH_TOKEN: ${{ secrets.UPDATE_ENGINE_TOKEN }}
 
 jobs:
   version:
@@ -44,6 +43,9 @@ jobs:
           - space-wizards/space-station-14
           - space-wizards/RobustToolboxTemplateSingleplayer
           - space-wizards/RobustToolboxTemplate
+
+    env:
+      GH_TOKEN: ${{ secrets.UPDATE_ENGINE_TOKEN }} # Use token that allows to manage PRs and contents in target repositories
 
     steps:
       - name: Checkout target

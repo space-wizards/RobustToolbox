@@ -361,17 +361,17 @@ namespace Robust.Shared.Serialization.Manager
         }
 
 #pragma warning disable CS0618
-        private static void RunAfterHook<TValue>(TValue instance, SerializationHookContext ctx)
-        {
-            if (instance is ISerializationHooks hooks)
-                RunAfterHookGenerated(hooks, ctx);
-        }
-
-        private static void RunAfterHookGenerated<TValue>(TValue instance, SerializationHookContext ctx) where TValue : ISerializationHooks
+        internal static void TryRunAfterHook<TValue>(TValue instance, SerializationHookContext ctx)
         {
             if (ctx.SkipHooks)
                 return;
 
+            if (instance is ISerializationHooks hooks)
+                ForceRunAfterHookGenerated(hooks, ctx);
+        }
+
+        private static void ForceRunAfterHookGenerated<TValue>(TValue instance, SerializationHookContext ctx) where TValue : ISerializationHooks
+        {
             DebugTools.Assert(!typeof(TValue).IsValueType, "ISerializationHooks must only be used on reference types");
 
             if (ctx.DeferQueue != null)

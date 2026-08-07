@@ -372,7 +372,7 @@ public sealed partial class SerializationManager
             var generated = Unsafe.As<ISerializationGenerated<T>>(source);
             var target = generated.Instantiate();
             generated.Copy(ref target, this, hookCtx, context);
-            RunAfterHook(target, hookCtx);
+            TryRunAfterHook(target, hookCtx);
             return target;
         }
         else
@@ -474,7 +474,7 @@ public sealed partial class SerializationManager
             var generated = Unsafe.As<ISerializationGenerated<T>>(source);
             target ??= generated.Instantiate();
             generated.Copy(ref target, this, hookCtx, context);
-            RunAfterHook(target, hookCtx);
+            TryRunAfterHook(target, hookCtx);
             return;
         }
 
@@ -489,7 +489,7 @@ public sealed partial class SerializationManager
             target = CreateCopy(source, hookCtx, context);
         }
 
-        RunAfterHook(target, hookCtx);
+        TryRunAfterHook(target, hookCtx);
     }
 
     public void CopyTo<T>(ITypeCopier<T> copier, T source, ref T target, ISerializationContext? context = null,
@@ -534,7 +534,7 @@ public sealed partial class SerializationManager
         }
 
         copier.CopyTo(this, source, ref target, DependencyCollection, hookCtx, context);
-        RunAfterHook(target, hookCtx);
+        TryRunAfterHook(target, hookCtx);
     }
 
     public void CopyTo<T, TCopier>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
@@ -607,13 +607,13 @@ public sealed partial class SerializationManager
             var generated = Unsafe.As<ISerializationGenerated<T>>(source);
             var target = generated.Instantiate();
             generated.Copy(ref target, this, hookCtx, context);
-            RunAfterHook(target, hookCtx);
+            TryRunAfterHook(target, hookCtx);
 
             return target;
         }
 
         var res = GetOrCreateCreateCopyGenericDelegate<T>()(source, hookCtx, context);
-        RunAfterHook(res, hookCtx);
+        TryRunAfterHook(res, hookCtx);
 
         return res;
     }
@@ -643,7 +643,7 @@ public sealed partial class SerializationManager
         }
 
         var res = copyCreator.CreateCopy(this, source, DependencyCollection, hookCtx, context);
-        RunAfterHook(res, hookCtx);
+        TryRunAfterHook(res, hookCtx);
 
         return res;
     }

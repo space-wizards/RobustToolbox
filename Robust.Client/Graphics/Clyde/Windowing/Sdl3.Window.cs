@@ -437,6 +437,11 @@ internal partial class Clyde
             SendCmd(new CmdWinSetVisible { Window = WinPtr(window), Visible = visible });
         }
 
+        public void WindowSetRelativeMouseMode(WindowReg window, bool enabled)
+        {
+            SendCmd(new CmdWinSetRelativeMouseMode { Window = WinPtr(window), Enabled = enabled });
+        }
+
         private static void WinThreadWinSetSize(CmdWinSetSize cmd)
         {
             var density = SDL.SDL_GetWindowPixelDensity(cmd.Window);
@@ -449,6 +454,12 @@ internal partial class Clyde
                 SDL.SDL_ShowWindow(cmd.Window);
             else
                 SDL.SDL_HideWindow(cmd.Window);
+        }
+
+        private void WinThreadWinSetRelativeMouseMode(CmdWinSetRelativeMouseMode cmd)
+        {
+            if (!SDL.SDL_SetWindowRelativeMouseMode(cmd.Window, cmd.Enabled))
+                _sawmill.Error("Failed to set relative mouse mode: {error}", SDL.SDL_GetError());
         }
 
         public void WindowRequestAttention(WindowReg window)

@@ -112,7 +112,8 @@ internal ref struct InternalPhysicsHull
 
 	    count = Math.Min(count, PhysicsConstants.MaxPolygonVertices);
 
-        Box2 aabb = new Box2(float.MaxValue, float.MaxValue, float.MinValue, float.MinValue);
+        var aabbBottomLeft = new Vector2(float.MaxValue, float.MaxValue);
+        var aabbTopRight = new Vector2(float.MinValue, float.MinValue);
 
 	    // Perform aggressive point welding. First point always remains.
 	    // Also compute the bounding box for later.
@@ -121,8 +122,8 @@ internal ref struct InternalPhysicsHull
 	    const float tolSqr = 16.0f * PhysicsConstants.LinearSlop * PhysicsConstants.LinearSlop;
 	    for (var i = 0; i < count; ++i)
 	    {
-		    aabb.BottomLeft = Vector2.Min(aabb.BottomLeft, points[i]);
-		    aabb.TopRight = Vector2.Max(aabb.TopRight, points[i]);
+		    aabbBottomLeft = Vector2.Min(aabbBottomLeft, points[i]);
+		    aabbTopRight = Vector2.Max(aabbTopRight, points[i]);
 
 		    var vi = points[i];
 
@@ -152,6 +153,7 @@ internal ref struct InternalPhysicsHull
 	    }
 
 	    // Find an extreme point as the first point on the hull
+	    var aabb = new Box2(aabbBottomLeft, aabbTopRight);
 	    var c = aabb.Center;
 	    var i1 = 0;
         float dsq1 = (ps[i1] - c).LengthSquared();

@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects;
 [RegisterComponent]
 [NetworkedComponent()]
 [AutoGenerateComponentState(true)]
-[Access(typeof(OccluderSystem))]
+[Access(typeof(OccluderSystem), Other = AccessPermissions.ReadExecute)]
 public sealed partial class OccluderComponent : Component, IComponentTreeEntry<OccluderComponent>
 {
     [DataField, AutoNetworkedField]

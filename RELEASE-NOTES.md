@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -26,7 +26,7 @@ Don't change the format without looking at the script!
 
 ### Internal
 
-*None yet*
+* Pool sprite post-shader render targets in Clyde. ([#6657](https://github.com/space-wizards/RobustToolbox/pull/6657))
 
 
 END TEMPLATE-->
@@ -47,11 +47,55 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Change `OccluderComponent` access to `ReadExecute`.
 
 ### Internal
 
 *None yet*
+
+
+## 286.0.0
+
+### Breaking changes
+
+* Box2 and Box2Rotated now validate their inputs and no longer accepts negative sizes.
+* Multiple PostShaders are now supported for SpriteComponent. The rendering paths for sprites also optionally take in post-shaders as well.
+
+### New features
+
+* `Thickness` is now serializable.
+* Added support for text outlines in `Font`, `DrawingHandleScreen`, `Label`, `RichTextLabel`, and overlays.
+* `IPrototypeManager `now has a new method, `TryGetEntityPrototypesByCategory `. It returns a set of serialized entity prototypes that form part of the given entity category
+* Expose relative mouse mode for windows.
+
+### Bugfixes
+
+* Fix Box2.EnlargeAabb's top bounds check.
+* Fix the NaN check for Box2.
+* Fix MoveBuffer not dropping proxies that move across maps in some cases.
+* Fix some serv5 edge cases.
+* Fix RobustIntegrationTest not raising an OnConnecting event for dummy sessions.
+* Fix server max player count on Discord RPC.
+
+### Other
+
+* Added Box2Rotated's Origin to its Hashcode.
+
+### Internal
+
+* Speedup many hotpaths on Box2 and Box2Rotated.
+* Cleanup ContainerSystem internally.
+* Standardize Roslyn analyzers and speed up some of them.
+* Make ComponentTreeEntry faster with GetHashCode.
+* Mark Direction extensions as Pure.
+
+
+## 285.0.1
+
+### Bugfixes
+
+* Fix FreeBSD builds and align CI with packaged builds.
+* Fix sRGB framebuffer for linux in GLES compatibility mode.
 
 
 ## 285.0.0
@@ -110,6 +154,93 @@ END TEMPLATE-->
 * Cache component net IDs and component changes in ClientGameStateManager.
 * Optimise entities being detached + re-inserted during PVS.
 * Moved the release build to the end of the content test action so tests are still run in debug.
+
+
+## 283.1.0
+
+### New features
+
+* The `Color` API now includes a `bool TryFromHex(ReadOnlySpan<char> hexColor, out Color color)` signature for returning a `bool` and `out Color` instead of a `Color?`.
+
+### Other
+
+* The `Color` API is now better documented.
+
+
+## 283.0.0
+
+### Breaking changes
+
+* The CompNetworkGenerator now .Clears and .Adds for collections where possible on the client.
+* Defer UI state application until the Update loop.
+* Expose the file name for selected file in dialog.
+* Removed unused GridEventHandler.
+
+### New features
+
+* Added a NetMessage.EstimateBufferSize() to provide an estimate of the initialCapacity required for NetMessages. This will make NetMessage take an existing adequately sized pooled buffer for your message. This is opt-in and will default to the old 4-byte size if not specified.
+* Add AudioParams.AddVariation.
+* Made AudioAuxiliaryComponent public.
+* Added API for OwnedTexture to load a texture without caching it.
+* Make TableContainer virtual and public.
+* Try to make connection failure message more useful by not defaulting to the first message (on IPV4 or IPV6).
+* Add methods for generating Color palettes.
+* Expose FovRenderTarget for the viewport.
+* Add TryComp(EntityUid, Type, IComponent?) proxy methods to EntitySystem.
+
+### Bugfixes
+
+* Static + StaticSundries will now also be considered for grid-traversal when a grid moves over these entities.
+* Fix field deltas not supporting 1-field states.
+* Fix interface cast in serialization generator.
+* Dispose PVS session states on disconnect.
+* Fix BaseWindow jittering on resize.
+
+### Internal
+
+* Improve clean and incremental build times around serialization generators.
+* Cleanup engine warnings around transform handling.
+* Made several internal performance improvements on debug and release.
+
+
+## 282.0.0
+
+### Breaking changes
+
+* Serv5 has been merged, re-doing the internals of DataDefinition serialization.
+  * It can now write into readonly fields.
+  * DataFields defined on objects that don't have DataDefinitions will cause errors in the analyzer and require the attribute.
+  * Value types will now be copied directly where possible rather than round-tripping through TryCustomCopy if no custom serializer is specified.
+  * It no longer uses as many expression trees so more tests should be able to run concurrently
+
+
+## 281.0.0
+
+### Breaking changes
+
+* Updated Lidgren.Network to `04678d057cc503f14f49801a725e61cfe27790a0` with additional fixes around MTU handling, NAT handling, and malformed packets.
+
+### New features
+
+* Exposed new Lidgren properties/CVARs for the above-mentioned fixes and previous updates around rate-limit settings.
+
+### Bugfixes
+
+* Fixed `EntitySystemSubscriptionsGenerator` not targeting server-side `SubscribeLocalEvent`/`SubscribeNetworkEvent` attributes.
+
+
+## 280.0.1
+
+### Bugfixes
+
+* Fix DynamicTree.Clear not removing node references.
+* Reverted validation for `UiBox2i` `ctor`s as it was causing regressions in debug UIs.
+* Fix command completions not being ordered. The list will still populate by any commands that contain the supplied arg.
+* Lidgren rate-limit settings were tweaked to make it less likely that players will unintentionally trigger it
+
+### Other
+
+* `EyeComponent.DrawLight` is now serialized.
 
 
 ## 280.0.0

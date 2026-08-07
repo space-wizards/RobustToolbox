@@ -113,7 +113,12 @@ public sealed partial class ContainerSystem : SharedContainerSystem
         {
             if (!component.Containers.TryGetValue(id, out var container))
             {
-                var type = _serializer.FindSerializedType(typeof(BaseContainer), data.ContainerType);
+                var type = data.ContainerType switch
+                {
+                    nameof(Container) => typeof(Container),
+                    nameof(ContainerSlot) => typeof(ContainerSlot),
+                    _ => null,
+                };
                 container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type!, inject: false);
                 container.Init(this, id, (uid, component));
                 component.Containers.Add(id, container);

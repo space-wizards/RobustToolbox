@@ -77,7 +77,7 @@ namespace Robust.Client.GameObjects
 
         private void LoadPrototypeData(Entity<SpriteComponent> sprite)
         {
-            LoadBaseRsi(sprite.Comp);
+            LoadBaseRsi(sprite, sprite);
             LoadLayers(sprite);
         }
 

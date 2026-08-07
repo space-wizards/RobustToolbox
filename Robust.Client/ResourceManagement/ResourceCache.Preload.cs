@@ -52,7 +52,7 @@ namespace Robust.Client.ResourceManagement
             _toDeserialize.Add(component);
         }
 
-        public void LoadBaseRsi(EntityUid entity, SpriteComponent component)
+        public void LoadBaseRsi(EntityUid uid, SpriteComponent component)
         {
             if (!string.IsNullOrWhiteSpace(component.rsi))
             {
@@ -69,7 +69,7 @@ namespace Robust.Client.ResourceManagement
                 component.Layers.Clear();
                 foreach (var datum in component.layerDatums)
                 {
-                    var layer = new SpriteComponent.Layer((entity, component), component.Layers.Count);
+                    var layer = new SpriteComponent.Layer((uid, component), component.Layers.Count);
                     component.Layers.Add(layer);
                     component.LayerSetData(layer, datum);
                 }

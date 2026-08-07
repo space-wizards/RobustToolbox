@@ -16,6 +16,6 @@ internal interface IResourceCacheInternal : IResourceCache
     void MountLoaderApi(IResourceManager manager, IFileApi api, string apiPrefix, ResPath? prefix = null);
 
     void AddToDeserialize(SpriteComponent component);
-    void LoadBaseRsi(EntityUid entity, SpriteComponent component);
+    void LoadBaseRsi(EntityUid uid, SpriteComponent component);
     void AfterDeserialization();
 }

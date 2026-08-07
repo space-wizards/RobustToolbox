@@ -19,15 +19,6 @@ namespace Robust.Shared.EntitySystemSubscriptionsGenerator;
 [Generator(LanguageNames.CSharp)]
 public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
 {
-    private static readonly DiagnosticDescriptor NotPartial = new(
-        Diagnostics.IdNonPartialContainingTypeForGeneratedSubscription,
-        "Containing class must be declared as Partial",
-        "Method is declared in type \"{0}\" which is not Partial",
-        "Usage",
-        DiagnosticSeverity.Error,
-        true
-    );
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var annotatedEntitySystems = Aggregate(
@@ -68,8 +59,6 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
             (productionContext, info) =>
             {
                 var (partialTypeInfo, subscriptions) = info;
-                if (partialTypeInfo.CheckPartialDiagnostic(productionContext, NotPartial))
-                    return;
 
                 var subscriptionsSyntax = new StringBuilder();
                 foreach (var method in subscriptions)

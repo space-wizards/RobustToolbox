@@ -65,18 +65,6 @@ public sealed record PartialTypeInfo(
         return false;
     }
 
-    [Obsolete("Diagnostics from source generators are recommended against, apparently: https://github.com/dotnet/roslyn/issues/71709")]
-    public bool CheckPartialDiagnostic(SourceProductionContext context, DiagnosticDescriptor diagnostic)
-    {
-        if (!IsValid)
-        {
-            context.ReportDiagnostic(Diagnostic.Create(diagnostic, SyntaxLocation, Parts[^1].DisplayName));
-            return true;
-        }
-
-        return false;
-    }
-
     public string GetQualifiedName()
     {
         return Namespace == null ? Name : $"{Namespace}.{Name}";

@@ -28,37 +28,49 @@ public sealed class PreferNonGenericVariantForAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics | GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(CheckForNonGenericVariant, OperationKind.Invocation);
+        context.RegisterCompilationStartAction(compilationContext =>
+        {
+            var preferNonGenericAttribute = compilationContext.Compilation.GetTypeByMetadataName(AttributeType);
+            if (preferNonGenericAttribute is null)
+                return;
+
+            compilationContext.RegisterOperationAction(
+                operationContext => CheckForNonGenericVariant(operationContext, preferNonGenericAttribute),
+                OperationKind.Invocation);
+        });
     }
 
-    private void CheckForNonGenericVariant(OperationAnalysisContext obj)
+    private void CheckForNonGenericVariant(OperationAnalysisContext obj, INamedTypeSymbol preferNonGenericAttribute)
     {
         if (obj.Operation is not IInvocationOperation invocationOperation) return;
 
-        var preferNonGenericAttribute = obj.Compilation.GetTypeByMetadataName(AttributeType);
-
-        HashSet<ITypeSymbol> forTypes = [];
+        AttributeData foundAttribute = null;
         foreach (var attribute in invocationOperation.TargetMethod.GetAttributes())
         {
             if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, preferNonGenericAttribute))
                 continue;
 
-            foreach (var type in attribute.ConstructorArguments[0].Values)
-                forTypes.Add((ITypeSymbol)type.Value);
-
+            foundAttribute = attribute;
             break;
         }
 
-        if (forTypes == null)
+        if (foundAttribute == null)
             return;
 
         foreach (var typeArg in invocationOperation.TargetMethod.TypeArguments)
         {
-            if (forTypes.Contains(typeArg))
+            foreach (var type in foundAttribute.ConstructorArguments[0].Values)
             {
+                if (type.Value is not ITypeSymbol forType ||
+                    !SymbolEqualityComparer.Default.Equals(forType, typeArg))
+                {
+                    continue;
+                }
+
                 obj.ReportDiagnostic(
-                Diagnostic.Create(UseNonGenericVariantDescriptor,
-                    invocationOperation.Syntax.GetLocation(), typeArg.Name));
+                    Diagnostic.Create(UseNonGenericVariantDescriptor,
+                        invocationOperation.Syntax.GetLocation(), typeArg.Name));
+                break;
             }
         }
     }

@@ -206,8 +206,13 @@ public sealed class LightLevelSystemTests
     {
         var entMan = sim.Resolve<IEntityManager>();
         var uid = entMan.Spawn(null, new MapCoordinates(position, mapId));
-        var occluderSys = entMan.System<ServerOccluderSystem>();
         var occluder = entMan.AddComponent<OccluderComponent>(uid);
-        occluderSys.SetBoundingBox(uid, new Box2(-0.25f, -2f, 0.25f, 2f), occluder);
+        entMan.System<ServerOccluderSystem>().SetPolygon(uid,
+        [
+            new(-0.25f, -2f),
+            new(0.25f, -2f),
+            new(0.25f, 2f),
+            new(-0.25f, 2f),
+        ], occluder);
     }
 }

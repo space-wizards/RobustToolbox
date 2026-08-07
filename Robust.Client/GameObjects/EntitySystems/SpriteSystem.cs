@@ -59,7 +59,6 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(SpriteTreeSystem));
 
             SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-            SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
             _query = GetEntityQuery<SpriteComponent>();
@@ -70,10 +69,40 @@ namespace Robust.Client.GameObjects
             return layer.Visible && layer.CopyToShaderParameters == null;
         }
 
-        private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
+        [SubscribeLocalEvent]
+        private void OnAdd(EntityUid uid, SpriteComponent component, ComponentAdd args)
+        {
+            LoadPrototypeData((uid, component));
+        }
+
+        private void LoadPrototypeData(Entity<SpriteComponent> sprite)
+        {
+            LoadBaseRsi(sprite.Comp);
+            LoadLayers(sprite);
+        }
+
+        private void LoadBaseRsi(EntityUid uid, SpriteComponent component)
         {
             _resourceCache.LoadBaseRsi(uid, component);
+        }
 
+        private void LoadLayers(Entity<SpriteComponent> sprite)
+        {
+            if (sprite.Comp.layerDatums.Count == 0)
+                return;
+
+            sprite.Comp.LayerMap.Clear();
+            sprite.Comp.Layers.Clear();
+            foreach (var datum in sprite.Comp.layerDatums)
+            {
+                var layer = new Layer(sprite, sprite.Comp.Layers.Count);
+                sprite.Comp.Layers.Add(layer);
+                LayerSetData(layer, datum);
+            }
+        }
+        [SubscribeLocalEvent]
+        private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
+        {
             try
             {
                 for (var i = 0; i < component.PostShaders.Count; i++)

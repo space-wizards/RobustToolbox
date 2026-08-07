@@ -182,9 +182,11 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
         public void BaseContainer_InsertGrid_False()
         {
             var sim = SimulationFactory();
-            var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapSys = entMan.System<SharedMapSystem>();
+            var containerSys = entMan.System<ContainerSystem>();
 
-            var grid = sim.Resolve<IMapManager>().CreateGridEntity(new MapId(1)).Owner;
+            var grid = mapSys.CreateGridEntity(new MapId(1)).Owner;
             var entity = sim.SpawnEntity(null,_coords);
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
@@ -272,11 +274,10 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             Assert.That(state.Containers.Keys.First(), Is.EqualTo("dummy"));
             Assert.That(cont.OccludesLight, Is.True);
             Assert.That(cont.ShowContents, Is.True);
-            Assert.That(cont.ContainedEntities.Count, Is.EqualTo(1));
+            Assert.That(cont.ContainedEntities, Has.Length.EqualTo(1));
             Assert.That(cont.ContainedEntities[0], Is.EqualTo(entManager.GetNetEntity(childEnt)));
         }
 
-        [SerializedType(nameof(ContainerOnlyContainer))]
         private sealed partial class ContainerOnlyContainer : BaseContainer
         {
             /// <summary>

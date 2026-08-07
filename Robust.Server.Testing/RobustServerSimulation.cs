@@ -24,6 +24,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
@@ -211,31 +212,48 @@ namespace Robust.UnitTesting.Server
                 AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"),
                 AppDomain.CurrentDomain.GetAssemblyByName("Robust.Server"),
             });
+            realReflection.EnsureGetAllTypesCache();
 
             var reflectionManager = new Mock<IReflectionManager>();
             reflectionManager
-                .Setup(x => x.FindTypesWithAttribute<MeansDataDefinitionAttribute>())
-                .Returns(() => new[]
-                {
-                    typeof(DataDefinitionAttribute)
-                });
+                .Setup(x => x.FindTypesWithAttribute<FlagsForAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<FlagsForAttribute>);
 
             reflectionManager
-                .Setup(x => x.FindTypesWithAttribute(typeof(DataDefinitionAttribute)))
-                .Returns(() => new[]
-                {
-                    typeof(EntityPrototype),
-                    typeof(TransformComponent),
-                    typeof(MetaDataComponent)
-                });
+                .Setup(x => x.FindTypesWithAttribute<ConstantsForAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<ConstantsForAttribute>);
 
             reflectionManager
                 .Setup(x => x.FindTypesWithAttribute<TypeSerializerAttribute>())
-                .Returns(() => realReflection.FindTypesWithAttribute<TypeSerializerAttribute>());
+                .Returns(realReflection.FindTypesWithAttribute<TypeSerializerAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttribute<MeansDataDefinitionAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<MeansDataDefinitionAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttribute<MeansDataRecordAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<MeansDataRecordAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttribute<ImplicitDataRecordAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<ImplicitDataRecordAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttributeSet<CopyByRefAttribute>())
+                .Returns(realReflection.FindTypesWithAttributeSet<CopyByRefAttribute>);
 
             reflectionManager
                 .Setup(x => x.FindAllTypes())
-                .Returns(() => realReflection.FindAllTypes());
+                .Returns(realReflection.FindAllTypes);
+
+            reflectionManager
+                .Setup(x => x.IsAttributeDefined(It.IsAny<Type>(), It.IsAny<Type>()))
+                .Returns((Type type1, Type type2) => realReflection.IsAttributeDefined(type1, type2));
 
             container.RegisterInstance<IBaseServerInternal>(new Mock<IBaseServerInternal>().Object);
             container.RegisterInstance<IReflectionManager>(reflectionManager.Object); // tests should not be searching for types
@@ -248,9 +266,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntityManager, ServerEntityManager>();
             container.Register<IServerEntityNetworkManager, ServerEntityManager>();
             container.Register<EntityManager, ServerEntityManager>();
-            container.Register<IMapManager, NetworkedMapManager>();
-            container.Register<INetworkedMapManager, NetworkedMapManager>();
-            container.Register<IMapManagerInternal, NetworkedMapManager>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IRobustRandom, RobustRandom>();
             container.Register<IPrototypeManager, ServerPrototypeManager>();
@@ -311,6 +326,8 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<OccluderTreeComponent>();
             compFactory.RegisterClass<CollideOnAnchorComponent>();
             compFactory.RegisterClass<ActorComponent>();
+            compFactory.RegisterClass<ChunkEntityComponent>();
+            compFactory.RegisterClass<ChunkContainerComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -336,16 +353,13 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
             entitySystemMan.LoadExtraSystemType<PvsSystem>();
+            entitySystemMan.LoadExtraSystemType<ServerChunkEntitySystem>();
             entitySystemMan.LoadExtraSystemType<InputSystem>();
             entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 
-            var mapManager = container.Resolve<IMapManager>();
-            mapManager.Initialize();
-
             entityMan.Startup();
-            mapManager.Startup();
 
             container.Resolve<INetManager>().Initialize(true);
             container.Resolve<ISerializationManager>().Initialize();

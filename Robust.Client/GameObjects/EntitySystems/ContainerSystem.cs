@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -115,7 +116,12 @@ namespace Robust.Client.GameObjects
             {
                 if (!component.Containers.TryGetValue(id, out var container))
                 {
-                    var type = _serializer.FindSerializedType(typeof(BaseContainer), data.ContainerType);
+                    var type = data.ContainerType switch
+                    {
+                        "Container" => typeof(Container),
+                        "ContainerSlot" => typeof(ContainerSlot),
+                        _ => null,
+                    };
                     container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type!, inject: false);
                     container.Init(this, id, (uid, component));
                     component.Containers.Add(id, container);
@@ -135,7 +141,7 @@ namespace Robust.Client.GameObjects
 
                 foreach (var entity in container.ContainedEntities)
                 {
-                    if (!stateEnts.Contains(entity))
+                    if (!Enumerable.Contains(stateEnts, entity))
                         toRemove.Add(entity);
                 }
 
@@ -155,7 +161,7 @@ namespace Robust.Client.GameObjects
                 var removedExpected = new ValueList<NetEntity>();
                 foreach (var netEntity in container.ExpectedEntities)
                 {
-                    if (!stateNetEnts.Contains(netEntity))
+                    if (!Enumerable.Contains(stateNetEnts, netEntity))
                         removedExpected.Add(netEntity);
                 }
 

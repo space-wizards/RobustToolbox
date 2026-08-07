@@ -14,6 +14,8 @@ env:
 jobs:
   version:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout engine

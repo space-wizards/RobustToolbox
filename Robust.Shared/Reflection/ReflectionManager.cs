@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
@@ -39,11 +40,14 @@ namespace Robust.Shared.Reflection
 
         private ImmutableArray<Type> _getAllTypesCache = ImmutableArray<Type>.Empty;
 
-        private ImmutableDictionary<Type, ImmutableArray<Type>> _getAllTypesInheritanceCache =
+        private ImmutableDictionary<Type, ImmutableArray<Type>> _inheritanceCache =
             ImmutableDictionary<Type, ImmutableArray<Type>>.Empty;
 
-        private ImmutableDictionary<Type, ImmutableHashSet<Type>> _getAllTypesAttributeCache =
+        private ImmutableDictionary<Type, ImmutableHashSet<Type>> _attributeCache =
             ImmutableDictionary<Type, ImmutableHashSet<Type>>.Empty;
+
+        private ImmutableDictionary<string, ImmutableArray<Type>> _allEnumCache =
+            ImmutableDictionary<string, ImmutableArray<Type>>.Empty;
 
         private ISawmill _sawmill = default!;
 
@@ -67,7 +71,7 @@ namespace Robust.Shared.Reflection
             if (inclusive)
                 yield return baseType;
 
-            if (!_getAllTypesInheritanceCache.TryGetValue(baseType, out var inheritors))
+            if (!_inheritanceCache.TryGetValue(baseType, out var inheritors))
                 yield break;
 
             foreach (var inheritor in inheritors)
@@ -95,6 +99,7 @@ namespace Robust.Shared.Reflection
             var typesCache = ImmutableArray.CreateBuilder<Type>(totalLength);
             var inheritanceCache = ImmutableDictionary.CreateBuilder<Type, (List<Type> List, HashSet<Type> Set)>();
             var attributeCache = ImmutableDictionary.CreateBuilder<Type, HashSet<Type>>();
+            var enumCache = ImmutableDictionary.CreateBuilder<string, List<Type>>();
 
             foreach (var typeSet in typeSets)
             {
@@ -156,6 +161,27 @@ namespace Robust.Shared.Reflection
 
                         attributes.Add(type);
                     }
+
+                    if (type.IsEnum)
+                    {
+                        var fullName = type.FullName!;
+                        var types = enumCache.GetOrNew(fullName);
+                        types.Add(type);
+
+                        types = enumCache.GetOrNew(type.Name);
+                        types.Add(type);
+
+                        var declaringType = type.DeclaringType;
+                        var lastIndexOf = fullName.LastIndexOf('.');
+                        while (declaringType != null && lastIndexOf != -1)
+                        {
+                            types = enumCache.GetOrNew(fullName[(lastIndexOf + 1)..]);
+                            types.Add(type);
+
+                            declaringType = declaringType.DeclaringType;
+                            lastIndexOf = fullName.LastIndexOf('.', lastIndexOf - 1, lastIndexOf - 1);
+                        }
+                    }
                 }
             }
 
@@ -178,10 +204,11 @@ namespace Robust.Shared.Reflection
             }
 
             _getAllTypesCache = typesCache.ToImmutable();
-            _getAllTypesInheritanceCache = inheritanceCache
+            _inheritanceCache = inheritanceCache
                 .ToImmutableDictionary(kvp => kvp.Key, kvp => kvp.Value.List.ToImmutableArray());
-            _getAllTypesAttributeCache = attributeCache
+            _attributeCache = attributeCache
                 .ToImmutableDictionary(kvp => kvp.Key, kvp => kvp.Value.ToImmutableHashSet());
+            _allEnumCache = enumCache.ToImmutableDictionary(kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
         }
 
         public void LoadAssemblies(params Assembly[] args) => LoadAssemblies(args.AsEnumerable());
@@ -194,7 +221,8 @@ namespace Robust.Shared.Reflection
 
             this.assemblies.AddRange(assembliesArray);
             _getAllTypesCache = ImmutableArray<Type>.Empty;
-            _getAllTypesInheritanceCache = ImmutableDictionary<Type, ImmutableArray<Type>>.Empty;
+            _inheritanceCache = ImmutableDictionary<Type, ImmutableArray<Type>>.Empty;
+            _allEnumCache = ImmutableDictionary<string, ImmutableArray<Type>>.Empty;
             OnAssemblyAdded?.Invoke(this, new ReflectionUpdateEventArgs(this));
         }
 
@@ -294,7 +322,7 @@ namespace Robust.Shared.Reflection
         public IEnumerable<Type> FindTypesWithAttribute(Type attributeType)
         {
             EnsureGetAllTypesCache();
-            return _getAllTypesAttributeCache.GetValueOrDefault(attributeType) ?? Enumerable.Empty<Type>();
+            return _attributeCache.GetValueOrDefault(attributeType) ?? Enumerable.Empty<Type>();
         }
 
         public IEnumerable<Type> FindAllTypes()
@@ -352,34 +380,36 @@ namespace Robust.Shared.Reflection
                     var dotIndex = cropped.LastIndexOf('.');
                     var typeName = cropped[..dotIndex];
 
+                    var firstDot = typeName.IndexOf('.');
+                    if (firstDot != -1)
+                        typeName = typeName[(firstDot + 1)..];
+
                     var value = cropped[(dotIndex + 1)..];
 
-                    foreach (var assembly in assemblies)
+                    if (!_allEnumCache.TryGetValue(typeName.ToString(), out var enums))
+                        return null;
+
+                    foreach (var @enum in enums)
                     {
-                        foreach (var type in assembly.DefinedTypes)
+                        if (!TypeNameMatchesEnumReference(@enum.FullName!, typeName))
+                            continue;
+
+                        var e = (Enum)Enum.Parse(@enum, value);
+                        if (!_reverseEnumCache.TryAdd(e, r) &&
+                            r != _reverseEnumCache[e])
                         {
-                            if (!type.IsEnum || !TypeNameMatchesEnumReference(type.FullName!, typeName))
-                            {
-                                continue;
-                            }
-
-                            var e = (Enum)Enum.Parse(type, value);
-                            if (!_reverseEnumCache.TryAdd(e, r) &&
-                                r != _reverseEnumCache[e])
-                            {
-                                _sawmill.Warning(
-                                    $"Conflicting enum references encountered. Enum: {e}. Existing: {_reverseEnumCache[e]}. New: {r}");
-                            }
-
-                            return e;
+                            _sawmill.Warning(
+                                $"Conflicting enum references encountered. Enum: {e}. Existing: {_reverseEnumCache[e]}. New: {r}");
                         }
-                    }
 
-                    if (shouldThrow)
-                        throw new ArgumentException($"Could not resolve enum reference: {r}.");
+                        return e;
+                    }
 
                     return null;
                 });
+
+            if (@enum == null && shouldThrow)
+                throw new ArgumentException($"Could not resolve enum reference: {reference}.");
 
             return @enum != null;
         }
@@ -435,14 +465,14 @@ namespace Robust.Shared.Reflection
 
         public bool IsAttributeDefined(Type type, Type attribute)
         {
-            return _getAllTypesAttributeCache.TryGetValue(attribute, out var attributes) &&
+            return _attributeCache.TryGetValue(attribute, out var attributes) &&
                    attributes.Contains(type);
         }
 
         public ImmutableHashSet<Type> FindTypesWithAttributeSet<T>()
         {
             EnsureGetAllTypesCache();
-            return _getAllTypesAttributeCache.GetValueOrDefault(typeof(T)) ?? ImmutableHashSet<Type>.Empty;
+            return _attributeCache.GetValueOrDefault(typeof(T)) ?? ImmutableHashSet<Type>.Empty;
         }
     }
 }

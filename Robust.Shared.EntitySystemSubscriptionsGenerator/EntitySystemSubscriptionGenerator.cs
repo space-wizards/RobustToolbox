@@ -59,6 +59,8 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
             (productionContext, info) =>
             {
                 var (partialTypeInfo, subscriptions) = info;
+                if (!partialTypeInfo.IsValid)
+                    return;
 
                 var subscriptionsSyntax = new StringBuilder();
                 foreach (var method in subscriptions)

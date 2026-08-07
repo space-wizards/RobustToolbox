@@ -30,7 +30,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             var scalar = (MappingDataNode) mapping;
 
             Assert.That(scalar.Children.Count, Is.EqualTo(0));
-            Assert.That(scalar.Tag, Is.EqualTo("!type:TestTypeOne"));
+            Assert.That(scalar.Tag, Is.EqualTo("!type:TestType1"));
         }
 
         [Test]

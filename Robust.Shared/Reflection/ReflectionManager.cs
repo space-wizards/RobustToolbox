@@ -77,7 +77,7 @@ namespace Robust.Shared.Reflection
             }
         }
 
-        private void EnsureGetAllTypesCache()
+        internal void EnsureGetAllTypesCache()
         {
             if (_getAllTypesCache.Length != 0)
                 return;

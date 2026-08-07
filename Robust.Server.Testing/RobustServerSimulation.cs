@@ -212,35 +212,48 @@ namespace Robust.UnitTesting.Server
                 AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"),
                 AppDomain.CurrentDomain.GetAssemblyByName("Robust.Server"),
             });
+            realReflection.EnsureGetAllTypesCache();
 
             var reflectionManager = new Mock<IReflectionManager>();
             reflectionManager
-                .Setup(x => x.FindTypesWithAttribute<MeansDataDefinitionAttribute>())
-                .Returns(() => new[]
-                {
-                    typeof(DataDefinitionAttribute)
-                });
+                .Setup(x => x.FindTypesWithAttribute<FlagsForAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<FlagsForAttribute>);
 
             reflectionManager
-                .Setup(x => x.FindTypesWithAttribute(typeof(DataDefinitionAttribute)))
-                .Returns(() => new[]
-                {
-                    typeof(EntityPrototype),
-                    typeof(TransformComponent),
-                    typeof(MetaDataComponent)
-                });
+                .Setup(x => x.FindTypesWithAttribute<ConstantsForAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<ConstantsForAttribute>);
 
             reflectionManager
                 .Setup(x => x.FindTypesWithAttribute<TypeSerializerAttribute>())
-                .Returns(() => realReflection.FindTypesWithAttribute<TypeSerializerAttribute>());
+                .Returns(realReflection.FindTypesWithAttribute<TypeSerializerAttribute>);
 
             reflectionManager
-                .Setup(x => x.FindAllTypes())
-                .Returns(() => realReflection.FindAllTypes());
+                .Setup(x => x.FindTypesWithAttribute<MeansDataDefinitionAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<MeansDataDefinitionAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttribute<MeansDataRecordAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<MeansDataRecordAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttribute<ImplicitDataRecordAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<ImplicitDataRecordAttribute>);
 
             reflectionManager
                 .Setup(x => x.FindTypesWithAttributeSet<CopyByRefAttribute>())
                 .Returns(realReflection.FindTypesWithAttributeSet<CopyByRefAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindAllTypes())
+                .Returns(realReflection.FindAllTypes);
+
+            reflectionManager
+                .Setup(x => x.IsAttributeDefined(It.IsAny<Type>(), It.IsAny<Type>()))
+                .Returns((Type type1, Type type2) => realReflection.IsAttributeDefined(type1, type2));
 
             container.RegisterInstance<IBaseServerInternal>(new Mock<IBaseServerInternal>().Object);
             container.RegisterInstance<IReflectionManager>(reflectionManager.Object); // tests should not be searching for types

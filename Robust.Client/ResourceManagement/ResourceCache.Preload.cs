@@ -4,19 +4,18 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Audio;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
-using Robust.Shared.Audio;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -32,10 +31,13 @@ namespace Robust.Client.ResourceManagement
         [Dependency] private ILogManager _logManager = default!;
         [Dependency] private IConfigurationManager _configurationManager = default!;
 
+        private readonly List<SpriteComponent> _toDeserialize = new();
+
         public void PreloadTextures()
         {
             var sawmill = _logManager.GetSawmill("res.preload");
 
+            PreloadRsis(sawmill);
             if (!_configurationManager.GetCVar(CVars.ResTexturePreloadingEnabled))
             {
                 sawmill.Debug($"Skipping texture preloading due to CVar value.");
@@ -43,7 +45,43 @@ namespace Robust.Client.ResourceManagement
             }
 
             PreloadTextures(sawmill);
-            PreloadRsis(sawmill);
+        }
+
+        public void AddToDeserialize(SpriteComponent component)
+        {
+            _toDeserialize.Add(component);
+        }
+
+        public void LoadBaseRsi(EntityUid entity, SpriteComponent component)
+        {
+            if (!string.IsNullOrWhiteSpace(component.rsi))
+            {
+                var rsiPath = SpriteSystem.TextureRoot / component.rsi;
+                if (TryGetResource(rsiPath, out RSIResource? resource))
+                    component._baseRsi = resource.RSI;
+                else
+                    Sawmill.Error($"Unable to load RSI '{rsiPath}'.");
+            }
+
+            if (component.layerDatums.Count != 0)
+            {
+                component.LayerMap.Clear();
+                component.Layers.Clear();
+                foreach (var datum in component.layerDatums)
+                {
+                    var layer = new SpriteComponent.Layer((entity, component), component.Layers.Count);
+                    component.Layers.Add(layer);
+                    component.LayerSetData(layer, datum);
+                }
+            }
+        }
+
+        public void AfterDeserialization()
+        {
+            foreach (var sprite in _toDeserialize)
+            {
+                LoadBaseRsi(default, sprite);
+            }
         }
 
         private void PreloadTextures(ISawmill sawmill)
@@ -217,7 +255,20 @@ namespace Robust.Client.ResourceManagement
             // The array must be sorted from biggest to smallest first.
             Array.Sort(atlasList, (b, a) => a.AtlasSheet.Height.CompareTo(b.AtlasSheet.Height));
 
+            #if FULL_RELEASE
             var maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
+            #else
+            // For tests
+            var maxSize = 12288;
+            try
+            {
+                maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+            #endif
 
             // THIS IS NOT GUARANTEED TO HAVE ANY PARTICULARLY LOGICAL ORDERING.
             // E.G you could have atlas 1 RSIs appear *before* you're done seeing atlas 2 RSIs.

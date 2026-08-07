@@ -29,7 +29,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private IConfigurationManager _cfg = default!;
         [Dependency] private IEyeManager _eye = default!;
         [Dependency] private IGameTiming _timing = default!;
-        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private IResourceCacheInternal _resourceCache = default!;
         [Dependency] private IPrototypeManager _prototypes = default!;
 
         // Note that any new system dependencies have to be added to RobustUnitTest.BaseSetup()
@@ -72,26 +72,7 @@ namespace Robust.Client.GameObjects
 
         private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
         {
-            if (!string.IsNullOrWhiteSpace(component.rsi))
-            {
-                var rsiPath = TextureRoot / component.rsi;
-                if (_resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
-                    component._baseRsi = resource.RSI;
-                else
-                    Log.Error($"Unable to load RSI '{rsiPath}'.");
-            }
-
-            if (component.layerDatums.Count != 0)
-            {
-                component.LayerMap.Clear();
-                component.Layers.Clear();
-                foreach (var datum in component.layerDatums)
-                {
-                    var layer = new Layer((uid, component), component.Layers.Count);
-                    component.Layers.Add(layer);
-                    LayerSetData(layer, datum);
-                }
-            }
+            _resourceCache.LoadBaseRsi(uid, component);
 
             try
             {

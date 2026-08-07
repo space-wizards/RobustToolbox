@@ -39,7 +39,7 @@ namespace Robust.Client.GameObjects
     {
         public const string LogCategory = "go.comp.sprite";
 
-        [Dependency] private IResourceCache resourceCache = default!;
+        [Dependency] private IResourceCacheInternal resourceCache = default!;
         [Dependency] private IPrototypeManager prototypes = default!;
         [Dependency] private EntityManager entities = default!;
         [Dependency] private IReflectionManager reflection = default!;
@@ -274,8 +274,11 @@ namespace Robust.Client.GameObjects
         {
             // Please somebody burn this to the ground. There is so much spaghetti.
             // Why has no one answered my prayers.
+            // I answered half of your prayer someone please answer the rest
 
             IoCManager.InjectDependencies(this);
+
+            resourceCache.AddToDeserialize(this);
 
             if (layerDatums.Count == 0)
             {

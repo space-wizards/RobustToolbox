@@ -12,6 +12,7 @@ using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio;
@@ -43,6 +44,10 @@ internal sealed partial class AudioManager : IAudioInternal
     private bool _audioInitialized;
     private bool _focused = true;
     private bool _muteUnfocused;
+    private const float MasterFadeDuration = 0.25f;
+    private float _masterFadeElapsed = MasterFadeDuration;
+    private float _masterFadeStartGain = 1f;
+    private float _masterFadeTargetGain = 1f;
 
     public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
     public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -186,7 +191,7 @@ internal sealed partial class AudioManager : IAudioInternal
     private void OnMuteUnfocusedChanged(bool muteUnfocused)
     {
         _muteUnfocused = muteUnfocused;
-        SetMasterGain(_cfg.GetCVar(CVars.AudioMasterVolume));
+        SetMasterFadeTarget(GetMasterFadeTarget());
     }
 
     private void OnWindowFocused(WindowFocusedEventArgs args)
@@ -195,7 +200,23 @@ internal sealed partial class AudioManager : IAudioInternal
             return;
 
         _focused = args.Focused;
-        SetMasterGain(_cfg.GetCVar(CVars.AudioMasterVolume));
+        SetMasterFadeTarget(GetMasterFadeTarget());
+    }
+
+    private float GetMasterFadeTarget()
+    {
+        return _muteUnfocused && !_focused ? 0f : 1f;
+    }
+
+    private void SetMasterFadeTarget(float fadeGain)
+    {
+        if (MathF.Abs(_masterFadeTargetGain - fadeGain) < 0.001f)
+            return;
+
+        _masterFadeStartGain = FadeGain;
+        _masterFadeTargetGain = fadeGain;
+        _masterFadeElapsed = 0f;
+        ApplyMasterGain();
     }
 
     private void OnAudioDeviceChanged(string deviceSpecifier)

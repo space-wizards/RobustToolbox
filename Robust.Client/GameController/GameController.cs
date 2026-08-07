@@ -699,6 +699,7 @@ namespace Robust.Client
                 _transfer.FrameUpdate();
             }
 
+            _audio.FrameUpdate(frameEventArgs.DeltaSeconds);
             _audio.FlushALDisposeQueues();
         }
 

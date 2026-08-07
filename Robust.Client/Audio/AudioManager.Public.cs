@@ -90,6 +90,17 @@ internal partial class AudioManager
         AL.Listener(ALListenerfv.Orientation, ref at, ref up);
     }
 
+    public void FrameUpdate(float frameTime)
+    {
+        if (MathF.Abs(FadeGain - _masterFadeTargetGain) < 0.001f)
+            return;
+
+        _masterFadeElapsed = MathF.Min(_masterFadeElapsed + frameTime, MasterFadeDuration);
+        var t = MasterFadeDuration <= 0f ? 1f : _masterFadeElapsed / MasterFadeDuration;
+        FadeGain = MathHelper.Lerp(_masterFadeStartGain, _masterFadeTargetGain, t);
+        ApplyMasterGain();
+    }
+
     void IAudioInternal.Remove(AudioStream stream)
     {
         if (stream.ClydeHandle == null)
@@ -235,14 +246,23 @@ internal partial class AudioManager
 
     public void SetMasterGain(float newGain)
     {
-        var effectiveGain = _muteUnfocused && !_focused ? 0f : newGain;
-
         if (newGain < 0f)
         {
             OpenALSawmill.Error("Tried to set master gain below 0, clamping to 0");
-            AL.Listener(ALListenerf.Gain, 0f);
-            return;
+            newGain = 0f;
         }
+
+        BaseGain = newGain;
+        ApplyMasterGain();
+    }
+
+    public float BaseGain { get; private set; }
+
+    public float FadeGain { get; private set; } = 1f;
+
+    private void ApplyMasterGain()
+    {
+        var effectiveGain = BaseGain * FadeGain;
 
 
         #region Platform hack for MacOS

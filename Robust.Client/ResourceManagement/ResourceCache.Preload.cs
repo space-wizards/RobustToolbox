@@ -185,9 +185,13 @@ namespace Robust.Client.ResourceManagement
                 .Where(p => p.Extension == "rsic")
                 .Select(c => c.WithExtension("rsi"));
 
-            var rsiList = foundRsiList
-                .Concat(foundRsicList)
-                .Where(p => !resList.ContainsKey(p))
+            var rsiListEnumerable = foundRsiList
+                .Concat(foundRsicList);
+
+            if (resList.Count > 0)
+                rsiListEnumerable = rsiListEnumerable.Where(p => !resList.ContainsKey(p));
+
+            var rsiList = rsiListEnumerable
                 .Select(p => new RSIResource.LoadStepData {Path = p})
                 .ToArray();
 

@@ -26,7 +26,7 @@ Don't change the format without looking at the script!
 
 ### Internal
 
-* Pool sprite post-shader render targets in Clyde. ([#6657](https://github.com/space-wizards/RobustToolbox/pull/6657))
+*None yet*
 
 
 END TEMPLATE-->
@@ -47,11 +47,47 @@ END TEMPLATE-->
 
 ### Other
 
-* Change `OccluderComponent` access to `ReadExecute`.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 287.0.0
+
+### Breaking changes
+
+* OccluderComponent now supports convex polygons and no longer uses a bounding box. These use the same limitations as convex hulls for physics (no more than 8 points).
+* Update Yamldotnet to 18.1.0
+* EntityPrototype components are now interned and shared. Any components that have the same datafield data are now shared when stored on PrototypeManager, saving significant amounts of memory.
+* RSIStates now store AtlasTexture and not Texture, speeding up RSI rendering by directly passing it through.
+* Reverted BUI state queueing.
+
+### New features
+
+* Added a field to `ComponentNetworkGenerator` to exclude components from replays.
+* Added support for before and after subscriptions for the new `[SubscribeLocalEvent]` and related attributes.
+
+### Bugfixes
+
+* Make DefaultWindow call base.FrameUpdate to support animations.
+* Fix Discord RPC playtime resetting on join.
+* Fix some WordWrap bugs.
+
+### Other
+
+* Change `OccluderComponent` access to `ReadExecute`.
+* Components that are being removed are no longer serialized.
+* Added test workflows for the template repos.
+
+### Internal
+
+* Rewrite ReflectionManager for performance reasons.
+* Made many optimizations to GameStates, componentregistryserializer, IoC dependencies, and collection serializers.
+* Remove redundant MsgEntity properties.
+* Cached texture UVs for rendering atlas textures.
+* Pool sprite post-shader render targets in Clyde.
 
 
 ## 286.0.0

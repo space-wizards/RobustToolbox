@@ -14,16 +14,12 @@ env:
 jobs:
   version:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout engine
         uses: actions/checkout@v7.0.1
-        with:
-          submodules: recursive
 
-      - name: Configure Git
+      - name: Configure git
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
@@ -38,9 +34,6 @@ jobs:
     name: Update ${{ matrix.repo }}
     runs-on: ubuntu-latest
     needs: version
-    permissions:
-      contents: write
-      pull-requests: write
 
     strategy:
       fail-fast: false

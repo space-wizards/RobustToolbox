@@ -25,12 +25,12 @@ public partial class PrototypeManager
     private readonly List<ResPath> _abstractDirectories = new();
 
     /// <summary>
-    ///     Which directories to force all prototypes recursively within to be partial.
+    /// Which directories to force all prototypes recursively within to be partial.
     /// </summary>
     private readonly List<(ResPath File, int Index)> _partialFiles = new();
 
     /// <summary>
-    ///     Which directories to force all prototypes recursively within to be partial.
+    /// Which directories to force all prototypes recursively within to be partial.
     /// </summary>
     private readonly List<ResPath> _partialDirectories = new();
 

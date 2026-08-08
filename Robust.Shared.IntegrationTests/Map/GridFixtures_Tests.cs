@@ -56,8 +56,8 @@ internal sealed class GridFixtures_Tests : RobustIntegrationTest
         var server = NewFixtureCounterSimulation();
         var map = server.CreateMap();
         var entManager = server.Resolve<IEntityManager>();
-        var grid = server.Resolve<IMapManager>().CreateGridEntity(map.MapId);
         var mapSystem = entManager.System<SharedMapSystem>();
+        var grid = mapSystem.CreateGridEntity(map.MapId);
         var fixtures = entManager.GetComponent<FixturesComponent>(grid);
         var counter = entManager.System<FixtureChangeCounterSystem>();
 
@@ -83,8 +83,8 @@ internal sealed class GridFixtures_Tests : RobustIntegrationTest
         var server = NewFixtureCounterSimulation();
         var map = server.CreateMap();
         var entManager = server.Resolve<IEntityManager>();
-        var grid = server.Resolve<IMapManager>().CreateGridEntity(map.MapId);
         var mapSystem = entManager.System<SharedMapSystem>();
+        var grid = mapSystem.CreateGridEntity(map.MapId);
         var fixtures = entManager.GetComponent<FixturesComponent>(grid);
         var counter = entManager.System<FixtureChangeCounterSystem>();
 
@@ -119,8 +119,8 @@ internal sealed class GridFixtures_Tests : RobustIntegrationTest
         var server = RobustServerSimulation.NewSimulation().InitializeInstance();
         var map = server.CreateMap();
         var entManager = server.Resolve<IEntityManager>();
-        var grid = server.Resolve<IMapManager>().CreateGridEntity(map.MapId);
         var mapSystem = entManager.System<SharedMapSystem>();
+        var grid = mapSystem.CreateGridEntity(map.MapId);
         var fixtures = entManager.GetComponent<FixturesComponent>(grid);
 
         mapSystem.SetTile(grid, new Vector2i(-1, 2), new Tile(1));

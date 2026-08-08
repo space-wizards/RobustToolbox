@@ -9,6 +9,7 @@ namespace Robust.Client.Graphics
         public string Title = "";
         public bool Maximized;
         public bool Visible = true;
+        public bool TitleBarVisible = true;
         public IClydeMonitor? Monitor;
         public bool Fullscreen;
 

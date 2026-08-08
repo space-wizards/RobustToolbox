@@ -1,8 +1,8 @@
-﻿using System;
-using System.Numerics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using SDL3;
+using System;
+using System.Numerics;
 
 namespace Robust.Client.Graphics
 {
@@ -20,6 +20,10 @@ namespace Robust.Client.Graphics
         bool IsFocused { get; }
         bool IsMinimized { get; }
         bool IsVisible { get; set; }
+        /// <summary>
+        ///     If set to false, then the titlebar and border of the window will be hidden.
+        /// </summary>
+        bool IsBordered { get; set; }
         Vector2 ContentScale { get; }
 
         /// <summary>

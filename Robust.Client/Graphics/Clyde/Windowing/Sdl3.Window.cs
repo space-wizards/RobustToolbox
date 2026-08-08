@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -265,14 +265,14 @@ internal partial class Clyde
                 switch (_videoDriver)
                 {
                     case SdlVideoDriver.Windows:
-                    {
-                        var hWnd = SDL.SDL_GetPointerProperty(
-                            props,
-                            SDL.SDL_PROP_WINDOW_WIN32_HWND_POINTER,
-                            0);
-                        WsiShared.SetWindowStyleNoTitleOptionsWindows((HWND)hWnd);
-                        break;
-                    }
+                        {
+                            var hWnd = SDL.SDL_GetPointerProperty(
+                                props,
+                                SDL.SDL_PROP_WINDOW_WIN32_HWND_POINTER,
+                                0);
+                            WsiShared.SetWindowStyleNoTitleOptionsWindows((HWND)hWnd);
+                            break;
+                        }
                     case SdlVideoDriver.X11:
                         unsafe
                         {
@@ -415,9 +415,25 @@ internal partial class Clyde
             });
         }
 
+
         private static void WinThreadWinSetTitle(CmdWinSetTitle cmd)
         {
             SDL.SDL_SetWindowTitle(cmd.Window, cmd.Title);
+        }
+
+        public void WindowSetBordered(WindowReg window, bool visible)
+        {
+            window.IsBordered = visible;
+            SendCmd(new CmdWinSetBordered
+            {
+                Window = WinPtr(window),
+                Visible = visible,
+            });
+        }
+
+        private static void WinThreadWinSetBordered(CmdWinSetBordered cmd)
+        {
+            SDL.SDL_SetWindowBordered(cmd.Window, cmd.Visible);
         }
 
         public void WindowSetMonitor(WindowReg window, IClydeMonitor monitor)

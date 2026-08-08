@@ -137,6 +137,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.MapSystem>();
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.PointLightSystem>();
                 systems.LoadExtraSystemType<LightTreeSystem>();
+                systems.LoadExtraSystemType<ClientOccluderSystem>();
                 systems.LoadExtraSystemType<SpriteSystem>();
                 systems.LoadExtraSystemType<SpriteTreeSystem>();
                 systems.LoadExtraSystemType<AppearanceSystem>();

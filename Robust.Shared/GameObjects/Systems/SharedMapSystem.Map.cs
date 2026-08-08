@@ -5,14 +5,17 @@ using System.Diagnostics.Contracts;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedMapSystem
 {
+    [ViewVariables]
     protected int LastMapId;
+
+    [ViewVariables]
     private Dictionary<EntityUid, MapId> _reserved = new();
 
     private void InitializeMap()

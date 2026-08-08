@@ -65,7 +65,6 @@ namespace Robust.Server.Physics
 
             _splitGridSizeComparison = (x, y) => _splitGridSizes[x].CompareTo(_splitGridSizes[y]);
 
-            SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
 
@@ -136,6 +135,7 @@ namespace Robust.Server.Physics
             base.OnGridInit(ev);
         }
 
+        [SubscribeLocalEvent]
         private void OnGridRemoval(GridRemovalEvent ev)
         {
             RemCompDeferred<GridSplitNodeComponent>(ev.EntityUid);
@@ -248,7 +248,7 @@ namespace Robust.Server.Physics
         {
             if (_isSplitting || !SplitAllowed ||
                !CanHaveSplitNodes(uid) ||
-               !Resolve(uid, ref grid, false) ||
+               !_gridQuery.Resolve(uid, ref grid, false) ||
                !_splitNodeQuery.TryGetComponent(uid, out var splitComp) ||
                !grid.CanSplit)
             {
@@ -699,7 +699,7 @@ namespace Robust.Server.Physics
 
             DebugTools.Assert(chunk.FilledTiles > 0);
 
-            grid ??= Comp<MapGridComponent>(gridEuid);
+            grid ??= _gridQuery.GetComponent(gridEuid);
             var group = CreateNodes(gridEuid, grid, chunk);
             EnsureComp<GridSplitNodeComponent>(gridEuid).Nodes[chunk.Indices] = group;
 

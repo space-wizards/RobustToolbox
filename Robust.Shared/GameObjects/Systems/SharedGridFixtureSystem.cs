@@ -25,6 +25,9 @@ namespace Robust.Shared.GameObjects
         [Dependency] private SharedMapSystem _map = default!;
         [Dependency] private IConfigurationManager _cfg = default!;
         [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
+        [Dependency] private EntityQuery<PhysicsComponent> _bodyQuery = default!;
+        [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
+        [Dependency] private EntityQuery<TransformComponent> _xformQuery = default!;
 
         private bool _enabled;
         private float _fixtureEnlargement;
@@ -40,16 +43,15 @@ namespace Robust.Shared.GameObjects
 
             Subs.CVar(_cfg, CVars.GenerateGridFixtures, SetEnabled, true);
             Subs.CVar(_cfg, CVars.GridFixtureEnlargement, SetEnlargement, true);
-
-            SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
-            SubscribeLocalEvent<RegenerateGridBoundsEvent>(OnGridBoundsRegenerate);
         }
 
+        [SubscribeLocalEvent]
         private void OnGridBoundsRegenerate(ref RegenerateGridBoundsEvent ev)
         {
             RegenerateCollision(ev.Entity, ev.ChunkRectangles, ev.RemovedChunks, ev.Grid);
         }
 
+        [SubscribeLocalEvent]
         protected virtual void OnGridInit(GridInitializeEvent ev)
         {
             if (_mapQuery.HasComponent(ev.EntityUid))
@@ -73,19 +75,19 @@ namespace Robust.Shared.GameObjects
             if (!_enabled)
                 return;
 
-            if (!TryComp(uid, out PhysicsComponent? body))
+            if (!_bodyQuery.TryGetComponent(uid, out var body))
             {
                 Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(body)}");
                 return;
             }
 
-            if (!TryComp(uid, out FixturesComponent? manager))
+            if (!_fixturesQuery.TryGetComponent(uid, out var manager))
             {
                 Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(manager)}");
                 return;
             }
 
-            if (!TryComp(uid, out TransformComponent? xform))
+            if (!_xformQuery.TryGetComponent(uid, out var xform))
             {
                 Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(TransformComponent)}");
                 return;

@@ -274,11 +274,10 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             Assert.That(state.Containers.Keys.First(), Is.EqualTo("dummy"));
             Assert.That(cont.OccludesLight, Is.True);
             Assert.That(cont.ShowContents, Is.True);
-            Assert.That(cont.ContainedEntities.Count, Is.EqualTo(1));
+            Assert.That(cont.ContainedEntities, Has.Length.EqualTo(1));
             Assert.That(cont.ContainedEntities[0], Is.EqualTo(entManager.GetNetEntity(childEnt)));
         }
 
-        [SerializedType(nameof(ContainerOnlyContainer))]
         private sealed partial class ContainerOnlyContainer : BaseContainer
         {
             /// <summary>

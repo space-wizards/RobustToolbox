@@ -31,6 +31,28 @@ public sealed class CommandImplementationAttribute :  Attribute
 }
 
 /// <summary>
+///     Provides a default description for this function in a <see cref="ToolshedCommand"/>.
+///     If localized, the localized string will take priority over the one in this attribute.
+///     To localize it, use command-description-yourcommandname in an .ftl file.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class CommandDescriptionAttribute(string description) : Attribute
+{
+    public readonly string Description = description;
+}
+
+/// <summary>
+///     Provides a default help string for this function in a <see cref="ToolshedCommand"/>.
+///     If localized, the localized string will take priority over the one in this attribute.
+///     To localize it, use command-help-yourcommandname in an .ftl file.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class CommandHelpAttribute(string help) : Attribute
+{
+    public readonly string Help = help;
+}
+
+/// <summary>
 ///     Marks an argument in a function in a <see cref="ToolshedCommand"/> as being the "piped" argument, the return value of the prior command in the chain.
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]

@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `ReplayData` no longer exposes the `States`/`Messages` lists; use `Count`, `GetState(index)` and `GetMessages(index)` instead. Replay history is now provided lazily through the new `IReplayDataProvider` interface, and `IReplayLoadManager.GenerateCheckpointsAsync` is no longer part of the public API.
 
 ### New features
 
-*None yet*
+* The replay client now streams replay history from disk instead of keeping the entire deserialized replay resident in RAM, both while loading (history is streamed block-by-block through checkpoint generation) and during playback (data blocks are lazily re-read through a small LRU window, configurable via the `replay.loaded_block_window` cvar). Measured on an 861 MB, 1h38m replay this halves load time and cuts peak memory from ~22 GB to ~12 GB.
 
 ### Bugfixes
 

@@ -1918,6 +1918,14 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ReplayWriteChannelSize = CVarDef.Create("replay.write_channel_size", 5);
 
         /// <summary>
+        /// Number of replay data blocks (each ≈ one <c>data_N</c> file) the client keeps resident in memory
+        /// at once during playback. The full replay is no longer loaded entirely into RAM; blocks are read
+        /// lazily and evicted (LRU) once this window is exceeded. Higher values use more memory but reduce
+        /// re-reads when scrubbing back and forth. Minimum effective value is 2.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayLoadedBlockWindow = CVarDef.Create("replay.loaded_block_window", 8);
+
+        /// <summary>
         /// Whether or not server-side replay recording is enabled.
         /// </summary>
         public static readonly CVarDef<bool> ReplayServerRecordingEnabled = CVarDef.Create(

@@ -631,63 +631,6 @@ public abstract partial class ChunkEntitySystem : EntitySystem
         }
     }
 
-    public struct ParallelChunkEntityRootEnumerator
-    {
-        private readonly ChunkEntitySystem _system;
-        private int _cardinalIndex = 0;
-        private readonly List<Entity<ChunkEntityComponent>>[] _cardinals;
-        private List<Entity<ChunkEntityComponent>>.Enumerator _enumerator;
-        private readonly bool _valid;
-        private Entity<ChunkEntityComponent> _current;
-
-        internal ParallelChunkEntityRootEnumerator(ChunkEntitySystem system, ChunkContainerComponent? container)
-        {
-            _system = system;
-            _valid = container != null;
-            _cardinals = container?.Cardinals!;
-            _enumerator = _valid ? _cardinals[0].GetEnumerator() : default;
-            _current = default;
-        }
-
-        public readonly ParallelChunkEntityRootEnumerator GetEnumerator() => this;
-
-        public readonly Entity<ChunkEntityComponent> Current => _current;
-
-        public bool MoveNext()
-        {
-            loop:
-            while (_valid && _enumerator.MoveNext())
-            {
-                var chunk = _enumerator.Current;
-                if (_system.IsAvailable(chunk))
-                {
-                    _current = (chunk.Owner, chunk.Comp);
-                    return true;
-                }
-            }
-
-            if (++_cardinalIndex < _cardinals.Length)
-            {
-                _enumerator = _cardinals[_cardinalIndex].GetEnumerator();
-                goto loop;
-            }
-
-            return false;
-        }
-
-        public bool MoveNext([NotNullWhen(true)] out Entity<ChunkEntityComponent>? entity)
-        {
-            if (MoveNext())
-            {
-                entity = _current;
-                return true;
-            }
-
-            entity = null;
-            return false;
-        }
-    }
-
     private int GetCardinalIndex(Vector2i vec)
     {
         return vec.X % 2 + vec.Y % 2 * 2;

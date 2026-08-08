@@ -12,7 +12,7 @@ namespace Robust.Shared.GameStates;
 /// Runtime index of chunk entities owned by a map or grid root.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-[Access(typeof(ChunkEntitySystem), typeof(ChunkEntitySystem.ChunkEntityRootEnumerator), typeof(ChunkEntitySystem.ParallelChunkEntityRootEnumerator))]
+[Access(typeof(ChunkEntitySystem), typeof(ChunkEntitySystem.ChunkEntityRootEnumerator))]
 public sealed partial class ChunkContainerComponent : Component
 {
     [ViewVariables]

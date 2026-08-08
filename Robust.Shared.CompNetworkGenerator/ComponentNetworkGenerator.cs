@@ -608,7 +608,7 @@ namespace Robust.Shared.CompNetworkGenerator
                 deltaNetRegister = $@"EntityManager.ComponentFactory.RegisterNetworkedFields<{classSymbol}>({fieldsStr});";
 
                 deltaGetState = @$"// Delta state
-            if (component is IComponentDelta delta)
+            if (component is IComponentDelta delta && args.FromTick > component.CreationTick)
             {{
                 var aspects = EntityManager.GetModifiedAspects(component, args.FromTick);
 

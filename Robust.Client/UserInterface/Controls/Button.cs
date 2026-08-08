@@ -1,4 +1,4 @@
-﻿using Robust.Shared.ViewVariables;
+using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
@@ -33,16 +33,6 @@ namespace Robust.Client.UserInterface.Controls
                 StyleClasses = { StyleClassButton }
             };
             AddChild(Label);
-        }
-
-        protected override void StylePropertiesChanged()
-        {
-            base.StylePropertiesChanged();
-
-			// Temporary workaround to fix button styles in content thanks to a lack of correct style updating for child selectors.
-			// The changing of the style class on the parent control (button in this case) doesn't cause a style update in the label correctly currently.
-			// This works around that.
-            Label.Restyle();
         }
 
         /// <summary>

@@ -15,4 +15,8 @@ public sealed partial class ChunkEntityComponent : Component
 
     [DataField, AutoNetworkedField]
     public Vector2i Chunk;
+
+    internal int CardinalIndex = -1;
+
+    internal int DiagonalIndex = -1;
 }

@@ -144,6 +144,12 @@ namespace Robust.Client.GameObjects
 
             // Give it AppearanceData so we can still keep the friend attribute on the component.
             RaiseLocalEvent(uid, ref ev);
+
+            var postEv = new AfterAppearanceChangeEvent
+            {
+                Component = appearanceComponent,
+            };
+            RaiseLocalEvent(uid, ref postEv);
         }
     }
 
@@ -156,5 +162,11 @@ namespace Robust.Client.GameObjects
         public AppearanceComponent Component;
         public IReadOnlyDictionary<Enum, object> AppearanceData;
         public SpriteComponent? Sprite;
+    }
+
+    [ByRefEvent]
+    public struct AfterAppearanceChangeEvent
+    {
+        public AppearanceComponent Component;
     }
 }

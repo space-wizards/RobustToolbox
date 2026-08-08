@@ -56,7 +56,10 @@ namespace Robust.Client.Graphics.Clyde
             public override GLContextSpec[] SpecsToTry => Array.Empty<GLContextSpec>();
             public override bool RequireWindowGL => false;
             public override bool EarlyContextInit => true;
-            public override bool HasBrokenWindowSrgb => false;
+            // In Windows compatibility mode, prefer the engine's shader sRGB emulation path for the
+            // window backbuffer. This avoids relying on ANGLE/DXGI window sRGB handling, which is
+            // inconsistent on older D3D feature level hardware.
+            public override bool HasBrokenWindowSrgb => Clyde._cfg.GetCVar(CVars.DisplayCompat);
 
             public GLContextAngle(Clyde clyde) : base(clyde)
             {

@@ -1,179 +1,100 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using Robust.Shared.Collections;
-using Robust.Shared.Maths;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.Random;
 
 /// <summary>
-/// Wrapper around random number generator helping methods.
+/// <para>
+///     Provides random numbers, and can be constructed using various static members that provide a <see cref="IDedicatedRandom"/>.
+///     Methods that take RNG as input should take an <see cref="IRobustRandom"/> or <see cref="IDedicatedRandom"/>, instead
+///     of their implementations.
+/// </para>
+/// <para>
+///     If you just want the global randomizer, you can depend on it with IoC using <see cref="IRobustRandom"/>. This
+///     will not however implement <see cref="IDedicatedRandom"/>.
+/// </para>
 /// </summary>
-public interface IRobustRandom
+/// <example>
+/// <code>
+///     // Use one of the constructors on IRobustRandom to create your randomizer.
+///     // This is the one for creating a randomizer with a given seed.
+///     var myRng = IRobustRandom.CreateSeeded(17);
+///     <br/>
+///     var fairDiceRoll = myRng.Next(1, 6); // Will be 4 with this seed.
+/// </code>
+/// </example>
+public partial interface IRobustRandom
 {
     /// <summary> Get the underlying <see cref="Random"/>.</summary>
-    [Obsolete("Do not access the underlying implementation")]
+    [Obsolete("Do not access the underlying implementation, it will be changed and this will be removed.")]
     System.Random GetRandom();
 
-    /// <summary> Set seed for underlying <see cref="Random"/>. </summary>
+    /// <summary>
+    ///     Set seed for underlying <see cref="Random"/>.
+    /// </summary>
+    [Obsolete("Construct a new IRobustRandom instead of setting the seed. API was removed because people kept setting the global rng seed...")]
     void SetSeed(int seed);
 
-    /// <summary> Get random <see cref="float"/> value between 0 (included) and 1 (excluded). </summary>
+    /// <summary>
+    ///     Set the seed for the underlying randomizer, but only in debug.
+    ///     Does nothing in release.
+    /// </summary>
+    void DebugSetSeed(int seed);
+
+    /// <summary>
+    ///     Get a random float between 0.0 (inclusive) and 1.0 (exclusive).
+    /// </summary>
+    [MustUseReturnValue]
     float NextFloat();
 
-    /// <summary> Get random <see cref="float"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="minValue">Random value should be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value should be less then this value.</param>
-    public float NextFloat(float minValue, float maxValue)
-        => NextFloat() * (maxValue - minValue) + minValue;
-
-    /// <summary> Get random <see cref="float"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value should be less then this value.</param>
-    public float NextFloat(float maxValue) => NextFloat() * maxValue;
-
-    /// <summary> Get random <see cref="int"/> value. </summary>
+    /// <summary>
+    ///     Get a random int between 0 (inclusive) and <see cref="int.MaxValue"/> (exclusive).
+    /// </summary>
+    [MustUseReturnValue]
     int Next();
 
-    /// <summary> Get random <see cref="int"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary>
+    ///     Get a random int between 0 (inclusive) and <paramref name="maxValue"/> (exclusive).
+    /// </summary>
+    /// <param name="maxValue">Exclusive upper bound on the random value.</param>
+    [MustUseReturnValue]
     int Next(int maxValue);
 
-    /// <summary> Get random <see cref="int"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="minValue">Random value should be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value should be less then this value.</param>
+    /// <summary>
+    ///     Get a random int between <paramref name="minValue"/> (inclusive) and <paramref name="maxValue"/> (exclusive).
+    /// </summary>
+    /// <param name="minValue">Inclusive lower bound on the random value.</param>
+    /// <param name="maxValue">Exclusive upper bound on the random value.</param>
+    [MustUseReturnValue]
     int Next(int minValue, int maxValue);
 
-    /// <summary> Get random <see cref="byte"/> value between 0 (included) and <see cref="byte.MaxValue"/> (excluded). </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte NextByte()
-        => NextByte(byte.MaxValue);
-
-    /// <summary> Get random <see cref="byte"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value should be less then this value.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte NextByte(byte maxValue)
-        => NextByte(0, maxValue);
-
-    /// <summary> Get random <see cref="byte"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="minValue">Random value should be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value should be less then this value.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte NextByte(byte minValue, byte maxValue)
-        => (byte)Next(minValue, maxValue);
-
-    /// <summary> Get random <see cref="double"/> value between 0 (included) and 1 (excluded). </summary>
+    /// <summary>
+    ///     Get a random double between 0.0 (inclusive) and 1.0 (exclusive).
+    /// </summary>
+    [MustUseReturnValue]
     double NextDouble();
 
-    /// <summary> Get random <see cref="double"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value should be less then this value.</param>
-    double Next(double maxValue)
-        => NextDouble() * maxValue;
-
-    /// <summary> Get random <see cref="double"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="minValue">Random value should be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value should be less then this value.</param>
-    double NextDouble(double minValue, double maxValue)
-        => NextDouble() * (maxValue - minValue) + minValue;
-
-    /// <summary> Get random <see cref="TimeSpan"/> value in range of <see cref="TimeSpan.Zero"/> (included) and <paramref name="maxTime"/> (excluded). </summary>
-    /// <param name="maxTime">Random value should be less then this value.</param>
+    /// <summary>
+    ///     Get a random <see cref="TimeSpan"/> between 0 (inclusive) and <paramref name="maxTime"/> (exclusive).
+    /// </summary>
+    /// <param name="maxTime">Exclusive upper bound on the random value.</param>
+    [MustUseReturnValue]
     TimeSpan Next(TimeSpan maxTime);
 
-    /// <summary> Get random <see cref="TimeSpan"/> value in range of <paramref name="minTime"/> (included) and <paramref name="maxTime"/> (excluded). </summary>
-    /// <param name="minTime">Random value should be greater or equal to this value.</param>
-    /// <param name="maxTime">Random value should be less then this value.</param>
+    /// <summary>
+    ///     Get a random <see cref="TimeSpan"/> between <paramref name="minTime"/> (inclusive) and <paramref name="maxTime"/> (exclusive).
+    /// </summary>
+    /// <param name="minTime">Inclusive lower bound on the random value.</param>
+    /// <param name="maxTime">Exclusive upper bound on the random value.</param>
+    [MustUseReturnValue]
     TimeSpan Next(TimeSpan minTime, TimeSpan maxTime);
 
-    /// <summary> Fill buffer with random bytes (values). </summary>
-    void NextBytes(byte[] buffer);
-
-    /// <summary> Get random <see cref="Angle"/> value in range of 0 (included) and <see cref="MathF.Tau"/> (excluded). </summary>
-    public Angle NextAngle()
-        => NextFloat() * MathF.Tau;
-
-    /// <summary> Get random <see cref="Angle"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value should be less then this value.</param>
-    public Angle NextAngle(Angle maxValue)
-        => NextFloat() * maxValue;
-
-    /// <summary> Get random <see cref="Angle"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="minValue">Random value should be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value should be less then this value.</param>
-    public Angle NextAngle(Angle minValue, Angle maxValue)
-        => NextFloat() * (maxValue - minValue) + minValue;
-
     /// <summary>
-    ///     Random vector, created from a uniform distribution of magnitudes and angles.
+    ///     Fills a given buffer with random bytes.
     /// </summary>
-    /// <param name="maxMagnitude">Max value for randomized vector magnitude (excluded).</param>
-    public Vector2 NextVector2(float maxMagnitude = 1)
-        => NextVector2(0, maxMagnitude);
-
-    /// <summary>
-    ///     Random vector, created from a uniform distribution of magnitudes and angles.
-    /// </summary>
-    /// <param name="minMagnitude">Min value for randomized vector magnitude (included).</param>
-    /// <param name="maxMagnitude">Max value for randomized vector magnitude (excluded).</param>
-    /// <remarks>
-    ///     In general, NextVector2(1) will tend to result in vectors with smaller magnitudes than
-    ///     NextVector2Box(1,1), even if you ignored any vectors with a magnitude larger than one.
-    /// </remarks>
-    public Vector2 NextVector2(float minMagnitude, float maxMagnitude)
-        => NextAngle().RotateVec(new Vector2(NextFloat(minMagnitude, maxMagnitude), 0));
-
-    /// <summary>
-    ///     Random vector, created from a uniform distribution of x and y coordinates lying inside some box.
-    /// </summary>
-    public Vector2 NextVector2Box(float minX, float minY, float maxX, float maxY)
-        => new Vector2(NextFloat(minX, maxX), NextFloat(minY, maxY));
-
-    /// <summary>
-    ///     Random vector, created from a uniform distribution of x and y coordinates lying inside some box.
-    ///     Box will have coordinates starting at [-<paramref name="maxAbsX"/> , -<paramref name="maxAbsY"/>]
-    ///     and ending in [<paramref name="maxAbsX"/> , <paramref name="maxAbsY"/>]
-    /// </summary>
-    public Vector2 NextVector2Box(float maxAbsX = 1, float maxAbsY = 1)
-        => NextVector2Box(-maxAbsX, -maxAbsY, maxAbsX, maxAbsY);
-
-    /// <summary> Randomly switches positions in collection. </summary>
-    void Shuffle<T>(IList<T> list)
-    {
-        if (list is T[] arr)
-        {
-            // Done to avoid significant performance dip from Moq workaround in RandomExtensions.cs,
-            // doubt it matters much.
-            // https://github.com/space-wizards/RobustToolbox/issues/6329
-            Shuffle(arr);
-            return;
-        }
-
-        var n = list.Count;
-        while (n > 1)
-        {
-            n -= 1;
-            var k = Next(n + 1);
-            (list[k], list[n]) = (list[n], list[k]);
-        }
-    }
-
-    /// <summary> Randomly switches positions in collection. </summary>
-    void Shuffle<T>(Span<T> list)
-    {
-        var n = list.Length;
-        while (n > 1)
-        {
-            n -= 1;
-            var k = Next(n + 1);
-            (list[k], list[n]) = (list[n], list[k]);
-        }
-    }
-
-    /// <summary> Randomly switches positions in collection. </summary>
-    void Shuffle<T>(ValueList<T> list)
-    {
-        Shuffle(list.Span);
-    }
+    void NextBytes(Span<byte> buffer);
 }
 
 [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]

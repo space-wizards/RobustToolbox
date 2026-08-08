@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Text;
 using Robust.Client.ResourceManagement;
@@ -7,6 +7,31 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {
+    /// <summary>
+    ///     Describes an outline drawn around text.
+    /// </summary>
+    public readonly record struct TextOutline(float Thickness, Color Color)
+    {
+        /// <summary>
+        ///     The default text outline.
+        /// </summary>
+        public static TextOutline Default => new(1f, Color.Black);
+
+        /// <summary>
+        ///     Creates an outline from optional settings.
+        /// </summary>
+        public static TextOutline? FromOverrides(float? thickness, Color? color)
+        {
+            if (thickness is null && color is null)
+                return null;
+
+            var actualThickness = thickness ?? Default.Thickness;
+            return actualThickness > 0
+                ? new TextOutline(actualThickness, color ?? Default.Color)
+                : null;
+        }
+    }
+
     /// <summary>
     ///     A generic font for rendering of text.
     ///     Does not contain properties such as size. Those are specific to children such as <see cref="VectorFont" />
@@ -57,6 +82,16 @@ namespace Robust.Client.Graphics
             Color color, bool fallback=true);
 
         /// <summary>
+        ///     Draws only the outline of a character and returns its advance.
+        /// </summary>
+        /// <remarks>
+        ///     Rendering outlines separately from glyph fills allows text renderers to batch both passes by texture.
+        /// </remarks>
+        public abstract float DrawCharOutline(
+            DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale,
+            TextOutline outline, bool fallback=true);
+
+        /// <summary>
         ///     Gets metrics describing the dimensions and positioning of a single glyph in the font.
         /// </summary>
         /// <param name="rune">The unicode codepoint to fetch the glyph metrics for.</param>
@@ -104,6 +139,12 @@ namespace Robust.Client.Graphics
             Handle = IoCManager.Resolve<IFontManagerInternal>().MakeInstance(res.FontFaceHandle, size);
         }
 
+        internal VectorFont(IFontInstanceHandle handle, int size)
+        {
+            Size = size;
+            Handle = handle;
+        }
+
         public override int GetAscent(float scale) => Handle.GetAscent(scale);
         public override int GetHeight(float scale) => Handle.GetHeight(scale);
         public override int GetDescent(float scale) => Handle.GetDescent(scale);
@@ -111,32 +152,57 @@ namespace Robust.Client.Graphics
 
         public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
         {
-            var metrics = Handle.GetCharMetrics(rune, scale);
-            if (!metrics.HasValue)
-            {
-                if (fallback && !Rune.IsWhiteSpace(rune))
-                {
-                    rune = new Rune('�');
-                    metrics = Handle.GetCharMetrics(rune, scale);
-                    if (!metrics.HasValue)
-                        return 0;
-                }
-                else
-                    return 0;
-            }
+            if (!TryGetGlyph(rune, scale, fallback, 0, out var metrics, out var texture, out _))
+                return 0;
 
-            var texture = Handle.GetCharTexture(rune, scale);
             if (texture == null)
+                return metrics.Advance;
+
+            var glyphPosition = baseline + new Vector2(metrics.BearingX, -metrics.BearingY);
+            DrawGlyph(handle, texture, glyphPosition, color);
+            return metrics.Advance;
+        }
+
+        public override float DrawCharOutline(
+            DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale,
+            TextOutline outline, bool fallback=true)
+        {
+            if (!TryGetGlyph(rune, scale, fallback, outline.Thickness, out var metrics, out var texture, out var outlinedGlyph))
+                return 0;
+
+            if (outline.Thickness > 0 && texture != null && outlinedGlyph is { } glyph)
             {
-                return metrics.Value.Advance;
+                var outlinePosition = baseline + new Vector2(glyph.Left, -glyph.Top);
+                DrawGlyph(handle, glyph.Texture, outlinePosition, outline.Color);
             }
 
-            baseline += new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
-            if(handle is DrawingHandleWorld worldhandle)
-                worldhandle.DrawTextureRect(texture, Box2.FromDimensions(baseline, texture.Size), color);
+            return metrics.Advance;
+        }
+
+        private bool TryGetGlyph(
+            Rune rune,
+            float scale,
+            bool fallback,
+            float outlineThickness,
+            out CharMetrics metrics,
+            out Texture? texture,
+            out OutlinedGlyph? outlinedGlyph)
+        {
+            if (Handle.TryGetGlyph(rune, scale, outlineThickness, out metrics, out texture, out outlinedGlyph))
+                return true;
+
+            if (!fallback || Rune.IsWhiteSpace(rune))
+                return false;
+
+            return Handle.TryGetGlyph(new Rune('�'), scale, outlineThickness, out metrics, out texture, out outlinedGlyph);
+        }
+
+        private static void DrawGlyph(DrawingHandleBase handle, Texture texture, Vector2 position, Color color)
+        {
+            if (handle is DrawingHandleWorld worldhandle)
+                worldhandle.DrawTextureRect(texture, Box2.FromDimensions(position, texture.Size), color);
             else
-                handle.DrawTexture(texture, baseline, color);
-            return metrics.Value.Advance;
+                handle.DrawTexture(texture, position, color);
         }
 
         public override CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback=true)
@@ -187,6 +253,23 @@ namespace Robust.Client.Graphics
             return 0f;
         }
 
+        public override float DrawCharOutline(
+            DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale,
+            TextOutline outline, bool fallback=true)
+        {
+            foreach (var f in Stack)
+            {
+                var w = f.DrawCharOutline(handle, rune, baseline, scale, outline, fallback: false);
+                if (w != 0f)
+                    return w;
+            }
+
+            if (fallback)
+                return _main.DrawCharOutline(handle, rune, baseline, scale, outline, fallback: true);
+
+            return 0f;
+        }
+
         public override CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback=true)
         {
             foreach (var f in Stack)
@@ -216,10 +299,88 @@ namespace Robust.Client.Graphics
             return 0;
         }
 
+        public override float DrawCharOutline(
+            DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale,
+            TextOutline outline, bool fallback=true)
+        {
+            // Nada, it's a dummy after all.
+            return 0;
+        }
+
         public override CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback=true)
         {
             // Nada, it's a dummy after all.
             return null;
         }
+    }
+
+    /// <summary>
+    /// Possible values for font weights. Larger values have thicker font strokes.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// These values are based on the <c>usWeightClass</c> property of the OpenType specification:
+    /// https://learn.microsoft.com/en-us/typography/opentype/spec/os2#usweightclass
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="ISystemFontFace.Weight"/>
+    public enum FontWeight : ushort
+    {
+        Thin = 100,
+        ExtraLight = 200,
+        UltraLight = ExtraLight,
+        Light = 300,
+        SemiLight = 350,
+        Normal = 400,
+        Regular = Normal,
+        Medium = 500,
+        SemiBold = 600,
+        DemiBold = SemiBold,
+        Bold = 700,
+        ExtraBold = 800,
+        UltraBold = ExtraBold,
+        Black = 900,
+        Heavy = Black,
+        ExtraBlack = 950,
+        UltraBlack = ExtraBlack,
+    }
+
+    /// <summary>
+    /// Possible slant values for fonts.
+    /// </summary>
+    /// <seealso cref="ISystemFontFace.Slant"/>
+    public enum FontSlant : byte
+    {
+        // NOTE: Enum values correspond to DWRITE_FONT_STYLE.
+        Normal = 0,
+        Oblique = 1,
+
+        // FUN FACT: they're called "italics" because they look like the Leaning Tower of Pisa.
+        // Don't fact-check that.
+        Italic = 2
+    }
+
+    /// <summary>
+    /// Possible values for font widths. Larger values are proportionally wider.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// These values are based on the <c>usWidthClass</c> property of the OpenType specification:
+    /// https://learn.microsoft.com/en-us/typography/opentype/spec/os2#uswidthclass
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="ISystemFontFace.Width"/>
+    public enum FontWidth : ushort
+    {
+        UltraCondensed = 1,
+        ExtraCondensed = 2,
+        Condensed = 3,
+        SemiCondensed = 4,
+        Normal = 5,
+        Medium =  Normal,
+        SemiExpanded = 6,
+        Expanded = 7,
+        ExtraExpanded = 8,
+        UltraExpanded = 9,
     }
 }

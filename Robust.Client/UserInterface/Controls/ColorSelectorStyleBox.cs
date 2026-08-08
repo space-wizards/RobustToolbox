@@ -21,19 +21,19 @@ public sealed class ColorSelectorStyleBox : StyleBoxTexture
     /// <summary>
     /// Base background colour.
     /// </summary>
-    public Robust.Shared.Maths.Vector4 BaseColor;
+    public Vector4 BaseColor;
 
     /// <summary>
     /// Colour to add to the background colour along the X-axis.
     /// I.e., from left to right the background colour will vary from (BaseColour) to (BaseColour + XAxis)
     /// </summary>
-    public Robust.Shared.Maths.Vector4 XAxis;
+    public Vector4 XAxis;
 
     /// <summary>
     /// Colour to add to the background colour along the y-axis.
     /// I.e., from left to right the background colour will vary from (BaseColour) to (BaseColour + XAxis)
     /// </summary>
-    public Robust.Shared.Maths.Vector4 YAxis;
+    public Vector4 YAxis;
 
     /// <summary>
     /// If true, then <see cref="BaseColor"/>, <see cref="XAxis"/>, and <see cref="YAxis"/> will be interpreted as HSVa
@@ -93,14 +93,14 @@ public sealed class ColorSelectorStyleBox : StyleBoxTexture
     {
         var colorData = Hsv
             ? Color.ToHsv(color)
-            : new Robust.Shared.Maths.Vector4(color.R, color.G, color.B, color.A);
+            : new Vector4(color.R, color.G, color.B, color.A);
         SetBaseColor(colorData);
     }
 
     /// <summary>
     /// Helper method that sets the base color by taking in some color and removing the components that are controlled by the x and y axes.
     /// </summary>
-    public void SetBaseColor(Robust.Shared.Maths.Vector4 colorData)
+    public void SetBaseColor(Vector4 colorData)
     {
         BaseColor = colorData - colorData * XAxis - colorData * YAxis;
     }

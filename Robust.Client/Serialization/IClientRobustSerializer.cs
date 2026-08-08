@@ -2,6 +2,7 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Client.Serialization;
 
+[NotContentImplementable]
 public interface IClientRobustSerializer : IRobustSerializer
 {
     /// <summary>

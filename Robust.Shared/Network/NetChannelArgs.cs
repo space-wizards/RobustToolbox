@@ -90,6 +90,7 @@ namespace Robust.Shared.Network
     /// <summary>
     /// Structured reason common interface.
     /// </summary>
+    [NotContentImplementable]
     public interface INetStructuredReason
     {
         NetDisconnectMessage Message { get; }

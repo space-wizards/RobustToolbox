@@ -9,12 +9,12 @@ using Robust.Shared.Physics.Components;
 
 namespace Robust.Client.GameObjects;
 
-public sealed class ShowPlayerVelocityDebugSystem : EntitySystem
+public sealed partial class ShowPlayerVelocityDebugSystem : EntitySystem
 {
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly TransformSystem _transform = default!;
-    [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private TransformSystem _transform = default!;
+    [Dependency] private IUserInterfaceManager _uiManager = default!;
 
     internal bool Enabled
     {
@@ -51,7 +51,7 @@ public sealed class ShowPlayerVelocityDebugSystem : EntitySystem
 
         var player = _playerManager.LocalEntity;
 
-        if (player == null || !EntityManager.TryGetComponent(player.Value, out PhysicsComponent? body))
+        if (player == null || !TryComp(player.Value, out PhysicsComponent? body))
         {
             _label.Visible = false;
             return;

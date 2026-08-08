@@ -34,7 +34,7 @@ public sealed partial class UITheme : IPrototype
     private ResPath _path;
 
     [DataField("colors", readOnly: true)] // This is a prototype, why is this readonly??
-    public FrozenDictionary<string, Color>? Colors { get; }
+    public FrozenDictionary<string, Color>? Colors;
     public ResPath Path => _path == default ? new ResPath(DefaultPath+"/"+ID) : _path;
 
     private void ValidateFilePath(IResourceManager manager)

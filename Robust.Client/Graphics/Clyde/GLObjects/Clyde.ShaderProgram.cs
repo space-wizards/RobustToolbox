@@ -5,8 +5,6 @@ using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -260,37 +258,26 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private unsafe void SetUniformDirect(int slot, in Matrix3x2 value)
+            private void SetUniformDirect(int slot, in Matrix3x2 value)
             {
-                // We put the rows of the input matrix into the columns of our GPU matrices
-                // this transpose is required, as in C#, we premultiply vectors with matrices
-                // (vM) while GL postmultiplies vectors with matrices (Mv); however, since
-                // the Matrix3x2 data is stored row-major, and GL uses column-major, the
-                // memory layout is the same (or would be, if Matrix3x2 didn't have an
-                // implicit column)
-                var buf = stackalloc float[9]{
-                    value.M11, value.M12, 0,
-                    value.M21, value.M22, 0,
-                    value.M31, value.M32, 1
-                };
-                GL.UniformMatrix3(slot, 1, false, (float*)buf);
+                _clyde.UniformMatrix3fv(slot, value);
                 _clyde.CheckGlError();
             }
 
-            public void SetUniform(string uniformName, in Matrix4 matrix, bool transpose=true)
+            public void SetUniform(string uniformName, in Matrix4x4 matrix, bool transpose=true)
             {
                 var uniformId = GetUniform(uniformName);
                 SetUniformDirect(uniformId, matrix, transpose);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private unsafe void SetUniformDirect(int uniformId, in Matrix4 value, bool transpose=true)
+            private unsafe void SetUniformDirect(int uniformId, in Matrix4x4 value, bool transpose=true)
             {
-                Matrix4 tmpTranspose = value;
+                Matrix4x4 tmpTranspose = value;
                 if (transpose)
                 {
                     // transposition not supported on GLES2, & no access to _hasGLES
-                    tmpTranspose.Transpose();
+                    tmpTranspose = Matrix4x4.Transpose(value);
                 }
                 GL.UniformMatrix4(uniformId, 1, false, (float*) &tmpTranspose);
                 _clyde.CheckGlError();
@@ -551,7 +538,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public void SetUniformMaybe(string uniformName, in Matrix4 value, bool transpose=true)
+            public void SetUniformMaybe(string uniformName, in Matrix4x4 value, bool transpose=true)
             {
                 if (TryGetUniform(uniformName, out var slot))
                 {

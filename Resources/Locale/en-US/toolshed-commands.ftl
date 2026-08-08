@@ -195,6 +195,8 @@ command-description-spawn-at =
     Spawns an entity at the given coordinates.
 command-description-spawn-on =
     Spawns an entity on the given entity, at it's coordinates.
+command-description-spawn-in =
+    Spawns an entity in the given container on the given entity, dropping it at its coordinates if it doesn't fit
 command-description-spawn-attached =
     Spawns an entity attached to the given entity, at (0 0) relative to it.
 command-description-mappos =
@@ -426,3 +428,7 @@ command-description-cmd-info =
     On its own, this means it'll print the command's help message.
 command-description-comp-rm =
     Removes the given component from the entity.
+
+command-description-overlay-toggle = Toggle an overlay on or off
+command-description-overlay-add = Add an overlay (if it does not already exist)
+command-description-overlay-remove = Remove an overlay

@@ -10,6 +10,7 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     The mod loader is in charge of loading content assemblies and managing them.
     /// </summary>
+    [NotContentImplementable]
     public interface IModLoader
     {
         /// <summary>

@@ -1,9 +1,8 @@
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
-using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -155,7 +154,7 @@ public static class CompletionHelper
     ///     Returns a completion list for all prototype IDs of the given type.
     /// </summary>
     /// <remarks>
-    ///     Don't use this for prototypes types that likely have a large number of entries, like <see cref="EntityPrototype"/>.
+    ///     Don't use this for prototypes types that likely have a large number of entries, like <see cref="EntityPrototype"/>, use <see cref="PrototypeIdsLimited{T}"/> instead.
     /// </remarks>
     public static IEnumerable<CompletionOption> PrototypeIDs<T>(bool sorted = true, IPrototypeManager? proto = null)
         where T: class, IPrototype
@@ -164,6 +163,36 @@ public static class CompletionHelper
 
         var protoOptions = proto.EnumeratePrototypes<T>().Select(p => new CompletionOption(p.ID));
         return sorted ? protoOptions.OrderBy(o => o.Value) : protoOptions;
+    }
+
+    /// <summary>
+    /// Returns a completion list for all prototype IDs of the given type, limited to avoid performance problems.
+    /// </summary>
+    /// <remarks>
+    /// This is a limited alternative to <see cref="PrototypeIDs{T}"/>.
+    /// The limit is applied before sorting of results, so the unfiltered results are somewhat arbitrary.
+    /// </remarks>
+    /// <param name="currentArgument">The argument being currently typed for the completion.</param>
+    /// <param name="proto">The <see cref="IPrototypeManager"/>.</param>
+    /// <param name="sorted">Whether to sort the results or not.</param>
+    /// <param name="maxCount">The maximum amount of results to return at once.</param>
+    /// <typeparam name="T">The type of prototype to search through.</typeparam>
+    /// <returns></returns>
+    public static IEnumerable<CompletionOption> PrototypeIdsLimited<T>(
+        string currentArgument,
+        IPrototypeManager proto,
+        bool sorted = true,
+        int maxCount = 30) where T : class, IPrototype
+    {
+        var protoOptions = proto.EnumeratePrototypes<T>()
+            .Where(p => p.ID.StartsWith(currentArgument, StringComparison.OrdinalIgnoreCase))
+            .Take(maxCount)
+            .Select(p => new CompletionOption(p.ID));
+
+        if (sorted)
+            protoOptions = protoOptions.OrderBy(o => o.Value);
+
+        return protoOptions;
     }
 
     /// <summary>
@@ -177,11 +206,16 @@ public static class CompletionHelper
         return sorted ? playerOptions.OrderBy(o => o.Value) : playerOptions;
     }
 
+    public static IEnumerable<CompletionOption> MapIds(string text, IEntityManager entManager)
+    {
+        return GetComponents<MapComponent>(text, entManager: entManager).Select(o => new CompletionOption(o.Component.MapId.ToString(), o.EntityName));
+    }
+
     public static IEnumerable<CompletionOption> MapIds(IEntityManager? entManager = null)
     {
         IoCManager.Resolve(ref entManager);
 
-        return entManager.EntityQuery<MapComponent>(true).Select(o => new CompletionOption(o.MapId.ToString()));
+        return entManager.EntityQuery<MapComponent, MetaDataComponent>(true).Select(o => new CompletionOption(o.Item1.MapId.ToString(), o.Item2.EntityName));
     }
 
     public static IEnumerable<CompletionOption> MapUids(IEntityManager? entManager = null)
@@ -214,23 +248,72 @@ public static class CompletionHelper
         }
     }
 
-    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null, int limit = 20) where T : IComponent
+    private static IEnumerable<(T Component, string NetString, string EntityName)> GetComponents<T>(string text, IEntityManager entManager, int limit = 20)
+        where T : IComponent
     {
         if (text != string.Empty && !NetEntity.TryParse(text, out _))
             yield break;
 
-        IoCManager.Resolve(ref entManager);
         var query = entManager.AllEntityQueryEnumerator<T, MetaDataComponent>();
 
         var i = 0;
-        while (i < limit && query.MoveNext(out _, out var metadata))
+        while (i < limit && query.MoveNext(out var comp, out var metadata))
         {
             var netString = metadata.NetEntity.ToString();
             if (!netString.StartsWith(text))
                 continue;
 
             i++;
-            yield return new CompletionOption(netString, metadata.EntityName);
+            yield return (comp, netString, metadata.EntityName);
+        }
+    }
+
+    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null, int limit = 20) where T : IComponent
+    {
+        IoCManager.Resolve(ref entManager);
+        return GetComponents<T>(text, entManager, limit).Select(o => new CompletionOption(o.NetString, o.EntityName));
+    }
+
+    /// <summary>
+    /// Gets AutoComplete options from list of all loaded <see cref="EntityPrototype"/>
+    /// filtered by provided <see cref="EntityCategoryPrototype"/>
+    /// and substring (filter by StartsWith on <see cref="EntityPrototype.Description"/>
+    /// and <see cref="EntityPrototype.ID"/>).
+    /// </summary>
+    /// <param name="filterWith">
+    /// Text to be used for filtering entity prototypes by <see cref="EntityPrototype.ID"/>
+    /// and <see cref="EntityPrototype.Name"/>. Will not do filtering in case null was provided.
+    /// </param>
+    /// <param name="category">Get entity prototypes that belong to this category.</param>
+    /// <param name="prototype">Prototype manager to be used (in case it was provided).</param>
+    /// <param name="limit">Amount of rows to return (in case source collection will have more rows after filtering applied).</param>
+    public static IEnumerable<CompletionOption> EntityPrototypes(
+        string? filterWith,
+        ProtoId<EntityCategoryPrototype> category,
+        IPrototypeManager? prototype = null,
+        int limit = 20
+    )
+    {
+        IoCManager.Resolve(ref prototype);
+
+        if (!prototype.TryGetEntityPrototypesByCategory(category, out var found))
+            yield break;
+
+        var isTextFilterEmpty = string.IsNullOrWhiteSpace(filterWith);
+        var index = 0;
+        var returnedCount = 0;
+        while (returnedCount < limit && index < found.Count)
+        {
+            var current = found[index];
+            index++;
+            var name = current.Name;
+            if (!isTextFilterEmpty
+                && !current.ID.Contains(filterWith!, StringComparison.InvariantCultureIgnoreCase)
+                && !name.Contains(filterWith!, StringComparison.InvariantCultureIgnoreCase))
+                continue;
+
+            returnedCount++;
+            yield return new CompletionOption(current.ID, name);
         }
     }
 }

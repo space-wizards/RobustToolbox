@@ -9,8 +9,10 @@ namespace Robust.Client.WebView
     /// </summary>
     internal interface IWebViewControlImpl : IWebViewControl
     {
-        void EnteredTree();
-        void ExitedTree();
+        public bool IsOpen { get; }
+
+        void StartBrowser();
+        void CloseBrowser();
         void MouseMove(GUIMouseMoveEventArgs args);
         void MouseExited();
         void MouseWheel(GUIMouseWheelEventArgs args);

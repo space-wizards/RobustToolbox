@@ -10,8 +10,6 @@ using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -37,6 +35,12 @@ namespace Robust.Client.Graphics.Clyde
 
         [ViewVariables]
         private readonly Dictionary<ClydeHandle, LoadedShaderInstance> _shaderInstances =
+            new();
+
+        private readonly Dictionary<ClydeHandle, ClydeShaderInstance> _noBlendShaderInstances =
+            new();
+
+        private readonly Dictionary<ClydeHandle, ClydeShaderInstance> _premultipliedBlendShaderInstances =
             new();
 
         private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new();
@@ -117,7 +121,16 @@ namespace Robust.Client.Graphics.Clyde
 
             var (vertBody, fragBody) = GetShaderCode(newShader);
 
-            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, loaded.Name);
+            GLShaderProgram? program = null;
+            try
+            {
+                program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, loaded.Name);
+            }
+            catch (ShaderCompilationException e)
+            {
+                _clydeSawmill.Warning($"Compilation failed: {e}");
+                return;
+            }
 
             loaded.Program.Delete();
 
@@ -390,8 +403,63 @@ namespace Robust.Client.Graphics.Clyde
         {
             while (_deadShaderInstances.TryDequeue(out var handle))
             {
+                if (_noBlendShaderInstances.Remove(handle, out var noBlendInstance))
+                    _shaderInstances.Remove(noBlendInstance.Handle);
+
+                if (_premultipliedBlendShaderInstances.Remove(handle, out var premultipliedBlendInstance))
+                    _shaderInstances.Remove(premultipliedBlendInstance.Handle);
+
                 _shaderInstances.Remove(handle);
             }
+        }
+
+        private ClydeShaderInstance GetNoBlendShaderInstance(ShaderInstance shader)
+        {
+            return GetBlendModeShaderInstance(shader, ShaderBlendMode.None, _noBlendShaderInstances);
+        }
+
+        private ClydeShaderInstance GetPremultipliedBlendShaderInstance(ShaderInstance shader)
+        {
+            return GetBlendModeShaderInstance(shader, ShaderBlendMode.Premultiplied, _premultipliedBlendShaderInstances);
+        }
+
+        private ClydeShaderInstance GetBlendModeShaderInstance(
+            ShaderInstance shader,
+            ShaderBlendMode blendMode,
+            Dictionary<ClydeHandle, ClydeShaderInstance> cache)
+        {
+            var clydeShader = (ClydeShaderInstance) shader;
+            var sourceData = _shaderInstances[clydeShader.Handle];
+
+            if (!cache.TryGetValue(clydeShader.Handle, out var instance))
+            {
+                var newHandle = AllocRid();
+                var newData = new LoadedShaderInstance(sourceData)
+                {
+                    BlendMode = blendMode,
+                    ParametersDirty = true,
+                };
+
+                _shaderInstances.Add(newHandle, newData);
+                instance = new ClydeShaderInstance(newHandle, this);
+                cache.Add(clydeShader.Handle, instance);
+                return instance;
+            }
+
+            var data = _shaderInstances[instance.Handle];
+            data.ShaderHandle = sourceData.ShaderHandle;
+            data.HasLighting = sourceData.HasLighting;
+            data.BlendMode = blendMode;
+            data.ParametersDirty = true;
+            data.Stencil = sourceData.Stencil;
+            data.Parameters.Clear();
+
+            foreach (var (key, value) in sourceData.Parameters)
+            {
+                data.Parameters[key] = value;
+            }
+
+            return instance;
         }
 
         private sealed class ClydeShaderInstance : ShaderInstance
@@ -528,7 +596,7 @@ namespace Robust.Client.Graphics.Clyde
                 data.Parameters[name] = value;
             }
 
-            private protected override void SetParameterImpl(string name, in Matrix4 value)
+            private protected override void SetParameterImpl(string name, in Matrix4x4 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.ParametersDirty = true;

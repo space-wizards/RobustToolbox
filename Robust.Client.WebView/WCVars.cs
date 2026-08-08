@@ -26,4 +26,16 @@ public static class WCVars
     /// </summary>
     public static readonly CVarDef<bool> WebHeadless =
         CVarDef.Create("web.headless", false, CVar.CLIENTONLY);
+
+#if TOOLS
+    private const int DefaultRemoteDebugPort = 9222;
+#else
+    private const int DefaultRemoteDebugPort = 0;
+#endif
+
+    /// <summary>
+    /// If not 0, the port number used for Chromium's remote debugging.
+    /// </summary>
+    public static readonly CVarDef<int> WebRemoteDebugPort =
+        CVarDef.Create("web.remote_debug_port", DefaultRemoteDebugPort, CVar.CLIENTONLY);
 }

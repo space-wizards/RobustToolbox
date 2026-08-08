@@ -30,8 +30,6 @@ using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 using Direction = Robust.Shared.Maths.Direction;
-using Vector4 = Robust.Shared.Maths.Vector4;
-using SysVec4 = System.Numerics.Vector4;
 #pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Robust.Client.GameObjects
@@ -41,10 +39,10 @@ namespace Robust.Client.GameObjects
     {
         public const string LogCategory = "go.comp.sprite";
 
-        [Dependency] private readonly IResourceCache resourceCache = default!;
-        [Dependency] private readonly IPrototypeManager prototypes = default!;
-        [Dependency] private readonly EntityManager entities = default!;
-        [Dependency] private readonly IReflectionManager reflection = default!;
+        [Dependency] private IResourceCacheInternal resourceCache = default!;
+        [Dependency] private IPrototypeManager prototypes = default!;
+        [Dependency] private EntityManager entities = default!;
+        [Dependency] private IReflectionManager reflection = default!;
 
         /// <summary>
         ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
@@ -168,8 +166,8 @@ namespace Robust.Client.GameObjects
             set => Sys.SetBaseRsi((Owner, this), value);
         }
 
-        [DataField("sprite", readOnly: true)] private string? rsi;
-        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
+        [DataField("sprite", readOnly: true)] internal string? rsi;
+        [DataField("layers", readOnly: true)] internal List<PrototypeLayerData> layerDatums = new();
 
         [DataField(readOnly: true)] private string? state;
         [DataField(readOnly: true)] private string? texture;
@@ -203,35 +201,62 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)] internal bool _inertUpdateQueued;
 
+        private const string LegacyPostShaderId = "__legacy";
+
         /// <summary>
-        ///     Shader instance to use when drawing the final sprite to the world.
+        ///     Ordered post-shaders to apply. These get run on the final entity sprite.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
+        /// <remarks>
+        /// Read-only as these should be constructed from base prototype + runtime.
+        /// </remarks>
+        [ViewVariables]
+        [DataField(readOnly: true)]
+        internal List<PostShaderEntry> PostShaders = new();
+
+        [ViewVariables]
+        internal bool PostShaderOrderDirty;
+
+        /// <summary>
+        ///     Legacy for code that still expects 1 shader.
+        /// </summary>
+        [ViewVariables]
+        [Obsolete("Use SpriteSystem.SetPostShader(), SpriteSystem.RemovePostShader(), or SpriteSystem.ClearPostShaders() instead.")]
         public ShaderInstance? PostShader
         {
-            get;
-            // This will get obsoleted, but I only want to mark it as obsolete when multi-shader support is added, so
-            // that people can use the appropriate method and don't migrate to an incorrect new method that wont
-            // be obsoleted.
-            set;
+            get => PostShaders.Count == 1 ? PostShaders[0].Shader : null;
+            set
+            {
+                PostShaders.Clear();
+
+                if (value != null)
+                    PostShaders.Add(new PostShaderEntry(LegacyPostShaderId, value));
+
+                PostShaderOrderDirty = false;
+            }
         }
 
         /// <summary>
-        ///     Whether to pass the screen texture to the <see cref="PostShader"/>.
+        ///     Legacy single-post-shader flag.
         /// </summary>
         /// <remarks>
-        ///     Should be false unless you really need it.
+        ///     New post-shader code should set this per entry through SpriteSystem.SetPostShader().
         /// </remarks>
         [DataField]
+        [Obsolete("Use SpriteSystem.SetPostShader(..., getScreenTexture: true) instead.")]
         public bool GetScreenTexture;
 
         /// <summary>
-        ///     If true, this raise a entity system event before rendering this sprite, allowing systems to modify the
-        ///     shader parameters. Usually this can just be done via a frame-update, but some shaders require
-        ///     information about the viewport / eye.
+        ///     Legacy single-post-shader flag.
         /// </summary>
+        /// <remarks>
+        ///     New post-shader code should set this per entry through SpriteSystem.SetPostShader().
+        /// </remarks>
         [DataField]
+        [Obsolete("Use SpriteSystem.SetPostShader(..., raiseShaderEvent: true) instead.")]
         public bool RaiseShaderEvent;
+
+        [ViewVariables]
+        internal bool HasPostShaders => PostShaders.Count != 0;
 
         [ViewVariables] internal Dictionary<object, int> LayerMap { get; set; } = new();
         [ViewVariables] internal List<Layer> Layers = new();
@@ -249,16 +274,11 @@ namespace Robust.Client.GameObjects
         {
             // Please somebody burn this to the ground. There is so much spaghetti.
             // Why has no one answered my prayers.
+            // I answered half of your prayer someone please answer the rest
 
             IoCManager.InjectDependencies(this);
-            if (!string.IsNullOrWhiteSpace(rsi))
-            {
-                var rsiPath = TextureRoot / rsi;
-                if (resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
-                    _baseRsi = resource.RSI;
-                else
-                    Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
-            }
+
+            resourceCache.AddToDeserialize(this);
 
             if (layerDatums.Count == 0)
             {
@@ -279,22 +299,19 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            if (layerDatums.Count != 0)
-            {
-                LayerMap.Clear();
-                Layers.Clear();
-                foreach (var datum in layerDatums)
-                {
-                    var layer = new Layer((Owner, this), Layers.Count);
-                    Layers.Add(layer);
-                    LayerSetData(layer, datum);
-                }
-
-            }
-
             BoundsDirty = true;
             LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
         }
+
+        /// <summary>
+        /// If false, this will prevent any of this sprite's animated layers from looping their animation.
+        /// This will set <see cref="Layer.AutoAnimated"/> whenever any layer's animation finishes.
+        /// </summary>
+        /// <remarks>
+        /// If this is false, this effectively overrides each layer's own <see cref="Layer.Loop"/>.
+        /// </remarks>
+        [DataField]
+        public bool Loop = true;
 
         /// <summary>
         /// Update this sprite component to visibly match the current state of other at the time
@@ -603,6 +620,7 @@ namespace Robust.Client.GameObjects
 
             layer.RenderingStrategy = layerDatum.RenderingStrategy ?? layer.RenderingStrategy;
             layer.Cycle = layerDatum.Cycle;
+            layer.Loop = layerDatum.Loop;
 
             layer.Color = layerDatum.Color ?? layer.Color;
             layer._rotation = layerDatum.Rotation ?? layer._rotation;
@@ -1159,6 +1177,15 @@ namespace Robust.Client.GameObjects
             /// </remarks>
             [ViewVariables] public bool Cycle;
 
+            /// <summary>
+            /// If false, this will prevent the layer's animation from looping.
+            /// This will set <see cref="AutoAnimated"/> to false once the animation finishes.
+            /// </summary>
+            /// <remarks>
+            /// This may be overriden by the parent's loop property.
+            /// </remarks>
+            [ViewVariables] public bool Loop = true;
+
             // TODO SPRITE ACCESS
             internal RSI.State? _actualState;
             [ViewVariables] public RSI.State? ActualState => _actualState;
@@ -1223,6 +1250,8 @@ namespace Robust.Client.GameObjects
                     if (_visible == value)
                         return;
                     _visible = value;
+
+                    Owner.Comp.BoundsDirty = true;
 
                     // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
                     if (_parent.Owner != EntityUid.Invalid)
@@ -1316,11 +1345,10 @@ namespace Robust.Client.GameObjects
             public Layer(Layer toClone, SpriteComponent parent) : this(parent)
             {
                 if (toClone.Shader != null)
-                {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
-                    UnShaded = toClone.UnShaded;
-                    ShaderPrototype = toClone.ShaderPrototype;
-                }
+
+                UnShaded = toClone.UnShaded;
+                ShaderPrototype = toClone.ShaderPrototype;
                 Texture = toClone.Texture;
                 RSI = toClone.RSI;
                 State = toClone.State;
@@ -1336,6 +1364,8 @@ namespace Robust.Client.GameObjects
                 DirOffset = toClone.DirOffset;
                 _autoAnimated = toClone._autoAnimated;
                 RenderingStrategy = toClone.RenderingStrategy;
+                Cycle = toClone.Cycle;
+                Loop = toClone.Loop;
                 if (toClone.CopyToShaderParameters is { } copyToShaderParameters)
                     CopyToShaderParameters = new CopyToShaderParameters(copyToShaderParameters);
             }
@@ -1663,17 +1693,25 @@ namespace Robust.Client.GameObjects
 
             internal void AdvanceFrameAnimation(RSI.State state)
             {
-                // Can't advance frames without more than 1 delay which is already checked above.
                 var delayCount = state.DelayCount;
+
                 while (AnimationTimeLeft < 0)
                 {
                     if (Reversed)
                     {
                         AnimationFrame -= 1;
 
-                        // Animation finished, do we cycle back to positive or reset.
                         if (AnimationFrame < 0)
                         {
+                            if (!Loop || !_parent.Loop)
+                            {
+                                // stop at first frame
+                                AnimationFrame = 0;
+                                AnimationTimeLeft = 0;
+                                AutoAnimated = false;
+                                return;
+                            }
+
                             if (Cycle)
                             {
                                 AnimationFrame = 1;
@@ -1691,9 +1729,17 @@ namespace Robust.Client.GameObjects
                     {
                         AnimationFrame += 1;
 
-                        // Animation finished, do we reverse or reset.
                         if (AnimationFrame >= delayCount)
                         {
+                            if (!Loop || !_parent.Loop)
+                            {
+                                // stop at last frame
+                                AnimationFrame = delayCount - 1;
+                                AnimationTimeLeft = 0;
+                                AutoAnimated = false;
+                                return;
+                            }
+
                             if (Cycle)
                             {
                                 AnimationFrame = delayCount - 2;
@@ -1711,6 +1757,7 @@ namespace Robust.Client.GameObjects
                     AnimationTimeLeft += state.GetDelay(AnimationFrame);
                 }
             }
+
         }
 
         /// <summary>
@@ -1727,6 +1774,154 @@ namespace Robust.Client.GameObjects
             {
                 ParameterTexture = toClone.ParameterTexture;
                 ParameterUV = toClone.ParameterUV;
+            }
+        }
+
+        /// <summary>
+        ///     A post-shader applied to this sprite.
+        /// </summary>
+        [DataDefinition]
+        public sealed partial class PostShaderEntry
+        {
+            /// <summary>
+            ///     Stable id used by systems to replace or remove their own post-shader.
+            /// </summary>
+            [DataField(required: true)]
+            public string Id = default!;
+
+            /// <summary>
+            ///     Shader prototype to run for this post-shader pass.
+            /// </summary>
+            [DataField(required: true)]
+            public ProtoId<ShaderPrototype> Prototype;
+
+            /// <summary>
+            ///     Whether to create a per-sprite mutable shader instance.
+            /// </summary>
+            [DataField]
+            public bool Mutable = true;
+
+            /// <summary>
+            ///     Whether this post-shader needs the current viewport texture assigned as SCREEN_TEXTURE.
+            /// </summary>
+            [DataField]
+            public bool GetScreenTexture;
+
+            /// <summary>
+            ///     Whether to raise BeforePostShaderRenderEvent before rendering this sprite.
+            /// </summary>
+            [DataField]
+            public bool RaiseShaderEvent;
+
+            /// <summary>
+            ///     Post-shader ids that this entry should run before.
+            /// </summary>
+            /// <remarks>
+            ///     Missing ids are ignored.
+            /// </remarks>
+            [DataField]
+            public string[] Before = Array.Empty<string>();
+
+            /// <summary>
+            ///     Post-shader ids that this entry should run after.
+            /// </summary>
+            /// <remarks>
+            ///     Missing ids are ignored.
+            /// </remarks>
+            [DataField]
+            public string[] After = Array.Empty<string>();
+
+            /// <summary>
+            ///     Shader instance to run for this post-shader pass.
+            /// </summary>
+            public ShaderInstance Shader = default!;
+
+            /// <summary>
+            ///     Original insertion position, used as the tie-breaker for unrelated post-shaders.
+            /// </summary>
+            internal int InsertionIndex;
+
+            /// <summary>
+            ///     Creates a post-shader entry.
+            /// </summary>
+            private PostShaderEntry()
+            {
+            }
+
+            public PostShaderEntry(
+                string id,
+                ShaderInstance shader,
+                bool getScreenTexture = false,
+                bool raiseShaderEvent = false,
+                string[]? before = null,
+                string[]? after = null)
+            {
+                Id = id;
+                Shader = shader;
+                Mutable = shader.Mutable;
+                GetScreenTexture = getScreenTexture;
+                RaiseShaderEvent = raiseShaderEvent;
+                Before = before ?? Array.Empty<string>();
+                After = after ?? Array.Empty<string>();
+            }
+
+            /// <summary>
+            ///     Copies a post-shader entry for sprite cloning.
+            /// </summary>
+            public PostShaderEntry(PostShaderEntry toClone)
+            {
+                Id = toClone.Id;
+                Prototype = toClone.Prototype;
+                Mutable = toClone.Mutable;
+                Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
+                GetScreenTexture = toClone.GetScreenTexture;
+                RaiseShaderEvent = toClone.RaiseShaderEvent;
+                Before = toClone.Before;
+                After = toClone.After;
+                InsertionIndex = toClone.InsertionIndex;
+            }
+        }
+
+        // Use args over big list just to make changes easier and not breaking for callers.
+        public struct PostShaderArgs
+        {
+            /// <summary>
+            ///     Stable id used to replace or remove this post-shader later.
+            /// </summary>
+            public string Id;
+
+            /// <summary>
+            ///     Shader instance to run for this post-shader pass.
+            /// </summary>
+            public ShaderInstance Shader;
+
+            /// <summary>
+            ///     Whether this post-shader needs the current viewport texture assigned as SCREEN_TEXTURE.
+            /// </summary>
+            public bool GetScreenTexture;
+
+            /// <summary>
+            ///     Whether to raise BeforePostShaderRenderEvent before rendering this sprite.
+            /// </summary>
+            public bool RaiseShaderEvent;
+
+            /// <summary>
+            ///     Post-shader ids that this entry should run before.
+            /// </summary>
+            public IEnumerable<string>? Before;
+
+            /// <summary>
+            ///     Post-shader ids that this entry should run after.
+            /// </summary>
+            public IEnumerable<string>? After;
+
+            /// <summary>
+            ///     Creates post-shader arguments with the required id and shader.
+            /// </summary>
+            public PostShaderArgs(string id, ShaderInstance shader)
+            {
+                Id = id;
+                Shader = shader;
             }
         }
 
@@ -1791,76 +1986,15 @@ namespace Robust.Client.GameObjects
         [Obsolete("Use SpriteSystem.GetPrototypeTextures() instead")]
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache, out bool noRot)
         {
-            var results = new List<IDirectionalTextureProvider>();
-            noRot = false;
-
-            // TODO when moving to a non-static method in a system, pass in IComponentFactory
-            if (prototype.TryGetComponent(out IconComponent? icon))
-            {
-                var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
-                results.Add(sys.GetIcon(icon));
-                return results;
-            }
-
-            if (!prototype.Components.TryGetValue("Sprite", out _))
-            {
-                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
-                return results;
-            }
-
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
-            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
-            EntitySystem.Get<AppearanceSystem>().OnChangeData(dummy, spriteComponent);
-
-            foreach (var layer in spriteComponent.AllLayers)
-            {
-                if (!layer.Visible) continue;
-
-                if (layer.Texture != null)
-                {
-                    results.Add(layer.Texture);
-                    continue;
-                }
-
-                if (!layer.RsiState.IsValid) continue;
-
-                var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
-                if (rsi == null ||
-                    !rsi.TryGetState(layer.RsiState, out var state))
-                    continue;
-
-                results.Add(state);
-            }
-
-            noRot = spriteComponent.NoRotation;
-
-            entityManager.DeleteEntity(dummy);
-
-            if (results.Count == 0)
-                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
-
-            return results;
+            var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
+            return sys.GetPrototypeTextures(prototype, out noRot);
         }
 
         [Obsolete("Use SpriteSystem.GetPrototypeIcon() instead")]
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
-            // TODO when moving to a non-static method in a system, pass in IComponentFactory
-            if (prototype.TryGetComponent(out IconComponent? icon))
-                return sys.GetIcon(icon);
-
-            if (!prototype.Components.ContainsKey("Sprite"))
-                return sys.GetFallbackState();
-
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
-            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
-            var result = spriteComponent.Icon ?? sys.GetFallbackState();
-            entityManager.DeleteEntity(dummy);
-
-            return result;
+            return sys.GetPrototypeIcon(prototype);
         }
     }
 }

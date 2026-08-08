@@ -11,7 +11,7 @@ namespace Robust.Shared.ContentPack
 {
     internal sealed partial class AssemblyTypeChecker
     {
-        public static IEnumerable<string> DumpMetaMembers(Type type)
+        public static IEnumerable<(string Value, bool IsField)> DumpMetaMembers(Type type)
         {
             var assemblyLoc = type.Assembly.Location;
 
@@ -58,7 +58,7 @@ namespace Robust.Shared.ContentPack
                 var fieldName = metaReader.GetString(fieldDef.Name);
                 var fieldType = fieldDef.DecodeSignature(provider, 0);
 
-                yield return $"{fieldType.WhitelistToString()} {fieldName}";
+                yield return ($"{fieldType.WhitelistToString()} {fieldName}", IsField: true);
             }
 
             foreach (var methodHandle in typeDef.GetMethods())
@@ -79,7 +79,7 @@ namespace Robust.Shared.ContentPack
                     ? ""
                     : $"<{new string(',', genericCount - 1)}>";
 
-                yield return $"{methodSig.ReturnType.WhitelistToString()} {methodName}{typeParamString}({paramString})";
+                yield return ($"{methodSig.ReturnType.WhitelistToString()} {methodName}{typeParamString}({paramString})", IsField: false);
             }
         }
     }

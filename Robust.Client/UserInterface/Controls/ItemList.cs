@@ -69,7 +69,7 @@ namespace Robust.Client.UserInterface.Controls
                 var itemHeight = 0f;
                 if (item.Icon != null)
                 {
-                    itemHeight = item.IconSize.Y;
+                    itemHeight = item.IconSize.Y * item.IconScale;
                 }
 
                 itemHeight = Math.Max(itemHeight, ActualFont.GetHeight(UIScale));
@@ -111,21 +111,21 @@ namespace Robust.Client.UserInterface.Controls
             Recalculate();
         }
 
-        public void AddItems(IEnumerable<string> texts, Texture? icon = null, bool selectable = true, object? metadata = null)
+        public void AddItems(IEnumerable<string> texts, Texture? icon = null, bool selectable = true, object? metadata = null, float iconScale = 1)
         {
             var items = new ValueList<Item>();
 
             foreach (var text in texts)
             {
-                items.Add(new Item(this) {Text = text, Icon = icon, Selectable = selectable, Metadata = metadata});
+                items.Add(new Item(this) {Text = text, Icon = icon, IconScale = iconScale, Selectable = selectable, Metadata = metadata});
             }
 
             Add(items);
         }
 
-        public Item AddItem(string text, Texture? icon = null, bool selectable = true, object? metadata = null)
+        public Item AddItem(string text, Texture? icon = null, bool selectable = true, object? metadata = null, float iconScale = 1)
         {
-            var item = new Item(this) {Text = text, Icon = icon, Selectable = selectable, Metadata = metadata};
+            var item = new Item(this) {Text = text, Icon = icon, IconScale = iconScale, Selectable = selectable, Metadata = metadata};
             Add(item);
             return item;
         }
@@ -477,7 +477,7 @@ namespace Robust.Client.UserInterface.Controls
                 var itemHeight = 0f;
                 if (item.Icon != null)
                 {
-                    itemHeight = item.IconSize.Y;
+                    itemHeight = item.IconSize.Y * item.IconScale;
                 }
 
                 itemHeight = Math.Max(itemHeight, font.GetHeight(UIScale));
@@ -496,19 +496,19 @@ namespace Robust.Client.UserInterface.Controls
                     {
                         if (item.IconRegion.Size == Vector2.Zero)
                         {
-                            handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size),
+                            handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size * item.IconScale),
                                 item.IconModulate);
                         }
                         else
                         {
-                            handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size),
+                            handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size * item.IconScale),
                                 item.IconRegion, item.IconModulate);
                         }
                     }
 
                     if (item.Text != null)
                     {
-                        var textBox = new UIBox2(contentBox.Left + item.IconSize.X, contentBox.Top, contentBox.Right,
+                        var textBox = new UIBox2(contentBox.Left + item.IconSize.X * item.IconScale, contentBox.Top, contentBox.Right,
                             contentBox.Bottom);
                         DrawTextInternal(handle, item.Text, textBox);
                     }
@@ -595,14 +595,40 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseMove(args);
 
+            DefaultCursorShape = CursorShape.Arrow;
+
             for (var idx = 0; idx < _itemList.Count; idx++)
             {
                 var item = _itemList[idx];
                 if (item.Region == null) continue;
                 if (!item.Region.Value.Contains(args.RelativePosition)) continue;
+
+                if (SelectMode != ItemListSelectMode.None)
+                {
+                    if (item.Disabled)
+                    {
+                        DefaultCursorShape = CursorShape.NotAllowed;
+                    }
+                    else if (item.Selectable)
+                    {
+                        DefaultCursorShape = CursorShape.Pointer;
+                    }
+                    else
+                    {
+                        DefaultCursorShape = CursorShape.Arrow;
+                    }
+                }
+
                 OnItemHover?.Invoke(new ItemListHoverEventArgs(idx, this));
                 break;
             }
+        }
+
+        protected internal override void MouseExited()
+        {
+            base.MouseExited();
+
+            DefaultCursorShape = CursorShape.Arrow;
         }
 
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
@@ -722,6 +748,7 @@ namespace Robust.Client.UserInterface.Controls
             public Texture? Icon { get; set; }
             public UIBox2 IconRegion { get; set; }
             public Color IconModulate { get; set; } = Color.White;
+            public float IconScale { get; set; } = 1;
             public bool Selectable { get; set; } = true;
             public bool TooltipEnabled { get; set; } = true;
             public UIBox2? Region { get; set; }

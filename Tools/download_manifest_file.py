@@ -26,7 +26,7 @@ def main():
     server_info = requests.get(f"{server}/info").json()
     (manifest_url, dl_url) = cdn_urls(server, server_info["build"])
 
-    manifest = requests.get(manifest_url).text
+    manifest = requests.get(manifest_url).content.decode("utf-8")
 
     manifest_lines = iter(manifest.splitlines())
 

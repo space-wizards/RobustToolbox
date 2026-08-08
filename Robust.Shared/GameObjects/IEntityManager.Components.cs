@@ -7,6 +7,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
+    [NotContentImplementable]
     public partial interface IEntityManager
     {
         /// <summary>

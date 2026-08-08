@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 
 namespace Robust.Shared.Timing
@@ -7,16 +8,22 @@ namespace Robust.Shared.Timing
     /// <summary>
     ///     This holds main loop timing information and helper functions.
     /// </summary>
+    [NotContentImplementable]
     public interface IGameTiming
     {
         /// <summary>
-        /// Is program execution inside of the simulation, or rendering?
+        /// Is program execution inside the simulation, or outside of it (rendering, input handling, etc.)
         /// </summary>
         bool InSimulation { get; set; }
 
         /// <summary>
         ///     Is the simulation currently paused?
         /// </summary>
+        /// <remarks>
+        ///     When true, system update loops are not ran and relative time (like <see cref="CurTime"/>) does not
+        ///     advance. This is useful for fully idling a game server and can be automatically managed by
+        ///     <see cref="CVars.GameAutoPauseEmpty"/>.
+        /// </remarks>
         bool Paused { get; set; }
 
         /// <summary>
@@ -26,9 +33,15 @@ namespace Robust.Shared.Timing
         TimeSpan CurTime { get; }
 
         /// <summary>
-        ///     The current real uptime of the simulation. Use this for UI and out of game timing.
+        ///     The current real uptime of the simulation. Use this for UI and out of game timing, it is not affected
+        ///     by pausing, timescale, or lag.
         /// </summary>
         TimeSpan RealTime { get; }
+
+        /// <summary>
+        /// The time (on the <see cref="RealTime"/> scale) when the current frame started.
+        /// </summary>
+        TimeSpan FrameStartTime { get; }
 
         /// <summary>
         ///     The <see cref="RealTime"/> of the server.
@@ -86,7 +99,18 @@ namespace Robust.Shared.Timing
         /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
+        /// <remarks>
+        /// This is specified in simulation time, not real time.
+        /// </remarks>
         ushort TickRate { get; set; }
+
+        /// <summary>
+        /// The scale of simulation time to real time.
+        /// </summary>
+        /// <remarks>
+        /// A scale of 2 means the game should go "twice as slow"
+        /// </remarks>
+        float TimeScale { get; set; }
 
         /// <summary>
         /// The baseline time value that CurTime is calculated relatively to.
@@ -96,6 +120,9 @@ namespace Robust.Shared.Timing
         /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.
         /// </summary>
+        /// <remarks>
+        /// This is in simulation time, not necessarily real time.
+        /// </remarks>
         TimeSpan TickPeriod { get; }
 
         /// <summary>
@@ -103,6 +130,18 @@ namespace Robust.Shared.Timing
         /// </summary>
         TimeSpan TickRemainder { get; set; }
 
+        /// <summary>
+        /// <see cref="TickRemainder"/> in real time.
+        /// </summary>
+        TimeSpan TickRemainderRealtime { get; }
+
+        /// <summary>
+        /// Calculate the amount of <b>real time</b> to wait between ticks.
+        /// </summary>
+        /// <remarks>
+        /// This is adjusted for various "out of simulation"
+        /// factors such as <see cref="TickTimingAdjustment"/> and <see cref="TimeScale"/>.
+        /// </remarks>
         TimeSpan CalcAdjustedTickPeriod();
 
         /// <summary>
@@ -137,34 +176,44 @@ namespace Robust.Shared.Timing
         void StartFrame();
 
         /// <summary>
-        /// Is this the first time CurTick has been predicted?
+        ///     Is this the first time CurTick has been predicted?
         /// </summary>
         bool IsFirstTimePredicted { get; }
 
         /// <summary>
-        /// True if CurTick is ahead of LastRealTick, and <see cref="ApplyingState"/> is false.
+        ///     True if CurTick is ahead of LastRealTick, and <see cref="ApplyingState"/> is false.
         /// </summary>
+        /// <remarks>
+        ///     This means the client is currently running ahead of the server, to fill in the gaps for the player and
+        ///     reduce latency while waiting for the next game state to arrive.
+        /// </remarks>
         bool InPrediction { get; }
 
         /// <summary>
-        /// If true, the game is currently in the process of applying a game server-state.
+        ///     If true, the game is currently in the process of applying a game server-state.
         /// </summary>
         bool ApplyingState { get; }
 
         string TickStamp => $"{CurTick}, predFirst: {IsFirstTimePredicted}, tickRem: {TickRemainder.TotalSeconds}, sim: {InSimulation}";
 
         /// <summary>
-        /// Statically-accessible version of <see cref="TickStamp"/>.
+        ///     Statically-accessible version of <see cref="TickStamp"/>.
         /// </summary>
         /// <remarks>
-        /// This is intended as a debugging aid, and should not be used in regular committed code.
+        ///     This is intended as a debugging aid, and should not be used in regular committed code.
         /// </remarks>
         static string TickStampStatic => IoCManager.Resolve<IGameTiming>().TickStamp;
 
         /// <summary>
-        /// Resets the simulation time. This should be called on round restarts.
+        ///     Resets the simulation time completely. While functional, no mainstream RobustToolbox game currently uses
+        ///     this outside of client synchronization with the server and it may have quirks on existing titles.
         /// </summary>
+        /// <remarks>
+        ///     To avoid potential desynchronization where some entities think they have changes from the far future,
+        ///     this should be accompanied by a full ECS reset using <see cref="IEntityManager.FlushEntities"/>.
+        /// </remarks>
         void ResetSimTime();
+        /// <inheritdoc cref="ResetSimTime()"/>
         void ResetSimTime((TimeSpan, GameTick) timeBase);
 
         void SetTickRateAt(ushort tickRate, GameTick atTick);

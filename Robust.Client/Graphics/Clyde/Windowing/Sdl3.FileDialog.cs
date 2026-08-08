@@ -46,6 +46,10 @@ internal partial class Clyde
                 }
             }
 
+            // NOTE: Giving a parent window is required to avoid the file dialog being blocking on macOS.
+            var mainWindow = (Sdl3WindowReg)_clyde._mainWindow!;
+            SDL.SDL_SetPointerProperty(props, SDL.SDL_PROP_FILE_DIALOG_WINDOW_POINTER, mainWindow.Sdl3Window);
+
             var task = ShowFileDialogWithProperties(type, props);
 
             SDL.SDL_DestroyProperties(props);

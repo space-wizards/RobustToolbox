@@ -10,6 +10,15 @@ namespace Robust.Shared.Configuration
         void LoadCVarsFromAssembly(Assembly assembly);
         void LoadCVarsFromType(Type containingType);
 
+        /// <summary>
+        /// Indicate that config should be stored in-memory.
+        /// </summary>
+        /// <remarks>
+        /// This suppresses warnings from <see cref="IConfigurationManager.SaveToFile"/>
+        /// if no config is otherwise loaded.
+        /// </remarks>
+        void SetVirtualConfig();
+
         void Initialize(bool isServer);
 
         void Shutdown();

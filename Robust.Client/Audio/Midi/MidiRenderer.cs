@@ -16,7 +16,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Audio.Midi;
 
-internal sealed class MidiRenderer : IMidiRenderer
+internal sealed partial class MidiRenderer : IMidiRenderer
 {
     private readonly IMidiManager _midiManager;
     private readonly ITaskManager _taskManager;
@@ -213,6 +213,11 @@ internal sealed class MidiRenderer : IMidiRenderer
 
     [ViewVariables]
     public BitArray FilteredChannels { get; } = new(RobustMidiEvent.MaxChannels);
+
+    [ViewVariables]
+    public byte MinVolume { get => _minVolume; set => _minVolume = value; }
+
+    private byte _minVolume;
 
     [ViewVariables(VVAccess.ReadWrite)]
     public byte? VelocityOverride { get; set; } = null;
@@ -435,15 +440,6 @@ internal sealed class MidiRenderer : IMidiRenderer
         _sequencer.RemoveEvents(SequencerClientId.Wildcard, SequencerClientId.Wildcard, -1);
     }
 
-    public void LoadSoundfont(string filename, bool resetPresets = true)
-    {
-        lock (_playerStateLock)
-        {
-            _synth.LoadSoundFont(filename, resetPresets);
-            MidiSoundfont = 1;
-        }
-    }
-
     void IMidiRenderer.Render()
     {
         Render();
@@ -548,14 +544,7 @@ internal sealed class MidiRenderer : IMidiRenderer
                     if (velocity <= 0)
                         continue;
 
-                    try
-                    {
-                        _synth.NoteOn(channel, key, velocity);
-                    }
-                    catch (FluidSynthInteropException e)
-                    {
-                        _midiSawmill.Error($"CH:{channel} KEY:{key} VEL:{velocity} {e.ToStringBetter()}");
-                    }
+                    _synth.TryNoteOn(channel, key, velocity);
                 }
             }
 
@@ -583,19 +572,32 @@ internal sealed class MidiRenderer : IMidiRenderer
                 {
                     case RobustMidiCommand.NoteOff:
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = 0;
-                        _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
-                        break;
+                        _synth.TryNoteOff(midiEvent.Channel, midiEvent.Key);
 
+                        break;
                     case RobustMidiCommand.NoteOn:
+                        // Velocity 0 *can* represent a NoteOff event.
+                        var velocity = midiEvent.Velocity;
+                        if (velocity == 0)
+                        {
+                            _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = 0;
+                            _synth.TryNoteOn(midiEvent.Channel, midiEvent.Key, velocity);
+
+                            break;
+                        }
+
                         if (FilteredChannels[midiEvent.Channel])
                             break;
 
-                        var velocity = VelocityOverride ?? midiEvent.Velocity;
+                        if (MinVolume > 0)
+                            velocity = (byte)Math.Floor(MathHelper.Lerp(MinVolume, 127, (float)velocity / 127));
+
+                        velocity = VelocityOverride ?? velocity;
 
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = velocity;
-                        _synth.NoteOn(midiEvent.Channel, midiEvent.Key, velocity);
-                        break;
+                        _synth.TryNoteOn(midiEvent.Channel, midiEvent.Key, velocity);
 
+                        break;
                     case RobustMidiCommand.AfterTouch:
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = midiEvent.Value;
                         _synth.KeyPressure(midiEvent.Channel, midiEvent.Key, midiEvent.Value);

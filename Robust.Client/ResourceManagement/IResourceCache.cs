@@ -11,6 +11,7 @@ namespace Robust.Client.ResourceManagement;
 /// <summary>
 /// Handles caching of <see cref="BaseResource"/>
 /// </summary>
+[NotContentImplementable]
 public interface IResourceCache : IResourceManager
 {
     T GetResource<T>(string path, bool useFallback = true)
@@ -26,6 +27,10 @@ public interface IResourceCache : IResourceManager
         where T : BaseResource, new();
 
     bool TryGetResource(AudioStream stream, [NotNullWhen(true)] out AudioResource? resource);
+
+    bool TryRemoveResource<T>(string path) where T : BaseResource, IBaseResource, new();
+
+    bool TryRemoveResource<T>(ResPath path) where T : BaseResource, IBaseResource, new();
 
     void ReloadResource<T>(string path)
         where T : BaseResource, new();

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -20,11 +22,11 @@ internal sealed partial class PvsSystem
     /// <returns>New entity State for the given entity.</returns>
     private EntityState GetEntityState(ICommonSession? player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
     {
-        var bus = EntityManager.EventBus;
-        var changed = new List<ComponentChange>();
+        var changed = GetComponentChangeList(meta.NetComponents.Count);
 
         bool sendCompList = meta.LastComponentRemoved > fromTick;
-        HashSet<ushort>? netComps = sendCompList ? new() : null;
+        HashSet<ushort>? netComps = sendCompList ? GetNetComponentSet() : null;
+        var stateEv = new ComponentGetState(player, fromTick);
 
         foreach (var (netId, component) in meta.NetComponents)
         {
@@ -32,7 +34,7 @@ internal sealed partial class PvsSystem
 
             if (component.Deleted || !component.Initialized)
             {
-                Log.Error("Entity manager returned deleted or uninitialized components while sending entity data");
+                Log.Error($"Entity manager returned deleted or uninitialized component of type {component.GetType()} on entity {ToPrettyString(entityUid)} while generating entity state data for {player?.Name ?? "replay"}");
                 continue;
             }
 
@@ -41,15 +43,18 @@ internal sealed partial class PvsSystem
 
             if (component.LastModifiedTick <= fromTick)
             {
-                if (sendCompList && (!component.SessionSpecific || player == null || EntityManager.CanGetComponentState(bus, component, player)))
+                if (sendCompList && (!component.SessionSpecific || player == null || EntityManager.CanGetComponentState(component, player)))
                     netComps!.Add(netId);
                 continue;
             }
 
-            if (component.SessionSpecific && player != null && !EntityManager.CanGetComponentState(bus, component, player))
+            if (component.SessionSpecific && player != null && !EntityManager.CanGetComponentState(component, player))
                 continue;
 
-            var state = EntityManager.GetComponentState(bus, component, player, fromTick);
+            var state = ComponentState(entityUid, component, netId, ref stateEv, out var excludeReplays);
+            if (excludeReplays && player == null)
+                continue;
+
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (state != null)
@@ -66,15 +71,28 @@ internal sealed partial class PvsSystem
         return entState;
     }
 
+    private IComponentState? ComponentState(EntityUid uid, IComponent comp, ushort netId, ref ComponentGetState stateEv, out bool excludeReplays)
+    {
+        DebugTools.Assert(comp.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {comp.GetType()}");
+// Reset the ComponentGetState data.
+stateEv.State = null;
+stateEv.ExcludeReplays = false;
+_getStateHandlers![netId]?.Invoke(uid, comp, ref Unsafe.As<ComponentGetState, EntityEventBus.Unit>(ref stateEv));
+var state = stateEv.State;
+        excludeReplays = stateEv.ExcludeReplays;
+return state;
+    }
+
     /// <summary>
     /// Variant of <see cref="GetEntityState"/> that includes all entity data, including data that can be inferred implicitly from the entity prototype.
     /// </summary>
     private EntityState GetFullEntityState(ICommonSession player, EntityUid entityUid, MetaDataComponent meta)
     {
-        var bus = EntityManager.EventBus;
-        var changed = new List<ComponentChange>();
+        var bus = EntityManager.EventBusInternal;
+        var changed = GetComponentChangeList(meta.NetComponents.Count);
+        var stateEv = new ComponentGetState(player, GameTick.Zero);
 
-        HashSet<ushort> netComps = new();
+        HashSet<ushort> netComps = GetNetComponentSet();
 
         foreach (var (netId, component) in meta.NetComponents)
         {
@@ -86,7 +104,7 @@ internal sealed partial class PvsSystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = EntityManager.GetComponentState(bus, component, player, GameTick.Zero);
+            var state = ComponentState(entityUid, component, netId, ref stateEv, out _);
             DebugTools.Assert(state is not IComponentDeltaState);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
             netComps.Add(netId);
@@ -132,7 +150,7 @@ internal sealed partial class PvsSystem
 
         if (enumerateAll)
         {
-            var query = EntityManager.AllEntityQueryEnumerator<MetaDataComponent>();
+            var query = AllEntityQuery<MetaDataComponent>();
             while (query.MoveNext(out var uid, out var md))
             {
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");
@@ -185,6 +203,7 @@ Entity: {ToPrettyString(uid)}
 Last modified: {md.EntityLastModifiedTick}
 Metadata last modified: {md.LastModifiedTick}
 Transform last modified: {Transform(uid).LastModifiedTick}");
+                        ReturnEntityState(state);
                         continue;
                     }
 
@@ -205,6 +224,8 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                     var state = GetEntityState(session, uid, fromTick, md);
                     if (!state.Empty)
                         pvsSession.States.Add(state);
+                    else
+                        ReturnEntityState(state);
                 }
             }
         }

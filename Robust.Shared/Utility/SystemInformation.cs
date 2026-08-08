@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.Wasm;
@@ -31,8 +33,18 @@ internal static class SystemInformation
             if (name != null)
                 return name;
         }
-
-        // TODO: ask OS as fallback for when x86 CPUID isn't available on Windows and Linux.
+        else if (OperatingSystem.IsWindows())
+        {
+            var name = GetProcessorModelWindows();
+            if (name != null)
+                return name;
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            var name = GetProcessorModelLinux();
+            if (name != null)
+                return name;
+        }
 
         return "Unknown processor model";
     }
@@ -93,6 +105,35 @@ internal static class SystemInformation
         void* newp,
         nint newlen);
 
+    private static string? GetProcessorModelWindows()
+    {
+        var mgs = new ManagementObjectSearcher("select Name from Win32_Processor");
+        foreach (var o in mgs.Get())
+        {
+            var obj = (ManagementObject)o;
+            return (string)obj["Name"];
+        }
+
+        return null;
+    }
+
+    private static string? GetProcessorModelLinux()
+    {
+        using var sr = new StreamReader("/proc/cpuinfo");
+        while (sr.ReadLine() is { } line)
+        {
+            var entry = line.Split(':', 2);
+            if (entry.Length != 2)
+                continue;
+
+            var key = entry[0].Trim();
+            if (key == "model name")
+                return entry[1].Trim();
+        }
+
+        return null;
+    }
+
     public static List<string> GetIntrinsics()
     {
         var options = new List<string>();
@@ -139,6 +180,18 @@ internal static class SystemInformation
 
         if (Avx512Vbmi.VL.IsSupported)
             options.Add(nameof(Avx512Vbmi) + ".VL");
+
+        if (Avx10v1.IsSupported)
+            options.Add(nameof(Avx10v1));
+
+        if (Avx10v1.V512.IsSupported)
+            options.Add(nameof(Avx10v1) + ".V512");
+
+        if (Avx10v2.IsSupported)
+            options.Add(nameof(Avx10v2));
+
+        if (Avx10v2.V512.IsSupported)
+            options.Add(nameof(Avx10v2) + ".V512");
 
         if (Bmi1.IsSupported)
             options.Add(nameof(Bmi1));

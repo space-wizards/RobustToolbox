@@ -12,9 +12,9 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     /// <seealso cref="BaseWindow"/>
     [Virtual]
-    public class OSWindow : Control
+    public partial class OSWindow : Control
     {
-        [Dependency] private readonly IClyde _clyde = default!;
+        [Dependency] private IClyde _clyde = default!;
 
         private string _title = "Window";
         private WindowRoot? _root;
@@ -107,10 +107,10 @@ namespace Robust.Client.UserInterface.Controls
             var parameters = new WindowCreateParameters();
 
             if (!float.IsNaN(SetWidth))
-                parameters.Width = (int) SetWidth;
+                parameters.Width = (int)SetWidth;
 
             if (!float.IsNaN(SetHeight))
-                parameters.Height = (int) SetHeight;
+                parameters.Height = (int)SetHeight;
 
             if (SizeToContent != WindowSizeToContent.Manual)
             {
@@ -135,10 +135,16 @@ namespace Robust.Client.UserInterface.Controls
             ClydeWindow.Resized += OnWindowResized;
 
             _root = UserInterfaceManager.CreateWindowRoot(ClydeWindow);
+            _root.CreateRootControls();
+
+            // Add ourselves *after* creating the root.
+            // This way root controls are valid in EnteredTree().
+            // We have to re-organize the controls after, of course.
             _root.AddChild(this);
+            SetPositionFirst();
 
             // Resize the window by our UIScale
-            ClydeWindow.Size = new((int)(ClydeWindow.Size.X * UIScale), (int)(ClydeWindow.Size.Y * UIScale));
+            ClydeWindow.Size = new((int)(parameters.Width * UIScale), (int)(parameters.Height * UIScale));
             return ClydeWindow;
         }
 

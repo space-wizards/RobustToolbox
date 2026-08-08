@@ -1,7 +1,7 @@
 using System.Globalization;
-using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
@@ -14,13 +14,15 @@ namespace Robust.Shared.Prototypes;
 internal sealed class YamlValidationContext :
     ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
-    ITypeSerializer<NetEntity, ValueDataNode>
+    ITypeSerializer<NetEntity, ValueDataNode>,
+    ITypeSerializer<MapId, ValueDataNode>
 {
-    public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
+    public SerializationManager.SerializerProvider SerializerProvider { get; }
     public bool WritingReadingPrototypes => true;
 
-    public YamlValidationContext()
+    public YamlValidationContext(ISerializationManager ser)
     {
+        SerializerProvider = new(ser);
         SerializerProvider.RegisterSerializer(this);
     }
 
@@ -92,5 +94,41 @@ internal sealed class YamlValidationContext :
             return new ValueDataNode("invalid");
 
         return new ValueDataNode(value.Id.ToString(CultureInfo.InvariantCulture));
+    }
+
+    ValidationNode ITypeValidator<MapId, ValueDataNode>.Validate(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        ISerializationContext? context)
+    {
+        if (node.Value == "invalid")
+            return new ValidatedValueNode(node);
+
+        return new ErrorNode(node, "Prototypes should not contain map ids", true);
+    }
+
+    MapId ITypeReader<MapId, ValueDataNode>.Read(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        SerializationHookContext hookCtx,
+        ISerializationContext? ctx,
+        ISerializationManager.InstantiationDelegate<MapId>? instanceProvider)
+    {
+        return node.Value == "invalid" ? MapId.Nullspace : new MapId(int.Parse(node.Value));
+    }
+
+    DataNode ITypeWriter<MapId>.Write(
+        ISerializationManager seri,
+        MapId value,
+        IDependencyCollection deps,
+        bool alwaysWrite,
+        ISerializationContext? ctx)
+    {
+        if (value == MapId.Nullspace)
+            return new ValueDataNode("invalid");
+
+        return new ValueDataNode(value.Value.ToString(CultureInfo.InvariantCulture));
     }
 }

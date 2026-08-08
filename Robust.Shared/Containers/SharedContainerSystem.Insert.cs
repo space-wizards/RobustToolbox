@@ -127,6 +127,7 @@ public abstract partial class SharedContainerSystem
         // The sheer number of asserts tells you about how little I trust container and parenting code.
         DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0, "invalid metadata flags after events");
         DebugTools.Assert(!transform.Anchored, "entity is anchored");
+        DebugTools.AssertEqual(transform.ParentUid, container.Owner, "Wrong parent");
         DebugTools.AssertEqual(transform.LocalPosition, Vector2.Zero);
         DebugTools.Assert(MathHelper.CloseTo(transform.LocalRotation.Theta, Angle.Zero), "Angle is not zero");
         DebugTools.Assert(!PhysicsQuery.TryGetComponent(toInsert, out var phys) || (!phys.Awake && !phys.CanCollide), "Invalid physics");
@@ -219,6 +220,9 @@ public abstract partial class SharedContainerSystem
 
     internal void RecursivelyUpdateJoints(Entity<TransformComponent> entity)
     {
+        if (_timing.ApplyingState)
+            return;
+
         if (JointQuery.TryGetComponent(entity, out var jointComp))
         {
             // TODO: This is going to be going up while joints going down, although these aren't too common

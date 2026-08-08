@@ -8,9 +8,9 @@ using Robust.Shared.Network;
 
 namespace Robust.Server.Console.Commands
 {
-    public sealed class ListPlayers : LocalizedCommands
+    public sealed partial class ListPlayers : LocalizedCommands
     {
-        [Dependency] private readonly IPlayerManager _players = default!;
+        [Dependency] private IPlayerManager _players = default!;
 
         public override string Command => "listplayers";
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -39,10 +39,10 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    internal sealed class KickCommand : LocalizedCommands
+    internal sealed partial class KickCommand : LocalizedCommands
     {
-        [Dependency] private readonly IPlayerManager _players = default!;
-        [Dependency] private readonly IServerNetManager _netManager = default!;
+        [Dependency] private IPlayerManager _players = default!;
+        [Dependency] private IServerNetManager _netManager = default!;
 
         public override string Command => "kick";
 

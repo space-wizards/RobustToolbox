@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using JetBrains.Annotations;
 using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -21,7 +20,13 @@ public record struct SerializationOptions
     public MissingEntityBehaviour MissingEntityBehaviour = MissingEntityBehaviour.IncludeNullspace;
 
     /// <summary>
-    /// Whether or not to log an error when serializing an entity without its parent.
+    /// What to do when an exception is thrown while trying to serialize an entity. The default behaviour is to abort
+    /// the serialization.
+    /// </summary>
+    public EntityExceptionBehaviour EntityExceptionBehaviour = EntityExceptionBehaviour.Rethrow;
+
+    /// <summary>
+    /// Whether to log an error when serializing an entity without its parent.
     /// </summary>
     public bool ErrorOnOrphan = true;
 
@@ -78,10 +83,10 @@ public record struct DeserializationOptions()
     public bool LogInvalidEntities = true;
 
     /// <summary>
-    /// Whether or not to automatically assign map ids to any deserialized map entities.
+    /// Whether to automatically assign map ids to any deserialized map entities.
     /// If false, maps need to be manually given ids before entities are initialized.
     /// </summary>
-    public bool AssignMapids = true;
+    public bool AssignMapIds = true;
 }
 
 /// <summary>

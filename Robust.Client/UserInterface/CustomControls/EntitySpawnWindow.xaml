@@ -5,8 +5,8 @@
     MinSize="350 200">
     <BoxContainer Orientation="Vertical">
         <BoxContainer Orientation="Horizontal">
-            <LineEdit Name="SearchBar" Access="Public" HorizontalExpand="True" PlaceHolder="{Loc entity-spawn-window-search-bar-placeholder}"/>
-            <Button Name="ClearButton" Access="Public" Disabled="True" Text="{Loc entity-spawn-window-clear-button}" />
+            <LineEdit Name="SearchBar" Access="Public" HorizontalExpand="True" PlaceHolder="{Loc window-search-bar-placeholder}"/>
+            <Button Name="ClearButton" Access="Public" Disabled="True" Text="{Loc window-clear-button}" />
         </BoxContainer>
         <ScrollContainer Name="PrototypeScrollContainer" Access="Public" MinSize="200 0" VerticalExpand="True">
             <PrototypeListContainer Name="PrototypeList" Access="Public"/>

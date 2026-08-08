@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
@@ -7,8 +8,6 @@ using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using static Robust.Client.GameObjects.SpriteComponent;
-using Vector4 = Robust.Shared.Maths.Vector4;
-using SysVec4 = System.Numerics.Vector4;
 
 namespace Robust.Client.GameObjects;
 
@@ -20,14 +19,16 @@ public sealed partial class SpriteSystem
         DrawingHandleWorld drawingHandle,
         Angle eyeRotation,
         Angle worldRotation,
-        Vector2 worldPosition)
+        Vector2 worldPosition,
+        IReadOnlyList<SpriteComponent.PostShaderEntry>? postShaders = null)
     {
         RenderSprite(sprite,
             drawingHandle,
             eyeRotation,
             worldRotation,
             worldPosition,
-            sprite.Comp.EnableDirectionOverride ? sprite.Comp.DirectionOverride : null);
+            sprite.Comp.EnableDirectionOverride ? sprite.Comp.DirectionOverride : null,
+            postShaders);
     }
 
     public void RenderSprite(
@@ -36,8 +37,21 @@ public sealed partial class SpriteSystem
         Angle eyeRotation,
         Angle worldRotation,
         Vector2 worldPosition,
-        Direction? overrideDirection)
+        Direction? overrideDirection,
+        IReadOnlyList<PostShaderEntry>? postShaders = null)
     {
+        if (postShaders is { Count: > 0 })
+        {
+            drawingHandle.RenderSpritePostShaders(
+                sprite,
+                postShaders,
+                eyeRotation,
+                worldRotation,
+                worldPosition,
+                overrideDirection);
+            return;
+        }
+
         // TODO SPRITE RENDERING
         // Add fast path for simple sprites.
         // I.e., when a sprite is modified, check if it is "simple". If it is. cache texture information in a struct
@@ -127,7 +141,17 @@ public sealed partial class SpriteSystem
             dir = overrideDirection.Value.Convert(state.RsiDirections);
         dir = dir.OffsetRsiDir(layer.DirOffset);
 
-        var texture = state?.GetFrame(dir, layer.AnimationFrame) ?? layer.Texture ?? GetFallbackTexture();
+        AtlasTexture? atlasTexture = null;
+        Texture texture;
+        if (state != null)
+        {
+            atlasTexture = state.GetAtlasFrame(dir, layer.AnimationFrame);
+            texture = atlasTexture;
+        }
+        else
+        {
+            texture = layer.Texture ?? GetFallbackTexture();
+        }
 
         // TODO SPRITE
         // Refactor shader-param-layers to a separate layer type after layers are split into types & collections.
@@ -157,10 +181,13 @@ public sealed partial class SpriteSystem
             // Negative color modulation values are by the default shader to disable light shading.
             // Specifically we set colour = - 1 - colour
             // This is good enough to ensure that non-negative values become negative & is trivially invertible.
-            layerColor = new(new SysVec4(-1) - layerColor.RGBA);
+            layerColor = new(new Vector4(-1) - layerColor.RGBA);
         }
 
-        drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
+        if (atlasTexture != null)
+            drawingHandle.DrawTextureRect(atlasTexture, quad, layerColor);
+        else
+            drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
 
         if (layer.Shader != null)
             drawingHandle.UseShader(null);

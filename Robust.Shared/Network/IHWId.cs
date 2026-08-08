@@ -50,9 +50,9 @@ internal sealed class DummyHWId : IHWId
 }
 
 #if DEBUG
-internal sealed class HwidCommand : LocalizedCommands
+internal sealed partial class HwidCommand : LocalizedCommands
 {
-    [Dependency] private readonly IHWId _hwId = default!;
+    [Dependency] private IHWId _hwId = default!;
 
     public override string Command => "hwid";
 

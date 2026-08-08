@@ -3,6 +3,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Timing
 {
+    [NotContentImplementable]
     public interface IClientGameTiming : IGameTiming
     {
         /// <summary>

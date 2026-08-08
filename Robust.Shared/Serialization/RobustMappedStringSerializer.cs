@@ -97,7 +97,7 @@ namespace Robust.Shared.Serialization
         /// </remarks>
         private const uint FirstMappedIndexStart = 2;
 
-        [Dependency] private readonly INetManager _net = default!;
+        [Dependency] private INetManager _net = default!;
 
         // I don't want to create 50 line changes in this commit so...
         // ReSharper disable once InconsistentNaming
@@ -295,7 +295,7 @@ namespace Robust.Shared.Serialization
 
             _stringMapHash = _serverHash;
 
-            LogSzr.Debug($"Locked in at {_dict.StringCount} mapped strings.");
+            LogSzr.Debug($"Locked in at {_dict.StringCount} mapped strings ({ByteHelpers.FormatBytes(msg.Package!.Length)}).");
 
             packageStream.Position = 0;
             if (EnableCaching)
@@ -439,7 +439,7 @@ namespace Robust.Shared.Serialization
 
                 _stringMapHash = msgMapStr.Hash!;
                 LogSzr.Debug($"Read {added} strings from cache {hashStr}.");
-                LogSzr.Debug($"Locked in at {_dict.StringCount} mapped strings.");
+                LogSzr.Debug($"Locked in at {_dict.StringCount} mapped strings ({ByteHelpers.FormatBytes(file.Length)}).");
                 // ok we're good now
                 var channel = msgMapStr.MsgChannel;
                 OnClientCompleteHandshake(_net, channel);

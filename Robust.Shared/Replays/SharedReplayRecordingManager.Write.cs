@@ -26,22 +26,30 @@ internal abstract partial class SharedReplayRecordingManager
     // and even then not for much longer than a couple hundred ms at most.
     private readonly List<Task> _finalizingWriteTasks = new();
 
-    private void WriteYaml(RecordingState state, ResPath path, YamlDocument data)
+    private void WriteYaml(
+        RecordingState state,
+        ResPath path,
+        YamlDocument data,
+        CompressionLevel level = CompressionLevel.Optimal)
     {
         var memStream = new MemoryStream();
         using var writer = new StreamWriter(memStream);
         var yamlStream = new YamlStream { data };
         yamlStream.Save(new YamlMappingFix(new Emitter(writer)), false);
         writer.Flush();
-        WriteBytes(state, path, memStream.AsMemory());
+        WriteBytes(state, path, memStream.AsMemory(), level);
     }
 
-    private void WriteSerializer<T>(RecordingState state, ResPath path, T obj)
+    private void WriteSerializer<T>(
+        RecordingState state,
+        ResPath path,
+        T obj,
+        CompressionLevel level = CompressionLevel.Optimal)
     {
         var memStream = new MemoryStream();
         _serializer.SerializeDirect(memStream, obj);
 
-        WriteBytes(state, path, memStream.AsMemory());
+        WriteBytes(state, path, memStream.AsMemory(), level);
     }
 
     private void WritePooledBytes(

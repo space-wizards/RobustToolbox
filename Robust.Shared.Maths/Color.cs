@@ -29,12 +29,11 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
-using SysVector3 = System.Numerics.Vector3;
-using SysVector4 = System.Numerics.Vector4;
 
 namespace Robust.Shared.Maths
 {
@@ -69,7 +68,7 @@ namespace Robust.Shared.Maths
         /// Vector representation, for easy SIMD operations.
         /// </summary>
         // ReSharper disable once InconsistentNaming
-        public readonly SysVector4 RGBA => Unsafe.BitCast<Color, SysVector4>(this);
+        public readonly Vector4 RGBA => Unsafe.BitCast<Color, Vector4>(this);
 
         public readonly byte RByte => (byte) (R * byte.MaxValue);
         public readonly byte GByte => (byte) (G * byte.MaxValue);
@@ -94,9 +93,9 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Constructs a new Color structure from the components in a <see cref="SysVector4"/>.
         /// </summary>
-        public Color(in SysVector4 vec)
+        public Color(in Vector4 vec)
         {
-            this = Unsafe.BitCast<SysVector4, Color>(vec);
+            this = Unsafe.BitCast<Vector4, Color>(vec);
         }
 
         /// <summary>
@@ -108,7 +107,6 @@ namespace Robust.Shared.Maths
         /// <param name="a">The alpha component of the new Color structure.</param>
         public Color(byte r, byte g, byte b, byte a = 255)
         {
-            Unsafe.SkipInit(out this);
             R = r / (float) byte.MaxValue;
             G = g / (float) byte.MaxValue;
             B = b / (float) byte.MaxValue;
@@ -163,19 +161,36 @@ namespace Robust.Shared.Maths
         /// <returns>A new Color structure containing the converted components.</returns>
         public static implicit operator Color(System.Drawing.Color color)
         {
-            return new(color.R, color.G, color.B, color.A);
+            return new Color(color.R, color.G, color.B, color.A);
         }
 
+        /// <summary>
+        ///     Converts the specified RGBA float tuple into a Color instance.
+        /// </summary>
+        /// <param name="tuple">The tuple to convert.</param>
+        /// <returns>The converted Color instance with the tuple's values.</returns>
         public static implicit operator Color((float r, float g, float b, float a) tuple)
         {
-            return new(tuple.r, tuple.g, tuple.b, tuple.a);
+            return new Color(tuple.r, tuple.g, tuple.b, tuple.a);
         }
 
+        /// <summary>
+        ///     Converts the specified RGB float tuple into a Color instance.
+        /// </summary>
+        /// <param name="tuple">The tuple to convert.</param>
+        /// <returns>The converted Color instance with the tuple's values.</returns>
         public static implicit operator Color((float r, float g, float b) tuple)
         {
-            return new(tuple.r, tuple.g, tuple.b);
+            return new Color(tuple.r, tuple.g, tuple.b);
         }
 
+        /// <summary>
+        ///     Deconstructs a Color instance into its float RGBA parts.
+        /// </summary>
+        /// <param name="r">The Color instance's red value.</param>
+        /// <param name="g">The Color instance's green value.</param>
+        /// <param name="b">The Color instance's blue value.</param>
+        /// <param name="a">The Color instance's alpha value.</param>
         public readonly void Deconstruct(out float r, out float g, out float b, out float a)
         {
             r = R;
@@ -184,6 +199,12 @@ namespace Robust.Shared.Maths
             a = A;
         }
 
+        /// <summary>
+        ///     Deconstructs a Color instance into its float RGB parts.
+        /// </summary>
+        /// <param name="r">The Color instance's red value.</param>
+        /// <param name="g">The Color instance's green value.</param>
+        /// <param name="b">The Color instance's blue value.</param>
         public readonly void Deconstruct(out float r, out float g, out float b)
         {
             r = R;
@@ -205,16 +226,32 @@ namespace Robust.Shared.Maths
                 (int) (color.B * byte.MaxValue));
         }
 
-        public static Color FromName(string colorname)
+        /// <summary>
+        ///     Indexes the <see cref="DefaultColors"/> instance and returns the value.
+        /// </summary>
+        /// <param name="colorName">The key to index the <see cref="DefaultColors"/> instance with.</param>
+        /// <returns>The Color instance returned from indexing the dictionary.</returns>
+        public static Color FromName(string colorName)
         {
-            return DefaultColors[colorname.ToLower()];
+            return DefaultColors[colorName.ToLower()];
         }
 
+        /// <summary>
+        ///     Tries to output a specific Color instance from the <see cref="DefaultColors"/> dictionary
+        ///     based on a colorName key.
+        /// </summary>
+        /// <param name="colorName">The key to index the <see cref="DefaultColors"/> with.</param>
+        /// <param name="color">The Color instance value that was associated with the colorName key, if any.</param>
+        /// <returns>Whether a Color instance was successfully found with the key.</returns>
         public static bool TryFromName(string colorName, out Color color)
         {
             return DefaultColors.TryGetValue(colorName.ToLower(), out color);
         }
 
+        /// <summary>
+        ///     Gets the dictionary with all color names and their associated values.
+        /// </summary>
+        /// <returns>The <see cref="DefaultColors"/> dictionary.</returns>
         public static IEnumerable<KeyValuePair<string, Color>> GetAllDefaultColors()
         {
             return DefaultColors;
@@ -251,10 +288,13 @@ namespace Robust.Shared.Maths
             return $"{{(R, G, B, A) = ({R}, {G}, {B}, {A})}}";
         }
 
+        /// <inheritdoc cref="ToString()"/>
+        /// <remarks>Does not do anything different to ToString().</remarks>
         public readonly string ToString(string? format, IFormatProvider? formatProvider)
         {
             return ToString();
         }
+
 
         public readonly bool TryFormat(
             Span<char> destination,
@@ -268,44 +308,84 @@ namespace Robust.Shared.Maths
                 $"{{(R, G, B, A) = ({R}, {G}, {B}, {A})}}");
         }
 
+        /// <summary>
+        ///     Creates a new Color instance with the provided red value.
+        /// </summary>
+        /// <param name="newR">The new red value to give the Color instance.</param>
+        /// <returns>A new Color instance with the provided red value.</returns>
         public readonly Color WithRed(float newR)
         {
-            return new(newR, G, B, A);
+            return new Color(newR, G, B, A);
         }
 
+        /// <summary>
+        ///     Creates a new Color instance with the provided green value.
+        /// </summary>
+        /// <param name="newG">The new green value to give the Color instance.</param>
+        /// <returns>A new Color instance with the provided green value.</returns>
         public readonly Color WithGreen(float newG)
         {
-            return new(R, newG, B, A);
+            return new Color(R, newG, B, A);
         }
 
+        /// <summary>
+        ///     Creates a new Color instance with the provided blue value.
+        /// </summary>
+        /// <param name="newB">The new blue value to give the Color instance.</param>
+        /// <returns>A new Color instance with the provided blue value.</returns>
         public readonly Color WithBlue(float newB)
         {
-            return new(R, G, newB, A);
+            return new Color(R, G, newB, A);
         }
 
+        /// <summary>
+        ///     Creates a new Color instance with the provided alpha value.
+        /// </summary>
+        /// <param name="newA">The new alpha value to give the Color instance.</param>
+        /// <returns>A new Color instance with the provided alpha value.</returns>
         public readonly Color WithAlpha(float newA)
         {
-            return new(R, G, B, newA);
+            return new Color(R, G, B, newA);
         }
 
+        /// <summary>
+        ///     Creates a new Color instance with a new byte-based red value.
+        /// </summary>
+        /// <param name="newR">The byte to convert into the new red value.</param>
+        /// <returns>A new Color instance with the provided red value.</returns>
         public readonly Color WithRed(byte newR)
         {
-            return new((float) newR / byte.MaxValue, G, B, A);
+            return new Color((float) newR / byte.MaxValue, G, B, A);
         }
 
+        /// <summary>
+        ///     Creates a new Color instance with a new byte-based green value.
+        /// </summary>
+        /// <param name="newG">The byte to convert into the new green value.</param>
+        /// <returns>A new Color instance with the provided green value.</returns>
         public readonly Color WithGreen(byte newG)
         {
-            return new(R, (float) newG / byte.MaxValue, B, A);
+            return new Color(R, (float) newG / byte.MaxValue, B, A);
         }
 
+        /// <summary>
+        ///     Creates a new Color instance with a new byte-based blue value.
+        /// </summary>
+        /// <param name="newB">The byte to convert into the new blue value.</param>
+        /// <returns>A new Color instance with the provided blue value.</returns>
         public readonly Color WithBlue(byte newB)
         {
-            return new(R, G, (float) newB / byte.MaxValue, A);
+            return new Color(R, G, (float) newB / byte.MaxValue, A);
         }
 
+        /// <summary>
+        ///     Creates a new Color instance with a new byte-based alpha value.
+        /// </summary>
+        /// <param name="newA">The byte to convert into the new alpha value.</param>
+        /// <returns>A new Color instance with the provided alpha value.</returns>
         public readonly Color WithAlpha(byte newA)
         {
-            return new(R, G, B, (float) newA / byte.MaxValue);
+            return new Color(R, G, B, (float) newA / byte.MaxValue);
         }
 
         /// <summary>
@@ -344,27 +424,27 @@ namespace Robust.Shared.Maths
         /// <returns>
         ///     Returns the converted color value.
         /// </returns>
-        /// <param name="rgb">Color value to convert.</param>
-        public static Color ToSrgb(Color rgb)
+        /// <param name="color">Color value to convert.</param>
+        public static Color ToSrgb(Color color)
         {
             float r, g, b;
 
-            if (rgb.R <= 0.0031308)
-                r = 12.92f * rgb.R;
+            if (color.R <= 0.0031308)
+                r = 12.92f * color.R;
             else
-                r = (1.0f + 0.055f) * MathF.Pow(rgb.R, 1.0f / 2.4f) - 0.055f;
+                r = (1.0f + 0.055f) * MathF.Pow(color.R, 1.0f / 2.4f) - 0.055f;
 
-            if (rgb.G <= 0.0031308)
-                g = 12.92f * rgb.G;
+            if (color.G <= 0.0031308)
+                g = 12.92f * color.G;
             else
-                g = (1.0f + 0.055f) * MathF.Pow(rgb.G, 1.0f / 2.4f) - 0.055f;
+                g = (1.0f + 0.055f) * MathF.Pow(color.G, 1.0f / 2.4f) - 0.055f;
 
-            if (rgb.B <= 0.0031308)
-                b = 12.92f * rgb.B;
+            if (color.B <= 0.0031308)
+                b = 12.92f * color.B;
             else
-                b = (1.0f + 0.055f) * MathF.Pow(rgb.B, 1.0f / 2.4f) - 0.055f;
+                b = (1.0f + 0.055f) * MathF.Pow(color.B, 1.0f / 2.4f) - 0.055f;
 
-            return new Color(r, g, b, rgb.A);
+            return new Color(r, g, b, color.A);
         }
 
         /// <summary>
@@ -447,23 +527,23 @@ namespace Robust.Shared.Maths
         ///     Alpha (a copy of the input's Alpha value).
         ///     Each has a range of 0.0 to 1.0.
         /// </returns>
-        /// <param name="rgb">Color value to convert.</param>
+        /// <param name="color">Color value to convert.</param>
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
-        public static Vector4 ToHsl(Color rgb)
+        public static Vector4 ToHsl(Color color)
         {
-            var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));
-            var min = MathF.Min(rgb.R, MathF.Min(rgb.G, rgb.B));
+            var max = MathF.Max(color.R, MathF.Max(color.G, color.B));
+            var min = MathF.Min(color.R, MathF.Min(color.G, color.B));
             var c = max - min;
 
             var h = 0.0f;
             if (c != 0)
             {
-                if (max == rgb.R)
-                    h = (rgb.G - rgb.B) / c;
-                else if (max == rgb.G)
-                    h = (rgb.B - rgb.R) / c + 2.0f;
-                else if (max == rgb.B)
-                    h = (rgb.R - rgb.G) / c + 4.0f;
+                if (max == color.R)
+                    h = (color.G - color.B) / c;
+                else if (max == color.G)
+                    h = (color.B - color.R) / c + 2.0f;
+                else if (max == color.B)
+                    h = (color.R - color.G) / c + 4.0f;
             }
 
             var hue = h / 6.0f;
@@ -476,7 +556,7 @@ namespace Robust.Shared.Maths
             if (0.0f != lightness && lightness != 1.0f)
                 saturation = c / (1.0f - MathF.Abs(2.0f * lightness - 1.0f));
 
-            return new Vector4(hue, saturation, lightness, rgb.A);
+            return new Vector4(hue, saturation, lightness, color.A);
         }
 
         /// <summary>
@@ -561,25 +641,25 @@ namespace Robust.Shared.Maths
         /// </returns>
         /// <param name="rgb">Color value to convert.</param>
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
-        public static Vector4 ToHsv(Color rgb)
+        public static Vector4 ToHsv(Color color)
         {
-            var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));
-            var min = MathF.Min(rgb.R, MathF.Min(rgb.G, rgb.B));
+            var max = MathF.Max(color.R, MathF.Max(color.G, color.B));
+            var min = MathF.Min(color.R, MathF.Min(color.G, color.B));
             var c = max - min;
 
             var h = 0.0f;
             if (c != 0)
             {
-                if (max == rgb.R)
+                if (max == color.R)
                 {
-                    h = (rgb.G - rgb.B) / c % 6.0f;
+                    h = (color.G - color.B) / c % 6.0f;
                     if (h < 0f)
                         h += 6.0f;
                 }
-                else if (max == rgb.G)
-                    h = (rgb.B - rgb.R) / c + 2.0f;
-                else if (max == rgb.B)
-                    h = (rgb.R - rgb.G) / c + 4.0f;
+                else if (max == color.G)
+                    h = (color.B - color.R) / c + 2.0f;
+                else if (max == color.B)
+                    h = (color.R - color.G) / c + 4.0f;
             }
 
             var hue = h * 60.0f / 360.0f;
@@ -588,8 +668,127 @@ namespace Robust.Shared.Maths
             if (0.0f != max)
                 saturation = c / max;
 
-            return new Vector4(hue, saturation, max, rgb.A);
+            return new Vector4(hue, saturation, max, color.A);
         }
+
+        #region Oklab/Oklch
+        /*
+
+            The code in this region is based off of https://bottosson.github.io/posts/oklab/, available under public domain or the MIT license.
+
+            Copyright (c) 2020 Björn Ottosson
+            Permission is hereby granted, free of charge, to any person obtaining a copy of
+            this software and associated documentation files (the "Software"), to deal in
+            the Software without restriction, including without limitation the rights to
+            use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+            of the Software, and to permit persons to whom the Software is furnished to do
+            so, subject to the following conditions:
+            The above copyright notice and this permission notice shall be included in all
+            copies or substantial portions of the Software.
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+            IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+            FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+            AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+            LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+            OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+            SOFTWARE.
+
+         */
+
+        /// <summary>
+        ///     Converts linear sRGB color values to Oklab color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        ///     The X element is L (lightness), the Y element is a (green-red), the Z element is b (blue-yellow), and the W element is Alpha
+        ///     (a copy of the input's Alpha value).
+        ///     L and Alpha have a range of 0 to 1, while a and b are unbounded, but roughly -0.5 to 0.5
+        /// </returns>
+        /// <param name="srgb">Linear sRGB color value to convert. <see cref="FromSrgb"/> to convert an sRGB color into linear sRGB.</param>
+        public static Vector4 ToLab(Color srgb)
+        {
+            // convert from srgb to linear lms
+
+            var l = 0.4122214708f * srgb.R + 0.5363325363f * srgb.G + 0.0514459929f * srgb.B;
+            var m = 0.2119034982f * srgb.R + 0.6806995451f * srgb.G + 0.1073969566f * srgb.B;
+            var s = 0.0883024619f * srgb.R + 0.2817188376f * srgb.G + 0.6299787005f * srgb.B;
+
+            // convert from linear lms to non-linear lms
+
+            var l_ = MathF.Cbrt(l);
+            var m_ = MathF.Cbrt(m);
+            var s_ = MathF.Cbrt(s);
+
+            // convert from non-linear lms to lab
+
+            return new Vector4(
+                0.2104542553f * l_ + 0.7936177850f * m_ - 0.0040720468f * s_,
+                1.9779984951f * l_ - 2.4285922050f * m_ + 0.4505937099f * s_,
+                0.0259040371f * l_ + 0.7827717662f * m_ - 0.8086757660f * s_,
+                srgb.A
+            );
+        }
+
+        /// <summary>
+        ///     Converts Oklab color values to linear sRGB color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value. <see cref="ToSrgb"/> to convert an sRGB color into linear sRGB.
+        /// </returns>
+        /// <param name="oklab">Oklab color value to convert.</param>
+        public static Color FromLab(Vector4 oklab)
+        {
+            var l_ = oklab.X + 0.3963377774f * oklab.Y + 0.2158037573f * oklab.Z;
+            var m_ = oklab.X - 0.1055613458f * oklab.Y - 0.0638541728f * oklab.Z;
+            var s_ = oklab.X - 0.0894841775f * oklab.Y - 1.2914855480f * oklab.Z;
+
+            // convert from non-linear lms to linear lms
+
+            var l = l_ * l_ * l_;
+            var m = m_ * m_ * m_;
+            var s = s_ * s_ * s_;
+
+            // convert from linear lms to linear srgb
+
+            var r = +4.0767416621f * l - 3.3077115913f * m + 0.2309699292f * s;
+            var g = -1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s;
+            var b = -0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s;
+
+            return new Color(r, g, b, oklab.W);
+        }
+
+        /// <summary>
+        ///     Converts cartesian Oklab color values to polar Oklch color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        /// </returns>
+        /// <param name="oklab">Oklab color value to convert.</param>
+        public static Vector4 ToLch(Vector4 oklab)
+        {
+            var c = MathF.Sqrt(oklab.Y * oklab.Y + oklab.Z * oklab.Z);
+            var h = MathF.Atan2(oklab.Z, oklab.Y);
+            if (h < 0)
+                h += 2 * MathF.PI;
+
+            return new Vector4(oklab.X, c, h, oklab.W);
+        }
+
+        /// <summary>
+        ///     Converts polar Oklch color values to cartesian Oklab color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        /// </returns>
+        /// <param name="oklch">Oklch color value to convert.</param>
+        public static Vector4 FromLch(Vector4 oklch)
+        {
+            var a = oklch.Y * MathF.Cos(oklch.Z);
+            var b = oklch.Y * MathF.Sin(oklch.Z);
+
+            return new Vector4(oklch.X, a, b, oklch.W);
+        }
+        #endregion
 
         /// <summary>
         ///     Converts XYZ color values to RGB color values.
@@ -619,14 +818,14 @@ namespace Robust.Shared.Maths
         ///     element with Alpha (a copy of the input's Alpha value).
         ///     Each has a range of 0.0 to 1.0.
         /// </returns>
-        /// <param name="rgb">Color value to convert.</param>
+        /// <param name="color">Color value to convert.</param>
         /// <remarks>Uses the CIE XYZ colorspace.</remarks>
-        public static Vector4 ToXyz(Color rgb)
+        public static Vector4 ToXyz(Color color)
         {
-            var x = (0.49f * rgb.R + 0.31f * rgb.G + 0.20f * rgb.B) / 0.17697f;
-            var y = (0.17697f * rgb.R + 0.81240f * rgb.G + 0.01063f * rgb.B) / 0.17697f;
-            var z = (0.00f * rgb.R + 0.01f * rgb.G + 0.99f * rgb.B) / 0.17697f;
-            return new Vector4(x, y, z, rgb.A);
+            var x = (0.49f * color.R + 0.31f * color.G + 0.20f * color.B) / 0.17697f;
+            var y = (0.17697f * color.R + 0.81240f * color.G + 0.01063f * color.B) / 0.17697f;
+            var z = (0.00f * color.R + 0.01f * color.G + 0.99f * color.B) / 0.17697f;
+            return new Vector4(x, y, z, color.A);
         }
 
         /// <summary>
@@ -660,14 +859,14 @@ namespace Robust.Shared.Maths
         ///     input's Alpha value).
         ///     Each has a range of 0.0 to 1.0.
         /// </returns>
-        /// <param name="rgb">Color value to convert.</param>
+        /// <param name="color">Color value to convert.</param>
         /// <remarks>Converts using ITU-R BT.601/CCIR 601 W(r) = 0.299 W(b) = 0.114 U(max) = 0.436 V(max) = 0.615.</remarks>
-        public static Vector4 ToYcbcr(Color rgb)
+        public static Vector4 ToYcbcr(Color color)
         {
-            var y = 0.299f * rgb.R + 0.587f * rgb.G + 0.114f * rgb.B;
-            var u = -0.168736f * rgb.R + -0.331264f * rgb.G + 0.5f * rgb.B;
-            var v = 0.5f * rgb.R + -0.418688f * rgb.G + -0.081312f * rgb.B;
-            return new Vector4(y, u, v, rgb.A);
+            var y = 0.299f * color.R + 0.587f * color.G + 0.114f * color.B;
+            var u = -0.168736f * color.R + -0.331264f * color.G + 0.5f * color.B;
+            var v = 0.5f * color.R + -0.418688f * color.G + -0.081312f * color.B;
+            return new Vector4(y, u, v, color.A);
         }
 
         /// <summary>
@@ -777,18 +976,39 @@ namespace Robust.Shared.Maths
             return new Vector4(hue, c, luminance, rgb.A);
         }
 
-
-        public static Vector4 ToCmyk(Color rgb)
+        /// <summary>
+        ///     Converts a Color instance into CMYK color values.
+        /// </summary>
+        /// <param name="color">The color instance to convert.</param>
+        /// <returns>
+        ///     Returns the converted color value.
+        ///     The X element is cyan (C), the Y element is magenta (M), the Z element is yellow (Y),
+        ///     and the W element is the key (K).
+        ///     Each has a range of 0.0 to 1.0.
+        /// </returns>
+        public static Vector4 ToCmyk(Color color)
         {
-            var (r, g, b) = rgb;
+            var (r, g, b) = color;
             var k = 1 - MathF.Max(r, MathF.Max(g, b));
             var c = (1 - r - k) / (1 - k);
             var m = (1 - g - k) / (1 - k);
             var y = (1 - b - k) / (1 - k);
 
-            return (c, m, y, k);
+            return new Vector4(c, m, y, k);
         }
 
+        /// <summary>
+        ///     Converts CMYK color values into a Color instance.
+        /// </summary>
+        /// <param name="cmyk">
+        ///     The CMYK color values.
+        ///     The X element is cyan (C), the Y element is magenta (M), the Z element is yellow (Y),
+        ///     and the W element is the key (K).
+        ///     Each has a range of 0.0 to 1.0.
+        /// </param>
+        /// <returns>
+        ///     The converted color instance.
+        /// </returns>
         public static Color FromCmyk(Vector4 cmyk)
         {
             var (c, m, y, k) = cmyk;
@@ -813,62 +1033,107 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Color InterpolateBetween(Color α, Color β, float λ)
         {
-            return new(SysVector4.Lerp(α.RGBA, β.RGBA, λ));
+            return new Color(Vector4.Lerp(α.RGBA, β.RGBA, λ));
         }
 
-        public static Color? TryFromHex(ReadOnlySpan<char> hexColor)
+        /// <summary>
+        ///     Tries to convert a <see cref="ReadOnlySpan{T}"/> of characters into a <see cref="Color"/> instance.
+        /// </summary>
+        /// <param name="hexColor">The <see cref="ReadOnlySpan{T}"/> to try to convert into a <see cref="Color"/> instance.</param>
+        /// <param name="color">The created <see cref="Color"/> instance. </param>
+        /// <returns>
+        ///     Returns <see langword='true' /> if it created a proper <see cref="Color"/> instance from the hex code.
+        ///     Returns <see langword='false' /> if no <see cref="Color"/> instance could be made.
+        /// </returns>
+        /// <remarks>
+        /// <paramref name="hexColor"/> must start with a #.
+        /// Works with the following hex code formats:
+        /// #00000000, #000000, #0000, #000
+        /// </remarks>
+        public static bool TryFromHex(ReadOnlySpan<char> hexColor, out Color color)
         {
-            if (hexColor.Length <= 0 || hexColor[0] != '#') return null;
+            color = default;
+
+            if (hexColor.Length <= 0 || hexColor[0] != '#') return false;
             if (hexColor.Length == 9)
             {
-                if (!byte.TryParse(hexColor[1..3], NumberStyles.HexNumber, null, out var r)) return null;
-                if (!byte.TryParse(hexColor[3..5], NumberStyles.HexNumber, null, out var g)) return null;
-                if (!byte.TryParse(hexColor[5..7], NumberStyles.HexNumber, null, out var b)) return null;
-                if (!byte.TryParse(hexColor[7..9], NumberStyles.HexNumber, null, out var a)) return null;
-                return new Color(r, g, b, a);
+                if (!byte.TryParse(hexColor[1..3], NumberStyles.HexNumber, null, out var r)) return false;
+                if (!byte.TryParse(hexColor[3..5], NumberStyles.HexNumber, null, out var g)) return false;
+                if (!byte.TryParse(hexColor[5..7], NumberStyles.HexNumber, null, out var b)) return false;
+                if (!byte.TryParse(hexColor[7..9], NumberStyles.HexNumber, null, out var a)) return false;
+                color = new Color(r, g, b, a);
+                return true;
             }
             if (hexColor.Length == 7)
             {
-                if (!byte.TryParse(hexColor[1..3], NumberStyles.HexNumber, null, out var r)) return null;
-                if (!byte.TryParse(hexColor[3..5], NumberStyles.HexNumber, null, out var g)) return null;
-                if (!byte.TryParse(hexColor[5..7], NumberStyles.HexNumber, null, out var b)) return null;
-                return new Color(r, g, b);
-            }
-
-            static bool ParseDup(char chr, out byte value)
-            {
-                Span<char> buf = stackalloc char[2];
-                buf[0] = chr;
-                buf[1] = chr;
-
-                return byte.TryParse(buf, NumberStyles.HexNumber, null, out value);
+                if (!byte.TryParse(hexColor[1..3], NumberStyles.HexNumber, null, out var r)) return false;
+                if (!byte.TryParse(hexColor[3..5], NumberStyles.HexNumber, null, out var g)) return false;
+                if (!byte.TryParse(hexColor[5..7], NumberStyles.HexNumber, null, out var b)) return false;
+                color = new Color(r, g, b);
+                return true;
             }
 
             if (hexColor.Length == 5)
             {
-                if (!ParseDup(hexColor[1], out var rByte)) return null;
-                if (!ParseDup(hexColor[2], out var gByte)) return null;
-                if (!ParseDup(hexColor[3], out var bByte)) return null;
-                if (!ParseDup(hexColor[4], out var aByte)) return null;
+                if (!ParseDup(hexColor[1], out var rByte)) return false;
+                if (!ParseDup(hexColor[2], out var gByte)) return false;
+                if (!ParseDup(hexColor[3], out var bByte)) return false;
+                if (!ParseDup(hexColor[4], out var aByte)) return false;
 
-                return new Color(rByte, gByte, bByte, aByte);
+                color = new Color(rByte, gByte, bByte, aByte);
+                return true;
             }
             if (hexColor.Length == 4)
             {
-                if (!ParseDup(hexColor[1], out var rByte)) return null;
-                if (!ParseDup(hexColor[2], out var gByte)) return null;
-                if (!ParseDup(hexColor[3], out var bByte)) return null;
+                if (!ParseDup(hexColor[1], out var rByte)) return false;
+                if (!ParseDup(hexColor[2], out var gByte)) return false;
+                if (!ParseDup(hexColor[3], out var bByte)) return false;
 
-                return new Color(rByte, gByte, bByte);
+                color = new Color(rByte, gByte, bByte);
+                return true;
             }
+            return false;
+        }
+
+        /// <summary>
+        ///     Tries to convert a <see cref="ReadOnlySpan{T}"/> of characters into a <see cref="Color"/>.
+        /// </summary>
+        /// <param name="hexColor">The <see cref="ReadOnlySpan{T}"/> of characters to convert into a <see cref="Color"/> instance.</param>
+        /// <returns>A <see cref="Color"/> instance if it succeeded, <see langword="null"/> otherwise.</returns>
+        /// <remarks>
+        ///     <paramref name="hexColor"/> must start with a #.
+        ///     Works with the following hex code formats:
+        ///     #00000000, #000000, #0000, #000
+        /// </remarks>
+        private static Color? TryFromHex(ReadOnlySpan<char> hexColor)
+        {
+            if (TryFromHex(hexColor, out var color))
+                return color;
+
             return null;
         }
 
+        private static bool ParseDup(char chr, out byte value)
+        {
+            Span<char> buf = stackalloc char[2];
+            buf[0] = chr;
+            buf[1] = chr;
+
+            return byte.TryParse(buf, NumberStyles.HexNumber, null, out value);
+        }
+
+        /// <summary>
+        ///     Converts a <see cref="ReadOnlySpan{T}"/> of characters into a <see cref="Color"/> instance
+        ///     and lets you provide a fallback if it fails.
+        /// </summary>
+        /// <param name="hexColor">Tries to </param>
+        /// <param name="fallback"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">If no fallback is provided, throws an <see cref="ArgumentException"/> </exception>
         public static Color FromHex(ReadOnlySpan<char> hexColor, Color? fallback = null)
         {
-            var color = TryFromHex(hexColor);
-            if (color.HasValue)
-                return color.Value;
+            if (TryFromHex(hexColor, out var color))
+                return color;
             if (fallback.HasValue)
                 return fallback.Value;
             throw new ArgumentException($"Invalid color code \"{new string(hexColor)}\" and no fallback provided.", nameof(hexColor));
@@ -876,9 +1141,8 @@ namespace Robust.Shared.Maths
 
         public static Color FromXaml(string name)
         {
-            var color = TryFromHex(name);
-            if (color != null)
-                return color.Value;
+            if (TryFromHex(name, out var color))
+                return color;
 
             if (TryFromName(name, out var namedColor))
                 return namedColor;
@@ -888,10 +1152,10 @@ namespace Robust.Shared.Maths
 
         public static Color Blend(Color dstColor, Color srcColor, BlendFactor dstFactor, BlendFactor srcFactor)
         {
-            var dst = new SysVector3(dstColor.R, dstColor.G, dstColor.B);
-            var src = new SysVector3(srcColor.R, srcColor.G, srcColor.B);
+            var dst = new Vector3(dstColor.R, dstColor.G, dstColor.B);
+            var src = new Vector3(srcColor.R, srcColor.G, srcColor.B);
 
-            var ret = new SysVector3();
+            var ret = new Vector3();
 
             switch (dstFactor)
             {
@@ -904,13 +1168,13 @@ namespace Robust.Shared.Maths
                     ret = dst * src;
                     break;
                 case BlendFactor.OneMinusSrcColor:
-                    ret = dst * (SysVector3.One - src);
+                    ret = dst * (Vector3.One - src);
                     break;
                 case BlendFactor.DstColor:
                     ret = dst * dst;
                     break;
                 case BlendFactor.OneMinusDstColor:
-                    ret = dst * (SysVector3.One - dst);
+                    ret = dst * (Vector3.One - dst);
                     break;
                 case BlendFactor.SrcAlpha:
                     ret = dst * srcColor.A;
@@ -939,13 +1203,13 @@ namespace Robust.Shared.Maths
                     ret += src * src;
                     break;
                 case BlendFactor.OneMinusSrcColor:
-                    ret += src * (SysVector3.One - src);
+                    ret += src * (Vector3.One - src);
                     break;
                 case BlendFactor.DstColor:
                     ret += src * dst;
                     break;
                 case BlendFactor.OneMinusDstColor:
-                    ret += src * (SysVector3.One - dst);
+                    ret += src * (Vector3.One - dst);
                     break;
                 case BlendFactor.SrcAlpha:
                     ret += src * srcColor.A;
@@ -972,6 +1236,10 @@ namespace Robust.Shared.Maths
         public static Color operator *(in Color a, in Color b)
             => new(a.RGBA * b.RGBA);
 
+        /// <summary>
+        ///     Converts a <see cref="Color"/> instance into a hex color <see cref="System.String"/>.
+        /// </summary>
+        /// <returns>The hex color code, formatted as #00000000.</returns>
         public readonly string ToHex()
         {
             var hexColor = 0;
@@ -983,6 +1251,8 @@ namespace Robust.Shared.Maths
             return $"#{hexColor:X8}";
         }
 
+        /// <inheritdoc cref="ToHex"/>
+        /// <returns>The hex color code, formatted as #000000.</returns>
         public readonly string ToHexNoAlpha()
         {
             var hexColor = 0;
@@ -1898,22 +2168,30 @@ namespace Robust.Shared.Maths
         private static readonly FrozenDictionary<Color, string> DefaultColorsInverted =
             DefaultColors.ToLookup(pair => pair.Value).ToFrozenDictionary(i => i.Key, i => i.First().Key);
 
+        /// <summary>
+        ///     Gets the associated color name with this color instance by using an inverted version of <see cref="DefaultColors"/>.
+        ///     Returns <see langword="null"/> if there is no possible name with this color instance.
+        /// </summary>
+        /// <returns>The associated color name if any, usable with <see cref="DefaultColors"/>.</returns>
         public readonly string? Name()
         {
             return DefaultColorsInverted.GetValueOrDefault(this);
         }
 
+        /// <summary>
+        ///     Tries to return a <see cref="Color"/> instance by first calling <see cref="TryFromName"/>, and then
+        ///     <see cref="TryFromHex" />.
+        /// </summary>
+        /// <param name="input">A <see cref="System.String"/> that could either be a hex color code or a valid default color name.</param>
+        /// <param name="color">The parsed color if it returned true.</param>
+        /// <returns>Returns true if a color was returned successfully. Returns false otherwise.</returns>
         public static bool TryParse(string input, out Color color)
         {
             if (TryFromName(input, out color))
                 return true;
 
-            var nullableColor = TryFromHex(input);
-            if (nullableColor != null)
-            {
-                color = nullableColor.Value;
+            if (TryFromHex(input, out color))
                 return true;
-            }
 
             return false;
         }

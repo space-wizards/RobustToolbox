@@ -1,4 +1,3 @@
-using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio.Effects;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.GameObjects;

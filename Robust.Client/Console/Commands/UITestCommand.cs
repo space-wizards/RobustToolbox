@@ -3,9 +3,8 @@ using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Client.UserInterface.RichText;
 using Robust.Shared.Console;
-using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -44,7 +43,10 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
         var progressBar = new ProgressBar { MaxValue = 10, Value = 5 };
         vBox.AddChild(progressBar);
 
-        var optionButton = new OptionButton();
+        var optionButton = new OptionButton
+        {
+            ToolTip = "This button has a tooltip. Spooky!"
+        };
         optionButton.AddItem("Honk");
         optionButton.AddItem("Foo");
         optionButton.AddItem("Bar");
@@ -154,6 +156,9 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
 
         _sprite = new TabSpriteView();
         _tabContainer.AddChild(_sprite);
+        _tabContainer.AddChild(TabCursorShapes());
+        _tabContainer.AddChild(new TabWrapContainer { Name = nameof(Tab.WrapContainer) });
+        _tabContainer.AddChild(new TabOkLab());
     }
 
     public void OnClosed()
@@ -204,10 +209,60 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
     private Control TabRichText()
     {
         var label = new RichTextLabel();
-        label.SetMessage(FormattedMessage.FromMarkupOrThrow(Lipsum));
+        var msg = FormattedMessage.FromMarkupOrThrow(Lipsum);
+        msg.AddMarkupOrThrow("\n\nWAWWAAWAWWAWA [cmdlink=\"DOES IT WORK\" command=\"help\" /] DOES IT WORK");
+
+        label.SetMessage(msg, [typeof(CommandLinkTag)]);
 
         TabContainer.SetTabTitle(label, "RichText");
         return label;
+    }
+
+    private Control TabCursorShapes()
+    {
+        var box = new BoxContainer
+        {
+            Orientation = BoxContainer.LayoutOrientation.Vertical,
+        };
+        var styleBox = new StyleBoxFlat
+        {
+            BackgroundColor = Color.Black
+        };
+        foreach (var cursorName in Enum.GetNames<CursorShape>())
+        {
+            // Go over names due to duplicate definitions in the enum.
+            var cursor = Enum.Parse<CursorShape>(cursorName);
+            // Wow was I bad at API design.
+            if (cursor == CursorShape.Custom)
+                continue;
+
+            var panel = new PanelContainer
+            {
+                PanelOverride = styleBox,
+                DefaultCursorShape = cursor,
+                MouseFilter = MouseFilterMode.Stop,
+                MinHeight = 30,
+                Children =
+                {
+                    new Label
+                    {
+                        Text = cursorName,
+                        VerticalAlignment = VAlignment.Center,
+                        Margin = new Thickness(4)
+                    }
+                }
+            };
+
+            box.AddChild(panel);
+        }
+
+        return new ScrollContainer
+        {
+            Children = { box },
+            VScrollEnabled = true,
+            HScrollEnabled = false,
+            Name = nameof(Tab.TabCursorShapes),
+        };
     }
 
     public void SelectTab(Tab tab)
@@ -226,32 +281,14 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
         TextEdit = 6,
         RichText = 7,
         SpriteView = 8,
+        TabCursorShapes = 9,
+        WrapContainer = 10,
     }
 }
 
-internal sealed class UITestCommand : LocalizedCommands
+internal abstract class BaseUITestCommand : LocalizedCommands
 {
-    public override string Command => "uitest";
-
-    public override void Execute(IConsoleShell shell, string argStr, string[] args)
-    {
-        var window = new DefaultWindow { MinSize = new(800, 600) };
-        var control = new UITestControl();
-        window.OnClose += control.OnClosed;
-        window.Contents.AddChild(control);
-
-        window.OpenCentered();
-    }
-}
-
-internal sealed class UITest2Command : LocalizedCommands
-{
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IUserInterfaceManager _uiMgr = default!;
-
-    public override string Command => "uitest2";
-
-    public override void Execute(IConsoleShell shell, string argStr, string[] args)
+    public sealed override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length > 1)
         {
@@ -272,18 +309,10 @@ internal sealed class UITest2Command : LocalizedCommands
             control.SelectTab(tab);
         }
 
-        var window = _clyde.CreateWindow(new WindowCreateParameters
-        {
-            Title = Loc.GetString("cmd-uitest2-title"),
-        });
-
-        var root = _uiMgr.CreateWindowRoot(window);
-        window.DisposeOnClose = true;
-        window.RequestClosed += _ => control.OnClosed();
-        root.AddChild(control);
+        CreateWindow(control);
     }
 
-    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public sealed override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
         {
@@ -293,5 +322,36 @@ internal sealed class UITest2Command : LocalizedCommands
         }
 
         return CompletionResult.Empty;
+    }
+
+    protected abstract void CreateWindow(UITestControl control);
+}
+
+internal sealed class UITestCommand : BaseUITestCommand
+{
+    public override string Command => "uitest";
+
+    protected override void CreateWindow(UITestControl control)
+    {
+        var window = new DefaultWindow { MinSize = new(800, 600) };
+        window.OnClose += control.OnClosed;
+        window.Contents.AddChild(control);
+        window.OpenCentered();
+    }
+}
+
+internal sealed class UITest2Command : BaseUITestCommand
+{
+    public override string Command => "uitest2";
+
+    protected override void CreateWindow(UITestControl control)
+    {
+        var window = new OSWindow
+        {
+            Title = Loc.GetString("cmd-uitest2-title"),
+        };
+        window.AddChild(control);
+        window.Closed += control.OnClosed;
+        window.Show();
     }
 }

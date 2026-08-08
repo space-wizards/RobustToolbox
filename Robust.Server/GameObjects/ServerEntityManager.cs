@@ -27,23 +27,25 @@ namespace Robust.Server.GameObjects
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
     [UsedImplicitly] // DI Container
-    public sealed class ServerEntityManager : EntityManager, IServerEntityManager
+    public sealed partial class ServerEntityManager : EntityManager, IServerEntityManager
     {
         private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
             "robust_entities_count",
             "Amount of alive entities.");
 
-        [Dependency] private readonly IReplayRecordingManager _replay = default!;
-        [Dependency] private readonly IServerNetManager _networkManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private IReplayRecordingManager _replay = default!;
+        [Dependency] private IServerNetManager _networkManager = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IConfigurationManager _configurationManager = default!;
 #if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+        [Dependency] private IRuntimeLog _runtimeLog = default!;
 #endif
 
         private ISawmill _netEntSawmill = default!;
         private PvsSystem _pvs = default!;
+        private Histogram? _tickUpdateHistogram;
+        private Histogram.Child? _entityNetHistogram;
 
         public override void Initialize()
         {
@@ -159,7 +161,9 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntityNet").NewTimer())
+            UpdateTickHistogram(histogram);
+
+            using (_entityNetHistogram?.NewTimer())
             {
                 while (_queue.Count != 0 && _queue.Peek().SourceTick <= _gameTiming.CurTick)
                 {
@@ -170,6 +174,15 @@ namespace Robust.Server.GameObjects
             base.TickUpdate(frameTime, noPredictions, histogram);
 
             EntitiesCount.Set(Entities.Count);
+        }
+
+        private void UpdateTickHistogram(Histogram? histogram)
+        {
+            if (ReferenceEquals(_tickUpdateHistogram, histogram))
+                return;
+
+            _tickUpdateHistogram = histogram;
+            _entityNetHistogram = histogram?.WithLabels("EntityNet");
         }
 
         public uint GetLastMessageSequence(ICommonSession? session)
@@ -213,7 +226,7 @@ namespace Robust.Server.GameObjects
                 {
                     _netEntSawmill.Warning(
                         "Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}, msg: {4}",
-                        (int) msgT.Value - (int) cT.Value,
+                        (int)msgT.Value - (int)cT.Value,
                         message.MsgChannel.UserName,
                         msgT,
                         cT,

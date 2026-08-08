@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.Maths;
 

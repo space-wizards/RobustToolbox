@@ -1,0 +1,26 @@
+﻿<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         x:Class="Robust.Client.UserInterface.DevWindowTabRenderTargets">
+    <BoxContainer Orientation="Vertical">
+        <BoxContainer Orientation="Horizontal">
+            <Button Text="{Loc 'dev-window-tab-render-targets-reload'}" Name="ReloadButton" />
+        </BoxContainer>
+        <LineEdit Name="FilterEdit" PlaceHolder="{Loc 'dev-window-tab-render-targets-filter'}" />
+        <ScrollContainer VerticalExpand="True" VScrollEnabled="True" HScrollEnabled="False">
+            <BoxContainer Orientation="Vertical">
+                <TableContainer Name="Table" Margin="2" Columns="6">
+                    <Label Margin="4" Text="{Loc 'dev-window-tab-render-targets-column-id'}" />
+                    <Label Margin="4" Text="{Loc 'dev-window-tab-render-targets-column-name'}" />
+                    <Label Margin="4" Text="{Loc 'dev-window-tab-render-targets-column-size'}" />
+                    <Label Margin="4" Text="{Loc 'dev-window-tab-render-targets-column-type'}" />
+                    <Label Margin="4" Text="{Loc 'dev-window-tab-render-targets-column-vram'}" />
+                    <Label Margin="4" Text="{Loc 'dev-window-tab-render-targets-column-thumbnail'}" />
+                </TableContainer>
+            </BoxContainer>
+        </ScrollContainer>
+        <BoxContainer Orientation="Horizontal">
+            <Label Name="TotalLabel" Margin="4" />
+        </BoxContainer>
+    </BoxContainer>
+
+</Control>

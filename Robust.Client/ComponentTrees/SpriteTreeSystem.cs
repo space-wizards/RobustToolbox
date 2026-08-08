@@ -8,9 +8,9 @@ using Robust.Shared.Physics;
 
 namespace Robust.Client.ComponentTrees;
 
-public sealed class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, SpriteComponent>
+public sealed partial class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, SpriteComponent>
 {
-    [Dependency] private readonly SpriteSystem _sprite = default!;
+    [Dependency] private SpriteSystem _sprite = default!;
 
     #region Component Tree Overrides
     protected override bool DoFrameUpdate => true;
@@ -21,7 +21,7 @@ public sealed class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, 
     protected override Box2 ExtractAabb(in ComponentTreeEntry<SpriteComponent> entry, Vector2 pos, Angle rot)
     {
         // TODO SPRITE optimize this
-        // Because the just take the BB of the rotated BB, I'mt pretty sure we do a lot of unnecessary maths.
+        // Because the just take the BB of the rotated BB, I'm pretty sure we do a lot of unnecessary maths.
         return _sprite.CalculateBounds((entry.Uid, entry.Component), pos, rot, default).CalcBoundingBox();
     }
 

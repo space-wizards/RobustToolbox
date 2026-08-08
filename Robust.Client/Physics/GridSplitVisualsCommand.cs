@@ -4,9 +4,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Physics;
 
-public sealed class GridSplitVisualCommand : LocalizedCommands
+public sealed partial class GridSplitVisualCommand : LocalizedCommands
 {
-    [Dependency] private readonly IEntitySystemManager _systemManager = default!;
+    [Dependency] private IEntitySystemManager _systemManager = default!;
 
     public override string Command => SharedGridFixtureSystem.ShowGridNodesCommand;
 

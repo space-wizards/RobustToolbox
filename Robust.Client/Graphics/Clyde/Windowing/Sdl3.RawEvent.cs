@@ -140,6 +140,7 @@ internal partial class Clyde
             {
                 WindowId = ev.windowID,
                 Scancode = ev.scancode,
+                Raw = ev.raw,
                 Type = ev.type,
                 Repeat = ev.repeat,
                 Mods = ev.mod,
@@ -194,6 +195,7 @@ internal partial class Clyde
         {
             public uint WindowId;
             public SDL.SDL_Scancode Scancode;
+            public ushort Raw;
             public ET Type;
             public bool Repeat;
             public SDL.SDL_Keymod Mods;
@@ -278,5 +280,9 @@ internal partial class Clyde
         private sealed class EventKeyMapChanged : EventBase;
 
         private sealed class EventQuit : EventBase;
+
+#if MACOS
+        private sealed class EventWindowDestroyed : EventBase;
+#endif
     }
 }

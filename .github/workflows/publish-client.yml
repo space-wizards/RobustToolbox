@@ -23,20 +23,20 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4.1.0
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
 
       - name: Package client
-        run: Tools/package_client_build.py -p windows mac linux
+        run: Tools/package_client_build.py
 
       - name: Shuffle files around
         run: |
           mkdir "release/${{ steps.parse_version.outputs.version }}"
           mv release/*.zip "release/${{ steps.parse_version.outputs.version }}"
 
-      - name: Upload files to Suns
+      - name: Upload files to Dropwig
         uses: appleboy/scp-action@master
         with:
-          host: suns.spacestation14.com
+          host: dropwig.playss14.com
           username: robust-build-push
           key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
           source: "release/${{ steps.parse_version.outputs.version }}"
@@ -46,7 +46,7 @@ jobs:
       - name: Update manifest JSON
         uses: appleboy/ssh-action@master
         with:
-          host: suns.spacestation14.com
+          host: dropwig.playss14.com
           username: robust-build-push
           key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
           script: /home/robust-build-push/push.ps1 ${{ steps.parse_version.outputs.version }}

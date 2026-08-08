@@ -12,7 +12,7 @@ using static Robust.Shared.Utility.SpriteSpecifier;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
-    public abstract class SpriteSpecifierSerializer :
+    public abstract partial class SpriteSpecifierSerializer :
         ITypeSerializer<Texture, ValueDataNode>,
         ITypeSerializer<EntityPrototype, ValueDataNode>,
         ITypeSerializer<Rsi, MappingDataNode>,
@@ -28,6 +28,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         // Should probably be in SpriteSystem, but is needed for server to validate paths.
         // So I guess it might as well go here?
         public static readonly ResPath TextureRoot = new("/Textures");
+
+        [Dependency] private Prototypes.IPrototypeManager _proto = default!;
 
         Texture ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
@@ -102,7 +104,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            return !dependencies.Resolve<Prototypes.IPrototypeManager>().HasIndex<Prototypes.EntityPrototype>(node.Value)
+            return !_proto.HasIndex<Prototypes.EntityPrototype>(node.Value)
                 ? new ErrorNode(node, $"Invalid {nameof(EntityPrototype)} id")
                 : new ValidatedValueNode(node);
         }
@@ -112,7 +114,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            return serializationManager.ValidateNode<ResPath>(new ValueDataNode($"{TextureRoot / node.Value}"), context);
+            var path = TextureRoot / node.Value;
+            if (path.ToString().Contains(".rsi/"))
+                return new ErrorNode(node, "Texture paths may not be inside RSI files.");
+
+            return serializationManager.ValidateNode<ResPath>(new ValueDataNode(path.ToString()), context);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, MappingDataNode>.Validate(

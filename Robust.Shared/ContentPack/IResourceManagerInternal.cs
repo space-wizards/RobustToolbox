@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Robust.Shared.Utility;
@@ -14,7 +15,11 @@ namespace Robust.Shared.ContentPack
         /// The directory to use for user data.
         /// If null, a virtual temporary file system is used instead.
         /// </param>
-        void Initialize(string? userData);
+        /// <param name="hideUserDataDir">
+        /// If true, <see cref="IWritableDirProvider.RootDir"/> will be hidden on
+        /// <see cref="IResourceManager.UserData"/>.
+        /// </param>
+        void Initialize(string? userData, bool hideUserDataDir);
 
         /// <summary>
         ///     Mounts a single stream as a content file. Useful for unit testing.
@@ -65,5 +70,7 @@ namespace Robust.Shared.ContentPack
         /// </para>
         /// </remarks>
         bool TryGetDiskFilePath(ResPath path, [NotNullWhen(true)] out string? diskPath);
+
+        new IEnumerable<string> GetContentRoots();
     }
 }

@@ -14,10 +14,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.Console.Commands
 {
-    public sealed class SaveGridCommand : LocalizedCommands
+    public sealed partial class SaveGridCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _ent = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntityManager _ent = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "savegrid";
 
@@ -45,7 +45,7 @@ namespace Robust.Server.Console.Commands
             }
 
             bool saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]));
-            if(saveSuccess)
+            if (saveSuccess)
             {
                 shell.WriteLine("Save successful. Look in the user data directory.");
             }
@@ -69,10 +69,10 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class LoadGridCommand : LocalizedCommands
+    public sealed partial class LoadGridCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntitySystemManager _system = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "loadgrid";
 
@@ -102,8 +102,8 @@ namespace Robust.Server.Console.Commands
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (!sys.MapExists(mapId))
             {
-                shell.WriteError("Target map does not exist.");
-                return;
+                shell.WriteError($"MapID {intMapId} did not exist, creating without map init");
+                sys.CreateMap(mapId, false); // doesnt runmapinit to be conservative.
             }
 
             Vector2 offset = default;
@@ -154,15 +154,15 @@ namespace Robust.Server.Console.Commands
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
-            return LoadMap.GetCompletionResult(shell, args, _resource);
+            return LoadMap.GetCompletionResult(shell, args, _resource, Loc);
         }
     }
 
-    public sealed class SaveMap : LocalizedCommands
+    public sealed partial class SaveMap : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
-        [Dependency] private readonly IEntitySystemManager _system = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntityManager _entManager = default!;
+        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "savemap";
 
@@ -209,7 +209,7 @@ namespace Robust.Server.Console.Commands
             }
 
             if (sys.IsInitialized(mapId) &&
-                ( args.Length < 3  || !bool.TryParse(args[2], out var force) || !force))
+                (args.Length < 3 || !bool.TryParse(args[2], out var force) || !force))
             {
                 shell.WriteError(Loc.GetString("cmd-savemap-init-warning"));
                 return;
@@ -217,42 +217,42 @@ namespace Robust.Server.Console.Commands
 
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
             bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[1]));
-            if(saveSuccess)
+            if (saveSuccess)
             {
-                    shell.WriteLine(Loc.GetString("cmd-savemap-success"));
+                shell.WriteLine(Loc.GetString("cmd-savemap-success"));
             }
             else
             {
-                    shell.WriteError(Loc.GetString("cmd-savemap-error"));
+                shell.WriteError(Loc.GetString("cmd-savemap-error"));
             }
         }
     }
 
-    public sealed class LoadMap : LocalizedCommands
+    public sealed partial class LoadMap : LocalizedCommands
     {
-        [Dependency] private readonly IEntitySystemManager _system = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "loadmap";
 
-        public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args, IResourceManager resource)
+        public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args, IResourceManager resource, ILocalizationManager loc)
         {
             switch (args.Length)
             {
                 case 1:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-id"));
+                    return CompletionResult.FromHint(loc.GetString("cmd-hint-savemap-id"));
                 case 2:
                     var opts = CompletionHelper.UserFilePath(args[1], resource.UserData)
                         .Concat(CompletionHelper.ContentFilePath(args[1], resource));
-                    return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+                    return CompletionResult.FromHintOptions(opts, loc.GetString("cmd-hint-savemap-path"));
                 case 3:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-x-position"));
+                    return CompletionResult.FromHint(loc.GetString("cmd-hint-loadmap-x-position"));
                 case 4:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-y-position"));
+                    return CompletionResult.FromHint(loc.GetString("cmd-hint-loadmap-y-position"));
                 case 5:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-rotation"));
+                    return CompletionResult.FromHint(loc.GetString("cmd-hint-loadmap-rotation"));
                 case 6:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-uids"));
+                    return CompletionResult.FromHint(loc.GetString("cmd-hint-loadmap-uids"));
             }
 
             return CompletionResult.Empty;
@@ -260,7 +260,7 @@ namespace Robust.Server.Console.Commands
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
-            return GetCompletionResult(shell, args, _resource);
+            return GetCompletionResult(shell, args, _resource, Loc);
         }
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -323,7 +323,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var opts = new DeserializationOptions {StoreYamlUids = storeUids};
+            var opts = new DeserializationOptions { StoreYamlUids = storeUids };
 
             var path = new ResPath(args[1]);
             _system.GetEntitySystem<MapLoaderSystem>().TryLoadMapWithId(mapId, path, out _, out _, opts, offset, rot);

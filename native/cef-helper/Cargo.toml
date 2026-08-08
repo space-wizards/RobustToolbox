@@ -1,0 +1,7 @@
+[package]
+name = "cef-helper"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cef = { workspace = true, default-features = false }

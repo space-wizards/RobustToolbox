@@ -4,16 +4,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
-using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Shared.EntitySerialization.Systems;
 
@@ -22,8 +19,8 @@ namespace Robust.Shared.EntitySerialization.Systems;
 public sealed partial class MapLoaderSystem
 {
     /// <summary>
-    /// Tries to load entities from a yaml file. Whenever possible, you should try to use <see cref="TryLoadMap"/>,
-    /// <see cref="TryLoadGrid"/>, or <see cref="TryLoadEntity"/> instead.
+    ///     Tries to load entities from a YAML file. Whenever possible, you should try to use <see cref="TryLoadMap"/>,
+    ///     <see cref="TryLoadGrid"/>, or <see cref="TryLoadEntity"/> instead.
     /// </summary>
     public bool TryLoadGeneric(
         ResPath file,
@@ -33,6 +30,7 @@ public sealed partial class MapLoaderSystem
     {
         grids = null;
         maps = null;
+
         if (!TryLoadGeneric(file, out var data, options))
             return false;
 
@@ -42,8 +40,29 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
-    /// Tries to load entities from a yaml file. Whenever possible, you should try to use <see cref="TryLoadMap"/>,
-    /// <see cref="TryLoadGrid"/>, or <see cref="TryLoadEntity"/> instead.
+    ///     Tries to load entities from a YAML text stream. Whenever possible, you should try to use <see cref="TryLoadMap"/>,
+    ///     <see cref="TryLoadGrid"/>, or <see cref="TryLoadEntity"/> instead.
+    /// </summary>
+    public bool TryLoadGeneric(
+        TextReader reader,
+        string source,
+        [NotNullWhen(true)] out HashSet<Entity<MapComponent>>? maps,
+        [NotNullWhen(true)] out HashSet<Entity<MapGridComponent>>? grids,
+        MapLoadOptions? options = null)
+    {
+        grids = null;
+        maps = null;
+        if (!TryLoadGeneric(reader, source, out var data, options))
+            return false;
+
+        maps = data.Maps;
+        grids = data.Grids;
+        return true;
+    }
+
+    /// <summary>
+    ///     Tries to load entities from a YAML file. Whenever possible, you should try to use <see cref="TryLoadMap"/>,
+    ///     <see cref="TryLoadGrid"/>, or <see cref="TryLoadEntity"/> instead.
     /// </summary>
     /// <param name="file">The file to load.</param>
     /// <param name="result">Data class containing information about the loaded entities</param>
@@ -52,8 +71,55 @@ public sealed partial class MapLoaderSystem
     {
         result = null;
 
-        if (!TryReadFile(file, out var data))
+        if (!TryReadFile(file.ToRootedPath(), out var data))
             return false;
+
+        return TryLoadGeneric(data, file.ToString(), out result, options);
+    }
+
+    /// <summary>
+    ///     Tries to load entities from a YAML text stream. Whenever possible, you should try to use <see cref="TryLoadMap"/>,
+    ///     <see cref="TryLoadGrid"/>, or <see cref="TryLoadEntity"/> instead.
+    /// </summary>
+    /// <param name="reader">The text to load.</param>
+    /// <param name="source">The name of the source, if any. This should be your file path (for example)</param>
+    /// <param name="result">Data class containing information about the loaded entities</param>
+    /// <param name="options">Optional Options for configuring loading behaviour.</param>
+    public bool TryLoadGeneric(TextReader reader, string source, [NotNullWhen(true)] out LoadResult? result, MapLoadOptions? options = null)
+    {
+        result = null;
+
+        if (!TryReadFile(reader, out var data))
+            return false;
+
+        return TryLoadGeneric(data, source, out result, options);
+    }
+
+    /// <summary>
+    ///     Tries to load entities from a YAML text stream. Whenever possible, you should try to use <see cref="TryLoadMap"/>,
+    ///     <see cref="TryLoadGrid"/>, or <see cref="TryLoadEntity"/> instead.
+    /// </summary>
+    /// <param name="stream">The stream containing the text to load.</param>
+    /// <param name="source">The name of the source, if any. This should be your file path (for example)</param>
+    /// <param name="result">Data class containing information about the loaded entities</param>
+    /// <param name="options">Optional Options for configuring loading behaviour.</param>
+    public bool TryLoadGeneric(Stream stream, string source, [NotNullWhen(true)] out LoadResult? result, MapLoadOptions? options = null)
+    {
+        result = null;
+
+        if (!TryReadFile(new StreamReader(stream, leaveOpen: true), out var data))
+            return false;
+
+        return TryLoadGeneric(data, source, out result, options);
+    }
+
+    public bool TryLoadGeneric(
+        MappingDataNode data,
+        string source,
+        [NotNullWhen(true)] out LoadResult? result,
+        MapLoadOptions? options = null)
+    {
+        result = null;
 
         _stopwatch.Restart();
         var ev = new BeforeEntityReadEvent();
@@ -62,7 +128,7 @@ public sealed partial class MapLoaderSystem
         var opts = options ?? MapLoadOptions.Default;
 
         // If we are forcing a map id, we cannot auto-assign ids.
-        opts.DeserializationOptions.AssignMapids = opts.ForceMapId == null;
+        opts.DeserializationOptions.AssignMapIds = opts.ForceMapId == null;
 
         if (opts.MergeMap is { } targetId && !_mapSystem.MapExists(targetId))
             throw new Exception($"Target map {targetId} does not exist");
@@ -75,7 +141,7 @@ public sealed partial class MapLoaderSystem
 
         // Using a local deserializer instead of a cached value, both to ensure that we don't accidentally carry over
         // data from a previous serializations, and because some entities cause other maps/grids to be loaded during
-        // during mapinit.
+        // mapinit.
         var deserializer = new EntityDeserializer(
             _dependency,
             data,
@@ -85,7 +151,18 @@ public sealed partial class MapLoaderSystem
 
         if (!deserializer.TryProcessData())
         {
-            Log.Debug($"Failed to process entity data in {file}");
+            Log.Debug($"Failed to process entity data in {source}");
+            return false;
+        }
+
+        // If the file isn't of the expected category, stop before we ever create any entities.
+        if (opts.ExpectedCategory is { } expected
+            && expected != deserializer.Result.Category
+            && deserializer.Result.Category != FileCategory.Unknown)
+        {
+            // Did someone try to load a map file as a grid or vice versa?
+            Log.Error($"Map {source} does not contain the expected data. Expected {expected} but got {deserializer.Result.Category}");
+            Delete(deserializer.Result);
             return false;
         }
 
@@ -95,15 +172,17 @@ public sealed partial class MapLoaderSystem
         }
         catch (Exception e)
         {
-            Log.Error($"Caught exception while creating entities for map {file}: {e}");
+            Log.Error($"Caught exception while creating entities for map {source}: {e}");
             Delete(deserializer.Result);
             throw;
         }
 
+        // If the map file was an older version, the category has to be inferred from the file's contents in CreateEntities()
+        // Hence the category is checked again here.
         if (opts.ExpectedCategory is { } exp && exp != deserializer.Result.Category)
         {
             // Did someone try to load a map file as a grid or vice versa?
-            Log.Error($"Map {file} does not contain the expected data. Expected {exp} but got {deserializer.Result.Category}");
+            Log.Error($"Map {source} does not contain the expected data. Expected {exp} but got {deserializer.Result.Category}");
             Delete(deserializer.Result);
             return false;
         }
@@ -138,12 +217,33 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
-    /// Tries to load a regular (non-map, non-grid) entity from a file.
-    /// The loaded entity will initially be in null-space.
-    /// If the file does not contain exactly one orphaned entity, this will return false and delete loaded entities.
+    ///     Tries to load a regular (non-map, non-grid) entity from a YAML file.
+    ///     The loaded entity will initially be in null-space.
+    ///     If the file does not contain exactly one orphaned entity, this will return false and delete loaded entities.
     /// </summary>
     public bool TryLoadEntity(
-        ResPath path,
+        ResPath file,
+        [NotNullWhen(true)] out Entity<TransformComponent>? entity,
+        DeserializationOptions? options = null)
+    {
+        entity = null;
+        if (!TryGetReader(file.ToRootedPath(), out var reader))
+            return false;
+
+        using (reader)
+        {
+            return TryLoadEntity(reader, file.ToString(), out entity, options);
+        }
+    }
+
+    /// <summary>
+    ///     Tries to load a regular (non-map, non-grid) entity from a YAML text stream.
+    ///     The loaded entity will initially be in null-space.
+    ///     If the file does not contain exactly one orphaned entity, this will return false and delete loaded entities.
+    /// </summary>
+    public bool TryLoadEntity(
+        TextReader reader,
+        string source,
         [NotNullWhen(true)] out Entity<TransformComponent>? entity,
         DeserializationOptions? options = null)
     {
@@ -154,7 +254,7 @@ public sealed partial class MapLoaderSystem
         };
 
         entity = null;
-        if (!TryLoadGeneric(path, out var result, opts))
+        if (!TryLoadGeneric(reader, source, out var result, opts))
             return false;
 
         if (result.Orphans.Count == 1)
@@ -169,12 +269,35 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
-    /// Tries to load a grid entity from a file and parent it to the given map.
-    /// If the file does not contain exactly one grid, this will return false and delete loaded entities.
+    ///     Tries to load a grid entity from a YAML file and parent it to the given map.
+    ///     If the file does not contain exactly one grid, this will return false and delete loaded entities.
     /// </summary>
     public bool TryLoadGrid(
         MapId map,
-        ResPath path,
+        ResPath file,
+        [NotNullWhen(true)] out Entity<MapGridComponent>? grid,
+        DeserializationOptions? options = null,
+        Vector2 offset = default,
+        Angle rot = default)
+    {
+        grid = null;
+        if (!TryGetReader(file.ToRootedPath(), out var reader))
+            return false;
+
+        using (reader)
+        {
+            return TryLoadGrid(map, reader, file.ToString(), out grid, options, offset, rot);
+        }
+    }
+
+    /// <summary>
+    ///     Tries to load a grid entity from a YAML text stream and parent it to the given map.
+    ///     If the file does not contain exactly one grid, this will return false and delete loaded entities.
+    /// </summary>
+    public bool TryLoadGrid(
+        MapId map,
+        TextReader reader,
+        string source,
         [NotNullWhen(true)] out Entity<MapGridComponent>? grid,
         DeserializationOptions? options = null,
         Vector2 offset = default,
@@ -190,7 +313,7 @@ public sealed partial class MapLoaderSystem
         };
 
         grid = null;
-        if (!TryLoadGeneric(path, out var result, opts))
+        if (!TryLoadGeneric(reader, source, out var result, opts))
             return false;
 
         if (result.Grids.Count == 1)
@@ -204,11 +327,35 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
-    /// Tries to load a grid entity from a file and parent it to a newly created map.
+    /// Tries to load a grid entity from a YAML file and parent it to a newly created map.
     /// If the file does not contain exactly one grid, this will return false and delete loaded entities.
     /// </summary>
     public bool TryLoadGrid(
-        ResPath path,
+        ResPath file,
+        [NotNullWhen(true)] out Entity<MapComponent>? map,
+        [NotNullWhen(true)] out Entity<MapGridComponent>? grid,
+        DeserializationOptions? options = null,
+        Vector2 offset = default,
+        Angle rot = default)
+    {
+        grid = null;
+        map = null;
+        if (!TryGetReader(file.ToRootedPath(), out var reader))
+            return false;
+
+        using (reader)
+        {
+            return TryLoadGrid(reader, file.ToString(), out map, out grid, options, offset, rot);
+        }
+    }
+
+    /// <summary>
+    /// Tries to load a grid entity from a YAML text stream and parent it to a newly created map.
+    /// If the file does not contain exactly one grid, this will return false and delete loaded entities.
+    /// </summary>
+    public bool TryLoadGrid(
+        TextReader reader,
+        string source,
         [NotNullWhen(true)] out Entity<MapComponent>? map,
         [NotNullWhen(true)] out Entity<MapGridComponent>? grid,
         DeserializationOptions? options = null,
@@ -221,7 +368,7 @@ public sealed partial class MapLoaderSystem
         if (opts.PauseMaps)
             _mapSystem.SetPaused(mapUid, true);
 
-        if (!TryLoadGrid(mapId, path, out grid, options, offset, rot))
+        if (!TryLoadGrid(mapId, reader, source, out grid, options, offset, rot))
         {
             Del(mapUid);
             map = null;

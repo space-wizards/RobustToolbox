@@ -2,6 +2,7 @@ using System;
 
 namespace Robust.Shared.Audio.Effects;
 
+[NotContentImplementable]
 public interface IAuxiliaryAudio : IDisposable
 {
     /// <summary>

@@ -49,6 +49,7 @@ public sealed partial class PrototypeLayerData
     [DataField] public PrototypeCopyToShaderParameters? CopyToShaderParameters;
 
     [DataField] public bool Cycle;
+    [DataField] public bool Loop = true;
 }
 
 /// <summary>
@@ -60,7 +61,7 @@ public sealed partial class PrototypeCopyToShaderParameters
     /// <summary>
     /// The map key of the layer that will have its shader modified.
     /// </summary>
-    [DataField(required: true)] public string LayerKey;
+    [DataField(required: true)] public string LayerKey = null!;
 
     /// <summary>
     /// The name of the shader parameter that will receive the actual selected texture.

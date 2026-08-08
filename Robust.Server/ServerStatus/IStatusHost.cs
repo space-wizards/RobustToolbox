@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 
 namespace Robust.Server.ServerStatus
 {
+    [NotContentImplementable]
     public interface IStatusHost
     {
         void Start();

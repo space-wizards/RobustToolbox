@@ -58,7 +58,8 @@ namespace Robust.Shared.Serialization.Markdown.Value
 
         public override bool IsEmpty => string.IsNullOrWhiteSpace(Value);
 
-        public static bool IsNullLiteral(string? value) => value != null && value.Trim().ToLower() is "null" ;
+        public static bool IsNullLiteral(string? value) =>
+            value != null && string.Equals(value.Trim(), "null", StringComparison.OrdinalIgnoreCase);
 
         public override ValueDataNode Copy()
         {
@@ -90,6 +91,11 @@ namespace Robust.Shared.Serialization.Markdown.Value
         public override int GetHashCode()
         {
             return Value.GetHashCode();
+        }
+
+        internal override int GetCanonicalHashCode()
+        {
+            return HashCode.Combine(typeof(ValueDataNode), Tag, Value, IsNull);
         }
 
         public override string ToString()

@@ -8,15 +8,17 @@ using Robust.Shared.Sandboxing;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class MarkupTagManager
+public sealed partial class MarkupTagManager
 {
-    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-    [Dependency] private readonly ISandboxHelper _sandboxHelper = default!;
+    [Dependency] private IReflectionManager _reflectionManager = default!;
+    [Dependency] private ISandboxHelper _sandboxHelper = default!;
+    [Dependency] private IDependencyCollection _deps = default!;
 
     /// <summary>
     /// Tags defined in engine need to be instantiated here because of sandboxing
     /// </summary>
-    private readonly Dictionary<string, IMarkupTagHandler> _markupTagTypes = new IMarkupTagHandler[] {
+    private readonly Dictionary<string, IMarkupTagHandler> _markupTagTypes = new IMarkupTagHandler[]
+    {
         new BoldItalicTag(),
         new BoldTag(),
         new BulletTag(),
@@ -54,9 +56,9 @@ public sealed class MarkupTagManager
             _markupTagTypes[instance.Name.ToLower()] = instance;
         }
 
-        foreach (var (_, tag) in _markupTagTypes)
+        foreach (var tag in _markupTagTypes.Values)
         {
-            IoCManager.InjectDependencies(tag);
+            _deps.InjectDependencies(tag);
         }
     }
 

@@ -7,9 +7,9 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    [Virtual]
     public abstract class ScrollBar : Range
     {
+        public const string StylePropertyTrack = "track";
         public const string StylePropertyGrabber = "grabber";
         public const string StylePseudoClassHover = "hover";
         public const string StylePseudoClassGrabbed = "grabbed";
@@ -74,13 +74,16 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 _updating = true;
-                Value = MathHelper.Lerp(Value, ValueTarget, Math.Min(args.DeltaSeconds * 15, 1));
+                Value = UIAnimations.LerpAnimate(Value, ValueTarget, args.DeltaSeconds, 15);
                 _updating = false;
             }
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
+            var trackStyle = _getTrackStyleBox();
+            trackStyle?.Draw(handle, PixelSizeBox, UIScale);
+
             var styleBox = _getGrabberStyleBox();
             styleBox?.Draw(handle, _getGrabberBox(), UIScale);
         }
@@ -192,6 +195,12 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return null;
+        }
+
+        [System.Diagnostics.Contracts.Pure]
+        private StyleBox? _getTrackStyleBox()
+        {
+            return StylePropertyDefault<StyleBox?>(StylePropertyTrack, null);
         }
 
         [System.Diagnostics.Contracts.Pure]

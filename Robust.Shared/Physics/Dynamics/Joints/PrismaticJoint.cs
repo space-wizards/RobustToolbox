@@ -30,7 +30,6 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Shared.Physics.Dynamics.Joints;
 // Linear constraint (point-to-line)

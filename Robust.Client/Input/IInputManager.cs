@@ -11,6 +11,7 @@ namespace Robust.Client.Input
     /// <summary>
     ///     Manages key bindings, input commands and other misc. input systems.
     /// </summary>
+    [NotContentImplementable]
     public interface IInputManager
     {
         bool Enabled { get; set; }
@@ -75,6 +76,15 @@ namespace Robust.Client.Input
         ///     UIKeyBindStateChanged is called when a keybind is found.
         /// </summary>
         event Func<BoundKeyEventArgs, bool> UIKeyBindStateChanged;
+
+        /// <summary>
+        /// Called to check if the UI is considered "focused".
+        /// </summary>
+        /// <remarks>
+        /// This is effectively similar to the return value of <see cref="UIKeyBindStateChanged"/>,
+        /// but may be called at different times.
+        /// </remarks>
+        event Func<bool> CheckUIIsFocused;
 
         /// <summary>
         ///     If UIKeyBindStateChanged did not handle the BoundKeyEvent, KeyBindStateChanged is called.

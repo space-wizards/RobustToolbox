@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -176,19 +176,6 @@ public interface IPrototypeManager
     bool Resolve([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
 
     /// <summary>
-    /// Retrieve an <see cref="EntityPrototype"/> by ID, optionally logging an error if it does not exist.
-    /// </summary>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if it does not.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex(
-        [ForbidLiteral] EntProtoId id,
-        [NotNullWhen(true)] out EntityPrototype? prototype,
-        bool logError = true);
-
-    /// <summary>
     /// Resolve an <see cref="EntityPrototype"/> by ID.
     /// </summary>
     /// <remarks>
@@ -235,17 +222,6 @@ public interface IPrototypeManager
     /// <returns>True if the prototype exists, false if it does not.</returns>
     /// <seealso cref="TryIndex{T}(ProtoId{T},out T?)"/>
     bool Resolve<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
-
-    /// <summary>
-    /// Retrieve a prototype by ID, optionally logging an error if it does not exist.
-    /// </summary>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if it does not.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-        where T : class, IPrototype;
 
     /// <summary>
     /// Resolve a prototype by ID.
@@ -300,25 +276,6 @@ public interface IPrototypeManager
     bool Resolve([ForbidLiteral] EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
 
     /// <summary>
-    /// Retrieve an <see cref="EntityPrototype"/> by ID, gracefully handling null,
-    /// and optionally logging an error if it does not exist.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// No error is logged if <paramref name="id"/> is null.
-    /// </para>
-    /// </remarks>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex(
-        [ForbidLiteral] EntProtoId? id,
-        [NotNullWhen(true)] out EntityPrototype? prototype,
-        bool logError = true);
-
-    /// <summary>
     /// Resolve an <see cref="EntityPrototype"/> by ID, gracefully handling null.
     /// </summary>
     /// <remarks>
@@ -368,22 +325,6 @@ public interface IPrototypeManager
     /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
     /// <seealso cref="TryIndex{T}(ProtoId{T}?,out T?)"/>
     bool Resolve<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
-
-    /// <summary>
-    /// Retrieve a prototype by ID, gracefully handling null,
-    /// and optionally logging an error if it does not exist.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// No error is logged if <paramref name="id"/> is null.
-    /// </para>
-    /// </remarks>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype;
 
     /// <summary>
     /// Resolve a prototype by ID, gracefully handling null.
@@ -493,7 +434,8 @@ public interface IPrototypeManager
     /// This will validate all known to <see cref="IReflectionManager"/>
     /// </summary>
     /// <remarks>
-    /// This will validate any field that has either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
+    /// This will validate any field that uses <see cref="ProtoId"/> or <see cref="EntProtoId"/>.
+    /// It also looks for these obsolete attributes: either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
     /// <see cref="DataFieldAttribute"/> with a <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.
     /// </remarks>
     /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection
@@ -623,6 +565,14 @@ public interface IPrototypeManager
     /// Entity prototypes grouped by their categories.
     /// </summary>
     FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; }
+
+    /// <summary>
+    /// Attempts to get a list of <see cref="EntityPrototype"/> that belongs to the provided <see cref="EntityCategoryPrototype"/>.
+    /// </summary>
+    /// <param name="category">Category id of the entity prototypes we want to get.</param>
+    /// <param name="prototypes">List of entity prototypes that form part category or null.</param>
+    /// <returns>True if the provided <see cref="EntityCategoryPrototype"/> id has a matching list of <see cref="EntityPrototype"/> False otherwise.</returns>
+    bool TryGetEntityPrototypesByCategory(ProtoId<EntityCategoryPrototype> category, [NotNullWhen(true)] out IReadOnlyList<EntityPrototype>? prototypes);
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

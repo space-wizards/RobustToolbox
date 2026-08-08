@@ -27,7 +27,6 @@ namespace Robust.Server.Physics
     /// </summary>
     public sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private IConfigurationManager _cfg = default!;
         [Dependency] private IConGroupController _conGroup = default!;
         [Dependency] private EntityLookupSystem _lookup = default!;
@@ -45,8 +44,11 @@ namespace Robust.Server.Physics
         /// </summary>
         private readonly HashSet<ICommonSession> _subscribedSessions = new();
 
-        private readonly Queue<ChunkSplitNode> _splitFrontier = new();
-        private readonly List<HashSet<ChunkSplitNode>> _splitGroups = new(1);
+        private readonly Queue<ChunkSplitNode> _splitFrontier = new(4);
+        private readonly List<HashSet<ChunkSplitNode>> _splitGrids = new(1);
+        private readonly Dictionary<HashSet<ChunkSplitNode>, int> _splitGridSizes = new();
+        private readonly HashSet<Vector2i> _splitTilePositions = new();
+        private Comparison<HashSet<ChunkSplitNode>> _splitGridSizeComparison = default!;
 
         /// <summary>
         /// Recursion detection to avoid splitting while handling an existing split
@@ -60,6 +62,8 @@ namespace Robust.Server.Physics
         public override void Initialize()
         {
             base.Initialize();
+
+            _splitGridSizeComparison = (x, y) => _splitGridSizes[x].CompareTo(_splitGridSizes[y]);
 
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
@@ -240,14 +244,13 @@ namespace Robust.Server.Physics
         /// <summary>
         /// Check for splits on the specified nodes.
         /// </summary>
-        private void CheckSplits(EntityUid uid, HashSet<ChunkSplitNode> dirtyNodes)
+        private void CheckSplits(EntityUid uid, HashSet<ChunkSplitNode> dirtyNodes, MapGridComponent? grid = null)
         {
-            // TODO: We already have mapgrid elsewhere
-            if (_isSplitting ||
+            if (_isSplitting || !SplitAllowed ||
                !CanHaveSplitNodes(uid) ||
-               !TryComp<MapGridComponent>(uid, out var oldGrid) ||
+               !Resolve(uid, ref grid, false) ||
                !_splitNodeQuery.TryGetComponent(uid, out var splitComp) ||
-               !oldGrid.CanSplit)
+               !grid.CanSplit)
             {
                 return;
             }
@@ -255,7 +258,7 @@ namespace Robust.Server.Physics
             _isSplitting = true;
             Log.Debug($"Started split check for {ToPrettyString(uid)}");
             _splitFrontier.Clear();
-            _splitGroups.Clear();
+            _splitGrids.Clear();
 
             while (dirtyNodes.Count > 0)
             {
@@ -281,35 +284,43 @@ namespace Robust.Server.Physics
                     }
                 }
 
-                _splitGroups.Add(foundSplits);
+                _splitGrids.Add(foundSplits);
             }
 
+            var grids = _splitGrids;
+            var oldGrid = grid;
             var oldGridUid = uid;
 
             // Split time
-            if (_splitGroups.Count > 1)
+            if (grids.Count > 1)
             {
-                Log.Debug($"Splitting {ToPrettyString(uid)} into {_splitGroups.Count} grids.");
+                Log.Debug($"Splitting {ToPrettyString(uid)} into {grids.Count} grids.");
                 var sw = new Stopwatch();
                 sw.Start();
 
                 // We'll leave the biggest group as the original grid
                 // anything smaller gets split off.
-                _splitGroups.Sort((x, y) =>
-                    x.Sum(o => o.TileCount)
-                        .CompareTo(y.Sum(o => o.TileCount)));
+                _splitGridSizes.Clear();
+                foreach (var sizeGroup in grids)
+                {
+                    var tileCount = 0;
+                    foreach (var sizeNode in sizeGroup)
+                        tileCount += sizeNode.TileCount;
+                    _splitGridSizes[sizeGroup] = tileCount;
+                }
+                grids.Sort(_splitGridSizeComparison);
 
                 var oldGridXform = _xformQuery.GetComponent(oldGridUid);
                 var (gridPos, gridRot) = _xformSystem.GetWorldPositionRotation(oldGridXform);
                 var mapBody = _bodyQuery.GetComponent(oldGridUid);
-                var oldGridComp = _gridQuery.GetComponent(oldGridUid);
-                var newGrids = new EntityUid[_splitGroups.Count - 1];
+                var oldGridComp = grid;
+                var newGrids = new EntityUid[grids.Count - 1];
                 var mapId = oldGridXform.MapID;
 
-                for (var i = 0; i < _splitGroups.Count - 1; i++)
+                for (var i = 0; i < grids.Count - 1; i++)
                 {
-                    var group = _splitGroups[i];
-                    var newGrid = _mapManager.CreateGridEntity(mapId);
+                    var group = grids[i];
+                    var newGrid = _maps.CreateGridEntity(mapId);
                     var newGridUid = newGrid.Owner;
                     var newGridXform = _xformQuery.GetComponent(newGridUid);
                     EnsureComp<GridSplitNodeComponent>(newGridUid);
@@ -325,7 +336,7 @@ namespace Robust.Server.Physics
                     _physics.SetAngularVelocity(newGridUid, mapBody.AngularVelocity, body: splitBody);
 
                     var gridComp = _gridQuery.GetComponent(newGridUid);
-                    var tileData = new List<(Vector2i GridIndices, Tile Tile)>(group.Sum(o => o.TileCount));
+                    var tileData = new List<(Vector2i GridIndices, Tile Tile)>(_splitGridSizes[group]);
                     var oldTileData = new List<(Vector2i GridIndices, Tile Tile)>(tileData.Capacity);
 
                     // Gather all tiles up front and set once to minimise fixture change events
@@ -374,26 +385,37 @@ namespace Robust.Server.Physics
 
                         // Update lookup ents
                         // Needs to be done before setting old tiles as they will be re-parented to the map.
-                        // TODO: Combine tiles into larger rectangles or something; this is gonna be the killer bit.
+                        // Build tile positions and union bounds so we can query once per node.
+                        _splitTilePositions.Clear();
+                        var nodeBounds = new Box2();
+                        var first = true;
+
                         foreach (var tile in node.GetTileIndices())
                         {
                             var tilePos = offset + tile;
-                            var bounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
+                            _splitTilePositions.Add(tilePos);
+                            var tileBounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
+                            nodeBounds = first ? tileBounds : nodeBounds.Union(tileBounds);
+                            first = false;
+                        }
 
-                            _entSet.Clear();
-                            _lookup.GetLocalEntitiesIntersecting(oldGridUid, tilePos, _entSet, 0f, LookupFlags.All | ~LookupFlags.Uncontained | LookupFlags.Approximate);
+                        _entSet.Clear();
+                        _lookup.GetLocalEntitiesIntersecting(oldGridUid, nodeBounds, _entSet, LookupFlags.All | ~LookupFlags.Uncontained | LookupFlags.Approximate);
 
-                            foreach (var ent in _entSet)
-                            {
-                                // Consider centre of entity position maybe?
-                                var entXform = _xformQuery.GetComponent(ent);
+                        foreach (var ent in _entSet)
+                        {
+                            var entXform = _xformQuery.GetComponent(ent);
 
-                                if (entXform.ParentUid != oldGridUid ||
-                                    !bounds.Contains(entXform.LocalPosition)) continue;
+                            if (entXform.ParentUid != oldGridUid)
+                                continue;
 
-                                _xformSystem.SetCoordinates(ent, entXform, new EntityCoordinates(newGridUid, entXform.LocalPosition - tileOffset),
-                                    oldParent: oldGridXform, newParent: newGridXform);
-                            }
+                            var entTile = _maps.LocalToTile(oldGridUid, oldGrid, entXform.Coordinates);
+
+                            if (!_splitTilePositions.Contains(entTile))
+                                continue;
+
+                            _xformSystem.SetCoordinates(ent, entXform, new EntityCoordinates(newGridUid, entXform.LocalPosition - tileOffset),
+                                oldParent: oldGridXform, newParent: newGridXform);
                         }
 
                         splitComp.Nodes[node.Group.Chunk.Indices].Nodes.Remove(node);
@@ -426,10 +448,10 @@ namespace Robust.Server.Physics
                 var ev = new GridSplitEvent(newGrids, oldGridUid);
                 RaiseLocalEvent(uid, ref ev, true);
 
-                Log.Debug($"Split {_splitGroups.Count} grids in {sw.Elapsed}");
+                Log.Debug($"Split {grids.Count} grids in {sw.Elapsed}");
             }
 
-            _splitGroups.Clear();
+            _splitGrids.Clear();
             _splitFrontier.Clear();
             Log.Debug($"Stopped split check for {ToPrettyString(uid)}");
             _isSplitting = false;
@@ -461,13 +483,14 @@ namespace Robust.Server.Physics
                 Chunk = chunk,
             };
 
-            var tiles = new HashSet<Vector2i>(chunk.ChunkSize * chunk.ChunkSize);
+            var tiles = new HashSet<Vector2i>(chunk.FilledTiles);
 
             for (var x = 0; x < chunk.ChunkSize; x++)
             {
                 for (var y = 0; y < chunk.ChunkSize; y++)
                 {
-                    tiles.Add(new Vector2i(x, y));
+                    if (!chunk.GetTile((ushort) x, (ushort) y).IsEmpty)
+                        tiles.Add(new Vector2i(x, y));
                 }
             }
 
@@ -527,11 +550,14 @@ namespace Robust.Server.Physics
 
             // Check each tile for node neighbours on other chunks (not possible for us to have neighbours on the same chunk
             // as they would already be in our node).
-            // TODO: This could be better (maybe only check edges of the chunk or something).
             foreach (var chunkNode in group.Nodes)
             {
                 foreach (var index in chunkNode.GetTileIndices())
                 {
+                    if (index.X != 0 && index.Y != 0 &&
+                        index.X != chunk.ChunkSize - 1 && index.Y != chunk.ChunkSize - 1)
+                        continue;
+
                     // Check for edge tiles.
                     if (index.X == 0)
                     {
@@ -585,7 +611,7 @@ namespace Robust.Server.Physics
         /// <summary>
         /// Checks for grid split with 1 chunk updated.
         /// </summary>
-        internal override void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles)
+        internal override void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles, MapGridComponent? grid = null)
         {
             if (!CanHaveSplitNodes(gridEuid))
                 return;
@@ -598,16 +624,16 @@ namespace Robust.Server.Physics
             }
             else
             {
-                nodes = GenerateSplitNode(gridEuid, chunk);
+                nodes = GenerateSplitNode(gridEuid, chunk, grid);
             }
 
-            CheckSplits(gridEuid, nodes);
+            CheckSplits(gridEuid, nodes, grid);
         }
 
         /// <summary>
         /// Checks for grid split with many chunks updated.
         /// </summary>
-        internal override void CheckSplit(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks, List<MapChunk> removedChunks)
+        internal override void CheckSplit(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks, List<MapChunk> removedChunks, MapGridComponent? grid = null)
         {
             if (!CanHaveSplitNodes(gridEuid))
                 return;
@@ -621,7 +647,7 @@ namespace Robust.Server.Physics
 
             foreach (var (chunk, _) in mapChunks)
             {
-                nodes.UnionWith(GenerateSplitNode(gridEuid, chunk));
+                nodes.UnionWith(GenerateSplitNode(gridEuid, chunk, grid));
             }
 
             var toRemove = new ValueList<ChunkSplitNode>();
@@ -640,7 +666,7 @@ namespace Robust.Server.Physics
                 nodes.Remove(node);
             }
 
-            CheckSplits(gridEuid, nodes);
+            CheckSplits(gridEuid, nodes, grid);
         }
 
         private bool CanHaveSplitNodes(EntityUid uid)
@@ -653,9 +679,9 @@ namespace Robust.Server.Physics
         /// </summary>
         private HashSet<ChunkSplitNode> RemoveSplitNode(EntityUid gridEuid, MapChunk chunk)
         {
-            var dirtyNodes = new HashSet<ChunkSplitNode>();
+            if (_isSplitting) return new HashSet<ChunkSplitNode>();
 
-            if (_isSplitting) return dirtyNodes;
+            var dirtyNodes = new HashSet<ChunkSplitNode>();
 
             Cleanup(gridEuid, chunk, dirtyNodes);
             DebugTools.Assert(dirtyNodes.All(o => o.Group.Chunk != chunk));
@@ -665,7 +691,7 @@ namespace Robust.Server.Physics
         /// <summary>
         /// Re-adds this chunk to nodes and dirties its neighbours and itself.
         /// </summary>
-        private HashSet<ChunkSplitNode> GenerateSplitNode(EntityUid gridEuid, MapChunk chunk)
+        private HashSet<ChunkSplitNode> GenerateSplitNode(EntityUid gridEuid, MapChunk chunk, MapGridComponent? grid = null)
         {
             var dirtyNodes = RemoveSplitNode(gridEuid, chunk);
 
@@ -673,7 +699,7 @@ namespace Robust.Server.Physics
 
             DebugTools.Assert(chunk.FilledTiles > 0);
 
-            var grid = Comp<MapGridComponent>(gridEuid);
+            grid ??= Comp<MapGridComponent>(gridEuid);
             var group = CreateNodes(gridEuid, grid, chunk);
             EnsureComp<GridSplitNodeComponent>(gridEuid).Nodes[chunk.Indices] = group;
 

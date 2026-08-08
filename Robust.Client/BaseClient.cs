@@ -26,7 +26,6 @@ namespace Robust.Client
         [Dependency] private IPlayerManager _playMan = default!;
         [Dependency] private IClientNetConfigurationManager _configManager = default!;
         [Dependency] private IClientEntityManager _entityManager = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private IDiscordRichPresence _discord = default!;
         [Dependency] private IGameTiming _timing = default!;
         [Dependency] private IClientGameStateManager _gameStates = default!;
@@ -170,14 +169,16 @@ namespace Robust.Client
 
             var info = GameInfo;
 
-            var serverName = _configManager.GetCVar<string>("game.hostname");
+            var serverName = _configManager.GetCVar(CVars.GameHostName);
+            var maxPlayers = _configManager.GetCVar(CVars.NetMaxConnections);
             if (info == null)
             {
-                GameInfo = info = new ServerInfo(serverName);
+                GameInfo = info = new ServerInfo(serverName, maxPlayers);
             }
             else
             {
                 info.ServerName = serverName;
+                info.ServerMaxPlayers = maxPlayers;
             }
 
             var channel = _net.ServerChannel!;
@@ -247,7 +248,6 @@ namespace Robust.Client
         private void GameStartedSetup()
         {
             _entityManager.Startup();
-            _mapManager.Startup();
 
             _timing.ResetSimTime(_timeBase);
             _timing.Paused = false;
@@ -259,7 +259,6 @@ namespace Robust.Client
             _gameStates.Reset();
             _playMan.Shutdown();
             _entityManager.Shutdown();
-            _mapManager.Shutdown();
             _discord.ClearPresence();
             Reset();
         }
@@ -387,22 +386,17 @@ namespace Robust.Client
     /// <summary>
     ///     Info about the server and player that is sent to the client while connecting.
     /// </summary>
-    public sealed class ServerInfo
+    public sealed class ServerInfo(string serverName, int serverMaxPlayers)
     {
-        public ServerInfo(string serverName)
-        {
-            ServerName = serverName;
-        }
-
         /// <summary>
         ///     Current name of the server.
         /// </summary>
-        public string ServerName { get; set; }
+        public string ServerName { get; set; } = serverName;
 
         /// <summary>
         ///     Max number of players that are allowed in the server at one time.
         /// </summary>
-        public int ServerMaxPlayers { get; set; }
+        public int ServerMaxPlayers { get; set; } = serverMaxPlayers;
 
         public uint TickRate { get; internal set; }
     }

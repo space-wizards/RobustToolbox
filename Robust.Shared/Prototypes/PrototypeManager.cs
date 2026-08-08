@@ -295,6 +295,7 @@ namespace Robust.Shared.Prototypes
         {
             _kindNames.Clear();
             _kinds = FrozenDictionary<Type, KindData>.Empty;
+            _entityComponentCache = FrozenDictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>.Empty;
         }
 
         /// <inheritdoc />
@@ -463,6 +464,9 @@ namespace Robust.Shared.Prototypes
 
             Freeze(modifiedKinds);
 
+            if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype)))
+                RebuildEntityComponentCache();
+
             if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
                 UpdateCategories();
 
@@ -519,6 +523,7 @@ namespace Robust.Shared.Prototypes
                 InstantiateKinds(kinds, inheritanceTasks);
             }
 
+            RebuildEntityComponentCache();
             UpdateCategories();
         }
 
@@ -802,14 +807,6 @@ namespace Robust.Shared.Prototypes
             return false;
         }
 
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
-        }
-
         public bool TryIndex([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype)
         {
             return TryIndex(id.Id, out prototype);
@@ -822,15 +819,6 @@ namespace Robust.Shared.Prototypes
 
             Sawmill.Error($"Attempted to resolve invalid ProtoId<{typeof(T).Name}>: {id.Id}\n{Environment.StackTrace}");
             return false;
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-            where T : class, IPrototype
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype)
@@ -848,14 +836,6 @@ namespace Robust.Shared.Prototypes
             }
 
             return Resolve(id.Value, out prototype);
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype)
@@ -878,15 +858,6 @@ namespace Robust.Shared.Prototypes
             }
 
             return Resolve(id.Value, out prototype);
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-            where T : class, IPrototype
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype)
@@ -1066,7 +1037,7 @@ namespace Robust.Shared.Prototypes
             {
                 throw new InvalidImplementationException(kind,
                     typeof(IPrototype),
-                    $"Duplicate prototype type ID: {attribute.Type}. Current: {existing}");
+                    $"Duplicate prototype type ID: {name}. Current: {existing}");
             }
 
             var foundIdAttribute = false;
@@ -1234,8 +1205,7 @@ namespace Robust.Shared.Prototypes
                         continue;
                     }
 
-                    var copy = componentMapping.Copy();
-                    copy.Remove("type");
+                    var copy = componentMapping.CopyNoType();
                     _tempMappingData[type.Value] = copy;
                 }
             }

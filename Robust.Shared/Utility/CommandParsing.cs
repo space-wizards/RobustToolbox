@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using Robust.Shared.Collections;
@@ -7,6 +8,8 @@ namespace Robust.Shared.Utility
 {
     public static class CommandParsing
     {
+        private static readonly SearchValues<char> CommandArgumentSeparator = SearchValues.Create(" ");
+
         /// <summary>
         /// Parses a full console command into a list of arguments.
         /// </summary>
@@ -63,7 +66,7 @@ namespace Robust.Shared.Utility
                     continue;
                 }
 
-                if (chr == ' ' && !inQuotes)
+                if (CommandArgumentSeparator.Contains(chr) && !inQuotes)
                 {
                     if (sb.Length != 0)
                     {
@@ -92,6 +95,39 @@ namespace Robust.Shared.Utility
         public static string Escape(string text)
         {
             return text.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
+        /// <summary>
+        /// Split a set of arguments into a string that can be parsed round-trip.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This is effectively the inverse of <see cref="ParseArguments"/>.
+        /// </para>
+        /// </remarks>
+        public static string EscapeCommand(params string[] arguments)
+        {
+            var sb = new StringBuilder();
+
+            var first = true;
+
+            foreach (var entry in arguments)
+            {
+                if (!first)
+                    sb.Append(' ');
+                first = false;
+
+                var quoted = entry.ContainsAny(CommandArgumentSeparator);
+                if (quoted)
+                    sb.Append('"');
+
+                sb.Append(Escape(entry));
+
+                if (quoted)
+                    sb.Append('"');
+            }
+
+            return sb.ToString();
         }
     }
 }

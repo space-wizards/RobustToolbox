@@ -79,8 +79,12 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
 
         ClientLogHandler.ActivateContext(testOut);
         ServerLogHandler.ActivateContext(testOut);
-        Client = await GenerateClient();
-        Server = await GenerateServer();
+
+        // Need a new task so it doesn't wait until the first await (after the constructor) to run asynchronously
+        var tasks = await Task.WhenAll(new[] {Task.Run(GenerateClientCast), Task.Run(GenerateServerCast)});
+        Client = (TClient) tasks[0];
+        Server = (TServer) tasks[1];
+
         ActivateContext(testOut);
         await ApplySettings(settings);
 
@@ -114,6 +118,16 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
 
     protected abstract Task<TClient> GenerateClient();
     protected abstract Task<TServer> GenerateServer();
+
+    protected async Task<IIntegrationInstance> GenerateClientCast()
+    {
+        return await GenerateClient();
+    }
+
+    protected async Task<IIntegrationInstance> GenerateServerCast()
+    {
+        return await GenerateServer();
+    }
 
     public void Kill()
     {

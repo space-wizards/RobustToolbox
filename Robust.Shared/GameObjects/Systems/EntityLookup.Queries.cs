@@ -94,7 +94,7 @@ public sealed partial class EntityLookupSystem
             flags);
 
         // Need to include maps
-        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+        _map.FindGridsIntersecting(mapId, worldAABB, ref state,
             static (EntityUid uid, MapGridComponent _, ref EntityQueryState<T> state) =>
             {
                 var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
@@ -245,7 +245,7 @@ public sealed partial class EntityLookupSystem
             flags);
 
         // Need to include maps
-        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+        _map.FindGridsIntersecting(mapId, worldAABB, ref state,
             static (EntityUid uid, MapGridComponent _, ref AnyEntityQueryState<T> state) =>
             {
                 var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
@@ -557,7 +557,7 @@ public sealed partial class EntityLookupSystem
         var state = (uid, transform, intersecting, _fixturesQuery, this, _physics, flags);
 
         // Unfortuantely I can't think of a way to de-dupe this with the other ones as it's slightly different.
-        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+        _map.FindGridsIntersecting(mapId, worldAABB, ref state,
             static (EntityUid gridUid, MapGridComponent grid,
                 ref (EntityUid entity, Transform transform, HashSet<EntityUid> intersecting,
                     EntityQuery<FixturesComponent> fixturesQuery, EntityLookupSystem lookup, SharedPhysicsSystem physics, LookupFlags flags) state) =>
@@ -787,7 +787,7 @@ public sealed partial class EntityLookupSystem
 
         var state = (callback, _broadQuery);
 
-        _mapManager.FindGridsIntersecting(mapId, worldBounds, ref state,
+        _map.FindGridsIntersecting(mapId, worldBounds, ref state,
             static (EntityUid uid, MapGridComponent grid,
                 ref (ComponentQueryCallback<BroadphaseComponent> callback, EntityQuery<BroadphaseComponent> _broadQuery)
                     tuple) =>

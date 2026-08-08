@@ -736,7 +736,7 @@ public struct ValueList<T> : IList<T>
             return false;
         }
 
-        value = _items![Count];
+        value = _items![Count - 1];
         return true;
     }
 }

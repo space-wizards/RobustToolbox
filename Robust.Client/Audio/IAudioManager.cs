@@ -31,6 +31,10 @@ public interface IAudioManager
 
     AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null);
 
+    float BaseGain { get; }
+
+    float FadeGain { get; }
+
     void SetMasterGain(float gain);
 
     /// <summary>

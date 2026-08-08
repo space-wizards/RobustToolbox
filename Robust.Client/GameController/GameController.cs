@@ -181,6 +181,7 @@ namespace Robust.Client
 
             _loadscr.EndLoadingSection();
 
+            _loadscr.LoadingStep(_reflectionManager.Initialize, _reflectionManager);
             _loadscr.LoadingStep(_serializationManager.Initialize, _serializationManager);
             _loadscr.LoadingStep(_loc.Initialize, _loc);
 
@@ -225,12 +226,12 @@ namespace Robust.Client
                 "Check bad file extensions");
 
             _loadscr.LoadingStep(_reload.Initialize, _reload);
-            _loadscr.LoadingStep(_reflectionManager.Initialize, _reflectionManager);
             _loadscr.LoadingStep(_xamlProxyManager.Initialize, _xamlProxyManager);
             _loadscr.LoadingStep(_xamlHotReloadManager.Initialize, _xamlHotReloadManager);
             _loadscr.BeginLoadingSection(_prototypeManager);
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
+            _resourceCache.AfterDeserialization();
             _loadscr.EndLoadingSection();
             _loadscr.LoadingStep(_userInterfaceManager.Initialize, "UI init");
             _loadscr.LoadingStep(_eyeManager.Initialize, _eyeManager);

@@ -196,7 +196,7 @@ namespace Robust.Shared.Prototypes
             if (!_kinds.TryGetValue(typeof(T), out var kindData))
                 throw new UnknownPrototypeException(id, typeof(T));
 
-            if (!kindData.Results.ContainsKey(id))
+            if (!kindData.RawResults.ContainsKey(id))
                 yield break;
 
             IPrototype? uncast;
@@ -215,7 +215,7 @@ namespace Robust.Shared.Prototypes
             var queue = new Queue<string>(parents);
             while (queue.TryDequeue(out var prototypeId))
             {
-                if (!kindData.Results.ContainsKey(prototypeId))
+                if (!kindData.RawResults.ContainsKey(prototypeId))
                 {
                     Sawmill.Error($"Encountered invalid prototype while enumerating parents. Kind: {typeof(T).Name}. Child: {id}. Invalid: {prototypeId}");
                     continue;
@@ -295,6 +295,7 @@ namespace Robust.Shared.Prototypes
         {
             _kindNames.Clear();
             _kinds = FrozenDictionary<Type, KindData>.Empty;
+            _prototypeStringInterner.Clear();
             _entityComponentCache = FrozenDictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>.Empty;
         }
 
@@ -419,9 +420,12 @@ namespace Robust.Shared.Prototypes
 
                             if (parents.Length == 1)
                             {
+                                if (!TryGetResolvedMapping(kind, kindData, parents[0], out var parent))
+                                    throw new InvalidOperationException($"Missing parent prototype {parents[0]} for {id}");
+
                                 kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
                                     kind,
-                                    kindData.Results[parents[0]],
+                                    parent,
                                     kindData.RawResults[id]);
                             }
                             else
@@ -429,7 +433,10 @@ namespace Robust.Shared.Prototypes
                                 var parentMaps = new MappingDataNode[parents.Length];
                                 for (var i = 0; i < parentMaps.Length; i++)
                                 {
-                                    parentMaps[i] = kindData.Results[parents[i]];
+                                    if (!TryGetResolvedMapping(kind, kindData, parents[i], out var parent))
+                                        throw new InvalidOperationException($"Missing parent prototype {parents[i]} for {id}");
+
+                                    parentMaps[i] = parent;
                                 }
 
                                 kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
@@ -469,6 +476,8 @@ namespace Robust.Shared.Prototypes
 
             if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
                 UpdateCategories();
+
+            DiscardResolvedMappings(prototypeTypeOrder.Select(kind => _kinds[kind]));
 
             var modifiedTypes = new HashSet<Type>(byType.Keys);
             if (removed != null)
@@ -525,6 +534,7 @@ namespace Robust.Shared.Prototypes
 
             RebuildEntityComponentCache();
             UpdateCategories();
+            DiscardResolvedMappings(_kinds.Values);
         }
 
         private void InstantiateKinds(KindData[] kinds, Dictionary<Type, Task> inheritanceTasks)
@@ -708,6 +718,99 @@ namespace Robust.Shared.Prototypes
             // _sawmill.Debug($"Inheritance {kind}: {sw.Elapsed}");
         }
 
+        /// <summary>
+        /// Returns an effective mapping without retaining it after the call.
+        /// </summary>
+        private bool TryGetResolvedMapping(Type kind, KindData kindData, string id,
+            [NotNullWhen(true)] out MappingDataNode? mapping)
+        {
+            if (kindData.Results.TryGetValue(id, out mapping))
+                return true;
+
+            if (!kindData.RawResults.TryGetValue(id, out var raw))
+            {
+                mapping = null;
+                return false;
+            }
+
+            if (kindData.Inheritance == null)
+            {
+                mapping = raw;
+                return true;
+            }
+
+            if (!kindData.Inheritance.TryGetParents(id, out _))
+            {
+                mapping = raw;
+                return true;
+            }
+
+            var resolved = new Dictionary<string, MappingDataNode>();
+            return TryComposeMapping(kind, kindData, id, resolved, out mapping);
+        }
+
+        private bool TryComposeMapping(Type kind, KindData kindData, string id,
+            Dictionary<string, MappingDataNode> resolved, [NotNullWhen(true)] out MappingDataNode? mapping)
+        {
+            if (resolved.TryGetValue(id, out mapping) || kindData.Results.TryGetValue(id, out mapping))
+                return true;
+
+            if (!kindData.RawResults.TryGetValue(id, out var raw))
+            {
+                mapping = null;
+                return false;
+            }
+
+            var tree = kindData.Inheritance!;
+            if (!tree.TryGetParents(id, out var parents))
+            {
+                mapping = raw;
+                resolved.Add(id, mapping);
+                return true;
+            }
+
+            MappingDataNode result;
+            if (parents.Length == 1)
+            {
+                if (!TryComposeMapping(kind, kindData, parents[0], resolved, out var parent))
+                {
+                    mapping = null;
+                    return false;
+                }
+
+                result = _serializationManager.PushCompositionWithGenericNode(kind, parent, raw);
+            }
+            else
+            {
+                var parentMaps = new MappingDataNode[parents.Length];
+                for (var i = 0; i < parents.Length; i++)
+                {
+                    if (!TryComposeMapping(kind, kindData, parents[i], resolved, out var parent))
+                    {
+                        mapping = null;
+                        return false;
+                    }
+
+                    parentMaps[i] = parent;
+                }
+
+                result = _serializationManager.PushCompositionWithGenericNode(kind, parentMaps, raw);
+            }
+
+            resolved.Add(id, result);
+            mapping = result;
+            return true;
+        }
+
+        private static void DiscardResolvedMappings(IEnumerable<KindData> kinds)
+        {
+            foreach (var kind in kinds)
+            {
+                if (kind.Inheritance != null)
+                    kind.Results.Clear();
+            }
+        }
+
         private sealed class InheritancePushDatum
         {
             public MappingDataNode Result;
@@ -882,18 +985,21 @@ namespace Robust.Shared.Prototypes
                 throw new UnknownPrototypeException(id, typeof(T));
             }
 
-            return index.Results.ContainsKey(id);
+            return index.RawResults.ContainsKey(id);
         }
 
         /// <inheritdoc />
         public bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings)
         {
-            return _kinds[kind].Results.TryGetValue(id, out mappings);
+            var kindData = _kinds[kind];
+            return TryGetResolvedMapping(kind, kindData, id, out mappings);
         }
 
         public bool TryGetMapping<T>(string id, [NotNullWhen(true)] out MappingDataNode? mappings)
         {
-            return _kinds[typeof(T)].Results.TryGetValue(id, out mappings);
+            var kind = typeof(T);
+            var kindData = _kinds[kind];
+            return TryGetResolvedMapping(kind, kindData, id, out mappings);
         }
 
         public bool HasKind(string kind)

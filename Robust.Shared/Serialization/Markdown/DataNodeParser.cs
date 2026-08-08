@@ -18,17 +18,17 @@ public static class DataNodeParser
 {
     public static IEnumerable<DataNodeDocument> ParseYamlStream(TextReader reader)
     {
-        return ParseYamlStream(reader, internStrings: false);
+        return ParseYamlStream(reader, null);
     }
 
-    internal static IEnumerable<DataNodeDocument> ParseYamlStream(TextReader reader, bool internStrings)
+    internal static IEnumerable<DataNodeDocument> ParseYamlStream(TextReader reader, StringInterner stringInterner)
     {
-        return ParseYamlStream(new Parser(reader), internStrings);
+        return ParseYamlStream(new Parser(reader), stringInterner);
     }
 
-    internal static IEnumerable<DataNodeDocument> ParseYamlStream(Parser parser, bool internStrings = false)
+    internal static IEnumerable<DataNodeDocument> ParseYamlStream(Parser parser, StringInterner stringInterner = null)
     {
-        var state = new ParserState(internStrings);
+        var state = new ParserState(stringInterner);
 
         parser.Consume<StreamStart>();
 
@@ -51,6 +51,10 @@ public static class DataNodeParser
         parser.Consume<DocumentEnd>();
 
         ResolveAliases(state);
+        foreach (var sequence in state.Sequences)
+        {
+            sequence.Seal();
+        }
 
         return new DataNodeDocument(root);
     }
@@ -99,14 +103,14 @@ public static class DataNodeParser
         return node;
     }
 
-    private static string ParseKey(Parser parser)
+    private static string ParseKey(Parser parser, ParserState state)
     {
         var ev = parser.Consume<Scalar>();
 
         if (!ev.Anchor.IsEmpty)
             throw new NotSupportedException();
 
-        return ev.Value;
+        return state.InternMappingKey(ev.Value);
     }
 
     private static SequenceDataNode ParseSequence(Parser parser, DocumentState state)
@@ -114,6 +118,7 @@ public static class DataNodeParser
         var ev = parser.Consume<SequenceStart>();
 
         var node = new SequenceDataNode();
+        state.Sequences.Add(node);
         node.Tag = ConvertTag(ev.Tag, state.ParserState);
         node.Start = ev.Start;
 
@@ -148,7 +153,7 @@ public static class DataNodeParser
         MappingEnd mapEnd;
         while (!parser.TryConsume(out mapEnd))
         {
-            var key = state.ParserState.InternString(ParseKey(parser));
+            var key = ParseKey(parser, state.ParserState);
             var value = Parse(parser, state);
 
             node.Add(key, value);
@@ -242,6 +247,7 @@ public static class DataNodeParser
         public readonly ParserState ParserState = parserState;
         public readonly Dictionary<AnchorName, DataNode> Anchors = new();
         public ValueList<DataNode> UnresolvedAliasOwners;
+        public ValueList<SequenceDataNode> Sequences;
     }
 
     private sealed class DataNodeAlias : DataNode
@@ -274,32 +280,17 @@ public static class DataNodeParser
 
 #nullable enable
 
-    private sealed class ParserState(bool internStrings)
+    private sealed class ParserState(StringInterner? stringInterner)
     {
-        public readonly HashSet<string>? StringInternIndex = internStrings ? [] : null;
-        //public int TotalStringsSaved = 0;
-
         [return: NotNullIfNotNull(nameof(str))]
         public string? InternString(string? str)
         {
-            if (StringInternIndex == null)
-                return str;
+            return str == null ? null : stringInterner?.Intern(str) ?? str;
+        }
 
-            if (str == null)
-                return null;
-
-            // Use a basic string interning system to avoid releasing a bunch of equivalent strings.
-            // This avoids having thousands of identical strings for stuff like "type" in prototypes stored in memory.
-            if (StringInternIndex.TryGetValue(str, out var indexedString))
-            {
-                // if (!ReferenceEquals(str, indexedString))
-                //     TotalStringsSaved += 1;
-
-                return indexedString;
-            }
-
-            StringInternIndex.Add(str);
-            return str;
+        public string InternMappingKey(string str)
+        {
+            return InternString(str)!;
         }
     }
 }

@@ -1,0 +1,68 @@
+name: Publish nupkgs to NuGet feed/package repository
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-publish:
+    environment: dotnet
+    permissions:
+      id-token: write
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7.0.0
+        with:
+          submodules: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6.0.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build packages
+        run: dotnet pack -c Release -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: "${{ vars.NUGET_USERNAME }}"
+
+      - name: Push NuGet packages
+        run: |
+          for pkg in $(find . -name '*.nupkg'); do
+            case "$pkg" in
+              ${{ vars.EXCLUDE_NUGET_PACKAGES }})
+                echo "Skipping $pkg"
+                continue
+                ;;
+            esac
+
+            dotnet nuget push "$pkg" \
+              --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
+
+      - name: Push symbol packages
+        run: |
+          for pkg in $(find . -name '*.snupkg'); do
+            case "$pkg" in
+              ${{ vars.EXCLUDE_NUGET_PACKAGES }})
+                echo "Skipping $pkg"
+                continue
+                ;;
+            esac
+
+            dotnet nuget push "$pkg" \
+              --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done

@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 288.0.1
+
+### Bugfixes
+
+* Fix server and client getstate not being aligned for ComponentNetworkGenerator.
+* Fix components removed on entity deserializer not flagging the entity as dirty.
+
+
 ## 288.0.0
 
 ### Breaking changes

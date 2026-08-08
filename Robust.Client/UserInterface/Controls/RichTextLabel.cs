@@ -20,6 +20,13 @@ namespace Robust.Client.UserInterface.Controls
         private RichTextEntry? _entry;
         private float _lineHeightScale = 1;
         private bool _lineHeightOverride;
+        private readonly MarkupDrawingContext _drawingContext = new();
+        private Font? _actualFont;
+        private bool _fontCacheValid;
+        private float? _outlineThicknessOverride;
+        private Color? _outlineColorOverride;
+        private TextOutline? _actualFontOutline;
+        private bool _fontOutlineCacheValid;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public float LineHeightScale
@@ -132,25 +139,55 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Returns a copy of the currently used formatted message.
         /// </summary>
-        public FormattedMessage? GetFormattedMessage() => _entry == null ? null : new FormattedMessage(_entry.Value.Message);
+        public FormattedMessage? GetFormattedMessage() =>
+            _entry == null ? null : new FormattedMessage(_entry.Value.Message);
 
-        public float? OutlineThicknessOverride { get; set; }
+        public float? OutlineThicknessOverride
+        {
+            get => _outlineThicknessOverride;
+            set
+            {
+                if (_outlineThicknessOverride == value)
+                    return;
 
-        public Color? OutlineColorOverride { get; set; }
+                _outlineThicknessOverride = value;
+                _fontOutlineCacheValid = false;
+            }
+        }
+
+        public Color? OutlineColorOverride
+        {
+            get => _outlineColorOverride;
+            set
+            {
+                if (_outlineColorOverride == value)
+                    return;
+
+                _outlineColorOverride = value;
+                _fontOutlineCacheValid = false;
+            }
+        }
 
         private TextOutline? ActualFontOutline
         {
             get
             {
+                if (_fontOutlineCacheValid)
+                    return _actualFontOutline;
+
                 var thickness = OutlineThicknessOverride;
-                if (!thickness.HasValue && TryGetStyleProperty<float>(Label.StylePropertyFontOutlineThickness, out var styleThickness))
+                if (!thickness.HasValue &&
+                    TryGetStyleProperty<float>(Label.StylePropertyFontOutlineThickness, out var styleThickness))
                     thickness = styleThickness;
 
                 var color = OutlineColorOverride;
-                if (!color.HasValue && TryGetStyleProperty<Color>(Label.StylePropertyFontOutlineColor, out var styleColor))
+                if (!color.HasValue &&
+                    TryGetStyleProperty<Color>(Label.StylePropertyFontOutlineColor, out var styleColor))
                     color = styleColor;
 
-                return TextOutline.FromOverrides(thickness, color);
+                _actualFontOutline = TextOutline.FromOverrides(thickness, color);
+                _fontOutlineCacheValid = true;
+                return _actualFontOutline;
             }
         }
 
@@ -173,6 +210,14 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
             DrawSelectionIfNeeded(handle);
             _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale, ActualFontOutline);
+        }
+
+        protected override void StylePropertiesChanged()
+        {
+            _fontOutlineCacheValid = false;
+            _fontCacheValid = false;
+
+            base.StylePropertiesChanged();
         }
 
         protected override ReadOnlySpan<char> GetTextSpan()
@@ -222,12 +267,19 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private Font _getFont()
         {
+            if (_fontCacheValid)
+                return _actualFont!;
+
             if (TryGetStyleProperty<Font>("font", out var font))
             {
-                return font;
+                _actualFont = font;
+                _fontCacheValid = true;
+                return _actualFont;
             }
 
-            return UserInterfaceManager.ThemeDefaults.DefaultFont;
+            _actualFont = UserInterfaceManager.ThemeDefaults.DefaultFont;
+            _fontCacheValid = true;
+            return _actualFont;
         }
     }
 }

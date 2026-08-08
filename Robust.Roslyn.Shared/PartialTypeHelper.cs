@@ -16,7 +16,6 @@ public sealed record PartialTypeInfo(
     string? Namespace,
     EquatableArray<PartialTypeInfo.NestedPart> Parts,
     bool IsValid,
-    Location SyntaxLocation,
     bool IsSealed)
 {
     public string Name => Parts[^1].Name;
@@ -50,7 +49,6 @@ public sealed record PartialTypeInfo(
             symbol.ContainingNamespace.IsGlobalNamespace ? null : symbol.ContainingNamespace.ToDisplayString(),
             parts.ToImmutable().AsEquatableArray(),
             isValid,
-            syntax.Keyword.GetLocation(),
             symbol.IsSealed);
     }
 

@@ -94,7 +94,7 @@ internal sealed class GridFixtures_Tests : RobustIntegrationTest
             Assert.That(manager.FixtureCount, Is.EqualTo(2));
 
             physSystem.SetLinearVelocity(grid, Vector2.One, manager: manager, body: gridBody);
-            Assert.That(gridBody.LinearVelocity.Length, Is.EqualTo(0f));
+            Assert.That(gridBody.LinearVelocity.Length(), Is.EqualTo(0f));
         });
     }
 }

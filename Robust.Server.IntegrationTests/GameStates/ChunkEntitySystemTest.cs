@@ -280,10 +280,10 @@ public sealed partial class ChunkEntitySystemTest
     }
 
     /// <summary>
-    /// Ensures full-save serialization syncs chunk entity lifecycle to its root, matching map/grid saves.
+    /// Ensures chunk entities spawned for a pre-mapinit root are not map-initialized ahead of that root.
     /// </summary>
     [Test]
-    public void FullSaveSyncsChunkEntityLifestageToRoot()
+    public void ChunkEntitySpawnedForPreMapInitRootStaysPreMapInit()
     {
         var sim = Simulation();
         var entMan = sim.Resolve<IEntityManager>();
@@ -297,7 +297,7 @@ public sealed partial class ChunkEntitySystemTest
         Assert.Multiple(() =>
         {
             Assert.That(entMan.GetComponent<MetaDataComponent>(grid).EntityLifeStage, Is.LessThan(EntityLifeStage.MapInitialized));
-            Assert.That(entMan.GetComponent<MetaDataComponent>(chunk).EntityLifeStage, Is.EqualTo(EntityLifeStage.MapInitialized));
+            Assert.That(entMan.GetComponent<MetaDataComponent>(chunk).EntityLifeStage, Is.LessThan(EntityLifeStage.MapInitialized));
         });
 
         var entities = entMan.GetEntities().ToHashSet();
@@ -308,6 +308,29 @@ public sealed partial class ChunkEntitySystemTest
         {
             Assert.That(entMan.GetComponent<MetaDataComponent>(chunk).EntityLifeStage, Is.LessThan(EntityLifeStage.MapInitialized));
             Assert.That(entities, Does.Contain(chunk));
+        });
+
+        entMan.DeleteEntity(map);
+    }
+
+    /// <summary>
+    /// Ensures chunk entities spawned for an already map-initialized root are also map-initialized.
+    /// </summary>
+    [Test]
+    public void ChunkEntitySpawnedForMapInitializedRootRunsMapInit()
+    {
+        var sim = Simulation();
+        var entMan = sim.Resolve<IEntityManager>();
+        var maps = entMan.System<SharedMapSystem>();
+        var chunks = entMan.System<ChunkEntitySystem>();
+
+        var map = maps.CreateMap();
+        var chunk = chunks.GetOrCreateChunk(map, new Vector2i(1, 2)).Owner;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(entMan.GetComponent<MetaDataComponent>(map).EntityLifeStage, Is.EqualTo(EntityLifeStage.MapInitialized));
+            Assert.That(entMan.GetComponent<MetaDataComponent>(chunk).EntityLifeStage, Is.EqualTo(EntityLifeStage.MapInitialized));
         });
 
         entMan.DeleteEntity(map);

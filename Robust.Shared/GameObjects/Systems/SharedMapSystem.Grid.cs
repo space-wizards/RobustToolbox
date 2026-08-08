@@ -932,23 +932,24 @@ public abstract partial class SharedMapSystem
 
             var offset = chunk.GridTileToChunkTile(gridIndices);
             chunk.SuppressCollisionRegeneration = true;
-            if (SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile, out var oldTile))
+            var changed = SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile, out var oldTile, out var shapeChanged);
+            chunk.SuppressCollisionRegeneration = false;
+
+            if (changed)
             {
-                modified.Add(chunk);
+                if (shapeChanged)
+                    modified.Add(chunk);
+
                 tileChanges.Add(new TileChangedEntry(tile, oldTile, offset, gridIndices));
             }
-        }
-
-        foreach (var chunk in modified)
-        {
-            chunk.SuppressCollisionRegeneration = false;
         }
 
         // Notify of all tile changes in one event
         var ev = new TileChangedEvent((uid, grid), tileChanges.ToArray());
         RaiseLocalEvent(uid, ref ev, true);
 
-        RegenerateCollision(uid, grid, modified);
+        if (modified.Count > 0)
+            RegenerateCollision(uid, grid, modified);
 
         // Back to normal
         SuppressOnTileChanged = false;

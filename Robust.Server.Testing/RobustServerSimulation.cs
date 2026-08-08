@@ -12,6 +12,7 @@ using Robust.Server.Localization;
 using Robust.Server.Network.Transfer;
 using Robust.Server.Physics;
 using Robust.Server.Player;
+using Robust.Server.Physics.Components;
 using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
 using Robust.Server.Replays;
@@ -312,6 +313,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<OccluderTreeComponent>();
             compFactory.RegisterClass<CollideOnAnchorComponent>();
             compFactory.RegisterClass<ActorComponent>();
+            compFactory.RegisterClass<GridSplitNodeComponent>();
             compFactory.RegisterClass<ChunkEntityComponent>();
             compFactory.RegisterClass<ChunkContainerComponent>();
 

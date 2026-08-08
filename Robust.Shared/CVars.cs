@@ -1474,7 +1474,7 @@ namespace Robust.Shared
         /// Can grids split if not connected by cardinals
         /// </summary>
         public static readonly CVarDef<bool> GridSplitting =
-            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE);
+            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// How much to enlarge grids when determining their fixture bounds.

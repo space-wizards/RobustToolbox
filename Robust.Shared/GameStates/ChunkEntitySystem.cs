@@ -10,6 +10,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameStates;
@@ -33,6 +34,7 @@ public abstract partial class ChunkEntitySystem : EntitySystem
     [Dependency] private EntityQuery<MapGridComponent> _gridQuery;
     [Dependency] private EntityQuery<TransformComponent> _xformQuery;
     [Dependency] private EntityQuery<ChunkContainerComponent> _containerQuery;
+    [Dependency] private IGameTiming _timing = default!;
     [Dependency] private MetaDataSystem _metaData = default!;
 
     /// <summary>
@@ -146,6 +148,28 @@ public abstract partial class ChunkEntitySystem : EntitySystem
 
         Del(chunk.Owner, meta);
         return true;
+    }
+
+    /// <summary>
+    /// Removes a data component from a chunk entity and removes the chunk entity if it no longer contains any data.
+    /// During prediction, the component is dirtied instead of removed so rollback can restore it before prediction reruns.
+    /// </summary>
+    public bool TryRemoveChunkData<T>(Entity<ChunkEntityComponent, T, MetaDataComponent?> chunk)
+        where T : IComponent
+    {
+        var meta = chunk.Comp3;
+
+        if (!_metaQuery.Resolve(chunk.Owner, ref meta))
+            return false;
+
+        if (_timing.InPrediction)
+        {
+            EntityManager.Dirty(chunk.Owner, chunk.Comp2, meta);
+            return true;
+        }
+
+        EntityManager.RemoveComponent(chunk.Owner, chunk.Comp2, meta);
+        return TryRemoveChunk((chunk.Owner, chunk.Comp1, meta));
     }
 
     // Returns chunk entities in range of the position, assumes non-normalized inputs.
@@ -378,7 +402,17 @@ public abstract partial class ChunkEntitySystem : EntitySystem
                 return;
             }
 
-            DebugTools.Assert($"Duplicate chunk entity for root {ToPrettyString(comp.Root)} and chunk {comp.Chunk}.");
+            if (_timing.ApplyingState)
+            {
+                // State application can receive a replacement chunk before the old
+                // chunk's deletion has been processed. Clear the stale slot so the
+                // incoming authoritative chunk state can own it.
+                RemoveChunk(oldChunk);
+            }
+            else
+            {
+                DebugTools.Assert($"Duplicate chunk entity for root {ToPrettyString(comp.Root)} and chunk {comp.Chunk}.");
+            }
         }
 
         meta.Flags |= MetaDataFlags.ChunkEntity;

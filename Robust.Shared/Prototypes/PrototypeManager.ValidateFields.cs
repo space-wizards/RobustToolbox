@@ -24,6 +24,13 @@ public partial class PrototypeManager
                 ValidateStaticFieldsInternal(type, errors, prototypes);
         }
 
+        ValidateCVars(
+            errors,
+            id =>
+                prototypes.TryGetValue(typeof(EntityPrototype), out var ids) &&
+                ids.Contains(id)
+        );
+
         return errors;
     }
 
@@ -32,6 +39,14 @@ public partial class PrototypeManager
     {
         var errors = new List<string>();
         ValidateStaticFieldsInternal(type, errors, prototypes);
+        return errors;
+    }
+
+    /// <inheritdoc/>
+    public List<string> ValidateCVars()
+    {
+        var errors = new List<string>();
+        ValidateCVars(errors, id => HasIndex(id));
         return errors;
     }
 
@@ -235,5 +250,39 @@ public partial class PrototypeManager
 
         proto = null;
         return false;
+    }
+
+    private void ValidateCVars(List<string> errors, Predicate<string> hasEntityPrototype)
+    {
+        foreach (var cVarName in _config.GetRegisteredCVars())
+        {
+            var cVarType = _config.GetCVarType(cVarName);
+            if (cVarType == typeof(EntProtoId))
+            {
+                var cVar = (EntProtoId) _config.GetCVar(cVarName);
+                if (!hasEntityPrototype(cVar))
+                {
+                    errors.Add($"{nameof(EntProtoId)} CVar failed validation. No entity prototype found with id {cVar}.");
+                }
+            }
+            else if (cVarType.IsGenericType &&
+                     cVarType.GetGenericTypeDefinition() == typeof(EntProtoId<>))
+            {
+                var cVar = (EntProtoId) _config.GetCVar(cVarName).ToString()!;
+                var compType = cVarType.GetGenericArguments()[0];
+                if (!hasEntityPrototype(cVar))
+                {
+                    errors.Add($"{nameof(EntProtoId<>)} CVar failed validation. No entity prototype found with id {cVar}.");
+                    continue;
+                }
+
+                if (!TryIndex(cVar, out var proto) ||
+                    !proto.HasComp(compType, _factory))
+                {
+                    var name = _factory.GetComponentName(compType);
+                    errors.Add($"{nameof(EntProtoId<>)} CVar failed validation. Entity prototype '{cVar}' does not have a component of type '{name}'.");
+                }
+            }
+        }
     }
 }

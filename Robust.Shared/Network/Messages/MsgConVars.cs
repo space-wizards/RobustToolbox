@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Lidgren.Network;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
@@ -53,6 +54,7 @@ namespace Robust.Shared.Network.Messages
                         value = buffer.ReadBoolean();
                         break;
                     case CvarType.String:
+                    case CvarType.EntProtoId:
 
                         // give the string a smaller bounds than int.MaxValue
                         var strSize = buffer.PeekStringSize();
@@ -60,6 +62,10 @@ namespace Robust.Shared.Network.Messages
                             throw new InvalidOperationException($"Cvar string value size '{nameSize}' for cvar '{name}' is out of bounds (0-{MaxStringValSize} bytes).");
 
                         value = buffer.ReadString();
+
+                        if (valType == CvarType.EntProtoId)
+                            value = (EntProtoId) (string) value;
+
                         break;
                     case CvarType.Float:
                         value = buffer.ReadFloat();
@@ -117,6 +123,14 @@ namespace Robust.Shared.Network.Messages
                         buffer.Write((byte)CvarType.Double);
                         buffer.Write(val);
                         break;
+                    case EntProtoId val:
+                        buffer.Write((byte)CvarType.EntProtoId);
+                        buffer.Write(val.Id);
+                        break;
+                    case IComparable<EntProtoId> val: // EntProtoId<T>
+                        buffer.Write((byte)CvarType.EntProtoId);
+                        buffer.Write(val.ToString());
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(value), value.GetType(), $"CVar {name} is not of a valid CVar type!");
                 }
@@ -133,7 +147,8 @@ namespace Robust.Shared.Network.Messages
             Bool,
             String,
             Float,
-            Double
+            Double,
+            EntProtoId,
         }
     }
 }

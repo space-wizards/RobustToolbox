@@ -150,28 +150,6 @@ public abstract partial class ChunkEntitySystem : EntitySystem
         return true;
     }
 
-    /// <summary>
-    /// Removes a data component from a chunk entity and removes the chunk entity if it no longer contains any data.
-    /// During prediction, the component is dirtied instead of removed so rollback can restore it before prediction reruns.
-    /// </summary>
-    public bool TryRemoveChunkData<T>(Entity<ChunkEntityComponent, T, MetaDataComponent?> chunk)
-        where T : IComponent
-    {
-        var meta = chunk.Comp3;
-
-        if (!_metaQuery.Resolve(chunk.Owner, ref meta))
-            return false;
-
-        if (_timing.InPrediction)
-        {
-            EntityManager.Dirty(chunk.Owner, chunk.Comp2, meta);
-            return true;
-        }
-
-        EntityManager.RemoveComponent(chunk.Owner, chunk.Comp2, meta);
-        return TryRemoveChunk((chunk.Owner, chunk.Comp1, meta));
-    }
-
     // Returns chunk entities in range of the position, assumes non-normalized inputs.
     public ChunkEntityEnumerator GetChunksInRange(EntityUid root, Vector2 localPosition, float range)
     {

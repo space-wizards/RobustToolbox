@@ -1,6 +1,5 @@
 ﻿using Robust.Client.ComponentTrees;
 using Robust.Client.GameObjects;
-using Robust.Shared.Physics.Systems;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -14,7 +13,6 @@ internal sealed partial class Clyde
     private SpriteSystem _spriteSystem = default!;
     private SpriteTreeSystem _spriteTreeSystem = default!;
     private ClientOccluderSystem _occluderSystem = default!;
-    private FixtureSystem _fixtureSystem = default!;
 
     private void InitSystems()
     {
@@ -30,7 +28,6 @@ internal sealed partial class Clyde
         _spriteSystem = _entitySystemManager.GetEntitySystem<SpriteSystem>();
         _spriteTreeSystem = _entitySystemManager.GetEntitySystem<SpriteTreeSystem>();
         _occluderSystem = _entitySystemManager.GetEntitySystem<ClientOccluderSystem>();
-        _fixtureSystem = _entitySystemManager.GetEntitySystem<FixtureSystem>();
     }
 
     private void EntityManagerOnAfterShutdown()
@@ -41,6 +38,5 @@ internal sealed partial class Clyde
         _spriteSystem = null!;
         _spriteTreeSystem = null!;
         _occluderSystem = null!;
-        _fixtureSystem = null!;
     }
 }

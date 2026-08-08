@@ -601,7 +601,12 @@ namespace Robust.Client.Graphics.Clyde
 
                 public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null)
                 {
-                    base.DrawTexture(texture, position, modulate);
+                    CheckDisposed();
+
+                    var color = (modulate ?? Color.White) * Modulate;
+                    var rect = UIBox2.FromDimensions(position, texture.Size);
+                    _renderHandle.DrawTextureScreen(texture, rect.BottomLeft, rect.BottomRight,
+                        rect.TopLeft, rect.TopRight, color, null);
                 }
 
                 /// <summary>

@@ -35,12 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `ReplayData` no longer exposes the `States`/`Messages` lists; use `Count`, `GetState(index)` and `GetMessages(index)` instead. Replay history is now provided lazily through the new `IReplayDataProvider` interface, and `IReplayLoadManager.GenerateCheckpointsAsync` is no longer part of the public API.
+*None yet*
 
 ### New features
 
-* Added IAudioManager.ConvertAudioDeviceNameForDisplay helper method for decoding OpenAL device names into a more human-readable format.
-* The replay client now streams replay history from disk instead of keeping the entire deserialized replay resident in RAM, both while loading (history is streamed block-by-block through checkpoint generation) and during playback (data blocks are lazily re-read through a small LRU window, configurable via the `replay.loaded_block_window` cvar). Measured on an 861 MB, 1h38m replay this halves load time and cuts peak memory from ~22 GB to ~12 GB.
+*None yet*
 
 ### Bugfixes
 
@@ -52,7 +51,37 @@ END TEMPLATE-->
 
 ### Internal
 
+*None yet*
+
+
+## 288.0.0
+
+### Breaking changes
+
+* `ReplayData` no longer exposes the `States`/`Messages` lists; use `Count`, `GetState(index)` and `GetMessages(index)` instead. Replay history is now provided lazily through the new `IReplayDataProvider` interface, and `IReplayLoadManager.GenerateCheckpointsAsync` is no longer part of the public API.
+* GridFixtureSystem now updates the grid origin for split grids to re-centre them.
+* Batch font outline drawing with new API methods.
+* SharedMapSystem enumerators can now use struct foreach loops instead of .MoveNext calls and obsoleted the other ones.
+
+### New features
+
+* Added IAudioManager.ConvertAudioDeviceNameForDisplay helper method for decoding OpenAL device names into a more human-readable format.
+* The replay client now streams replay history from disk instead of keeping the entire deserialized replay resident in RAM, both while loading (history is streamed block-by-block through checkpoint generation) and during playback (data blocks are lazily re-read through a small LRU window, configurable via the `replay.loaded_block_window` cvar). Measured on an 861 MB, 1h38m replay this halves load time and cuts peak memory from ~22 GB to ~12 GB.
+* Added WithCompOrNull helper methods to EntitySystems.
+* Fix deletion rectangle rotation
+* Added CVar to mute on unfocus.
+
+### Bugfixes
+
+* Failed runtime prototype uploads are now dropped.
+* Fix spawn tiles window UIBox2 errors.
+* Release all keybinds when window loses focus.
+* Fix chunt pausing not aligning with the attached root pausing.
+
+### Internal
+
 * ISimulation no longer has SpawnEntity methods, resolve IEntityManager and call the spawn methods directly instead.
+* Run GenerateClient and GenerateServer in parallel.
 
 
 ## 287.0.0

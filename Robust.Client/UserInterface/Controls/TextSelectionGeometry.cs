@@ -142,9 +142,8 @@ internal static class TextSelectionGeometry
             if (y <= _lines[0].Top)
                 return _lines[0];
 
-            for (var i = 0; i < _lines.Count; i++)
+            foreach (var line in _lines)
             {
-                var line = _lines[i];
                 if (y <= line.Bottom)
                     return line;
             }

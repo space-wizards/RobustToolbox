@@ -6,9 +6,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Timing
 {
-    public sealed class ClientGameTiming : GameTiming, IClientGameTiming
+    public sealed partial class ClientGameTiming : GameTiming, IClientGameTiming
     {
-        [Dependency] private readonly IClientNetManager _netManager = default!;
+        [Dependency] private IClientNetManager _netManager = default!;
 
         public override bool InPrediction => !ApplyingState && CurTick > LastRealTick;
 

@@ -81,9 +81,9 @@ namespace Robust.Shared.Configuration
     }
 
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
-    internal sealed class CVarCommand : LocalizedCommands
+    internal sealed partial class CVarCommand : LocalizedCommands
     {
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
 
         public override string Command => "cvar";
 
@@ -155,9 +155,9 @@ namespace Robust.Shared.Configuration
         }
     }
 
-    internal sealed class CVarSubsCommand : LocalizedCommands
+    internal sealed partial class CVarSubsCommand : LocalizedCommands
     {
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
 
         public override string Command => "cvar_subs";
 
@@ -198,9 +198,9 @@ namespace Robust.Shared.Configuration
         }
     }
 
-    internal sealed class ConfigMarkRollbackCommand : IConsoleCommand
+    internal sealed partial class ConfigMarkRollbackCommand : IConsoleCommand
     {
-        [Dependency] private readonly IConfigurationManager _cfg = null!;
+        [Dependency] private IConfigurationManager _cfg = null!;
 
         public string Command => "config_rollback_mark";
         public string Description => "";
@@ -230,9 +230,9 @@ namespace Robust.Shared.Configuration
         }
     }
 
-    internal sealed class ConfigUnmarkRollbackCommand : IConsoleCommand
+    internal sealed partial class ConfigUnmarkRollbackCommand : IConsoleCommand
     {
-        [Dependency] private readonly IConfigurationManager _cfg = null!;
+        [Dependency] private IConfigurationManager _cfg = null!;
 
         public string Command => "config_rollback_unmark";
         public string Description => "";
@@ -263,9 +263,9 @@ namespace Robust.Shared.Configuration
     }
 
 
-    internal sealed class ConfigApplyRollbackCommand : IConsoleCommand
+    internal sealed partial class ConfigApplyRollbackCommand : IConsoleCommand
     {
-        [Dependency] private readonly IConfigurationManager _cfg = null!;
+        [Dependency] private IConfigurationManager _cfg = null!;
 
         public string Command => "config_rollback_apply";
         public string Description => "";

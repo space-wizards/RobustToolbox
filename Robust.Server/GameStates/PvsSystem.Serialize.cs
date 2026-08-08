@@ -14,7 +14,7 @@ namespace Robust.Server.GameStates;
 
 internal sealed partial class PvsSystem
 {
-    [Dependency] private readonly IRobustSerializer _serializer = default!;
+    [Dependency] private IRobustSerializer _serializer = default!;
 
     /// <summary>
     /// Get and serialize <see cref="GameState"/> objects for each player. Compressing & sending the states is done later.
@@ -71,6 +71,6 @@ internal sealed partial class PvsSystem
             _serializer.SerializeDirect(data.StateStream, data.State);
         }
 
-        data.ClearState();
+        ClearSessionState(data);
     }
 }

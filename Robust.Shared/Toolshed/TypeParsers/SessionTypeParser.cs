@@ -14,7 +14,7 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 /// <summary>
 /// Parse a username to an <see cref="ICommonSession"/>
 /// </summary>
-internal sealed class SessionTypeParser : TypeParser<ICommonSession>
+internal sealed partial class SessionTypeParser : TypeParser<ICommonSession>
 {
     [Dependency] private ISharedPlayerManager _player = default!;
 

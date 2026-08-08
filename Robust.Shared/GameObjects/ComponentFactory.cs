@@ -349,6 +349,14 @@ namespace Robust.Shared.GameObjects
             return GetRegistration(netID).Name;
         }
 
+        [Pure]
+        public CompName CompName<T>() where T : IComponent, new()
+            => GameObjects.CompName.Get<T>(this);
+
+        [Pure]
+        public CompName CompName(Type type)
+            => GameObjects.CompName.Get(type, this);
+
         public ComponentRegistration GetRegistration(ushort netID)
         {
             if (_networkedComponents is null)
@@ -406,6 +414,9 @@ namespace Robust.Shared.GameObjects
             registration = null;
             return false;
         }
+
+        public bool HasRegistration(string componentName)
+            => _names.ContainsKey(componentName);
 
         public bool TryGetRegistration(Type reference, [NotNullWhen(true)] out ComponentRegistration? registration)
         {

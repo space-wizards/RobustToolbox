@@ -13,14 +13,13 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.UserInterface.Controls
 {
     [Virtual]
-    public class RichTextLabel : SelectableTextControl
+    public partial class RichTextLabel : Control
     {
-        [Dependency] private readonly MarkupTagManager _tagManager = default!;
+        [Dependency] private MarkupTagManager _tagManager = default!;
 
         private RichTextEntry? _entry;
         private float _lineHeightScale = 1;
         private bool _lineHeightOverride;
-        private readonly RichTextLabelSelectionLayout _selectionLayout;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public float LineHeightScale
@@ -70,7 +69,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             _entry?.RemoveControls();
             _entry = null;
-            ClearSelection();
             InvalidateMeasure();
         }
 
@@ -81,7 +79,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             IoCManager.InjectDependencies(this);
             VerticalAlignment = VAlignment.Center;
-            _selectionLayout = new RichTextLabelSelectionLayout(this);
         }
 
         /// <summary>
@@ -114,7 +111,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             _entry?.RemoveControls();
             _entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
-            ClearSelection();
             InvalidateMeasure();
         }
 
@@ -137,6 +133,26 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public FormattedMessage? GetFormattedMessage() => _entry == null ? null : new FormattedMessage(_entry.Value.Message);
 
+        public float? OutlineThicknessOverride { get; set; }
+
+        public Color? OutlineColorOverride { get; set; }
+
+        private TextOutline? ActualFontOutline
+        {
+            get
+            {
+                var thickness = OutlineThicknessOverride;
+                if (!thickness.HasValue && TryGetStyleProperty<float>(Label.StylePropertyFontOutlineThickness, out var styleThickness))
+                    thickness = styleThickness;
+
+                var color = OutlineColorOverride;
+                if (!color.HasValue && TryGetStyleProperty<Color>(Label.StylePropertyFontOutlineColor, out var styleColor))
+                    color = styleColor;
+
+                return TextOutline.FromOverrides(thickness, color);
+            }
+        }
+
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             if (_entry == null)
@@ -154,26 +170,7 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-            if (_entry == null)
-                return;
-
-            var entry = _entry.Value;
-            var font = _getFont();
-            var context = new MarkupDrawingContext();
-
-            DrawSelectionIfNeeded(handle);
-
-            entry.Draw(_tagManager, handle, font, SizeBox, 0, context, UIScale, LineHeightScale);
-        }
-
-        protected override ISelectableTextLayout SelectionLayout => _selectionLayout;
-
-        private void EnsureEntryLayout()
-        {
-            if (_entry == null)
-                return;
-
-            _entry = _entry.Value.Update(_tagManager, _getFont(), SizeBox.Width * UIScale, UIScale, LineHeightScale);
+            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale, ActualFontOutline);
         }
 
         [Pure]
@@ -185,45 +182,6 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return UserInterfaceManager.ThemeDefaults.DefaultFont;
-        }
-
-        private sealed class RichTextLabelSelectionLayout(RichTextLabel owner) : ISelectableTextLayout
-        {
-            private readonly RichTextLabel _owner = owner;
-
-            public ReadOnlySpan<char> GetTextSpan()
-            {
-                if (_owner._entry == null)
-                    return [];
-
-                return _owner._entry.Value.GetPlainText(_owner._tagManager, _owner._getFont()).AsSpan();
-            }
-
-            public int GetIndexAtPosition(Vector2 relativePosition)
-            {
-                _owner.EnsureEntryLayout();
-                if (_owner._entry == null)
-                    return 0;
-
-                return _owner._entry.Value.GetIndexAtPosition(
-                    _owner._tagManager,
-                    _owner._getFont(),
-                    _owner.SizeBox,
-                    0,
-                    relativePosition * _owner.UIScale,
-                    _owner.UIScale,
-                    _owner.LineHeightScale);
-            }
-
-            public void DrawSelection(DrawingHandleScreen handle, int selectionLower, int selectionUpper, Color color)
-            {
-                _owner.EnsureEntryLayout();
-                if (_owner._entry == null)
-                    return;
-
-                _owner._entry.Value.DrawSelection(_owner._tagManager, handle, _owner._getFont(), _owner.SizeBox, 0,
-                    new MarkupDrawingContext(), _owner.UIScale, _owner.LineHeightScale, selectionLower, selectionUpper, color);
-            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed `EntitySystem` dependencies throwing an exception when opening a BUI.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,494 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 288.0.0
+
+### Breaking changes
+
+* `ReplayData` no longer exposes the `States`/`Messages` lists; use `Count`, `GetState(index)` and `GetMessages(index)` instead. Replay history is now provided lazily through the new `IReplayDataProvider` interface, and `IReplayLoadManager.GenerateCheckpointsAsync` is no longer part of the public API.
+* GridFixtureSystem now updates the grid origin for split grids to re-centre them.
+* Batch font outline drawing with new API methods.
+* SharedMapSystem enumerators can now use struct foreach loops instead of .MoveNext calls and obsoleted the other ones.
+
+### New features
+
+* Added IAudioManager.ConvertAudioDeviceNameForDisplay helper method for decoding OpenAL device names into a more human-readable format.
+* The replay client now streams replay history from disk instead of keeping the entire deserialized replay resident in RAM, both while loading (history is streamed block-by-block through checkpoint generation) and during playback (data blocks are lazily re-read through a small LRU window, configurable via the `replay.loaded_block_window` cvar). Measured on an 861 MB, 1h38m replay this halves load time and cuts peak memory from ~22 GB to ~12 GB.
+* Added WithCompOrNull helper methods to EntitySystems.
+* Fix deletion rectangle rotation
+* Added CVar to mute on unfocus.
+
+### Bugfixes
+
+* Failed runtime prototype uploads are now dropped.
+* Fix spawn tiles window UIBox2 errors.
+* Release all keybinds when window loses focus.
+* Fix chunt pausing not aligning with the attached root pausing.
+
+### Internal
+
+* ISimulation no longer has SpawnEntity methods, resolve IEntityManager and call the spawn methods directly instead.
+* Run GenerateClient and GenerateServer in parallel.
+
+
+## 287.0.0
+
+### Breaking changes
+
+* OccluderComponent now supports convex polygons and no longer uses a bounding box. These use the same limitations as convex hulls for physics (no more than 8 points).
+* Update Yamldotnet to 18.1.0
+* EntityPrototype components are now interned and shared. Any components that have the same datafield data are now shared when stored on PrototypeManager, saving significant amounts of memory.
+* RSIStates now store AtlasTexture and not Texture, speeding up RSI rendering by directly passing it through.
+* Reverted BUI state queueing.
+
+### New features
+
+* Added a field to `ComponentNetworkGenerator` to exclude components from replays.
+* Added support for before and after subscriptions for the new `[SubscribeLocalEvent]` and related attributes.
+
+### Bugfixes
+
+* Make DefaultWindow call base.FrameUpdate to support animations.
+* Fix Discord RPC playtime resetting on join.
+* Fix some WordWrap bugs.
+
+### Other
+
+* Change `OccluderComponent` access to `ReadExecute`.
+* Components that are being removed are no longer serialized.
+* Added test workflows for the template repos.
+
+### Internal
+
+* Rewrite ReflectionManager for performance reasons.
+* Made many optimizations to GameStates, componentregistryserializer, IoC dependencies, and collection serializers.
+* Remove redundant MsgEntity properties.
+* Cached texture UVs for rendering atlas textures.
+* Pool sprite post-shader render targets in Clyde.
+
+
+## 286.0.0
+
+### Breaking changes
+
+* Box2 and Box2Rotated now validate their inputs and no longer accepts negative sizes.
+* Multiple PostShaders are now supported for SpriteComponent. The rendering paths for sprites also optionally take in post-shaders as well.
+
+### New features
+
+* `Thickness` is now serializable.
+* Added support for text outlines in `Font`, `DrawingHandleScreen`, `Label`, `RichTextLabel`, and overlays.
+* `IPrototypeManager `now has a new method, `TryGetEntityPrototypesByCategory `. It returns a set of serialized entity prototypes that form part of the given entity category
+* Expose relative mouse mode for windows.
+
+### Bugfixes
+
+* Fix Box2.EnlargeAabb's top bounds check.
+* Fix the NaN check for Box2.
+* Fix MoveBuffer not dropping proxies that move across maps in some cases.
+* Fix some serv5 edge cases.
+* Fix RobustIntegrationTest not raising an OnConnecting event for dummy sessions.
+* Fix server max player count on Discord RPC.
+
+### Other
+
+* Added Box2Rotated's Origin to its Hashcode.
+
+### Internal
+
+* Speedup many hotpaths on Box2 and Box2Rotated.
+* Cleanup ContainerSystem internally.
+* Standardize Roslyn analyzers and speed up some of them.
+* Make ComponentTreeEntry faster with GetHashCode.
+* Mark Direction extensions as Pure.
+
+
+## 285.0.1
+
+### Bugfixes
+
+* Fix FreeBSD builds and align CI with packaged builds.
+* Fix sRGB framebuffer for linux in GLES compatibility mode.
+
+
+## 285.0.0
+
+### Breaking changes
+
+- XamlX has been upgraded, and has a new style class syntax.
+  The syntax for multiple style classes has changed from:
+  ```xaml
+  <Control.StyleClasses>
+    <system:String>Hello</system:String>
+    <system:String>World</system:String>
+  </Control.StyleClasses>
+  ```
+  to
+  ```xaml
+  <Control StyleClasses="Hello World" />
+  ```
+
+- Setting `StyleClasses` in XAML now overrides all of the style classes with the provided list, instead of concatenating the given style class with any existing style classes.
+  The stock Button controls have modified setters to provide compatibility with older stylesheets, but user-defined controls may need to watch out for this.
+
+### New features
+
+* Add chunk-based entity support to PVS. The API is accessed via ChunkEntitySystem. This can be used instead of manually handling streaming chunk-based data.
+* Allow passing a reason to the shutdown command.
+* Exposed CVar for AL's doppler factor.
+
+### Bugfixes
+
+* Fix last state passed in for EnsureClientBui on UI system.
+
+
+## 284.0.0
+
+### New features
+
+* Serializers can now take [Dependency] fields.
+* Added a SplitCenterChangingEventArgs to SplitContainer for when it's being moved around.
+* Added a LightLevelSystem to measure how lit-up entities are.
+
+### Bugfixes
+
+* Fix PredictedQueueDel not rolling back properly on the client.
+* Fix sprites jittering on grids due to matrix imprecision.
+
+### Other
+
+* EntityManager.IsDefault now fast-paths with direct datafield equality methods
+* Updated Lidgren to f7ecb5aa384013d920f7925340cc4608ed156e83
+
+### Internal
+
+* Added profiling zones to the physics update, splitting it into broadphase, collision, solver (island build/solve) and per-controller pre/post-solve phases.
+* Added profiling zones splitting entity rendering into sprite gathering and drawing.
+* Cache component net IDs and component changes in ClientGameStateManager.
+* Optimise entities being detached + re-inserted during PVS.
+* Moved the release build to the end of the content test action so tests are still run in debug.
+
+
+## 283.1.0
+
+### New features
+
+* The `Color` API now includes a `bool TryFromHex(ReadOnlySpan<char> hexColor, out Color color)` signature for returning a `bool` and `out Color` instead of a `Color?`.
+
+### Other
+
+* The `Color` API is now better documented.
+
+
+## 283.0.0
+
+### Breaking changes
+
+* The CompNetworkGenerator now .Clears and .Adds for collections where possible on the client.
+* Defer UI state application until the Update loop.
+* Expose the file name for selected file in dialog.
+* Removed unused GridEventHandler.
+
+### New features
+
+* Added a NetMessage.EstimateBufferSize() to provide an estimate of the initialCapacity required for NetMessages. This will make NetMessage take an existing adequately sized pooled buffer for your message. This is opt-in and will default to the old 4-byte size if not specified.
+* Add AudioParams.AddVariation.
+* Made AudioAuxiliaryComponent public.
+* Added API for OwnedTexture to load a texture without caching it.
+* Make TableContainer virtual and public.
+* Try to make connection failure message more useful by not defaulting to the first message (on IPV4 or IPV6).
+* Add methods for generating Color palettes.
+* Expose FovRenderTarget for the viewport.
+* Add TryComp(EntityUid, Type, IComponent?) proxy methods to EntitySystem.
+
+### Bugfixes
+
+* Static + StaticSundries will now also be considered for grid-traversal when a grid moves over these entities.
+* Fix field deltas not supporting 1-field states.
+* Fix interface cast in serialization generator.
+* Dispose PVS session states on disconnect.
+* Fix BaseWindow jittering on resize.
+
+### Internal
+
+* Improve clean and incremental build times around serialization generators.
+* Cleanup engine warnings around transform handling.
+* Made several internal performance improvements on debug and release.
+
+
+## 282.0.0
+
+### Breaking changes
+
+* Serv5 has been merged, re-doing the internals of DataDefinition serialization.
+  * It can now write into readonly fields.
+  * DataFields defined on objects that don't have DataDefinitions will cause errors in the analyzer and require the attribute.
+  * Value types will now be copied directly where possible rather than round-tripping through TryCustomCopy if no custom serializer is specified.
+  * It no longer uses as many expression trees so more tests should be able to run concurrently
+
+
+## 281.0.0
+
+### Breaking changes
+
+* Updated Lidgren.Network to `04678d057cc503f14f49801a725e61cfe27790a0` with additional fixes around MTU handling, NAT handling, and malformed packets.
+
+### New features
+
+* Exposed new Lidgren properties/CVARs for the above-mentioned fixes and previous updates around rate-limit settings.
+
+### Bugfixes
+
+* Fixed `EntitySystemSubscriptionsGenerator` not targeting server-side `SubscribeLocalEvent`/`SubscribeNetworkEvent` attributes.
+
+
+## 280.0.1
+
+### Bugfixes
+
+* Fix DynamicTree.Clear not removing node references.
+* Reverted validation for `UiBox2i` `ctor`s as it was causing regressions in debug UIs.
+* Fix command completions not being ordered. The list will still populate by any commands that contain the supplied arg.
+* Lidgren rate-limit settings were tweaked to make it less likely that players will unintentionally trigger it
+
+### Other
+
+* `EyeComponent.DrawLight` is now serialized.
+
+
+## 280.0.0
+
+### Breaking changes
+
+* Validate UIBox2i inputs
+* IMapManager has been completely nuked from the codebase. Almost all of its content-facing functionality was ported to `SharedMapSystem` in https://github.com/space-wizards/RobustToolbox/pull/6579 beforehand.
+
+### New features
+
+* Lidgren now rate-limits logging. You can control this via the `net.lidgren_log_rate_...` CVars.
+
+### Bugfixes
+
+* Fixed Lidgren.ChatClient/ChatServer not building properly.
+* Fixed multiple sources of memory exhaustion/DOS attack surfaces in Lidgren.
+
+
+## 279.0.1
+
+### Bugfixes
+
+* Fix SubscribeLocalEvent name and added `MeansImplicitUse` attribute to the sourcegenned eventbus methods.
+
+
+## 279.0.0
+
+### Breaking changes
+
+* Validate Box2i inputs to ensure no negative-sized boxes.
+* Removed QuadTree due to lack of maintenance, test coverage, and usage.
+* Partivally reverted the additional mouse cursors on button hovers.
+* Changed SpawnAtPosition EntityCoordinates overload to use the attached entity's rotation, and also added a rotation override argument.
+* Reduced the default ReallyBeIdle tick count from 25 to 5.
+
+### New features
+
+* Added DictionaryEquals helper method to compare elements to determine if 2 dictionaries are identical.
+* Tracy integration is now supported for profiling.
+* SubscribeLocalEvent and SubscribeNetworkEvent can now be replaced with the similarly named attributes on methods.
+* Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
+* Added a DictionaryEquals extension method to check equality between two dictionaries.
+* Added support for uploading .ftl files. Format is: /<your-uploaded-folder>/<language-code>.ftl - Example: /TestUpload/en-US.ftl , you can have multiple files, so long they are on different subfolders, they will all be loaded.
+
+### Bugfixes
+
+* Fix IsHardCollidable mask check.
+* Fix Robust.Benchmarks not compiling in some instances.
+* Fix ApplyLinearImpulse not correctly using world-space.
+* Fix OnClientRequestFull throwing an error when logging deleted entities.
+
+### Internal
+
+* Unnecessary prototypemanager dependencies were removed from engine systems.
+* Added a 30m timeout to engine test workflows.
+* Cleaned up ContainerSystems and PlayerManagers code-files.
+
+
+## 278.0.0
+
+### Breaking changes
+
+* Remove the duplicate serialization copy of components kept on ComponentRegistryEntry; now it only stores the deserialized component. To get the raw MappingDataNode for EntityPrototypes use PrototypeManager. This is expected to significantly reduce memory usage.
+* Obsolete LocalRotation in favor of the system method. The angle is now also normalized to 2PI and no longer grows indefinitely.
+* Obsoleted IMapManager methods in lieu of SharedMapSystem.
+
+### New features
+
+* Add a `OnlyRotation` property to MoveEvent where the EntityCoordinates remain the same.
+* ValueList now implements IList and not just IEnumerable.
+* Add a BoundUserInterfaceMessageReceivedEvent that will be raised whenever a BoundUserInterfaceMessage is received regardless of validation.
+* Added `IsHardCollidable` to `SharedPhysicsSystem`.
+* Added `GetFilledTileCount` to `SharedMapSystem`.
+* Changed the cursors on interactive controls.
+* Added new `StyleProperty` `track` to `ScrollBar` that takes a `StyleBox` and displays it as a backing track for the whole height of the `ScrollBar`.
+* Scroll Lock is now a bindable key.
+* The obsoleted TryIndex methods on PrototypeManager have now been removed.
+* Add batched Box2 / Box2Rotated drawing methods to Clyde WorldHandle.
+* Completion filter now works by Contains instead of StartsWith
+* Add SwitchAudioDevice API to AudioManager.
+* Added a PhysicsBodyStatusChangedEvent (self-descriptive).
+* Allow enumeration on EntityQuery.
+
+### Bugfixes
+
+* Fix ValueList TryPop not clearing element references.
+* Fix ValueList Peek always throwing by referencing the wrong index.
+* Windows will stay at relative position not absolute pixel position on window resize.
+* Fixed override properties in `WrapContainer` not actually overriding the Style Properties.
+* Fixed `BoxContainer`'s `SeparationOverride` not overriding the Style Properties.
+* Fixed `SeparationOverride` not invalidating measure.
+* Fixed swapped parameters in `MapManager`'s `FindGridsIntersecting` methods.
+* Fix DataRecord serialization.
+
+### Other
+
+* Optimise Direction and DirectionFlag methods.
+* Added Pure attributes to the `EntityLookup` bounds methods.
+* Improved performance of collision filter test.
+* Removed an outdated xmldoc comment regarding dependency injection.
+* Audio resources now use `AsSpan` when checking signatures.
+
+### Internal
+
+* Reduce TryParseEnum string allocations.
+* Reduce TryRelativeTo string allocations.
+* Reduce OpenGL logging string allocations on debug for the client.
+* Optimise sprite sorting slightly.
+* Simplify and optimise Box2.Contains(Vector2)
+* Optimise ComponentRegistry deserialization slightly.
+* Optimise Box2Rotated.TransformBox slightly.
+* Added several test helpers to avoid boilerplate in integration tests around client connection / disconnection.
+* Simplifed AccessAnalyzer check to speed it up.
+
+## 277.2.1
+
+### Bugfixes
+
+* Fixed a bug in Lidgren.Network HandleReleasedFragment that could cause out of memory errors.
+
+
+## 277.2.0
+
+### New features
+
+* Local and guest trust scores are now assigned via the `auth.localtrust` and `auth.guesttrust` CVars.
+
+### Bugfixes
+
+* Fixed exceptions related to WebSocket transfer system.
+
+
+## 277.1.0
+
+### New features
+
+* Console commands can now be "hidden" by prefixing them with `_`.
+* Add `ESCAPE()` and `ESCAPE-PARAM()` localization functions, for escaping text for markup formatting.
+* The `[cmdlink /]` tag can now have a tooltip specified with the optional "title" attribute.
+* Added `CommandParsing.EscapeCommand()` for *formatting* command strings easily.
+* Added `IUserInterfaceManager.GetRootForMouse()`.
+* Added `Popup.OpenAtCursor()`.
+* Added `FormattedStringBuilder` for safely constructing markup with code.
+* Added `VBox` and `HBox` convenience types for more concisely construct `BoxContainer`s.
+* Added `IsLocal` to `NetUserData`.
+* Add `SharedMapSystem.GetFilledTileCount()`
+* Add a `track` style property for scroll bars.
+* Added `ScrollLock` key.
+
+### Bugfixes
+
+* Fixes override properties in `WrapContainer` not being respected properly.
+* Fix `BoxContainer.SeparationOverride` not being respected properly and not invalidating layout.
+* Fixed swapped arguments being passed through in various `FindGridsIntersecting` overloads.
+* Fixed a doc comment in `LocalizationManager`.
+
+### Other
+
+* Add Pure attributes to the EntityLookup bounds methods
+* Bump `Robust.Natives` to `0.2.5`.
+* Minor performance improvement in `IsHardCollidable()`.
+* Remove an outdated paragraph from `[DependencyAttribute]` documentation related to `readonly` fields.
+* More stock controls use alternative cursor shapes where appropriate.
+* Minor performance improvement to audio loading.
+
+### Internal
+
+* Added `.lscache` to `.gitignore`.
+
+
+## 277.0.0
+
+### New features
+
+* Statics on interfaces, and other cases of `static abstract` methods and properties, are now allowed by the sandbox.
+* `INumber<T>` and all associated types in `System.Numerics` are now allowed by the sandbox.
+* `BigInteger` is now allowed by the sandbox.
+* `ISpanFormattable` and `IUtf8SpanFormattable` are now allowed by the sandbox.
+* `IParsable`, `ISpanParsable`, and `IUtf8SpanParsable` are now allowed by the sandbox.
+* Added `MarkupNode.IsPlainText` helper property.
+* Added an analyzer to detect and warn about `[Dependency]` fields with nullable types. These have never done anything special and are programming error.
+* Added a `[Dependency]` source generator. This should reduce runtime codegen overhead amount and reduce reflection use.
+  * Existing code using dependency fields should be updated to be `partial` and not use `readonly`. Analyzers and code fixers exist for this. It is not yet an error, but will become one in the future.
+* `IEntityManager` has a new family of 1-4 component methods for working with *singleton entities*, entities which only
+  one instance of exists at a time for state management. Consult `IEntityManager.Single.cs` and the documentation for
+  details.
+* `INetManager` receive bandwidth stats are now tracked on release builds.
+* OpenAL is now configured for HRTF support. This should make positional audio sound better on headphones.
+* More fields on `AudioComponent` are now accessible to be modified by user code, in case you replace the built-in occlusion code or similar.
+* Added `IDependencyCollection.Create()` and `.CreateFrom()`.
+* Added a system for explicitly unloading `IResourceCache` resources. Use with care!
+* `System.Numerics.Tensors.TensorPrimitives` is now available to sandbox.
+* A new analyzer prevents `[Virtual]` from being used on `static`, `sealed` or `abstract` types.
+
+### Bugfixes
+
+* `ComponentNetworkGenerator` received some internal refactoring, and should now work on `internal` types.
+* Matrix and shader state are now automatically cleaned up after each overlay draw.
+* Fixed `ScrollContainer` not arranging child elements correctly, causing buggy behavior with `RichTextLabel` and other controls.
+* Fix Happy Eyeballs HTTP connections being left alive in some cases.
+* Fixed some doc comments.
+* Fix VRAM leak related to grid chunk edges.
+
+### Other
+
+* Game server now informs the auth server of its address when confirming client connections.
+* CEF for `Robust.Client.WebView` has been updated to version 147.
+
+### Internal
+
+* More warning fixes.
+
+
+## 276.0.0
+
+### Breaking changes
+
+* Obsolete methods in `MapGridComponent` have been fully removed. Use the corresponding `MapSystem` API methods instead.
+
+### Bugfixes
+
+* Fixed `EntitySystem` dependencies throwing an exception when opening a BUI.
+* Fixed some cross-grid collisions being ignored.
+* Tagged more auto-generated code with `[RobustAutoGenerated]`.
+* `SharedTransformSystem.SetCoordinates` no longer causes a grid traversal check, which was causing unexpected parenting.
+* Fixed `ComponentNetworkGenerator` generating invalid code for nullable `IRobustCloneable` field deltas.
+* `TryGetEntitySystem` and `GetEntitySystemOrNull` no longer throw an exception if `EntitySystemManager` is uninitialized.
+* Fixed several more sources of netencryption exceptions.
+
+### Other
+
+* `TestPair`s with multiple failed assertions now report all failures instead of saying to consult the server logs.
 
 
 ## 275.2.0

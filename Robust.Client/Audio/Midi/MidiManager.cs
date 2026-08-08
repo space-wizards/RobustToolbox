@@ -31,15 +31,15 @@ internal sealed partial class MidiManager : IMidiManager
 {
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
 
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IResourceManager _resourceManager = default!;
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IConfigurationManager _cfgMan = default!;
-    [Dependency] private readonly IAudioInternal _audio = default!;
-    [Dependency] private readonly ITaskManager _taskManager = default!;
-    [Dependency] private readonly ILogManager _logger = default!;
-    [Dependency] private readonly IParallelManager _parallel = default!;
-    [Dependency] private readonly IRuntimeLog _runtime = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IResourceManager _resourceManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IConfigurationManager _cfgMan = default!;
+    [Dependency] private IAudioInternal _audio = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
+    [Dependency] private ILogManager _logger = default!;
+    [Dependency] private IParallelManager _parallel = default!;
+    [Dependency] private IRuntimeLog _runtime = default!;
 
     private AudioSystem _audioSys = default!;
     private SharedPhysicsSystem _physics = default!;

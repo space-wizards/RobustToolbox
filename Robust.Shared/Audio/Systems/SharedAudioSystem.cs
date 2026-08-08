@@ -29,13 +29,12 @@ namespace Robust.Shared.Audio.Systems;
 /// </remarks>
 public abstract partial class SharedAudioSystem : EntitySystem
 {
-    [Dependency] protected readonly IConfigurationManager CfgManager = default!;
-    [Dependency] protected readonly IGameTiming Timing = default!;
-    [Dependency] private   readonly INetManager _netManager = default!;
-    [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
-    [Dependency] protected readonly IRobustRandom RandMan = default!;
-    [Dependency] protected readonly MetaDataSystem MetadataSys = default!;
-    [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
+    [Dependency] protected IConfigurationManager CfgManager = default!;
+    [Dependency] protected IGameTiming Timing = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] protected IRobustRandom RandMan = default!;
+    [Dependency] protected MetaDataSystem MetadataSys = default!;
+    [Dependency] protected SharedTransformSystem XformSystem = default!;
 
     public const float AudioDespawnBuffer = 1f;
 
@@ -59,6 +58,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         Subs.CVar(CfgManager, CVars.AudioZOffset, SetZOffset);
         SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
         SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
+        SubscribeLocalEvent<AudioComponent, TimedDespawnEvent>(OnTimedDespawn);
     }
 
     /// <summary>
@@ -263,6 +263,16 @@ public abstract partial class SharedAudioSystem : EntitySystem
         {
             args.Cancelled = true;
         }
+    }
+
+    private void OnTimedDespawn(Entity<AudioComponent> ent, ref TimedDespawnEvent args)
+    {
+        var parent = Transform(ent).ParentUid;
+        if (!Exists(parent))
+            return;
+
+        var ev = new AttachedAudioDespawnedEvent();
+        RaiseLocalEvent(parent, ref ev);
     }
 
     /// <summary>

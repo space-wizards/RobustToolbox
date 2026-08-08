@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Robust.Shared.Collections;
@@ -98,6 +99,100 @@ public static class RandomExtensions
         }
 
         throw new UnreachableException("This should be unreachable!");
+    }
+
+    /// <summary>
+    /// Picks a random element based on weights provided in the float-based dictionary and returns it.
+    /// </summary>
+    /// <param name="random">The IRobustRandom instance, acquired via the extension.</param>
+    /// <param name="weights">The dictionary of items to pick and their weights.</param>
+    /// <typeparam name="T">The generic type that the dictionary would contain.</typeparam>
+    /// <returns>The picked type.</returns>
+    /// <exception cref="InvalidOperationException">The error when no pick was found.</exception>
+    public static T Pick<T>(this IRobustRandom random, Dictionary<T, float> weights)
+        where T: notnull
+    {
+        var sum = weights.Values.Sum();
+        var accumulated = 0f;
+        var rand = random.NextFloat() * sum;
+
+        foreach (var (key, weight) in weights)
+        {
+            accumulated += weight;
+
+            if (accumulated >= rand)
+            {
+                return key;
+            }
+        }
+
+        throw new InvalidOperationException("Invalid weighted pick");
+    }
+
+    /// <summary>
+    /// Picks a random element based on weights provided in the float-based dictionary,
+    /// removes it from the possible weights, and then returns it.
+    /// </summary>
+    /// <param name="random">The IRobustRandom instance, acquired via the extension.</param>
+    /// <param name="weights">The dictionary of items to pick and their weights.</param>
+    /// <typeparam name="T">The generic type that the dictionary would contain.</typeparam>
+    /// <returns>The picked element.</returns>
+    /// <exception cref="InvalidOperationException">The error when no possible element was found.</exception>
+    public static T PickAndTake<T>(this IRobustRandom random, Dictionary<T, float> weights)
+        where T : notnull
+    {
+        var pick = Pick(random, weights);
+        weights.Remove(pick);
+        return pick;
+    }
+
+    /// <summary>
+    /// Picks a random element based on weights provided in the float-based dictionary,
+    /// removes it from the possible weights, and then returns it.
+    /// </summary>
+    /// <param name="random">The IRobustRandom instance, acquired via the extension.</param>
+    /// <param name="weights">The dictionary of items to pick and their weights.</param>
+    /// <param name="pick">The element that was found, if any.</param>
+    /// <typeparam name="T">The generic type that the dictionary would contain.</typeparam>
+    /// <returns>Whether a picked element was found.</returns>
+    public static bool TryPickAndTake<T>(this IRobustRandom random, Dictionary<T, float> weights, [NotNullWhen(true)] out T? pick)
+        where T : notnull
+    {
+        if (weights.Count == 0)
+        {
+            pick = default;
+            return false;
+        }
+        pick = PickAndTake(random, weights);
+        return true;
+    }
+
+    /// <summary>
+    /// Picks a random element based on weights provided in the float-based dictionary and then returns it.
+    /// </summary>
+    /// <param name="weights">The dictionary of items to pick and their weights.</param>
+    /// <param name="random">The IRobustRandom instance, acquired via the extension.</param>
+    /// <typeparam name="T">The generic type that the dictionary would contain.</typeparam>
+    /// <returns>The picked element.</returns>
+    /// <exception cref="InvalidOperationException">The error when no possible element was found.</exception>
+    public static T Pick<T>(Dictionary<T, float> weights, IRobustRandom random)
+        where T : notnull
+    {
+        var sum = weights.Values.Sum();
+        var accumulated = 0f;
+        var rand = random.NextFloat() * sum;
+
+        foreach (var (key, weight) in weights)
+        {
+            accumulated += weight;
+
+            if (accumulated >= rand)
+            {
+                return key;
+            }
+        }
+
+        throw new InvalidOperationException("Invalid weighted pick");
     }
 
     /// <summary>
@@ -287,5 +382,31 @@ public static class RandomExtensions
         }
 
         return result;
+    }
+
+    /// <inheritdoc cref="HashCodeCombine(IReadOnlyCollection{int})"/>
+    public static int HashCodeCombine(params int[] values)
+    {
+        return HashCodeCombine((IReadOnlyCollection<int>)values);
+    }
+
+    /// <summary>
+    /// A very simple, deterministic djb2 hash function for generating a combined seed for the random number generator.
+    /// We can't use HashCode.Combine because that is initialized with a random value, creating different results on the server and client.
+    /// </summary>
+    /// <example>
+    /// Combine the current game tick with a NetEntity Id in order to not get the same random result if this is called multiple times in the same tick.
+    /// <code>
+    /// var seed = RandomExtensions.HashCodeCombine((int)_timing.CurTick.Value, GetNetEntity(ent).Id);
+    /// </code>
+    /// </example>
+    public static int HashCodeCombine(IReadOnlyCollection<int> values)
+    {
+        int hash = 5381;
+        foreach (var value in values)
+        {
+            hash = (hash << 5) + hash + value;
+        }
+        return hash;
     }
 }

@@ -50,7 +50,7 @@ public sealed class ClientOccluderSystemTests : RobustUnitTest
         Assert.That(light.EmbeddedOccluderCacheValid, Is.True);
         Assert.That(light.EmbeddedOccluderCachePosition, Is.EqualTo(Vector2.Zero));
 
-        // Moving the light changes the cache key, forcing the point query to recompute.
+        // Moving the light changes the cache key, forcing the point query to update the cache.
         var outsideOccluder = new Vector2(2f, 0f);
         transform.SetCoordinates(lightUid, new EntityCoordinates(grid, outsideOccluder));
 
@@ -58,7 +58,7 @@ public sealed class ClientOccluderSystemTests : RobustUnitTest
         Assert.That(light.EmbeddedOccluderCachePosition, Is.EqualTo(outsideOccluder));
         Assert.That(light.EmbeddedOccluderCacheValue, Is.False);
 
-        // Prime the cache with the light embedded again, then move the occluder out from under it.
+        // Setup the cache with the light embedded again, then move the occluder out from under it.
         transform.SetCoordinates(lightUid, new EntityCoordinates(grid, Vector2.Zero));
         Assert.That(occluders.IsPointLightEmbeddedInOccluder(mapId, lightUid, light, Vector2.Zero), Is.True);
 

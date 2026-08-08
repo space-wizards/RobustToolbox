@@ -76,8 +76,6 @@ namespace Robust.UnitTesting.Server
         /// Adds a new map directly to the map manager.
         /// </summary>
         (EntityUid Uid, MapId MapId) CreateMap();
-        EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates);
-        EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates);
     }
 
     /// <summary>
@@ -90,19 +88,19 @@ namespace Robust.UnitTesting.Server
             return simulation.Resolve<IEntitySystemManager>().GetEntitySystem<T>();
         }
 
-        public static bool HasComp<T>(this ISimulation simulation, EntityUid entity) where T : IComponent
+        public static bool HasComp<T>(this ISimulation simulation, EntityUid entity, IEntityManager entMan) where T : IComponent
         {
-            return simulation.Resolve<IEntityManager>().HasComponent<T>(entity);
+            return entMan.HasComponent<T>(entity);
         }
 
-        public static T Comp<T>(this ISimulation simulation, EntityUid entity) where T : IComponent
+        public static T Comp<T>(this ISimulation simulation, EntityUid entity, IEntityManager entMan) where T : IComponent
         {
-            return simulation.Resolve<IEntityManager>().GetComponent<T>(entity);
+            return entMan.GetComponent<T>(entity);
         }
 
-        public static TransformComponent Transform(this ISimulation simulation, EntityUid entity)
+        public static TransformComponent Transform(this ISimulation simulation, EntityUid entity, IEntityManager entMan)
         {
-            return simulation.Comp<TransformComponent>(entity);
+            return simulation.Comp<TransformComponent>(entity, entMan);
         }
     }
 
@@ -132,18 +130,6 @@ namespace Robust.UnitTesting.Server
         {
             var uid = Collection.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var mapId);
             return (uid, mapId);
-        }
-
-        public EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates)
-        {
-            var entMan = Collection.Resolve<IEntityManager>();
-            return entMan.SpawnEntity(protoId, coordinates);
-        }
-
-        public EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates)
-        {
-            var entMan = Collection.Resolve<IEntityManager>();
-            return entMan.SpawnEntity(protoId, coordinates);
         }
 
         private RobustServerSimulation() { }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Threading;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -10,6 +11,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameStates;
@@ -34,6 +36,7 @@ public abstract partial class ChunkEntitySystem : EntitySystem
     [Dependency] private EntityQuery<TransformComponent> _xformQuery;
     [Dependency] private EntityQuery<ChunkContainerComponent> _containerQuery;
     [Dependency] private MetaDataSystem _metaData = default!;
+    [Dependency] private IParallelManager _parallel = default!;
 
     /// <summary>
     /// Temporary list for serialization.
@@ -122,6 +125,26 @@ public abstract partial class ChunkEntitySystem : EntitySystem
     {
         _containerQuery.TryGetComponent(root, out var container);
         return new ChunkEntityRootEnumerator(this, container);
+    }
+
+    /// <summary>
+    /// Returns all known, attached chunk entities for the specified root.
+    /// </summary>
+    public void ProcessChunksParallelCardinal<T>(EntityUid root, T[] jobs) where T : IParallelRangeRobustJob, IChunkJob, new()
+    {
+        if (!_containerQuery.TryGetComponent(root, out var container))
+            return;
+
+        var handles = new WaitHandle[4];
+        for (var i = 0; i < container.Cardinals.Length; i++)
+        {
+            var chunks = container.Cardinals[i];
+            var job = jobs[i];
+            job.Chunks = chunks;
+            handles[i] = _parallel.Process(job, chunks.Count);
+        }
+
+        WaitHandle.WaitAll(handles);
     }
 
     /// <summary>
@@ -386,6 +409,14 @@ public abstract partial class ChunkEntitySystem : EntitySystem
         container.Chunks[comp.Chunk] = (uid, comp);
         container.ChunkEntities.Add(uid);
 
+        var cardinals = container.Cardinals[GetCardinalIndex(comp.Chunk)];
+        comp.CardinalIndex = cardinals.Count;
+        cardinals.Add((uid, comp));
+
+        var diagonals = container.Diagonals[GetDiagonalIndex(comp.Chunk)];
+        comp.DiagonalIndex = diagonals.Count;
+        diagonals.Add((uid, comp));
+
         SyncChunkToRoot((uid, comp, meta), comp.Root);
 
         var ev = new ChunkEntityAddedEvent(uid, key.Root, key.Chunk);
@@ -412,6 +443,12 @@ public abstract partial class ChunkEntitySystem : EntitySystem
 
         container?.ChunkEntities.Remove(uid);
 
+        if (comp.CardinalIndex != -1)
+            container?.Cardinals[GetCardinalIndex(comp.Chunk)].RemoveSwap(comp.CardinalIndex);
+
+        if (comp.DiagonalIndex != -1)
+            container?.Diagonals[GetDiagonalIndex(comp.Chunk)].RemoveSwap(comp.DiagonalIndex);
+
         var ev = new ChunkEntityRemovedEvent(uid, comp.Root, comp.Chunk);
         RaiseLocalEvent(ref ev);
 
@@ -426,6 +463,16 @@ public abstract partial class ChunkEntitySystem : EntitySystem
 
         _tempUids.Clear();
         _tempUids.AddRange(container.ChunkEntities);
+
+        foreach (var cardinal in container.Cardinals)
+        {
+            cardinal.Clear();
+        }
+
+        foreach (var diagonal in container.Diagonals)
+        {
+            diagonal.Clear();
+        }
 
         foreach (var uid in _tempUids)
         {
@@ -583,6 +630,73 @@ public abstract partial class ChunkEntitySystem : EntitySystem
             return false;
         }
     }
+
+    public struct ParallelChunkEntityRootEnumerator
+    {
+        private readonly ChunkEntitySystem _system;
+        private int _cardinalIndex = 0;
+        private readonly List<Entity<ChunkEntityComponent>>[] _cardinals;
+        private List<Entity<ChunkEntityComponent>>.Enumerator _enumerator;
+        private readonly bool _valid;
+        private Entity<ChunkEntityComponent> _current;
+
+        internal ParallelChunkEntityRootEnumerator(ChunkEntitySystem system, ChunkContainerComponent? container)
+        {
+            _system = system;
+            _valid = container != null;
+            _cardinals = container?.Cardinals!;
+            _enumerator = _valid ? _cardinals[0].GetEnumerator() : default;
+            _current = default;
+        }
+
+        public readonly ParallelChunkEntityRootEnumerator GetEnumerator() => this;
+
+        public readonly Entity<ChunkEntityComponent> Current => _current;
+
+        public bool MoveNext()
+        {
+            loop:
+            while (_valid && _enumerator.MoveNext())
+            {
+                var chunk = _enumerator.Current;
+                if (_system.IsAvailable(chunk))
+                {
+                    _current = (chunk.Owner, chunk.Comp);
+                    return true;
+                }
+            }
+
+            if (++_cardinalIndex < _cardinals.Length)
+            {
+                _enumerator = _cardinals[_cardinalIndex].GetEnumerator();
+                goto loop;
+            }
+
+            return false;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out Entity<ChunkEntityComponent>? entity)
+        {
+            if (MoveNext())
+            {
+                entity = _current;
+                return true;
+            }
+
+            entity = null;
+            return false;
+        }
+    }
+
+    private int GetCardinalIndex(Vector2i vec)
+    {
+        return vec.X % 2 + vec.Y % 2 * 2;
+    }
+
+    private int GetDiagonalIndex(Vector2i vec)
+    {
+        return vec.X % 3 + vec.Y % 3 * 3;
+    }
 }
 
 /// <summary>
@@ -605,4 +719,9 @@ public record struct ChunkEntityRemovedEvent(EntityUid Entity, EntityUid Root, V
     public readonly EntityUid Entity = Entity;
     public readonly EntityUid Root = Root;
     public readonly Vector2i Chunk = Chunk;
+}
+
+public interface IChunkJob
+{
+    List<Entity<ChunkEntityComponent>> Chunks { set; }
 }

@@ -84,6 +84,7 @@ internal sealed class ToolshedCommandImplementor
             ctx.Error.Contextualize(ctx.Input, (ctx.Bundle.NameStart, ctx.Bundle.NameEnd));
             return false;
         }
+        ctx.Bundle.CommandMethod = new CurrentCommandMethod(method.Value.Info, method.Value.Args);
 
         var argsStart = ctx.Index;
         if (!TryParseArguments(ctx, method.Value))
@@ -155,6 +156,7 @@ internal sealed class ToolshedCommandImplementor
     {
         DebugTools.AssertNull(ctx.Error);
         DebugTools.AssertNull(ctx.Completions);
+        ctx.CurrentArgument = arg;
         var start = ctx.Index;
         var save = ctx.Save();
         ctx.ConsumeWhitespace();
@@ -764,6 +766,8 @@ public readonly record struct CommandArgument(
     bool IsOptional,
     object? DefaultValue,
     bool IsParamsCollection);
+
+public readonly record struct CurrentCommandMethod(MethodInfo Info, CommandArgument[] Args);
 
 public sealed class ArgumentParseError(Type type, Type parser) : ConError
 {

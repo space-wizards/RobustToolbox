@@ -323,6 +323,11 @@ public struct CommandArgumentBundle
     /// The index where the (sub)command's name ends. Used for contextualising errors.
     /// </summary>
     public int NameEnd;
+
+    /// <summary>
+    /// The resolved method for the command currently attempting to be parsed, if applicable.
+    /// </summary>
+    public CurrentCommandMethod? CommandMethod;
 }
 
 internal readonly record struct CommandDiscriminator(Type? PipedType, Type[]? TypeArguments)

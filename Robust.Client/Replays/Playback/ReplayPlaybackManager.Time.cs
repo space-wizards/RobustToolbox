@@ -29,7 +29,7 @@ internal sealed partial class ReplayPlaybackManager
         }
 
         Playing &= !pausePlayback;
-        value = Math.Clamp(value, 0, Replay.States.Count - 1);
+        value = Math.Clamp(value, 0, Replay.Count - 1);
         if (value == Replay.CurrentIndex)
         {
             ScrubbingTarget = null;
@@ -115,7 +115,7 @@ internal sealed partial class ReplayPlaybackManager
             return 0;
 
         if (time >= Replay.ReplayTime[^1])
-            return Replay.States.Count - 1;
+            return Replay.Count - 1;
 
         var index = Array.BinarySearch(Replay.ReplayTime, time);
 

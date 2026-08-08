@@ -73,7 +73,7 @@ public partial class SharedPhysicsSystem
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
     {
-        if (args.FromTick > component.CreationTick && component.LastFieldUpdate >= args.FromTick)
+        if (component.LastUnclassifiedDirty <= args.FromTick)
         {
             var slowPath = false;
 
@@ -81,7 +81,7 @@ public partial class SharedPhysicsSystem
             {
                 var field = component.LastModifiedFields[i];
 
-                if (field < args.FromTick)
+                if (field <= args.FromTick)
                     continue;
 
                 slowPath = true;
@@ -91,7 +91,7 @@ public partial class SharedPhysicsSystem
             // We can do a smaller delta with no list index overhead.
             if (!slowPath)
             {
-                var angularDirty = component.LastModifiedFields[_angularVelocityIndex] >= args.FromTick;
+                var angularDirty = component.LastModifiedFields[_angularVelocityIndex] > args.FromTick;
 
                 if (angularDirty)
                 {

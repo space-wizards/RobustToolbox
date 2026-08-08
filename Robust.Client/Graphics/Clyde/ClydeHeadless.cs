@@ -522,6 +522,9 @@ namespace Robust.Client.Graphics.Clyde
             public IRenderTexture LightRenderTarget { get; } =
                 new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
 
+            public IRenderTexture FovRenderTarget { get; } =
+                new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
+
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
             public event Action<ClearCachedViewportResourcesEvent>? ClearCachedResources;
@@ -584,6 +587,11 @@ namespace Robust.Client.Graphics.Clyde
             public event Action<WindowRequestClosedEventArgs>? RequestClosed { add { } remove { } }
             public event Action<WindowDestroyedEventArgs>? Destroyed;
             public event Action<WindowResizedEventArgs>? Resized { add { } remove { } }
+
+            public void SetRelativeMouseMode(bool enabled)
+            {
+                // Nop.
+            }
 
             public void SetWindowProgress(WindowProgressState state, float value)
             {

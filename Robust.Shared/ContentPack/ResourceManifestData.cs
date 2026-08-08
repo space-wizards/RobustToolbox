@@ -1,11 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.ContentPack;
 
-internal sealed record ResourceManifestData(
+public sealed record ResourceManifestData(
     string[] Modules,
     string? AssemblyPrefix,
     string? DefaultWindowTitle,
@@ -13,32 +15,55 @@ internal sealed record ResourceManifestData(
     string? SplashLogo,
     bool? ShowLoadingBar,
     bool AutoConnect,
-    string[]? ClientAssemblies
+    string[]? ClientAssemblies,
+    Dictionary<string, string>? ModularResources
 )
 {
+    public const string DefaultManifestName = "manifest.yml";
+
     public static readonly ResourceManifestData Default =
-        new ResourceManifestData(Array.Empty<string>(), null, null, null, null, null, true, null);
+        new ResourceManifestData(Array.Empty<string>(), null, null, null, null, null, true, null, null);
 
     public static ResourceManifestData LoadResourceManifest(IResourceManager res)
     {
-        // Parses /manifest.yml for game-specific settings that cannot be exclusively set up by content code.
-        if (!res.TryContentFileRead("/manifest.yml", out var stream))
-            return ResourceManifestData.Default;
+        if (!res.TryContentFileRead(
+                string.IsNullOrEmpty(res.ManifestFileName)
+                ? new ResPath(DefaultManifestName).ToRootedPath().ToString()
+                : new ResPath(res.ManifestFileName).ToRootedPath().ToString(),
+                out var stream))
+            return Default;
 
-        var yamlStream = new YamlStream();
         using (stream)
         {
-            using var streamReader = new StreamReader(stream, EncodingHelpers.UTF8);
+            return Parse(stream);
+        }
+    }
+
+    public static ResourceManifestData LoadFromFile(string baseDir, ResPath resPath)
+    {
+        var safePath = PathHelpers.SafeGetResourcePath(baseDir, resPath);
+
+        if (!File.Exists(safePath))
+            return Default;
+
+        using var stream = File.OpenRead(safePath);
+        return Parse(stream);
+    }
+
+    private static ResourceManifestData Parse(Stream stream)
+    {
+        var yamlStream = new YamlStream();
+        using (var streamReader = new StreamReader(stream, Encoding.UTF8))
+        {
             yamlStream.Load(streamReader);
         }
 
         if (yamlStream.Documents.Count == 0)
-            return ResourceManifestData.Default;
+            return Default;
 
         if (yamlStream.Documents.Count != 1 || yamlStream.Documents[0].RootNode is not YamlMappingNode mapping)
         {
-            throw new InvalidOperationException(
-                "Expected a single YAML document with root mapping for /manifest.yml");
+            throw new InvalidOperationException($"Expected a single YAML document with root mapping for {DefaultManifestName}");
         }
 
         var modules = ReadStringArray(mapping, "modules") ?? Array.Empty<string>();
@@ -69,6 +94,8 @@ internal sealed record ResourceManifestData(
 
         var clientAssemblies = ReadStringArray(mapping, "clientAssemblies");
 
+        var modularResources = ReadResourceMods(mapping, "resources");
+
         return new ResourceManifestData(
             modules,
             assemblyPrefix,
@@ -77,22 +104,53 @@ internal sealed record ResourceManifestData(
             splashLogo,
             showBar,
             autoConnect,
-            clientAssemblies
+            clientAssemblies,
+            modularResources
         );
+    }
 
-        static string[]? ReadStringArray(YamlMappingNode mapping, string key)
+    static string[]? ReadStringArray(YamlMappingNode mapping, string key)
+    {
+        if (!mapping.TryGetNode(key, out var node))
+            return null;
+
+        if (node is not YamlSequenceNode sequence)
+            return null;
+
+        var array = new string[sequence.Children.Count];
+        for (var i = 0; i < array.Length; i++)
         {
-            if (!mapping.TryGetNode(key, out var node))
-                return null;
+            array[i] = sequence[i].AsString();
+        }
 
-            var sequence = (YamlSequenceNode)node;
-            var array = new string[sequence.Children.Count];
-            for (var i = 0; i < array.Length; i++)
+        return array;
+    }
+
+    static Dictionary<string, string>? ReadResourceMods(YamlMappingNode mapping, string key)
+    {
+        if (!mapping.TryGetNode(key, out var node))
+            return null;
+
+        if (node is not YamlMappingNode mapNode)
+            return null;
+
+        var dict = new Dictionary<string, string>();
+
+        foreach (var child in mapNode)
+        {
+            var moduleName = child.Key.AsString();
+            var diskPath = child.Value.AsString();
+
+            // Sanitize the path right away so it never escapes the root.
+            if (diskPath.Contains("\\..")
+                || diskPath.Contains("/..")
+                || diskPath.StartsWith(".."))
             {
-                array[i] = sequence[i].AsString();
+                throw new InvalidOperationException($"Manifest data specified incorrectly: This branch should never be reached. Path: {diskPath}");
             }
 
-            return array;
+            dict[moduleName] = diskPath;
         }
+        return dict;
     }
 }

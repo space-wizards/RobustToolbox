@@ -50,5 +50,10 @@ namespace Robust.Server
         ///     Whether to load config and user data.
         /// </summary>
         public bool LoadConfigAndUserData { get; init; } = true;
+
+        /// <summary>
+        ///     If specified, overrides the default manifest file that gets loaded.
+        /// </summary>
+        public string? ManifestOverride { get; init; }
     }
 }

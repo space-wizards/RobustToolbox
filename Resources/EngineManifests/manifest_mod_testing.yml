@@ -1,0 +1,3 @@
+# Manifest used by ModularResourceTest.cs
+resources:
+  EngineResourceTest: RobustToolbox/Robust.Shared.IntegrationTests/Resources/TestModResources

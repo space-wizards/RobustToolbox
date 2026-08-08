@@ -1,0 +1,5 @@
+# Manifest used by ModularResourceTest.cs
+# This is an example of a bad manifest with a path to an external folder.
+# It should get sanitized so that it always points to a folder inside the root directory.
+resources:
+  EngineResourceTest: ../../../RobustToolbox/Robust.Shared.IntegrationTests/Resources/TestModResources

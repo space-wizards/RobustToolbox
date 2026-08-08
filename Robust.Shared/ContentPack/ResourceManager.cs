@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Threading;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
@@ -41,7 +39,10 @@ namespace Robust.Shared.ContentPack
         public IWritableDirProvider UserData { get; private set; } = default!;
 
         /// <inheritdoc />
-        public virtual void Initialize(string? userData, bool hideRootDir)
+        public string ManifestFileName { get; private set; } = ResourceManifestData.DefaultManifestName;
+
+        /// <inheritdoc />
+        public virtual void Initialize(string? userData, bool hideRootDir, string? manifestOverride)
         {
             Sawmill = _logManager.GetSawmill("res");
 
@@ -53,6 +54,9 @@ namespace Robust.Shared.ContentPack
             {
                 UserData = new VirtualWritableDirProvider();
             }
+
+            if (manifestOverride != null)
+                ManifestFileName = manifestOverride;
 
             _config.OnValueChanged(CVars.ResStreamSeekMode, i => _streamSeekMode = (StreamSeekMode)i, true);
         }
@@ -337,9 +341,8 @@ namespace Robust.Shared.ContentPack
                 foreach (var filename in root.FindFiles(relative.Value))
                 {
                     var newPath = prefix / filename;
-                    if (!alreadyReturnedFiles.Contains(newPath))
+                    if (alreadyReturnedFiles.Add(newPath))
                     {
-                        alreadyReturnedFiles.Add(newPath);
                         yield return newPath;
                     }
                 }

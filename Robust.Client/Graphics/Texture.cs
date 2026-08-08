@@ -84,7 +84,7 @@ public abstract class Texture : IRsiStateLike
     /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
     /// <param name="loadParameters">
     ///     Parameters that influence the loading of textures.
-    ///     Defaults to <see cref="Robust.Client.Graphics.TextureLoadParameters.Default"/> if <c>null</c>.
+    ///     Defaults to <see cref="TextureLoadParameters.Default"/> if <c>null</c>.
     /// </param>
     /// <typeparam name="T">The type of pixels of the image. At the moment, images must be <see cref="Rgba32"/>.</typeparam>
     public static Texture LoadFromImage<T>(Image<T> image, string? name = null,
@@ -101,7 +101,7 @@ public abstract class Texture : IRsiStateLike
     /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
     /// <param name="loadParameters">
     ///     Parameters that influence the loading of textures.
-    ///     Defaults to <see cref="Robust.Client.Graphics.TextureLoadParameters.Default"/> if <c>null</c>.
+    ///     Defaults to <see cref="TextureLoadParameters.Default"/> if <c>null</c>.
     /// </param>
     public static Texture LoadFromPNGStream(Stream stream, string? name = null,
         TextureLoadParameters? loadParameters = null)

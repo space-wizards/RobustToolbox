@@ -1,0 +1,7 @@
+﻿- type: entity
+  id: ModularResourcesTestEntity
+  categories: [ HideSpawnMenu, Debug ]
+  components:
+  - type: Sprite
+    sprite: /EngineResourceTest/Textures/test_error.rsi
+    state: error

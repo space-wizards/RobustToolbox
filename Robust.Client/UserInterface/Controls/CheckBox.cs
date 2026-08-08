@@ -1,4 +1,5 @@
-﻿using Robust.Shared.ViewVariables;
+﻿using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
@@ -44,7 +45,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private bool _leftAlign = true;
-        
+
         public CheckBox()
         {
             ToggleMode = true;
@@ -89,6 +90,8 @@ namespace Robust.Client.UserInterface.Controls
                 else
                     TextureRect.RemoveStyleClass(StyleClassCheckBoxChecked);
             }
+
+            Modulate = Disabled ? Color.LightGray : Color.White;
         }
 
         /// <summary>

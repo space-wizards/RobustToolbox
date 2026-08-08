@@ -158,6 +158,7 @@ namespace Robust.UnitTesting.Client.UserInterface
                         Property = nameof(TestControl.Foo),
                         KeyFrames =
                         {
+                            new AnimationTrackProperty.KeyFrame(0f, 0f), // This is the common way to specify the first keyframe.
                             new AnimationTrackProperty.KeyFrame(1f, 1f),
                             new AnimationTrackProperty.KeyFrame(3f, 2f)
                         }
@@ -168,7 +169,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             control.PlayAnimation(animation, "foo");
             control.DoFrameUpdateRecursive(new FrameEventArgs(0.5f));
 
-            Assert.That(control.Foo, new ApproxEqualityConstraint(0f)); // Should still be 0.
+            Assert.That(control.Foo, new ApproxEqualityConstraint(0.5f)); // Should be 0.5 as half a second elapsed and our 1s keyframe is at 1.
 
             control.DoFrameUpdateRecursive(new FrameEventArgs(0.5001f));
 

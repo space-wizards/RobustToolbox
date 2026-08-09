@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -282,8 +283,18 @@ namespace Robust.Shared.GameObjects
 
             var order = TopologicalSort.Sort(allNodes).ToArray();
 #pragma warning disable CS0618 // Type or member is obsolete
-            var frameUpdate = order.Where(p => p.NeedsFrameUpdate() ?? NeedsFrameUpdate(p.GetType()));
-            var update = order.Where(p => p.NeedsUpdate() ?? NeedsUpdate(p.GetType()));
+            var frameUpdate = order.Where(p =>
+            {
+                // Uncomment below to test, but do not commit it!
+                // Debug.Assert(p.NeedsFrameUpdate() == NeedsFrameUpdate(p.GetType()));
+                return p.NeedsFrameUpdate() ?? NeedsFrameUpdate(p.GetType());
+            });
+            var update = order.Where(p =>
+            {
+                // Uncomment below to test, but do not commit it!
+                // Debug.Assert(p.NeedsUpdate() == NeedsUpdate(p.GetType()));
+                return p.NeedsUpdate() ?? NeedsUpdate(p.GetType());
+            });
 #pragma warning restore CS0618 // Type or member is obsolete
 
             return (frameUpdate, update);

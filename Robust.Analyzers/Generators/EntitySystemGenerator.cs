@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Robust.Roslyn.Shared;
@@ -59,16 +60,14 @@ public sealed class EntitySystemGenerator : IIncrementalGenerator
 
                     var needsUpdate = "false";
                     var needsFrameUpdate = "false";
-                    foreach (var member in symbol.GetMembers())
+                    foreach (var member in TypeSymbolHelper.GetAllMembersIncludingInherited(symbol))
                     {
                         if (member is not IMethodSymbol method)
                             continue;
 
                         if (method.IsOverride &&
                             method.Name is Update or FrameUpdate &&
-                            !TypeSymbolHelper.ShittyTypeMatch(method.ContainingType, EntitySystem) &&
-                            method.OverriddenMethod?.ContainingType is { } containing &&
-                            TypeSymbolHelper.ShittyTypeMatch(containing, EntitySystem))
+                            !TypeSymbolHelper.ShittyTypeMatch(method.ContainingType, EntitySystem))
                         {
                             switch (method.Name)
                             {

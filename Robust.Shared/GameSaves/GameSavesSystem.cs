@@ -8,19 +8,18 @@ using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 using SharpZstd.Interop;
 
 namespace Robust.Shared.GameSaves;
 
-public sealed class GameSavesSystem : EntitySystem
+public sealed partial class GameSavesSystem : EntitySystem
 {
-    [Dependency] private readonly IResourceManager _resourceManager = default!;
-    [Dependency] private readonly IRobustSerializer _serializer = default!;
-    [Dependency] private readonly IConfigurationManager _config = default!;
-    [Dependency] private readonly MapLoaderSystem _mapLoader = default!;
+    [Dependency] private IResourceManager _resourceManager = default!;
+    [Dependency] private IRobustSerializer _serializer = default!;
+    [Dependency] private IConfigurationManager _config = default!;
+    [Dependency] private MapLoaderSystem _mapLoader = default!;
 
     /// <summary>
     /// File extension that represents a ZSTD compressed YAML file with a single mapping data node.
@@ -28,6 +27,8 @@ public sealed class GameSavesSystem : EntitySystem
     public const string Extension = ".rtsave";
 
     private bool _enabled;
+
+    private ZStdCompressionContext _zstdContext = default!;
 
     public override void Initialize()
     {
@@ -37,6 +38,12 @@ public sealed class GameSavesSystem : EntitySystem
         Subs.CVar(_config, CVars.GameSavesEnabled, value => _enabled = value, true);
     }
 
+    /// <summary>
+    /// Serializes all entities and compresses the resulting data into a save file.
+    /// </summary>
+    /// <param name="path">Path to a save file. The extension is always ignored.</param>
+    /// <returns>True if the game was saved successfully, false if saves are disabled
+    /// or an error occured during entity serialization.</returns>
     public bool TrySaveGame(ResPath path)
     {
         if (!_enabled)
@@ -60,31 +67,36 @@ public sealed class GameSavesSystem : EntitySystem
         var ev = new BeforeGameLoadEvent(path);
         RaiseLocalEvent(ref ev);
 
-        if (!TryReadCompressedZstd(path, out var data))
-            return false;
+        // TODO add support for uncompressed saves (.yml file extension)
+        if (path.Extension == Extension)
+        {
+            if (!TryReadCompressedZstd(path, out var data))
+                return false;
 
-        if (!_mapLoader.TryLoadGeneric(data, path.Filename, out _))
-            return false;
+            if (!_mapLoader.TryLoadGeneric(data, path.Filename, out _))
+                return false;
 
-        return true;
+            return true;
+        }
+
+        return false;
     }
-
-    private ZStdCompressionContext _zstdContext = default!;
 
     /// <summary>
     /// Compresses a YAML data node using ZSTD compression.
     /// </summary>
-    /// <param name="path">Path to a file without a file extension</param>
+    /// <param name="path">Path to a file.</param>
     /// <param name="data">Mapping data node to compress in the specified path.</param>
     private void WriteCompressedZstd(ResPath path, MappingDataNode data)
     {
         var uncompressedStream = new MemoryStream();
+        _serializer.SerializeDirect(uncompressedStream, data.ToString());
 
-        _serializer.SerializeDirect(uncompressedStream, MappingNodeToString(data));
-
-        var uncompressed = uncompressedStream.AsSpan();
-        var poolData = ArrayPool<byte>.Shared.Rent(uncompressed.Length);
-        uncompressed.CopyTo(poolData);
+        // Get the underlying buffer directly to avoid allocations
+        if (!uncompressedStream.TryGetBuffer(out var uncompressed))
+        {
+            uncompressed = new ArraySegment<byte>(uncompressedStream.ToArray());
+        }
 
         if (_resourceManager.UserData.RootDir == null)
             return; // can't save anything
@@ -92,70 +104,54 @@ public sealed class GameSavesSystem : EntitySystem
         byte[]? buf = null;
         try
         {
-            // Compress stream to buffer.
-            // First 4 bytes of buffer are reserved for the length of the uncompressed stream.
-            var bound = ZStd.CompressBound(uncompressed.Length);
+            var bound = ZStd.CompressBound(uncompressed.Count);
             buf = ArrayPool<byte>.Shared.Rent(4 + bound);
+
+            // Write the uncompressed length into the first 4 bytes
+            BitConverter.TryWriteBytes(buf.AsSpan(0, 4), uncompressed.Count);
+
+            // Compress the data
             var compressedLength = _zstdContext.Compress2(
                 buf.AsSpan(4, bound),
-                poolData.AsSpan(0, uncompressed.Length));
+                uncompressed.AsSpan());
 
             var filePath = Path.Combine(_resourceManager.UserData.RootDir, path.Filename + Extension);
-            File.WriteAllBytes(filePath, buf);
+
+            using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+            fileStream.Write(buf, 0, 4 + compressedLength);
         }
         finally
         {
-            ArrayPool<byte>.Shared.Return(poolData);
             if (buf != null)
                 ArrayPool<byte>.Shared.Return(buf);
         }
     }
 
-    private bool TryReadCompressedZstd(ResPath path, [NotNullWhen(true)] out MappingDataNode? data)
+    private bool TryReadCompressedZstd(ResPath path, [NotNullWhen(true)] out Stream? data)
     {
         data = null;
-
         var intBuf = new byte[4];
 
         using var fileStream = _resourceManager.ContentFileRead(path);
-        using var decompressStream = new ZStdDecompressStream(fileStream, false);
 
+        // Read the prefix
         fileStream.ReadExactly(intBuf);
         var uncompressedSize = BitConverter.ToInt32(intBuf);
+
+        using var decompressStream = new ZStdDecompressStream(fileStream, false);
 
         var decompressedStream = new MemoryStream(uncompressedSize);
         decompressStream.CopyTo(decompressedStream);
         decompressedStream.Position = 0;
+
         DebugTools.Assert(uncompressedSize == decompressedStream.Length);
 
         while (decompressedStream.Position < decompressedStream.Length)
         {
-            _serializer.DeserializeDirect<string>(decompressedStream, out var yml);
-            if (!TryParseMappingNode(yml, out var node))
-                return false;
-
-            data = node;
+            data = decompressedStream;
             return true;
         }
 
-        return false;
-    }
-
-    private string MappingNodeToString(MappingDataNode node)
-    {
-        return node.ToString();
-    }
-
-    private bool TryParseMappingNode(string yml, [NotNullWhen(true)] out MappingDataNode? node)
-    {
-        var stream = new StringReader(yml);
-        foreach (var document in DataNodeParser.ParseYamlStream(stream))
-        {
-            node = (MappingDataNode) document.Root;
-            return true;
-        }
-
-        node = null;
         return false;
     }
 }

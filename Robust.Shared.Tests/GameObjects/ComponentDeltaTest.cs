@@ -47,6 +47,6 @@ internal sealed partial class ComponentDeltaTest
     private sealed partial class TestDeltaComponent : Component, IComponentDelta
     {
         public GameTick LastUnclassifiedDirty { get; set; }
-        public GameTick[] LastModifiedFields { get; set; } = [];
+        public GameTick[] LastModifiedFields { get; set; } = new GameTick[2];
     }
 }

@@ -81,8 +81,7 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
         var handle = args.ScreenHandle;
         var (_, _, matrix, invMatrix) = Transform.GetWorldPositionRotationMatrixWithInv(grid.Owner);
         var gridBounds = invMatrix.TransformBox(args.WorldBounds).Enlarged(grid.Comp.TileSize * 2);
-        var tilesEnumerator = Map.GetLocalTilesEnumerator(grid, grid, gridBounds);
-        while (tilesEnumerator.MoveNext(out var tile))
+        foreach (var tile in Map.GetLocalTilesIntersecting(grid, grid, gridBounds))
         {
             var tileBounds = Lookup.GetLocalBounds(tile, grid.Comp.TileSize);
             if (!gridBounds.Intersects(tileBounds))
@@ -146,8 +145,7 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
         var handle = args.WorldHandle;
         var (_, _, matrix, invMatrix) = Transform.GetWorldPositionRotationMatrixWithInv(grid.Owner);
         var gridBounds = invMatrix.TransformBox(args.WorldBounds).Enlarged(grid.Comp.TileSize * 2);
-        var tilesEnumerator = Map.GetLocalTilesEnumerator(grid, grid, gridBounds);
-        while (tilesEnumerator.MoveNext(out var tile))
+        foreach (var tile in Map.GetLocalTilesIntersecting(grid, grid, gridBounds))
         {
             handle.SetTransform(matrix);
             var tileBounds = Lookup.GetLocalBounds(tile, grid.Comp.TileSize);

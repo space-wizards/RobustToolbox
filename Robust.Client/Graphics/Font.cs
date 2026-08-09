@@ -82,15 +82,14 @@ namespace Robust.Client.Graphics
             Color color, bool fallback=true);
 
         /// <summary>
-        ///     Draws a character with an optional outline.
+        ///     Draws only the outline of a character and returns its advance.
         /// </summary>
-        /// <inheritdoc cref="DrawChar(DrawingHandleBase, Rune, Vector2, float, Color, bool)"/>
-        public virtual float DrawChar(
+        /// <remarks>
+        ///     Rendering outlines separately from glyph fills allows text renderers to batch both passes by texture.
+        /// </remarks>
+        public abstract float DrawCharOutline(
             DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale,
-            Color color, TextOutline? outline, bool fallback=true)
-        {
-            return DrawChar(handle, rune, baseline, scale, color, fallback);
-        }
+            TextOutline outline, bool fallback=true);
 
         /// <summary>
         ///     Gets metrics describing the dimensions and positioning of a single glyph in the font.
@@ -152,40 +151,50 @@ namespace Robust.Client.Graphics
         public override int GetLineHeight(float scale) => Handle.GetLineHeight(scale);
 
         public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
-            => DrawChar(handle, rune, baseline, scale, color, null, fallback);
-
-        public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, TextOutline? outline, bool fallback=true)
         {
-            var metrics = Handle.GetCharMetrics(rune, scale);
-            if (!metrics.HasValue)
-            {
-                if (fallback && !Rune.IsWhiteSpace(rune))
-                {
-                    rune = new Rune('�');
-                    metrics = Handle.GetCharMetrics(rune, scale);
-                    if (!metrics.HasValue)
-                        return 0;
-                }
-                else
-                    return 0;
-            }
+            if (!TryGetGlyph(rune, scale, fallback, 0, out var metrics, out var texture, out _))
+                return 0;
 
-            var texture = Handle.GetCharTexture(rune, scale);
             if (texture == null)
-            {
-                return metrics.Value.Advance;
-            }
+                return metrics.Advance;
 
-            var glyphPosition = baseline + new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
-            if (outline is { Thickness: > 0 } settings &&
-                Handle.GetOutlinedChar(rune, scale, settings.Thickness) is { } outlinedGlyph)
-            {
-                var outlinePosition = baseline + new Vector2(outlinedGlyph.Left, -outlinedGlyph.Top);
-                DrawGlyph(handle, outlinedGlyph.Texture, outlinePosition, settings.Color);
-            }
-
+            var glyphPosition = baseline + new Vector2(metrics.BearingX, -metrics.BearingY);
             DrawGlyph(handle, texture, glyphPosition, color);
-            return metrics.Value.Advance;
+            return metrics.Advance;
+        }
+
+        public override float DrawCharOutline(
+            DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale,
+            TextOutline outline, bool fallback=true)
+        {
+            if (!TryGetGlyph(rune, scale, fallback, outline.Thickness, out var metrics, out var texture, out var outlinedGlyph))
+                return 0;
+
+            if (outline.Thickness > 0 && texture != null && outlinedGlyph is { } glyph)
+            {
+                var outlinePosition = baseline + new Vector2(glyph.Left, -glyph.Top);
+                DrawGlyph(handle, glyph.Texture, outlinePosition, outline.Color);
+            }
+
+            return metrics.Advance;
+        }
+
+        private bool TryGetGlyph(
+            Rune rune,
+            float scale,
+            bool fallback,
+            float outlineThickness,
+            out CharMetrics metrics,
+            out Texture? texture,
+            out OutlinedGlyph? outlinedGlyph)
+        {
+            if (Handle.TryGetGlyph(rune, scale, outlineThickness, out metrics, out texture, out outlinedGlyph))
+                return true;
+
+            if (!fallback || Rune.IsWhiteSpace(rune))
+                return false;
+
+            return Handle.TryGetGlyph(new Rune('�'), scale, outlineThickness, out metrics, out texture, out outlinedGlyph);
         }
 
         private static void DrawGlyph(DrawingHandleBase handle, Texture texture, Vector2 position, Color color)
@@ -230,19 +239,33 @@ namespace Robust.Client.Graphics
 
         // DrawChar just proxies to the stack, or invokes _main's fallback.
         public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
-            => DrawChar(handle, rune, baseline, scale, color, null, fallback);
-
-        public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, TextOutline? outline, bool fallback=true)
         {
             foreach (var f in Stack)
             {
-                var w = f.DrawChar(handle, rune, baseline, scale, color, outline, fallback: false);
+                var w = f.DrawChar(handle, rune, baseline, scale, color, fallback: false);
                 if (w != 0f)
                     return w;
             }
 
             if (fallback)
-                return _main.DrawChar(handle, rune, baseline, scale, color, outline, fallback: true);
+                return _main.DrawChar(handle, rune, baseline, scale, color, fallback: true);
+
+            return 0f;
+        }
+
+        public override float DrawCharOutline(
+            DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale,
+            TextOutline outline, bool fallback=true)
+        {
+            foreach (var f in Stack)
+            {
+                var w = f.DrawCharOutline(handle, rune, baseline, scale, outline, fallback: false);
+                if (w != 0f)
+                    return w;
+            }
+
+            if (fallback)
+                return _main.DrawCharOutline(handle, rune, baseline, scale, outline, fallback: true);
 
             return 0f;
         }
@@ -271,6 +294,14 @@ namespace Robust.Client.Graphics
         public override int GetLineHeight(float scale) => default;
 
         public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
+        {
+            // Nada, it's a dummy after all.
+            return 0;
+        }
+
+        public override float DrawCharOutline(
+            DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale,
+            TextOutline outline, bool fallback=true)
         {
             // Nada, it's a dummy after all.
             return 0;

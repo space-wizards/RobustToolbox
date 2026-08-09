@@ -156,6 +156,16 @@ namespace Robust.Client.Graphics
         }
 
         /// <summary>
+        ///     Draws an atlas texture without an additional subregion.
+        /// </summary>
+        public virtual void DrawTextureRect(AtlasTexture texture, Box2 quad, Color? modulate = null)
+        {
+            CheckDisposed();
+
+            DrawTextureRectRegion(texture, quad, modulate);
+        }
+
+        /// <summary>
         /// Draws a full texture sprite to the world. The coordinate system is right handed.
         /// Make sure to set <see cref="DrawingHandleBase.SetTransform"/>
         /// to set the model matrix if needed.

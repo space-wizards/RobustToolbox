@@ -1414,6 +1414,12 @@ namespace Robust.Shared
             CVarDef.Create("audio.mastervolume", 0.50f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// Whether to mute audio while the game window is unfocused.
+        /// </summary>
+        public static readonly CVarDef<bool> AudioMuteUnfocused =
+            CVarDef.Create("audio.mute_unfocused", false, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// Maximum raycast distance for audio occlusion.
         /// </summary>
         public static readonly CVarDef<float> AudioRaycastLength =
@@ -1468,7 +1474,7 @@ namespace Robust.Shared
         /// Can grids split if not connected by cardinals
         /// </summary>
         public static readonly CVarDef<bool> GridSplitting =
-            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE);
+            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// How much to enlarge grids when determining their fixture bounds.
@@ -1916,6 +1922,14 @@ namespace Robust.Shared
         /// The max amount of pending write commands while recording replays.
         /// </summary>
         public static readonly CVarDef<int> ReplayWriteChannelSize = CVarDef.Create("replay.write_channel_size", 5);
+
+        /// <summary>
+        /// Number of replay data blocks (each ≈ one <c>data_N</c> file) the client keeps resident in memory
+        /// at once during playback. The full replay is no longer loaded entirely into RAM; blocks are read
+        /// lazily and evicted (LRU) once this window is exceeded. Higher values use more memory but reduce
+        /// re-reads when scrubbing back and forth. Minimum effective value is 2.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayLoadedBlockWindow = CVarDef.Create("replay.loaded_block_window", 8);
 
         /// <summary>
         /// Whether or not server-side replay recording is enabled.

@@ -646,7 +646,7 @@ namespace Robust.Shared.CompNetworkGenerator
                 deltaCompFields = @$"/// <inheritdoc />
     public GameTick LastUnclassifiedDirty {{ get; set; }}
     /// <inheritdoc />
-    public GameTick[] LastModifiedFields {{ get; set; }}";
+    public GameTick[] LastModifiedFields {{ get; set; }} = new GameTick[{fields.Count}];";
             }
 
             string handleState;

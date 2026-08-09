@@ -44,7 +44,7 @@ namespace Robust.Shared.GameObjects
         public GameTick LastUnclassifiedDirty { get; set; }
 
         /// <inheritdoc />
-        public GameTick[] LastModifiedFields { get; set; } = [];
+        public GameTick[] LastModifiedFields { get; set; } = new GameTick[5];
 
         /// <summary>
         /// Indicates this entity can traverse grids.

@@ -2,12 +2,14 @@
 using System.Numerics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using SDL3;
 
 namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     Represents a single operating system window.
     /// </summary>
+    [NotContentImplementable]
     public interface IClydeWindow : IDisposable
     {
         bool IsDisposed { get; }
@@ -19,6 +21,15 @@ namespace Robust.Client.Graphics
         bool IsMinimized { get; }
         bool IsVisible { get; set; }
         Vector2 ContentScale { get; }
+
+        /// <summary>
+        /// Enables or disables relative mouse mode for this window.
+        /// </summary>
+        /// <remarks>
+        /// While enabled, the cursor is hidden and confined to the window, and mouse motion continues to be reported
+        /// when the cursor would otherwise reach the edge of the window.
+        /// </remarks>
+        void SetRelativeMouseMode(bool enabled);
 
         /// <summary>
         ///     If set to true, the user closing the window will also <see cref="IDisposable.Dispose"/> it.
@@ -41,6 +52,8 @@ namespace Robust.Client.Graphics
         /// Raised when the window has been resized.
         /// </summary>
         event Action<WindowResizedEventArgs> Resized;
+
+        internal void SetWindowProgress(WindowProgressState state, float value);
 
         /// <summary>
         /// Set the active text input area in window pixel coordinates.
@@ -67,7 +80,17 @@ namespace Robust.Client.Graphics
         void TextInputStop();
     }
 
-    public interface IClydeWindowInternal : IClydeWindow
+    internal enum WindowProgressState : byte
+    {
+        None = SDL.SDL_ProgressState.SDL_PROGRESS_STATE_NONE,
+        Indeterminate = SDL.SDL_ProgressState.SDL_PROGRESS_STATE_INDETERMINATE,
+        Normal = SDL.SDL_ProgressState.SDL_PROGRESS_STATE_NORMAL,
+        Paused = SDL.SDL_ProgressState.SDL_PROGRESS_STATE_PAUSED,
+        Error = SDL.SDL_ProgressState.SDL_PROGRESS_STATE_ERROR
+    }
+
+    [NotContentImplementable]
+    internal interface IClydeWindowInternal : IClydeWindow
     {
         nint? WindowsHWnd { get; }
     }

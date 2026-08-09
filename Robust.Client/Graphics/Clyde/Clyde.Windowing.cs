@@ -102,18 +102,11 @@ namespace Robust.Client.Graphics.Clyde
 
             _windowingThread = Thread.CurrentThread;
 
-            // Default to SDL3 on ARM64. GLFW is not feature complete there (lacking file dialog implementation)
-            if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
-                _cfg.SetCVar(CVars.DisplayWindowingApi, "sdl3");
-
             var windowingApi = _cfg.GetCVar(CVars.DisplayWindowingApi);
             IWindowingImpl winImpl;
 
             switch (windowingApi)
             {
-                case "glfw":
-                    winImpl = new GlfwWindowingImpl(this, _deps);
-                    break;
                 case "sdl3":
                     winImpl = new Sdl3WindowingImpl(this, _deps);
                     break;
@@ -563,6 +556,13 @@ namespace Robust.Client.Graphics.Clyde
 
             public Vector2 ContentScale => Reg.WindowScale;
 
+            public void SetRelativeMouseMode(bool enabled)
+            {
+                DebugTools.AssertNotNull(_clyde._windowing);
+
+                _clyde._windowing!.WindowSetRelativeMouseMode(Reg, enabled);
+            }
+
             public bool DisposeOnClose
             {
                 get => Reg.DisposeOnClose;
@@ -606,6 +606,11 @@ namespace Robust.Client.Graphics.Clyde
                 DebugTools.AssertNotNull(_clyde._windowing);
 
                 _clyde._windowing!.TextInputStop(Reg);
+            }
+
+            public void SetWindowProgress(WindowProgressState state, float value)
+            {
+                _clyde._windowing!.WindowSetProgress(Reg, state, value);
             }
 
             public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);

@@ -173,6 +173,18 @@ namespace Robust.Client.Input
             F24,
             Pause,
             World1,
+            CapsLock,
+            ScrollLock,
+            Help,
+            Stop,
+            Again,
+            Props,
+            Undo,
+            Cut,
+            Copy,
+            Open,
+            Paste,
+            Find,
         }
 
         public static bool IsMouseKey(this Key key)

@@ -7,6 +7,7 @@ using Robust.Shared.Player;
 
 namespace Robust.Client.Player;
 
+[NotContentImplementable]
 public interface IPlayerManager : ISharedPlayerManager
 {
     /// <summary>

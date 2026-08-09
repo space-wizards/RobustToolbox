@@ -13,6 +13,7 @@ namespace Robust.Shared.Random;
 public interface IRobustRandom
 {
     /// <summary> Get the underlying <see cref="Random"/>.</summary>
+    [Obsolete("Do not access the underlying implementation")]
     System.Random GetRandom();
 
     /// <summary> Set seed for underlying <see cref="Random"/>. </summary>
@@ -138,6 +139,15 @@ public interface IRobustRandom
     /// <summary> Randomly switches positions in collection. </summary>
     void Shuffle<T>(IList<T> list)
     {
+        if (list is T[] arr)
+        {
+            // Done to avoid significant performance dip from Moq workaround in RandomExtensions.cs,
+            // doubt it matters much.
+            // https://github.com/space-wizards/RobustToolbox/issues/6329
+            Shuffle(arr);
+            return;
+        }
+
         var n = list.Count;
         while (n > 1)
         {
@@ -162,18 +172,14 @@ public interface IRobustRandom
     /// <summary> Randomly switches positions in collection. </summary>
     void Shuffle<T>(ValueList<T> list)
     {
-        var n = list.Count;
-        while (n > 1)
-        {
-            n -= 1;
-            var k = Next(n + 1);
-            (list[k], list[n]) = (list[n], list[k]);
-        }
+        Shuffle(list.Span);
     }
 }
 
+[Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
 public static class RandomHelpers
 {
+    [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static void Shuffle<T>(this System.Random random, IList<T> list)
     {
         var n = list.Count;
@@ -185,24 +191,28 @@ public static class RandomHelpers
         }
     }
 
+    [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static bool Prob(this System.Random random, double chance)
     {
         return random.NextDouble() < chance;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static byte NextByte(this System.Random random, byte maxValue)
     {
         return NextByte(random, 0, maxValue);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static byte NextByte(this System.Random random)
     {
         return NextByte(random, byte.MaxValue);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
     public static byte NextByte(this System.Random random, byte minValue, byte maxValue)
     {
         return (byte)random.Next(minValue, maxValue);

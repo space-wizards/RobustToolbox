@@ -9,9 +9,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class EntityTypeParser : TypeParser<EntityUid>
+internal sealed partial class EntityTypeParser : TypeParser<EntityUid>
 {
-    [Dependency] private readonly IEntityManager _entMan = default!;
+    [Dependency] private IEntityManager _entMan = default!;
 
     public static bool TryParseEntity(IEntityManager entMan, ParserContext ctx, out EntityUid result)
     {
@@ -57,9 +57,9 @@ internal sealed class EntityTypeParser : TypeParser<EntityUid>
         => CompletionResult.FromHint(ToolshedCommand.GetArgHint(arg, typeof(NetEntity)));
 }
 
-internal sealed class NetEntityTypeParser : TypeParser<NetEntity>
+internal sealed partial class NetEntityTypeParser : TypeParser<NetEntity>
 {
-    [Dependency] private readonly IEntityManager _entMan = default!;
+    [Dependency] private IEntityManager _entMan = default!;
 
     public override bool TryParse(ParserContext ctx, out NetEntity result)
     {
@@ -104,10 +104,10 @@ internal sealed class NetEntityTypeParser : TypeParser<NetEntity>
         => CompletionResult.FromHint(ToolshedCommand.GetArgHint(arg, typeof(NetEntity)));
 }
 
-internal sealed class EntityTypeParser<T> : TypeParser<Entity<T>>
+internal sealed partial class EntityTypeParser<T> : TypeParser<Entity<T>>
     where T : IComponent
 {
-    [Dependency] private readonly IEntityManager _entMan = default!;
+    [Dependency] private IEntityManager _entMan = default!;
 
     public override bool TryParse(ParserContext parser, out Entity<T> result)
     {
@@ -147,11 +147,11 @@ internal sealed class EntityTypeParser<T> : TypeParser<Entity<T>>
     }
 }
 
-internal sealed class EntityTypeParser<T1, T2> : TypeParser<Entity<T1, T2>>
+internal sealed partial class EntityTypeParser<T1, T2> : TypeParser<Entity<T1, T2>>
     where T1 : IComponent
     where T2 : IComponent
 {
-    [Dependency] private readonly IEntityManager _entMan = default!;
+    [Dependency] private IEntityManager _entMan = default!;
 
     public override bool TryParse(ParserContext parser, out Entity<T1, T2> result)
     {
@@ -189,12 +189,12 @@ internal sealed class EntityTypeParser<T1, T2> : TypeParser<Entity<T1, T2>>
     }
 }
 
-internal sealed class EntityTypeParser<T1, T2, T3> : TypeParser<Entity<T1, T2, T3>>
+internal sealed partial class EntityTypeParser<T1, T2, T3> : TypeParser<Entity<T1, T2, T3>>
     where T1 : IComponent
     where T2 : IComponent
     where T3 : IComponent
 {
-    [Dependency] private readonly IEntityManager _entMan = default!;
+    [Dependency] private IEntityManager _entMan = default!;
 
     public override bool TryParse(ParserContext parser, out Entity<T1, T2, T3> result)
     {

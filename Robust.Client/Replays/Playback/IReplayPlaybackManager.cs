@@ -9,6 +9,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Client.Replays.Playback;
 
+[NotContentImplementable]
 public interface IReplayPlaybackManager
 {
     public const string PlayCommand = "replay_play";

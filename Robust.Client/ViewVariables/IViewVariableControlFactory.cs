@@ -6,6 +6,7 @@ namespace Robust.Client.ViewVariables;
 /// <summary>
 /// Factory that creates UI controls for viewing variables based on provided property type.
 /// </summary>
+[NotContentImplementable]
 public interface IViewVariableControlFactory
 {
     /// <summary>

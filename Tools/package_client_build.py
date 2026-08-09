@@ -98,7 +98,7 @@ IGNORED_FILES_MACOS = {
     "libsodium.dylib",
     "libopenal.1.dylib",
     "libSDL3.0.dylib",
-    "libfluidsynth.3.dylib"
+    "libfluidsynth.3.dylib",
     "libzstd.1.dylib"
 }
 
@@ -112,7 +112,7 @@ IGNORED_FILES_LINUX = {
     "libsodium.so",
     "libopenal.so.1",
     "libSDL3.so.0",
-    "libfluidsynth.so.3"
+    "libfluidsynth.so.3",
     "libzstd.so.1"
 }
 
@@ -220,7 +220,7 @@ def build_linux_like(rid: str, target_os: TargetOS, skip_build: bool) -> None:
 
     client_zip = zipfile.ZipFile(
         p("release", "Robust.Client_%s.zip" % rid), "w",
-        compression=zipfile.ZIP_DEFLATED)
+        compression=zipfile.ZIP_DEFLATED, strict_timestamps=False)
 
     copy_dir_into_zip(p("bin", "Client", rid, "publish"), "", client_zip, IGNORED_FILES_LINUX)
     copy_resources("Resources", client_zip)

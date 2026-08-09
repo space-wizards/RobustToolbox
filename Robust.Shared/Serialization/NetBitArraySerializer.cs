@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
 using NetSerializer;
@@ -22,8 +23,11 @@ namespace Robust.Shared.Serialization;
 /// This code is designed to be backportable &amp; network compatible with the previous behavior on .NET 9.
 /// </para>
 /// </remarks>
-internal sealed class NetBitArraySerializer : IStaticTypeSerializer
+internal sealed class NetBitArraySerializer : IDynamicTypeSerializer
 {
+    // NOTE: MUST be a IDynamicTypeSerializer for compatibility!
+    // Can be changed in the future.
+
     // For reference, the layout of BitArray before .NET 10 was:
     // private int[] m_array;
     // private int m_length;
@@ -41,14 +45,32 @@ internal sealed class NetBitArraySerializer : IStaticTypeSerializer
         return [typeof(int[]), typeof(int)];
     }
 
-    public MethodInfo GetStaticWriter(Type type)
+    public void GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
     {
-        return typeof(NetBitArraySerializer).GetMethod("Write", BindingFlags.Static | BindingFlags.NonPublic)!;
+        var method = typeof(NetBitArraySerializer).GetMethod("Write", BindingFlags.Static | BindingFlags.NonPublic)!;
+
+        // arg0: Serializer, arg1: Stream, arg2: value
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Ldarg_1);
+        il.Emit(OpCodes.Ldarg_2);
+
+        il.EmitCall(OpCodes.Call, method, null);
+
+        il.Emit(OpCodes.Ret);
     }
 
-    public MethodInfo GetStaticReader(Type type)
+    public void GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il)
     {
-        return typeof(NetBitArraySerializer).GetMethod("Read", BindingFlags.Static | BindingFlags.NonPublic)!;
+        var method = typeof(NetBitArraySerializer).GetMethod("Read", BindingFlags.Static | BindingFlags.NonPublic)!;
+
+        // arg0: Serializer, arg1: stream, arg2: out value
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Ldarg_1);
+        il.Emit(OpCodes.Ldarg_2);
+
+        il.EmitCall(OpCodes.Call, method, null);
+
+        il.Emit(OpCodes.Ret);
     }
 
     [UsedImplicitly]

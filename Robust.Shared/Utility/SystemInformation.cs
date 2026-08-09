@@ -181,6 +181,18 @@ internal static class SystemInformation
         if (Avx512Vbmi.VL.IsSupported)
             options.Add(nameof(Avx512Vbmi) + ".VL");
 
+        if (Avx10v1.IsSupported)
+            options.Add(nameof(Avx10v1));
+
+        if (Avx10v1.V512.IsSupported)
+            options.Add(nameof(Avx10v1) + ".V512");
+
+        if (Avx10v2.IsSupported)
+            options.Add(nameof(Avx10v2));
+
+        if (Avx10v2.V512.IsSupported)
+            options.Add(nameof(Avx10v2) + ".V512");
+
         if (Bmi1.IsSupported)
             options.Add(nameof(Bmi1));
 

@@ -53,7 +53,7 @@ public partial class PrototypeManager
 
                     var extractedList = new List<ExtractedMappingData>();
                     var i = 0;
-                    foreach (var document in DataNodeParser.ParseYamlStream(reader))
+                    foreach (var document in DataNodeParser.ParseYamlStream(reader, internStrings: true))
                     {
                         i += 1;
                         LoadedData?.Invoke(document);
@@ -152,7 +152,7 @@ public partial class PrototypeManager
                 return;
 
             var i = 0;
-            foreach (var document in DataNodeParser.ParseYamlStream(reader))
+            foreach (var document in DataNodeParser.ParseYamlStream(reader, internStrings: true))
             {
                 LoadedData?.Invoke(document);
 
@@ -254,7 +254,7 @@ public partial class PrototypeManager
         _hasEverBeenReloaded = true;
 
         var i = 0;
-        foreach (var document in DataNodeParser.ParseYamlStream(stream))
+        foreach (var document in DataNodeParser.ParseYamlStream(stream, internStrings: true))
         {
             LoadedData?.Invoke(document);
 
@@ -316,6 +316,9 @@ public partial class PrototypeManager
         }
 
         Freeze(modified);
+
+        if (modified.Any(x => x.Type == typeof(EntityPrototype)))
+            RebuildEntityComponentCache();
     }
 
     public void AbstractFile(ResPath path)

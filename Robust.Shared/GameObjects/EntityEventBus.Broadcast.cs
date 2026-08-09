@@ -11,6 +11,7 @@ namespace Robust.Shared.GameObjects
     /// EntitySystems communicate with each other.
     /// </summary>
     [PublicAPI]
+    [NotContentImplementable]
     public interface IBroadcastEventBus
     {
         /// <summary>

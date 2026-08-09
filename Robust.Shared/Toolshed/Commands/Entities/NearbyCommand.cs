@@ -8,9 +8,9 @@ using Robust.Shared.IoC;
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
 [ToolshedCommand]
-internal sealed class NearbyCommand : ToolshedCommand
+internal sealed partial class NearbyCommand : ToolshedCommand
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     private EntityLookupSystem? _lookup;
 

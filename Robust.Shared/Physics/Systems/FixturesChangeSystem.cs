@@ -4,10 +4,10 @@ using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.Physics.Systems;
 
-public sealed class FixturesChangeSystem : EntitySystem
+public sealed partial class FixturesChangeSystem : EntitySystem
 {
-    [Dependency] private readonly FixtureSystem _fixtures = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private FixtureSystem _fixtures = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
 
     private EntityQuery<FixturesComponent> _fixturesQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;

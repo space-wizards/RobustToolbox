@@ -17,6 +17,7 @@ public enum MidiRendererStatus : byte
     File,
 }
 
+[NotContentImplementable]
 public interface IMidiRenderer : IDisposable
 {
     /// <summary>

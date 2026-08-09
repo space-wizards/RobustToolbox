@@ -501,15 +501,15 @@ namespace Robust.Client.UserInterface.Controls
                         }
                         else
                         {
-                            handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size * item.IconScale),
+                            handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.IconRegion.Size * item.IconScale),
                                 item.IconRegion, item.IconModulate);
                         }
                     }
 
                     if (item.Text != null)
                     {
-                        var textBox = new UIBox2(contentBox.Left + item.IconSize.X * item.IconScale, contentBox.Top, contentBox.Right,
-                            contentBox.Bottom);
+                        var textStart = Math.Min(contentBox.Left + item.IconSize.X * item.IconScale, contentBox.Right);
+                        var textBox = new UIBox2(textStart, contentBox.Top, contentBox.Right, contentBox.Bottom);
                         DrawTextInternal(handle, item.Text, textBox);
                     }
                 }
@@ -595,14 +595,40 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseMove(args);
 
+            DefaultCursorShape = CursorShape.Arrow;
+
             for (var idx = 0; idx < _itemList.Count; idx++)
             {
                 var item = _itemList[idx];
                 if (item.Region == null) continue;
                 if (!item.Region.Value.Contains(args.RelativePosition)) continue;
+
+                if (SelectMode != ItemListSelectMode.None)
+                {
+                    if (item.Disabled)
+                    {
+                        DefaultCursorShape = CursorShape.NotAllowed;
+                    }
+                    else if (item.Selectable)
+                    {
+                        DefaultCursorShape = CursorShape.Pointer;
+                    }
+                    else
+                    {
+                        DefaultCursorShape = CursorShape.Arrow;
+                    }
+                }
+
                 OnItemHover?.Invoke(new ItemListHoverEventArgs(idx, this));
                 break;
             }
+        }
+
+        protected internal override void MouseExited()
+        {
+            base.MouseExited();
+
+            DefaultCursorShape = CursorShape.Arrow;
         }
 
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)

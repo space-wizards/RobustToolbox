@@ -5,6 +5,7 @@ namespace Robust.Shared.Input
     /// <summary>
     ///     Contains a mapping of <see cref="BoundKeyFunction"/> to their current <see cref="BoundKeyState"/>.
     /// </summary>
+    [NotContentImplementable]
     public interface IPlayerCommandStates
     {
         /// <summary>

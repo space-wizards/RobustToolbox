@@ -223,7 +223,9 @@ namespace Robust.Shared.Utility
         /// <param name="message">Exception message.</param>
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void AssertNotNull([AssertionCondition(AssertionConditionType.IS_NOT_NULL)]
+        public static void AssertNotNull(
+            [AssertionCondition(AssertionConditionType.IS_NOT_NULL)]
+            [System.Diagnostics.CodeAnalysis.NotNull]
             object? arg,
             string? message = null)
         {

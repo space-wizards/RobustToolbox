@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Robust.Shared.Collections;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -17,22 +18,31 @@ public static class DataNodeParser
 {
     public static IEnumerable<DataNodeDocument> ParseYamlStream(TextReader reader)
     {
-        return ParseYamlStream(new Parser(reader));
+        return ParseYamlStream(reader, internStrings: false);
     }
 
-    internal static IEnumerable<DataNodeDocument> ParseYamlStream(Parser parser)
+    internal static IEnumerable<DataNodeDocument> ParseYamlStream(TextReader reader, bool internStrings)
     {
+        return ParseYamlStream(new Parser(reader), internStrings);
+    }
+
+    internal static IEnumerable<DataNodeDocument> ParseYamlStream(Parser parser, bool internStrings = false)
+    {
+        var state = new ParserState(internStrings);
+
         parser.Consume<StreamStart>();
 
         while (!parser.TryConsume<StreamEnd>(out _))
         {
-            yield return ParseDocument(parser);
+            yield return ParseDocument(parser, state);
         }
+
+        // System.Console.WriteLine(state.TotalStringsSaved);
     }
 
-    private static DataNodeDocument ParseDocument(Parser parser)
+    private static DataNodeDocument ParseDocument(Parser parser, ParserState parserState)
     {
-        var state = new DocumentState();
+        var state = new DocumentState(parserState);
 
         parser.Consume<DocumentStart>();
 
@@ -78,7 +88,11 @@ public static class DataNodeParser
     private static ValueDataNode ParseValue(Parser parser, DocumentState state)
     {
         var ev = parser.Consume<Scalar>();
-        var node = new ValueDataNode(ev){Tag = ConvertTag(ev.Tag)};
+        var node = new ValueDataNode(ev)
+        {
+            Tag = ConvertTag(ev.Tag, state.ParserState),
+            Value = state.ParserState.InternString(ev.Value)
+        };
 
         NodeParsed(node, ev, false, state);
 
@@ -100,7 +114,7 @@ public static class DataNodeParser
         var ev = parser.Consume<SequenceStart>();
 
         var node = new SequenceDataNode();
-        node.Tag = ConvertTag(ev.Tag);
+        node.Tag = ConvertTag(ev.Tag, state.ParserState);
         node.Start = ev.Start;
 
         var unresolvedAlias = false;
@@ -127,14 +141,14 @@ public static class DataNodeParser
         var ev = parser.Consume<MappingStart>();
 
         var node = new MappingDataNode();
-        node.Tag = ConvertTag(ev.Tag);
+        node.Tag = ConvertTag(ev.Tag, state.ParserState);
 
         var unresolvedAlias = false;
 
         MappingEnd mapEnd;
         while (!parser.TryConsume(out mapEnd))
         {
-            var key = ParseKey(parser);
+            var key = state.ParserState.InternString(ParseKey(parser));
             var value = Parse(parser, state);
 
             node.Add(key, value);
@@ -218,13 +232,14 @@ public static class DataNodeParser
         return node;
     }
 
-    private static string ConvertTag(TagName tag)
+    private static string ConvertTag(TagName tag, ParserState state)
     {
-        return (tag.IsNonSpecific || tag.IsEmpty) ? null : tag.Value;
+        return (tag.IsNonSpecific || tag.IsEmpty) ? null : state.InternString(tag.Value);
     }
 
-    private sealed class DocumentState
+    private sealed class DocumentState(ParserState parserState)
     {
+        public readonly ParserState ParserState = parserState;
         public readonly Dictionary<AnchorName, DataNode> Anchors = new();
         public ValueList<DataNode> UnresolvedAliasOwners;
     }
@@ -254,6 +269,37 @@ public static class DataNodeParser
         public override DataNode PushInheritance(DataNode parent)
         {
             throw new NotSupportedException();
+        }
+    }
+
+#nullable enable
+
+    private sealed class ParserState(bool internStrings)
+    {
+        public readonly HashSet<string>? StringInternIndex = internStrings ? [] : null;
+        //public int TotalStringsSaved = 0;
+
+        [return: NotNullIfNotNull(nameof(str))]
+        public string? InternString(string? str)
+        {
+            if (StringInternIndex == null)
+                return str;
+
+            if (str == null)
+                return null;
+
+            // Use a basic string interning system to avoid releasing a bunch of equivalent strings.
+            // This avoids having thousands of identical strings for stuff like "type" in prototypes stored in memory.
+            if (StringInternIndex.TryGetValue(str, out var indexedString))
+            {
+                // if (!ReferenceEquals(str, indexedString))
+                //     TotalStringsSaved += 1;
+
+                return indexedString;
+            }
+
+            StringInternIndex.Add(str);
+            return str;
         }
     }
 }

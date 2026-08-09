@@ -8,6 +8,7 @@ namespace Robust.Server.GameStates
     /// <summary>
     /// Engine service that provides creating and dispatching of game states.
     /// </summary>
+    [NotContentImplementable]
     public interface IServerGameStateManager
     {
         /// <summary>

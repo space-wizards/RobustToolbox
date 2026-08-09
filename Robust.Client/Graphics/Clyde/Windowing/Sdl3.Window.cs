@@ -21,6 +21,7 @@ internal partial class Clyde
     private sealed partial class Sdl3WindowingImpl
     {
         private int _nextWindowId = 1;
+        private bool _progressUnavailable;
 
         public (WindowReg?, string? error) WindowCreate(
             GLContextSpec? spec,
@@ -175,7 +176,7 @@ internal partial class Clyde
                 SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_STENCIL_SIZE, 8);
                 SDL.SDL_GL_SetAttribute(
                     GLAttr.SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-                    s.Profile == GLContextProfile.Es ? 0 : 1);
+                    s.Profile == GLContextProfile.Es && OperatingSystem.IsWindows() ? 0 : 1);
                 int ctxFlags = 0;
 #if DEBUG
                 ctxFlags |= SDL.SDL_GL_CONTEXT_DEBUG_FLAG;
@@ -436,9 +437,15 @@ internal partial class Clyde
             SendCmd(new CmdWinSetVisible { Window = WinPtr(window), Visible = visible });
         }
 
+        public void WindowSetRelativeMouseMode(WindowReg window, bool enabled)
+        {
+            SendCmd(new CmdWinSetRelativeMouseMode { Window = WinPtr(window), Enabled = enabled });
+        }
+
         private static void WinThreadWinSetSize(CmdWinSetSize cmd)
         {
-            SDL.SDL_SetWindowSize(cmd.Window, cmd.W, cmd.H);
+            var density = SDL.SDL_GetWindowPixelDensity(cmd.Window);
+            SDL.SDL_SetWindowSize(cmd.Window, (int)(cmd.W / density), (int)(cmd.H / density));
         }
 
         private static void WinThreadWinSetVisible(CmdWinSetVisible cmd)
@@ -447,6 +454,12 @@ internal partial class Clyde
                 SDL.SDL_ShowWindow(cmd.Window);
             else
                 SDL.SDL_HideWindow(cmd.Window);
+        }
+
+        private void WinThreadWinSetRelativeMouseMode(CmdWinSetRelativeMouseMode cmd)
+        {
+            if (!SDL.SDL_SetWindowRelativeMouseMode(cmd.Window, cmd.Enabled))
+                _sawmill.Error("Failed to set relative mouse mode: {error}", SDL.SDL_GetError());
         }
 
         public void WindowRequestAttention(WindowReg window)
@@ -459,6 +472,42 @@ internal partial class Clyde
             var res = SDL.SDL_FlashWindow(cmd.Window, SDL.SDL_FlashOperation.SDL_FLASH_UNTIL_FOCUSED);
             if (!res)
                 _sawmill.Error("Failed to flash window: {error}", SDL.SDL_GetError());
+        }
+
+        public void WindowSetProgress(WindowReg window, WindowProgressState state, float value)
+        {
+            SendCmd(new CmdWinSetProgress
+            {
+                Window = WinPtr(window),
+                State = (SDL.SDL_ProgressState)state,
+                Value = value
+            });
+        }
+
+        private void WinThreadWinSetProgress(CmdWinSetProgress cmd)
+        {
+            if (_progressUnavailable)
+                return;
+
+            try
+            {
+                var res = SDL.SDL_SetWindowProgressState(cmd.Window, cmd.State);
+                if (!res)
+                {
+                    _sawmill.Error("Failed to set window progress state: {error}", SDL.SDL_GetError());
+                    return;
+                }
+
+                res = SDL.SDL_SetWindowProgressValue(cmd.Window, cmd.Value);
+                if (!res)
+                    _sawmill.Error("Failed to set window progress value: {error}", SDL.SDL_GetError());
+            }
+            catch (EntryPointNotFoundException)
+            {
+                // Allowing it to fail means I don't have to update the launcher immediately :)
+                _progressUnavailable = true;
+                _sawmill.Debug("SDL3 progress APIs unavailable");
+            }
         }
 
         public unsafe void WindowSwapBuffers(WindowReg window)
@@ -606,7 +655,7 @@ internal partial class Clyde
         private void WinThreadSetClipboard(CmdSetClipboard cmd)
         {
             var res = SDL.SDL_SetClipboardText(cmd.Text);
-            if (res)
+            if (!res)
                 _sawmill.Error("Failed to set clipboard text: {error}", SDL.SDL_GetError());
         }
 

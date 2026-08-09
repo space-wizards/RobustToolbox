@@ -4,6 +4,7 @@ using Robust.Shared.Audio.Midi;
 
 namespace Robust.Client.Audio.Midi;
 
+[NotContentImplementable]
 public interface IMidiManager
 {
     /// <summary>

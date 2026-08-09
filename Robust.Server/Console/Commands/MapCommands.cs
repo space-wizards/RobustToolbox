@@ -338,11 +338,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class SaveGame : LocalizedCommands
+    public sealed partial class SaveGame : LocalizedCommands
     {
-        [Dependency] private readonly IEntitySystemManager _system = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
-        [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IResourceManager _resource = default!;
+        [Dependency] private IConfigurationManager _config = default!;
 
         public override string Command => "savegame";
 
@@ -386,12 +386,12 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class LoadGame : LocalizedCommands
+    public sealed partial class LoadGame : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IEntitySystemManager _system = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
-        [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private IEntityManager _entMan = default!;
+        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IResourceManager _resource = default!;
+        [Dependency] private IConfigurationManager _config = default!;
 
         public override string Command => "loadgame";
 

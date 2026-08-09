@@ -48,6 +48,11 @@ public sealed class TestingParallelManager : IParallelManagerInternal
         }
     }
 
+    public void ProcessSerialNow(IParallelRangeRobustJob jobs, int amount)
+    {
+        jobs.ExecuteRange(0, amount);
+    }
+
     /// <inheritdoc/>
     public WaitHandle Process(IParallelRobustJob jobs, int amount)
     {
@@ -68,6 +73,14 @@ public sealed class TestingParallelManager : IParallelManagerInternal
     }
 
     public WaitHandle Process(IParallelBulkRobustJob jobs, int amount)
+    {
+        ProcessSerialNow(jobs, amount);
+        var ev = new ManualResetEventSlim();
+        ev.Set();
+        return ev.WaitHandle;
+    }
+
+    public WaitHandle Process(IParallelRangeRobustJob jobs, int amount)
     {
         ProcessSerialNow(jobs, amount);
         var ev = new ManualResetEventSlim();

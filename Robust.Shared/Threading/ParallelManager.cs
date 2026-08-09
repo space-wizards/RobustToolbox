@@ -63,6 +63,14 @@ public interface IParallelManager
     /// <param name="amount">The total number of elements to process.</param>
     /// <returns>A wait handle that signals when the job is complete.</returns>
     WaitHandle Process(IParallelBulkRobustJob jobs, int amount);
+
+    /// <summary>
+    /// Takes in a range parallel job and runs it without blocking.
+    /// </summary>
+    /// <param name="jobs">The bulk parallel job to process.</param>
+    /// <param name="amount">The total number of elements to process.</param>
+    /// <returns>A wait handle that signals when the job is complete.</returns>
+    WaitHandle Process(IParallelRangeRobustJob jobs, int amount);
 }
 
 internal interface IParallelManagerInternal : IParallelManager

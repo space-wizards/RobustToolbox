@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -24,4 +26,27 @@ public sealed partial class ChunkContainerComponent : Component
 
     [ViewVariables(VVAccess.ReadOnly)]
     public readonly Dictionary<Vector2i, Entity<ChunkEntityComponent>> Chunks = new();
+
+    [ViewVariables(VVAccess.ReadOnly)]
+    internal readonly List<Entity<ChunkEntityComponent>>[] Cardinals = new[]
+    {
+        new List<Entity<ChunkEntityComponent>>(),
+        new List<Entity<ChunkEntityComponent>>(),
+        new List<Entity<ChunkEntityComponent>>(),
+        new List<Entity<ChunkEntityComponent>>(),
+    };
+
+    [ViewVariables(VVAccess.ReadOnly)]
+    internal readonly List<Entity<ChunkEntityComponent>>[] Diagonals = new[]
+    {
+        new List<Entity<ChunkEntityComponent>>(),
+        new List<Entity<ChunkEntityComponent>>(),
+        new List<Entity<ChunkEntityComponent>>(),
+        new List<Entity<ChunkEntityComponent>>(),
+        new List<Entity<ChunkEntityComponent>>(),
+        new List<Entity<ChunkEntityComponent>>(),
+        new List<Entity<ChunkEntityComponent>>(),
+        new List<Entity<ChunkEntityComponent>>(),
+        new List<Entity<ChunkEntityComponent>>(),
+    };
 }

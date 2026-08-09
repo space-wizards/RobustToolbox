@@ -281,8 +281,10 @@ namespace Robust.Shared.GameObjects
             }
 
             var order = TopologicalSort.Sort(allNodes).ToArray();
-            var frameUpdate = order.Where(p => NeedsFrameUpdate(p.GetType()));
-            var update = order.Where(p => NeedsUpdate(p.GetType()));
+#pragma warning disable CS0618 // Type or member is obsolete
+            var frameUpdate = order.Where(p => p.NeedsFrameUpdate() ?? NeedsFrameUpdate(p.GetType()));
+            var update = order.Where(p => p.NeedsUpdate() ?? NeedsUpdate(p.GetType()));
+#pragma warning restore CS0618 // Type or member is obsolete
 
             return (frameUpdate, update);
         }

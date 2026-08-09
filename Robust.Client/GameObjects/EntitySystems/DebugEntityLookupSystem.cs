@@ -23,7 +23,7 @@ public sealed partial class DebugEntityLookupCommand : LocalizedEntityCommands
     }
 }
 
-public sealed class DebugEntityLookupSystem : EntitySystem
+public sealed partial class DebugEntityLookupSystem : EntitySystem
 {
     public bool Enabled
     {

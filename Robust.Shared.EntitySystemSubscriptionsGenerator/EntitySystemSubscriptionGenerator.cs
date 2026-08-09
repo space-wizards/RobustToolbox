@@ -85,6 +85,9 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
                     productionContext.CancellationToken.ThrowIfCancellationRequested();
                     var subscriptionMethod = method.Type.ToSubscriptionMethod();
 
+                    var before = method.Before.HasValue ? ("[" + string.Join(", ", method.Before.Value.Select(t => $"typeof({t})")) + "]") : "null";
+                    var after = method.After.HasValue ? ("[" + string.Join(", ", method.After.Value.Select(t => $"typeof({t})")) + "]") : "null";
+
                     // Handle methods with generic types
                     if (method.Generic != null)
                     {
@@ -128,16 +131,12 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
                             }
 
                             var genericTypeArgs = string.Join(", ", newArgs);
-                            subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{genericTypeArgs}>({method.MethodName});");
+                            subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{genericTypeArgs}>({method.MethodName}, {before}, {after});");
                         }
                         continue;
                     }
 
                     var typeArgs = string.Join(", ", method.TypeArgs);
-
-                    var before = method.Before.HasValue ? ("[" + string.Join(", ", method.Before.Value.Select(t => $"typeof({t})")) + "]") : "null";
-                    var after = method.After.HasValue ? ("[" + string.Join(", ", method.After.Value.Select(t => $"typeof({t})")) + "]") : "null";
-
                     subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{typeArgs}>({method.MethodName}, {before}, {after});");
                 }
 

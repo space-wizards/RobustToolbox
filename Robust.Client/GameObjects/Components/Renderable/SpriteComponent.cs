@@ -980,14 +980,8 @@ namespace Robust.Client.GameObjects
             LayerSetShader(layer, shader, prototype);
         }
 
-        public void LayerSetShader(int layer, string? shaderName)
+        public void LayerSetShader(int layer, string shaderName)
         {
-            if (shaderName == null)
-            {
-                LayerSetShader(layer, null, null);
-                return;
-            }
-
             if (!prototypes.TryIndex<ShaderPrototype>(shaderName, out var prototype))
             {
                 Logger.ErrorS(LogCategory,
@@ -1002,7 +996,7 @@ namespace Robust.Client.GameObjects
             LayerSetShader(layer, prototype.Instance(), shaderName);
         }
 
-        public void LayerSetShader(object layerKey, string? shaderName)
+        public void LayerSetShader(object layerKey, string shaderName)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;

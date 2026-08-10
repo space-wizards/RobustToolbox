@@ -4,10 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Robust.Shared.Random;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes;
@@ -25,6 +27,12 @@ public partial class PrototypeManager
     private readonly List<ResPath> _abstractDirectories = new();
 
     public event Action<DataNodeDocument>? LoadedData;
+
+    /// <summary>
+    /// Custom context use when reading YML into prototypes.
+    /// It ensures that the same mapping always returns the same component instance.
+    /// </summary>
+    private PrototypeLoadContext _prototypeLoadContext = default!;
 
     /// <inheritdoc />
     public void LoadDirectory(ResPath path, bool overwrite = false,
@@ -316,9 +324,6 @@ public partial class PrototypeManager
         }
 
         Freeze(modified);
-
-        if (modified.Any(x => x.Type == typeof(EntityPrototype)))
-            RebuildEntityComponentCache();
     }
 
     public void AbstractFile(ResPath path)
@@ -377,4 +382,16 @@ public partial class PrototypeManager
         string Id,
         string[]? Parents,
         MappingDataNode Data);
+
+    private sealed class PrototypeLoadContext : ISerializationContext
+    {
+        public SerializationManager.SerializerProvider SerializerProvider { get; }
+        public bool WritingReadingPrototypes { get; }
+
+        public PrototypeLoadContext(ISerializationManager serialization)
+        {
+            SerializerProvider = new SerializationManager.SerializerProvider(serialization);
+            SerializerProvider.RegisterSerializer<ComponentRegistrySerializer>()?.CacheComponents = true;
+        }
+    }
 }

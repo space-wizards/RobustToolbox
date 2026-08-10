@@ -518,6 +518,14 @@ namespace Robust.Shared.GameObjects
             RemoveComponentDeferred(component, owner, false);
         }
 
+        /// <summary>
+        /// Returns whether a component is being removed or is queued for deferred removal.
+        /// </summary>
+        internal bool IsComponentPendingRemoval(IComponent component)
+        {
+            return component.LifeStage >= ComponentLifeStage.Stopping || _deleteSet.Contains(component);
+        }
+
         private static IEnumerable<IComponent> InSafeOrder(IEnumerable<IComponent> comps, bool forCreation = false)
         {
             static int Sequence(IComponent x)
@@ -1194,6 +1202,18 @@ namespace Robust.Shared.GameObjects
             return new EntityQuery<TComp1>(this, comps);
         }
 
+        // this literally just exists to handle SharedLightComponent and is pretty hacky
+        // just move point light to shared and kill this.
+        // TODO LIGHT
+        internal EntityQuery<TCompShared> GetEntityQuery<TCompShared, TComp>()
+            where TCompShared : IComponent
+            where TComp : TCompShared
+        {
+            var comps = _entTraitArray[CompIdx.ArrayIndex<TComp>()];
+            DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp).Name}");
+            return new EntityQuery<TCompShared>(this, comps);
+        }
+
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
             var comps = _entTraitDict[type];
@@ -1219,6 +1239,7 @@ namespace Robust.Shared.GameObjects
         internal IReadOnlyCollection<IComponent> GetComponentsInternal(EntityUid uid) => _entCompIndex[uid];
 
         /// <inheritdoc />
+        [Pure]
         public int ComponentCount(EntityUid uid)
         {
             var comps = _entCompIndex[uid];

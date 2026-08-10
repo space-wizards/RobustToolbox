@@ -295,6 +295,7 @@ namespace Robust.Shared.Prototypes
         {
             _kindNames.Clear();
             _kinds = FrozenDictionary<Type, KindData>.Empty;
+            _entityComponentCache = FrozenDictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>.Empty;
         }
 
         /// <inheritdoc />
@@ -348,6 +349,21 @@ namespace Robust.Shared.Prototypes
             Dictionary<Type, HashSet<string>> modified,
             Dictionary<Type, HashSet<string>>? removed = null)
         {
+            ReloadPrototypes(modified, removed, false);
+        }
+
+        void IPrototypeManagerInternal.ReloadPrototypesOrThrow(
+            Dictionary<Type, HashSet<string>> modified,
+            Dictionary<Type, HashSet<string>>? removed)
+        {
+            ReloadPrototypes(modified, removed, true);
+        }
+
+        private void ReloadPrototypes(
+            Dictionary<Type, HashSet<string>> modified,
+            Dictionary<Type, HashSet<string>>? removed,
+            bool throwOnFailure)
+        {
             var prototypeTypeOrder = modified.Keys.ToList();
             prototypeTypeOrder.Sort(SortPrototypesByPriority);
 
@@ -355,6 +371,7 @@ namespace Robust.Shared.Prototypes
             var modifiedKinds = new HashSet<KindData>();
             var toProcess = new HashSet<string>();
             var processQueue = new Queue<string>();
+            var validationContext = throwOnFailure ? new YamlValidationContext(_serializationManager) : null;
 
             foreach (var kind in prototypeTypeOrder)
             {
@@ -445,7 +462,15 @@ namespace Robust.Shared.Prototypes
 
                     toProcess.Remove(id);
 
-                    var prototype = TryReadPrototype(kind, id, kindData.Results[id], SerializationHookContext.DontSkipHooks);
+                    if (validationContext != null)
+                        ValidatePrototype(kind, id, kindData.Results[id], validationContext);
+
+                    var prototype = TryReadPrototype(
+                        kind,
+                        id,
+                        kindData.Results[id],
+                        SerializationHookContext.DontSkipHooks,
+                        throwOnFailure);
                     if (prototype == null)
                         continue;
 
@@ -463,6 +488,9 @@ namespace Robust.Shared.Prototypes
 
             Freeze(modifiedKinds);
 
+            if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype)))
+                RebuildEntityComponentCache();
+
             if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
                 UpdateCategories();
 
@@ -473,6 +501,31 @@ namespace Robust.Shared.Prototypes
             var ev = new PrototypesReloadedEventArgs(modifiedTypes, byType, removed);
             PrototypesReloaded?.Invoke(ev);
             _entMan.EventBus.RaiseEvent(EventSource.Local, ev);
+        }
+
+        private void ValidatePrototype(
+            Type kind,
+            string id,
+            MappingDataNode mapping,
+            YamlValidationContext context)
+        {
+            var validationMapping = mapping;
+            if (mapping.Has("type"))
+            {
+                // Runtime-loaded mappings still include "type"; field validation already knows the prototype kind.
+                validationMapping = mapping.Copy();
+                validationMapping.Remove("type");
+            }
+
+            var errors = _serializationManager.ValidateNode(kind, validationMapping, context)
+                .GetErrors()
+                .ToArray();
+
+            if (errors.Length == 0)
+                return;
+
+            var errorText = string.Join("\n", errors.Select(x => x.ErrorReason));
+            throw new PrototypeLoadException($"Validation failed for {kind}({id})\n{errorText}");
         }
 
         private void Freeze(IEnumerable<KindData> kinds)
@@ -519,6 +572,7 @@ namespace Robust.Shared.Prototypes
                 InstantiateKinds(kinds, inheritanceTasks);
             }
 
+            RebuildEntityComponentCache();
             UpdateCategories();
         }
 
@@ -606,7 +660,8 @@ namespace Robust.Shared.Prototypes
             Type kind,
             string id,
             MappingDataNode mapping,
-            SerializationHookContext hookCtx)
+            SerializationHookContext hookCtx,
+            bool throwOnReadFailure = false)
         {
             if (mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) &&
                 abstractNode.AsBool())
@@ -618,6 +673,9 @@ namespace Robust.Shared.Prototypes
             }
             catch (Exception e)
             {
+                if (throwOnReadFailure)
+                    throw new PrototypeLoadException($"Failed reading {kind}({id})", e);
+
                 Sawmill.Error($"Reading {kind}({id}) threw the following exception: {e}");
                 return null;
             }
@@ -1032,7 +1090,7 @@ namespace Robust.Shared.Prototypes
             {
                 throw new InvalidImplementationException(kind,
                     typeof(IPrototype),
-                    $"Duplicate prototype type ID: {attribute.Type}. Current: {existing}");
+                    $"Duplicate prototype type ID: {name}. Current: {existing}");
             }
 
             var foundIdAttribute = false;
@@ -1200,8 +1258,7 @@ namespace Robust.Shared.Prototypes
                         continue;
                     }
 
-                    var copy = componentMapping.Copy();
-                    copy.Remove("type");
+                    var copy = componentMapping.CopyNoType();
                     _tempMappingData[type.Value] = copy;
                 }
             }

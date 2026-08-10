@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -52,6 +52,193 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 288.0.1
+
+### Bugfixes
+
+* Fix server and client getstate not being aligned for ComponentNetworkGenerator.
+* Fix components removed on entity deserializer not flagging the entity as dirty.
+
+
+## 288.0.0
+
+### Breaking changes
+
+* `ReplayData` no longer exposes the `States`/`Messages` lists; use `Count`, `GetState(index)` and `GetMessages(index)` instead. Replay history is now provided lazily through the new `IReplayDataProvider` interface, and `IReplayLoadManager.GenerateCheckpointsAsync` is no longer part of the public API.
+* GridFixtureSystem now updates the grid origin for split grids to re-centre them.
+* Batch font outline drawing with new API methods.
+* SharedMapSystem enumerators can now use struct foreach loops instead of .MoveNext calls and obsoleted the other ones.
+
+### New features
+
+* Added IAudioManager.ConvertAudioDeviceNameForDisplay helper method for decoding OpenAL device names into a more human-readable format.
+* The replay client now streams replay history from disk instead of keeping the entire deserialized replay resident in RAM, both while loading (history is streamed block-by-block through checkpoint generation) and during playback (data blocks are lazily re-read through a small LRU window, configurable via the `replay.loaded_block_window` cvar). Measured on an 861 MB, 1h38m replay this halves load time and cuts peak memory from ~22 GB to ~12 GB.
+* Added WithCompOrNull helper methods to EntitySystems.
+* Fix deletion rectangle rotation
+* Added CVar to mute on unfocus.
+
+### Bugfixes
+
+* Failed runtime prototype uploads are now dropped.
+* Fix spawn tiles window UIBox2 errors.
+* Release all keybinds when window loses focus.
+* Fix chunt pausing not aligning with the attached root pausing.
+
+### Internal
+
+* ISimulation no longer has SpawnEntity methods, resolve IEntityManager and call the spawn methods directly instead.
+* Run GenerateClient and GenerateServer in parallel.
+
+
+## 287.0.0
+
+### Breaking changes
+
+* OccluderComponent now supports convex polygons and no longer uses a bounding box. These use the same limitations as convex hulls for physics (no more than 8 points).
+* Update Yamldotnet to 18.1.0
+* EntityPrototype components are now interned and shared. Any components that have the same datafield data are now shared when stored on PrototypeManager, saving significant amounts of memory.
+* RSIStates now store AtlasTexture and not Texture, speeding up RSI rendering by directly passing it through.
+* Reverted BUI state queueing.
+
+### New features
+
+* Added a field to `ComponentNetworkGenerator` to exclude components from replays.
+* Added support for before and after subscriptions for the new `[SubscribeLocalEvent]` and related attributes.
+
+### Bugfixes
+
+* Make DefaultWindow call base.FrameUpdate to support animations.
+* Fix Discord RPC playtime resetting on join.
+* Fix some WordWrap bugs.
+
+### Other
+
+* Change `OccluderComponent` access to `ReadExecute`.
+* Components that are being removed are no longer serialized.
+* Added test workflows for the template repos.
+
+### Internal
+
+* Rewrite ReflectionManager for performance reasons.
+* Made many optimizations to GameStates, componentregistryserializer, IoC dependencies, and collection serializers.
+* Remove redundant MsgEntity properties.
+* Cached texture UVs for rendering atlas textures.
+* Pool sprite post-shader render targets in Clyde.
+
+
+## 286.0.0
+
+### Breaking changes
+
+* Box2 and Box2Rotated now validate their inputs and no longer accepts negative sizes.
+* Multiple PostShaders are now supported for SpriteComponent. The rendering paths for sprites also optionally take in post-shaders as well.
+
+### New features
+
+* `Thickness` is now serializable.
+* Added support for text outlines in `Font`, `DrawingHandleScreen`, `Label`, `RichTextLabel`, and overlays.
+* `IPrototypeManager `now has a new method, `TryGetEntityPrototypesByCategory `. It returns a set of serialized entity prototypes that form part of the given entity category
+* Expose relative mouse mode for windows.
+
+### Bugfixes
+
+* Fix Box2.EnlargeAabb's top bounds check.
+* Fix the NaN check for Box2.
+* Fix MoveBuffer not dropping proxies that move across maps in some cases.
+* Fix some serv5 edge cases.
+* Fix RobustIntegrationTest not raising an OnConnecting event for dummy sessions.
+* Fix server max player count on Discord RPC.
+
+### Other
+
+* Added Box2Rotated's Origin to its Hashcode.
+
+### Internal
+
+* Speedup many hotpaths on Box2 and Box2Rotated.
+* Cleanup ContainerSystem internally.
+* Standardize Roslyn analyzers and speed up some of them.
+* Make ComponentTreeEntry faster with GetHashCode.
+* Mark Direction extensions as Pure.
+
+
+## 285.0.1
+
+### Bugfixes
+
+* Fix FreeBSD builds and align CI with packaged builds.
+* Fix sRGB framebuffer for linux in GLES compatibility mode.
+
+
+## 285.0.0
+
+### Breaking changes
+
+- XamlX has been upgraded, and has a new style class syntax.
+  The syntax for multiple style classes has changed from:
+  ```xaml
+  <Control.StyleClasses>
+    <system:String>Hello</system:String>
+    <system:String>World</system:String>
+  </Control.StyleClasses>
+  ```
+  to
+  ```xaml
+  <Control StyleClasses="Hello World" />
+  ```
+
+- Setting `StyleClasses` in XAML now overrides all of the style classes with the provided list, instead of concatenating the given style class with any existing style classes.
+  The stock Button controls have modified setters to provide compatibility with older stylesheets, but user-defined controls may need to watch out for this.
+
+### New features
+
+* Add chunk-based entity support to PVS. The API is accessed via ChunkEntitySystem. This can be used instead of manually handling streaming chunk-based data.
+* Allow passing a reason to the shutdown command.
+* Exposed CVar for AL's doppler factor.
+
+### Bugfixes
+
+* Fix last state passed in for EnsureClientBui on UI system.
+
+
+## 284.0.0
+
+### New features
+
+* Serializers can now take [Dependency] fields.
+* Added a SplitCenterChangingEventArgs to SplitContainer for when it's being moved around.
+* Added a LightLevelSystem to measure how lit-up entities are.
+
+### Bugfixes
+
+* Fix PredictedQueueDel not rolling back properly on the client.
+* Fix sprites jittering on grids due to matrix imprecision.
+
+### Other
+
+* EntityManager.IsDefault now fast-paths with direct datafield equality methods
+* Updated Lidgren to f7ecb5aa384013d920f7925340cc4608ed156e83
+
+### Internal
+
+* Added profiling zones to the physics update, splitting it into broadphase, collision, solver (island build/solve) and per-controller pre/post-solve phases.
+* Added profiling zones splitting entity rendering into sprite gathering and drawing.
+* Cache component net IDs and component changes in ClientGameStateManager.
+* Optimise entities being detached + re-inserted during PVS.
+* Moved the release build to the end of the content test action so tests are still run in debug.
+
+
+## 283.1.0
+
+### New features
+
+* The `Color` API now includes a `bool TryFromHex(ReadOnlySpan<char> hexColor, out Color color)` signature for returning a `bool` and `out Color` instead of a `Color?`.
+
+### Other
+
+* The `Color` API is now better documented.
 
 
 ## 283.0.0

@@ -67,8 +67,11 @@ namespace Robust.Client.UserInterface.Controls
             get => _splitStart + _splitWidth / 2;
             set
             {
+                var args = new SplitCenterChangingEventArgs(value, _dragging);
+                OnSplitCenterChanging?.Invoke(args);
+
                 State = SplitState.Manual;
-                _splitStart = value - _splitWidth / 2;
+                _splitStart = args.SplitCenter - _splitWidth / 2;
                 ClampSplitCenter();
                 InvalidateMeasure();
                 OnSplitResized?.Invoke();
@@ -93,6 +96,14 @@ namespace Robust.Client.UserInterface.Controls
             {
                 SplitCenter = value * (Vertical ? Size.Y : Size.X);
             }
+        }
+
+        private float? _pendingSplitFraction;
+
+        public void SetSplitFractionOnNextArrange(float fraction)
+        {
+            _pendingSplitFraction = fraction;
+            State = SplitState.Manual;
         }
 
         private SplitState _splitState = SplitState.Auto;
@@ -137,6 +148,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public (Control First, Control Second)? Splits => ChildCount < 3 ? null : (GetChild(0), GetChild(1));
 
+        public event Action<SplitCenterChangingEventArgs>? OnSplitCenterChanging;
         public event Action? OnSplitResizeFinished;
         public event Action? OnSplitResized;
 
@@ -298,6 +310,12 @@ namespace Robust.Client.UserInterface.Controls
             var secondDesiredSize = Vertical ? second.DesiredSize.Y : second.DesiredSize.X;
 
             var size = Vertical ? finalSize.Y : finalSize.X;
+            if (_pendingSplitFraction is { } pendingSplitFraction && size > 0)
+            {
+                _splitStart = pendingSplitFraction * size - _splitWidth / 2;
+                _pendingSplitFraction = null;
+                OnSplitResized?.Invoke();
+            }
 
             var ratio = first.SizeFlagsStretchRatio / (first.SizeFlagsStretchRatio + second.SizeFlagsStretchRatio);
 
@@ -459,6 +477,18 @@ namespace Robust.Client.UserInterface.Controls
         {
             Horizontal,
             Vertical
+        }
+
+        public sealed class SplitCenterChangingEventArgs
+        {
+            public SplitCenterChangingEventArgs(float splitCenter, bool dragging)
+            {
+                SplitCenter = splitCenter;
+                Dragging = dragging;
+            }
+
+            public float SplitCenter { get; set; }
+            public bool Dragging { get; }
         }
 
         /// <summary>

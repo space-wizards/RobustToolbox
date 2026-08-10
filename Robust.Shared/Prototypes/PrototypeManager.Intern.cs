@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -41,36 +43,34 @@ namespace Robust.Shared.Prototypes
             // Anything not re-used gets GC'd when the new cache gets set.
             // Realistically we don't even need to keep the dictionary but it's using a tiny amount of memory ATM compared
             // to the non-interned approach.
-            var cache = new Dictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>(ComponentMappingNodeComparer);
+            var cache = new ConcurrentDictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>(ComponentMappingNodeComparer);
 
-            foreach (var (id, mapping) in entityKind.Results)
-            {
-                if (!entityKind.Instances.TryGetValue(id, out var instance)
-                    || instance is not EntityPrototype prototype
-                    || !mapping.TryGet<SequenceDataNode>("components", out var componentMappings))
+            Parallel.ForEach(entityKind.Results,
+                tuple =>
                 {
-                    continue;
-                }
-
-                foreach (var componentNode in componentMappings)
-                {
-                    if (componentNode is not MappingDataNode componentMapping
-                        || !componentMapping.TryGet<ValueDataNode>("type", out var typeNode)
-                        || !prototype.Components.TryGetValue(typeNode.Value, out var component))
+                    var (id, mapping) = tuple;
+                    if (!entityKind.Instances.TryGetValue(id, out var instance)
+                        || instance is not EntityPrototype prototype
+                        || !mapping.TryGet<SequenceDataNode>("components", out var componentMappings))
                     {
-                        continue;
+                        return;
                     }
 
-                    if (!cache.TryGetValue(componentMapping, out var canonical)
-                        && !_entityComponentCache.TryGetValue(componentMapping, out canonical))
+                    foreach (var componentNode in componentMappings)
                     {
-                        canonical = component;
-                    }
+                        if (componentNode is not MappingDataNode componentMapping
+                            || !componentMapping.TryGet<ValueDataNode>("type", out var typeNode)
+                            || !prototype.Components.TryGetValue(typeNode.Value, out var component))
+                        {
+                            continue;
+                        }
 
-                    cache.TryAdd(componentMapping, canonical);
-                    prototype.Components[typeNode.Value] = canonical;
-                }
-            }
+                        if (!_entityComponentCache.TryGetValue(componentMapping, out var canonical))
+                            canonical = cache.GetOrAdd(componentMapping, component);
+
+                        prototype.Components[typeNode.Value] = canonical;
+                    }
+                });
 
             _entityComponentCache = cache.ToFrozenDictionary(ComponentMappingNodeComparer);
             Sawmill?.Info($"Rebuilding entity prototype component cache took {stopwatch.Elapsed.TotalMilliseconds:f2}ms " +

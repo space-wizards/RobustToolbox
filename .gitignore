@@ -33,6 +33,7 @@
 # Build results
 bin/
 obj/
+analyzers/
 
 # ReSharper is a .NET coding add-in
 _ReSharper*/

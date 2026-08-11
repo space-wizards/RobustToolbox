@@ -89,17 +89,13 @@ public sealed partial class GameSavesSystem : EntitySystem
     /// <param name="data">Mapping data node to compress in the specified path.</param>
     private void WriteCompressedZstd(ResPath path, MappingDataNode data)
     {
-        var uncompressedStream = new MemoryStream();
+        using var uncompressedStream = new MemoryStream();
         _serializer.SerializeDirect(uncompressedStream, data.ToString());
 
-        // Get the underlying buffer directly to avoid allocations
         if (!uncompressedStream.TryGetBuffer(out var uncompressed))
         {
             uncompressed = new ArraySegment<byte>(uncompressedStream.ToArray());
         }
-
-        if (_resourceManager.UserData.RootDir == null)
-            return; // can't save anything
 
         byte[]? buf = null;
         try
@@ -110,15 +106,16 @@ public sealed partial class GameSavesSystem : EntitySystem
             // Write the uncompressed length into the first 4 bytes
             BitConverter.TryWriteBytes(buf.AsSpan(0, 4), uncompressed.Count);
 
-            // Compress the data
             var compressedLength = _zstdContext.Compress2(
                 buf.AsSpan(4, bound),
                 uncompressed.AsSpan());
 
-            var filePath = Path.Combine(_resourceManager.UserData.RootDir, path.Filename + Extension);
+            Log.Info($"Saving serialized results to {path}");
+            path = path.ToRootedPath();
+            _resourceManager.UserData.CreateDir(path.Directory);
 
-            using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-            fileStream.Write(buf, 0, 4 + compressedLength);
+            using var writer = _resourceManager.UserData.OpenWrite(path);
+            writer.Write(buf, 0, 4 + compressedLength);
         }
         finally
         {
@@ -140,7 +137,7 @@ public sealed partial class GameSavesSystem : EntitySystem
 
         using var decompressStream = new ZStdDecompressStream(fileStream, false);
 
-        var decompressedStream = new MemoryStream(uncompressedSize);
+        using var decompressedStream = new MemoryStream(uncompressedSize);
         decompressStream.CopyTo(decompressedStream);
         decompressedStream.Position = 0;
 

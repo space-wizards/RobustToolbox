@@ -396,7 +396,7 @@ namespace Robust.Shared.Physics.Systems
             DebugTools.Assert(proxy.Body.CanCollide);
 
             // Broadphase can't intersect with entities on itself so skip.
-            if (proxy.Entity == broadphase || broadphase == EntityUid.Invalid || !_xformQuery.TryGetComponent(proxy.Entity, out var xform))
+            if (proxy.Entity == broadphase || !_xformQuery.TryGetComponent(proxy.Entity, out var xform))
             {
                 return;
             }
@@ -632,10 +632,12 @@ namespace Robust.Shared.Physics.Systems
             public void Execute(int index)
             {
                 var proxy = MoveBuffer[index];
-                var broadphaseUid = XformQuery.GetComponent(proxy.Entity).Broadphase?.Uid;
-                var worldAABB = TransformSys.GetWorldMatrix(broadphaseUid!.Value).TransformBox(proxy.AABB);
+                var proxyXform = XformQuery.GetComponent(proxy.Entity);
+                if (proxyXform.MapUid is not { } mapUid)
+                    return;
 
-                var mapUid = XformQuery.GetComponent(proxy.Entity).MapUid ?? EntityUid.Invalid;
+                var broadphaseUid = proxyXform.Broadphase?.Uid;
+                var worldAABB = TransformSys.GetWorldMatrix(broadphaseUid!.Value).TransformBox(proxy.AABB);
 
                 var broadphaseExpand = System.GetBroadphaseExpand(proxy.Body, FrameTime);
 

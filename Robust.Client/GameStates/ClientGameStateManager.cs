@@ -61,6 +61,7 @@ namespace Robust.Client.GameStates
         private readonly HashSet<EntityUid> _detachBatch = new();
         private readonly List<(NetEntity NetEntity, Entity<MetaDataComponent> Entity)> _detachEntities = new();
         private readonly List<(EntityState State, EntityUid Uid, MetaDataComponent Meta)> _resolvedEntityStates = new();
+        private readonly Dictionary<NetEntity, GameTick> _detachedChunkEntities = new();
 
         private readonly record struct StateData(
             EntityUid Uid,
@@ -95,6 +96,7 @@ namespace Robust.Client.GameStates
         [Dependency] private ILogManager _logMan = default!;
 
         private ISawmill _sawmill = default!;
+        private ClientChunkEntitySystem? _chunkEntities;
 
         /// <summary>
         /// If we are waiting for a full game state from the server, we will automatically re-send full state requests
@@ -181,6 +183,10 @@ namespace Robust.Client.GameStates
             _conHost.RegisterCommand("fullstatereset", Loc.GetString("cmd-full-state-reset-desc"), Loc.GetString("cmd-full-state-reset-help"), (_, _, _) => RequestFullState());
 
             _entities.ComponentAdded += OnComponentAdded;
+            _entitySystemManager.SystemLoaded += OnEntitySystemLoaded;
+            _entitySystemManager.SystemUnloaded += OnEntitySystemUnloaded;
+            if (_entitySystemManager.TryGetEntitySystem(out ClientChunkEntitySystem? chunkEntities))
+                HookChunkEntitySystem(chunkEntities);
 
             var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
             if (!metaId.HasValue)
@@ -193,6 +199,7 @@ namespace Robust.Client.GameStates
                 throw new InvalidOperationException("TransformComponent does not have a NetId.");
 
             _xformCompNetId = xformId.Value;
+
         }
 
         private void OnComponentAdded(AddedComponentEventArgs args)
@@ -221,6 +228,36 @@ namespace Robust.Client.GameStates
             _timing.CurTick = GameTick.Zero;
             _timing.LastRealTick = GameTick.Zero;
             _lastProcessedInput = 0;
+            _detachedChunkEntities.Clear();
+        }
+
+        private void OnEntitySystemLoaded(object? sender, SystemChangedArgs args)
+        {
+            if (args.System is not ClientChunkEntitySystem chunkEntities)
+                return;
+
+            HookChunkEntitySystem(chunkEntities);
+        }
+
+        private void OnEntitySystemUnloaded(object? sender, SystemChangedArgs args)
+        {
+            if (!ReferenceEquals(args.System, _chunkEntities))
+                return;
+
+            _chunkEntities.ChunkEntityInitialized -= OnChunkEntityInit;
+            _chunkEntities = null;
+        }
+
+        private void HookChunkEntitySystem(ClientChunkEntitySystem chunkEntities)
+        {
+            if (ReferenceEquals(_chunkEntities, chunkEntities))
+                return;
+
+            if (_chunkEntities != null)
+                _chunkEntities.ChunkEntityInitialized -= OnChunkEntityInit;
+
+            _chunkEntities = chunkEntities;
+            _chunkEntities.ChunkEntityInitialized += OnChunkEntityInit;
         }
 
         private void RunLevelChanged(object? sender, RunLevelChangedEventArgs args)
@@ -285,18 +322,29 @@ namespace Robust.Client.GameStates
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
         {
-            QueuePvsDetach(message.Entities, message.Tick);
+            if (message.Entities.Count != 0 || message.ChunkEntities.Count != 0)
+                QueuePvsDetach(message.Entities, message.Tick, message.ChunkEntities);
+
+            if (message.ChunkEntities.Count != 0)
+                DetachChunkEntities(message.ChunkEntities, message.Tick);
+
             PvsLeave?.Invoke(message);
         }
 
-        public void QueuePvsDetach(List<NetEntity> entities, GameTick tick)
+        public void QueuePvsDetach(List<NetEntity> entities, GameTick tick, List<NetEntity>? chunkEntities = null)
         {
-            _processor.AddLeavePvsMessage(entities, tick);
-            if (_replayRecording.IsRecording)
-                _replayRecording.RecordClientMessage(new ReplayMessage.LeavePvs(entities, tick));
+            if (entities.Count != 0)
+                _processor.AddLeavePvsMessage(entities, tick);
+
+            if (_replayRecording.IsRecording && (entities.Count != 0 || chunkEntities is { Count: > 0 }))
+                _replayRecording.RecordClientMessage(new ReplayMessage.LeavePvs(entities, tick, chunkEntities));
         }
 
-        public void ClearDetachQueue() => _processor.ClearDetachQueue();
+        public void ClearDetachQueue()
+        {
+            _processor.ClearDetachQueue();
+            _detachedChunkEntities.Clear();
+        }
 
         /// <inheritdoc />
         public void ApplyGameState()
@@ -567,16 +615,8 @@ namespace Robust.Client.GameStates
             // This is terrible, and I hate it. This also needs to run even when prediction is disabled.
             _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
 
-            if (!PredictionNeedsResetting)
-                return;
-
-            PredictionNeedsResetting = false;
-            var countReset = 0;
-            var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
-            var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
-            RemQueue<IComponent> toRemove = new();
-
-            // Handle predicted entity spawns.
+            // Handle predicted entity spawns before applying state-created entities. This
+            // keeps predicted chunk entities from colliding with authoritative chunk entities.
             var predicted = new ValueList<EntityUid>();
             var predictedQuery = _entities.AllEntityQueryEnumerator<PredictedSpawnComponent>();
 
@@ -591,6 +631,15 @@ namespace Robust.Client.GameStates
                 _entities.DeleteEntity(ent);
             }
 
+            if (!PredictionNeedsResetting)
+                return;
+
+            PredictionNeedsResetting = false;
+            var countReset = 0;
+            var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
+            var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
+            RemQueue<IComponent> toRemove = new();
+
             foreach (var entity in system.DirtyEntities)
             {
                 DebugTools.Assert(toRemove.Count == 0);
@@ -602,14 +651,19 @@ namespace Robust.Client.GameStates
                     !_processor.TryGetLastServerStates(meta.NetEntity, out var last))
                 {
                     // Entity was probably deleted on the server so do nothing.
+                    _entities.ClearPredictedDeletion(entity);
                     continue;
                 }
 
                 countReset += 1;
+                var predictedDetached = _entities.IsPredictedDetached(entity);
 
                 try
                 {
                     _resettingPredictedEntities = true;
+
+                    if (predictedDetached)
+                        meta.Flags &= ~MetaDataFlags.Detached;
 
                     foreach (var (netId, comp) in meta.NetComponents)
                     {
@@ -634,6 +688,7 @@ namespace Robust.Client.GameStates
                             }
                         }
 
+                        // If the component wasn't modified, or if we have no state to roll back to.
                         if (comp.LastModifiedTick <= _timing.LastRealTick ||
                             !last.TryGetValue(netId, out var compState))
                         {
@@ -693,6 +748,7 @@ namespace Robust.Client.GameStates
 
                 DebugTools.Assert(meta.EntityLastModifiedTick > _timing.LastRealTick);
                 meta.EntityLastModifiedTick = _timing.LastRealTick;
+                _entities.ClearPredictedDeletion(entity);
             }
 
             _entities.System<PhysicsSystem>().ResetContacts();
@@ -840,11 +896,22 @@ namespace Robust.Client.GameStates
                 var isEnteringPvs = (meta.Flags & MetaDataFlags.Detached) != 0;
                 if (isEnteringPvs)
                 {
+                    if ((meta.Flags & MetaDataFlags.ChunkEntity) != 0 &&
+                        _detachedChunkEntities.TryGetValue(es.NetEntity, out var detachedTick))
+                    {
+                        if (curState.ToSequence <= detachedTick)
+                            continue;
+
+                        _detachedChunkEntities.Remove(es.NetEntity);
+                        isEnteringPvs = false;
+                    }
+
                     // _toApply already contains newly created entities, but these should never be "entering PVS"
                     DebugTools.Assert(!_toApply.ContainsKey(uid));
 
                     meta.Flags &= ~MetaDataFlags.Detached;
-                    enteringPvs++;
+                    if (isEnteringPvs)
+                        enteringPvs++;
                 }
                 else if (meta.LastStateApplied >= es.EntityLastModified && meta.LastStateApplied != GameTick.Zero)
                 {
@@ -1160,6 +1227,7 @@ namespace Robust.Client.GameStates
                 return;
             }
 
+            _detachedChunkEntities.Clear();
             _sawmill.Info($"Resetting all entity states to tick {state.ToSequence}.");
 
             // Construct hashset for set.Contains() checks.
@@ -1245,6 +1313,7 @@ namespace Robust.Client.GameStates
             {
                 // Don't worry about this for later.
                 _entities.PendingNetEntityStates.Remove(netEntity);
+                _detachedChunkEntities.Remove(netEntity);
 
                 if (!_entities.TryGetEntity(netEntity, out var id))
                     continue;
@@ -1426,6 +1495,36 @@ namespace Robust.Client.GameStates
             }
 
             return false;
+        }
+
+        private void DetachChunkEntities(List<NetEntity> entities, GameTick tick)
+        {
+            foreach (var netEntity in entities)
+            {
+                if (!_detachedChunkEntities.TryGetValue(netEntity, out var oldTick) || oldTick < tick)
+                    _detachedChunkEntities[netEntity] = tick;
+
+                if (!_entities.TryGetEntityData(netEntity, out _, out var meta))
+                    continue;
+
+                if (meta.LastStateApplied > tick)
+                    continue;
+
+                meta._flags |= MetaDataFlags.Detached;
+            }
+        }
+
+        private void OnChunkEntityInit(EntityUid uid)
+        {
+            if (_detachedChunkEntities.Count == 0)
+                return;
+
+            var meta = _entities.GetComponent<MetaDataComponent>(uid);
+            if (!_detachedChunkEntities.TryGetValue(meta.NetEntity, out var detachedTick))
+                return;
+
+            if (meta.LastStateApplied <= detachedTick)
+                meta._flags |= MetaDataFlags.Detached;
         }
 
         private void HandleEntityState(in StateData data, IEventBus bus, GameTick toTick)

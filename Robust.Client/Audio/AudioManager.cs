@@ -6,11 +6,13 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.Audio.Sources;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio;
@@ -21,6 +23,7 @@ internal sealed partial class AudioManager : IAudioInternal
     [Shared.IoC.Dependency] private ILogManager _logMan = default!;
     [Shared.IoC.Dependency] private IReloadManager _reload = default!;
     [Shared.IoC.Dependency] private IResourceCache _cache = default!;
+    [Shared.IoC.Dependency] private IClydeInternal _clyde = default!;
 
     private Thread? _gameThread;
 
@@ -39,6 +42,12 @@ internal sealed partial class AudioManager : IAudioInternal
     private readonly HashSet<string> _alContextExtensions = new();
     private Attenuation _attenuation;
     private bool _audioInitialized;
+    private bool _focused = true;
+    private bool _muteUnfocused;
+    private const float MasterFadeDuration = 0.25f;
+    private float _masterFadeElapsed = MasterFadeDuration;
+    private float _masterFadeStartGain = 1f;
+    private float _masterFadeTargetGain = 1f;
 
     public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
     public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -168,13 +177,46 @@ internal sealed partial class AudioManager : IAudioInternal
         IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
         _cfg.OnValueChanged(CVars.AudioMasterVolume, SetMasterGain, true);
+        _cfg.OnValueChanged(CVars.AudioMuteUnfocused, OnMuteUnfocusedChanged, true);
         _cfg.OnValueChanged(CVars.AudioDevice, OnAudioDeviceChanged);
+        _clyde.OnWindowFocused += OnWindowFocused;
 
         _reload.Register("/Audio", "*.ogg");
         _reload.Register("/Audio", "*.wav");
 
         _reload.OnChanged += OnReload;
         _audioInitialized = true;
+    }
+
+    private void OnMuteUnfocusedChanged(bool muteUnfocused)
+    {
+        _muteUnfocused = muteUnfocused;
+        SetMasterFadeTarget(GetMasterFadeTarget());
+    }
+
+    private void OnWindowFocused(WindowFocusedEventArgs args)
+    {
+        if (args.Window != _clyde.MainWindow)
+            return;
+
+        _focused = args.Focused;
+        SetMasterFadeTarget(GetMasterFadeTarget());
+    }
+
+    private float GetMasterFadeTarget()
+    {
+        return _muteUnfocused && !_focused ? 0f : 1f;
+    }
+
+    private void SetMasterFadeTarget(float fadeGain)
+    {
+        if (MathF.Abs(_masterFadeTargetGain - fadeGain) < 0.001f)
+            return;
+
+        _masterFadeStartGain = FadeGain;
+        _masterFadeTargetGain = fadeGain;
+        _masterFadeElapsed = 0f;
+        ApplyMasterGain();
     }
 
     private void OnAudioDeviceChanged(string deviceSpecifier)

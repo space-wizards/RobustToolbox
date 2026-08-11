@@ -378,7 +378,6 @@ namespace Robust.Server.Console.Commands
 
     public sealed partial class LoadGame : LocalizedCommands
     {
-        [Dependency] private IEntityManager _entMan = default!;
         [Dependency] private IEntitySystemManager _system = default!;
         [Dependency] private IResourceManager _resource = default!;
 
@@ -391,34 +390,22 @@ namespace Robust.Server.Console.Commands
                 case 1:
                     var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
-                case 2:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-force"));
             }
             return CompletionResult.Empty;
         }
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 1)
+            if (args.Length != 1)
             {
                 shell.WriteLine(Help);
                 return;
             }
 
-            var flush = false;
-            if (args.Length == 2 && !bool.TryParse(args[1], out flush))
-            {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-bool", ("arg", args[1])));
-                return;
-            }
-
             shell.WriteLine(Loc.GetString("cmd-loadgame-attempt", ("path", args[0])));
 
-            if (flush)
-                _entMan.FlushEntities();
-
             var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>().TryLoadGeneric(new ResPath(args[0]), out _);
-            if(loadSuccess)
+            if (loadSuccess)
             {
                 shell.WriteLine(Loc.GetString("cmd-loadgame-success"));
             }

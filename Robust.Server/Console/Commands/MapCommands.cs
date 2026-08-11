@@ -1,13 +1,10 @@
 using System.Linq;
 using System.Numerics;
-using Robust.Shared;
-using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameSaves;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
@@ -342,7 +339,6 @@ namespace Robust.Server.Console.Commands
     {
         [Dependency] private IEntitySystemManager _system = default!;
         [Dependency] private IResourceManager _resource = default!;
-        [Dependency] private IConfigurationManager _config = default!;
 
         public override string Command => "savegame";
 
@@ -361,12 +357,6 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (!_config.GetCVar(CVars.GameSavesEnabled))
-            {
-                shell.WriteLine(Loc.GetString("cmd-savegame-disabled"));
-                return;
-            }
-
             if (args.Length < 1)
             {
                 shell.WriteLine(Help);
@@ -374,7 +364,7 @@ namespace Robust.Server.Console.Commands
             }
 
             shell.WriteLine(Loc.GetString("cmd-savegame-attempt", ("path", args[0])));
-            bool saveSuccess = _system.GetEntitySystem<GameSavesSystem>().TrySaveGame(new ResPath(args[0]));
+            var saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveAllEntities(new ResPath(args[0]));
             if(saveSuccess)
             {
                 shell.WriteLine(Loc.GetString("cmd-savegame-success"));
@@ -391,7 +381,6 @@ namespace Robust.Server.Console.Commands
         [Dependency] private IEntityManager _entMan = default!;
         [Dependency] private IEntitySystemManager _system = default!;
         [Dependency] private IResourceManager _resource = default!;
-        [Dependency] private IConfigurationManager _config = default!;
 
         public override string Command => "loadgame";
 
@@ -410,12 +399,6 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (!_config.GetCVar(CVars.GameSavesEnabled))
-            {
-                shell.WriteLine(Loc.GetString("cmd-savegame-disabled"));
-                return;
-            }
-
             if (args.Length < 1)
             {
                 shell.WriteLine(Help);
@@ -434,7 +417,7 @@ namespace Robust.Server.Console.Commands
             if (flush)
                 _entMan.FlushEntities();
 
-            bool loadSuccess = _system.GetEntitySystem<GameSavesSystem>().TryLoadGame(new ResPath(args[0]));
+            var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveAllEntities(new ResPath(args[0]));
             if(loadSuccess)
             {
                 shell.WriteLine(Loc.GetString("cmd-loadgame-success"));

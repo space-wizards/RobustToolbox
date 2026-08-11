@@ -2164,21 +2164,13 @@ namespace Robust.Shared
             CVarDef.Create("loading.show_debug", DefaultShowDebug, CVar.CLIENTONLY);
 
         /*
-         * GAME SAVES
+         * MAP LOADER
          */
 
         /// <summary>
-        /// Whether to allow saving and loading all entities.
-        /// Should be enabled only after the repository is tested, and it's confirmed that
-        /// saving and loading in stable scenarios doesn't throw any errors.
+        /// ZSTD compression level to use when compressing save files.
         /// </summary>
-        public static readonly CVarDef<bool> GameSavesEnabled =
-            CVarDef.Create("gamesaves.enabled", false, CVar.SERVER | CVar.REPLICATED);
-
-        /// <summary>
-        /// ZSTD compression level to use when compressing game saves.
-        /// </summary>
-        public static readonly CVarDef<int> GameSavesCompressLevel =
-            CVarDef.Create("gamesaves.compress_level", 3, CVar.ARCHIVE);
+        public static readonly CVarDef<int> MapSavesCompressLevel =
+            CVarDef.Create("maploader.compress_level", 3, CVar.ARCHIVE);
     }
 }

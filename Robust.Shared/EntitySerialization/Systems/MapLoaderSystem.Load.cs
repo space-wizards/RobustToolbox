@@ -10,6 +10,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.EntitySerialization.Systems;
@@ -113,7 +114,7 @@ public sealed partial class MapLoaderSystem
         return TryLoadGeneric(data, source, out result, options);
     }
 
-    private bool TryLoadGeneric(
+    public bool TryLoadGeneric(
         MappingDataNode data,
         string source,
         [NotNullWhen(true)] out LoadResult? result,
@@ -121,7 +122,9 @@ public sealed partial class MapLoaderSystem
     {
         result = null;
 
-        _stopwatch.Restart();
+        var stopwatch = new RStopwatch();
+        stopwatch.Start();
+
         var ev = new BeforeEntityReadEvent();
         RaiseLocalEvent(ev);
 
@@ -212,7 +215,7 @@ public sealed partial class MapLoaderSystem
             MapInitalizeMerged(merged, map);
 
         result = deserializer.Result;
-        Log.Debug($"Loaded map in {_stopwatch.Elapsed}");
+        Log.Debug($"Loaded map in {stopwatch.Elapsed}");
         return true;
     }
 
@@ -226,14 +229,25 @@ public sealed partial class MapLoaderSystem
         [NotNullWhen(true)] out Entity<TransformComponent>? entity,
         DeserializationOptions? options = null)
     {
+        var opts = new MapLoadOptions
+        {
+            DeserializationOptions = options ?? DeserializationOptions.Default,
+            ExpectedCategory = FileCategory.Entity
+        };
+
         entity = null;
-        if (!TryGetReader(file.ToRootedPath(), out var reader))
+        if (!TryLoadGeneric(file, out var result, opts))
             return false;
 
-        using (reader)
+        if (result.Orphans.Count == 1)
         {
-            return TryLoadEntity(reader, file.ToString(), out entity, options);
+            var uid = result.Orphans.Single();
+            entity = (uid, Transform(uid));
+            return true;
         }
+
+        Delete(result);
+        return false;
     }
 
     /// <summary>
@@ -280,14 +294,27 @@ public sealed partial class MapLoaderSystem
         Vector2 offset = default,
         Angle rot = default)
     {
+        var opts = new MapLoadOptions
+        {
+            MergeMap = map,
+            Offset = offset,
+            Rotation = rot,
+            DeserializationOptions = options ?? DeserializationOptions.Default,
+            ExpectedCategory = FileCategory.Grid
+        };
+
         grid = null;
-        if (!TryGetReader(file.ToRootedPath(), out var reader))
+        if (!TryLoadGeneric(file, out var result, opts))
             return false;
 
-        using (reader)
+        if (result.Grids.Count == 1)
         {
-            return TryLoadGrid(map, reader, file.ToString(), out grid, options, offset, rot);
+            grid = result.Grids.Single();
+            return true;
         }
+
+        Delete(result);
+        return false;
     }
 
     /// <summary>
@@ -338,15 +365,21 @@ public sealed partial class MapLoaderSystem
         Vector2 offset = default,
         Angle rot = default)
     {
-        grid = null;
-        map = null;
-        if (!TryGetReader(file.ToRootedPath(), out var reader))
-            return false;
+        var opts = options ?? DeserializationOptions.Default;
 
-        using (reader)
+        var mapUid = _mapSystem.CreateMap(out var mapId, runMapInit: opts.InitializeMaps);
+        if (opts.PauseMaps)
+            _mapSystem.SetPaused(mapUid, true);
+
+        if (!TryLoadGrid(mapId, file, out grid, options, offset, rot))
         {
-            return TryLoadGrid(reader, file.ToString(), out map, out grid, options, offset, rot);
+            Del(mapUid);
+            map = null;
+            return false;
         }
+
+        map = new(mapUid, Comp<MapComponent>(mapUid));
+        return true;
     }
 
     /// <summary>

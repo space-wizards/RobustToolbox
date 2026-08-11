@@ -221,7 +221,7 @@ public partial class PrototypeManager
 
         DebugTools.AssertNull(data.Parents);
         DebugTools.AssertNull(data.ParentMappings);
-        data.Parents = _serializationManager.Read<string[]>(parentNode, notNullableOverride: true);
+        data.Parents = NodeToParentArray(parentNode);
         data.ParentMappings = new MappingDataNode[data.Parents.Length];
 
         var i = 0;

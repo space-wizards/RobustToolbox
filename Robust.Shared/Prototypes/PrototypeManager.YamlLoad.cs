@@ -204,12 +204,10 @@ public partial class PrototypeManager
         var id = idNode.Value;
         string[]? parents = null;
 
-        if (kindData.Inheritance != null)
+        if (kindData.Inheritance != null &&
+            dataNode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
         {
-            if (dataNode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
-            {
-                parents = _serializationManager.Read<string[]>(parentNode, notNullableOverride: true);
-            }
+            parents = NodeToParentArray(parentNode);
         }
 
         return new ExtractedMappingData(kind, id, parents, dataNode);
@@ -369,6 +367,38 @@ public partial class PrototypeManager
         }
 
         mapping.Add("abstract", "true");
+    }
+
+    /// <summary>
+    /// Turns a node used to note the parents of a prototype into a string array
+    /// of those parent ids.
+    /// </summary>
+    /// <param name="node">The node to read.</param>
+    /// <returns>A string array of the parent id or parent ids.</returns>
+    /// <exception cref="ArgumentException">
+    /// raised if the given <see cref="node"/> is not of type
+    /// <see cref="SequenceDataNode"/> or <see cref="ValueDataNode"/>
+    /// </exception>
+    private string[] NodeToParentArray(DataNode node)
+    {
+        switch (node)
+        {
+            case SequenceDataNode sequence:
+            {
+                var parents = new string[sequence.Count];
+                for (var i = 0; i < sequence.Count; i++)
+                {
+                    parents[i] = ((ValueDataNode) sequence[i]).Value;
+                }
+
+                return parents;
+            }
+            case ValueDataNode value:
+                return [value.Value];
+        }
+
+        throw new ArgumentException(
+            $"Node of type {node.GetType()} cannot be used as a single parent or list of parents! Expected {typeof(SequenceDataNode)} or {typeof(ValueDataNode)}. Node string:\n{node}");
     }
 
     // All these fields can be null in case the

@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -84,8 +85,7 @@ public sealed partial class MapLoaderSystem : EntitySystem
     /// <param name="data">Mapping data node to compress into the specified path.</param>
     private void WriteCompressedZstd(ResPath path, MappingDataNode data)
     {
-        using var uncompressedStream = new MemoryStream();
-        _serializer.SerializeDirect(uncompressedStream, data.ToString());
+        using var uncompressedStream = new MemoryStream(Encoding.UTF8.GetBytes(data.ToString()));
 
         if (!uncompressedStream.TryGetBuffer(out var uncompressed))
         {
@@ -95,6 +95,7 @@ public sealed partial class MapLoaderSystem : EntitySystem
         byte[]? buf = null;
         try
         {
+
             var bound = ZStd.CompressBound(uncompressed.Count);
             buf = ArrayPool<byte>.Shared.Rent(4 + bound);
 
@@ -125,7 +126,7 @@ public sealed partial class MapLoaderSystem : EntitySystem
     /// </summary>
     /// <param name="path">Path to a file.</param>
     /// <param name="data">Mapping data node to write.</param>
-    private void Write(ResPath path, MappingDataNode data)
+    public void Write(ResPath path, MappingDataNode data)
     {
         Log.Info($"Saving serialized results to {path}");
         path = path.ToRootedPath();
@@ -254,10 +255,8 @@ public sealed partial class MapLoaderSystem : EntitySystem
 
             DebugTools.Assert(uncompressedSize == decompressedStream.Length);
 
-            // Some robust serializer shenanigans add 5 bytes of garbage to our stream, so we have to skip it manually.
-            decompressedStream.Position = 9;
-
-            return TryReadFile(new StreamReader(decompressedStream, leaveOpen: true), out data);
+            using var reader = new StreamReader(decompressedStream);
+            return TryReadFile(reader, out data);
         }
     }
 

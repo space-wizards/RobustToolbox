@@ -41,7 +41,7 @@ public sealed partial class MapLoaderSystem : EntitySystem
     /// <summary>
     /// File extension that represents a ZSTD compressed YAML file with a single mapping data node.
     /// </summary>
-    public const string SaveExtension = ".rtsave";
+    public const string SaveExtension = "rtsave";
 
     private ZStdCompressionContext _zstdContext = default!;
 
@@ -207,6 +207,26 @@ public sealed partial class MapLoaderSystem : EntitySystem
         return false;
     }
 
+    private bool TryGetStream(ResPath resPath, [NotNullWhen(true)] out Stream? stream)
+    {
+        if (_resourceManager.UserData.Exists(resPath))
+        {
+            // Log warning if file exists in both user and content data.
+            if (_resourceManager.ContentFileExists(resPath))
+                Log.Warning("Reading map user data instead of content");
+
+            stream = _resourceManager.UserData.OpenRead(resPath);
+            return true;
+        }
+
+        if (_resourceManager.TryContentFileRead(resPath, out stream))
+            return true;
+
+        Log.Error($"File not found: {resPath}");
+        stream = null;
+        return false;
+    }
+
     /// <summary>
     /// Tries to read a ZSTD compressed save file from a file path.
     /// </summary>
@@ -218,21 +238,27 @@ public sealed partial class MapLoaderSystem : EntitySystem
         data = null;
         var intBuf = new byte[4];
 
-        using var fileStream = _resourceManager.ContentFileRead(path);
+        if (!TryGetStream(path, out var fileStream))
+            return false;
 
-        // Read the prefix
-        fileStream.ReadExactly(intBuf);
-        var uncompressedSize = BitConverter.ToInt32(intBuf);
+        using (fileStream)
+        {
+            fileStream.ReadExactly(intBuf);
+            var uncompressedSize = BitConverter.ToInt32(intBuf);
 
-        using var decompressStream = new ZStdDecompressStream(fileStream, false);
+            using var decompressStream = new ZStdDecompressStream(fileStream, false);
 
-        using var decompressedStream = new MemoryStream(uncompressedSize);
-        decompressStream.CopyTo(decompressedStream);
-        decompressedStream.Position = 0;
+            using var decompressedStream = new MemoryStream(uncompressedSize);
+            decompressStream.CopyTo(decompressedStream);
+            decompressedStream.Position = 0;
 
-        DebugTools.Assert(uncompressedSize == decompressedStream.Length);
+            DebugTools.Assert(uncompressedSize == decompressedStream.Length);
 
-        return TryReadFile(new StreamReader(decompressedStream, leaveOpen: true), out data);
+            // Some robust serializer shenanigans add 5 bytes of garbage to our stream, so we have to skip it manually.
+            decompressedStream.Position = 9;
+
+            return TryReadFile(new StreamReader(decompressedStream, leaveOpen: true), out data);
+        }
     }
 
     /// <summary>

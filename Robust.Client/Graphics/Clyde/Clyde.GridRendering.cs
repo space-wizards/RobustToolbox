@@ -84,7 +84,15 @@ namespace Robust.Client.Graphics.Clyde
                     gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
                 }
 
-                gridProgram.SetUniform(UniIModelMatrix, _transformSystem.GetWorldMatrix(mapGrid));
+                var matrix = _transformSystem.GetWorldMatrix(mapGrid);
+                matrix.Translation += GetPixelSnapOffset(
+                    matrix.Translation,
+                    eye.Position.Position + eye.Offset,
+                    eye.Rotation,
+                    eye.Scale * viewport.RenderScale *
+                        new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter),
+                    viewport.Size);
+                gridProgram.SetUniform(UniIModelMatrix, matrix);
                 var enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
 
                 // Handle base texture updates.

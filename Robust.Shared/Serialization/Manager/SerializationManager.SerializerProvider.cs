@@ -628,7 +628,7 @@ public sealed partial class SerializationManager
             {
                 var id = SerializedType.GetId(elementType) + SerializerInterfaces.IndexOf(interfaceType);
                 if (id >= _typeSerializersArray.Length)
-                    Array.Resize(ref _typeSerializersArray, Math.Max(id + TypeInterfaces, _typeSerializersArray.Length) * 2);
+                    Array.Resize(ref _typeSerializersArray, Math.Max(id, _typeSerializersArray.Length) * 2 + 1);
 
                 ref var serializers = ref _typeSerializersArray[id];
                 if (regular)
@@ -644,7 +644,7 @@ public sealed partial class SerializationManager
             {
                 var id = TypeSerializerType.GetId(interfaceIndex, elementType, nodeType);
                 if (id >= _typeNodeSerializersArray.Length)
-                    Array.Resize(ref _typeNodeSerializersArray, Math.Max(id + TypeNodeInterfaces, _typeNodeSerializersArray.Length) * 2);
+                    Array.Resize(ref _typeNodeSerializersArray, Math.Max(id, _typeNodeSerializersArray.Length) * 2 + 1);
 
                 ref var tuple = ref _typeNodeSerializersArray[id];
                 if (regular)
@@ -721,9 +721,22 @@ public sealed partial class SerializationManager
         where TNode : DataNode
     {
         // ReSharper disable once StaticMemberInGenericType
-        internal static readonly int Index = SerializedType<TType>.Information.Id *
-                                             (TypeNodeInterfaces + NodeTypes) +
-                                             SerializerNodeInterfaces.IndexOf(typeof(TInterface).GetGenericTypeDefinition()) +
-                                             Nodes.IndexOf(typeof(TNode));
+        internal static readonly int Index;
+
+        static TypeSerializerType()
+        {
+            var interfaceIndex = SerializerNodeInterfaces.IndexOf(typeof(TInterface).GetGenericTypeDefinition());
+            if (interfaceIndex == -1)
+                throw new ArgumentException($"Invalid node type: {typeof(TInterface)}");
+
+            var nodeIndex = Nodes.IndexOf(typeof(TNode));
+            if (nodeIndex == -1)
+                throw new ArgumentException($"Invalid node type: {typeof(TNode)}");
+
+            Index = SerializedType<TType>.Information.Id *
+                    (TypeNodeInterfaces + NodeTypes) +
+                    interfaceIndex +
+                    nodeIndex;
+        }
     }
 }

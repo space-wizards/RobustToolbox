@@ -349,15 +349,13 @@ namespace Robust.Server.Console.Commands
                 case 1:
                     var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
-                case 2:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-force"));
             }
             return CompletionResult.Empty;
         }
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 1)
+            if (args.Length != 1)
             {
                 shell.WriteLine(Help);
                 return;

@@ -29,7 +29,6 @@ namespace Robust.Shared.EntitySerialization.Systems;
 /// </remarks>
 public sealed partial class MapLoaderSystem : EntitySystem
 {
-    [Dependency] private IRobustSerializer _serializer = default!;
     [Dependency] private IConfigurationManager _config = default!;
     [Dependency] private IResourceManager _resourceManager = default!;
     [Dependency] private IDependencyCollection _dependency = default!;

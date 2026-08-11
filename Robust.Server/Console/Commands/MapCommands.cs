@@ -417,7 +417,7 @@ namespace Robust.Server.Console.Commands
             if (flush)
                 _entMan.FlushEntities();
 
-            var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveAllEntities(new ResPath(args[0]));
+            var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>().TryLoadGeneric(new ResPath(args[0]), out _);
             if(loadSuccess)
             {
                 shell.WriteLine(Loc.GetString("cmd-loadgame-success"));

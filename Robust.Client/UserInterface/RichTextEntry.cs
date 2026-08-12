@@ -118,6 +118,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Recalculate line dimensions and where it has line breaks for word wrapping.
         /// </summary>
+        /// <param name="tagManager">MarkupTagManager</param>
         /// <param name="defaultFont">The font being used for display.</param>
         /// <param name="maxSizeX">The maximum horizontal size of the container of this entry.</param>
         /// <param name="uiScale"></param>
@@ -144,7 +145,7 @@ namespace Robust.Client.UserInterface
             foreach (var node in Message)
             {
                 nodeIndex++;
-                var text = ProcessNode(tagManager, node, context);
+                var text = ProcessNode(tagManager, node, context, _tagsAllowed);
 
                 if (!context.Font.TryPeek(out var font))
                     font = defaultFont;
@@ -170,7 +171,8 @@ namespace Robust.Client.UserInterface
 
                 var desiredSize = control.DesiredPixelSize;
                 var controlMetrics = new CharMetrics(
-                    0, 0,
+                    0,
+                    0,
                     desiredSize.X,
                     desiredSize.X,
                     desiredSize.Y);
@@ -225,6 +227,63 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        private static List<int> CalculateLineWidths(
+            in RichTextEntry entry,
+            MarkupTagManager tagManager,
+            Font defaultFont,
+            float uiScale)
+        {
+            var widths = new List<int> { 0 };
+            var context = new MarkupDrawingContext();
+            context.Color.Push(entry._defaultColor);
+            context.Font.Push(defaultFont);
+
+            var globalBreakCounter = 0;
+            var lineBreakIndex = 0;
+            var currentLine = 0;
+            var nodeIndex = -1;
+
+            foreach (var node in entry.Message)
+            {
+                nodeIndex++;
+                var text = ProcessNode(tagManager, node, context, entry._tagsAllowed);
+                if (!context.Font.TryPeek(out var font))
+                    font = defaultFont;
+
+                foreach (var rune in text.EnumerateRunes())
+                {
+                    if (lineBreakIndex < entry.LineBreaks.Count &&
+                        entry.LineBreaks[lineBreakIndex] == globalBreakCounter)
+                    {
+                        currentLine += 1;
+                        widths.Add(0);
+                        lineBreakIndex += 1;
+                    }
+
+                    if (font.TryGetCharMetrics(rune, uiScale, out var metrics))
+                        widths[currentLine] += metrics.Advance;
+
+                    globalBreakCounter += 1;
+                }
+
+                if (entry.Controls == null || !entry.Controls.TryGetValue(nodeIndex, out var control))
+                    continue;
+
+                if (lineBreakIndex < entry.LineBreaks.Count &&
+                    entry.LineBreaks[lineBreakIndex] == globalBreakCounter)
+                {
+                    currentLine += 1;
+                    widths.Add(0);
+                    lineBreakIndex += 1;
+                }
+
+                control.Measure(new Vector2(entry.Width, entry.Height));
+                widths[currentLine] += control.DesiredPixelSize.X;
+            }
+
+            return widths;
+        }
+
         public readonly void Draw(
             MarkupTagManager tagManager,
             DrawingHandleBase handle,
@@ -234,7 +293,8 @@ namespace Robust.Client.UserInterface
             MarkupDrawingContext context,
             float uiScale,
             float lineHeightScale = 1,
-            TextOutline? outline = null)
+            TextOutline? outline = null,
+            RichTextLabel.AlignMode align = RichTextLabel.AlignMode.Left)
         {
             if (outline is { } outlineSettings)
             {
@@ -248,7 +308,8 @@ namespace Robust.Client.UserInterface
                     uiScale,
                     lineHeightScale,
                     outlineSettings,
-                    arrangeControls: false);
+                    arrangeControls: false,
+                    align);
             }
 
             DrawPass(
@@ -261,7 +322,8 @@ namespace Robust.Client.UserInterface
                 uiScale,
                 lineHeightScale,
                 outline: null,
-                arrangeControls: true);
+                arrangeControls: true,
+                align);
         }
 
         private readonly void DrawPass(
@@ -274,14 +336,18 @@ namespace Robust.Client.UserInterface
             float uiScale,
             float lineHeightScale,
             TextOutline? outline,
-            bool arrangeControls)
+            bool arrangeControls,
+            RichTextLabel.AlignMode align)
         {
             context.Clear();
             context.Color.Push(_defaultColor);
             context.Font.Push(defaultFont);
 
+            var lineWidths = CalculateLineWidths(in this, tagManager, defaultFont, uiScale);
+
             var globalBreakCounter = 0;
             var lineBreakIndex = 0;
+            var currentLine = 0;
             var baseLine = drawBox.TopLeft + new Vector2(0, defaultFont.GetAscent(uiScale) + verticalOffset);
             var controlYAdvance = 0f;
             var hasOutline = outline.HasValue;
@@ -293,7 +359,7 @@ namespace Robust.Client.UserInterface
             foreach (var node in Message)
             {
                 nodeIndex++;
-                var text = ProcessNode(tagManager, node, context);
+                var text = ProcessNode(tagManager, node, context, _tagsAllowed);
                 if (!context.Color.TryPeek(out var color) || !context.Font.TryPeek(out var font))
                 {
                     color = _defaultColor;
@@ -307,7 +373,9 @@ namespace Robust.Client.UserInterface
                     if (lineBreakIndex < LineBreaks.Count &&
                         LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
-                        baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(font, uiScale, lineHeightScale) + controlYAdvance);
+
+                        currentLine += 1;
+                        baseLine = new Vector2(drawBox.Left + GetAlignedOffset(currentLine), baseLine.Y + GetLineHeight(font, uiScale, lineHeightScale) + controlYAdvance);
                         controlYAdvance = 0;
                         lineBreakIndex += 1;
 
@@ -354,16 +422,33 @@ namespace Robust.Client.UserInterface
                 controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(font, uiScale, lineHeightScale)) * invertedScale);
                 baseLine += new Vector2(advanceX, 0);
             }
+
+            float GetAlignedOffset(int lineIndex)
+            {
+                if (lineIndex < 0 || lineIndex >= lineWidths.Count)
+                    return 0f;
+
+                var remainingWidth = drawBox.Width - lineWidths[lineIndex];
+                if (remainingWidth <= 0)
+                    return 0f;
+
+                return align switch
+                {
+                    RichTextLabel.AlignMode.Right => remainingWidth,
+                    RichTextLabel.AlignMode.Center or RichTextLabel.AlignMode.Fill => remainingWidth / 2f,
+                    _ => 0f,
+                };
+            }
         }
 
-        private readonly string ProcessNode(MarkupTagManager tagManager, MarkupNode node, MarkupDrawingContext context)
+        private static string ProcessNode(MarkupTagManager tagManager, MarkupNode node, MarkupDrawingContext context, Type[]? tagsAllowed)
         {
             // If a nodes name is null it's a text node.
             if (node.Name == null)
                 return node.Value.StringValue ?? "";
 
             //Skip the node if there is no markup tag for it.
-            if (!tagManager.TryGetMarkupTagHandler(node.Name, _tagsAllowed, out var tag))
+            if (!tagManager.TryGetMarkupTagHandler(node.Name, tagsAllowed, out var tag))
                 return "";
 
             if (!node.Closing)

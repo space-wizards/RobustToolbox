@@ -71,7 +71,6 @@ public sealed partial class MapLoaderSystem : EntitySystem
     /// <returns>The text writer for that path.</returns>
     private StreamWriter GetWriterForPath(ResPath path)
     {
-        Log.Info($"Saving serialized results to {path}");
         path = path.ToRootedPath();
         _resourceManager.UserData.CreateDir(path.Directory);
         return _resourceManager.UserData.OpenWriteText(path);
@@ -128,6 +127,10 @@ public sealed partial class MapLoaderSystem : EntitySystem
     public void Write(ResPath path, MappingDataNode data)
     {
         Log.Info($"Saving serialized results to {path}");
+
+        var stopwatch = new RStopwatch();
+        stopwatch.Start();
+
         path = path.ToRootedPath();
         _resourceManager.UserData.CreateDir(path.Directory);
 
@@ -140,6 +143,8 @@ public sealed partial class MapLoaderSystem : EntitySystem
             using var writer = _resourceManager.UserData.OpenWriteText(path);
             WriteYaml(writer, data);
         }
+
+        Log.Info($"Saved serialized results to {path} in {stopwatch.Elapsed}");
     }
 
     public bool TryReadFile(ResPath file, [NotNullWhen(true)] out MappingDataNode? data)

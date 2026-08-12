@@ -348,7 +348,7 @@ namespace Robust.Client.UserInterface
             var globalBreakCounter = 0;
             var lineBreakIndex = 0;
             var currentLine = 0;
-            var baseLine = drawBox.TopLeft + new Vector2(0, defaultFont.GetAscent(uiScale) + verticalOffset);
+            var baseLine = drawBox.TopLeft + new Vector2(GetAlignedOffset(currentLine), defaultFont.GetAscent(uiScale) + verticalOffset);
             var controlYAdvance = 0f;
             var hasOutline = outline.HasValue;
             var outlineSettings = outline.GetValueOrDefault();

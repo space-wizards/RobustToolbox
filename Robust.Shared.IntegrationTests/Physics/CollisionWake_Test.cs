@@ -64,7 +64,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 mapSystem.TryGetMap(mapId, out var mapUid);
                 Assert.That(xform.ParentUid == mapUid);
 
-                entityTwo = entManager.SpawnEntity("CollisionWakeTestItem", new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
+                entityTwo = entManager.SpawnAttachedTo("CollisionWakeTestItem", new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
                 entityTwoPhysics = entManager.GetComponent<PhysicsComponent>(entityTwo.Value);
                 Assert.That(entManager.GetComponent<TransformComponent>(entityTwo.Value).ParentUid == grid.Owner);
 

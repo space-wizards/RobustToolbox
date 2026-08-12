@@ -177,11 +177,11 @@ internal sealed class GridMapTransition_Test
         var fixtureParent = grid.Owner;
         if (nested)
         {
-            parent = entManager.SpawnEntity(null, new EntityCoordinates(grid, Vector2.Zero));
+            parent = entManager.SpawnAttachedTo(null, new EntityCoordinates(grid, Vector2.Zero));
             fixtureParent = parent.Value;
         }
 
-        var child = entManager.SpawnEntity(null, new EntityCoordinates(fixtureParent, new Vector2(0.5f, 0.5f)));
+        var child = entManager.SpawnAttachedTo(null, new EntityCoordinates(fixtureParent, new Vector2(0.5f, 0.5f)));
         var body = entManager.AddComponent<PhysicsComponent>(child);
         physics.SetBodyType(child, bodyType, body: body);
         var shape = new PolygonShape();

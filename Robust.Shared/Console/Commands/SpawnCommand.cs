@@ -27,14 +27,14 @@ public sealed partial class SpawnCommand : LocalizedCommands
         if (args.Length == 1 && pAE != EntityUid.Invalid)
         {
             var entityCoordinates = _entityManager.GetComponent<TransformComponent>(pAE).Coordinates;
-            var createdEntity = _entityManager.SpawnEntity(args[0], entityCoordinates);
+            var createdEntity = _entityManager.SpawnAttachedTo(args[0], entityCoordinates);
             placementEv = new PlacementEntityEvent(createdEntity, entityCoordinates, PlacementEventAction.Create, shell.Player?.UserId);
         }
         else if (args.Length == 2)
         {
             var uidNet = NetEntity.Parse(args[1]);
             var entityCoordinates = _entityManager.GetComponent<TransformComponent>(_entityManager.GetEntity(uidNet)).Coordinates;
-            var createdEntity = _entityManager.SpawnEntity(args[0], entityCoordinates);
+            var createdEntity = _entityManager.SpawnAttachedTo(args[0], entityCoordinates);
             placementEv = new PlacementEntityEvent(createdEntity, entityCoordinates, PlacementEventAction.Create, shell.Player?.UserId);
         }
         else if (pAE != EntityUid.Invalid)

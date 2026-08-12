@@ -87,7 +87,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
             var parentXform = entManager.GetComponent<TransformComponent>(parent);
 
-            var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
+            var child = entManager.SpawnAttachedTo(null, new EntityCoordinates(parent, Vector2.Zero));
             var childXform = entManager.GetComponent<TransformComponent>(child);
 
             Assert.That(parentXform.MapID, Is.EqualTo(mapId));

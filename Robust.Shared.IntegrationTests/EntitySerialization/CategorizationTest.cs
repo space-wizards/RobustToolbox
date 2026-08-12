@@ -61,10 +61,10 @@ internal sealed partial class CategorizationTest : RobustIntegrationTest
             mapSys.SetTile(gridEntB, Vector2i.Zero, new Tile(tDef.TileId));
             gridA = gridEntA.Owner;
             gridB = gridEntB.Owner;
-            entA = entMan.SpawnEntity(null, new EntityCoordinates(gridA, 0.5f, 0.5f));
-            entB = entMan.SpawnEntity(null, new EntityCoordinates(gridB, 0.5f, 0.5f));
-            entC = entMan.SpawnEntity(null, new EntityCoordinates(gridB, 0.5f, 0.5f));
-            child = entMan.SpawnEntity(null, new EntityCoordinates(entB, 0.5f, 0.5f));
+            entA = entMan.SpawnAttachedTo(null, new EntityCoordinates(gridA, 0.5f, 0.5f));
+            entB = entMan.SpawnAttachedTo(null, new EntityCoordinates(gridB, 0.5f, 0.5f));
+            entC = entMan.SpawnAttachedTo(null, new EntityCoordinates(gridB, 0.5f, 0.5f));
+            child = entMan.SpawnAttachedTo(null, new EntityCoordinates(entB, 0.5f, 0.5f));
             @null = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
         });
 

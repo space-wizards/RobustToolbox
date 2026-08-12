@@ -51,7 +51,7 @@ internal sealed partial class OrphanSerializationTest : RobustIntegrationTest
             mapSys.CreateMap(out mapId);
             var entAUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var entBUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-            var childUid = entMan.SpawnEntity(null, new EntityCoordinates(entBUid, 0, 0));
+            var childUid = entMan.SpawnAttachedTo(null, new EntityCoordinates(entBUid, 0, 0));
             entA = Get(entAUid, entMan);
             entB = Get(entBUid, entMan);
             child = Get(childUid, entMan);
@@ -158,7 +158,7 @@ internal sealed partial class OrphanSerializationTest : RobustIntegrationTest
             mapSys.SetTile(gridBUid, Vector2i.Zero, new Tile(tDef.TileId));
             gridB = Get(gridBUid, entMan);
 
-            var childUid = entMan.SpawnEntity(null, new EntityCoordinates(gridBUid, 0.5f, 0.5f));
+            var childUid = entMan.SpawnAttachedTo(null, new EntityCoordinates(gridBUid, 0.5f, 0.5f));
             child = Get(childUid, entMan);
 
             map.Comp2.Id = nameof(map);

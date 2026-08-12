@@ -57,7 +57,7 @@ internal sealed partial class AutoIncludeSerializationTest : RobustIntegrationTe
             var gridUid = mapSys.CreateGridEntity(mapId);
             mapSys.SetTile(gridUid, Vector2i.Zero, new Tile(tDef.TileId));
 
-            var onGridUid = entMan.SpawnEntity(null, new EntityCoordinates(gridUid, 0.5f, 0.5f));
+            var onGridUid = entMan.SpawnAttachedTo(null, new EntityCoordinates(gridUid, 0.5f, 0.5f));
             var offGridUid = entMan.SpawnEntity(null, new MapCoordinates(10f, 10f, mapId));
             var nullSpaceUid = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
 

@@ -39,8 +39,8 @@ internal sealed partial class LifestageSerializationTest : RobustIntegrationTest
             var mapUid = mapSys.CreateMap(out var mapId, runMapInit: false);
             var entAUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var entBUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-            var childAUid = entMan.SpawnEntity(null, new EntityCoordinates(entAUid, 0, 0));
-            var childBUid = entMan.SpawnEntity(null, new EntityCoordinates(entBUid, 0, 0));
+            var childAUid = entMan.SpawnAttachedTo(null, new EntityCoordinates(entAUid, 0, 0));
+            var childBUid = entMan.SpawnAttachedTo(null, new EntityCoordinates(entBUid, 0, 0));
             map = Get(mapUid, entMan);
             entA = Get(entAUid, entMan);
             entB = Get(entBUid, entMan);

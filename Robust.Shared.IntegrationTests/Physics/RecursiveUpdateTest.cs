@@ -35,12 +35,12 @@ internal sealed class RecursiveUpdateTest
         var coords = new EntityCoordinates(guid, new Vector2(0.5f, 0.5f));
         var broadData = new BroadphaseData(guid, false, false);
 
-        var container = entManager.SpawnEntity(null, coords);
+        var container = entManager.SpawnAttachedTo(null, coords);
         var containerXform = entManager.GetComponent<TransformComponent>(container);
         Assert.That(broadphase.SundriesTree, Does.Contain(container));
         Assert.That(containerXform.Broadphase, Is.EqualTo(broadData));
 
-        var contained = entManager.SpawnEntity(null, coords);
+        var contained = entManager.SpawnAttachedTo(null, coords);
         var childA = entManager.SpawnEntity(null, MapCoordinates.Nullspace);
         var childB = entManager.SpawnEntity(null, MapCoordinates.Nullspace);
 
@@ -172,8 +172,8 @@ internal sealed class RecursiveUpdateTest
         var mapBroadData = new BroadphaseData(map, false, false);
 
         // Set up parent & child
-        var parent = entManager.SpawnEntity(null, coords);
-        var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
+        var parent = entManager.SpawnAttachedTo(null, coords);
+        var child = entManager.SpawnAttachedTo(null, new EntityCoordinates(parent, Vector2.Zero));
         var parentXform = entManager.GetComponent<TransformComponent>(parent);
         var childXform = entManager.GetComponent<TransformComponent>(child);
 

@@ -77,9 +77,9 @@ public sealed class DetachedParentTest : RobustIntegrationTest
             mapCoords = new EntityCoordinates(map, 200, 200);
             grid = gridEnt.Owner;
 
-            parent = sEntMan.SpawnEntity(null, gridCoords);
-            player = sEntMan.SpawnEntity(null, gridCoords);
-            child = sEntMan.SpawnEntity(null, mapCoords);
+            parent = sEntMan.SpawnAttachedTo(null, gridCoords);
+            player = sEntMan.SpawnAttachedTo(null, gridCoords);
+            child = sEntMan.SpawnAttachedTo(null, mapCoords);
 
             // Attach player.
             var session = sPlayerMan.Sessions.First();
@@ -223,7 +223,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
 
         // Create a new parent entity
         EntityUid parent2 = default;
-        await server.WaitPost(() => parent2 = sEntMan.SpawnEntity(null, gridCoords));
+        await server.WaitPost(() => parent2 = sEntMan.SpawnAttachedTo(null, gridCoords));
 
         await RunTicksSync(server, client, 10);
 
@@ -271,7 +271,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
             mapSys.SetTile(gridEnt.Owner, gridEnt.Comp, Vector2i.Zero, new Tile(1));
             var grid2Coords = new EntityCoordinates(gridEnt, .5f, .5f);
             grid2 = gridEnt.Owner;
-            parent3 = sEntMan.SpawnEntity(null, grid2Coords);
+            parent3 = sEntMan.SpawnAttachedTo(null, grid2Coords);
         });
 
         await RunTicksSync(server, client, 10);
@@ -344,7 +344,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
             mapSys.SetTile(gridEnt.Owner, gridEnt.Comp, Vector2i.Zero, new Tile(1));
             var grid3Coords = new EntityCoordinates(gridEnt, .5f, .5f);
             grid3 = gridEnt.Owner;
-            parent4 = sEntMan.SpawnEntity(null, grid3Coords);
+            parent4 = sEntMan.SpawnAttachedTo(null, grid3Coords);
 
             var parent4Coords = new EntityCoordinates(parent4, Vector2.Zero);
 

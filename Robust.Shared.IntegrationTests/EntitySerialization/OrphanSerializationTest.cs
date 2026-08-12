@@ -49,8 +49,8 @@ internal sealed partial class OrphanSerializationTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             mapSys.CreateMap(out mapId);
-            var entAUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-            var entBUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var entAUid = entMan.Spawn(null, new MapCoordinates(0, 0, mapId));
+            var entBUid = entMan.Spawn(null, new MapCoordinates(0, 0, mapId));
             var childUid = entMan.SpawnAttachedTo(null, new EntityCoordinates(entBUid, 0, 0));
             entA = Get(entAUid, entMan);
             entB = Get(entBUid, entMan);

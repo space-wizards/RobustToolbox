@@ -58,7 +58,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 grid = mapSystem.CreateGridEntity(mapId);
                 mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
 
-                entityOne = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));
+                entityOne = entManager.Spawn("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));
                 entityOnePhysics = entManager.GetComponent<PhysicsComponent>(entityOne.Value);
                 xform = entManager.GetComponent<TransformComponent>(entityOne.Value);
                 mapSystem.TryGetMap(mapId, out var mapUid);

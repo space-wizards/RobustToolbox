@@ -64,18 +64,18 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             var coordinates = new MapCoordinates(0, 0, mapId);
 
-            var baseEntity = entityManager.SpawnEntity(BaseEntityId, coordinates);
+            var baseEntity = entityManager.Spawn(BaseEntityId, coordinates);
 
             Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(baseEntity, out TestBaseComponent? baseComponent));
             Assert.That(baseComponent!.BaseField, Is.EqualTo(BaseComponentFieldValue));
 
-            var inheritorEntity = entityManager.SpawnEntity(InheritorEntityId, coordinates);
+            var inheritorEntity = entityManager.Spawn(InheritorEntityId, coordinates);
 
             Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(inheritorEntity, out TestInheritorComponent? inheritorComponent));
             Assert.That(inheritorComponent!.BaseField, Is.EqualTo(BaseComponentFieldValue));
             Assert.That(inheritorComponent!.InheritorField, Is.EqualTo(InheritorComponentFieldValue));
 
-            var finalEntity = entityManager.SpawnEntity(FinalEntityId, coordinates);
+            var finalEntity = entityManager.Spawn(FinalEntityId, coordinates);
 
             Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(finalEntity, out TestFinalComponent? finalComponent));
             Assert.That(finalComponent!.BaseField, Is.EqualTo(BaseComponentFieldValue));

@@ -225,7 +225,7 @@ internal sealed class GridMapTransition_Test
         var entManager = sim.Resolve<IEntityManager>();
         var physics = entManager.System<SharedPhysicsSystem>();
         var fixtures = entManager.System<FixtureSystem>();
-        var uid = entManager.SpawnEntity(null, new MapCoordinates(position, mapId));
+        var uid = entManager.Spawn(null, new MapCoordinates(position, mapId));
         var body = entManager.AddComponent<PhysicsComponent>(uid);
         physics.SetBodyType(uid, bodyType, body: body);
         var shape = new PolygonShape();

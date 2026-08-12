@@ -51,7 +51,7 @@ internal sealed class GridMovement_Test : RobustIntegrationTest
             physSystem.WakeBody(onGrid, body: onGridBody);
             Assert.That(onGridBody.Awake);
 
-            var offGrid = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
+            var offGrid = entManager.Spawn(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
             var offGridBody = entManager.AddComponent<PhysicsComponent>(offGrid);
             physSystem.SetBodyType(offGrid, BodyType.Dynamic, body: offGridBody);
             var shapeB = new PolygonShape();
@@ -96,7 +96,7 @@ internal sealed class GridMovement_Test : RobustIntegrationTest
             var grid = mapSystem.CreateGridEntity(mapId);
             mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
 
-            var entity = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10.5f, 10.5f), mapId));
+            var entity = entManager.Spawn(null, new MapCoordinates(new Vector2(10.5f, 10.5f), mapId));
             var body = entManager.AddComponent<PhysicsComponent>(entity);
             physSystem.SetBodyType(entity, BodyType.Dynamic, body: body);
 

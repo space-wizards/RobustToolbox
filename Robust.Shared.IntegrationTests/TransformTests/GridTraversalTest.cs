@@ -43,7 +43,7 @@ internal sealed class GridTraversalTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             // Spawn an entity using map coordinates will get parented to the grid when spawning on the grid.
-            var entity = sEntMan.SpawnEntity(null, new MapCoordinates(gridMapPos, mapId));
+            var entity = sEntMan.Spawn(null, new MapCoordinates(gridMapPos, mapId));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).MapUid, Is.EqualTo(map));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).GridUid, Is.EqualTo(grid));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(grid));
@@ -64,7 +64,7 @@ internal sealed class GridTraversalTest : RobustIntegrationTest
             sEntMan.Deleted(entity);
 
             // Spawning an entity far away from the grid will leave it parented to the map.
-            entity = sEntMan.SpawnEntity(null, new MapCoordinates(new Vector2(100f, 100f), mapId));
+            entity = sEntMan.Spawn(null, new MapCoordinates(new Vector2(100f, 100f), mapId));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).MapUid, Is.EqualTo(map));
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).GridUid, Is.Null);
             Assert.That(sEntMan.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(map));

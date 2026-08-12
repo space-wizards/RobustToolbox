@@ -66,7 +66,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
             // I made a mistake earlier in this test where I used a server-side uid on the client
             for (var i = 0; i < 10; i++)
             {
-                server.EntMan.DeleteEntity(server.EntMan.SpawnEntity(null, MapCoordinates.Nullspace));
+                server.EntMan.DeleteEntity(server.EntMan.Spawn());
             }
 
             map = mapSys.CreateMap(out mapId);

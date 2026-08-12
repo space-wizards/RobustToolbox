@@ -23,8 +23,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManager.System<SharedMapSystem>().CreateMap(out var mapId);
             var xform = entManager.System<TransformSystem>();
 
-            var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
-            var ent2 = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(100f, 0f), mapId));
+            var ent1 = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
+            var ent2 = entManager.Spawn(null, new MapCoordinates(new Vector2(100f, 0f), mapId));
 
             var xform1 = entManager.GetComponent<TransformComponent>(ent1);
             var xform2 = entManager.GetComponent<TransformComponent>(ent2);

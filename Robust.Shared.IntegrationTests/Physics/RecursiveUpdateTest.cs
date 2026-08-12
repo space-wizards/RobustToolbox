@@ -41,8 +41,8 @@ internal sealed class RecursiveUpdateTest
         Assert.That(containerXform.Broadphase, Is.EqualTo(broadData));
 
         var contained = entManager.SpawnAttachedTo(null, coords);
-        var childA = entManager.SpawnEntity(null, MapCoordinates.Nullspace);
-        var childB = entManager.SpawnEntity(null, MapCoordinates.Nullspace);
+        var childA = entManager.Spawn();
+        var childB = entManager.Spawn();
 
         var containedXform = entManager.GetComponent<TransformComponent>(contained);
         var childAXform = entManager.GetComponent<TransformComponent>(childA);

@@ -39,7 +39,7 @@ public partial class SpawnDeleteEntityBenchmark
     {
         for (var i = 0; i < N; i++)
         {
-            var uid = _entityManager.SpawnEntity(null, _mapCoords);
+            var uid = _entityManager.Spawn(null, _mapCoords);
             _entityManager.DeleteEntity(uid);
         }
     }

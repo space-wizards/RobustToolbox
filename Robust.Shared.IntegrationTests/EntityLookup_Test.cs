@@ -58,7 +58,7 @@ namespace Robust.UnitTesting.Shared
 
         private EntityUid GetPhysicsEntity(IEntityManager entManager, MapCoordinates spawnPos)
         {
-            var ent = entManager.SpawnEntity(null, spawnPos);
+            var ent = entManager.Spawn(null, spawnPos);
             var physics = entManager.AddComponent<PhysicsComponent>(ent);
             entManager.System<FixtureSystem>().TryCreateFixture(ent, new PhysShapeCircle(0.35f, Vector2.Zero), "fix1");
             entManager.System<SharedPhysicsSystem>().SetCanCollide(ent, true, body: physics);
@@ -227,7 +227,7 @@ namespace Robust.UnitTesting.Shared
             else
                 entManager.Spawn(null, spawnPos);
 
-            _ = entManager.SpawnEntity(null, spawnPos);
+            _ = entManager.Spawn(null, spawnPos);
             var bounds = new Box2Rotated(Box2.CenteredAround(queryPos.Position, new Vector2(range, range)));
 
             Assert.That(lookup.GetEntitiesIntersecting(queryPos.MapId, bounds).Count > 0, Is.EqualTo(result));
@@ -252,7 +252,7 @@ namespace Robust.UnitTesting.Shared
             else
                 entManager.Spawn(null, spawnPos);
 
-            _ = entManager.SpawnEntity(null, spawnPos);
+            _ = entManager.Spawn(null, spawnPos);
             Assert.That(lookup.GetEntitiesInRange(queryPos.MapId, queryPos.Position, range).Count > 0, Is.EqualTo(result));
             mapSystem.DeleteMap(spawnPos.MapId);
         }
@@ -358,7 +358,7 @@ namespace Robust.UnitTesting.Shared
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Is.Empty);
 
             // Setup and check it actually worked
-            var dummy = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+            var dummy = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Has.Count.EqualTo(1));
 
             var xform = entManager.GetComponent<TransformComponent>(dummy);

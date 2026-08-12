@@ -44,7 +44,7 @@ public sealed partial class SpawnCommand : LocalizedCommands
                 float.Parse(args[2], CultureInfo.InvariantCulture),
                 _entityManager.GetComponent<TransformComponent>(pAE).MapID);
 
-            var createdEntity = _entityManager.SpawnEntity(args[0], coords);
+            var createdEntity = _entityManager.Spawn(args[0], coords);
             placementEv = new PlacementEntityEvent(createdEntity, _entityManager.GetComponent<TransformComponent>(createdEntity).Coordinates, PlacementEventAction.Create, shell.Player?.UserId);
         }
 

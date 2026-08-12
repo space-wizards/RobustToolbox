@@ -452,7 +452,7 @@ internal sealed class Broadphase_Test
 
         Assert.That(entManager.EntityQuery<BroadphaseComponent>(true).Count(), Is.EqualTo(1));
 
-        var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var parent = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
         var parentXform = entManager.GetComponent<TransformComponent>(parent);
         entManager.AddComponent<PhysicsComponent>(parent);
 

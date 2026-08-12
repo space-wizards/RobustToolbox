@@ -65,7 +65,7 @@ internal sealed partial class CategorizationTest : RobustIntegrationTest
             entB = entMan.SpawnAttachedTo(null, new EntityCoordinates(gridB, 0.5f, 0.5f));
             entC = entMan.SpawnAttachedTo(null, new EntityCoordinates(gridB, 0.5f, 0.5f));
             child = entMan.SpawnAttachedTo(null, new EntityCoordinates(entB, 0.5f, 0.5f));
-            @null = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
+            @null = entMan.Spawn();
         });
 
         FileCategory Save(params EntityUid[] ents)

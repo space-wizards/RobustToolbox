@@ -63,7 +63,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
                  mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
-                 entityUid = sEntManager.SpawnEntity(null, mapPos);
+                 entityUid = sEntManager.Spawn(null, mapPos);
                  sMetadataSys.SetEntityName(entityUid, "Container");
                  sContainerSys.EnsureContainer<Container>(entityUid, "dummy");
 
@@ -83,7 +83,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
              EntityUid itemUid = default!;
              await server.WaitAssertion(() =>
              {
-                 itemUid = sEntManager.SpawnEntity(null, mapPos);
+                 itemUid = sEntManager.Spawn(null, mapPos);
                  sMetadataSys.SetEntityName(itemUid, "Item");
                  var container = sContainerSys.EnsureContainer<Container>(entityUid, "dummy");
                  Assert.That(sContainerSys.Insert(itemUid, container));
@@ -194,7 +194,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
                  mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
-                 sEntityUid = sEntManager.SpawnEntity(null, mapPos);
+                 sEntityUid = sEntManager.Spawn(null, mapPos);
                  sMetadataSys.SetEntityName(sEntityUid, "Container");
                  sContainerSys.EnsureContainer<Container>(sEntityUid, "dummy");
 
@@ -213,7 +213,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
              await server.WaitAssertion(() =>
              {
-                 sItemUid = sEntManager.SpawnEntity(null, mapPos);
+                 sItemUid = sEntManager.Spawn(null, mapPos);
                  netEnt = sEntManager.GetNetEntity(sItemUid);
                  sMetadataSys.SetEntityName(sItemUid, "Item");
                  var container = sContainerSys.GetContainer(sEntityUid, "dummy");
@@ -309,10 +309,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 sEntManager.System<SharedMapSystem>().CreateMap(out var mapIdOne);
                 Assert.That(mapSys.IsInitialized(mapIdOne), Is.True);
 
-                var containerEnt = sEntManager.SpawnEntity(null, new MapCoordinates(1, 1, mapIdOne));
+                var containerEnt = sEntManager.Spawn(null, new MapCoordinates(1, 1, mapIdOne));
                 sMetadataSys.SetEntityName(containerEnt, "ContainerEnt");
 
-                var containeeEnt = sEntManager.SpawnEntity(null, new MapCoordinates(2, 2, mapIdOne));
+                var containeeEnt = sEntManager.Spawn(null, new MapCoordinates(2, 2, mapIdOne));
                 sMetadataSys.SetEntityName(containeeEnt, "ContaineeEnt");
 
                 var container = sContainerSys.MakeContainer<Container>(containerEnt, "testContainer");

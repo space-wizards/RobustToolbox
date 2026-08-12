@@ -19,7 +19,10 @@ namespace Robust.Shared.Network.Messages.Handshake
         public bool CanAuth;
         public bool NeedPubKey;
         public bool Encrypt;
-        public bool Discord; // Starlight-edit
+        #region Starlight
+        public bool Discord;
+        public bool Steam;
+        #endregion
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
@@ -28,7 +31,10 @@ namespace Robust.Shared.Network.Messages.Handshake
             NeedPubKey = buffer.ReadBoolean();
             Encrypt = buffer.ReadBoolean();
 
-            Discord = buffer.Position < buffer.LengthBits && buffer.ReadBoolean(); // Starlight-edit
+            // Starlight-start
+            Discord = buffer.Position < buffer.LengthBits && buffer.ReadBoolean();
+            Steam = buffer.Position < buffer.LengthBits && buffer.ReadBoolean();
+            // Starlight-end
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
@@ -37,7 +43,11 @@ namespace Robust.Shared.Network.Messages.Handshake
             buffer.Write(CanAuth);
             buffer.Write(NeedPubKey);
             buffer.Write(Encrypt);
-            buffer.Write(Discord); // Starlight-edit
+
+            // Starlight-start
+            buffer.Write(Discord);
+            buffer.Write(Steam);
+            // Starlight-end
         }
     }
 }

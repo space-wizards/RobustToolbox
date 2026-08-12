@@ -14,7 +14,10 @@ namespace Robust.Shared.Network.Messages.Handshake
         public byte[] VerifyToken;
         public byte[] PublicKey;
         public bool WantHwid;
-        public bool WantDiscord; // Starlight-edit
+        #region Starlight
+        public bool WantDiscord;
+        public bool WantSteam;
+        #endregion
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
@@ -23,7 +26,10 @@ namespace Robust.Shared.Network.Messages.Handshake
             var keyLength = buffer.ReadVariableInt32();
             PublicKey = buffer.ReadBytes(keyLength);
             WantHwid = buffer.ReadBoolean();
-            WantDiscord = buffer.Position < buffer.LengthBits && buffer.ReadBoolean(); // Starlight-edit
+            // Starlight-start
+            WantDiscord = buffer.Position < buffer.LengthBits && buffer.ReadBoolean();
+            WantSteam = buffer.Position < buffer.LengthBits && buffer.ReadBoolean();
+            // Starlight-end
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
@@ -33,7 +39,10 @@ namespace Robust.Shared.Network.Messages.Handshake
             buffer.WriteVariableInt32(PublicKey.Length);
             buffer.Write(PublicKey);
             buffer.Write(WantHwid);
-            buffer.Write(WantDiscord); // Starlight-edit
+            // Starlight-start
+            buffer.Write(WantDiscord);
+            buffer.Write(WantSteam);
+            // Starlight-end
         }
     }
 }

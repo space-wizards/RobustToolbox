@@ -16,6 +16,7 @@ namespace Robust.Shared.Network
         string? Token { get; set; }
         string? PubKey { get; set; }
         string? DiscordToken { get; set; } // Starlight-edit
+        string? SteamToken { get; set; } // Starlight-edit
 
         /// <summary>
         /// If true, the user allows HWID information to be provided to servers.
@@ -36,6 +37,7 @@ namespace Robust.Shared.Network
         public string? Token { get; set; }
         public string? PubKey { get; set; }
         public string? DiscordToken { get; set; } // Starlight-edit
+        public string? SteamToken { get; set; } // Starlight-edit
         public bool AllowHwid { get; set; } = true;
 
         public void LoadFromEnv()
@@ -61,6 +63,9 @@ namespace Robust.Shared.Network
 
             if (TryGetVar("STARLIGHT_AUTH_DISCORDTOKEN", out var discordToken))
                 DiscordToken = discordToken;
+
+            if (TryGetVar("STARLIGHT_AUTH_STEAMTOKEN", out var steamToken))
+                SteamToken = steamToken;
             // Starlight-end
 
             static bool TryGetVar(string var, [NotNullWhen(true)] out string? val)

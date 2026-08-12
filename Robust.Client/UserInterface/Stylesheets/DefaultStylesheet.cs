@@ -177,6 +177,20 @@ public sealed class DefaultStylesheet
                     ContentMarginTopOverride = 3,
                 }),
 
+            // Button style pressing (same as pressed)
+            Element<ContainerButton>().Class(ContainerButton.StyleClassButton).Pseudo(ContainerButton.StylePseudoClassPressing)
+                .Prop(ContainerButton.StylePropertyStyleBox, new StyleBoxFlat
+                {
+                    BackgroundColor = theme.ResolveColorOrSpecified("buttonBackgroundPressed", Color.FromHex("#173717")),
+                    BorderThickness = new Thickness(1),
+                    BorderColor = theme.ResolveColorOrSpecified("buttonBorderPressed", Color.FromHex("#447044")),
+                    Padding = new Thickness(3),
+                    ContentMarginBottomOverride = 3,
+                    ContentMarginLeftOverride = 5,
+                    ContentMarginRightOverride = 5,
+                    ContentMarginTopOverride = 3,
+                }),
+
             // Button style disabled
             Element<ContainerButton>().Class(ContainerButton.StyleClassButton).Pseudo(ContainerButton.StylePseudoClassDisabled)
                 .Prop(ContainerButton.StylePropertyStyleBox, new StyleBoxFlat

@@ -432,12 +432,14 @@ namespace Robust.Client.UserInterface
                 if (remainingWidth <= 0)
                     return 0f;
 
-                return align switch
+                var offset = align switch
                 {
                     RichTextLabel.AlignMode.Right => remainingWidth,
                     RichTextLabel.AlignMode.Center or RichTextLabel.AlignMode.Fill => remainingWidth / 2f,
                     _ => 0f,
                 };
+
+                return MathF.Floor(offset);
             }
         }
 

@@ -19,18 +19,14 @@ public interface IFixtureQueryCallback<TState>
     bool Invoke(ref TState state, in FixtureProxy fixture);
 }
 
-public record struct FixtureQueryArgs
+public readonly record struct FixtureQueryArgs(
+    QueryFilter Filter,
+    bool Approximate = false,
+    bool IgnoreShapeSkin = false)
 {
-    public QueryFilter Filter { get; init; }
-    public bool Approximate { get; init; }
-    public bool IgnoreShapeSkin { get; init; }
-
-    public FixtureQueryArgs(QueryFilter filter, bool approximate = false, bool ignoreShapeSkin = false)
-    {
-        Filter = filter;
-        Approximate = approximate;
-        IgnoreShapeSkin = ignoreShapeSkin;
-    }
+    public readonly QueryFilter Filter = Filter;
+    public readonly bool Approximate = Approximate;
+    public readonly bool IgnoreShapeSkin = IgnoreShapeSkin;
 }
 
 public sealed partial class EntityLookupSystem

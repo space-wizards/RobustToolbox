@@ -632,6 +632,7 @@ namespace Robust.Shared.GameObjects
             TransformComponent xform)
         {
             DebugTools.Assert(metadata.EntityLifeStage < EntityLifeStage.Terminating);
+            EventBusInternal.ComponentSetMutating(uid);
             SetLifeStage(metadata, EntityLifeStage.Terminating);
 
             try

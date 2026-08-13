@@ -374,10 +374,12 @@ namespace Robust.Shared.GameObjects
                     // This will invalidate the comp ref as it removes the key from the dictionary.
                     // This is inefficient, but component overriding rarely ever happens.
                     RemoveComponentImmediate(uid, comp!, type, false, metadata);
+                    EventBusInternal.ComponentSetMutating(uid);
                     dict.Add(uid, component);
                 }
                 else
                 {
+                    EventBusInternal.ComponentSetMutating(uid);
                     comp = component;
                 }
             }
@@ -668,6 +670,8 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
+            EventBusInternal.ComponentSetMutating(uid);
+
             if (component.Running)
                 LifeShutdown(uid, component, idx);
 
@@ -699,6 +703,8 @@ namespace Robust.Shared.GameObjects
             try
             {
 #endif
+                EventBusInternal.ComponentSetMutating(uid);
+
                 // The component may have been restarted sometime after removal was deferred.
                 if (component.Running)
                 {

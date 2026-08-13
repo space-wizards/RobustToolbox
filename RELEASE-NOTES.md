@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `LayerSetShader` now supports setting shaders to `null` when using an `object` layer key.
 
 ### Bugfixes
 

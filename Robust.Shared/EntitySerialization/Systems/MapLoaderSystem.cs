@@ -8,6 +8,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Markdown;
@@ -39,82 +40,18 @@ public sealed partial class MapLoaderSystem : EntitySystem
     [Dependency] private EntityQuery<MapGridComponent> _gridQuery = default!;
 
     /// <summary>
-    /// File extension that represents a ZSTD compressed YAML file with a single mapping data node.
+    /// File extension that represents a compressed save file of entities.
+    /// The data inside is a ZStd compressed YAML file with a single mapping data node.
     /// </summary>
     public const string SaveExtension = "rtsave";
 
-    private ZStdCompressionContext _zstdContext = default!;
+    private ZStdCompressionContext _zStdContext = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        _zstdContext = new ZStdCompressionContext();
-        _zstdContext.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, _config.GetCVar(CVars.MapSavesCompressLevel));
-    }
-
-    /// <summary>
-    /// Writes a YAML data node into a file as plain text.
-    /// </summary>
-    /// <param name="target">The target text writer.</param>
-    /// <param name="data">Mapping data node to write into the specified text writer.</param>
-    private void WriteYaml(TextWriter target, MappingDataNode data)
-    {
-        var document = new YamlDocument(data.ToYaml());
-        var stream = new YamlStream {document};
-        stream.Save(new YamlMappingFix(new Emitter(target)), false);
-    }
-
-    /// <summary>
-    /// Gets the text writer for a specified path.
-    /// </summary>
-    /// <param name="path">The target path.</param>
-    /// <returns>The text writer for that path.</returns>
-    private StreamWriter GetWriterForPath(ResPath path)
-    {
-        path = path.ToRootedPath();
-        _resourceManager.UserData.CreateDir(path.Directory);
-        return _resourceManager.UserData.OpenWriteText(path);
-    }
-
-    /// <summary>
-    /// Compresses a YAML data node using ZSTD compression.
-    /// </summary>
-    /// <param name="path">Path to a file.</param>
-    /// <param name="data">Mapping data node to compress into the specified path.</param>
-    private void WriteCompressedZstd(ResPath path, MappingDataNode data)
-    {
-        using var uncompressedStream = new MemoryStream(Encoding.UTF8.GetBytes(data.ToString()));
-
-        if (!uncompressedStream.TryGetBuffer(out var uncompressed))
-        {
-            uncompressed = new ArraySegment<byte>(uncompressedStream.ToArray());
-        }
-
-        byte[]? buf = null;
-        try
-        {
-
-            var bound = ZStd.CompressBound(uncompressed.Count);
-            buf = ArrayPool<byte>.Shared.Rent(4 + bound);
-
-            // Write the uncompressed length into the first 4 bytes
-            BitConverter.TryWriteBytes(buf.AsSpan(0, 4), uncompressed.Count);
-
-            var compressedLength = _zstdContext.Compress2(
-                buf.AsSpan(4, bound),
-                uncompressed.AsSpan());
-
-            path = path.ToRootedPath();
-            _resourceManager.UserData.CreateDir(path.Directory);
-
-            using var writer = _resourceManager.UserData.OpenWrite(path);
-            writer.Write(buf, 0, 4 + compressedLength);
-        }
-        finally
-        {
-            if (buf != null)
-                ArrayPool<byte>.Shared.Return(buf);
-        }
+        _zStdContext = new ZStdCompressionContext();
+        _zStdContext.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, _config.GetCVar(CVars.MapSavesCompressLevel));
     }
 
     /// <summary>
@@ -136,7 +73,8 @@ public sealed partial class MapLoaderSystem : EntitySystem
 
         if (path.Extension == SaveExtension)
         {
-            WriteCompressedZstd(path, data);
+            using var writer = _resourceManager.UserData.OpenWrite(path);
+            WriteCompressedZStd(writer, data, _zStdContext);
         }
         else
         {
@@ -147,13 +85,65 @@ public sealed partial class MapLoaderSystem : EntitySystem
         Log.Info($"Saved serialized results to {path} in {stopwatch.Elapsed}");
     }
 
+    /// <summary>
+    /// Writes a YAML data node into a file as plain text.
+    /// </summary>
+    /// <param name="target">The target text writer.</param>
+    /// <param name="data">Mapping data node to write into the specified text writer.</param>
+    private static void WriteYaml(TextWriter target, MappingDataNode data)
+    {
+        var document = new YamlDocument(data.ToYaml());
+        var stream = new YamlStream {document};
+        stream.Save(new YamlMappingFix(new Emitter(target)), false);
+    }
+
+    /// <summary>
+    /// Compresses a YAML data node using ZStd compression.
+    /// </summary>
+    /// <param name="target">Target stream to write in.</param>
+    /// <param name="data">Mapping data node to compress into the specified path.</param>
+    /// <param name="zStdContext">ZStd context to use for compression.</param>
+    private static void WriteCompressedZStd(Stream target, MappingDataNode data, ZStdCompressionContext zStdContext)
+    {
+        using var uncompressedStream = new MemoryStream(Encoding.UTF8.GetBytes(data.ToString()));
+
+        if (!uncompressedStream.TryGetBuffer(out var uncompressed))
+        {
+            uncompressed = new ArraySegment<byte>(uncompressedStream.ToArray());
+        }
+
+        var bound = ZStd.CompressBound(uncompressed.Count);
+        var buf = ArrayPool<byte>.Shared.Rent(4 + bound);
+        try
+        {
+            // Write the uncompressed length into the first 4 bytes
+            BitConverter.TryWriteBytes(buf.AsSpan(0, 4), uncompressed.Count);
+
+            var compressedLength = zStdContext.Compress2(
+                buf.AsSpan(4, bound),
+                uncompressed.AsSpan());
+
+            target.Write(buf, 0, 4 + compressedLength);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buf);
+        }
+    }
+
     public bool TryReadFile(ResPath file, [NotNullWhen(true)] out MappingDataNode? data)
     {
         var resPath = file.ToRootedPath();
         data = null;
 
         if (file.Extension == SaveExtension)
-            return TryReadCompressedFile(file, out data);
+        {
+            if (!TryGetStream(file, out var fileStream))
+                return false;
+
+            Log.Info($"Loading file: {resPath}");
+            return TryReadCompressedFile(fileStream, out data);
+        }
 
         if (!TryGetReader(resPath, out var reader))
             return false;
@@ -162,7 +152,7 @@ public sealed partial class MapLoaderSystem : EntitySystem
         return TryReadFile(reader, out data);
     }
 
-    private bool TryReadFile(TextReader reader, [NotNullWhen(true)] out MappingDataNode? data)
+    private static bool TryReadFile(TextReader reader, [NotNullWhen(true)] out MappingDataNode? data, ISawmill? log = null)
     {
         data = null;
 
@@ -171,21 +161,50 @@ public sealed partial class MapLoaderSystem : EntitySystem
 
         using var textReader = reader;
         var documents = DataNodeParser.ParseYamlStream(reader).ToArray();
-        Log.Debug($"Loaded yml stream in {stopwatch.Elapsed}");
+        log?.Debug($"Loaded yml stream in {stopwatch.Elapsed}");
 
         // Yes, logging errors in a "try" method is kinda shit, but it was throwing exceptions when I found it and it does
         // make sense to at least provide some kind of feedback for why it failed.
         switch (documents.Length)
         {
             case < 1:
-                Log.Error("Stream has no YAML documents.");
+                log?.Error("Stream has no YAML documents.");
                 return false;
             case > 1:
-                Log.Error("Stream too many YAML documents. Map files store exactly one.");
+                log?.Error("Stream too many YAML documents. Map files store exactly one.");
                 return false;
             default:
                 data = (MappingDataNode) documents[0].Root;
                 return true;
+        }
+    }
+
+    /// <summary>
+    /// Tries to read a ZSTD compressed save file from a file path.
+    /// </summary>
+    /// <param name="fileStream">The target file stream to decompress and read.</param>
+    /// <param name="data">The decompressed map data.</param>
+    /// <returns>True if the file was read successfully.</returns>
+    private static bool TryReadCompressedFile(Stream fileStream, [NotNullWhen(true)] out MappingDataNode? data)
+    {
+        data = null;
+        var intBuf = new byte[4];
+
+        using (fileStream)
+        {
+            fileStream.ReadExactly(intBuf);
+            var uncompressedSize = BitConverter.ToInt32(intBuf);
+
+            using var decompressStream = new ZStdDecompressStream(fileStream, false);
+
+            using var decompressedStream = new MemoryStream(uncompressedSize);
+            decompressStream.CopyTo(decompressedStream);
+            decompressedStream.Position = 0;
+
+            DebugTools.Assert(uncompressedSize == decompressedStream.Length);
+
+            using var reader = new StreamReader(decompressedStream);
+            return TryReadFile(reader, out data);
         }
     }
 
@@ -230,38 +249,6 @@ public sealed partial class MapLoaderSystem : EntitySystem
         Log.Error($"File not found: {resPath}");
         stream = null;
         return false;
-    }
-
-    /// <summary>
-    /// Tries to read a ZSTD compressed save file from a file path.
-    /// </summary>
-    /// <param name="path">The target file to decompress and read.</param>
-    /// <param name="data">The decompressed map data.</param>
-    /// <returns>True if the file was read successfully.</returns>
-    private bool TryReadCompressedFile(ResPath path, [NotNullWhen(true)] out MappingDataNode? data)
-    {
-        data = null;
-        var intBuf = new byte[4];
-
-        if (!TryGetStream(path, out var fileStream))
-            return false;
-
-        using (fileStream)
-        {
-            fileStream.ReadExactly(intBuf);
-            var uncompressedSize = BitConverter.ToInt32(intBuf);
-
-            using var decompressStream = new ZStdDecompressStream(fileStream, false);
-
-            using var decompressedStream = new MemoryStream(uncompressedSize);
-            decompressStream.CopyTo(decompressedStream);
-            decompressedStream.Position = 0;
-
-            DebugTools.Assert(uncompressedSize == decompressedStream.Length);
-
-            using var reader = new StreamReader(decompressedStream);
-            return TryReadFile(reader, out data);
-        }
     }
 
     /// <summary>

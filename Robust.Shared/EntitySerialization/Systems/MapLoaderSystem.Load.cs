@@ -125,10 +125,10 @@ public sealed partial class MapLoaderSystem
         var stopwatch = new RStopwatch();
         stopwatch.Start();
 
-        var ev = new BeforeEntityReadEvent();
-        RaiseLocalEvent(ev);
-
         var opts = options ?? MapLoadOptions.Default;
+
+        var ev = new BeforeEntityReadEvent(opts.ExpectedCategory ?? FileCategory.Unknown);
+        RaiseLocalEvent(ev);
 
         // If we are forcing a map id, we cannot auto-assign ids.
         opts.DeserializationOptions.AssignMapIds = opts.ForceMapId == null;

@@ -570,6 +570,7 @@ namespace Robust.Shared.GameObjects
 
             var version = eventTable.Version;
 
+            // Fastpath no stackalloc
             if (indices.Count == 1)
             {
                 ref var entry = ref eventTable.ComponentLists[indices.Start];
@@ -613,21 +614,22 @@ namespace Robust.Shared.GameObjects
 #endif
             try
             {
-                foreach (var dispatchEntry in dispatchEntries)
+                foreach (var (compIdx, entry) in dispatchEntries)
                 {
                     IComponent comp;
-                    var compIdx = dispatchEntry.Component;
 
+                    // If we haven't degenned then just use the indexed component.
                     if (!fallback && eventTable.Version == version)
                     {
-                        comp = eventTable.ComponentLists[dispatchEntry.Entry].ComponentInstance;
+                        comp = eventTable.ComponentLists[entry].ComponentInstance;
                     }
+                    // Debug mode do NOT change components during eventbus, however still need it work in release (even if slow).
                     else
                     {
                         DebugTools.AssertEqual(eventTable.Version, version);
                         fallback = true;
 
-                        if (!_entMan.TryGetComponent(euid, compIdx, out IComponent? fallbackComp))
+                        if (!_entMan.TryGetComponent(euid, compIdx, out var fallbackComp))
                             continue;
 
                         comp = fallbackComp;

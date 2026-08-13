@@ -66,7 +66,7 @@ public sealed partial class MapLoaderSystem
     ///     Serialize a standard (non-grid, non-map) entity and all of its children and write the result to a file.
     ///     Data gets compressed if the file has .rtsave extension.
     /// </summary>
-    public bool TrySaveEntity(EntityUid entity, ResPath target, SerializationOptions? options = null)
+    public bool TrySaveEntity(EntityUid entity, ResPath target, SerializationOptions? options = null, bool immediate = false)
     {
         if (SavingHandlers.ContainsKey(target))
         {
@@ -77,7 +77,7 @@ public sealed partial class MapLoaderSystem
         if (!TrySaveEntity(entity, out var data, options))
             return false;
 
-        Write(target, data);
+        Write(target, data, immediate);
         return true;
     }
 
@@ -98,7 +98,10 @@ public sealed partial class MapLoaderSystem
     ///     Serialize a standard (non-grid, non-map) entity and all of its children
     ///     and write the result to a YAML data node.
     /// </summary>
-    public bool TrySaveEntity(EntityUid entity, [NotNullWhen(true)] out MappingDataNode? data, SerializationOptions? options = null)
+    public bool TrySaveEntity(
+        EntityUid entity,
+        [NotNullWhen(true)] out MappingDataNode? data,
+        SerializationOptions? options = null)
     {
         data = null;
         if (_mapQuery.HasComp(entity))
@@ -139,10 +142,10 @@ public sealed partial class MapLoaderSystem
     /// <summary>
     /// Serialize a map and all of its children and write the result to a YAML file.
     /// </summary>
-    public bool TrySaveMap(MapId mapId, ResPath path, SerializationOptions? options = null)
+    public bool TrySaveMap(MapId mapId, ResPath path, SerializationOptions? options = null, bool immediate = false)
     {
         if (_mapSystem.TryGetMap(mapId, out var mapUid))
-            return TrySaveMap(mapUid.Value, path, options);
+            return TrySaveMap(mapUid.Value, path, options, immediate);
 
         Log.Error($"Unable to find map {mapId}");
         return false;
@@ -151,7 +154,7 @@ public sealed partial class MapLoaderSystem
     /// <summary>
     ///     Serialize a map and all of its children and write the result to a YAML file.
     /// </summary>
-    public bool TrySaveMap(EntityUid map, ResPath target, SerializationOptions? options = null)
+    public bool TrySaveMap(EntityUid map, ResPath target, SerializationOptions? options = null, bool immediate = false)
     {
         if (SavingHandlers.ContainsKey(target))
         {
@@ -162,7 +165,7 @@ public sealed partial class MapLoaderSystem
         if (!TrySaveMap(map, out var data, options))
             return false;
 
-        Write(target, data);
+        Write(target, data, immediate);
         return true;
     }
 
@@ -216,7 +219,7 @@ public sealed partial class MapLoaderSystem
     /// <summary>
     ///     Serialize a grid and all of its children and write the result to a YAML file.
     /// </summary>
-    public bool TrySaveGrid(EntityUid grid, ResPath target, SerializationOptions? options = null)
+    public bool TrySaveGrid(EntityUid grid, ResPath target, SerializationOptions? options = null, bool immediate = false)
     {
         if (SavingHandlers.ContainsKey(target))
         {
@@ -227,7 +230,7 @@ public sealed partial class MapLoaderSystem
         if (!TrySaveGrid(grid, out var data, options))
             return false;
 
-        Write(target, data);
+        Write(target, data, immediate);
         return true;
     }
 
@@ -246,7 +249,10 @@ public sealed partial class MapLoaderSystem
     /// <summary>
     ///     Serialize a grid and all of its children and write the result to a YAML data node.
     /// </summary>
-    public bool TrySaveGrid(EntityUid grid, [NotNullWhen(true)] out MappingDataNode? data, SerializationOptions? options = null)
+    public bool TrySaveGrid(
+        EntityUid grid,
+        [NotNullWhen(true)] out MappingDataNode? data,
+        SerializationOptions? options = null)
     {
         data = null;
         if (!_gridQuery.HasComp(grid))
@@ -293,9 +299,10 @@ public sealed partial class MapLoaderSystem
         EntityUid uid,
         ResPath target,
         out FileCategory category,
-        SerializationOptions? options = null)
+        SerializationOptions? options = null,
+        bool immediate = false)
     {
-        return TrySaveGeneric([uid], target, out category, options);
+        return TrySaveGeneric([uid], target, out category, options, immediate);
     }
 
     /// <summary>
@@ -321,7 +328,8 @@ public sealed partial class MapLoaderSystem
         HashSet<EntityUid> entities,
         ResPath target,
         out FileCategory category,
-        SerializationOptions? options = null)
+        SerializationOptions? options = null,
+        bool immediate = false)
     {
         category = FileCategory.Unknown;
         if (SavingHandlers.ContainsKey(target))
@@ -333,7 +341,7 @@ public sealed partial class MapLoaderSystem
         if (!TrySaveGeneric(entities, out var data, out category, options))
             return false;
 
-        Write(target, data);
+        Write(target, data, immediate);
         return true;
     }
 
@@ -397,7 +405,7 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <inheritdoc cref="TrySerializeAllEntities(out MappingDataNode, SerializationOptions?)"/>
-    public bool TrySaveAllEntities(ResPath path, SerializationOptions? options = null)
+    public bool TrySaveAllEntities(ResPath path, SerializationOptions? options = null, bool immediate = false)
     {
         if (SavingHandlers.ContainsKey(path))
         {
@@ -408,7 +416,7 @@ public sealed partial class MapLoaderSystem
         if (!TrySerializeAllEntities(out var data, options))
             return false;
 
-        Write(path, data);
+        Write(path, data, immediate);
         return true;
     }
 

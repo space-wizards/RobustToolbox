@@ -139,6 +139,14 @@ public sealed partial class MapLoaderSystem : EntitySystem
         SavingHandlers.Add(path, handler);
     }
 
+    public void Write(ResPath path, MappingDataNode data, bool immediate)
+    {
+        if (immediate)
+            WriteNow(path, data);
+        else
+            Write(path, data);
+    }
+
     /// <summary>
     /// Writes a YAML data node into a file as plain text.
     /// </summary>

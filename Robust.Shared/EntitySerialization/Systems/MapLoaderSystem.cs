@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -51,15 +52,28 @@ public sealed partial class MapLoaderSystem : EntitySystem
     private ZStdCompressionContext _zStdContext = default!;
 
     /// <summary>
-    /// Files that are currently being saved.
+    /// A dictionary of file paths that are being saved and wait handles of the jobs that save them.
     /// </summary>
-    private readonly List<ResPath> SavingFiles = new();
+    private readonly Dictionary<ResPath, WaitHandle> SavingHandlers = new();
 
     public override void Initialize()
     {
         base.Initialize();
         _zStdContext = new ZStdCompressionContext();
         _zStdContext.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, _config.GetCVar(CVars.MapSavesCompressLevel));
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+
+        // Wait for all of them to finish.
+        foreach (var (_, handle) in SavingHandlers)
+        {
+            handle.WaitOne();
+        }
+
+        SavingHandlers.Clear();
     }
 
     /// <summary>
@@ -109,20 +123,20 @@ public sealed partial class MapLoaderSystem : EntitySystem
     /// <param name="data">Mapping data node to write.</param>
     public void Write(ResPath path, MappingDataNode data)
     {
-        if (SavingFiles.Contains(path))
+        if (SavingHandlers.ContainsKey(path))
         {
             // Either some admin is spamming with these commands, or the code works wrong.
             Log.Error($"Tried to write to a file {path} which is already being saved!");
             return;
         }
 
-        SavingFiles.Add(path);
         var job = new SaveSerializedJob(this)
         {
             Path = path,
             Data = data
         };
-        _parallel.Process(job);
+        var handler = _parallel.Process(job);
+        SavingHandlers.Add(path, handler);
     }
 
     /// <summary>
@@ -322,15 +336,14 @@ public sealed partial class MapLoaderSystem : EntitySystem
         public MappingDataNode Data = default!;
         public ResPath Path = new();
 
-
-        public MapLoaderSystem System = System;
+        public readonly MapLoaderSystem System = System;
 
         public void Execute()
         {
             System.WriteNow(Path, Data);
-            lock (System.SavingFiles)
+            lock (System.SavingHandlers)
             {
-                System.SavingFiles.Remove(Path);
+                System.SavingHandlers.Remove(Path);
             }
         }
     }

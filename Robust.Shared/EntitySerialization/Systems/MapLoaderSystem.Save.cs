@@ -448,8 +448,6 @@ public sealed partial class MapLoaderSystem
             DebugTools.AssertEqual(cat, FileCategory.Save);
             var ev2 = new AfterSerializationEvent(entities, data, cat);
             RaiseLocalEvent(ev2);
-
-            Log.Debug($"Serialized {serializer.EntityData.Count} entities in {stopwatch.Elapsed}");
         }
         catch (Exception e)
         {

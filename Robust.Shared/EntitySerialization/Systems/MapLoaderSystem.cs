@@ -1,6 +1,5 @@
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -14,7 +13,6 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
-using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using SharpZstd.Interop;
@@ -33,7 +31,6 @@ namespace Robust.Shared.EntitySerialization.Systems;
 public sealed partial class MapLoaderSystem : EntitySystem
 {
     [Dependency] private IConfigurationManager _config = default!;
-    [Dependency] private IParallelManager _parallel = default!;
     [Dependency] private IResourceManager _resourceManager = default!;
     [Dependency] private IDependencyCollection _dependency = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
@@ -50,11 +47,6 @@ public sealed partial class MapLoaderSystem : EntitySystem
 
     private ZStdCompressionContext _zStdContext = default!;
 
-    /// <summary>
-    /// Files that are currently being saved.
-    /// </summary>
-    private readonly List<ResPath> SavingFiles = new();
-
     public override void Initialize()
     {
         base.Initialize();
@@ -67,11 +59,9 @@ public sealed partial class MapLoaderSystem : EntitySystem
     /// If the file has a special extension, the contents will be compressed using ZSTD,
     /// otherwise it will be written as plain text.
     /// </summary>
-    /// <remarks>This is a variation that doesn't run on a separate thread,
-    /// do not use this on the main thread while the main game is running or else it will lead to stuttering.</remarks>
     /// <param name="path">Path to a file.</param>
     /// <param name="data">Mapping data node to write.</param>
-    public void WriteNow(ResPath path, MappingDataNode data)
+    public void Write(ResPath path, MappingDataNode data)
     {
         Log.Info($"Saving serialized results to {path}");
 
@@ -93,36 +83,6 @@ public sealed partial class MapLoaderSystem : EntitySystem
         }
 
         Log.Info($"Saved serialized results to {path} in {stopwatch.Elapsed}");
-    }
-
-    /// <summary>
-    /// Generic method that writes a YAML data node into a file.
-    /// If the file has a special extension, the contents will be compressed using ZSTD,
-    /// otherwise it will be written as plain text.
-    /// </summary>
-    /// <remarks>
-    /// This method runs on a separate thread in parallel to the game,
-    /// and doesn't apply the data right after execution.
-    /// If you need to ensure that the results were written before continuing, use <see cref="WriteNow"/>.
-    /// </remarks>
-    /// <param name="path">Path to a file.</param>
-    /// <param name="data">Mapping data node to write.</param>
-    public void Write(ResPath path, MappingDataNode data)
-    {
-        if (SavingFiles.Contains(path))
-        {
-            // Either some admin is spamming with these commands, or the code works wrong.
-            Log.Error($"Tried to write to a file {path} which is already being saved!");
-            return;
-        }
-
-        SavingFiles.Add(path);
-        var job = new SaveSerializedJob(this)
-        {
-            Path = path,
-            Data = data
-        };
-        _parallel.Process(job);
     }
 
     /// <summary>
@@ -314,24 +274,6 @@ public sealed partial class MapLoaderSystem : EntitySystem
         foreach (var uid in result.NullspaceEntities)
         {
             Del(uid);
-        }
-    }
-
-    private record struct SaveSerializedJob(MapLoaderSystem System) : IRobustJob
-    {
-        public MappingDataNode Data = default!;
-        public ResPath Path = new();
-
-
-        public MapLoaderSystem System = System;
-
-        public void Execute()
-        {
-            System.WriteNow(Path, Data);
-            lock (System.SavingFiles)
-            {
-                System.SavingFiles.Remove(Path);
-            }
         }
     }
 }

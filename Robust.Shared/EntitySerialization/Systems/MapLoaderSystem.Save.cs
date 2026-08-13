@@ -68,12 +68,6 @@ public sealed partial class MapLoaderSystem
     /// </summary>
     public bool TrySaveEntity(EntityUid entity, ResPath target, SerializationOptions? options = null)
     {
-        if (SavingFiles.Contains(target))
-        {
-            Log.Error($"Tried to write to a file {target} which is already being saved!");
-            return false;
-        }
-
         if (!TrySaveEntity(entity, out var data, options))
             return false;
 
@@ -153,12 +147,6 @@ public sealed partial class MapLoaderSystem
     /// </summary>
     public bool TrySaveMap(EntityUid map, ResPath target, SerializationOptions? options = null)
     {
-        if (SavingFiles.Contains(target))
-        {
-            Log.Error($"Tried to write to a file {target} which is already being saved!");
-            return false;
-        }
-
         if (!TrySaveMap(map, out var data, options))
             return false;
 
@@ -218,12 +206,6 @@ public sealed partial class MapLoaderSystem
     /// </summary>
     public bool TrySaveGrid(EntityUid grid, ResPath target, SerializationOptions? options = null)
     {
-        if (SavingFiles.Contains(target))
-        {
-            Log.Error($"Tried to write to a file {target} which is already being saved!");
-            return false;
-        }
-
         if (!TrySaveGrid(grid, out var data, options))
             return false;
 
@@ -323,13 +305,6 @@ public sealed partial class MapLoaderSystem
         out FileCategory category,
         SerializationOptions? options = null)
     {
-        category = FileCategory.Unknown;
-        if (SavingFiles.Contains(target))
-        {
-            Log.Error($"Tried to write to a file {target} which is already being saved!");
-            return false;
-        }
-
         if (!TrySaveGeneric(entities, out var data, out category, options))
             return false;
 
@@ -399,12 +374,6 @@ public sealed partial class MapLoaderSystem
     /// <inheritdoc cref="TrySerializeAllEntities(out MappingDataNode, SerializationOptions?)"/>
     public bool TrySaveAllEntities(ResPath path, SerializationOptions? options = null)
     {
-        if (SavingFiles.Contains(path))
-        {
-            Log.Error($"Tried to write to a file {path} which is already being saved!");
-            return false;
-        }
-
         if (!TrySerializeAllEntities(out var data, options))
             return false;
 

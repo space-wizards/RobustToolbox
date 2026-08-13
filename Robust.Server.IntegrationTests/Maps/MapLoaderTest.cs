@@ -120,7 +120,7 @@ entities:
         await server.WaitPost(() =>
         {
             Assert.That(mapLoad.TryReadFile(new ResPath("/TestMap.yml"), out var data));
-            mapLoad.Write(new ResPath("/TestMap.rtsave"), data!);
+            mapLoad.WriteNow(new ResPath("/TestMap.rtsave"), data!);
             resourceManager.MountString("/TestMap.rtsave", MapData);
         });
 

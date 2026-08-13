@@ -454,6 +454,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+
             system.Write(newFile, data);
             shell.WriteLine(Loc.GetString("cmd-convertsavefile-success", ("file", oldFile), ("extension", newFile.Extension.ToUpper())));
         }

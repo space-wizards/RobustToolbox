@@ -43,9 +43,29 @@ public sealed class RobustRandom : IRobustRandom
         return _random.Next();
     }
 
+    public int Next(int maxValue)
+    {
+        return _random.Next(maxValue);
+    }
+
     public int Next(int minValue, int maxValue)
     {
         return _random.Next(minValue, maxValue);
+    }
+
+    public long NextLong()
+    {
+        return _random.NextInt64();
+    }
+
+    public long NextLong(long maxValue)
+    {
+        return _random.NextInt64(maxValue);
+    }
+
+    public long NextLong(long minValue, long maxValue)
+    {
+        return _random.NextInt64(minValue, maxValue);
     }
 
     public TimeSpan Next(TimeSpan minTime, TimeSpan maxTime)
@@ -57,11 +77,6 @@ public sealed class RobustRandom : IRobustRandom
     public TimeSpan Next(TimeSpan maxTime)
     {
         return Next(TimeSpan.Zero, maxTime);
-    }
-
-    public int Next(int maxValue)
-    {
-        return _random.Next(maxValue);
     }
 
     public double NextDouble()

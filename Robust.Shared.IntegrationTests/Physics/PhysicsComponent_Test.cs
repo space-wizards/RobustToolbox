@@ -43,16 +43,16 @@ namespace Robust.UnitTesting.Shared.Physics
 
                 // Check regular impulse works
                 physicsSystem.ApplyLinearImpulse(boxEnt, new Vector2(0f, 1f), body: box);
-                Assert.That(box.LinearVelocity.Length, Is.GreaterThan(0f));
+                Assert.That(box.LinearVelocity.Length(), Is.GreaterThan(0f));
 
                 // Reset the box
                 physicsSystem.SetLinearVelocity(boxEnt, Vector2.Zero, body: box);
-                Assert.That(box.LinearVelocity.Length, Is.EqualTo(0f));
+                Assert.That(box.LinearVelocity.Length(), Is.EqualTo(0f));
                 Assert.That(box.AngularVelocity, Is.EqualTo(0f));
 
                 // Check the angular impulse is applied from the point
                 physicsSystem.ApplyLinearImpulse(boxEnt, new Vector2(0f, 1f), new Vector2(0.5f, 0f), body: box);
-                Assert.That(box.LinearVelocity.Length, Is.GreaterThan(0f));
+                Assert.That(box.LinearVelocity.Length(), Is.GreaterThan(0f));
                 Assert.That(box.AngularVelocity, Is.Not.EqualTo(0f));
             });
         }

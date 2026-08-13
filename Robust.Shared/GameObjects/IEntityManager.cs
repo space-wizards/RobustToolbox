@@ -131,9 +131,6 @@ namespace Robust.Shared.GameObjects
 
         public void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null);
 
-        [Obsolete("use override with an EntityUid")]
-        public void Dirty(IComponent component, MetaDataComponent? metadata = null);
-
         public void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null);
 
         public void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent;
@@ -198,6 +195,11 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="uid">Uid of entity to remove.</param>
         void DeleteEntity(EntityUid? uid);
+
+        /// <summary>
+        /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.
+        /// </summary>
+        void DeleteEntity(EntityUid uid, MetaDataComponent meta);
 
         /// <summary>
         /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.

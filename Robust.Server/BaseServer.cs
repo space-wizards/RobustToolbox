@@ -340,6 +340,8 @@ namespace Robust.Server
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
 
+            _refMan.Initialize();
+
             // HAS to happen after content gets loaded.
             // Else the content types won't be included.
             // TODO: solve this properly.
@@ -390,7 +392,6 @@ namespace Robust.Server
             // otherwise the prototypes will be cleared
             _prototype.Initialize();
             _prototype.LoadDefaultPrototypes();
-            _refMan.Initialize();
 
             IoCManager.Resolve<ToolshedManager>().Initialize();
             _consoleHost.Initialize();

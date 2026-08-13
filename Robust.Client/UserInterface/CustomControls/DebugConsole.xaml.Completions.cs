@@ -263,6 +263,7 @@ public sealed partial class DebugConsole
     {
         return completions
             .Where(c => c.Value.Contains(curTyping, StringComparison.CurrentCultureIgnoreCase))
+            .OrderByDescending(c => c.Value.StartsWith(curTyping, StringComparison.CurrentCultureIgnoreCase))
             .ToArray();
     }
 

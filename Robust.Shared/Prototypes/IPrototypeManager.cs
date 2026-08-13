@@ -434,7 +434,8 @@ public interface IPrototypeManager
     /// This will validate all known to <see cref="IReflectionManager"/>
     /// </summary>
     /// <remarks>
-    /// This will validate any field that has either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
+    /// This will validate any field that uses <see cref="ProtoId"/> or <see cref="EntProtoId"/>.
+    /// It also looks for these obsolete attributes: either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
     /// <see cref="DataFieldAttribute"/> with a <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.
     /// </remarks>
     /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection
@@ -566,6 +567,14 @@ public interface IPrototypeManager
     FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; }
 
     /// <summary>
+    /// Attempts to get a list of <see cref="EntityPrototype"/> that belongs to the provided <see cref="EntityCategoryPrototype"/>.
+    /// </summary>
+    /// <param name="category">Category id of the entity prototypes we want to get.</param>
+    /// <param name="prototypes">List of entity prototypes that form part category or null.</param>
+    /// <returns>True if the provided <see cref="EntityCategoryPrototype"/> id has a matching list of <see cref="EntityPrototype"/> False otherwise.</returns>
+    bool TryGetEntityPrototypesByCategory(ProtoId<EntityCategoryPrototype> category, [NotNullWhen(true)] out IReadOnlyList<EntityPrototype>? prototypes);
+
+    /// <summary>
     /// Tries to get the list of all associated variants for a given prototype. 
     /// </summary>
     /// <param name="collectionMember">The prototype being indexed.</param>
@@ -577,6 +586,10 @@ public interface IPrototypeManager
 internal interface IPrototypeManagerInternal : IPrototypeManager
 {
     event Action<DataNodeDocument>? LoadedData;
+
+    void ReloadPrototypesOrThrow(
+        Dictionary<Type, HashSet<string>> modified,
+        Dictionary<Type, HashSet<string>>? removed = null);
 }
 
 /// <summary>

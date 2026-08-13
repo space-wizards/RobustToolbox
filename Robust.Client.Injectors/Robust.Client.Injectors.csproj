@@ -1,18 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\MSBuild\Robust.Engine.props" />
 
-    <!--
-    PJB3005 (2024-08-24)
-    So the reason that Robust.Client.Injectors is NS2.0 is that Visual Studio 
-    still ships a .NET FX based MSBuild for some godforsaken reason. This means 
-    that when having Robust.Client.Injectors loaded directly by the main MSBuild 
-    process... that would break.
-
-    Except we don't do that anyways right now due to file locking issues, so maybe 
-    it's fine to give up on that. Whatever. 
-    -->
     <PropertyGroup>
-      <TargetFramework>netstandard2.0</TargetFramework>
+      <TargetFramework>net10.0</TargetFramework>
       <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
       <LangVersion>8.0</LangVersion>
       <Nullable>enable</Nullable>

@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `LayerSetShader` now supports setting shaders to `null` when using an `object` layer key.
+* `IRobustRandom` can now make random longs with `NextLong`.
 
 ### Bugfixes
 

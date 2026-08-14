@@ -359,8 +359,8 @@ public sealed partial class MapLoaderSystem : EntitySystem
 
     private record struct SaveSerializedJob(MapLoaderSystem System) : IRobustJob
     {
-        public MappingDataNode Data;
-        public ResPath Path;
+        public MappingDataNode Data = default!;
+        public ResPath Path = new();
 
         public readonly MapLoaderSystem System = System;
 

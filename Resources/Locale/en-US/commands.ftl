@@ -154,7 +154,7 @@ cmd-set-ambient-light-parse = Unable to parse args as a byte values for a color.
 ## Mapping commands
 
 cmd-savemap-desc = Serializes a map to disk. Will not save a post-init map unless forced.
-cmd-savemap-help = Usage: {$command} <MapID> <Path> [force]
+cmd-savemap-help = Usage: {$command} <MapID> <Path> [force] [immediate]
 cmd-savemap-not-exist = Target map does not exist.
 cmd-savemap-init-warning = Attempted to save a post-init map without forcing the save.
 cmd-savemap-attempt = Attempting to save map {$mapId} to {$path}.
@@ -163,6 +163,7 @@ cmd-savemap-error = Could not save map! See server log for details.
 cmd-hint-savemap-id = <MapID>
 cmd-hint-savemap-path = <Path>
 cmd-hint-savemap-force = [bool]
+cmd-hint-savemap-immediate = [bool]
 
 cmd-loadmap-desc = Loads a map from disk into the game.
 cmd-loadmap-help = Usage: {$command} <MapID> <Path> [x] [y] [rotation] [consistentUids]
@@ -176,7 +177,7 @@ cmd-hint-loadmap-rotation = [rotation]
 cmd-hint-loadmap-uids = [float]
 
 cmd-savegame-desc = Serializes all game entities to disk. Will save all entities, paused an unpaused.
-cmd-savegame-help = savegame <Path>
+cmd-savegame-help = savegame <Path> [immediate]
 cmd-savegame-attempt = Attempting to save full game state to {$path}.
 cmd-savegame-success = Game state successfully saved.
 cmd-savegame-error = Could not save the game state! See server log for details.

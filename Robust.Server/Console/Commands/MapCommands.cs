@@ -44,7 +44,14 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            bool saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]));
+            var immediate = false;
+            if (args.Length >= 3 && !bool.TryParse(args[2], out immediate))
+            {
+                shell.WriteError(Loc.GetString("cmd-parse-failure-bool", ("arg", args[2])));
+                return;
+            }
+
+            bool saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]), immediate: immediate);
             if (saveSuccess)
             {
                 shell.WriteLine("Save successful. Look in the user data directory.");
@@ -64,6 +71,8 @@ namespace Robust.Server.Console.Commands
                 case 2:
                     var opts = CompletionHelper.UserFilePath(args[1], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+                case 3:
+                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-immediate"));
             }
             return CompletionResult.Empty;
         }
@@ -177,6 +186,8 @@ namespace Robust.Server.Console.Commands
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
                 case 3:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-force"));
+                case 4:
+                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-immediate"));
             }
             return CompletionResult.Empty;
         }
@@ -215,8 +226,15 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            var immediate = false;
+            if (args.Length >= 4 && !bool.TryParse(args[3], out immediate))
+            {
+                shell.WriteError(Loc.GetString("cmd-parse-failure-bool", ("arg", args[3])));
+                return;
+            }
+
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
-            bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[1]));
+            bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[1]), immediate: immediate);
             if (saveSuccess)
             {
                 shell.WriteLine(Loc.GetString("cmd-savemap-success"));
@@ -349,6 +367,8 @@ namespace Robust.Server.Console.Commands
                 case 1:
                     var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+                case 2:
+                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-immediate"));
             }
             return CompletionResult.Empty;
         }
@@ -361,8 +381,15 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            var immediate = false;
+            if (args.Length >= 2 && !bool.TryParse(args[1], out immediate))
+            {
+                shell.WriteError(Loc.GetString("cmd-parse-failure-bool", ("arg", args[1])));
+                return;
+            }
+
             shell.WriteLine(Loc.GetString("cmd-savegame-attempt", ("path", args[0])));
-            var saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveAllEntities(new ResPath(args[0]));
+            var saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveAllEntities(new ResPath(args[0]), immediate: immediate);
             if(saveSuccess)
             {
                 shell.WriteLine(Loc.GetString("cmd-savegame-success"));

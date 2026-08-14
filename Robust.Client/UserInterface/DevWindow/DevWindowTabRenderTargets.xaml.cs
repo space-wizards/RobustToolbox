@@ -217,7 +217,7 @@ internal sealed partial class DevWindowTabRenderTargets : Control
         return rt;
     }
 
-    private static Vector2i GetThumbnailSize(Vector2i textureSize)
+    internal static Vector2i GetThumbnailSize(Vector2i textureSize)
     {
         const int maxHeight = 50;
         const int maxWidth = 100;
@@ -236,7 +236,7 @@ internal sealed partial class DevWindowTabRenderTargets : Control
             w = maxWidth;
         }
 
-        return new Vector2i((int)w, (int)h);
+        return new Vector2i(Math.Max(1, (int)w), Math.Max(1, (int)h));
     }
 #endif // TOOLS
 }

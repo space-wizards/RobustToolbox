@@ -2,7 +2,6 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -11,11 +10,6 @@ namespace Robust.Shared.Prototypes;
 
 public partial class PrototypeManager
 {
-    /// <summary>
-    /// A dictionary that maps a prototype to a list of all variants of that prototype.
-    /// </summary>
-    private readonly Dictionary<Type, Dictionary<string, List<string>>> _variantCollections = new();
-
     /// <summary>
     /// Recursively searches all child nodes in the tree for any nodes with the CreateVariants tag.
     /// </summary>
@@ -26,7 +20,7 @@ public partial class PrototypeManager
         switch (dataNode)
         {
             case MappingDataNode mappingNode:
-                foreach (var (childName, childNode) in mappingNode.Children.ToDictionary())
+                foreach (var (childName, childNode) in mappingNode.Children)
                 {
                     if (childNode is MappingDataNode variantNode
                         && variantNode.Tag?.Equals(CreateVariantsTag) == true)
@@ -89,23 +83,23 @@ public partial class PrototypeManager
     /// </summary>
     /// <param name="kind">The prototype kind.</param>
     /// <param name="collectionVariants">A list of prototype variants derived from the same source prototype.</param>
-    private void RegisterVariantCollection(Type kind, List<string> collectionVariants)
+    private void RegisterVariantCollection(KindData kindData, List<string> collectionVariants)
     {
-        if (!_variantCollections.TryGetValue(kind, out var kindCollection))
+        if (kindData.UnfrozenVariants == null)
         {
-            kindCollection = new();
+            kindData.UnfrozenVariants = kindData.Variants.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToList());
         }
+
+        kindData.UnfrozenVariants.EnsureCapacity(kindData.UnfrozenVariants.Count + collectionVariants.Count);
 
         foreach (var collectionMember in collectionVariants)
         {
-            kindCollection[collectionMember] = collectionVariants;
+            kindData.UnfrozenVariants[collectionMember] = collectionVariants;
         }
-
-        _variantCollections[kind] = kindCollection;
     }
 
     /// <summary>
-    /// Tries to get the list of all associated variants for a given prototype. 
+    /// Tries to get the list of all variants associated with a given prototype. 
     /// </summary>
     /// <param name="collectionMember">The prototype being indexed.</param>
     /// <param name="collectionVariants">The collection of variants this prototype belongs to.</param>
@@ -114,15 +108,14 @@ public partial class PrototypeManager
     {
         collectionVariants = null;
 
-        if (!_variantCollections.TryGetValue(typeof(T), out var collectionKind))
+        if (!_kinds.TryGetValue(typeof(T), out var collectionKind))
             return false;
 
-        if (!collectionKind.TryGetValue(collectionMember, out var collectionVariantNames))
+        if (!collectionKind.Variants.TryGetValue(collectionMember, out var collectionVariantNames))
             return false;
 
         collectionVariants = new();
 
-        // Resolve each variant in the collection to ensure they exist
         foreach (var variantName in collectionVariantNames)
         {
             if (!Resolve<T>(variantName, out var varitantPrototype))

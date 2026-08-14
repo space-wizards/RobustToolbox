@@ -36,6 +36,9 @@ public sealed partial class CommandLinkTag : IMarkupTagHandler
         label.OnMouseExited += _ => label.FontColorOverride = Color.LightBlue;
         label.OnKeyBindDown += args => OnKeybindDown(args, command);
 
+        if (node.Attributes.TryGetValue("title", out var titleArg))
+            label.ToolTip = titleArg.StringValue;
+
         control = label;
         return true;
     }

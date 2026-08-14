@@ -19,18 +19,12 @@ namespace Robust.Shared.IoC;
 public interface IHasDependencies
 {
     /// <summary>
-    /// Get an array of types that this object wants to have resolved and injected.
-    /// </summary>
-    Type[] GetDependencyTypes();
-
-    /// <summary>
     /// Inject services into this type.
     /// </summary>
     /// <param name="instances">
-    /// The list of services to inject.
-    /// This is the same length and order as the types returned by <see cref="GetDependencyTypes"/>.
+    /// The list of services to inject, indexed by <see cref="DependencyType.Index"/>
     /// </param>
-    void Inject(ReadOnlySpan<object> instances);
+    void Inject(IDependencyCollection dependencies);
 }
 
 /// <summary>

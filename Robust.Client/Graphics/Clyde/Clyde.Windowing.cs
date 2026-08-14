@@ -564,6 +564,13 @@ namespace Robust.Client.Graphics.Clyde
 
             public Vector2 ContentScale => Reg.WindowScale;
 
+            public void SetRelativeMouseMode(bool enabled)
+            {
+                DebugTools.AssertNotNull(_clyde._windowing);
+
+                _clyde._windowing!.WindowSetRelativeMouseMode(Reg, enabled);
+            }
+
             public bool DisposeOnClose
             {
                 get => Reg.DisposeOnClose;

@@ -305,6 +305,27 @@ public abstract partial class SharedPhysicsSystem
 
     private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
     {
+        List<IslandData> islands;
+        using (_prof.Group("Build Islands"))
+        {
+            islands = BuildIslands(prediction);
+        }
+
+        using (_prof.Group("Solve Islands"))
+        {
+            SolveIslands(islands, frameTime, dtRatio, invDt, prediction);
+        }
+
+        foreach (var island in islands)
+        {
+            ReturnIsland(island);
+        }
+
+        Cleanup(frameTime);
+    }
+
+    private List<IslandData> BuildIslands(bool prediction)
+    {
         // Build and simulated islands from awake bodies.
         _bodyStack.EnsureCapacity(AwakeBodies.Count);
         _islandSet.EnsureCapacity(AwakeBodies.Count);
@@ -332,7 +353,7 @@ public abstract partial class SharedPhysicsSystem
             // when contact broke so if you want to try that then GOOD LUCK.
             if (seed.Island) continue;
 
-            var seedUid = seed.Owner;
+            var seedUid = ent.Owner;
             var mapUid = xform.MapUid;
 
             // TODO: Handle this on client.
@@ -377,7 +398,7 @@ public abstract partial class SharedPhysicsSystem
                 if (body.BodyType == BodyType.Static) continue;
 
                 // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                SetAwake(bodyUid, body, true, updateSleepTime: false);
+                SetAwake(bodyEnt, true, updateSleepTime: false);
 
                 var node = body.Contacts.First;
 
@@ -548,14 +569,7 @@ public abstract partial class SharedPhysicsSystem
             ReturnIsland(loneIsland);
         }
 
-        SolveIslands(islands, frameTime, dtRatio, invDt, prediction);
-
-        foreach (var island in islands)
-        {
-            ReturnIsland(island);
-        }
-
-        Cleanup(frameTime);
+        return islands;
     }
 
     private void ReturnIsland(in IslandData island)
@@ -1139,7 +1153,7 @@ public abstract partial class SharedPhysicsSystem
 
             var body = island.Bodies[i];
 
-            SetAwake(body.Owner, body, false);
+            SetAwake(body, false);
         }
     }
 }

@@ -258,20 +258,9 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private unsafe void SetUniformDirect(int slot, in Matrix3x2 value)
+            private void SetUniformDirect(int slot, in Matrix3x2 value)
             {
-                // We put the rows of the input matrix into the columns of our GPU matrices
-                // this transpose is required, as in C#, we premultiply vectors with matrices
-                // (vM) while GL postmultiplies vectors with matrices (Mv); however, since
-                // the Matrix3x2 data is stored row-major, and GL uses column-major, the
-                // memory layout is the same (or would be, if Matrix3x2 didn't have an
-                // implicit column)
-                var buf = stackalloc float[9]{
-                    value.M11, value.M12, 0,
-                    value.M21, value.M22, 0,
-                    value.M31, value.M32, 1
-                };
-                GL.UniformMatrix3(slot, 1, false, (float*)buf);
+                _clyde.UniformMatrix3fv(slot, value);
                 _clyde.CheckGlError();
             }
 

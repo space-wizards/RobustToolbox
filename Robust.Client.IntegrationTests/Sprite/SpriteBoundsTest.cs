@@ -113,6 +113,16 @@ public sealed class SpriteBoundsTest : RobustIntegrationTest
         box = sys.GetLocalBounds(ent3);
         Assert.That(box1.EqualsApprox(box));
 
+        sys.SetScale(ent3!, new Vector2(-1, 1));
+        box = sys.GetLocalBounds(ent3);
+        Assert.That(box1.EqualsApprox(box));
+        sys.SetScale(ent3!, Vector2.One);
+
+        sys.LayerSetScale(ent3!, 1, new Vector2(-1, 1));
+        box = sys.GetLocalBounds(ent3);
+        Assert.That(box1.EqualsApprox(box));
+        sys.LayerSetScale(ent3!, 1, Vector2.One);
+
         // offset
         Assert.That(box.Center, Is.Approximately(Vector2.Zero));
         sys.LayerSetOffset(ent3!, 1, Vector2.One);

@@ -61,7 +61,6 @@ namespace Robust.Client
         [Dependency] private IXamlHotReloadManager _xamlHotReloadManager = default!;
         [Dependency] private IPrototypeManager _prototypeManager = default!;
         [Dependency] private IClientNetManager _networkManager = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private IStateManager _stateManager = default!;
         [Dependency] private IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private IBaseClient _client = default!;
@@ -148,7 +147,7 @@ namespace Robust.Client
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
-            _loadscr.Initialize(42);
+            _loadscr.Initialize(41);
 
             _loadscr.BeginLoadingSection("Init graphics", dontRender: true);
             _clyde.InitializePostWindowing();
@@ -182,6 +181,7 @@ namespace Robust.Client
 
             _loadscr.EndLoadingSection();
 
+            _loadscr.LoadingStep(_reflectionManager.Initialize, _reflectionManager);
             _loadscr.LoadingStep(_serializationManager.Initialize, _serializationManager);
             _loadscr.LoadingStep(_loc.Initialize, _loc);
 
@@ -226,17 +226,16 @@ namespace Robust.Client
                 "Check bad file extensions");
 
             _loadscr.LoadingStep(_reload.Initialize, _reload);
-            _loadscr.LoadingStep(_reflectionManager.Initialize, _reflectionManager);
             _loadscr.LoadingStep(_xamlProxyManager.Initialize, _xamlProxyManager);
             _loadscr.LoadingStep(_xamlHotReloadManager.Initialize, _xamlHotReloadManager);
             _loadscr.BeginLoadingSection(_prototypeManager);
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
+            _resourceCache.AfterDeserialization();
             _loadscr.EndLoadingSection();
             _loadscr.LoadingStep(_userInterfaceManager.Initialize, "UI init");
             _loadscr.LoadingStep(_eyeManager.Initialize, _eyeManager);
             _loadscr.LoadingStep(_entityManager.Initialize, _entityManager);
-            _loadscr.LoadingStep(_mapManager.Initialize, _mapManager);
             _loadscr.LoadingStep(_gameStateManager.Initialize, _gameStateManager);
             _loadscr.LoadingStep(_placementManager.Initialize, _placementManager);
             _loadscr.LoadingStep(_viewVariablesManager.Initialize, _viewVariablesManager);
@@ -701,6 +700,7 @@ namespace Robust.Client
                 _transfer.FrameUpdate();
             }
 
+            _audio.FrameUpdate(frameEventArgs.DeltaSeconds);
             _audio.FlushALDisposeQueues();
         }
 

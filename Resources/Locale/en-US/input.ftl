@@ -78,4 +78,15 @@ input-key-RSystem-mac = Right ⌘
 input-key-LSystem-linux = Left Meta
 input-key-RSystem-linux = Right Meta
 
+input-key-Help = Help
+input-key-Stop = Stop
+input-key-Again = Again
+input-key-Prop = Props
+input-key-Undo = Undo
+input-key-Cut = Cut
+input-key-Copy = Copy
+input-key-Open = Open
+input-key-Paste = Paste
+input-key-Find = Find
+
 input-key-unknown = <unknown key>

@@ -205,6 +205,16 @@ internal partial class Clyde
             MapKey(SC.SDL_SCANCODE_PAUSE, Key.Pause);
             MapKey(SC.SDL_SCANCODE_CAPSLOCK, Key.CapsLock);
             MapKey(SC.SDL_SCANCODE_SCROLLLOCK, Key.ScrollLock);
+            MapKey(SC.SDL_SCANCODE_HELP, Key.Help);
+            MapKey(SC.SDL_SCANCODE_CANCEL, Key.Stop);
+            MapKey(SC.SDL_SCANCODE_AGAIN, Key.Again);
+            MapKey(SC.SDL_SCANCODE_AC_PROPERTIES, Key.Props);
+            MapKey(SC.SDL_SCANCODE_UNDO, Key.Undo);
+            MapKey(SC.SDL_SCANCODE_CUT, Key.Cut);
+            MapKey(SC.SDL_SCANCODE_COPY, Key.Copy);
+            MapKey(SC.SDL_SCANCODE_AC_OPEN, Key.Open);
+            MapKey(SC.SDL_SCANCODE_PASTE, Key.Paste);
+            MapKey(SC.SDL_SCANCODE_FIND, Key.Find);
 
             var keyMapReverse = new Dictionary<Key, SC>();
 

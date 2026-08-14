@@ -22,9 +22,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private ITileDefinitionManager _tileMan = default!;
         [Dependency] private IGameTiming _timing = default!;
-        [Dependency] protected IMapManager MapManager = default!;
         [Dependency] private IManifoldManager _manifolds = default!;
-        [Dependency] private IMapManagerInternal _mapInternal = default!;
         [Dependency] private INetManager _netManager = default!;
         [Dependency] private FixtureSystem _fixtures = default!;
         [Dependency] private SharedPhysicsSystem _physics = default!;
@@ -165,10 +163,12 @@ namespace Robust.Shared.GameObjects
     public sealed class GridInitializeEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
+        public MapGridComponent Grid { get; }
 
-        public GridInitializeEvent(EntityUid uid)
+        public GridInitializeEvent(EntityUid uid, MapGridComponent grid)
         {
             EntityUid = uid;
+            Grid = grid;
         }
     }
 #pragma warning restore CS0618

@@ -44,16 +44,16 @@ public interface IRobustRandom
     /// <param name="maxValue">Random value should be less then this value.</param>
     int Next(int minValue, int maxValue);
 
-    /// <summary> Get random <see cref="long"/> value. </summary>
+    /// <summary> Get random <see langword="long"/> value. </summary>
     long NextLong();
 
-    /// <summary> Get random <see cref="long"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
-    /// <param name="maxValue">Random value will be less then this value.</param>
+    /// <summary> Get random <see langword="long"/> value in range of 0 (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     long NextLong(long maxValue);
 
-    /// <summary> Get random <see cref="long"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
+    /// <summary> Get random <see langword="long"/> value in range of <paramref name="minValue"/> (included) and <paramref name="maxValue"/> (excluded). </summary>
     /// <param name="minValue">Random value will be greater or equal to this value.</param>
-    /// <param name="maxValue">Random value will be less then this value.</param>
+    /// <param name="maxValue">Random value will be less than this value.</param>
     long NextLong(long minValue, long maxValue);
 
     /// <summary> Get random <see cref="byte"/> value between 0 (included) and <see cref="byte.MaxValue"/> (excluded). </summary>

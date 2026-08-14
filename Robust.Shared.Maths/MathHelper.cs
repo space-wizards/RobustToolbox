@@ -27,44 +27,29 @@ namespace Robust.Shared.Maths
         #region Fields
 
         /// <summary>
-        /// Defines the value of Pi as a <see cref="System.Single"/>.
-        /// </summary>
-        public const float Pi = MathF.PI;
-
-        /// <summary>
         /// Defines the value of Pi divided by two as a <see cref="System.Single"/>.
         /// </summary>
-        public const float PiOver2 = Pi / 2;
+        public const float PiOver2 = MathF.PI / 2;
 
         /// <summary>
         /// Defines the value of Pi divided by three as a <see cref="System.Single"/>.
         /// </summary>
-        public const float PiOver3 = Pi / 3;
+        public const float PiOver3 = MathF.PI / 3;
 
         /// <summary>
         /// Definesthe value of  Pi divided by four as a <see cref="System.Single"/>.
         /// </summary>
-        public const float PiOver4 = Pi / 4;
+        public const float PiOver4 = MathF.PI / 4;
 
         /// <summary>
         /// Defines the value of Pi divided by six as a <see cref="System.Single"/>.
         /// </summary>
-        public const float PiOver6 = Pi / 6;
-
-        /// <summary>
-        /// Defines the value of Pi multiplied by two as a <see cref="System.Single"/>.
-        /// </summary>
-        public const float TwoPi = 2 * Pi;
+        public const float PiOver6 = MathF.PI / 6;
 
         /// <summary>
         /// Defines the value of Pi multiplied by 3 and divided by two as a <see cref="System.Single"/>.
         /// </summary>
-        public const float ThreePiOver2 = 3 * Pi / 2;
-
-        /// <summary>
-        /// Defines the value of E as a <see cref="System.Single"/>.
-        /// </summary>
-        public const float E = MathF.E;
+        public const float ThreePiOver2 = 3 * MathF.PI / 2;
 
         /// <summary>
         /// Defines the base-10 logarithm of E.

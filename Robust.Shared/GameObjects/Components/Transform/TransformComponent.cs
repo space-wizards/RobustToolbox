@@ -249,7 +249,7 @@ namespace Robust.Shared.GameObjects
                 {
                     _anchored = value;
                 }
-                else if (value && !_anchored && _mapManager.TryFindGridAt(_entMan.System<SharedTransformSystem>().GetMapCoordinates(this), out _, out var grid))
+                else if (value && !_anchored && _entMan.System<SharedMapSystem>().TryFindGridAt(_entMan.System<SharedTransformSystem>().GetMapCoordinates(this), out _, out var grid))
                 {
                     _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(Owner, this, grid);
                 }

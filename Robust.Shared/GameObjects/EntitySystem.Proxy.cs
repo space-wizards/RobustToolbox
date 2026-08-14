@@ -1967,4 +1967,29 @@ public partial class EntitySystem
         return EntityManager.TrySingle(out entity);
     }
     #endregion
+
+    #region Entity Relations
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity)
+    {
+        EntityManager.SetRelation(owner, ref relation, entity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void ClearRelation(EntityRelation relation)
+    {
+        EntityManager.ClearRelation(relation);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void ClearRelation(Entity<EntityRelationsComponent?> relationEnt)
+    {
+        EntityManager.ClearRelation(relationEnt);
+    }
+
+    #endregion
 }

@@ -31,32 +31,17 @@ public abstract partial class SharedTransformSystem
         TransformComponent newGridXform,
         Angle rotation)
     {
-        // Bypass some of the expensive stuff in unanchoring / anchoring.
-        _map.RemoveFromSnapGridCell(oldGridUid, oldGrid, oldTilePos, uid);
-        _map.AddToSnapGridCell(newGridUid, newGrid, tilePos, uid);
-        // TODO: Could do this re-parent way better.
-        // Unfortunately we don't want any anchoring events to go out hence... this.
-        xform._anchored = false;
-        oldGridXform._children.Remove(uid);
-        newGridXform._children.Add(uid);
-        xform._parent = newGridUid;
-        xform._anchored = true;
-        var oldPos = xform._localPosition;
-        var oldRot = xform._localRotation;
-        var oldMap = xform.MapUid;
-        xform._localPosition = tilePos + newGrid.TileSizeHalfVector;
-        xform._localRotation = NormalizeRotation(xform._localRotation + rotation);
-
         var meta = MetaData(uid);
-        SetGridId((uid, xform, meta), newGridUid);
-        RaiseMoveEvent((uid, xform, meta), oldGridUid, oldPos, oldRot, oldMap);
+        var localRotation = xform.LocalRotation + rotation;
+        var coordinates = new EntityCoordinates(newGridUid, tilePos + newGrid.TileSizeHalfVector);
+
+        Unanchor(uid, xform);
+        SetCoordinates((uid, xform, meta), coordinates, localRotation);
+        AnchorEntityResolved((uid, xform, meta), (newGridUid, newGrid), tilePos);
 
         DebugTools.Assert(XformQuery.GetComponent(oldGridUid).MapID == XformQuery.GetComponent(newGridUid).MapID);
         DebugTools.Assert(xform._anchored);
 
-        Dirty(uid, xform, meta);
-        var ev = new ReAnchorEvent(uid, oldGridUid, newGridUid, tilePos, xform);
-        RaiseLocalEvent(uid, ref ev);
     }
 
     [Obsolete("Use Entity<T> variant")]
@@ -67,43 +52,209 @@ public abstract partial class SharedTransformSystem
         MapGridComponent grid,
         Vector2i tileIndices)
     {
-        return AnchorEntity((uid, xform), (gridUid, grid), tileIndices);
+        return AnchorEntity((uid, xform, MetaData(uid)), (gridUid, grid), tileIndices);
     }
 
+    /// <summary>
+    ///     Moves an entity to the specified grid tile and attempts to anchor it there.
+    /// </summary>
+    /// <returns>Whether the entity is anchored after this call.</returns>
     public bool AnchorEntity(
+        Entity<TransformComponent?, MetaDataComponent?> entity,
+        Entity<MapGridComponent> grid,
+        Vector2i tileIndices)
+    {
+        var (uid, xform, meta) = entity;
+        if (!Resolve(uid, ref xform, ref meta))
+            return false;
+
+        return AnchorEntityResolved((uid, xform, meta), grid, tileIndices);
+    }
+
+    /// <summary>
+    ///     Moves an entity to the specified tile and attempts to anchor it there.
+    /// </summary>
+    /// <returns>Whether the entity is anchored after this call.</returns>
+    public bool AnchorEntity(Entity<TransformComponent?, MetaDataComponent?> entity, TileRef tile)
+    {
+        var (uid, xform, meta) = entity;
+        if (!Resolve(uid, ref xform, ref meta))
+            return false;
+
+        return AnchorEntityResolved((uid, xform, meta), tile);
+    }
+
+    /// <summary>
+    ///     Moves an entity to the specified coordinates and attempts to anchor it there.
+    /// </summary>
+    /// <returns>Whether the entity is anchored after this call.</returns>
+    public bool AnchorEntity(Entity<TransformComponent?, MetaDataComponent?> entity, EntityCoordinates coordinates)
+    {
+        var (uid, xform, meta) = entity;
+        if (!Resolve(uid, ref xform, ref meta))
+            return false;
+
+        return AnchorEntityResolved((uid, xform, meta), coordinates);
+    }
+
+    /// <summary>
+    ///     Moves an entity to the specified map coordinates and attempts to anchor it there.
+    /// </summary>
+    /// <returns>Whether the entity is anchored after this call.</returns>
+    public bool AnchorEntity(Entity<TransformComponent?, MetaDataComponent?> entity, MapCoordinates coordinates)
+    {
+        var (uid, xform, meta) = entity;
+        if (!Resolve(uid, ref xform, ref meta))
+            return false;
+
+        return AnchorEntityResolved((uid, xform, meta), coordinates);
+    }
+
+    private bool AnchorEntityResolved(Entity<TransformComponent, MetaDataComponent> entity, TileRef tile)
+    {
+        if (!_gridQuery.TryGetComponent(tile.GridUid, out var grid))
+            return entity.Comp1.Anchored;
+
+        return AnchorEntityResolved(entity, (tile.GridUid, grid), tile.GridIndices);
+    }
+
+    private bool AnchorEntityResolved(Entity<TransformComponent, MetaDataComponent> entity, EntityCoordinates coordinates)
+    {
+        var (uid, xform, _) = entity;
+        var wasAnchored = xform._anchored;
+
+        if (TryGetTargetAnchor(coordinates, out var grid, out var tile))
+            return AnchorEntityResolved(entity, grid, tile);
+
+        if (wasAnchored)
+            Unanchor(uid, xform, setPhysics: false);
+
+        SetCoordinates(entity, coordinates);
+        if (wasAnchored)
+            _physics.TrySetBodyType(uid, BodyType.Dynamic, xform: xform);
+
+        return xform.Anchored;
+    }
+
+    private bool AnchorEntityResolved(Entity<TransformComponent, MetaDataComponent> entity, MapCoordinates coordinates)
+    {
+        var (uid, xform, _) = entity;
+        var wasAnchored = xform._anchored;
+
+        if (TryGetTargetAnchor(coordinates, out var grid, out var tile))
+            return AnchorEntityResolved(entity, grid, tile);
+
+        if (wasAnchored)
+            Unanchor(uid, xform, setPhysics: false);
+
+        SetMapCoordinates((entity.Owner, entity.Comp1), coordinates);
+        if (wasAnchored)
+            _physics.TrySetBodyType(uid, BodyType.Dynamic, xform: xform);
+
+        return xform.Anchored;
+    }
+
+    /// <summary>
+    /// Checks whether the entity is already in the target anchort spot.
+    /// </summary>
+    private bool IsSameValidAnchor(
         Entity<TransformComponent> entity,
         Entity<MapGridComponent> grid,
         Vector2i tileIndices)
     {
-        var (uid, xform) = entity;
-        if (!_map.AddToSnapGridCell(grid, grid, tileIndices, uid))
+        if (!entity.Comp._anchored)
             return false;
 
-        var wasAnchored = entity.Comp._anchored;
-        xform._anchored = true;
-        var meta = MetaData(uid);
-        Dirty(entity, meta);
+        if (!TryGetCurrentAnchor(entity, out var oldGridUid, out _, out var oldTile))
+            return false;
 
-        // Mark as static before doing position changes, to avoid the velocity change on parent change.
+        return oldGridUid == grid.Owner
+               && oldTile == tileIndices
+               && _map.IsAnchored(grid, tileIndices, entity.Owner);
+    }
+
+    /// <summary>
+    /// The actual authoritative anchoring method.
+    /// </summary>
+    private bool AnchorEntityResolved(
+        Entity<TransformComponent, MetaDataComponent> entity,
+        Entity<MapGridComponent> grid,
+        Vector2i tileIndices,
+        bool snapToTileCenter = true)
+    {
+        var (uid, xform, meta) = entity;
+        var wasAnchored = xform._anchored;
+        if (IsSameValidAnchor((uid, xform), grid, tileIndices))
+            return true;
+
+        if (wasAnchored)
+            Unanchor(uid, xform, setPhysics: false);
+
+        if (snapToTileCenter)
+        {
+            var pos = new EntityCoordinates(grid, _map.GridTileToLocal(grid, grid, tileIndices).Position);
+            SetCoordinates((uid, xform, meta), pos);
+        }
+        else if (xform.ParentUid != grid.Owner)
+        {
+            var localPos = Vector2.Transform(GetMapCoordinates(xform).Position, GetInvWorldMatrix(grid.Owner));
+            SetCoordinates((uid, xform, meta), new EntityCoordinates(grid, localPos), unanchor: false);
+        }
+
+        if (!_map.AddToSnapGridCell(grid, grid, tileIndices, uid))
+        {
+            DebugTools.Assert(!xform.Anchored);
+            if (wasAnchored)
+                _physics.TrySetBodyType(uid, BodyType.Dynamic, xform: xform);
+
+            return xform.Anchored;
+        }
+
+        xform._anchored = true;
+        Dirty(uid, xform, meta);
+
         _physics.TrySetBodyType(uid, BodyType.Static, xform: xform);
 
-        if (!wasAnchored && xform.Running)
+        if (xform.Running)
         {
             var ev = new AnchorStateChangedEvent(uid, xform);
             RaiseLocalEvent(uid, ref ev, true);
         }
 
-        // Anchor snapping. If there is a coordinate change, it will dirty the component for us.
-        var pos = new EntityCoordinates(grid, _map.GridTileToLocal(grid, grid, tileIndices).Position);
-        SetCoordinates((uid, xform, meta), pos, unanchor: false);
         return true;
+    }
+
+    private bool TryGetTargetAnchor(EntityCoordinates coordinates, out Entity<MapGridComponent> grid, out Vector2i tile)
+    {
+        if (_gridQuery.TryGetComponent(coordinates.EntityId, out var gridComp))
+        {
+            grid = (coordinates.EntityId, gridComp);
+            tile = _map.TileIndicesFor(grid, coordinates);
+            return true;
+        }
+
+        var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(coordinates.EntityId));
+        return TryGetTargetAnchor(new MapCoordinates(worldPos, GetMapId(coordinates)), out grid, out tile);
+    }
+
+    private bool TryGetTargetAnchor(MapCoordinates coordinates, out Entity<MapGridComponent> grid, out Vector2i tile)
+    {
+        if (_map.TryFindGridAt(coordinates, out var gridUid, out var gridComp))
+        {
+            grid = (gridUid, gridComp);
+            tile = _map.TileIndicesFor(grid, coordinates);
+            return true;
+        }
+
+        grid = default;
+        tile = default;
+        return false;
     }
 
     [Obsolete("Use Entity<T> variants")]
     public bool AnchorEntity(EntityUid uid, TransformComponent xform, MapGridComponent grid)
     {
-        var tileIndices = _map.TileIndicesFor(grid.Owner, grid, xform.Coordinates);
-        return AnchorEntity(uid, xform, grid.Owner, grid, tileIndices);
+        return AnchorEntity((uid, xform, MetaData(uid)), (grid.Owner, grid));
     }
 
     public bool AnchorEntity(EntityUid uid)
@@ -113,37 +264,154 @@ public abstract partial class SharedTransformSystem
 
     public bool AnchorEntity(EntityUid uid, TransformComponent xform)
     {
-        return AnchorEntity((uid, xform));
+        return AnchorEntity((uid, xform, MetaData(uid)));
     }
 
-    public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null)
+    /// <summary>
+    ///     Attempts to anchor or unanchor an entity at its current position.
+    /// </summary>
+    /// <returns>Whether the entity is anchored after this call.</returns>
+    [Obsolete("Use AnchorEntity")]
+    public bool TryAnchor(EntityUid uid, bool value, TransformComponent? xform = null)
     {
-        if (grid != null && grid.Value.Owner != entity.Comp.GridUid)
-        {
-            Log.Error($"Tried to anchor entity {Name(entity)} to a grid ({grid.Value.Owner}) different from its GridUid ({entity.Comp.GridUid})");
+        MetaDataComponent? meta = null;
+        if (!Resolve(uid, ref xform, ref meta))
             return false;
+
+        return TryAnchorResolved((uid, xform, meta), value);
+    }
+
+    /// <summary>
+    ///     Attempts to anchor or unanchor an entity at its current position.
+    /// </summary>
+    /// <returns>Whether the entity is anchored after this call.</returns>
+    public bool TryAnchor(Entity<TransformComponent?, MetaDataComponent?> entity, bool value)
+    {
+        var (uid, xform, meta) = entity;
+        if (!Resolve(uid, ref xform, ref meta))
+            return false;
+
+        return TryAnchorResolved((uid, xform, meta), value);
+    }
+
+    private bool TryAnchorResolved(Entity<TransformComponent, MetaDataComponent> entity, bool value)
+    {
+        if (!entity.Comp1.Initialized)
+        {
+            entity.Comp1._anchored = value;
+            return entity.Comp1.Anchored;
         }
 
+        return value
+            ? AnchorEntityResolved(entity)
+            : Unanchor(entity.Owner, entity.Comp1);
+    }
+
+    /// <summary>
+    ///     Attempts to anchor an entity at its current map position without snapping it to the tile center.
+    /// </summary>
+    /// <returns>Whether the entity is anchored after this call.</returns>
+    public bool AnchorEntity(Entity<TransformComponent?, MetaDataComponent?> entity, Entity<MapGridComponent>? grid = null)
+    {
+        var (uid, xform, meta) = entity;
+        if (!Resolve(uid, ref xform, ref meta))
+            return false;
+
+        return AnchorEntityResolved((uid, xform, meta), grid);
+    }
+
+    private bool AnchorEntityResolved(Entity<TransformComponent, MetaDataComponent> entity, Entity<MapGridComponent>? grid = null)
+    {
+        var xform = entity.Comp1;
         if (grid == null)
         {
-            if (!TryComp(entity.Comp.GridUid, out MapGridComponent? gridComp))
-                return false;
-            grid = (entity.Comp.GridUid.Value, gridComp);
+            if (xform.GridUid is { } gridUid && _gridQuery.TryGetComponent(gridUid, out var gridComp))
+            {
+                grid = (gridUid, gridComp);
+            }
+            else
+            {
+                var coords = GetMapCoordinates(xform);
+                if (!_map.TryFindGridAt(coords, out gridUid, out gridComp))
+                    return xform.Anchored;
+
+                grid = (gridUid, gridComp);
+            }
+        }
+        else if (grid.Value.Owner != xform.GridUid && grid.Value.Owner != xform.ParentUid)
+        {
+            var coords = GetMapCoordinates(xform);
+            if (!_map.TryFindGridAt(coords, out var currentGridUid, out _) || currentGridUid != grid.Value.Owner)
+            {
+                Log.Error($"Tried to anchor entity {Name(entity)} to a grid ({grid.Value.Owner}) that it is not currently on");
+                return xform.Anchored;
+            }
         }
 
-        var tileIndices =  _map.TileIndicesFor(grid.Value, grid.Value, entity.Comp.Coordinates);
-        return AnchorEntity(entity, grid.Value, tileIndices);
+        var tileIndices = grid.Value.Owner == xform.ParentUid
+            ? _map.TileIndicesFor(grid.Value, xform.Coordinates)
+            : _map.TileIndicesFor(grid.Value, GetMapCoordinates(xform));
+
+        return AnchorEntityResolved(entity, grid.Value, tileIndices, snapToTileCenter: false);
     }
 
-    public void Unanchor(EntityUid uid)
+    internal void SetAnchored(Entity<TransformComponent> entity, bool value)
     {
-        Unanchor(uid, XformQuery.GetComponent(uid));
+        // Internal just because of this shenanigan.
+        if (!entity.Comp.Initialized)
+        {
+            entity.Comp._anchored = value;
+            return;
+        }
+
+        if (value)
+        {
+            TryAnchorResolved((entity.Owner, entity.Comp, MetaData(entity.Owner)), true);
+        }
+        else
+        {
+            TryAnchorResolved((entity.Owner, entity.Comp, MetaData(entity.Owner)), false);
+        }
     }
 
-    public void Unanchor(EntityUid uid, TransformComponent xform, bool setPhysics = true)
+    private bool TryGetCurrentAnchor(
+        Entity<TransformComponent> entity,
+        out EntityUid? gridUid,
+        [NotNullWhen(true)] out MapGridComponent? grid,
+        out Vector2i? tile)
+    {
+        gridUid = null;
+        grid = null;
+        tile = null;
+
+        if (!entity.Comp._anchored)
+            return false;
+
+        if (!entity.Comp.ParentUid.IsValid() || !_gridQuery.TryGetComponent(entity.Comp.ParentUid, out grid))
+            return false;
+
+        gridUid = entity.Comp.ParentUid;
+        tile = _map.TileIndicesFor(entity.Comp.ParentUid, grid, entity.Comp.Coordinates);
+        return true;
+    }
+
+    /// <summary>
+    ///     Unanchors an entity.
+    /// </summary>
+    /// <returns>Whether the entity is anchored after this call.</returns>
+    public bool Unanchor(EntityUid uid)
+    {
+        return Unanchor(uid, XformQuery.GetComponent(uid));
+    }
+
+    /// <summary>
+    ///     Unanchors an entity.
+    /// </summary>
+    /// <returns>Whether the entity is anchored after this call.</returns>
+    public bool Unanchor(EntityUid uid, TransformComponent xform, bool setPhysics = true)
     {
         if (!xform._anchored)
-            return;
+            return false;
 
         Dirty(uid, xform);
         xform._anchored = false;
@@ -152,7 +420,7 @@ public abstract partial class SharedTransformSystem
             _physics.TrySetBodyType(uid, BodyType.Dynamic, xform: xform);
 
         if (xform.LifeStage < ComponentLifeStage.Initialized)
-            return;
+            return xform.Anchored;
 
         if (_gridQuery.TryGetComponent(xform.GridUid, out var grid))
         {
@@ -161,10 +429,11 @@ public abstract partial class SharedTransformSystem
         }
 
         if (!xform.Running)
-            return;
+            return xform.Anchored;
 
         var ev = new AnchorStateChangedEvent(uid, xform);
         RaiseLocalEvent(uid, ref ev, true);
+        return xform.Anchored;
     }
 
     #endregion
@@ -889,9 +1158,7 @@ public abstract partial class SharedTransformSystem
             }
             else
             {
-#pragma warning disable CS0618 // AnchorEntity/Unanchored can't be used from uninitialized states.
-                xform.Anchored = newState.Anchored;
-#pragma warning restore CS0618
+                SetAnchored((uid, xform), newState.Anchored);
             }
 
             if (oldAnchored != newState.Anchored && xform.Initialized)

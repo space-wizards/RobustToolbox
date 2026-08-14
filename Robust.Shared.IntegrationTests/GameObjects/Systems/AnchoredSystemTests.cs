@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Containers;
@@ -67,7 +69,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         [Test]
         public void OnAnchored_WorldPosition_TileCenter()
         {
-            var (_, grid, coordinates, xformSys, mapSys, entMan) = SimulationFactory();
+            var (sim, grid, coordinates, xformSys, mapSys, entMan) = SimulationFactory();
 
             // can only be anchored to a tile
             mapSys.SetTile(grid, mapSys.TileIndicesFor(grid, coordinates), new Tile(1));
@@ -75,9 +77,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = entMan.Spawn(null, coordinates); // this raises MoveEvent, subscribe after
 
             // Act
-            var moveEventTest = entMan.System<MoveEventTestSystem>();
+            var moveEventTest = sim.System<MoveEventTestSystem>();
             moveEventTest.ResetCounters();
-            xformSys.AnchorEntity(ent1);
+            xformSys.AnchorEntity((ent1, sim.Transform(ent1, entMan)), grid, mapSys.TileIndicesFor(grid, coordinates));
             Assert.That(xformSys.GetWorldPosition(ent1), Is.EqualTo(new Vector2(7.5f, 7.5f))); // centered on tile
             moveEventTest.AssertMoved(false);
         }
@@ -94,7 +96,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             public override void Initialize()
             {
                 base.Initialize();
-                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => _transform.AnchorEntity(e));
+                SubscribeLocalEvent<AnchorOnInitComponent, ComponentInit>((e, _, _) => _transform.AnchorEntity((e, Transform(e))));
             }
         }
 
@@ -240,13 +242,341 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             mapSys.SetTile(grid, tileIndices, new Tile(1));
 
             // Act
-            xform.Anchored = true;
+            xformSys.AnchorEntity(ent1);
 
             Assert.That(mapSys.GetAnchoredEntities(grid, tileIndices).First(), Is.EqualTo(ent1));
             Assert.That(mapSys.GetTileRef(grid, tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
             Assert.That(sim.HasComp<PhysicsComponent>(ent1, entMan), Is.False);
             var tempQualifier = grid.Owner;
             Assert.That(sim.HasComp<PhysicsComponent>(tempQualifier, entMan), Is.True);
+        }
+
+        // Acruid-style names
+
+        /*
+         * Assert same-spot anchoring works.
+         */
+
+        [Test]
+        public void AnchorEntity_CurrentMapPosition_AnchorsToGridUnderEntity()
+        {
+            var (sim, grid, coords, xformSys, mapSys, entMan) = SimulationFactory();
+            var mapUid = mapSys.GetMap(coords.MapId);
+            var tileIndices = mapSys.TileIndicesFor(grid, coords);
+            mapSys.SetTile(grid, tileIndices, new Tile(1));
+
+            var ent1 = entMan.SpawnEntity(null, new EntityCoordinates(mapUid, coords.Position));
+
+            Assert.That(xformSys.AnchorEntity(ent1), Is.True);
+            Assert.That(sim.Transform(ent1, entMan).Anchored, Is.True);
+            Assert.That(sim.Transform(ent1, entMan).ParentUid, Is.EqualTo(grid.Owner));
+            Assert.That(mapSys.GetAnchoredEntities(grid, tileIndices), Does.Contain(ent1));
+            Assert.That(xformSys.GetWorldPosition(ent1), Is.EqualTo(new Vector2(7f, 7f)));
+        }
+
+        [Test]
+        public void AnchorEntity_GridTile_ReanchorsAndCleansOldTile()
+        {
+            var (sim, grid, coords, xformSys, mapSys, entMan) = SimulationFactory();
+            var oldTile = mapSys.TileIndicesFor(grid, coords);
+            var newTile = oldTile + new Vector2i(1, 0);
+            mapSys.SetTile(grid, oldTile, new Tile(1));
+            mapSys.SetTile(grid, newTile, new Tile(1));
+
+            var ent1 = entMan.SpawnEntity(null, coords);
+            Assert.That(xformSys.AnchorEntity(ent1), Is.True);
+
+            Assert.That(xformSys.AnchorEntity((ent1, sim.Transform(ent1, entMan)), grid, newTile), Is.True);
+
+            Assert.That(mapSys.GetAnchoredEntities(grid, oldTile), Does.Not.Contain(ent1));
+            Assert.That(mapSys.GetAnchoredEntities(grid, newTile), Does.Contain(ent1));
+            Assert.That(xformSys.GetWorldPosition(ent1), Is.EqualTo(new Vector2(8.5f, 7.5f)));
+        }
+
+        [Test]
+        public void AnchorEntity_GridTile_SameTile_Noops()
+        {
+            var (sim, grid, coords, xformSys, mapSys, entMan) = SimulationFactory();
+            var tile = mapSys.TileIndicesFor(grid, coords);
+            mapSys.SetTile(grid, tile, new Tile(1));
+
+            var ent1 = entMan.SpawnEntity(null, coords);
+            Assert.That(xformSys.AnchorEntity(ent1), Is.True);
+
+            // I LOVE THIS SYSTEM
+            sim.System<MoveEventTestSystem>().ResetCounters();
+            Assert.That(xformSys.AnchorEntity((ent1, sim.Transform(ent1, entMan)), grid, tile), Is.True);
+
+            Assert.That(sim.Transform(ent1, entMan).Anchored, Is.True);
+            Assert.That(mapSys.GetAnchoredEntities(grid, tile), Does.Contain(ent1));
+            Assert.That(sim.System<MoveEventTestSystem>().MoveCounter, Is.EqualTo(0));
+            Assert.That(sim.System<MoveEventTestSystem>().ParentCounter, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void AnchorEntity_GridTile_InvalidReanchor_MovesAndUnanchors()
+        {
+            var (sim, grid, coords, xformSys, mapSys, entMan) = SimulationFactory();
+            var oldTile = mapSys.TileIndicesFor(grid, coords);
+            var emptyTile = oldTile + new Vector2i(1, 0);
+            mapSys.SetTile(grid, oldTile, new Tile(1));
+            mapSys.SetTile(grid, emptyTile, Tile.Empty);
+
+            var ent1 = entMan.SpawnEntity(null, coords);
+            Assert.That(xformSys.AnchorEntity(ent1), Is.True);
+
+            Assert.That(xformSys.AnchorEntity((ent1, sim.Transform(ent1, entMan)), grid, emptyTile), Is.False);
+
+            Assert.That(sim.Transform(ent1, entMan).Anchored, Is.False);
+            Assert.That(mapSys.GetAnchoredEntities(grid, oldTile), Does.Not.Contain(ent1));
+            Assert.That(mapSys.GetAnchoredEntities(grid, emptyTile), Does.Not.Contain(ent1));
+            Assert.That(xformSys.GetWorldPosition(ent1), Is.EqualTo(new Vector2(8.5f, 7.5f)));
+        }
+
+        [Test]
+        public void AnchorEntity_GridTile_StaleSameTileAnchor_RepairsLookup()
+        {
+            var (sim, grid, coords, xformSys, mapSys, entMan) = SimulationFactory();
+            var tile = mapSys.TileIndicesFor(grid, coords);
+            mapSys.SetTile(grid, tile, new Tile(1));
+
+            var ent1 = entMan.SpawnEntity(null, coords);
+            Assert.That(xformSys.AnchorEntity(ent1), Is.True);
+            mapSys.RemoveFromSnapGridCell(grid, grid.Comp, tile, ent1);
+
+            Assert.That(xformSys.AnchorEntity((ent1, sim.Transform(ent1, entMan)), grid, tile), Is.True);
+
+            Assert.That(sim.Transform(ent1, entMan).Anchored, Is.True);
+            Assert.That(mapSys.GetAnchoredEntities(grid, tile), Does.Contain(ent1));
+        }
+
+        [Test]
+        public void AnchorEntity_TileRef_MovesAndAnchors()
+        {
+            var (sim, grid, coords, xformSys, mapSys, entMan) = SimulationFactory();
+            var targetTile = mapSys.TileIndicesFor(grid, coords) + new Vector2i(1, 0);
+            mapSys.SetTile(grid, targetTile, new Tile(1));
+            var tileRef = mapSys.GetTileRef(grid, targetTile);
+
+            var ent1 = entMan.SpawnEntity(null, coords);
+
+            Assert.That(xformSys.AnchorEntity((ent1, sim.Transform(ent1, entMan)), tileRef), Is.True);
+
+            Assert.That(sim.Transform(ent1, entMan).Anchored, Is.True);
+            Assert.That(mapSys.GetAnchoredEntities(grid, targetTile), Does.Contain(ent1));
+            Assert.That(xformSys.GetWorldPosition(ent1), Is.EqualTo(new Vector2(8.5f, 7.5f)));
+        }
+
+        [Test]
+        public void AnchorEntity_MapCoordinates_MovesEvenWhenAnchorFails()
+        {
+            var (sim, grid, coords, xformSys, mapSys, entMan) = SimulationFactory();
+            var targetCoords = coords.Offset(new Vector2(1, 0));
+            var targetTile = mapSys.TileIndicesFor(grid, targetCoords);
+            mapSys.SetTile(grid, targetTile, Tile.Empty);
+
+            var ent1 = entMan.SpawnEntity(null, coords);
+
+            Assert.That(xformSys.AnchorEntity((ent1, sim.Transform(ent1, entMan)), targetCoords), Is.False);
+
+            Assert.That(sim.Transform(ent1, entMan).Anchored, Is.False);
+            Assert.That(mapSys.GetAnchoredEntities(grid, targetTile), Does.Not.Contain(ent1));
+            Assert.That(xformSys.GetWorldPosition(ent1), Is.EqualTo(targetCoords.Position));
+        }
+
+        /*
+         * Down here we test the targeted variants and not same-spot anchoring.
+         */
+
+        internal enum AnchorTargetVariant : byte
+        {
+            GridTile,
+            TileRef,
+            EntityCoordinates,
+            MapCoordinates,
+        }
+
+        internal enum AnchorTargetScenario : byte
+        {
+            SameSpot,
+            DifferentGrid,
+            NoGrid,
+        }
+
+        private static IEnumerable<TestCaseData> AnchorTargetCases()
+        {
+            foreach (var variant in new[]
+                     {
+                         AnchorTargetVariant.GridTile,
+                         AnchorTargetVariant.TileRef,
+                         AnchorTargetVariant.EntityCoordinates,
+                         AnchorTargetVariant.MapCoordinates,
+                     })
+            {
+                yield return new TestCaseData(variant, AnchorTargetScenario.SameSpot)
+                    .SetName($"AnchorEntity_TargetedVariants_SameSpot_{variant}");
+                yield return new TestCaseData(variant, AnchorTargetScenario.DifferentGrid)
+                    .SetName($"AnchorEntity_TargetedVariants_DifferentGrid_{variant}");
+            }
+
+            yield return new TestCaseData(AnchorTargetVariant.EntityCoordinates, AnchorTargetScenario.NoGrid)
+                .SetName("AnchorEntity_TargetedVariants_NoGrid_EntityCoordinates");
+            yield return new TestCaseData(AnchorTargetVariant.MapCoordinates, AnchorTargetScenario.NoGrid)
+                .SetName("AnchorEntity_TargetedVariants_NoGrid_MapCoordinates");
+        }
+
+        [TestCaseSource(nameof(AnchorTargetCases))]
+        public void AnchorEntity_TargetedVariants_Scenarios(AnchorTargetVariant variant, AnchorTargetScenario scenario)
+        {
+            var (sim, gridA, coords, xformSys, mapSys, entMan) = SimulationFactory();
+            var mapUid = mapSys.GetMap(coords.MapId);
+            var gridB = mapSys.CreateGridEntity(coords.MapId);
+
+            var tileA = mapSys.TileIndicesFor(gridA, coords);
+            var tileB = new Vector2i(10, 0);
+            mapSys.SetTile(gridA, tileA, new Tile(1));
+            mapSys.SetTile(gridB, tileB, new Tile(1));
+
+            var ent = entMan.SpawnEntity(null, coords);
+            var xform = sim.Transform(ent, entMan);
+            Assert.That(xformSys.AnchorEntity(ent), Is.True);
+
+            sim.System<MoveEventTestSystem>().ResetCounters();
+
+            var result = variant switch
+            {
+                AnchorTargetVariant.GridTile => xformSys.AnchorEntity((ent, xform), TargetGrid(), TargetTile()),
+                AnchorTargetVariant.TileRef => xformSys.AnchorEntity((ent, xform), mapSys.GetTileRef(TargetGrid(), TargetTile())),
+                AnchorTargetVariant.EntityCoordinates => xformSys.AnchorEntity((ent, xform), TargetCoordinates()),
+                AnchorTargetVariant.MapCoordinates => xformSys.AnchorEntity((ent, xform), TargetMapCoordinates()),
+                _ => throw new System.ArgumentOutOfRangeException(nameof(variant), variant, null),
+            };
+
+            switch (scenario)
+            {
+                case AnchorTargetScenario.SameSpot:
+                    Assert.That(result, Is.True);
+                    Assert.That(xform.Anchored, Is.True);
+                    Assert.That(mapSys.GetAnchoredEntities(gridA, tileA), Does.Contain(ent));
+                    Assert.That(sim.System<MoveEventTestSystem>().MoveCounter, Is.EqualTo(0));
+                    Assert.That(sim.System<MoveEventTestSystem>().ParentCounter, Is.EqualTo(0));
+                    break;
+                case AnchorTargetScenario.DifferentGrid:
+                    Assert.That(result, Is.True);
+                    Assert.That(xform.Anchored, Is.True);
+                    Assert.That(mapSys.GetAnchoredEntities(gridA, tileA), Does.Not.Contain(ent));
+                    Assert.That(mapSys.GetAnchoredEntities(gridB, tileB), Does.Contain(ent));
+                    Assert.That(xformSys.GetWorldPosition(ent), Is.EqualTo(new Vector2(10.5f, 0.5f)));
+                    break;
+                case AnchorTargetScenario.NoGrid:
+                    Assert.That(result, Is.False);
+                    Assert.That(xform.Anchored, Is.False);
+                    Assert.That(mapSys.GetAnchoredEntities(gridA, tileA), Does.Not.Contain(ent));
+                    Assert.That(xformSys.GetWorldPosition(ent), Is.EqualTo(new Vector2(1000, 1000)));
+                    break;
+                default:
+                    throw new System.ArgumentOutOfRangeException(nameof(scenario), scenario, null);
+            }
+
+            Entity<MapGridComponent> TargetGrid()
+            {
+                return scenario == AnchorTargetScenario.DifferentGrid ? gridB : gridA;
+            }
+
+            Vector2i TargetTile()
+            {
+                return scenario == AnchorTargetScenario.DifferentGrid ? tileB : tileA;
+            }
+
+            EntityCoordinates TargetCoordinates()
+            {
+                return scenario switch
+                {
+                    AnchorTargetScenario.DifferentGrid => new EntityCoordinates(gridB, 10.5f, 0.5f),
+                    AnchorTargetScenario.NoGrid => new EntityCoordinates(mapUid, 1000, 1000),
+                    _ => new EntityCoordinates(gridA, 7.5f, 7.5f),
+                };
+            }
+
+            MapCoordinates TargetMapCoordinates()
+            {
+                return scenario switch
+                {
+                    AnchorTargetScenario.DifferentGrid => new MapCoordinates(new Vector2(10.5f, 0.5f), coords.MapId),
+                    AnchorTargetScenario.NoGrid => new MapCoordinates(new Vector2(1000, 1000), coords.MapId),
+                    _ => new MapCoordinates(new Vector2(7.5f, 7.5f), coords.MapId),
+                };
+            }
+        }
+
+        internal enum UnanchorVariant : byte
+        {
+            Uid,
+            TryAnchor,
+        }
+
+        internal enum UnanchorScenario : byte
+        {
+            SameSpot,
+            DifferentGrid,
+            NoGrid,
+        }
+
+        private static IEnumerable<TestCaseData> UnanchorCases()
+        {
+            foreach (var variant in new[] {UnanchorVariant.Uid, UnanchorVariant.TryAnchor})
+            {
+                yield return new TestCaseData(variant, UnanchorScenario.SameSpot)
+                    .SetName($"UnanchorEntity_Variants_SameSpot_{variant}");
+                yield return new TestCaseData(variant, UnanchorScenario.DifferentGrid)
+                    .SetName($"UnanchorEntity_Variants_DifferentGrid_{variant}");
+                yield return new TestCaseData(variant, UnanchorScenario.NoGrid)
+                    .SetName($"UnanchorEntity_Variants_NoGrid_{variant}");
+            }
+        }
+
+        [TestCaseSource(nameof(UnanchorCases))]
+        public void UnanchorEntity_Variants_Scenarios(UnanchorVariant variant, UnanchorScenario scenario)
+        {
+            var (sim, gridA, coords, xformSys, mapSys, entMan) = SimulationFactory();
+            var mapUid = mapSys.GetMap(coords.MapId);
+            var gridB = mapSys.CreateGridEntity(coords.MapId);
+
+            var tileA = mapSys.TileIndicesFor(gridA, coords);
+            var tileB = tileA + new Vector2i(10, 0);
+            mapSys.SetTile(gridA, tileA, new Tile(1));
+            mapSys.SetTile(gridB, tileB, new Tile(1));
+
+            var ent = entMan.SpawnEntity(null, coords);
+            var xform = sim.Transform(ent, entMan);
+            var meta = entMan.GetComponent<MetaDataComponent>(ent);
+
+            switch (scenario)
+            {
+                case UnanchorScenario.SameSpot:
+                    Assert.That(xformSys.AnchorEntity(ent), Is.True);
+                    break;
+                case UnanchorScenario.DifferentGrid:
+                    Assert.That(xformSys.AnchorEntity((ent, xform), gridB, tileB), Is.True);
+                    break;
+                case UnanchorScenario.NoGrid:
+                    xformSys.SetCoordinates((ent, xform, meta), new EntityCoordinates(mapUid, 1000, 1000));
+                    break;
+                default:
+                    throw new System.ArgumentOutOfRangeException(nameof(scenario), scenario, null);
+            }
+
+            var result = variant switch
+            {
+                UnanchorVariant.Uid => xformSys.Unanchor(ent),
+                UnanchorVariant.TryAnchor => xformSys.TryAnchor((ent, xform, meta), false),
+                _ => throw new System.ArgumentOutOfRangeException(nameof(variant), variant, null),
+            };
+
+            Assert.That(result, Is.False);
+            Assert.That(xform.Anchored, Is.False);
+            Assert.That(mapSys.GetAnchoredEntities(gridA, tileA), Does.Not.Contain(ent));
+            Assert.That(mapSys.GetAnchoredEntities(gridB, tileB), Does.Not.Contain(ent));
         }
 
         /// <summary>
@@ -265,11 +595,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             // can only be anchored to a tile
             mapSys.SetTile(grid, mapSys.TileIndicesFor(grid, coordinates), new Tile(1));
 
-            var ent1 = entMan.Spawn(null, coordinates); // this raises MoveEvent, subscribe after
+            var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
             var xform = sim.Transform(ent1, entMan);
-            var moveEventTest = entMan.System<MoveEventTestSystem>();
-            xform.Anchored = true;
-            moveEventTest.FailOnMove = true;
+            xformSys.AnchorEntity(ent1);
+            sim.System<MoveEventTestSystem>().FailOnMove = true;
 
             // Act
 #pragma warning disable CS0618 // Checking property setters.
@@ -278,6 +607,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 #pragma warning restore CS0618
 
             Assert.That(xformSys.GetMapCoordinates(ent1), Is.EqualTo(coordinates));
+            var moveEventTest = sim.System<MoveEventTestSystem>();
             moveEventTest.FailOnMove = false;
         }
 
@@ -317,7 +647,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var xform = sim.Transform(ent1, entMan);
             var tileIndices = mapSys.TileIndicesFor(grid, xform.Coordinates);
             mapSys.SetTile(grid, tileIndices, new Tile(1));
-            xform.Anchored = true;
+            xformSys.AnchorEntity(ent1);
 
             // Act
             xformSys.SetParent(ent1, grid.Owner);
@@ -435,7 +765,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = mapSys.TileIndicesFor(grid, xform.Coordinates);
             mapSys.SetTile(grid, tileIndices, new Tile(1));
             var physComp = entMan.AddComponent<PhysicsComponent>(ent1);
-            xform.Anchored = true;
+            xformSys.AnchorEntity(ent1);
 
             // Act
             xformSys.Unanchor(ent1);

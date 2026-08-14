@@ -51,12 +51,12 @@ public class PairSettings
     public virtual string? TestName { get; set; }
 
     /// <summary>
-    /// If set, this will be used to call <see cref="IRobustRandom.SetSeed"/>
+    /// If set, this will be used to call <see cref="IRobustRandom.DebugSetSeed"/>
     /// </summary>
     public virtual int? ServerSeed { get; set; }
 
     /// <summary>
-    /// If set, this will be used to call <see cref="IRobustRandom.SetSeed"/>
+    /// If set, this will be used to call <see cref="IRobustRandom.DebugSetSeed"/>
     /// </summary>
     public virtual int? ClientSeed { get; set; }
 

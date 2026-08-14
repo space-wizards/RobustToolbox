@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Made `TextEdit.GetLineCount` public.
 
 ### Bugfixes
 

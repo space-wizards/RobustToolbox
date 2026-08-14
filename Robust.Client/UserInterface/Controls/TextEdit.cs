@@ -916,7 +916,11 @@ public sealed partial class TextEdit : Control
         return _placeholder ?? Rope.Leaf.Empty;
     }
 
-    private int GetLineCount()
+    /// <summary>
+    /// Returns the number of lines currently in the textbox.
+    /// </summary>
+    [Pure]
+    public int GetLineCount()
     {
         return _lineBreaks.Count + 1;
     }

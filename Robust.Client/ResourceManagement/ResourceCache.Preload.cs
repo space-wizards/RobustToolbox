@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Client.Graphics.Clyde;
 using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Collections;
@@ -279,14 +280,8 @@ namespace Robust.Client.ResourceManagement
             #else
             // For tests
             var maxSize = 12288;
-            try
-            {
+            if (_clyde is not ClydeHeadless)
                 maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
             #endif
 
             // THIS IS NOT GUARANTEED TO HAVE ANY PARTICULARLY LOGICAL ORDERING.

@@ -20,7 +20,7 @@ public partial class PrototypeManager
         switch (dataNode)
         {
             case MappingDataNode mappingNode:
-                foreach (var (childName, childNode) in mappingNode.Children)
+                foreach (var (childName, childNode) in mappingNode.Children.ToDictionary())
                 {
                     if (childNode is MappingDataNode variantNode
                         && variantNode.Tag?.Equals(CreateVariantsTag) == true)

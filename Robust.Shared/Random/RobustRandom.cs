@@ -30,6 +30,7 @@ public sealed class RobustRandom : IRobustRandom
         _random = new(seed);
     }
 
+    /// <inheritdoc />
     public float NextFloat()
     {
         // This is pretty much the CoreFX implementation.
@@ -38,52 +39,62 @@ public sealed class RobustRandom : IRobustRandom
         return Next() * 4.6566128752458E-10f;
     }
 
+    /// <inheritdoc />
     public int Next()
     {
         return _random.Next();
     }
 
+    /// <inheritdoc />
     public int Next(int maxValue)
     {
         return _random.Next(maxValue);
     }
 
+    /// <inheritdoc />
     public int Next(int minValue, int maxValue)
     {
         return _random.Next(minValue, maxValue);
     }
 
+    /// <inheritdoc />
     public long NextLong()
     {
         return _random.NextInt64();
     }
 
+    /// <inheritdoc />
     public long NextLong(long maxValue)
     {
         return _random.NextInt64(maxValue);
     }
 
+    /// <inheritdoc />
     public long NextLong(long minValue, long maxValue)
     {
         return _random.NextInt64(minValue, maxValue);
     }
 
+    /// <inheritdoc />
     public TimeSpan Next(TimeSpan minTime, TimeSpan maxTime)
     {
         DebugTools.Assert(minTime <= maxTime);
         return minTime + (maxTime - minTime) * _random.NextDouble();
     }
 
+    /// <inheritdoc />
     public TimeSpan Next(TimeSpan maxTime)
     {
         return Next(TimeSpan.Zero, maxTime);
     }
 
+    /// <inheritdoc />
     public double NextDouble()
     {
         return _random.NextDouble();
     }
 
+    /// <inheritdoc />
     public void NextBytes(byte[] buffer)
     {
         _random.NextBytes(buffer);

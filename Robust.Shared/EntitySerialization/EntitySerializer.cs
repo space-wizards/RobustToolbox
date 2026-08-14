@@ -1033,7 +1033,7 @@ public sealed partial class EntitySerializer : ISerializationContext,
         if (value == EntityUid.Invalid)
         {
             if (Options.MissingEntityBehaviour != MissingEntityBehaviour.Ignore)
-                _log.Error($"Encountered an invalid entityUid reference.");
+                _log.Error($"Encountered an invalid entityUid reference in entity {EntMan.ToPrettyString(CurrentEntity)}, component {CurrentComponent}.");
 
             return InvalidNode;
         }

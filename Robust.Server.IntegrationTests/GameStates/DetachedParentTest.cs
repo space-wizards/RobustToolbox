@@ -26,7 +26,6 @@ public sealed class DetachedParentTest : RobustIntegrationTest
 
         var mapSys = server.System<SharedMapSystem>();
         var xformSys = server.System<SharedTransformSystem>();
-        var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
@@ -72,7 +71,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
 
             map = mapSys.CreateMap(out mapId);
 
-            var gridEnt = mapMan.CreateGridEntity(mapId);
+            var gridEnt = mapSys.CreateGridEntity(mapId);
             mapSys.SetTile(gridEnt.Owner, gridEnt.Comp, Vector2i.Zero, new Tile(1));
             gridCoords = new EntityCoordinates(gridEnt, .5f, .5f);
             mapCoords = new EntityCoordinates(map, 200, 200);
@@ -268,7 +267,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             map2 = mapSys.CreateMap(out mapId2);
-            var gridEnt = mapMan.CreateGridEntity(mapId2);
+            var gridEnt = mapSys.CreateGridEntity(mapId2);
             mapSys.SetTile(gridEnt.Owner, gridEnt.Comp, Vector2i.Zero, new Tile(1));
             var grid2Coords = new EntityCoordinates(gridEnt, .5f, .5f);
             grid2 = gridEnt.Owner;
@@ -341,7 +340,7 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             map3 = mapSys.CreateMap(out mapId3);
-            var gridEnt = mapMan.CreateGridEntity(mapId3);
+            var gridEnt = mapSys.CreateGridEntity(mapId3);
             mapSys.SetTile(gridEnt.Owner, gridEnt.Comp, Vector2i.Zero, new Tile(1));
             var grid3Coords = new EntityCoordinates(gridEnt, .5f, .5f);
             grid3 = gridEnt.Owner;

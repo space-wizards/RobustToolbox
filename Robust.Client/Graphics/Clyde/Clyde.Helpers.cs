@@ -12,6 +12,8 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
     {
+        private unsafe delegate* unmanaged<int, int, byte, float*, void> _glUniformMatrix3fv;
+
         private void GLClearColor(Color color)
         {
             GL.ClearColor(color.R, color.G, color.B, color.A);
@@ -289,6 +291,38 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             return proc;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private unsafe void UniformMatrix3fv(int location, in Matrix3x2 value)
+        {
+            // OpenTK's pointer overload allocates a RuntimePtr on every call in debug builds.
+            // Bypass the binding for this hot path until OpenTK is upgraded.
+            var func = _glUniformMatrix3fv;
+            if (func == null)
+            {
+                func = (delegate* unmanaged<int, int, byte, float*, void>) LoadGLProc("glUniformMatrix3fv");
+                _glUniformMatrix3fv = func;
+            }
+
+            // We put the rows of the input matrix into the columns of our GPU matrices.
+            // This transpose is required, as in C#, we premultiply vectors with matrices
+            // (vM) while GL postmultiplies vectors with matrices (Mv); however, since
+            // Matrix3x2 is stored row-major and GL uses column-major, the memory layout
+            // is the same apart from Matrix3x2's implicit column.
+            // Assign these individually instead of using a stackalloc initializer because in debug it is allocating yipee.
+            float* matrix = stackalloc float[9];
+            matrix[0] = value.M11;
+            matrix[1] = value.M12;
+            matrix[2] = 0;
+            matrix[3] = value.M21;
+            matrix[4] = value.M22;
+            matrix[5] = 0;
+            matrix[6] = value.M31;
+            matrix[7] = value.M32;
+            matrix[8] = 1;
+
+            func(location, 1, 0, matrix);
         }
     }
 }

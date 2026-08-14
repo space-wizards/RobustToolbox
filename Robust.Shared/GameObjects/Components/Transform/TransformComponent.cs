@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
@@ -8,7 +7,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -103,8 +101,6 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
-        [Dependency] private IMapManager _mapManager = default!;
-
         /// <summary>
         ///     Returns the index of the map which this object is on
         /// </summary>
@@ -147,7 +143,7 @@ namespace Robust.Shared.GameObjects
         public Angle LocalRotation
         {
             get => _localRotation;
-            [Obsolete("Use SharedTransformSystem.SetLocalRotation")]
+            [Obsolete("Use SharedTransformSystem.SetLocalRotation() instead")]
             set
             {
                 if(_noLocalRotation)
@@ -175,7 +171,7 @@ namespace Robust.Shared.GameObjects
         ///     Current world rotation of the entity.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        [Obsolete("Use the system method instead")]
+        [Obsolete("Use SharedTransformSystem.Get/SetWorldRotation() instead")]
         public Angle WorldRotation
         {
             get
@@ -224,7 +220,7 @@ namespace Robust.Shared.GameObjects
                 var valid = _parent.IsValid();
                 return new EntityCoordinates(valid ? _parent : Owner, valid ? LocalPosition : Vector2.Zero);
             }
-            [Obsolete("Use the system's setter method instead.")]
+            [Obsolete("Use SharedTransformSystem.SetCoordinates() instead")]
             set => _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(Owner, this, value);
         }
 
@@ -288,6 +284,7 @@ namespace Robust.Shared.GameObjects
             _invLocalMatrix = Matrix3Helpers.CreateInverseTransform(_localPosition, _localRotation);
         }
 
+        [Obsolete("Use SharedTransformSystem.GetDebugString() instead")]
         public string GetDebugString()
         {
             var xform = _entMan.System<SharedTransformSystem>();
@@ -318,6 +315,7 @@ namespace Robust.Shared.GameObjects
         public TransformComponent Component => Entity.Comp1;
 
         public bool ParentChanged => NewPosition.EntityId != OldPosition.EntityId;
+        public bool OnlyRotation => OldPosition.Equals(NewPosition);
     }
 
     public struct TransformChildrenEnumerator : IDisposable

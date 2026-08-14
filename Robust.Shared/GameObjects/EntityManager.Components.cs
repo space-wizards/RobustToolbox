@@ -397,6 +397,7 @@ namespace Robust.Shared.GameObjects
             if (component is IComponentDelta delta)
             {
                 var curTick = _gameTiming.CurTick;
+                delta.LastUnclassifiedDirty = curTick;
                 delta.LastModifiedFields = new GameTick[reg.NetworkedFields.Length];
                 Array.Fill(delta.LastModifiedFields, curTick);
             }
@@ -515,6 +516,14 @@ namespace Robust.Shared.GameObjects
         public void RemoveComponentDeferred(EntityUid owner, Component component)
         {
             RemoveComponentDeferred(component, owner, false);
+        }
+
+        /// <summary>
+        /// Returns whether a component is being removed or is queued for deferred removal.
+        /// </summary>
+        internal bool IsComponentPendingRemoval(IComponent component)
+        {
+            return component.LifeStage >= ComponentLifeStage.Stopping || _deleteSet.Contains(component);
         }
 
         private static IEnumerable<IComponent> InSafeOrder(IEnumerable<IComponent> comps, bool forCreation = false)
@@ -1193,6 +1202,18 @@ namespace Robust.Shared.GameObjects
             return new EntityQuery<TComp1>(this, comps);
         }
 
+        // this literally just exists to handle SharedLightComponent and is pretty hacky
+        // just move point light to shared and kill this.
+        // TODO LIGHT
+        internal EntityQuery<TCompShared> GetEntityQuery<TCompShared, TComp>()
+            where TCompShared : IComponent
+            where TComp : TCompShared
+        {
+            var comps = _entTraitArray[CompIdx.ArrayIndex<TComp>()];
+            DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp).Name}");
+            return new EntityQuery<TCompShared>(this, comps);
+        }
+
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
             var comps = _entTraitDict[type];
@@ -1218,6 +1239,7 @@ namespace Robust.Shared.GameObjects
         internal IReadOnlyCollection<IComponent> GetComponentsInternal(EntityUid uid) => _entCompIndex[uid];
 
         /// <inheritdoc />
+        [Pure]
         public int ComponentCount(EntityUid uid)
         {
             var comps = _entCompIndex[uid];
@@ -2308,6 +2330,28 @@ namespace Robust.Shared.GameObjects
         {
             _traitDict.Dispose();
         }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(EntityQueryEnumerator<TComp1> enumerator)
+        {
+            private EntityQueryEnumerator<TComp1> _enumerator = enumerator;
+
+            public Entity<TComp1> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp))
+                    return false;
+
+                Current = (id, comp);
+                return true;
+            }
+        }
     }
 
     /// <inheritdoc cref="EntityQueryEnumerator{TComp1}"/>
@@ -2376,6 +2420,28 @@ namespace Robust.Shared.GameObjects
         public void Dispose()
         {
             _traitDict.Dispose();
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(EntityQueryEnumerator<TComp1, TComp2> enumerator)
+        {
+            private EntityQueryEnumerator<TComp1, TComp2> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2))
+                    return false;
+
+                Current = (id, comp1, comp2);
+                return true;
+            }
         }
     }
 
@@ -2460,6 +2526,28 @@ namespace Robust.Shared.GameObjects
         public void Dispose()
         {
             _traitDict.Dispose();
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(EntityQueryEnumerator<TComp1, TComp2, TComp3> enumerator)
+        {
+            private EntityQueryEnumerator<TComp1, TComp2, TComp3> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2, TComp3> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2, out var comp3))
+                    return false;
+
+                Current = (id, comp1, comp2, comp3);
+                return true;
+            }
         }
     }
 
@@ -2558,6 +2646,28 @@ namespace Robust.Shared.GameObjects
         {
             _traitDict.Dispose();
         }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> enumerator)
+        {
+            private EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2, TComp3, TComp4> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2, out var comp3, out var comp4))
+                    return false;
+
+                Current = (id, comp1, comp2, comp3, comp4);
+                return true;
+            }
+        }
     }
 
     #endregion
@@ -2640,6 +2750,28 @@ namespace Robust.Shared.GameObjects
         {
             _traitDict.Dispose();
         }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(AllEntityQueryEnumerator<TComp1> enumerator)
+        {
+            private AllEntityQueryEnumerator<TComp1> _enumerator = enumerator;
+
+            public Entity<TComp1> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp))
+                    return false;
+
+                Current = (id, comp);
+                return true;
+            }
+        }
     }
 
     /// <inheritdoc cref="AllEntityQueryEnumerator{TComp1}"/>
@@ -2699,6 +2831,28 @@ namespace Robust.Shared.GameObjects
         public void Dispose()
         {
             _traitDict.Dispose();
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(AllEntityQueryEnumerator<TComp1, TComp2> enumerator)
+        {
+            private AllEntityQueryEnumerator<TComp1, TComp2> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2))
+                    return false;
+
+                Current = (id, comp1, comp2);
+                return true;
+            }
         }
     }
 
@@ -2773,6 +2927,28 @@ namespace Robust.Shared.GameObjects
         public void Dispose()
         {
             _traitDict.Dispose();
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(AllEntityQueryEnumerator<TComp1, TComp2, TComp3> enumerator)
+        {
+            private AllEntityQueryEnumerator<TComp1, TComp2, TComp3> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2, TComp3> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2, out var comp3))
+                    return false;
+
+                Current = (id, comp1, comp2, comp3);
+                return true;
+            }
         }
     }
 
@@ -2859,6 +3035,28 @@ namespace Robust.Shared.GameObjects
         public void Dispose()
         {
             _traitDict.Dispose();
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator(AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> enumerator)
+        {
+            private AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> _enumerator = enumerator;
+
+            public Entity<TComp1, TComp2, TComp3, TComp4> Current { get; private set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                if (!_enumerator.MoveNext(out var id, out var comp1, out var comp2, out var comp3, out var comp4))
+                    return false;
+
+                Current = (id, comp1, comp2, comp3, comp4);
+                return true;
+            }
         }
     }
 

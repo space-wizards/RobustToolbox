@@ -20,5 +20,5 @@ public sealed partial class AudioAuxiliaryComponent : Component
     public EntityUid? Effect;
 
     [ViewVariables]
-    internal IAuxiliaryAudio Auxiliary = new DummyAuxiliaryAudio();
+    public IAuxiliaryAudio Auxiliary = new DummyAuxiliaryAudio();
 }

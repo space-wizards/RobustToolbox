@@ -37,7 +37,6 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private IClydeTileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private ILightManager _lightManager = default!;
         [Dependency] private ILogManager _logManager = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private IOverlayManager _overlayManager = default!;
         [Dependency] private IResourceCache _resourceCache = default!;
         [Dependency] private IResourceManager _resManager = default!;
@@ -580,6 +579,9 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Shutdown()
         {
+            ClearPostShaderRenderTargetPool();
+            _postShaderEventEntries.Clear();
+
             _glContext?.Shutdown();
             ShutdownWindowing();
         }

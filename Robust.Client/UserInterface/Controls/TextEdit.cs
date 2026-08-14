@@ -917,7 +917,7 @@ public sealed partial class TextEdit : Control
     }
 
     /// <summary>
-    /// Returns the number of lines currently in the textbox.
+    /// Returns the number of lines of text currently in the textbox.
     /// </summary>
     [Pure]
     public int GetLineCount()

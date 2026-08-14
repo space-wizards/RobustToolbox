@@ -56,7 +56,7 @@ internal sealed partial class ChunkEntitySerializationTest : RobustIntegrationTe
         });
 
         await server.WaitRunTicks(5);
-        Assert.That(loader.TrySaveGrid(grid, gridPath));
+        Assert.That(loader.TrySaveGrid(grid, gridPath, immediate: true));
         await server.WaitPost(() => mapSys.DeleteMap(mapId));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
 

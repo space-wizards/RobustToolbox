@@ -30,6 +30,7 @@ public abstract partial class SharedJointSystem : EntitySystem
     private readonly HashSet<Entity<JointComponent>> _dirtyJoints = new();
     protected readonly HashSet<Joint> AddedJoints = new();
     protected readonly List<Joint> ToRemove = new();
+    private readonly HashSet<EntityUid> _crossGridWakeBuffer = new();
 
     public override void Initialize()
     {
@@ -125,6 +126,51 @@ public abstract partial class SharedJointSystem : EntitySystem
         }
 
         _dirtyJoints.Clear();
+    }
+
+    internal void WakeCrossGridJoints(HashSet<EntityUid> movedGrids)
+    {
+        if (movedGrids.Count == 0)
+            return;
+
+        _crossGridWakeBuffer.Clear();
+
+        var query = EntityQueryEnumerator<JointComponent>();
+        while (query.MoveNext(out var uid, out var component))
+        {
+            foreach (var joint in component.Joints.Values)
+            {
+                if (!joint.Enabled || joint.BodyAUid != uid ||
+                    !_jointsQuery.TryComp(joint.BodyBUid, out var jointComponentB))
+                {
+                    continue;
+                }
+
+                var bodyAUid = component.Relay ?? joint.BodyAUid;
+                var bodyBUid = jointComponentB.Relay ?? joint.BodyBUid;
+                var gridAUid = _transform.GetGrid(bodyAUid);
+                var gridBUid = _transform.GetGrid(bodyBUid);
+
+                if (gridAUid == gridBUid)
+                    continue;
+
+                if ((gridAUid == null || !movedGrids.Contains(gridAUid.Value)) &&
+                    (gridBUid == null || !movedGrids.Contains(gridBUid.Value)))
+                {
+                    continue;
+                }
+
+                _crossGridWakeBuffer.Add(bodyAUid);
+                _crossGridWakeBuffer.Add(bodyBUid);
+            }
+        }
+
+        foreach (var uid in _crossGridWakeBuffer)
+        {
+            _physics.WakeBody(uid);
+        }
+
+        _crossGridWakeBuffer.Clear();
     }
 
     private void InitJoint(Joint joint,

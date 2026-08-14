@@ -23,8 +23,10 @@ public sealed class RobustRandom : IRobustRandom
     // or add it to <see cref="RandomExtensions"/>.
     private System.Random _random = new();
 
+    /// <inheritdoc />
     public System.Random GetRandom() => _random;
 
+    /// <inheritdoc />
     public void SetSeed(int seed)
     {
         _random = new(seed);

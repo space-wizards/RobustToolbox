@@ -196,6 +196,7 @@ using JetBrains.Annotations;
 
         if (entityType.OriginalDefinition.ToDisplayString() != EntityTypeName ||
             entityType.TypeArguments is not [INamedTypeSymbol componentType] ||
+            componentType.NullableAnnotation == NullableAnnotation.Annotated ||
             !TypeSymbolHelper.ImplementsInterface(componentType, IComponentTypeName))
             return null;
 
@@ -211,6 +212,7 @@ using JetBrains.Annotations;
             method.Parameters[1].Type is not INamedTypeSymbol componentType ||
             method.Parameters[2].Type is not INamedTypeSymbol eventType ||
             !TypeSymbolHelper.ShittyTypeMatch(entityUidType, EntityUidTypeName) ||
+            componentType.NullableAnnotation == NullableAnnotation.Annotated ||
             !TypeSymbolHelper.ImplementsInterface(componentType, IComponentTypeName))
             return null;
 

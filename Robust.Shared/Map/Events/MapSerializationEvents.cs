@@ -2,6 +2,7 @@
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map.Events;
 
@@ -46,6 +47,11 @@ public readonly record struct BeforeSerializationEvent(
     FileCategory Category = FileCategory.Unknown);
 
 /// <summary>
-/// This event is broadcast just after entities (and their children) have been serialized, but before it gets written to a yaml file.
+/// This event is broadcast just after entities (and their children) have been serialized, but before it gets written to a save file.
 /// </summary>
 public readonly record struct AfterSerializationEvent(HashSet<EntityUid> Entities, MappingDataNode Node, FileCategory Category);
+
+/// <summary>
+/// This event is broadcast after the serialized data about some entities were written into a save file.
+/// </summary>
+public readonly record struct AfterSerializationWriteEvent(ResPath SavedPath);

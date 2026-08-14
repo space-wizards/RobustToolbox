@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -12,6 +13,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Map.Events;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -56,6 +58,11 @@ public sealed partial class MapLoaderSystem : EntitySystem
     /// </summary>
     private readonly Dictionary<ResPath, WaitHandle> SavingHandlers = new();
 
+    /// <summary>
+    /// A queue of events that will be raised after the save job was finished.
+    /// </summary>
+    private readonly ConcurrentQueue<AfterSerializationWriteEvent> WriteEventQueue = new();
+
     public override void Initialize()
     {
         base.Initialize();
@@ -74,6 +81,17 @@ public sealed partial class MapLoaderSystem : EntitySystem
         }
 
         SavingHandlers.Clear();
+        WriteEventQueue.Clear();
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        while (WriteEventQueue.TryDequeue(out var ev))
+        {
+            RaiseLocalEvent(ev);
+        }
     }
 
     /// <summary>
@@ -341,14 +359,15 @@ public sealed partial class MapLoaderSystem : EntitySystem
 
     private record struct SaveSerializedJob(MapLoaderSystem System) : IRobustJob
     {
-        public MappingDataNode Data = default!;
-        public ResPath Path = new();
+        public MappingDataNode Data;
+        public ResPath Path;
 
         public readonly MapLoaderSystem System = System;
 
         public void Execute()
         {
             System.WriteNow(Path, Data);
+            System.WriteEventQueue.Enqueue(new AfterSerializationWriteEvent(Path));
             lock (System.SavingHandlers)
             {
                 System.SavingHandlers.Remove(Path);

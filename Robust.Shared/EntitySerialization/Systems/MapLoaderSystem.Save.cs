@@ -83,8 +83,13 @@ public sealed partial class MapLoaderSystem
 
     /// <summary>
     ///     Serialize a standard (non-grid, non-map) entity and all of its children
-    ///     and write the result to a YAML text stream.
+    ///     and write the result to a text writer in plain YAML.
     /// </summary>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
     public bool TrySaveEntity(EntityUid entity, TextWriter target, SerializationOptions? options = null)
     {
         if (!TrySaveEntity(entity, out var data, options))
@@ -142,6 +147,7 @@ public sealed partial class MapLoaderSystem
     /// <summary>
     /// Serialize a map and all of its children and write the result to a YAML file.
     /// </summary>
+    /// <see cref=""/>
     public bool TrySaveMap(MapId mapId, ResPath path, SerializationOptions? options = null, bool immediate = false)
     {
         if (_mapSystem.TryGetMap(mapId, out var mapUid))
@@ -172,6 +178,11 @@ public sealed partial class MapLoaderSystem
     /// <summary>
     ///     Serialize a map and all of its children and write the result to a YAML text stream.
     /// </summary>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
     public bool TrySaveMap(EntityUid map, TextWriter target, SerializationOptions? options = null)
     {
         if (!TrySaveMap(map, out var data, options))
@@ -237,6 +248,11 @@ public sealed partial class MapLoaderSystem
     /// <summary>
     ///     Serialize a grid and all of its children and write the result to a YAML text stream.
     /// </summary>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
     public bool TrySaveGrid(EntityUid grid, TextWriter target, SerializationOptions? options = null)
     {
         if (!TrySaveGrid(grid, out var data, options))
@@ -310,6 +326,11 @@ public sealed partial class MapLoaderSystem
     ///     This makes no assumptions about the expected entity or resulting file category.
     ///     If possible, use the map/grid specific variants instead.
     /// </summary>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
     public bool TrySaveGeneric(
         EntityUid uid,
         TextWriter target,
@@ -350,6 +371,11 @@ public sealed partial class MapLoaderSystem
     ///     This makes no assumptions about the expected entity or resulting file category.
     ///     If possible, use the map/grid specific variants instead.
     /// </summary>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
     public bool TrySaveGeneric(
         HashSet<EntityUid> entities,
         TextWriter target,
@@ -395,6 +421,12 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <inheritdoc cref="TrySerializeAllEntities(out MappingDataNode, SerializationOptions?)"/>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
+    /// <seealso cref="TrySerializeAllEntities(out MappingDataNode, SerializationOptions?)"/>
     public bool TrySaveAllEntities(TextWriter target, SerializationOptions? options = null)
     {
         if (!TrySerializeAllEntities(out var data, options))

@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using Robust.Shared.Console;
 using Robust.Shared.Toolshed.Errors;
@@ -27,7 +25,7 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
 
         var values = new List<T>();
 
-        var (minLength, maxLength) = GetLengthParameters(ctx);
+        var (minLength, maxLength) = GetLengthParameters(ctx.CurrentArgument);
 
         while (true)
         {
@@ -68,7 +66,7 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
 
     public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
-        var hint = ToolshedCommand.GetArgHint(arg, typeof(List<T>));
+        var hint = GetArgHint(arg);
 
         ctx.ConsumeWhitespace();
 
@@ -82,7 +80,7 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
                 hint);
         }
 
-        var (minLength, maxLength) = GetLengthParameters(ctx);
+        var (minLength, maxLength) = GetLengthParameters(arg);
         int count = 0;
 
         while (true)
@@ -147,23 +145,11 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
         }
     }
 
-    private (int minLength, int maxLength) GetLengthParameters(ParserContext ctx)
+    private (int minLength, int maxLength) GetLengthParameters(CommandArgument? arg)
     {
-        if (ctx.Bundle.CommandMethod is null)
-            throw new Exception("There is no situation in which these should be null. Something is horribly wrong.");
-
-        var parameters = ctx.Bundle.CommandMethod.Value.Info
-            .GetParameters()
-            .Where(p => p.ParameterType != typeof(IInvocationContext))
-            .ToArray();
-
-        var argIndex = ctx.Bundle.Arguments?.Count ?? 0;
-
-        var attr = parameters[argIndex].GetCustomAttribute<ListLengthAttribute>();
-
         return (
-            attr?.MinLength ?? 0,
-            attr?.MaxLength ?? -1
+            arg?.ListLengthAttribute?.MinLength ?? 0,
+            arg?.ListLengthAttribute?.MaxLength ?? -1
         );
     }
 }

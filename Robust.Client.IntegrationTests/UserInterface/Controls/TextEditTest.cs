@@ -56,7 +56,6 @@ public sealed class TextEditTest : RobustUnitTest
     {
         // When the max lines value is 0 we are not limited, so we place an arbitrary ammount newlines
         var textEdit = new TextEdit { MaxLines = 0 };
-        textEdit.Arrange(new UIBox2(0, 0, 2000, 2000));
         for (var i = 0; i < 100; i++)
         {
             var newline = new GUIBoundKeyEventArgs(
@@ -67,7 +66,7 @@ public sealed class TextEditTest : RobustUnitTest
             textEdit.KeyBindDown(newline);
         }
 
-        var ropeLength= Rope.CalcTotalLength(textEdit.TextRope) - 1;
+        var ropeLength = Rope.CalcTotalLength(textEdit.TextRope) - 1;
         using (Assert.EnterMultipleScope())
         {
             // check that the last value in the list is a newline
@@ -88,7 +87,7 @@ public sealed class TextEditTest : RobustUnitTest
         }
 
         // 0-indexed, if this asserts the TextRope ended up with more than 10 "items"
-         ropeLength = Rope.CalcTotalLength(textEdit.TextRope);
+        ropeLength = Rope.CalcTotalLength(textEdit.TextRope);
         Assert.That(ropeLength > 9, Is.False);
     }
 }

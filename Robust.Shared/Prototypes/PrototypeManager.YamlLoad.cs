@@ -248,7 +248,9 @@ public partial class PrototypeManager
                 // The number of extracted strings (minus one) is the number of clones to generate.
                 if (mappingNode.TryGet<SequenceDataNode>(VariantValuesFieldAttribute.Name, out var sequenceNode))
                 {
-                    for (int i = 1; i < sequenceNode.Count(); i++)
+                    variantCollection.EnsureCapacity(sequenceNode.Count);
+
+                    for (int i = 1; i < sequenceNode.Count; i++)
                     {
                         // Clone the data node, then recursively search through it for any CreateVariants nodes.
                         // Replace these nodes with data appropriate for the current variant index.
@@ -280,7 +282,7 @@ public partial class PrototypeManager
                     variantCollection.Insert(0, idNode.Value);
 
                     // Register all variants of the source prototype as a collection for later reference.
-                    RegisterVariantCollection(kind, variantCollection);
+                    RegisterVariantCollection(kindData, variantCollection);
                 }
                 else
                 {

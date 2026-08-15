@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Serialization;
 using Robust.Shared.GameStates;
 using Robust.Shared.Utility;
 using Robust.Shared.Serialization.Manager;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Client.GameObjects
 {
@@ -69,10 +69,10 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        ///     Take in an appearance data dictionary and attempt to clone it.
+        /// Take in an appearance data dictionary and attempt to clone it.
         /// </summary>
         /// <remarks>
-        ///     As some appearance data values are not simple value-type objects, this is not just a shallow clone.
+        /// As some appearance data values are not simple value-type objects, this is not just a shallow clone.
         /// </remarks>
         private Dictionary<Enum, object> CloneAppearanceData(Dictionary<Enum, object> data)
         {
@@ -148,7 +148,7 @@ namespace Robust.Client.GameObjects
     }
 
     /// <summary>
-    ///     Raised whenever the appearance data for an entity changes.
+    /// Raised whenever the appearance data for an entity changes.
     /// </summary>
     [ByRefEvent]
     public struct AppearanceChangeEvent
@@ -156,5 +156,25 @@ namespace Robust.Client.GameObjects
         public AppearanceComponent Component;
         public IReadOnlyDictionary<Enum, object> AppearanceData;
         public SpriteComponent? Sprite;
+
+        /// <summary>
+        /// Looks up an enum in the dictionary if it can.
+        /// If it finds it, it outputs the value in <paramref name="data"/> and returns true.
+        /// Otherwise, it outputs default into data, returning false.
+        /// </summary>
+        public bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T? data)
+        {
+            if (AppearanceData.TryGetValue(key, out var objValue)
+                && objValue is T value)
+            {
+                data = value;
+                return true;
+            }
+            else
+            {
+                data = default!;
+                return false;
+            }
+        }
     }
 }

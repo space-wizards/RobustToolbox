@@ -231,14 +231,6 @@ namespace Robust.Client.GameObjects
         [DataField]
         public bool RaiseShaderEvent;
 
-        /// <summary>
-        ///     If true, this sprite is drawn after hard FOV has been applied to the viewport.
-        ///     Useful for semi-transparent occluders like smoke, where FOV should appear behind the sprite instead of
-        ///     on top of it.
-        /// </summary>
-        [DataField]
-        public bool DrawOverFov;
-
         [ViewVariables] internal Dictionary<object, int> LayerMap { get; set; } = new();
         [ViewVariables] internal List<Layer> Layers = new();
 
@@ -1128,8 +1120,7 @@ namespace Robust.Client.GameObjects
             /// </summary>
             [ViewVariables] internal bool UnShaded;
 
-            [ViewVariables]
-            public RSI? RSI
+            [ViewVariables] public RSI? RSI
             {
                 get => _rsi;
                 [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
@@ -1146,8 +1137,7 @@ namespace Robust.Client.GameObjects
             }
 
             internal RSI.StateId StateId;
-            [ViewVariables]
-            public RSI.StateId State
+            [ViewVariables] public RSI.StateId State
             {
                 get => StateId;
                 [Obsolete("Use SpriteSystem.LayerSetRsiState() instead.")]
@@ -1647,7 +1637,7 @@ namespace Robust.Client.GameObjects
                 if (dir == RsiDirection.South || noRot)
                     layerDrawMatrix = LocalMatrix;
                 else
-                    layerDrawMatrix = Matrix3x2.Multiply(_rsiDirectionMatrices[(int)dir], LocalMatrix);
+                    layerDrawMatrix = Matrix3x2.Multiply(_rsiDirectionMatrices[(int) dir], LocalMatrix);
             }
 
             private static Matrix3x2[] _rsiDirectionMatrices = new Matrix3x2[]

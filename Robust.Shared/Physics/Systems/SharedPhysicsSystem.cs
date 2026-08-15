@@ -131,6 +131,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
         {
+            _joints.ClearJointSleep(uid);
             SetCanCollide(uid, false, false, body: component);
             DebugTools.Assert(!component.Awake);
 
@@ -282,7 +283,6 @@ namespace Robust.Shared.Physics.Systems
                 // Given external stuff can move bodies we'll just do this here.
                 using (_prof.Group("Broadphase", Color.Cyan))
                 {
-                    _joints.WakeCrossGridJoints(MovedGrids);
                     _broadphase.FindNewContacts();
                 }
 

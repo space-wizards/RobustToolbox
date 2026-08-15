@@ -19,6 +19,7 @@ public abstract partial class SharedJointSystem : EntitySystem
     [Dependency] private SharedContainerSystem _container = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private MetaDataSystem _metadata = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
 
     private EntityQuery<JointComponent> _jointsQuery;
@@ -30,7 +31,6 @@ public abstract partial class SharedJointSystem : EntitySystem
     private readonly HashSet<Entity<JointComponent>> _dirtyJoints = new();
     protected readonly HashSet<Joint> AddedJoints = new();
     protected readonly List<Joint> ToRemove = new();
-    private readonly HashSet<EntityUid> _crossGridWakeBuffer = new();
 
     public override void Initialize()
     {
@@ -44,6 +44,8 @@ public abstract partial class SharedJointSystem : EntitySystem
         UpdatesBefore.Add(typeof(SharedPhysicsSystem));
         SubscribeLocalEvent<JointComponent, ComponentShutdown>(OnJointShutdown);
         SubscribeLocalEvent<JointComponent, ComponentInit>(OnJointInit);
+        SubscribeLocalEvent<JointComponent, GridUidChangedEvent>(OnGridChanged);
+        SubscribeLocalEvent<JointComponent, MetaFlagRemoveAttemptEvent>(OnFlagRemoveAttempt);
 
         InitializeRelay();
     }
@@ -52,6 +54,8 @@ public abstract partial class SharedJointSystem : EntitySystem
 
     private void OnJointInit(EntityUid uid, JointComponent component, ComponentInit args)
     {
+        _metadata.AddFlag(uid, MetaDataFlags.ExtraTransformEvents);
+
         foreach (var (id, joint) in component.Joints)
         {
             var other = uid == joint.BodyAUid ? joint.BodyBUid : joint.BodyAUid;
@@ -74,6 +78,7 @@ public abstract partial class SharedJointSystem : EntitySystem
 
             _physics.WakeBody(joint.BodyAUid, body: bodyA);
             _physics.WakeBody(joint.BodyBUid, body: bodyB);
+            UpdateJointSleep(joint);
 
             // Raise broadcast last so we can do both sides of directed first.
             var vera = new JointAddedEvent(joint, joint.BodyAUid, joint.BodyBUid, bodyA, bodyB);
@@ -96,6 +101,22 @@ public abstract partial class SharedJointSystem : EntitySystem
         // If we're relaying elsewhere then cleanup our old data.
         if (component.Relay != null && !TerminatingOrDeleted(component.Relay.Value))
             SetRelay(uid, null, component);
+
+        _metadata.RemoveFlag(uid, MetaDataFlags.ExtraTransformEvents);
+    }
+
+    private void OnGridChanged(EntityUid uid, JointComponent component, ref GridUidChangedEvent args)
+    {
+        foreach (var joint in component.Joints.Values)
+        {
+            UpdateJointSleep(joint);
+        }
+    }
+
+    private void OnFlagRemoveAttempt(EntityUid uid, JointComponent component, ref MetaFlagRemoveAttemptEvent args)
+    {
+        if (component.LifeStage <= ComponentLifeStage.Running)
+            args.ToRemove &= ~MetaDataFlags.ExtraTransformEvents;
     }
 
     #endregion
@@ -106,6 +127,7 @@ public abstract partial class SharedJointSystem : EntitySystem
             return;
 
         joint.Enabled = value;
+        UpdateJointSleep(joint);
     }
 
     public override void Update(float frameTime)
@@ -128,49 +150,116 @@ public abstract partial class SharedJointSystem : EntitySystem
         _dirtyJoints.Clear();
     }
 
-    internal void WakeCrossGridJoints(HashSet<EntityUid> movedGrids)
+    internal void UpdateJointSleep(EntityUid uid)
     {
-        if (movedGrids.Count == 0)
-            return;
-
-        _crossGridWakeBuffer.Clear();
-
-        var query = EntityQueryEnumerator<JointComponent>();
-        while (query.MoveNext(out var uid, out var component))
+        if (_jointsQuery.TryComp(uid, out var component))
         {
             foreach (var joint in component.Joints.Values)
             {
-                if (!joint.Enabled || joint.BodyAUid != uid ||
-                    !_jointsQuery.TryComp(joint.BodyBUid, out var jointComponentB))
-                {
-                    continue;
-                }
-
-                var bodyAUid = component.Relay ?? joint.BodyAUid;
-                var bodyBUid = jointComponentB.Relay ?? joint.BodyBUid;
-                var gridAUid = _transform.GetGrid(bodyAUid);
-                var gridBUid = _transform.GetGrid(bodyBUid);
-
-                if (gridAUid == gridBUid)
-                    continue;
-
-                if ((gridAUid == null || !movedGrids.Contains(gridAUid.Value)) &&
-                    (gridBUid == null || !movedGrids.Contains(gridBUid.Value)))
-                {
-                    continue;
-                }
-
-                _crossGridWakeBuffer.Add(bodyAUid);
-                _crossGridWakeBuffer.Add(bodyBUid);
+                UpdateJointSleep(joint);
             }
         }
 
-        foreach (var uid in _crossGridWakeBuffer)
+        if (!_relayQuery.TryComp(uid, out var relay))
+            return;
+
+        foreach (var relayed in relay.Relayed)
         {
-            _physics.WakeBody(uid);
+            if (!_jointsQuery.TryComp(relayed, out component))
+                continue;
+
+            foreach (var joint in component.Joints.Values)
+            {
+                UpdateJointSleep(joint);
+            }
+        }
+    }
+
+    internal void ClearJointSleep(EntityUid uid)
+    {
+        if (_jointsQuery.TryComp(uid, out var component))
+        {
+            foreach (var joint in component.Joints.Values)
+            {
+                if (Contains(joint.SleepBlockerBodies, uid))
+                    SetJointSleepBodies(joint, null);
+            }
         }
 
-        _crossGridWakeBuffer.Clear();
+        if (!_relayQuery.TryComp(uid, out var relay))
+            return;
+
+        foreach (var relayed in relay.Relayed)
+        {
+            if (!_jointsQuery.TryComp(relayed, out component))
+                continue;
+
+            foreach (var joint in component.Joints.Values)
+            {
+                if (Contains(joint.SleepBlockerBodies, uid))
+                    SetJointSleepBodies(joint, null);
+            }
+        }
+    }
+
+    protected void UpdateJointSleep(Joint joint)
+    {
+        (EntityUid A, EntityUid B)? bodies = null;
+
+        if (joint.Enabled &&
+            _jointsQuery.TryComp(joint.BodyAUid, out var jointComponentA) &&
+            _jointsQuery.TryComp(joint.BodyBUid, out var jointComponentB))
+        {
+            var bodyAUid = jointComponentA.Relay ?? joint.BodyAUid;
+            var bodyBUid = jointComponentB.Relay ?? joint.BodyBUid;
+
+            if (_physicsQuery.HasComp(bodyAUid) &&
+                _physicsQuery.HasComp(bodyBUid) &&
+                _transform.GetGrid(bodyAUid) != _transform.GetGrid(bodyBUid))
+            {
+                bodies = (bodyAUid, bodyBUid);
+            }
+        }
+
+        SetJointSleepBodies(joint, bodies);
+    }
+
+    private void SetJointSleepBodies(Joint joint, (EntityUid A, EntityUid B)? bodies)
+    {
+        var oldBodies = joint.SleepBlockerBodies;
+        if (oldBodies == bodies)
+            return;
+
+        joint.SleepBlockerBodies = bodies;
+
+        if (oldBodies is { } old)
+        {
+            RemoveSleepBlocker(old.A, bodies);
+            RemoveSleepBlocker(old.B, bodies);
+        }
+
+        if (bodies is { } current)
+        {
+            AddSleepBlocker(current.A, oldBodies);
+            AddSleepBlocker(current.B, oldBodies);
+        }
+    }
+
+    private void AddSleepBlocker(EntityUid uid, (EntityUid A, EntityUid B)? existing)
+    {
+        if (!Contains(existing, uid) && _physicsQuery.TryComp(uid, out var body))
+            _physics.AddSleepBlocker(uid, body);
+    }
+
+    private void RemoveSleepBlocker(EntityUid uid, (EntityUid A, EntityUid B)? current)
+    {
+        if (!Contains(current, uid) && _physicsQuery.TryComp(uid, out var body))
+            _physics.RemoveSleepBlocker(body);
+    }
+
+    private static bool Contains((EntityUid A, EntityUid B)? bodies, EntityUid uid)
+    {
+        return bodies is { } value && (value.A == uid || value.B == uid);
     }
 
     private void InitJoint(Joint joint,
@@ -235,6 +324,7 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         jointsA.TryAdd(joint.ID, joint);
         jointsB.TryAdd(joint.ID, joint);
+        UpdateJointSleep(joint);
 
         // If the joint prevents collisions, then flag any contacts for filtering.
         if (!joint.CollideConnected)
@@ -582,6 +672,7 @@ public abstract partial class SharedJointSystem : EntitySystem
     public void RemoveJoint(Joint joint)
     {
         AddedJoints.Remove(joint);
+        SetJointSleepBodies(joint, null);
         var bodyAUid = joint.BodyAUid;
         var bodyBUid = joint.BodyBUid;
 

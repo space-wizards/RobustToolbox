@@ -58,19 +58,18 @@ internal sealed class Joints_Test
 
     [TestCase(false)]
     [TestCase(true)]
-    public void CrossGridJointWakesOnGridMove(bool relayed)
+    public void CrossGridJointPreventsSleeping(bool relayed)
     {
         var factory = RobustServerSimulation.NewSimulation();
         var sim = factory.InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
-        var fixtureSystem = entManager.System<FixtureSystem>();
         var jointSystem = entManager.System<SharedJointSystem>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var physicsSystem = entManager.System<SharedPhysicsSystem>();
         var transformSystem = entManager.System<SharedTransformSystem>();
 
-        var mapId = sim.CreateMap().MapId;
+        var (map, mapId) = sim.CreateMap();
         var grid = mapSystem.CreateGridEntity(mapId);
         mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
 
@@ -79,8 +78,7 @@ internal sealed class Joints_Test
 
         var gridJointBody = AddBody(gridJointBodyUid);
         var mapBody = AddBody(mapBodyUid);
-
-        jointSystem.CreateDistanceJoint(gridJointBodyUid, mapBodyUid);
+        var joint = jointSystem.CreateDistanceJoint(gridJointBodyUid, mapBodyUid);
 
         var gridBodyUid = gridJointBodyUid;
         var gridBody = gridJointBody;
@@ -93,27 +91,36 @@ internal sealed class Joints_Test
             jointSystem.SetRelay(gridJointBodyUid, gridBodyUid);
         }
 
-        physicsSystem.Update(0.001f);
-
-        if (relayed)
-            physicsSystem.SetAwake((gridJointBodyUid, gridJointBody), false);
-
-        physicsSystem.SetAwake((gridBodyUid, gridBody), false);
-        physicsSystem.SetAwake((mapBodyUid, mapBody), false);
-
         Assert.Multiple(() =>
         {
-            Assert.That(gridBody.Awake, Is.False);
-            Assert.That(mapBody.Awake, Is.False);
+            Assert.That(gridBody.CanSleep, Is.False);
+            Assert.That(mapBody.CanSleep, Is.False);
+            Assert.That(gridJointBody.CanSleep, Is.EqualTo(relayed));
         });
 
-        transformSystem.SetLocalPosition(grid, Vector2.One);
-        physicsSystem.Update(0.001f);
-
+        jointSystem.SetEnabled(joint, false);
         Assert.Multiple(() =>
         {
-            Assert.That(gridBody.Awake, Is.True);
-            Assert.That(mapBody.Awake, Is.True);
+            Assert.That(gridBody.CanSleep, Is.True);
+            Assert.That(mapBody.CanSleep, Is.True);
+        });
+
+        jointSystem.SetEnabled(joint, true);
+        transformSystem.SetCoordinates(mapBodyUid, new EntityCoordinates(grid, Vector2.Zero));
+        Assert.Multiple(() =>
+        {
+            Assert.That(gridBody.CanSleep, Is.True);
+            Assert.That(mapBody.CanSleep, Is.True);
+        });
+
+        transformSystem.SetCoordinates(mapBodyUid, new EntityCoordinates(map, Vector2.Zero));
+        Assert.That(mapBody.CanSleep, Is.False);
+
+        jointSystem.RemoveJoint(joint);
+        Assert.Multiple(() =>
+        {
+            Assert.That(gridBody.CanSleep, Is.True);
+            Assert.That(mapBody.CanSleep, Is.True);
         });
 
         mapSystem.DeleteMap(mapId);
@@ -122,7 +129,6 @@ internal sealed class Joints_Test
         {
             var body = entManager.AddComponent<PhysicsComponent>(uid);
             physicsSystem.SetBodyType(uid, BodyType.Dynamic, body: body);
-            fixtureSystem.TryCreateFixture(uid, new PhysShapeCircle(0.1f), "fixture");
             return body;
         }
     }

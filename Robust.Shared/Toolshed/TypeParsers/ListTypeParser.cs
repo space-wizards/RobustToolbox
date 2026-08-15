@@ -4,13 +4,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Robust.Shared.Console;
-using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
-using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
 
-namespace Content.Shared.Toolshed;
+namespace Robust.Shared.Toolshed.TypeParsers;
 
 public sealed class ListTypeParser<T> : TypeParser<List<T>>
 {

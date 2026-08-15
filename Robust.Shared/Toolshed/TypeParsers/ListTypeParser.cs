@@ -27,6 +27,18 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
 
         var (minLength, maxLength) = GetLengthParameters(ctx.CurrentArgument);
 
+        if (ctx.EatMatch(']'))
+        {
+            if (minLength > 0)
+            {
+                ctx.Error = new NotEnoughElementsError(minLength);
+                return false;
+            }
+
+            result = values;
+            return true;
+        }
+
         while (true)
         {
             ctx.ConsumeWhitespace();
@@ -55,7 +67,7 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
                     return false;
                 }
 
-                result = new List<T>(values.ToArray());
+                result = values;
                 return true;
             }
 
@@ -98,11 +110,10 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
                 ctx.Restore(restore);
                 var result = Toolshed.TryAutocomplete(ctx, typeof(T), arg);
                 if (result is null) return result;
-                List<CompletionOption> opts = [];
-                opts.AddRange(result.Options.Select(opt =>
+                var opts = result.Options.Select(opt =>
                     new CompletionOption(opt.Value,
                         opt.Hint,
-                        opt.Flags | CompletionOptionFlags.IgnoreCurrent | CompletionOptionFlags.AppendOnly)));
+                        opt.Flags | CompletionOptionFlags.IgnoreCurrent | CompletionOptionFlags.AppendOnly));
                 return new CompletionResult(opts.ToArray(), result.Hint);
             }
 

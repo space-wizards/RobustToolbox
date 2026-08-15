@@ -231,3 +231,18 @@ internal sealed class TestExplicitImplCommand : ToolshedCommand
     [CommandImplementation]
     public int Impl2() => 2;
 }
+
+[ToolshedCommand]
+internal sealed class TestArrayParseCommand : ToolshedCommand
+{
+    [CommandImplementation]
+    public int[] Impl(int[] val) => val;
+}
+
+[ToolshedCommand]
+internal sealed class TestListParseCommand : ToolshedCommand
+{
+    [CommandImplementation]
+    public List<int> Impl(List<int> val) => val;
+}
+

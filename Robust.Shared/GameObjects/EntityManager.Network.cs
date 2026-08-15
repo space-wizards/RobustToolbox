@@ -575,6 +575,22 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
+    public HashSet<NetEntity> GetNetEntitySet(HashSet<EntityRelation> entities)
+    {
+        var netEntities = new HashSet<NetEntity>(entities.Count);
+
+        foreach (var relation in entities)
+        {
+            if (relation.Entity == null)
+                continue;
+
+            netEntities.Add(GetNetEntity(relation.Entity.Value));
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
     public List<NetEntity> GetNetEntityList(List<EntityUid> entities)
     {
         var netEntities = new List<NetEntity>(entities.Count);
@@ -626,6 +642,7 @@ public partial class EntityManager
         return netEntities;
     }
 
+    /// <inheritdoc />
     public List<NetEntity> GetNetEntityList(List<EntityRelation> entities)
     {
         var netEntities = new List<NetEntity>(entities.Count);

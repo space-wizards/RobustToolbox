@@ -127,9 +127,19 @@ public partial interface IEntityManager
     public HashSet<NetEntity> GetNetEntitySet(HashSet<EntityUid> entities);
 
     /// <summary>
+    /// HashSet version of <see cref="GetNetEntity"/>
+    /// </summary>
+    public HashSet<NetEntity> GetNetEntitySet(HashSet<EntityRelation> entities);
+
+    /// <summary>
     /// List version of <see cref="GetNetEntity"/>
     /// </summary>
     public List<NetEntity> GetNetEntityList(List<EntityUid> entities);
+
+    /// <summary>
+    /// List version of <see cref="GetNetEntity"/>
+    /// </summary>
+    public List<NetEntity> GetNetEntityList(List<EntityRelation> entities);
 
     /// <summary>
     /// List version of <see cref="GetNetEntity"/>

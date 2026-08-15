@@ -1590,6 +1590,16 @@ public partial class EntitySystem
     }
 
     /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entity relations. Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected HashSet<NetEntity> GetNetEntitySet(HashSet<EntityRelation> uids)
+    {
+        return EntityManager.GetNetEntitySet(uids);
+    }
+
+    /// <summary>
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

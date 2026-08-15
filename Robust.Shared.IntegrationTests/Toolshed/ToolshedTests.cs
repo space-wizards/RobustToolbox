@@ -408,6 +408,7 @@ internal sealed class ToolshedTests : ToolshedTest
         await Server.WaitAssertion(() =>
         {
             AssertResult("testarrayparse []", Array.Empty<int>());
+            AssertResult("testarrayparse [ ]", Array.Empty<int>());
             AssertResult("testarrayparse [1]", new[] {1});
             AssertResult("testarrayparse [1,2]", new[] {1, 2});
             AssertResult("testarrayparse [ 1 , 2 ]", new[] {1, 2});
@@ -422,6 +423,11 @@ internal sealed class ToolshedTests : ToolshedTest
             AssertResult("testlistparse [ 1 , 2 ]", new List<int> {1, 2});
             AssertCompletionSingle("testlistparse ", "[");
             AssertCompletionContains("testlistparse [ 1 ", "]", ",");
+
+            AssertResult("testlistlength  [ 1 ]", new[] {1});
+            AssertResult("testlistlength  [ 1, 2 ]", new[] {1, 2});
+            ParseError<NotEnoughElementsError>("testlistlength [ ]");
+            ParseError<TooManyElementsError>("testlistlength [ 1, 2, 3 ]");
         });
     }
 

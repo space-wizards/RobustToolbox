@@ -27,6 +27,7 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
 
         var (minLength, maxLength) = GetLengthParameters(ctx.CurrentArgument);
 
+        ctx.ConsumeWhitespace();
         if (ctx.EatMatch(']'))
         {
             if (minLength > 0)
@@ -108,6 +109,10 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
             if (!Toolshed.TryParse(ctx, out T? _))
             {
                 ctx.Restore(restore);
+
+                // TODO TOOLSHED fix
+                ctx.Error = null;
+
                 var result = Toolshed.TryAutocomplete(ctx, typeof(T), arg);
                 if (result is null) return result;
                 var opts = result.Options.Select(opt =>

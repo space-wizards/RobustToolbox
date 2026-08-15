@@ -246,3 +246,10 @@ internal sealed class TestListParseCommand : ToolshedCommand
     public List<int> Impl(List<int> val) => val;
 }
 
+[ToolshedCommand]
+internal sealed class TestListLengthCommand : ToolshedCommand
+{
+    [CommandImplementation]
+    public List<int> Impl([ListLength(MinLength = 1, MaxLength = 2)] List<int> val) => val;
+}
+

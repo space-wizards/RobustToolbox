@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Made `TextEdit.GetLineCount` public.
+* `TextEdit.GetLineCount` is now public. Also the `TextEdit` control now has a `MaxLines` property that limits the ammount of newlines you can place
 * `AppearanceChangeEvent` now has a `TryGetData` function that checks the type of the data at a given key.
 
 ### Bugfixes

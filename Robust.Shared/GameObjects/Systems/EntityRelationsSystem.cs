@@ -20,8 +20,12 @@ public sealed partial class EntityRelationsSystem : EntitySystem
 }
 
 /// <summary>
-/// Raised by some entity on each of its relations to inform them about removing
+/// Raised by an entity on each of its relations, so the subscribers can clear the relation
+/// to prevent storing a reference to an invalid EntityUid.
 /// </summary>
-/// <param name="Relation">A relation that is about to become invalid.</param>
+/// <param name="Relation">
+/// A relation that is about to become invalid.
+/// After the event is handled, it has to be removed from all fields of the handler component.
+/// </param>
 [ByRefEvent]
 public readonly record struct EntityRelationDeleteEvent(EntityRelation Relation);

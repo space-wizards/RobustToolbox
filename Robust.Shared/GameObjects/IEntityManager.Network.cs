@@ -62,6 +62,11 @@ public partial interface IEntityManager
     public EntityUid? EnsureEntity<T>(NetEntity? nEntity, EntityUid callerEntity);
 
     /// <summary>
+    /// Tries to get a corresponding <see cref="EntityRelation"/> if it exists and nEntity is not null.
+    /// </summary>
+    public EntityRelation EnsureEntityRelation<T>(NetEntity? nEntity, EntityUid callerEntity);
+
+    /// <summary>
     /// Returns the corresponding local <see cref="EntityUid"/>.
     /// </summary>
     public EntityUid GetEntity(NetEntity nEntity);

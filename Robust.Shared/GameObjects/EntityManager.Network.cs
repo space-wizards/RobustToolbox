@@ -150,6 +150,7 @@ public partial class EntityManager
         return EnsureEntity<T>(nEntity.Value, callerEntity);
     }
 
+    /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityRelation EnsureEntityRelation<T>(NetEntity? nEntity, EntityUid callerEntity)
     {

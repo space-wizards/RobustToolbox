@@ -20,7 +20,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
     private const string IComponentTypeName = "Robust.Shared.GameObjects.IComponent";
 
     private static readonly DiagnosticDescriptor NotComponentDiagnostic = new(
-        Diagnostics.IdComponentPauseNotComponent,
+        Diagnostics.IdComponentRelationNotComponent,
         "Class must be an IComponent to use AutoGenerateEntityRelations",
         "Class '{0}' must implement IComponent to be used with [AutoGenerateEntityRelations]",
         "Usage",
@@ -28,7 +28,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
         true);
 
     private static readonly DiagnosticDescriptor NoFieldsDiagnostic = new(
-        Diagnostics.IdComponentPauseNoFields,
+        Diagnostics.IdComponentRelationNoFields,
         "AutoGenerateEntityRelations has no fields",
         "Class '{0}' has [AutoGenerateEntityRelations] but has no fields or properties with [AutoRelationField]",
         "Usage",
@@ -36,7 +36,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
         true);
 
     private static readonly DiagnosticDescriptor NoParentAttributeDiagnostic = new(
-        Diagnostics.IdComponentPauseNoParentAttribute,
+        Diagnostics.IdComponentRelationNoParentAttribute,
         "AutoRelationField on type of field without AutoGenerateEntityRelations",
         "Field '{0}' has [AutoRelationField] but its containing type does not have [AutoGenerateEntityRelations]",
         "Usage",
@@ -44,7 +44,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
         true);
 
     private static readonly DiagnosticDescriptor WrongTypeAttributeDiagnostic = new(
-        Diagnostics.IdComponentPauseWrongTypeAttribute,
+        Diagnostics.IdComponentRelationWrongTypeAttribute,
         "AutoRelationField has wrong type",
         "Field '{0}' has [AutoRelationField] but is not of type EntityRelation",
         "Usage",

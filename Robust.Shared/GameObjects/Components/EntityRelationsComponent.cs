@@ -4,8 +4,13 @@ using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.GameObjects;
 
-[RegisterComponent, NetworkedComponent, Access(typeof(EntityManager), typeof(EntityRelationsSystem))]
-[AutoGenerateComponentState]
+/// <summary>
+/// Tracks entities that are currently related to the Owner of this component.
+/// Used for tracking <see cref="EntityRelation"/>s in other components to
+/// properly clean them when the entity is terminated.
+/// </summary>
+[Access(typeof(EntityManager), typeof(EntityRelationsSystem))]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class EntityRelationsComponent : Component
 {
     /// <summary>

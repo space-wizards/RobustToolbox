@@ -317,6 +317,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<GridSplitNodeComponent>();
             compFactory.RegisterClass<ChunkEntityComponent>();
             compFactory.RegisterClass<ChunkContainerComponent>();
+            compFactory.RegisterClass<EntityRelationsComponent>();
 
             _regDelegate?.Invoke(compFactory);
 

@@ -87,10 +87,10 @@ public enum CompletionOptionFlags
     NoEscape = 1 << 2,
 
     /// <summary>
-    /// Makes suggestions ignore whatever the client perceives as being "currently typed"
+    /// Prevents suggestions from being filtered based on what the client has "currently typed"
     /// so that your completion shows up anyway based on the defined rules in your parser.
     /// </summary>
-    IgnoreCurrent = 1 << 3,
+    NoFilter = 1 << 3,
 
     /// <summary>
     /// Instead of replacing the entire argument, the suggestion will

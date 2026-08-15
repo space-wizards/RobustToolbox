@@ -262,7 +262,7 @@ public sealed partial class DebugConsole
     private CompletionOption[] FilterCompletions(IEnumerable<CompletionOption> completions, string curTyping)
     {
         return completions
-            .Where(c => c.Value.Contains(curTyping, StringComparison.CurrentCultureIgnoreCase) || (c.Flags & CompletionOptionFlags.IgnoreCurrent) != 0x0)
+            .Where(c => c.Value.Contains(curTyping, StringComparison.CurrentCultureIgnoreCase) || (c.Flags & CompletionOptionFlags.NoFilter) != 0x0)
             .OrderByDescending(c => c.Value.StartsWith(curTyping, StringComparison.CurrentCultureIgnoreCase))
             .ToArray();
     }

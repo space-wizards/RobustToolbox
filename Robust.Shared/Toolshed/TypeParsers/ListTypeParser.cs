@@ -113,7 +113,7 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
                 var opts = result.Options.Select(opt =>
                     new CompletionOption(opt.Value,
                         opt.Hint,
-                        opt.Flags | CompletionOptionFlags.IgnoreCurrent | CompletionOptionFlags.AppendOnly));
+                        opt.Flags | CompletionOptionFlags.NoFilter | CompletionOptionFlags.AppendOnly));
                 return new CompletionResult(opts.ToArray(), result.Hint);
             }
 
@@ -127,14 +127,14 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
                 if (maxLength < 0 || maxLength > count)
                 {
                     opts.Add(new CompletionOption(",",
-                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.IgnoreCurrent |
+                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.NoFilter |
                                CompletionOptionFlags.AppendOnly));
                 }
 
                 if (count >= minLength || count >= maxLength)
                 {
                     opts.Add(new CompletionOption("]",
-                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.IgnoreCurrent |
+                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.NoFilter |
                                CompletionOptionFlags.AppendOnly));
                 }
 
@@ -149,7 +149,7 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
 
             return CompletionResult.FromHintOptions([
                     new CompletionOption("]",
-                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.IgnoreCurrent |
+                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.NoFilter |
                                CompletionOptionFlags.AppendOnly)
                 ],
                 hint);

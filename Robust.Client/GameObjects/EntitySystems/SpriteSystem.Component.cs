@@ -107,6 +107,7 @@ public sealed partial class SpriteSystem
         target.Comp.PostShaderOrderDirty = source.Comp.PostShaderOrderDirty;
 
         target.Comp.RenderOrder = source.Comp.RenderOrder;
+        target.Comp.RenderStage = source.Comp.RenderStage;
         target.Comp.GranularLayersRendering = source.Comp.GranularLayersRendering;
         target.Comp.Loop = source.Comp.Loop;
 

@@ -294,22 +294,35 @@ namespace Robust.Client.Graphics.Clyde
             return ScreenBufferTexture;
         }
 
-        private void DrawEntities(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
+        /// <summary>
+        ///     Gathers and sorts the sprites visible in the viewport.
+        /// </summary>
+        private int[] GatherSprites(Viewport viewport, Box2Rotated worldBounds, IEye eye)
         {
-            var mapId = eye.Position.MapId;
-            if (mapId == MapId.Nullspace)
-                return;
+            using var _ = _prof.Group("Gather Sprites");
+            GetSprites(eye.Position.MapId, viewport, eye, worldBounds, out var indexList);
+            return indexList;
+        }
 
-            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB, worldBounds);
-            var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
+        /// <summary>
+        ///     Draws sprites for the specified render stage, interleaving world overlays by draw depth.
+        /// </summary>
+        private void DrawEntities(
+            Viewport viewport,
+            Box2Rotated worldBounds,
+            Box2 worldAABB,
+            IEye eye,
+            int[] indexList,
+            SpriteRenderStage stage)
+        {
+            var renderOverlays = stage == SpriteRenderStage.Default;
+            if (renderOverlays)
+                RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB, worldBounds);
 
+            var worldOverlays = renderOverlays
+                ? GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities)
+                : [];
             var spriteSystem = _entityManager.System<SpriteSystem>();
-            int[] indexList;
-            using (_prof.Group("Gather Sprites"))
-            {
-                GetSprites(mapId, viewport, eye, worldBounds, out indexList);
-            }
-
             var overlayIndex = 0;
 
             bool flushed = false;
@@ -317,6 +330,9 @@ namespace Robust.Client.Graphics.Clyde
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];
+                if (entry.Sprite.RenderStage != stage)
+                    continue;
+
                 var postShaders = spriteSystem.GetPostShaders(entry.Sprite);
 
                 for (; overlayIndex < worldOverlays.Count; overlayIndex++)
@@ -360,10 +376,6 @@ namespace Robust.Client.Graphics.Clyde
                 RenderSingleWorldOverlay(worldOverlays[overlayIndex], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
             }
 
-            ArrayPool<int>.Shared.Return(indexList);
-
-            _debugStats.Entities += _drawingSpriteList.Count;
-            _drawingSpriteList.Clear();
             FlushRenderQueue();
         }
 
@@ -688,11 +700,13 @@ namespace Robust.Client.Graphics.Clyde
                         _drawGrids(viewport, worldAABB, worldBounds, eye);
                     }
 
+                    var spriteIndices = GatherSprites(viewport, worldBounds, eye);
+
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
                     using (DebugGroup("Entities"))
                     using (_prof.Group("Entities"))
                     {
-                        DrawEntities(viewport, worldBounds, worldAABB, eye);
+                        DrawEntities(viewport, worldBounds, worldAABB, eye, spriteIndices, SpriteRenderStage.Default);
                     }
 
                     using (_prof.Group("Overlays WSBFOV"))
@@ -706,6 +720,16 @@ namespace Robust.Client.Graphics.Clyde
                         if (_entityManager.GetComponent<MapComponent>(mapUid).LightingEnabled)
                             ApplyFovToBuffer(viewport, eye);
                     }
+
+                    using (DebugGroup("Late Entities"))
+                    using (_prof.Group("Late Entities"))
+                    {
+                        DrawEntities(viewport, worldBounds, worldAABB, eye, spriteIndices, SpriteRenderStage.Late);
+                    }
+
+                    ArrayPool<int>.Shared.Return(spriteIndices);
+                    _debugStats.Entities += _drawingSpriteList.Count;
+                    _drawingSpriteList.Clear();
                 }
 
                 _lightingReady = false;

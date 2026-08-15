@@ -263,6 +263,12 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
+        /// <summary>
+        ///     Controls which entity rendering stage this sprite is drawn in.
+        /// </summary>
+        [DataField]
+        public SpriteRenderStage RenderStage;
+
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; internal set; }
 
         public ISpriteLayer this[int layer] => Layers[layer];
@@ -1996,5 +2002,22 @@ namespace Robust.Client.GameObjects
             var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
             return sys.GetPrototypeIcon(prototype);
         }
+    }
+
+    /// <summary>
+    ///     Identifies the ordered pass in which a sprite is rendered.
+    ///     The renderer gathers and sorts all visible sprites once, then renders that same order for each stage.
+    /// </summary>
+    public enum SpriteRenderStage : byte
+    {
+        /// <summary>
+        ///     The normal entity pass, rendered before inter-stage effects such as hard FOV.
+        /// </summary>
+        Default,
+
+        /// <summary>
+        ///     A later entity pass, rendered after inter-stage effects such as hard FOV.
+        /// </summary>
+        Late
     }
 }

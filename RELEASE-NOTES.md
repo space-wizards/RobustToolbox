@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added the `RenderStage` field to `SpriteComponent` with `Default` and `Late` modes, allowing sprites to be rendered in separate entity passes around effects such as hard FOV.
 
 ### Bugfixes
 

@@ -304,7 +304,7 @@ namespace Robust.Client.Graphics.Clyde
             var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
 
             var spriteSystem = _entityManager.System<SpriteSystem>();
-            int[] indexList;
+            SpriteSortItem[] indexList;
             using (_prof.Group("Gather Sprites"))
             {
                 GetSprites(mapId, viewport, eye, worldBounds, out indexList);
@@ -313,10 +313,10 @@ namespace Robust.Client.Graphics.Clyde
             var overlayIndex = 0;
 
             bool flushed = false;
-            using var _drawZone = _prof.Group("Draw");
+            using var drawZone = _prof.Group("Draw");
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
-                ref var entry = ref _drawingSpriteList[indexList[i]];
+                ref var entry = ref _drawingSpriteList[indexList[i].Index];
                 var postShaders = spriteSystem.GetPostShaders(entry.Sprite);
 
                 for (; overlayIndex < worldOverlays.Count; overlayIndex++)
@@ -360,7 +360,7 @@ namespace Robust.Client.Graphics.Clyde
                 RenderSingleWorldOverlay(worldOverlays[overlayIndex], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
             }
 
-            ArrayPool<int>.Shared.Return(indexList);
+            ArrayPool<SpriteSortItem>.Shared.Return(indexList);
 
             _debugStats.Entities += _drawingSpriteList.Count;
             _drawingSpriteList.Clear();

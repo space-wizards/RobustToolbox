@@ -1,9 +1,9 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
-using System.Threading.Tasks;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
@@ -21,44 +21,95 @@ internal partial class Clyde
 {
     [Shared.IoC.Dependency] private IParallelManager _parMan = default!;
     private readonly RefList<SpriteData> _drawingSpriteList = new();
-    private const int _spriteProcessingBatchSize = 25;
+    private readonly SpriteSortBucket[] _spriteSortBuckets = new SpriteSortBucket[byte.MaxValue + 1];
+    private const byte SpriteProcessingBatchSize = 32;
 
-    private void GetSprites(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, out int[] indexList)
+    private void GetSprites(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, out SpriteSortItem[] sortItems)
     {
         ProcessSpriteEntities(map, view, eye, worldBounds, _drawingSpriteList);
 
         var count = _drawingSpriteList.Count;
+        sortItems = ArrayPool<SpriteSortItem>.Shared.Rent(count);
 
-        indexList = ArrayPool<int>.Shared.Rent(count);
-        var sortItems = ArrayPool<SpriteSortItem>.Shared.Rent(count);
+        using (_prof.Group("Build sprite sort"))
+        {
+            for (var i = 0; i < count; i++)
+            {
+                ref var data = ref _drawingSpriteList[i];
+                sortItems[i] = new SpriteSortItem(
+                    i,
+                    data.Sprite.DrawDepth,
+                    data.Sprite.RenderOrder,
+                    data.SortY,
+                    data.Uid);
+            }
+        }
+
+        using (_prof.Group("Sort sprites"))
+        {
+            SortSprites(ref sortItems, count);
+        }
+    }
+
+    private void SortSprites(ref SpriteSortItem[] items, int count)
+    {
+        Array.Clear(_spriteSortBuckets);
+
+        if (count == 0)
+            return;
 
         for (var i = 0; i < count; i++)
         {
-            ref var data = ref _drawingSpriteList[i];
-            sortItems[i] = new SpriteSortItem(
-                i,
-                data.Sprite.DrawDepth,
-                data.Sprite.RenderOrder,
-                data.SpriteScreenBB.Top,
-                data.Uid);
+            ref readonly var item = ref items[i];
+            _spriteSortBuckets[item.DrawDepth].Count++;
         }
 
-        // TODO better sorting? parallel merge sort?
-        Array.Sort(sortItems, 0, count);
+        var offset = 0;
+        var highestBucket = 0;
 
-        for (var i = 0; i < count; i++)
+        for (var i = 0; i < _spriteSortBuckets.Length; i++)
         {
-            indexList[i] = sortItems[i].Index;
+            ref var bucket = ref _spriteSortBuckets[i];
+            if (bucket.Count == 0)
+                continue;
+
+            bucket.Offset = offset;
+            bucket.Next = offset;
+            offset += bucket.Count;
+            highestBucket = Math.Max(i, highestBucket);
         }
 
-        ArrayPool<SpriteSortItem>.Shared.Return(sortItems);
+        var bucketed = ArrayPool<SpriteSortItem>.Shared.Rent(count);
+        try
+        {
+            for (var i = 0; i < count; i++)
+            {
+                ref readonly var item = ref items[i];
+                ref var bucket = ref _spriteSortBuckets[item.DrawDepth];
+                bucketed[bucket.Next++] = item;
+            }
+
+            for (var i = 0; i < highestBucket; i++)
+            {
+                var bucket = _spriteSortBuckets[i];
+                if (bucket.Count > 1)
+                    Array.Sort(bucketed, bucket.Offset, bucket.Count, SpriteSortItemDepthComparer.Instance);
+            }
+        }
+        catch
+        {
+            ArrayPool<SpriteSortItem>.Shared.Return(bucketed);
+            throw;
+        }
+
+        ArrayPool<SpriteSortItem>.Shared.Return(items);
+        items = bucketed;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void ProcessSpriteEntities(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, RefList<SpriteData> list)
     {
         var query = _entityManager.GetEntityQuery<TransformComponent>();
-        var gridQuery = _entityManager.GetEntityQuery<MapGridComponent>();
         var viewScale = eye.Scale * view.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
         var treeData = new BatchData()
         {
@@ -74,8 +125,6 @@ internal partial class Clyde
         // parallelize the rotation & bounding box calculations.
         var index = 0;
         var added = 0;
-        var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
-
         foreach (var (treeOwner, comp) in _spriteTreeSystem.GetIntersectingTrees(map, worldBounds))
         {
             var treeXform = query.GetComponent(treeOwner);
@@ -83,15 +132,12 @@ internal partial class Clyde
             var bounds = _transformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
             DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
 
-            if (gridQuery.HasComponent(treeOwner))
-            {
-                treePos += GetPixelSnapOffset(
-                    treePos,
-                    treeData.ViewPosition,
-                    treeData.ViewRotation,
-                    treeData.ViewScale,
-                    view.Size);
-            }
+            treePos += GetPixelSnapOffset(
+                treePos,
+                treeData.ViewPosition,
+                treeData.ViewRotation,
+                treeData.ViewScale,
+                view.Size);
 
             treeData = treeData with
             {
@@ -102,31 +148,40 @@ internal partial class Clyde
                 Cos = MathF.Cos((float)treeXform.LocalRotation),
             };
 
-            comp.Tree.QueryAabb(ref list,
-                static (ref RefList<SpriteData> state, in ComponentTreeEntry<SpriteComponent> value) =>
-                {
-                    ref var entry = ref state.AllocAdd();
-                    entry.Uid = value.Uid;
-                    entry.Sprite = value.Component;
-                    entry.Xform = value.Transform;
-                    return true;
-                }, bounds, true);
+            using (_prof.Group("Query sprite tree"))
+            {
+                comp.Tree.QueryAabb(ref list,
+                    static (ref RefList<SpriteData> state, in ComponentTreeEntry<SpriteComponent> value) =>
+                    {
+                        ref var entry = ref state.AllocAdd();
+                        entry.Uid = value.Uid;
+                        entry.Sprite = value.Component;
+                        entry.Xform = value.Transform;
+                        return true;
+                    }, bounds, true);
+            }
 
             // Get bounding boxes & world positions
             added = list.Count - index;
-            var batches = added/_spriteProcessingBatchSize;
+            using (_prof.Group("Process sprite bounds"))
+            {
+                if (added >= 2 * SpriteProcessingBatchSize)
+                {
+                    _parMan.ProcessNow(new SpriteProcessingJob
+                    {
+                        Renderer = this,
+                        List = list,
+                        StartIndex = index,
+                        Batch = treeData,
+                    }, added);
+                }
+                else if (added > 0)
+                {
+                    ProcessSprites(list, index, added, treeData);
+                }
+            }
 
-            // TODO also do sorting here & use a merge sort later on for y-sorting?
-            if (batches > 1)
-                Parallel.For(0, batches, opts, (i) => ProcessSprites(list, index + i * _spriteProcessingBatchSize, _spriteProcessingBatchSize, treeData));
-            else
-                batches = 0;
-
-            var remainder = added - _spriteProcessingBatchSize * batches;
-            if (remainder > 0)
-                ProcessSprites(list, index + batches * _spriteProcessingBatchSize, remainder, treeData);
-
-            index += batches * _spriteProcessingBatchSize + remainder;
+            index += added;
         }
     }
 
@@ -191,11 +246,11 @@ internal partial class Clyde
             pos = batch.ViewRotation.RotateVec(pos - batch.ViewPosition);
 
             // special casing angle = n*pi/2 to avoid box rotation & bounding calculations doesn't seem to give significant speedups.
-            data.SpriteScreenBB = TransformCenteredBox(
+            data.SortY = TransformCenteredBox(
                 _spriteSystem.GetLocalBounds((data.Uid, data.Sprite)),
                 finalRotation,
                 pos + batch.PreScaleViewOffset,
-                batch.ViewScale);
+                batch.ViewScale).Top;
         }
     }
 
@@ -206,8 +261,9 @@ internal partial class Clyde
     internal static unsafe Box2 TransformCenteredBox(in Box2 box, float angle, in Vector2 offset, in Vector2 scale)
     {
         var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in box));
-        var sin = Vector128.Create(MathF.Sin(angle));
-        var cos = Vector128.Create(MathF.Cos(angle));
+        var (sinValue, cosValue) = MathF.SinCos(angle);
+        var sin = Vector128.Create(sinValue);
+        var cos = Vector128.Create(cosValue);
         var boxX = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
         var boxY = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));
 
@@ -237,7 +293,23 @@ internal partial class Clyde
         public TransformComponent Xform;
         public Vector2 WorldPos;
         public Angle WorldRot;
-        public Box2 SpriteScreenBB;
+        public float SortY;
+    }
+
+    private readonly struct SpriteProcessingJob : IParallelBulkRobustJob
+    {
+        public required Clyde Renderer { get; init; }
+        public required RefList<SpriteData> List { get; init; }
+        public required int StartIndex { get; init; }
+        public required BatchData Batch { get; init; }
+
+        public int BatchSize => SpriteProcessingBatchSize;
+        public int MinimumBatchParallel => 1;
+
+        public void ExecuteRange(int startIndex, int endIndex)
+        {
+            Renderer.ProcessSprites(List, StartIndex + startIndex, endIndex - startIndex, Batch);
+        }
     }
 
     private readonly struct BatchData
@@ -255,15 +327,37 @@ internal partial class Clyde
         public float Cos { get;  init; }
     }
 
+    private struct SpriteSortBucket
+    {
+        public int Count;
+        public int Offset;
+        public int Next;
+    }
+
+    private sealed class SpriteSortItemDepthComparer : IComparer<SpriteSortItem>
+    {
+        public static readonly SpriteSortItemDepthComparer Instance = new();
+
+        public int Compare(SpriteSortItem x, SpriteSortItem y)
+        {
+            var comparison = x.RenderOrder.CompareTo(y.RenderOrder);
+            if (comparison != 0)
+                return comparison;
+
+            comparison = x.YSort.CompareTo(y.YSort);
+            return comparison != 0 ? comparison : x.Uid.CompareTo(y.Uid);
+        }
+    }
+
     private readonly struct SpriteSortItem : IComparable<SpriteSortItem>
     {
         public readonly int Index;
-        private readonly int _drawDepth;
+        private readonly byte _drawDepth;
         private readonly uint _renderOrder;
         private readonly float _ySort;
         private readonly EntityUid _uid;
 
-        public SpriteSortItem(int index, int drawDepth, uint renderOrder, float ySort, EntityUid uid)
+        public SpriteSortItem(int index, byte drawDepth, uint renderOrder, float ySort, EntityUid uid)
         {
             Index = index;
             _drawDepth = drawDepth;
@@ -271,6 +365,11 @@ internal partial class Clyde
             _ySort = ySort;
             _uid = uid;
         }
+
+        public byte DrawDepth => _drawDepth;
+        public uint RenderOrder => _renderOrder;
+        public float YSort => _ySort;
+        public EntityUid Uid => _uid;
 
         public int CompareTo(SpriteSortItem other)
         {

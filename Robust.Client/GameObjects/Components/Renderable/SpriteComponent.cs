@@ -978,7 +978,7 @@ namespace Robust.Client.GameObjects
             theLayer.ShaderPrototype = prototype;
         }
 
-        public void LayerSetShader(object layerKey, ShaderInstance shader, string? prototype = null)
+        public void LayerSetShader(object layerKey, ShaderInstance? shader, string? prototype = null)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;

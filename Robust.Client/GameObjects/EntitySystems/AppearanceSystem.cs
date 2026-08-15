@@ -158,8 +158,9 @@ namespace Robust.Client.GameObjects
         public SpriteComponent? Sprite;
 
         /// <summary>
-        /// Looks up an enum in the dictionary if it can.
-        /// If it finds it, it outputs the value in <paramref name="data"/> and returns true.
+        /// Looks up <paramref name="key"> in the appearance data if it can.
+        /// If it finds data of type <typeparamref name="T"/>,
+        /// it outputs the value in <paramref name="data"/> and returns true.
         /// Otherwise, it outputs default into data, returning false.
         /// </summary>
         public bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T? data)

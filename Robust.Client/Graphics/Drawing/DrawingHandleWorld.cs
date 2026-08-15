@@ -1,5 +1,9 @@
+using System;
+using System.Collections.Generic;
 using System.Numerics;
+using Robust.Client.GameObjects;
 using Robust.Shared.Graphics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -21,6 +25,19 @@ namespace Robust.Client.Graphics
         /// <param name="color">Color of the rectangle.</param>
         /// <param name="filled">Is it filled with color, or just the border lines?</param>
         public abstract void DrawRect(Box2 rect, Color color, bool filled = true);
+
+        /// <summary>
+        /// Draws multiple filled, untextured colored rectangles to the world. All rectangles use the current transform.
+        /// </summary>
+        /// <remarks>
+        /// This is the batched equivalent of repeated filled <see cref="DrawRect(Box2, Color, bool)"/> calls.
+        /// </remarks>
+        public abstract void DrawRects(ReadOnlySpan<WorldRect> rects);
+
+        /// <summary>
+        /// Draws multiple filled, untextured colored rectangles without multiplying by the handle modulation color.
+        /// </summary>
+        public abstract void DrawRectsUnmodulated(ReadOnlySpan<WorldRect> rects);
 
         /// <summary>
         /// Draws an untextured colored rectangle to the world.The coordinate system is right handed.
@@ -57,6 +74,27 @@ namespace Robust.Client.Graphics
         /// <param name="subRegion">The four corners of the texture sub region in px.</param>
         public abstract void DrawTextureRectRegion(Texture texture, in Box2Rotated quad,
             Color? modulate = null, UIBox2? subRegion = null);
+
+        /// <summary>
+        /// Draws multiple rotated rectangles for the same texture.
+        /// </summary>
+        public abstract void DrawTextureRects(Texture texture, ReadOnlySpan<WorldTextureRect> rects);
+
+        /// <summary>
+        /// Draws multiple rotated rectangles for the same texture without multiplying by the handle modulation color.
+        /// </summary>
+        public abstract void DrawTextureRectsUnmodulated(Texture texture, ReadOnlySpan<WorldTextureRect> rects);
+
+        /// <summary>
+        /// Renders a sprite through the supplied post-shader passes.
+        /// </summary>
+        public abstract void RenderSpritePostShaders(
+            Entity<SpriteComponent> sprite,
+            IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders,
+            Angle eyeRotation,
+            Angle worldRotation,
+            Vector2 worldPosition,
+            Direction? overrideDirection);
 
         private Box2 GetQuad(Texture texture, Vector2 position)
         {
@@ -118,6 +156,16 @@ namespace Robust.Client.Graphics
         }
 
         /// <summary>
+        ///     Draws an atlas texture without an additional subregion.
+        /// </summary>
+        public virtual void DrawTextureRect(AtlasTexture texture, Box2 quad, Color? modulate = null)
+        {
+            CheckDisposed();
+
+            DrawTextureRectRegion(texture, quad, modulate);
+        }
+
+        /// <summary>
         /// Draws a full texture sprite to the world. The coordinate system is right handed.
         /// Make sure to set <see cref="DrawingHandleBase.SetTransform"/>
         /// to set the model matrix if needed.
@@ -133,4 +181,14 @@ namespace Robust.Client.Graphics
             DrawTextureRectRegion(texture, in quad, modulate);
         }
     }
+
+    /// <summary>
+    /// A rotated rectangle for batched world texture drawing.
+    /// </summary>
+    public readonly record struct WorldTextureRect(Box2Rotated Quad, Color? Modulate = null);
+
+    /// <summary>
+    /// An axis-aligned rectangle for batched world rectangle drawing.
+    /// </summary>
+    public readonly record struct WorldRect(Box2 Rect, Color Color);
 }

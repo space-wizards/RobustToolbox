@@ -8,11 +8,11 @@ using Robust.Shared.Sandboxing;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class MarkupTagManager
+public sealed partial class MarkupTagManager
 {
-    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-    [Dependency] private readonly ISandboxHelper _sandboxHelper = default!;
-    [Dependency] private readonly IDependencyCollection _deps = default!;
+    [Dependency] private IReflectionManager _reflectionManager = default!;
+    [Dependency] private ISandboxHelper _sandboxHelper = default!;
+    [Dependency] private IDependencyCollection _deps = default!;
 
     /// <summary>
     /// Tags defined in engine need to be instantiated here because of sandboxing
@@ -52,7 +52,7 @@ public sealed class MarkupTagManager
             if (_engineTypes.Contains(type))
                 continue;
 
-            var instance = (IMarkupTagHandler) _sandboxHelper.CreateInstance(type);
+            var instance = (IMarkupTagHandler)_sandboxHelper.CreateInstance(type);
             _markupTagTypes[instance.Name.ToLower()] = instance;
         }
 

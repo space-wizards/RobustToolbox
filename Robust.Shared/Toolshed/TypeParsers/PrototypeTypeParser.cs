@@ -12,11 +12,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-public sealed class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
+public sealed partial class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
     where T : class, IPrototype
 {
-    [Dependency] private readonly IConfigurationManager _config = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
+    [Dependency] private IConfigurationManager _config = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
 
     public override bool TryParse(ParserContext ctx, out ProtoId<T> result)
     {
@@ -58,10 +58,10 @@ public sealed class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
     }
 }
 
-public sealed class EntProtoIdTypeParser : TypeParser<EntProtoId>
+public sealed partial class EntProtoIdTypeParser : TypeParser<EntProtoId>
 {
-    [Dependency] private readonly IConfigurationManager _config = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
+    [Dependency] private IConfigurationManager _config = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
 
     public override bool TryParse(ParserContext ctx, out EntProtoId result)
     {

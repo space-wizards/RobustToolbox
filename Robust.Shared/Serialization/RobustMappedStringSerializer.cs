@@ -97,7 +97,7 @@ namespace Robust.Shared.Serialization
         /// </remarks>
         private const uint FirstMappedIndexStart = 2;
 
-        [Dependency] private readonly INetManager _net = default!;
+        [Dependency] private INetManager _net = default!;
 
         // I don't want to create 50 line changes in this commit so...
         // ReSharper disable once InconsistentNaming

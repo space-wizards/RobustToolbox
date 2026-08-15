@@ -273,6 +273,7 @@ internal sealed partial class PvsSystem
         metadata.LastModifiedTick = meta.LastModifiedTick;
         metadata.VisMask = meta.VisibilityMask;
         metadata.LifeStage = meta.EntityLifeStage;
+        metadata.IsChunkEntity = false;
 #if DEBUG
         metadata.Marker = uint.MaxValue;
 #endif

@@ -1,25 +1,27 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using Robust.Shared.Console;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Toolshed.TypeParsers.Math;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
 public sealed class ListTypeParser<T> : TypeParser<List<T>>
 {
-    public override bool TryParse(ParserContext ctx, out List<T> result)
+    public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out List<T>? result)
     {
         ctx.ConsumeWhitespace();
+        result = null;
 
         if (!ctx.EatMatch('['))
         {
-            ctx.Error = new ExpectedTokenError(["["]);
-            result = [];
+            ctx.Error = new ExpectedOpenBrace();
             return false;
         }
 
@@ -32,17 +34,13 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
             ctx.ConsumeWhitespace();
 
             if (!Toolshed.TryParse(ctx, out T? value))
-            {
-                result = [];
                 return false;
-            }
 
             values.Add(value);
 
             if (maxLength >= 0 && values.Count > maxLength)
             {
                 ctx.Error = new TooManyElementsError(maxLength);
-                result = [];
                 return false;
             }
 
@@ -56,7 +54,6 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
                 if (values.Count < minLength)
                 {
                     ctx.Error = new NotEnoughElementsError(minLength);
-                    result = [];
                     return false;
                 }
 
@@ -65,7 +62,6 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
             }
 
             ctx.Error = new ExpectedTokenError([",", "]"]);
-            result = [];
             return false;
         }
     }

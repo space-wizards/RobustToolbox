@@ -1425,6 +1425,13 @@ public partial class EntitySystem
         return EntityManager.EnsureEntity<T>(netEntity, callerEntity);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected EntityRelation EnsureEntityRelation<T>(NetEntity? netEntity, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureEntityRelation<T>(netEntity, callerEntity);
+    }
+
     /// <summary>
     ///     Returns the <see cref="NetCoordinates"/> of an entity or creates a new entity if none exists.
     /// </summary>
@@ -1471,6 +1478,34 @@ public partial class EntitySystem
     protected void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities)
     {
         EntityManager.EnsureEntityList<T>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected HashSet<EntityRelation> EnsureEntitySetRelation<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureEntitySetRelation<T>(netEntities, callerEntity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void EnsureEntitySetRelation<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity, HashSet<EntityRelation> entities)
+    {
+        EntityManager.EnsureEntitySetRelation<T>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected List<EntityRelation> EnsureEntityListRelation<T>(List<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureEntityListRelation<T>(netEntities, callerEntity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void EnsureEntityListRelation<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityRelation> entities)
+    {
+        EntityManager.EnsureEntityListRelation<T>(netEntities, callerEntity, entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1591,6 +1626,16 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
     protected List<NetEntity> GetNetEntityList(List<EntityUid> uids)
+    {
+        return EntityManager.GetNetEntityList(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entity relations. Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected List<NetEntity> GetNetEntityList(List<EntityRelation> uids)
     {
         return EntityManager.GetNetEntityList(uids);
     }
@@ -1970,6 +2015,7 @@ public partial class EntitySystem
 
     #region Entity Relations
 
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelation"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
     protected void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity)
@@ -1977,18 +2023,44 @@ public partial class EntitySystem
         EntityManager.SetRelation(owner, ref relation, entity);
     }
 
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelations(Entity{EntityRelationsComponent?}, List{EntityRelation}, List{EntityUid})"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
-    protected void ClearRelation(EntityRelation relation)
+    protected void SetRelations(Entity<EntityRelationsComponent?> owner, List<EntityRelation> relations, List<EntityUid> entities)
     {
-        EntityManager.ClearRelation(relation);
+        EntityManager.SetRelations(owner, relations, entities);
     }
 
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelations(Entity{EntityRelationsComponent?}, HashSet{EntityRelation}, HashSet{EntityUid})"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
-    protected void ClearRelation(Entity<EntityRelationsComponent?> relationEnt)
+    protected void SetRelations(Entity<EntityRelationsComponent?> owner, HashSet<EntityRelation> relations, HashSet<EntityUid> entities)
     {
-        EntityManager.ClearRelation(relationEnt);
+        EntityManager.SetRelations(owner, relations, entities);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation relation)
+    {
+        EntityManager.ClearRelation(ent, ref relation);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelations(EntityRelation, EntityRelationsComponent?)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void ClearRelations(EntityRelation relation, EntityRelationsComponent? relations = null)
+    {
+        EntityManager.ClearRelations(relation, relations);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelations(Entity{EntityRelationsComponent?})"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void ClearRelations(Entity<EntityRelationsComponent?> ent)
+    {
+        EntityManager.ClearRelations(ent);
     }
 
     #endregion

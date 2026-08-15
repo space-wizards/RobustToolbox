@@ -150,6 +150,15 @@ public partial class EntityManager
         return EnsureEntity<T>(nEntity.Value, callerEntity);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityRelation EnsureEntityRelation<T>(NetEntity? nEntity, EntityUid callerEntity)
+    {
+        if (nEntity == null)
+            return EntityRelation.Null;
+
+        return new EntityRelation(EnsureEntity<T>(nEntity.Value, callerEntity));
+    }
+
     /// <inheritdoc />
     public EntityUid GetEntity(NetEntity nEntity)
     {
@@ -362,6 +371,31 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
+    public HashSet<EntityRelation> EnsureEntitySetRelation<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        var entities = new HashSet<EntityRelation>(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntityRelation<T>(netEntity, callerEntity));
+        }
+
+        return entities;
+    }
+
+    /// <inheritdoc />
+    public void EnsureEntitySetRelation<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity, HashSet<EntityRelation> relations)
+    {
+        relations.Clear();
+        relations.EnsureCapacity(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            relations.Add(EnsureEntityRelation<T>(netEntity, callerEntity));
+        }
+    }
+
+    /// <inheritdoc />
     public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
     {
         var entities = new List<EntityUid>(netEntities.Count);
@@ -381,6 +415,31 @@ public partial class EntityManager
         foreach (var netEntity in netEntities)
         {
             entities.Add(EnsureEntity<T>(netEntity, callerEntity));
+        }
+    }
+
+    /// <inheritdoc />
+    public List<EntityRelation> EnsureEntityListRelation<T>(List<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        var entities = new List<EntityRelation>(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntityRelation<T>(netEntity, callerEntity));
+        }
+
+        return entities;
+    }
+
+    /// <inheritdoc />
+    public void EnsureEntityListRelation<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityRelation> relations)
+    {
+        relations.Clear();
+        relations.EnsureCapacity(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            relations.Add(EnsureEntityRelation<T>(netEntity, callerEntity));
         }
     }
 
@@ -562,6 +621,21 @@ public partial class EntityManager
         foreach (var netEntity in entities)
         {
             netEntities.Add(GetNetEntity(netEntity));
+        }
+
+        return netEntities;
+    }
+
+    public List<NetEntity> GetNetEntityList(List<EntityRelation> entities)
+    {
+        var netEntities = new List<NetEntity>(entities.Count);
+
+        foreach (var relation in entities)
+        {
+            if (relation.Entity == null)
+                continue;
+
+            netEntities.Add(GetNetEntity(relation.Entity.Value));
         }
 
         return netEntities;

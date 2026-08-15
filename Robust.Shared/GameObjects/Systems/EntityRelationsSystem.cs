@@ -5,7 +5,7 @@ public sealed partial class EntityRelationsSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnEntityRelationDelete(Entity<EntityRelationsComponent> ent, ref EntityTerminatingEvent args)
     {
-        ClearRelation(ent.AsNullable());
+        ClearRelations(ent.AsNullable());
     }
 }
 

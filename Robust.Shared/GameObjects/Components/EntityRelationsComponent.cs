@@ -9,8 +9,5 @@ namespace Robust.Shared.GameObjects;
 public sealed partial class EntityRelationsComponent : Component
 {
     [DataField, AutoNetworkedField, AutoRelationField]
-    public HashSet<EntityRelation> Relations = new();
-
-    [DataField, AutoNetworkedField, AutoRelationField]
-    public EntityRelation FooRelation;
+    public List<EntityRelation> Relations = new();
 }

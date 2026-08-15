@@ -102,7 +102,6 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                         {
                             dictionaryValue = true;
                         }
-                        // TODO add support for interfaces of collections
                         if (namedType.Name == "List" || namedType.Name == "HashSet" && namedType is { TypeArguments: [{ Name: "EntityRelation" }]})
                         {
                             collection = true;

@@ -1,23 +1,10 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects;
 
 public partial class EntityManager
 {
-    /// <summary>
-    /// Assign an entity to have a relation.
-    /// </summary>
-    /// <param name="owner">
-    /// Owner of the provided <see cref="relation"/>.
-    /// An event will be raised to the owner when the specified <see cref="entity"/> gets deleted.
-    /// </param>
-    /// <param name="relation">
-    /// The relation struct will hold the reference to <see cref="entity"/>.
-    /// </param>
-    /// <param name="entity">
-    /// An entity that will become related to <see cref="owner"/> and stored in the <see cref="relation"/>.
-    /// </param>
-    [PublicAPI]
+    /// <inheritdoc/>
     public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity)
     {
         if (!entity.HasValue)
@@ -31,17 +18,36 @@ public partial class EntityManager
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
             EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
 
-        entityRelations.Relations.Add(relation);
+        entityRelations.Relations.Add(new EntityRelation(owner));
         owner.Comp.Relations.Add(relation);
 
         relation.Entity = entity;
     }
 
-    /// <summary>
-    /// Manually removes all relations from an <see cref="EntityRelation"/>.
-    /// </summary>
-    [PublicAPI]
-    public void ClearRelation(EntityRelation relation, EntityRelationsComponent? relations = null)
+    /// <inheritdoc/>
+    public void SetRelations(Entity<EntityRelationsComponent?> owner, List<EntityRelation> relations, List<EntityUid> entities)
+    {
+        foreach (var entity in entities)
+        {
+            var relation = EntityRelation.Null;
+            SetRelation(owner, ref relation, entity);
+            relations.Add(relation);
+        }
+    }
+
+    /// <inheritdoc/>
+    public void SetRelations(Entity<EntityRelationsComponent?> owner, HashSet<EntityRelation> relations, HashSet<EntityUid> entities)
+    {
+        foreach (var entity in entities)
+        {
+            var relation = EntityRelation.Null;
+            SetRelation(owner, ref relation, entity);
+            relations.Add(relation);
+        }
+    }
+
+    /// <inheritdoc/>
+    public void ClearRelations(EntityRelation relation, EntityRelationsComponent? relations = null)
     {
         if (relation.Entity == null)
             return; // Already cleared
@@ -59,13 +65,20 @@ public partial class EntityManager
         }
     }
 
-    /// <summary>
-    /// Manually removes all relations from an entity with <see cref="EntityRelationsComponent"/>.
-    /// </summary>
-    [PublicAPI]
-    public void ClearRelation(Entity<EntityRelationsComponent?> ent)
+    /// <inheritdoc/>
+    public void ClearRelations(Entity<EntityRelationsComponent?> ent)
     {
-        var relation = new EntityRelation { Entity = ent.Owner };
-        ClearRelation(relation, ent.Comp);
+        var relation = new EntityRelation(ent.Owner);
+        ClearRelations(relation, ent.Comp);
+    }
+
+    /// <inheritdoc/>
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation relation)
+    {
+        if (!_relationsQuery.Resolve(ent.Owner, ref ent.Comp))
+            return;
+
+        ent.Comp.Relations.Remove(relation);
+        relation = EntityRelation.Null;
     }
 }

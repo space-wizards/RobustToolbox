@@ -93,4 +93,59 @@ public partial class EntityManager
 
         relation = EntityRelation.Null;
     }
+
+    /// <inheritdoc/>
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation? relation)
+    {
+        if (relation == null)
+            return;
+
+        var copy = relation.Value;
+        ClearRelation(ent, ref copy);
+        relation = null;
+    }
+
+    /// <inheritdoc/>
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations)
+    {
+        foreach (var relation in relations)
+        {
+            var copy = relation;
+            ClearRelation(ent, ref copy);
+        }
+        relations.Clear();
+    }
+
+    /// <inheritdoc/>
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relations)
+    {
+        foreach (var relation in relations)
+        {
+            var copy = relation;
+            ClearRelation(ent, ref copy);
+        }
+        relations.Clear();
+    }
+
+    /// <inheritdoc/>
+    public void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relations)
+    {
+        foreach (var relation in relations.Keys)
+        {
+            var copy = relation;
+            ClearRelation(ent, ref copy);
+        }
+        relations.Clear();
+    }
+
+    /// <inheritdoc/>
+    public void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations) where T : notnull
+    {
+        foreach (var (key, relation) in relations)
+        {
+            var copy = relation;
+            ClearRelation(ent, ref copy);
+            relations[key] = copy;
+        }
+    }
 }

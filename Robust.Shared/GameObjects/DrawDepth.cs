@@ -13,6 +13,6 @@ namespace Robust.Shared.GameObjects
         /// The default draw depth. The content enum which represents draw depth
         /// should respect this value, since it is used in the engine.
         /// </summary>
-        public const byte Default = 0;
+        public const byte Default = 128;
     }
 }

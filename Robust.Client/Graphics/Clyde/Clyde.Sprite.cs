@@ -65,6 +65,7 @@ internal partial class Clyde
         }
 
         var offset = 0;
+        var lowestBucket = int.MaxValue;
         var highestBucket = 0;
 
         for (var i = 0; i < _spriteSortBuckets.Length; i++)
@@ -76,6 +77,7 @@ internal partial class Clyde
             bucket.Offset = offset;
             bucket.Next = offset;
             offset += bucket.Count;
+            lowestBucket = Math.Min(i, lowestBucket);
             highestBucket = Math.Max(i, highestBucket);
         }
 
@@ -89,7 +91,7 @@ internal partial class Clyde
                 bucketed[bucket.Next++] = item;
             }
 
-            for (var i = 0; i < highestBucket; i++)
+            for (var i = lowestBucket; i <= highestBucket; i++)
             {
                 var bucket = _spriteSortBuckets[i];
                 if (bucket.Count > 1)

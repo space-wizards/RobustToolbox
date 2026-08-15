@@ -31,7 +31,8 @@ public sealed partial class EntityDeserializer :
     ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
     ITypeSerializer<NetEntity, ValueDataNode>,
-    ITypeSerializer<MapId, ValueDataNode>
+    ITypeSerializer<MapId, ValueDataNode>,
+    ITypeSerializer<EntityRelation, ValueDataNode>
 {
     // See the comments around EntitySerializer's version const for information about the different versions.
     // TBH version three isn't even really fully supported anymore, simply due to changes in engine component serialization.
@@ -1294,4 +1295,34 @@ public sealed partial class EntityDeserializer :
     }
 
     #endregion
+
+    public ValidationNode Validate(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        ISerializationContext? context = null)
+    {
+        return seri.ValidateNode<EntityUid?>(node, context);
+    }
+
+    public EntityRelation Read(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<EntityRelation>? instanceProvider = null)
+    {
+        return new EntityRelation(seri.Read<EntityUid?>(node, context));
+    }
+
+    public DataNode Write(
+        ISerializationManager seri,
+        EntityRelation value,
+        IDependencyCollection dependencies,
+        bool alwaysWrite = false,
+        ISerializationContext? context = null)
+    {
+        return seri.WriteValue(value.Entity, alwaysWrite, context);
+    }
 }

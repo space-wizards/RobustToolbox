@@ -44,6 +44,14 @@ namespace Robust.Shared.Network
         /// Discord auth enabled
         /// </summary>
         DiscordEnabled = 1,
+        /// <summary>
+        /// Steam auth enabled
+        /// </summary>
+        SteamEnabled = 2,
+        /// <summary>
+        /// Any additional auth enabled
+        /// </summary>
+        Any = 10,
     }
 
     #endregion

@@ -12,7 +12,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.Network
 {
@@ -51,7 +50,10 @@ namespace Robust.Shared.Network
                 var ip = connection.RemoteEndPoint.Address;
                 var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar(CVars.AuthAllowLocal);
                 var canAuth = msgLogin.CanAuth;
-                var discord = msgLogin.Discord; // Starlight-edit
+                // Starlight-start
+                var discord = msgLogin.Discord;
+                var steam = msgLogin.Steam;
+                // Starlight-end
                 var needPk = msgLogin.NeedPubKey;
                 var authServer = _config.GetCVar(CVars.AuthServer);
 
@@ -65,8 +67,9 @@ namespace Robust.Shared.Network
                 if (Auth == AuthMode.Required && !isLocal)
                 {
                     // Starlight-start
-                    var allowDiscord = AdditionalAuth == AdditionalAuthModes.DiscordEnabled;
-                    var willAuthenticate = canAuth || (discord && allowDiscord);
+                    var allowDiscord = AdditionalAuth is AdditionalAuthModes.DiscordEnabled or AdditionalAuthModes.Any;
+                    var allowSteam = AdditionalAuth is AdditionalAuthModes.SteamEnabled or AdditionalAuthModes.Any;
+                    var willAuthenticate = canAuth || (discord && allowDiscord) || (steam && allowSteam);
                     if (!willAuthenticate)
                     {
                         connection.Disconnect("This server requires authentication.");
@@ -80,7 +83,7 @@ namespace Robust.Shared.Network
                 LoginType type;
                 var padSuccessMessage = true;
 
-                if ((canAuth || discord) && Auth != AuthMode.Disabled) // Starlight-edit
+                if ((canAuth || discord || steam) && Auth != AuthMode.Disabled) // Starlight-edit
                 {
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: Initiating authentication");
@@ -93,7 +96,10 @@ namespace Robust.Shared.Network
                         PublicKey = needPk ? CryptoPublicKey : Array.Empty<byte>(),
                         VerifyToken = verifyToken,
                         WantHwid = wantHwid,
-                        WantDiscord = discord && AdditionalAuth == AdditionalAuthModes.DiscordEnabled // Starlight-edit
+                        // Starlight-start
+                        WantDiscord = discord && AdditionalAuth is AdditionalAuthModes.DiscordEnabled or AdditionalAuthModes.Any,
+                        WantSteam = steam && AdditionalAuth is AdditionalAuthModes.SteamEnabled or AdditionalAuthModes.Any,
+                        // Starlight-end
                     };
 
                     var outMsgEncReq = peer.Peer.CreateMessage();
@@ -154,6 +160,13 @@ namespace Robust.Shared.Network
                     {
                         var starlightApi = _config.GetCVar(CVars.StarlightAPIServer);
                         url = $"{starlightApi}api/discord-auth/hasJoined" +
+                                  $"?hash={authHash}&" +
+                                  $"userId={msgEncResponse.UserId}";
+                    }
+                    else if (steam)
+                    {
+                        var starlightApi = _config.GetCVar(CVars.StarlightAPIServer);
+                        url = $"{starlightApi}api/steam-auth/hasJoined" +
                                   $"?hash={authHash}&" +
                                   $"userId={msgEncResponse.UserId}";
                     }

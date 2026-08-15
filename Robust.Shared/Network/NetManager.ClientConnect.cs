@@ -133,8 +133,10 @@ namespace Robust.Shared.Network
 
             // Starlight-start
             var discordToken = _authManager.DiscordToken;
+            var steamToken = _authManager.SteamToken;
 
-            var useDiscord = !string.IsNullOrEmpty(discordToken);
+            var useSteam = !string.IsNullOrEmpty(steamToken);
+            var useDiscord = !useSteam && !string.IsNullOrEmpty(discordToken);
             // Starlight-end
 
             var hasPubKey = !string.IsNullOrEmpty(pubKey);
@@ -148,7 +150,10 @@ namespace Robust.Shared.Network
                 CanAuth = authenticate,
                 NeedPubKey = !hasPubKey,
                 Encrypt = encrypt,
-                Discord = useDiscord, // Starlight-edit
+                // Starlight-start
+                Discord = useDiscord,
+                Steam = useSteam,
+                // Starlight-end
             };
 
             var outLoginMsg = peer.Peer.CreateMessage();
@@ -214,9 +219,21 @@ namespace Robust.Shared.Network
                 {
                     request = new HttpRequestMessage(
                         HttpMethod.Post,
-                        $"{starlightApi}api/discord-auth/join");
-                    request.Content = JsonContent.Create(joinReq);
+                        $"{starlightApi}api/discord-auth/join")
+                    {
+                        Content = JsonContent.Create(joinReq)
+                    };
                     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", discordToken);
+                }
+                else if (encRequest.WantSteam && useSteam)
+                {
+                    request = new HttpRequestMessage(
+                        HttpMethod.Post,
+                        $"{starlightApi}api/steam-auth/join")
+                    {
+                        Content = JsonContent.Create(joinReq)
+                    };
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", steamToken);
                 }
                 else
                 {

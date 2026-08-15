@@ -1227,9 +1227,14 @@ namespace Robust.Shared.Network
             return new T();
         }
 
-        private NetOutgoingMessage BuildMessage(NetMessage message, NetPeer peer)
+        private NetOutgoingMessage BuildMessage(NetMessage message, NetChannel channel)
         {
-            var packet = peer.CreateMessage(4);
+            var initialCapacity = message.EstimateBufferSize();
+
+            if (channel.Encryption != null)
+                initialCapacity += NetEncryption.EncryptionOverhead;
+
+            var packet = channel.Connection.Peer.CreateMessage(initialCapacity);
 
             if (!_strings.TryFindStringId(message.MsgName, out int msgId))
                 throw new NetManagerException(

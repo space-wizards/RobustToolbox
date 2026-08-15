@@ -495,6 +495,14 @@ public partial class EntitySystem
         return EntityManager.TryGetComponent(uid, out comp);
     }
 
+    /// <inheritdoc cref="IEntityManager.TryGetComponent(EntityUid?, Type, out IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
+    protected bool TryComp(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? comp)
+    {
+        return EntityManager.TryGetComponent(uid, type, out comp);
+    }
+
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryComp(EntityUid uid, [NotNullWhen(true)] out TransformComponent? comp)
@@ -523,6 +531,20 @@ public partial class EntitySystem
         return EntityManager.TryGetComponent(uid.Value, out comp);
     }
 
+    /// <inheritdoc cref="IEntityManager.TryGetComponent(EntityUid?, Type, out IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
+    protected bool TryComp([NotNullWhen(true)] EntityUid? uid, Type type, [NotNullWhen(true)] out IComponent? comp)
+    {
+        if (!uid.HasValue)
+        {
+            comp = null;
+            return false;
+        }
+
+        return EntityManager.TryGetComponent(uid.Value, type, out comp);
+    }
+
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
     protected bool TryComp([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TransformComponent? comp)
     {
@@ -545,6 +567,36 @@ public partial class EntitySystem
         }
 
         return EntityManager.MetaQuery.TryGetComponent(uid.Value, out comp);
+    }
+
+    /// <summary>
+    /// Retrieves the given entity's component of the specified type, assembled into an <see cref="Entity{T}"/>. If no
+    /// such component exists, returns null.
+    /// </summary>
+    /// <typeparam name="T">The type of component to retrieve.</typeparam>
+    /// <param name="uid">The UID of the entity whose component will be retrieved.</param>
+    /// <returns>The assembled entity UID and component, if the component exists; otherwise <c>null</c>.</returns>
+    protected Entity<T>? WithCompOrNull<T>(EntityUid uid) where T : IComponent
+    {
+        return EntityManager.TryGetComponent<T>(uid, out var comp) ? new Entity<T>(uid, comp) : null;
+    }
+
+    /// <summary>
+    /// Retrieves the given entity's component of the specified type, assembled into an <see cref="Entity{T}"/>. If the
+    /// given entity already contains a component value, that is returned in the assembled return value. If the given
+    /// entity has no such component, returns null.
+    /// </summary>
+    /// <typeparam name="T">The type of component to retrieve.</typeparam>
+    /// <param name="entity">
+    /// An <see cref="Entity{T}"/> containing the UID of the entity whose component will be retrieved. Note that this
+    /// MAY already contain a component value.
+    /// </param>
+    /// <returns>The assembled entity UID and component, if the component exists; otherwise <c>null</c>.</returns>
+    protected Entity<T>? WithCompOrNull<T>(Entity<T?> entity) where T : IComponent
+    {
+        return entity.Comp is { } comp || EntityManager.TryGetComponent(entity, out comp)
+            ? new Entity<T>(entity, comp)
+            : null;
     }
 
     /// <inheritdoc cref="IEntityManager.GetComponents"/>
@@ -864,6 +916,14 @@ public partial class EntitySystem
     protected void Del(EntityUid? uid)
     {
         EntityManager.DeleteEntity(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid, MetaDataComponent, TransformComponent)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.DeleteEntity))]
+    protected void Del(EntityUid uid, MetaDataComponent meta)
+    {
+        EntityManager.DeleteEntity(uid, meta);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />

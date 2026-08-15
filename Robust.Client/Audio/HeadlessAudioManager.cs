@@ -34,6 +34,11 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     }
 
     /// <inheritdoc />
+    public void FrameUpdate(float frameTime)
+    {
+    }
+
+    /// <inheritdoc />
     public IAudioSource CreateAudioSource(AudioStream stream)
     {
         return DummyAudioSource.Instance;
@@ -73,10 +78,20 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     /// <inheritdoc />
     public void SetMasterGain(float newGain)
     {
+        BaseGain = Math.Max(newGain, 0f);
     }
+
+    public float BaseGain { get; private set; }
+
+    public float FadeGain { get; private set; } = 1f;
 
     /// <inheritdoc />
     public void SetAttenuation(Attenuation attenuation)
+    {
+    }
+
+    /// <inheritdoc />
+    public void SetDopplerFactor(float factor)
     {
     }
 

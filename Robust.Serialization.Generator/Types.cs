@@ -78,6 +78,12 @@ internal static class Types
         if (HasAttribute(type, CopyByRefNamespace))
             return true;
 
+        if (type is INamedTypeSymbol named &&
+            HasAttribute(named.OriginalDefinition, CopyByRefNamespace))
+        {
+            return true;
+        }
+
         if (type.TypeKind == TypeKind.Enum)
             return true;
 
@@ -395,18 +401,6 @@ internal static class Types
             setsRequired = "[SetsRequiredMembers]";
 
         return setsRequired;
-    }
-
-    internal static ITypeSymbol? GetFirstDataDefinitionBaseType(ITypeSymbol type)
-    {
-        var parent = type;
-        while ((parent = parent.BaseType) != null)
-        {
-            if (IsDataDefinition(parent, out _))
-                return parent;
-        }
-
-        return null;
     }
 
     internal static IEnumerable<(ISymbol Field, ITypeSymbol Type, DataFieldAttribute Attribute)> GetAllDataFields(ITypeSymbol? definition, bool isDataRecord)

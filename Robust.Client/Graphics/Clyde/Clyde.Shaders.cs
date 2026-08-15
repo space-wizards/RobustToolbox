@@ -37,6 +37,12 @@ namespace Robust.Client.Graphics.Clyde
         private readonly Dictionary<ClydeHandle, LoadedShaderInstance> _shaderInstances =
             new();
 
+        private readonly Dictionary<ClydeHandle, ClydeShaderInstance> _noBlendShaderInstances =
+            new();
+
+        private readonly Dictionary<ClydeHandle, ClydeShaderInstance> _premultipliedBlendShaderInstances =
+            new();
+
         private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new();
 
         private sealed class LoadedShader
@@ -397,8 +403,63 @@ namespace Robust.Client.Graphics.Clyde
         {
             while (_deadShaderInstances.TryDequeue(out var handle))
             {
+                if (_noBlendShaderInstances.Remove(handle, out var noBlendInstance))
+                    _shaderInstances.Remove(noBlendInstance.Handle);
+
+                if (_premultipliedBlendShaderInstances.Remove(handle, out var premultipliedBlendInstance))
+                    _shaderInstances.Remove(premultipliedBlendInstance.Handle);
+
                 _shaderInstances.Remove(handle);
             }
+        }
+
+        private ClydeShaderInstance GetNoBlendShaderInstance(ShaderInstance shader)
+        {
+            return GetBlendModeShaderInstance(shader, ShaderBlendMode.None, _noBlendShaderInstances);
+        }
+
+        private ClydeShaderInstance GetPremultipliedBlendShaderInstance(ShaderInstance shader)
+        {
+            return GetBlendModeShaderInstance(shader, ShaderBlendMode.Premultiplied, _premultipliedBlendShaderInstances);
+        }
+
+        private ClydeShaderInstance GetBlendModeShaderInstance(
+            ShaderInstance shader,
+            ShaderBlendMode blendMode,
+            Dictionary<ClydeHandle, ClydeShaderInstance> cache)
+        {
+            var clydeShader = (ClydeShaderInstance) shader;
+            var sourceData = _shaderInstances[clydeShader.Handle];
+
+            if (!cache.TryGetValue(clydeShader.Handle, out var instance))
+            {
+                var newHandle = AllocRid();
+                var newData = new LoadedShaderInstance(sourceData)
+                {
+                    BlendMode = blendMode,
+                    ParametersDirty = true,
+                };
+
+                _shaderInstances.Add(newHandle, newData);
+                instance = new ClydeShaderInstance(newHandle, this);
+                cache.Add(clydeShader.Handle, instance);
+                return instance;
+            }
+
+            var data = _shaderInstances[instance.Handle];
+            data.ShaderHandle = sourceData.ShaderHandle;
+            data.HasLighting = sourceData.HasLighting;
+            data.BlendMode = blendMode;
+            data.ParametersDirty = true;
+            data.Stencil = sourceData.Stencil;
+            data.Parameters.Clear();
+
+            foreach (var (key, value) in sourceData.Parameters)
+            {
+                data.Parameters[key] = value;
+            }
+
+            return instance;
         }
 
         private sealed class ClydeShaderInstance : ShaderInstance

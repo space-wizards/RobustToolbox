@@ -8,14 +8,15 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype
 {
-    public sealed class AbstractPrototypeIdSerializer<TPrototype> : PrototypeIdSerializer<TPrototype>
+    public sealed partial class AbstractPrototypeIdSerializer<TPrototype> : PrototypeIdSerializer<TPrototype>
         where TPrototype : class, IPrototype, IInheritingPrototype
     {
+        [Dependency] private IPrototypeManager _proto = default!;
+
         public override ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            var protoMan = dependencies.Resolve<IPrototypeManager>();
-            return protoMan.TryGetKindFrom<TPrototype>(out _) && protoMan.HasMapping<TPrototype>(node.Value)
+            return _proto.TryGetKindFrom<TPrototype>(out _) && _proto.HasMapping<TPrototype>(node.Value)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"PrototypeID {node.Value} for type {typeof(TPrototype)} not found");
         }

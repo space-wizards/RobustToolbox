@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
@@ -32,7 +31,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             xform.SetParent(ent2, ent1);
 
-            xform1.LocalRotation = MathF.PI;
+            xform.SetLocalRotationNoLerp(ent1, MathF.PI, xform1);
 
             var (worldPos, worldRot, worldMatrix) = xform.GetWorldPositionRotationMatrix(xform2);
 

@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
-using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -204,7 +202,7 @@ public static class CompletionHelper
     {
         IoCManager.Resolve(ref players);
 
-        var playerOptions = players.Sessions.Select(p => new CompletionOption(p.Name));
+        var playerOptions = players.Sessions.Select(p => new CompletionOption(p.Name, p.UserId.UserId.ToString()));
         return sorted ? playerOptions.OrderBy(o => o.Value) : playerOptions;
     }
 
@@ -274,5 +272,48 @@ public static class CompletionHelper
     {
         IoCManager.Resolve(ref entManager);
         return GetComponents<T>(text, entManager, limit).Select(o => new CompletionOption(o.NetString, o.EntityName));
+    }
+
+    /// <summary>
+    /// Gets AutoComplete options from list of all loaded <see cref="EntityPrototype"/>
+    /// filtered by provided <see cref="EntityCategoryPrototype"/>
+    /// and substring (filter by StartsWith on <see cref="EntityPrototype.Description"/>
+    /// and <see cref="EntityPrototype.ID"/>).
+    /// </summary>
+    /// <param name="filterWith">
+    /// Text to be used for filtering entity prototypes by <see cref="EntityPrototype.ID"/>
+    /// and <see cref="EntityPrototype.Name"/>. Will not do filtering in case null was provided.
+    /// </param>
+    /// <param name="category">Get entity prototypes that belong to this category.</param>
+    /// <param name="prototype">Prototype manager to be used (in case it was provided).</param>
+    /// <param name="limit">Amount of rows to return (in case source collection will have more rows after filtering applied).</param>
+    public static IEnumerable<CompletionOption> EntityPrototypes(
+        string? filterWith,
+        ProtoId<EntityCategoryPrototype> category,
+        IPrototypeManager? prototype = null,
+        int limit = 20
+    )
+    {
+        IoCManager.Resolve(ref prototype);
+
+        if (!prototype.TryGetEntityPrototypesByCategory(category, out var found))
+            yield break;
+
+        var isTextFilterEmpty = string.IsNullOrWhiteSpace(filterWith);
+        var index = 0;
+        var returnedCount = 0;
+        while (returnedCount < limit && index < found.Count)
+        {
+            var current = found[index];
+            index++;
+            var name = current.Name;
+            if (!isTextFilterEmpty
+                && !current.ID.Contains(filterWith!, StringComparison.InvariantCultureIgnoreCase)
+                && !name.Contains(filterWith!, StringComparison.InvariantCultureIgnoreCase))
+                continue;
+
+            returnedCount++;
+            yield return new CompletionOption(current.ID, name);
+        }
     }
 }

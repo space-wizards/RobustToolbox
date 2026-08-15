@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -434,7 +434,8 @@ public interface IPrototypeManager
     /// This will validate all known to <see cref="IReflectionManager"/>
     /// </summary>
     /// <remarks>
-    /// This will validate any field that has either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
+    /// This will validate any field that uses <see cref="ProtoId"/> or <see cref="EntProtoId"/>.
+    /// It also looks for these obsolete attributes: either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
     /// <see cref="DataFieldAttribute"/> with a <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.
     /// </remarks>
     /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection
@@ -564,11 +565,31 @@ public interface IPrototypeManager
     /// Entity prototypes grouped by their categories.
     /// </summary>
     FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; }
+
+    /// <summary>
+    /// Attempts to get a list of <see cref="EntityPrototype"/> that belongs to the provided <see cref="EntityCategoryPrototype"/>.
+    /// </summary>
+    /// <param name="category">Category id of the entity prototypes we want to get.</param>
+    /// <param name="prototypes">List of entity prototypes that form part category or null.</param>
+    /// <returns>True if the provided <see cref="EntityCategoryPrototype"/> id has a matching list of <see cref="EntityPrototype"/> False otherwise.</returns>
+    bool TryGetEntityPrototypesByCategory(ProtoId<EntityCategoryPrototype> category, [NotNullWhen(true)] out IReadOnlyList<EntityPrototype>? prototypes);
+
+    /// <summary>
+    /// Tries to get the list of all associated variants for a given prototype. 
+    /// </summary>
+    /// <param name="collectionMember">The prototype being indexed.</param>
+    /// <param name="collectionVariants">The collection of variants this prototype belongs to.</param>
+    /// <returns>Returns true if the prototype is part of a variant collection, false otherwise.</returns>
+    bool TryGetVariantCollection<T>(ProtoId<T> collectionMember, [NotNullWhen(true)] out List<ProtoId<T>>? collectionVariants) where T : class, IPrototype;
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager
 {
     event Action<DataNodeDocument>? LoadedData;
+
+    void ReloadPrototypesOrThrow(
+        Dictionary<Type, HashSet<string>> modified,
+        Dictionary<Type, HashSet<string>>? removed = null);
 }
 
 /// <summary>

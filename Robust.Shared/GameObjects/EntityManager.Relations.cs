@@ -75,10 +75,22 @@ public partial class EntityManager
     /// <inheritdoc/>
     public void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation relation)
     {
+        if (relation.Entity == null)
+            return;
+
         if (!_relationsQuery.Resolve(ent.Owner, ref ent.Comp))
             return;
 
+        var relationComp = _relationsQuery.Comp(relation.Entity.Value);
+
         ent.Comp.Relations.Remove(relation);
+        if (ent.Comp.Relations.Count == 0)
+            RemoveComponent(ent.Owner, ent.Comp);
+
+        relationComp.Relations.Remove(relation);
+        if (relationComp.Relations.Count == 0)
+            RemoveComponent(relation.Entity.Value, relationComp);
+
         relation = EntityRelation.Null;
     }
 }

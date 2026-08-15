@@ -370,10 +370,10 @@ namespace Robust.Shared.CompNetworkGenerator
                         cast = $"({GlobalNetEntityUidSetName})";
 
                         handleStateSetters.Append($@"
-            EnsureEntitySet<{componentName}>(state.{name}, uid, component.{name});");
+            EnsureEntitySetRelation<{componentName}>(state.{name}, uid, component.{name});");
 
                         deltaHandleFields.Append($@"
-                    EnsureEntitySet<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
+                    EnsureEntitySetRelation<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
 
                         AppendCollectionClone(name, nullable);
 

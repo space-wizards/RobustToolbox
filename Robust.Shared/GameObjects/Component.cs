@@ -226,6 +226,13 @@ namespace Robust.Shared.GameObjects
     public sealed class ComponentShutdown : EntityEventArgs { }
 
     /// <summary>
+    /// Shuts down the component's <see cref="EntityRelation"/> fields.
+    /// This is called right before <see cref="ComponentRemove"/>.
+    /// </summary>
+    [ComponentEvent]
+    public readonly record struct ComponentRelationsRemove;
+
+    /// <summary>
     /// The component has been removed from the entity. This is the last function
     /// that is called before the component is freed.
     /// </summary>

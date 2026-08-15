@@ -18,10 +18,10 @@ public partial class EntityManager
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
             EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
 
+        relation.Entity = entity;
+
         entityRelations.Relations.Add(new EntityRelation(owner));
         owner.Comp.Relations.Add(relation);
-
-        relation.Entity = entity;
     }
 
     /// <inheritdoc/>
@@ -84,11 +84,11 @@ public partial class EntityManager
         var relationComp = _relationsQuery.Comp(relation.Entity.Value);
 
         ent.Comp.Relations.Remove(relation);
-        if (ent.Comp.Relations.Count == 0)
+        if (ent.Comp.Relations.Count == 0 && ent.Comp.LifeStage < ComponentLifeStage.Stopping)
             RemoveComponent(ent.Owner, ent.Comp);
 
-        relationComp.Relations.Remove(relation);
-        if (relationComp.Relations.Count == 0)
+        relationComp.Relations.Remove(new EntityRelation(ent.Owner));
+        if (relationComp.Relations.Count == 0 && relationComp.LifeStage < ComponentLifeStage.Stopping)
             RemoveComponent(relation.Entity.Value, relationComp);
 
         relation = EntityRelation.Null;

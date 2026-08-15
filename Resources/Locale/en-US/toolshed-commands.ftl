@@ -122,8 +122,6 @@ command-description-splat =
     "Splats" a block, value, or variable, creating N copies of it in a list.
 command-description-val =
     Casts the given value, block, or variable to the given type. This is mostly a workaround for current limitations of variables.
-command-description-valarr =
-    Helper command to construct an array of values of the given type.
 command-description-var =
     Returns the contents of the given variable. This will attempt to automatically infer a variables type. Compound commands that modify a variable may need to use the 'val' command instead.
 command-description-actor-controlled =

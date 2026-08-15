@@ -1,50 +1,57 @@
-using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using Robust.Shared.Console;
-using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
-using Robust.Shared.Toolshed.TypeParsers;
+using Robust.Shared.Toolshed.TypeParsers.Math;
 using Robust.Shared.Utility;
 
-namespace Content.Shared.Toolshed;
+namespace Robust.Shared.Toolshed.TypeParsers;
 
 public sealed class ListTypeParser<T> : TypeParser<List<T>>
 {
-    public override bool TryParse(ParserContext ctx, out List<T> result)
+    public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out List<T>? result)
     {
         ctx.ConsumeWhitespace();
+        result = null;
 
         if (!ctx.EatMatch('['))
         {
-            ctx.Error = new ExpectedTokenError(["["]);
-            result = [];
+            ctx.Error = new ExpectedOpenBrace();
             return false;
         }
 
         var values = new List<T>();
 
-        var (minLength, maxLength) = GetLengthParameters(ctx);
+        var (minLength, maxLength) = GetLengthParameters(ctx.CurrentArgument);
+
+        ctx.ConsumeWhitespace();
+        if (ctx.EatMatch(']'))
+        {
+            if (minLength > 0)
+            {
+                ctx.Error = new NotEnoughElementsError(minLength);
+                return false;
+            }
+
+            result = values;
+            return true;
+        }
 
         while (true)
         {
             ctx.ConsumeWhitespace();
 
             if (!Toolshed.TryParse(ctx, out T? value))
-            {
-                result = [];
                 return false;
-            }
 
             values.Add(value);
 
             if (maxLength >= 0 && values.Count > maxLength)
             {
                 ctx.Error = new TooManyElementsError(maxLength);
-                result = [];
                 return false;
             }
 
@@ -58,23 +65,21 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
                 if (values.Count < minLength)
                 {
                     ctx.Error = new NotEnoughElementsError(minLength);
-                    result = [];
                     return false;
                 }
 
-                result = new List<T>(values.ToArray());
+                result = values;
                 return true;
             }
 
             ctx.Error = new ExpectedTokenError([",", "]"]);
-            result = [];
             return false;
         }
     }
 
     public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
-        var hint = ToolshedCommand.GetArgHint(arg, typeof(List<T>));
+        var hint = GetArgHint(arg);
 
         ctx.ConsumeWhitespace();
 
@@ -88,7 +93,7 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
                 hint);
         }
 
-        var (minLength, maxLength) = GetLengthParameters(ctx);
+        var (minLength, maxLength) = GetLengthParameters(arg);
         int count = 0;
 
         while (true)
@@ -104,13 +109,16 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
             if (!Toolshed.TryParse(ctx, out T? _))
             {
                 ctx.Restore(restore);
+
+                // TODO TOOLSHED fix
+                ctx.Error = null;
+
                 var result = Toolshed.TryAutocomplete(ctx, typeof(T), arg);
                 if (result is null) return result;
-                List<CompletionOption> opts = [];
-                opts.AddRange(result.Options.Select(opt =>
+                var opts = result.Options.Select(opt =>
                     new CompletionOption(opt.Value,
                         opt.Hint,
-                        opt.Flags | CompletionOptionFlags.IgnoreCurrent | CompletionOptionFlags.AppendOnly)));
+                        opt.Flags | CompletionOptionFlags.NoFilter | CompletionOptionFlags.AppendOnly));
                 return new CompletionResult(opts.ToArray(), result.Hint);
             }
 
@@ -124,14 +132,14 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
                 if (maxLength < 0 || maxLength > count)
                 {
                     opts.Add(new CompletionOption(",",
-                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.IgnoreCurrent |
+                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.NoFilter |
                                CompletionOptionFlags.AppendOnly));
                 }
 
                 if (count >= minLength || count >= maxLength)
                 {
                     opts.Add(new CompletionOption("]",
-                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.IgnoreCurrent |
+                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.NoFilter |
                                CompletionOptionFlags.AppendOnly));
                 }
 
@@ -146,30 +154,18 @@ public sealed class ListTypeParser<T> : TypeParser<List<T>>
 
             return CompletionResult.FromHintOptions([
                     new CompletionOption("]",
-                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.IgnoreCurrent |
+                        Flags: CompletionOptionFlags.NoEscape | CompletionOptionFlags.NoFilter |
                                CompletionOptionFlags.AppendOnly)
                 ],
                 hint);
         }
     }
 
-    private (int minLength, int maxLength) GetLengthParameters(ParserContext ctx)
+    private (int minLength, int maxLength) GetLengthParameters(CommandArgument? arg)
     {
-        if (ctx.Bundle.CommandMethod is null)
-            throw new Exception("There is no situation in which these should be null. Something is horribly wrong.");
-
-        var parameters = ctx.Bundle.CommandMethod.Value.Info
-            .GetParameters()
-            .Where(p => p.ParameterType != typeof(IInvocationContext))
-            .ToArray();
-
-        var argIndex = ctx.Bundle.Arguments?.Count ?? 0;
-
-        var attr = parameters[argIndex].GetCustomAttribute<ListLengthAttribute>();
-
         return (
-            attr?.MinLength ?? 0,
-            attr?.MaxLength ?? -1
+            arg?.ListLengthAttribute?.MinLength ?? 0,
+            arg?.ListLengthAttribute?.MaxLength ?? -1
         );
     }
 }

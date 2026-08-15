@@ -32,7 +32,7 @@ public sealed partial class EntityRelationsSystem : EntitySystem
     /// This is used to prevent <see cref="EntityRelationsComponent"/>
     /// from modifying its own set during enumeration.
     /// </summary>
-    private void ClearRelationCopy(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relations)
+    private void ClearRelationCopy(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations)
     {
         var copyList = new ValueList<EntityRelation>(relations);
         foreach (var relation in copyList)

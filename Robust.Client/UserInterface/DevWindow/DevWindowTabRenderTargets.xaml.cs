@@ -127,10 +127,9 @@ internal sealed partial class DevWindowTabRenderTargets : Control
             // Disable texture thumbnails outside TOOLS.
             // Avoid people cheating by using devwindow to see through walls. Barely.
 #if TOOLS
-            if (instance is IRenderTexture renderTexture)
+            if (instance is IRenderTexture renderTexture &&
+                CloneTexture(renderTexture.Texture, loaded.ColorFormat) is { } clone)
             {
-                var clone = CloneTexture(renderTexture.Texture, loaded.ColorFormat);
-
                 _copyTextures.Add(clone);
 
                 AddColumn(new TextureRect
@@ -191,9 +190,10 @@ internal sealed partial class DevWindowTabRenderTargets : Control
     }
 
 #if TOOLS
-    private IRenderTexture CloneTexture(Texture texture, RTCF colorFormat)
+    private IRenderTexture? CloneTexture(Texture texture, RTCF colorFormat)
     {
-        var thumbnailSize = GetThumbnailSize(texture.Size);
+        if (!TryGetThumbnailSize(texture.Size, out var thumbnailSize))
+            return null;
 
         var rt = _clyde.CreateRenderTarget(
             thumbnailSize,
@@ -217,7 +217,7 @@ internal sealed partial class DevWindowTabRenderTargets : Control
         return rt;
     }
 
-    internal static Vector2i GetThumbnailSize(Vector2i textureSize)
+    internal static bool TryGetThumbnailSize(Vector2i textureSize, out Vector2i thumbnailSize)
     {
         const int maxHeight = 50;
         const int maxWidth = 100;
@@ -236,7 +236,8 @@ internal sealed partial class DevWindowTabRenderTargets : Control
             w = maxWidth;
         }
 
-        return new Vector2i(Math.Max(1, (int)w), Math.Max(1, (int)h));
+        thumbnailSize = new Vector2i((int)w, (int)h);
+        return thumbnailSize.X > 0 && thumbnailSize.Y > 0;
     }
 #endif // TOOLS
 }

@@ -11,13 +11,21 @@ public sealed class DevWindowTabRenderTargetsTest
 {
     [TestCase(50, 25, 50, 25)]
     [TestCase(200, 100, 100, 50)]
-    [TestCase(2048, 2, 100, 1)]
-    [TestCase(2, 2048, 1, 50)]
     public void TestThumbnailSize(int width, int height, int expectedWidth, int expectedHeight)
     {
-        var size = DevWindowTabRenderTargets.GetThumbnailSize(new Vector2i(width, height));
+        var result = DevWindowTabRenderTargets.TryGetThumbnailSize(new Vector2i(width, height), out var size);
 
+        Assert.That(result, Is.True);
         Assert.That(size, Is.EqualTo(new Vector2i(expectedWidth, expectedHeight)));
+    }
+
+    [TestCase(2048, 2)]
+    [TestCase(2, 2048)]
+    public void TestEmptyThumbnailSize(int width, int height)
+    {
+        var result = DevWindowTabRenderTargets.TryGetThumbnailSize(new Vector2i(width, height), out _);
+
+        Assert.That(result, Is.False);
     }
 }
 #endif

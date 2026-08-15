@@ -22,7 +22,19 @@ public sealed class AutoGenerateEntityRelationsAttribute : Attribute
     ///     <see cref="IEntityManager.Dirty(EntityUid,IComponent,MetaDataComponent)"/> after resetting the related entity.
     ///     This is automatically inferred for fields marked <see cref="AutoNetworkedFieldAttribute"/>.
     /// </summary>
-    public bool Dirty = false;
+    public readonly bool Dirty;
+
+    /// <summary>
+    ///     Whenever the generated code should subscribe to the <see cref="ComponentShutdown"/> event.
+    ///     in order to clear the related links.
+    /// </summary>
+    public readonly bool ShutdownEvent;
+
+    public AutoGenerateEntityRelationsAttribute(bool dirty = false, bool shutdownEvent = true)
+    {
+        Dirty = dirty;
+        ShutdownEvent = shutdownEvent;
+    }
 }
 
 /// <summary>

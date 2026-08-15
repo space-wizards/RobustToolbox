@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using Robust.Shared.Collections;
-
-namespace Robust.Shared.GameObjects;
+﻿namespace Robust.Shared.GameObjects;
 
 /// <summary>
 /// A system that manually handles <see cref="EntityRelationsComponent"/>'s entity relation events,
@@ -10,37 +7,15 @@ namespace Robust.Shared.GameObjects;
 public sealed partial class EntityRelationsSystem : EntitySystem
 {
     [SubscribeLocalEvent]
-    private void OnEntityRelationDelete(Entity<EntityRelationsComponent> ent, ref EntityTerminatingEvent args)
-    {
-        ClearRelations(ent.AsNullable());
-    }
-
-    [SubscribeLocalEvent]
     private static void OnEntityRelationDelete(Entity<EntityRelationsComponent> ent, ref EntityRelationDeleteEvent args)
     {
         ent.Comp.Relations.Remove(args.Relation);
     }
 
     [SubscribeLocalEvent]
-    private void OnEntityRelationDelete(Entity<EntityRelationsComponent> ent, ref ComponentRelationsRemove args)
+    private void OnEntityRelationDelete(Entity<EntityRelationsComponent> ent, ref ComponentShutdown args)
     {
-        ClearRelationCopy(ent.AsNullable(), ent.Comp.Relations);
-    }
-
-    /// <summary>
-    /// Copies a set of relations and clears all relations.
-    /// This is used to prevent <see cref="EntityRelationsComponent"/>
-    /// from modifying its own set during enumeration.
-    /// </summary>
-    private void ClearRelationCopy(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations)
-    {
-        var copyList = new ValueList<EntityRelation>(relations);
-        foreach (var relation in copyList)
-        {
-            var copy = relation;
-            ClearRelation(ent, ref copy);
-        }
-        relations.Clear();
+        ClearRelations(ent.AsNullable());
     }
 }
 

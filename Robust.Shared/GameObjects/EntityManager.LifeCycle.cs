@@ -8,7 +8,6 @@ public partial class EntityManager
     private static readonly ComponentInit CompInitInstance = new();
     private static readonly ComponentStartup CompStartupInstance = new();
     private static readonly ComponentShutdown CompShutdownInstance = new();
-    private static readonly ComponentRelationsRemove CompRemoveRelationsInstance = new();
     private static readonly ComponentRemove CompRemoveInstance = new();
 
     /// <summary>
@@ -77,7 +76,6 @@ public partial class EntityManager
         }
 
         component.LifeStage = ComponentLifeStage.Stopping;
-        EventBusInternal.RaiseComponentEvent(uid, component, idx, CompRemoveRelationsInstance);
         EventBusInternal.RaiseComponentEvent(uid, component, idx, CompShutdownInstance);
         component.LifeStage = ComponentLifeStage.Stopped;
     }

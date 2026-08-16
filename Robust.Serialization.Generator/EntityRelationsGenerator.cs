@@ -13,43 +13,12 @@ namespace Robust.Serialization.Generator;
 [Generator(LanguageNames.CSharp)]
 public sealed class EntityRelationsGenerator : IIncrementalGenerator
 {
-    private const string AutoGenerateEntityRelationsAttributeName = "Robust.Shared.Analyzers.AutoGenerateEntityRelationsAttribute";
-    private const string AutoRelationFieldAttributeName = "Robust.Shared.Analyzers.AutoRelationFieldAttribute";
-    private const string AutoNetworkFieldAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
+    public const string AutoGenerateEntityRelationsAttributeName = "Robust.Shared.Analyzers.AutoGenerateEntityRelationsAttribute";
+    public const string AutoRelationFieldAttributeName = "Robust.Shared.Analyzers.AutoRelationFieldAttribute";
     // ReSharper disable once InconsistentNaming
-    private const string IComponentTypeName = "Robust.Shared.GameObjects.IComponent";
+    public const string IComponentTypeName = "Robust.Shared.GameObjects.IComponent";
 
-    private static readonly DiagnosticDescriptor NotComponentDiagnostic = new(
-        Diagnostics.IdComponentRelationNotComponent,
-        "Class must be an IComponent to use AutoGenerateEntityRelations",
-        "Class '{0}' must implement IComponent to be used with [AutoGenerateEntityRelations]",
-        "Usage",
-        DiagnosticSeverity.Error,
-        true);
-
-    private static readonly DiagnosticDescriptor NoFieldsDiagnostic = new(
-        Diagnostics.IdComponentRelationNoFields,
-        "AutoGenerateEntityRelations has no fields",
-        "Class '{0}' has [AutoGenerateEntityRelations] but has no fields or properties with [AutoRelationField]",
-        "Usage",
-        DiagnosticSeverity.Warning,
-        true);
-
-    private static readonly DiagnosticDescriptor NoParentAttributeDiagnostic = new(
-        Diagnostics.IdComponentRelationNoParentAttribute,
-        "AutoRelationField on type of field without AutoGenerateEntityRelations",
-        "Field '{0}' has [AutoRelationField] but its containing type does not have [AutoGenerateEntityRelations]",
-        "Usage",
-        DiagnosticSeverity.Error,
-        true);
-
-    private static readonly DiagnosticDescriptor WrongTypeAttributeDiagnostic = new(
-        Diagnostics.IdComponentRelationWrongTypeAttribute,
-        "AutoRelationField has wrong type",
-        "Field '{0}' has [AutoRelationField] but is not of type EntityRelation",
-        "Usage",
-        DiagnosticSeverity.Error,
-        true);
+    private const string AutoNetworkFieldAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -125,7 +94,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                     if (AttributeHelper.HasAttribute(member, AutoNetworkFieldAttributeName, out var _))
                         dirty = true;
 
-                    fieldBuilder.Add(new FieldInfo(member.Name, nullable, invalid, dictionaryKey, dictionaryValue, collection, member.Locations[0]));
+                    fieldBuilder.Add(new FieldInfo(member.Name, nullable, invalid, dictionaryKey, dictionaryValue, collection));
                 }
 
                 return new ComponentInfo(
@@ -133,46 +102,28 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                     EquatableArray<FieldInfo>.FromImmutableArray(fieldBuilder.ToImmutable()),
                     dirty,
                     shutdownSub,
-                    !TypeSymbolHelper.ImplementsInterface(symbol, IComponentTypeName),
-                    typeDeclarationSyntax.Identifier.GetLocation());
+                    !TypeSymbolHelper.ImplementsInterface(symbol, IComponentTypeName));
             });
 
-        context.RegisterImplementationSourceOutput(componentInfos, static (productionContext, info) =>
+        context.RegisterImplementationSourceOutput(componentInfos,
+            static (productionContext, info) =>
         {
             if (info.NotComponent)
-            {
-                productionContext.ReportDiagnostic(Diagnostic.Create(
-                    NotComponentDiagnostic,
-                    info.Location,
-                    info.PartialTypeInfo.Name));
                 return;
-            }
 
-            // Component always have to be partial anyways due to the serialization generator.
-            // So I can't be arsed to define a diagnostic for this.
             if (!info.PartialTypeInfo.IsValid)
                 return;
 
             if (info.Fields.AsImmutableArray().Length == 0)
-            {
-                productionContext.ReportDiagnostic(Diagnostic.Create(
-                    NoFieldsDiagnostic,
-                    info.Location,
-                    info.PartialTypeInfo.Name));
                 return;
-            }
 
             var relationBuilder = new StringBuilder();
             var shutdownBuilder = new StringBuilder();
-
             var anyValidField = false;
             foreach (var field in info.Fields)
             {
                 if (field.Invalid)
-                {
-                    productionContext.ReportDiagnostic(Diagnostic.Create(WrongTypeAttributeDiagnostic, field.Location));
                     continue;
-                }
 
                 if (field.Nullable)
                 {
@@ -286,49 +237,20 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
 
             productionContext.AddSource(info.PartialTypeInfo.GetGeneratedFileName(), result.ToString());
         });
-
-        // Code to report diagnostic for fields that have it but don't have the attribute on the parent.
-        var allFields = context.SyntaxProvider.ForAttributeWithMetadataName(
-            AutoRelationFieldAttributeName,
-            (syntaxNode, _) => syntaxNode is VariableDeclaratorSyntax or PropertyDeclarationSyntax,
-            (syntaxContext, _) =>
-            {
-                var errorTarget = syntaxContext.TargetNode is PropertyDeclarationSyntax prop
-                    ? prop.Identifier.GetLocation()
-                    : syntaxContext.TargetNode.GetLocation();
-                return new AllFieldInfo(
-                    syntaxContext.TargetSymbol.Name,
-                    syntaxContext.TargetSymbol.ContainingType.ToDisplayString(),
-                    errorTarget);
-            });
-
-        var allComponentsTogether = componentInfos.Collect();
-        var allFieldsTogether = allFields.Collect();
-        var componentFieldJoin = allFieldsTogether.Combine(allComponentsTogether);
-
-        context.RegisterImplementationSourceOutput(componentFieldJoin, (productionContext, info) =>
-        {
-            var componentsByName = new HashSet<string>(info.Right.Select(x => x.PartialTypeInfo.DisplayName));
-            foreach (var field in info.Left)
-            {
-                if (!componentsByName.Contains(field.ParentDisplayName))
-                {
-                    productionContext.ReportDiagnostic(
-                        Diagnostic.Create(NoParentAttributeDiagnostic, field.Location, field.Name));
-                }
-            }
-        });
     }
 
-    public sealed record ComponentInfo(
+    private record struct ComponentInfo(
         PartialTypeInfo PartialTypeInfo,
         EquatableArray<FieldInfo> Fields,
         bool Dirty,
         bool ShutdownEvent,
-        bool NotComponent,
-        Location Location);
+        bool NotComponent);
 
-    public sealed record FieldInfo(string Name, bool Nullable, bool Invalid, bool DictionaryKey, bool DictionaryValue, bool Collection, Location Location);
-
-    public sealed record AllFieldInfo(string Name, string ParentDisplayName, Location Location);
+    private record struct FieldInfo(
+        string Name,
+        bool Nullable,
+        bool Invalid,
+        bool DictionaryKey,
+        bool DictionaryValue,
+        bool Collection);
 }

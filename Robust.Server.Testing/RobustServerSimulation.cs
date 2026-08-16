@@ -346,6 +346,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<ServerChunkEntitySystem>();
             entitySystemMan.LoadExtraSystemType<InputSystem>();
             entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();
+            entitySystemMan.LoadExtraSystemType<EntityRelationsSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

@@ -70,7 +70,8 @@ public partial interface IEntityManager
     /// making the entity unreferenced by any other components.
     /// </summary>
     /// <remarks>
-    /// This method is called automatically during the deletion of an <see cref="EntityRelationsComponent"/> entity.
+    /// This method is called automatically during shutdown of the <see cref="EntityRelationsComponent"/> entity.
+    ///
     /// </remarks>
     public void ClearRelations(Entity<EntityRelationsComponent?> ent);
 

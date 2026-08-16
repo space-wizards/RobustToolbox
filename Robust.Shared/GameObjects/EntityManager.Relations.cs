@@ -50,7 +50,7 @@ public partial class EntityManager
     public void ClearRelations(EntityRelation relation, EntityRelationsComponent? relations = null)
     {
         if (relation.Entity == null)
-            return; // Already cleared
+            return;
 
         if (!_relationsQuery.Resolve(relation.Entity.Value, ref relations))
             return;
@@ -62,6 +62,8 @@ public partial class EntityManager
                 continue;
 
             EventBus.RaiseLocalEvent(related.Entity.Value, ref ev);
+
+            RemoveRelationCompIfEmpty(related.Entity.Value);
         }
     }
 
@@ -84,12 +86,10 @@ public partial class EntityManager
         var relationComp = _relationsQuery.Comp(relation.Entity.Value);
 
         ent.Comp.Relations.Remove(relation);
-        if (ent.Comp.Relations.Count == 0 && ent.Comp.LifeStage < ComponentLifeStage.Stopping)
-            RemoveComponent(ent.Owner, ent.Comp);
+        RemoveRelationCompIfEmpty(ent);
 
         relationComp.Relations.Remove(new EntityRelation(ent.Owner));
-        if (relationComp.Relations.Count == 0 && relationComp.LifeStage < ComponentLifeStage.Stopping)
-            RemoveComponent(relation.Entity.Value, relationComp);
+        RemoveRelationCompIfEmpty((relation.Entity.Value, relationComp));
 
         relation = EntityRelation.Null;
     }
@@ -147,5 +147,14 @@ public partial class EntityManager
             ClearRelation(ent, ref copy);
             relations[key] = copy;
         }
+    }
+
+    private void RemoveRelationCompIfEmpty(Entity<EntityRelationsComponent?> ent)
+    {
+        if (!_relationsQuery.Resolve(ent.Owner, ref ent.Comp))
+            return;
+
+        if (ent.Comp.Relations.Count == 0 && ent.Comp.LifeStage < ComponentLifeStage.Stopping)
+            RemoveComponent(ent.Owner, ent.Comp);
     }
 }

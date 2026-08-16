@@ -25,7 +25,7 @@ public sealed class AutoGenerateEntityRelationsAttribute : Attribute
     public readonly bool Dirty;
 
     /// <summary>
-    ///     Whenever the generated code should subscribe to the <see cref="ComponentShutdown"/> event.
+    ///     Whether the generated code should subscribe to the <see cref="ComponentShutdown"/> event.
     ///     in order to clear the related links.
     /// </summary>
     public readonly bool ShutdownEvent;
@@ -44,7 +44,8 @@ public sealed class AutoGenerateEntityRelationsAttribute : Attribute
 ///     The type of the field must be <see cref="EntityRelation"/>,
 ///     an <see cref="IEnumerable{T}"/> listing EntityRelations,
 ///     or a Dictionary with EntityRelation as a key or a value.
-///     For all other use cases handle the
+///     For all other use cases handle the relations deletion manually using
+///     <see cref="EntityRelationDeleteEvent"/> and <see cref="ComponentShutdown"/>.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public sealed class AutoRelationFieldAttribute : Attribute;

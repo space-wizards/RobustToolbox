@@ -8,13 +8,13 @@ using Robust.Roslyn.Shared.Helpers;
 namespace Robust.Serialization.Generator;
 
 /// <summary>
-/// Automatically generates implementations for handling timer unpausing.
+/// Automatically generates implementations for handling entity relation reference resetting.
 /// </summary>
 [Generator(LanguageNames.CSharp)]
 public sealed class EntityRelationsGenerator : IIncrementalGenerator
 {
-    private const string AutoGenerateComponentPauseAttributeName = "Robust.Shared.Analyzers.AutoGenerateEntityRelationsAttribute";
-    private const string AutoPausedFieldAttributeName = "Robust.Shared.Analyzers.AutoRelationFieldAttribute";
+    private const string AutoGenerateEntityRelationsAttributeName = "Robust.Shared.Analyzers.AutoGenerateEntityRelationsAttribute";
+    private const string AutoRelationFieldAttributeName = "Robust.Shared.Analyzers.AutoRelationFieldAttribute";
     private const string AutoNetworkFieldAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
     // ReSharper disable once InconsistentNaming
     private const string IComponentTypeName = "Robust.Shared.GameObjects.IComponent";
@@ -54,7 +54,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var componentInfos = context.SyntaxProvider.ForAttributeWithMetadataName(
-            AutoGenerateComponentPauseAttributeName,
+            AutoGenerateEntityRelationsAttributeName,
             (syntaxNode, _) => syntaxNode is TypeDeclarationSyntax,
             (syntaxContext, _) =>
             {
@@ -79,7 +79,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                 var fieldBuilder = ImmutableArray.CreateBuilder<FieldInfo>();
                 foreach (var member in symbol.GetMembers())
                 {
-                    if (!AttributeHelper.HasAttribute(member, AutoPausedFieldAttributeName, out var _))
+                    if (!AttributeHelper.HasAttribute(member, AutoRelationFieldAttributeName, out var _))
                         continue;
 
                     var type = member switch
@@ -121,7 +121,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                         }
                     }
 
-                    // If any pause field has [AutoNetworkedField], automatically mark it to dirty on unpause.
+                    // If any relation field has [AutoNetworkedField], automatically mark it to dirty on reference reset.
                     if (AttributeHelper.HasAttribute(member, AutoNetworkFieldAttributeName, out var _))
                         dirty = true;
 
@@ -194,8 +194,8 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                     relationBuilder.AppendLine($$"""
                                 foreach (var (key, value) in ent.Comp.{{field.Name}})
                                 {
-                                    if (ent.Comp.{{field.Name}}[key] == args.Relation)
-                                    ent.Comp.{{field.Name}}[key] = EntityRelation.Null;
+                                    if (value == args.Relation)
+                                        ent.Comp.{{field.Name}}[key] = EntityRelation.Null;
                                 }
                         """);
 
@@ -289,7 +289,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
 
         // Code to report diagnostic for fields that have it but don't have the attribute on the parent.
         var allFields = context.SyntaxProvider.ForAttributeWithMetadataName(
-            AutoPausedFieldAttributeName,
+            AutoRelationFieldAttributeName,
             (syntaxNode, _) => syntaxNode is VariableDeclaratorSyntax or PropertyDeclarationSyntax,
             (syntaxContext, _) =>
             {

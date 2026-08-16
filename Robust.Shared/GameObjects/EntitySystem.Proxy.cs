@@ -2024,12 +2024,20 @@ public partial class EntitySystem
 
     #region Entity Relations
 
-    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelation"/>
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation, EntityUid?, bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
-    protected void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity)
+    protected void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity, bool dirty = true)
     {
-        EntityManager.SetRelation(owner, ref relation, entity);
+        EntityManager.SetRelation(owner, ref relation, entity, dirty);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation?, EntityUid?, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, EntityUid? entity, bool dirty = true)
+    {
+        EntityManager.SetRelation(owner, ref relation, entity, dirty);
     }
 
     /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelations(Entity{EntityRelationsComponent?}, List{EntityRelation}, List{EntityUid})"/>

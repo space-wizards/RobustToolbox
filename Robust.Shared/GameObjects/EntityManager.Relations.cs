@@ -6,7 +6,7 @@ namespace Robust.Shared.GameObjects;
 public partial class EntityManager
 {
     /// <inheritdoc/>
-    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity)
+    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity, bool dirty = true)
     {
         DebugTools.Assert(owner.Owner != entity,
             $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
@@ -26,13 +26,19 @@ public partial class EntityManager
 
         entityRelations.Relations.Add(new EntityRelation(owner));
         owner.Comp.Relations.Add(relation);
+
+        if (!dirty)
+            return;
+
+        Dirty(entity.Value, entityRelations);
+        Dirty(owner.Owner, owner.Comp);
     }
 
     /// <inheritdoc/>
-    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, EntityUid? entity)
+    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, EntityUid? entity, bool dirty = true)
     {
         var copy = relation ?? EntityRelation.Null;
-        SetRelation(owner, ref copy, entity);
+        SetRelation(owner, ref copy, entity, dirty);
         relation = copy;
     }
 

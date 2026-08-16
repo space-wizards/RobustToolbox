@@ -17,10 +17,14 @@ public partial interface IEntityManager
     /// <param name="entity">
     /// An entity that will become related to <see cref="owner"/> and stored in the <see cref="relation"/>.
     /// </param>
-    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity);
+    /// <param name="dirty">
+    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
+    /// Use this if you want to make a custom networking setup.
+    /// </param>
+    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity, bool dirty = true);
 
-    /// <inheritdoc cref="SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation, EntityUid?)"/>
-    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, EntityUid? entity);
+    /// <inheritdoc cref="SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation, EntityUid?, bool)"/>
+    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, EntityUid? entity, bool dirty = true);
 
     /// <summary>
     /// Sets a list of entities to have a relation with an <see cref="owner"/> entity.

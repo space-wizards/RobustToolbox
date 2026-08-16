@@ -42,9 +42,8 @@ public sealed partial class DebugConsole
 
     private void InitCompletions()
     {
-        CommandBar.OnTextTyped += CommandBarOnOnTextTyped;
         CommandBar.OnFocusExit += CommandBarOnOnFocusExit;
-        CommandBar.OnTextRemoved += CommandBarOnTextRemoved;
+        CommandBar.OnTextChanged += CommandBarOnTextChanged;
     }
 
     private void CommandBarOnOnFocusExit(LineEdit.LineEditEventArgs obj)
@@ -52,22 +51,10 @@ public sealed partial class DebugConsole
         AbortActiveCompletions();
     }
 
-    private void CommandBarOnOnTextTyped(GUITextEnteredEventArgs obj)
+    private void CommandBarOnTextChanged(LineEdit.LineEditEventArgs args)
     {
-        TypeUpdateCompletions(true);
-    }
-
-    private void CommandBarOnTextRemoved(LineEdit.LineEditTextRemovedEventArgs eventArgs)
-    {
-        if (eventArgs.OldCursorPosition == 0 || eventArgs.OldSelectionStart != eventArgs.OldCursorPosition)
+        if (args.Text.Length == 0)
         {
-            AbortActiveCompletions();
-            return;
-        }
-
-        if (CommandBar.CursorPosition == 0)
-        {
-            // Don't do completions if you have nothing typed.
             AbortActiveCompletions();
             return;
         }

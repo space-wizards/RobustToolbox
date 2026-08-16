@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -7,6 +8,9 @@ public partial class EntityManager
     /// <inheritdoc/>
     public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity)
     {
+        DebugTools.Assert(owner.Owner != entity,
+            $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
+
         if (!entity.HasValue)
         {
             relation.Entity = null;
@@ -29,6 +33,9 @@ public partial class EntityManager
     {
         foreach (var entity in entities)
         {
+            DebugTools.Assert(owner.Owner != entity,
+                $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
+
             var relation = EntityRelation.Null;
             SetRelation(owner, ref relation, entity);
             relations.Add(relation);
@@ -40,6 +47,9 @@ public partial class EntityManager
     {
         foreach (var entity in entities)
         {
+            DebugTools.Assert(owner.Owner != entity,
+                $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
+
             var relation = EntityRelation.Null;
             SetRelation(owner, ref relation, entity);
             relations.Add(relation);
@@ -62,7 +72,6 @@ public partial class EntityManager
                 continue;
 
             EventBus.RaiseLocalEvent(related.Entity.Value, ref ev);
-
             RemoveRelationCompIfEmpty(related.Entity.Value);
         }
     }

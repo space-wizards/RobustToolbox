@@ -116,6 +116,16 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public IClydeMonitor? GetWindowMonitor(IClydeWindow window)
+        {
+            return null;
+        }
+
+        public IClydeMonitor? GetMainWindowMonitor()
+        {
+            return null;
+        }
+
         public void RequestWindowAttention()
         {
             // Nada.
@@ -587,6 +597,11 @@ namespace Robust.Client.Graphics.Clyde
             public event Action<WindowRequestClosedEventArgs>? RequestClosed { add { } remove { } }
             public event Action<WindowDestroyedEventArgs>? Destroyed;
             public event Action<WindowResizedEventArgs>? Resized { add { } remove { } }
+
+            public void SetRelativeMouseMode(bool enabled)
+            {
+                // Nop.
+            }
 
             public void SetWindowProgress(WindowProgressState state, float value)
             {

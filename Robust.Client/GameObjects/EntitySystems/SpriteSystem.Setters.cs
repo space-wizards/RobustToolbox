@@ -30,7 +30,7 @@ public sealed partial class SpriteSystem
         if (!ValidateScale(sprite!, value))
             return;
 
-        sprite.Comp._bounds = sprite.Comp._bounds.Scale(value / sprite.Comp.scale);
+        sprite.Comp._bounds = sprite.Comp._bounds.Scale(Vector2.Abs(value) / Vector2.Abs(sprite.Comp.scale));
         sprite.Comp.scale = value;
         sprite.Comp.LocalMatrix = Matrix3Helpers.CreateTransform(
             in sprite.Comp.offset,

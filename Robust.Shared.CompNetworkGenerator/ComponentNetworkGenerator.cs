@@ -50,7 +50,8 @@ namespace Robust.Shared.CompNetworkGenerator
             TypeDeclarationSyntax classSyntax,
             CSharpCompilation comp,
             bool raiseAfterAutoHandle,
-            bool fieldDeltas)
+            bool fieldDeltas,
+            bool excludeReplays)
         {
             var partialInfo = PartialTypeInfo.FromSymbol(classSymbol, classSyntax);
             var componentName = classSymbol.Name;
@@ -607,7 +608,7 @@ namespace Robust.Shared.CompNetworkGenerator
                 deltaNetRegister = $@"EntityManager.ComponentFactory.RegisterNetworkedFields<{classSymbol}>({fieldsStr});";
 
                 deltaGetState = @$"// Delta state
-            if (component is IComponentDelta delta)
+            if (component is IComponentDelta delta && args.FromTick > component.CreationTick)
             {{
                 var aspects = EntityManager.GetModifiedAspects(component, args.FromTick);
 
@@ -695,11 +696,24 @@ namespace Robust.Shared.CompNetworkGenerator
             }}{eventRaise}";
             }
 
+            var excludeReplaysStr = string.Empty;
+            if (excludeReplays)
+            {
+                excludeReplaysStr = @"
+            if (args.ReplayState)
+            {
+                args.ExcludeReplays = true;
+                return;
+            }
+";
+            }
+
             var outSb = new StringBuilder();
             var stateFieldsText = TrimNewLines(stateFields);
             var getStateInitText = TrimNewLines(getStateInit);
             var clientGetStateInitText = TrimNewLines(clientGetStateInit);
             var cloneMethodText = TrimNewLines(cloneMethod);
+            var excludeReplaysText = TrimNewLines(excludeReplaysStr);
             var deltaGetStateText = TrimNewLines(deltaGetState);
             var clientDeltaGetStateText = TrimNewLines(clientDeltaGetState);
             var deltaCompFieldsText = TrimNewLines(deltaCompFields);
@@ -780,6 +794,12 @@ namespace Robust.Shared.CompNetworkGenerator
             outSb.AppendLine();
             outSb.AppendLine($"        private void OnGetState(EntityUid uid, {componentName} component, ref ComponentGetState args)");
             outSb.AppendLine("        {");
+
+            if (excludeReplaysStr.Length != 0)
+            {
+                outSb.AppendLine(IndentFirstLine(excludeReplaysText, 12));
+                outSb.AppendLine();
+            }
 
             if (deltaGetStateText.Length != 0)
             {
@@ -870,14 +890,16 @@ namespace Robust.Shared.CompNetworkGenerator
                 {
                     var raiseEv = false;
                     var fieldDeltas = false;
-                    if (attribute.ConstructorArguments is [{Value: bool raise}, {Value: bool fields}])
+                    var excludeReplays = false;
+                    if (attribute.ConstructorArguments is [{Value: bool raise}, {Value: bool fields}, {Value: bool exclude}])
                     {
                         // Get the afterautohandle bool, which is first constructor arg
                         raiseEv = raise;
                         fieldDeltas = fields;
+                        excludeReplays = exclude;
                     }
 
-                    var source = GenerateSource(context, classType, classSyntax, comp, raiseEv, fieldDeltas);
+                    var source = GenerateSource(context, classType, classSyntax, comp, raiseEv, fieldDeltas, excludeReplays);
                     // can be null if no members marked with network field, which already has a diagnostic, so
                     // just continue
                     if (source == null)

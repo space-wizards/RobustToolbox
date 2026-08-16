@@ -34,13 +34,12 @@ public sealed record PartialTypeInfo(
 
         do
         {
+            parts.Insert(0, NestedPart.FromNode(curSymbol, curSyntax));
             if (!IsPartial(curSyntax))
             {
                 isValid = false;
                 break;
             }
-
-            parts.Insert(0, NestedPart.FromNode(curSymbol, curSyntax));
 
             curSymbol = curSymbol.ContainingType;
             curSyntax = curSyntax.Parent as TypeDeclarationSyntax;

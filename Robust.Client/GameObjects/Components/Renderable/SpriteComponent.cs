@@ -270,6 +270,11 @@ namespace Robust.Client.GameObjects
         public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
 
+        /// <summary>
+        ///     Provides indexed access to sprite layers.
+        /// </summary>
+        public IReadOnlyList<Layer> LayerData => Layers;
+
         void ISerializationHooks.AfterDeserialization()
         {
             // Please somebody burn this to the ground. There is so much spaghetti.

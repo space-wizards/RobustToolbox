@@ -24,17 +24,9 @@ internal sealed partial class EntityRelationSystemTests
     [Test]
     public void Relation_SetRelation_Test()
     {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
+        Setup(out var entMan, out var ownerEnt, out var testComp, out var targetEnt);
 
-        var ownerEnt = entMan.Spawn(RelationProto);
-        var targetEnt = entMan.Spawn();
-
-        var testComp = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt);
-
-        entMan.SetRelation(ownerEnt, ref testComp.Value, targetEnt);
-        entMan.SetRelations(ownerEnt, testComp.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt, testComp.Set, [targetEnt]);
+        SetRelations(ownerEnt, testComp, targetEnt, entMan);
 
         using (Assert.EnterMultipleScope())
         {
@@ -64,22 +56,16 @@ internal sealed partial class EntityRelationSystemTests
     [Test]
     public void Relation_SetRelationsMany_Test()
     {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
+        SetupMany(
+            out var entMan,
+            out var ownerEnt1,
+            out var testComp1,
+            out var ownerEnt2,
+            out var testComp2,
+            out var targetEnt);
 
-        var ownerEnt1 = entMan.Spawn(RelationProto);
-        var ownerEnt2 = entMan.Spawn(RelationProto);
-        var targetEnt = entMan.Spawn();
-
-        var testComp1 = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt1);
-        var testComp2 = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt2);
-
-        entMan.SetRelation(ownerEnt1, ref testComp1.Value, targetEnt);
-        entMan.SetRelations(ownerEnt1, testComp1.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt1, testComp1.Set, [targetEnt]);
-        entMan.SetRelation(ownerEnt2, ref testComp2.Value, targetEnt);
-        entMan.SetRelations(ownerEnt2, testComp2.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt2, testComp2.Set, [targetEnt]);
+        SetRelations(ownerEnt1, testComp1, targetEnt, entMan);
+        SetRelations(ownerEnt2, testComp2, targetEnt, entMan);
 
         using (Assert.EnterMultipleScope())
         {
@@ -125,17 +111,9 @@ internal sealed partial class EntityRelationSystemTests
     [Test]
     public void Relation_DeleteTarget_Test()
     {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
+        Setup(out var entMan, out var ownerEnt, out var testComp, out var targetEnt);
 
-        var ownerEnt = entMan.Spawn(RelationProto);
-        var targetEnt = entMan.Spawn();
-
-        var testComp = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt);
-
-        entMan.SetRelation(ownerEnt, ref testComp.Value, targetEnt);
-        entMan.SetRelations(ownerEnt, testComp.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt, testComp.Set, [targetEnt]);
+        SetRelations(ownerEnt, testComp, targetEnt, entMan);
 
         entMan.DeleteEntity(targetEnt);
 
@@ -161,22 +139,16 @@ internal sealed partial class EntityRelationSystemTests
     [Test]
     public void Relation_DeleteTargetMany_Test()
     {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
+        SetupMany(
+            out var entMan,
+            out var ownerEnt1,
+            out var testComp1,
+            out var ownerEnt2,
+            out var testComp2,
+            out var targetEnt);
 
-        var ownerEnt1 = entMan.Spawn(RelationProto);
-        var ownerEnt2 = entMan.Spawn(RelationProto);
-        var targetEnt = entMan.Spawn();
-
-        var testComp1 = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt1);
-        var testComp2 = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt2);
-
-        entMan.SetRelation(ownerEnt1, ref testComp1.Value, targetEnt);
-        entMan.SetRelations(ownerEnt1, testComp1.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt1, testComp1.Set, [targetEnt]);
-        entMan.SetRelation(ownerEnt2, ref testComp2.Value, targetEnt);
-        entMan.SetRelations(ownerEnt2, testComp2.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt2, testComp2.Set, [targetEnt]);
+        SetRelations(ownerEnt1, testComp1, targetEnt, entMan);
+        SetRelations(ownerEnt2, testComp2, targetEnt, entMan);
 
         entMan.DeleteEntity(targetEnt);
 
@@ -207,17 +179,9 @@ internal sealed partial class EntityRelationSystemTests
     [Test]
     public void Relation_DeleteOwner_Test()
     {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
+        Setup(out var entMan, out var ownerEnt, out var testComp, out var targetEnt);
 
-        var ownerEnt = entMan.Spawn(RelationProto);
-        var targetEnt = entMan.Spawn();
-
-        var testComp = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt);
-
-        entMan.SetRelation(ownerEnt, ref testComp.Value, targetEnt);
-        entMan.SetRelations(ownerEnt, testComp.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt, testComp.Set, [targetEnt]);
+        SetRelations(ownerEnt, testComp, targetEnt, entMan);
 
         entMan.DeleteEntity(ownerEnt);
 
@@ -229,7 +193,7 @@ internal sealed partial class EntityRelationSystemTests
     /// The test plan is:
     /// <list type="number">
     /// <item>A target entity is assigned to a field in the owner component</item>
-    /// <item>EntityRelationsComponent was added to both entities</item>
+    /// <item>EntityRelationsComponent was added to all entities</item>
     /// <item>The first owner entity is deleted</item>
     /// <item>The target has half the references, second owner is unchanged</item>
     /// <item>The second owner entity is deleted</item>
@@ -239,22 +203,16 @@ internal sealed partial class EntityRelationSystemTests
     [Test]
     public void Relation_DeleteOwnersMany_Test()
     {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
+        SetupMany(
+            out var entMan,
+            out var ownerEnt1,
+            out var testComp1,
+            out var ownerEnt2,
+            out var testComp2,
+            out var targetEnt);
 
-        var ownerEnt1 = entMan.Spawn(RelationProto);
-        var ownerEnt2 = entMan.Spawn(RelationProto);
-        var targetEnt = entMan.Spawn();
-
-        var testComp1 = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt1);
-        var testComp2 = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt2);
-
-        entMan.SetRelation(ownerEnt1, ref testComp1.Value, targetEnt);
-        entMan.SetRelations(ownerEnt1, testComp1.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt1, testComp1.Set, [targetEnt]);
-        entMan.SetRelation(ownerEnt2, ref testComp2.Value, targetEnt);
-        entMan.SetRelations(ownerEnt2, testComp2.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt2, testComp2.Set, [targetEnt]);
+        SetRelations(ownerEnt1, testComp1, targetEnt, entMan);
+        SetRelations(ownerEnt2, testComp2, targetEnt, entMan);
 
         entMan.DeleteEntity(ownerEnt1);
 
@@ -288,7 +246,8 @@ internal sealed partial class EntityRelationSystemTests
     /// Set relations between two entities and deletes the test component that referenced the target.
     /// The test plan is:
     /// <list type="number">
-    /// <item>An entity is assigned to a field in the component, EntityRelationsComponent was added to both ents</item>
+    /// <item>An entity is assigned to a field in the component</item>
+    /// <item>EntityRelationsComponent was added to both entities</item>
     /// <item>The related entity's component that stores the reference is removed</item>
     /// <item>EntityRelationsComponent was removed both from the entity and the target</item>
     /// </list>
@@ -296,23 +255,15 @@ internal sealed partial class EntityRelationSystemTests
     [Test]
     public void Relation_RemoveTestComponent_Test()
     {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
+        Setup(out var entMan, out var ownerEnt, out var testComp, out var targetEnt);
 
-        var ent = entMan.Spawn(RelationProto);
-        var targetEnt = entMan.Spawn();
+        SetRelations(ownerEnt, testComp, targetEnt, entMan);
 
-        var testComp = entMan.GetComponent<EntityRelationsTestComponent>(ent);
-
-        entMan.SetRelation(ent, ref testComp.Value, targetEnt);
-        entMan.SetRelations(ent, testComp.List, [targetEnt]);
-        entMan.SetRelations(ent, testComp.Set, [targetEnt]);
-
-        entMan.RemoveComponent<EntityRelationsTestComponent>(ent);
+        entMan.RemoveComponent<EntityRelationsTestComponent>(ownerEnt);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(entMan.HasComponent<EntityRelationsComponent>(ent), Is.False);
+            Assert.That(entMan.HasComponent<EntityRelationsComponent>(ownerEnt), Is.False);
             Assert.That(entMan.HasComponent<EntityRelationsComponent>(targetEnt), Is.False);
         }
     }
@@ -332,22 +283,16 @@ internal sealed partial class EntityRelationSystemTests
     [Test]
     public void Relation_RemoveTestComponentsMany_Test()
     {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
+        SetupMany(
+            out var entMan,
+            out var ownerEnt1,
+            out var testComp1,
+            out var ownerEnt2,
+            out var testComp2,
+            out var targetEnt);
 
-        var ownerEnt1 = entMan.Spawn(RelationProto);
-        var ownerEnt2 = entMan.Spawn(RelationProto);
-        var targetEnt = entMan.Spawn();
-
-        var testComp1 = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt1);
-        var testComp2 = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt2);
-
-        entMan.SetRelation(ownerEnt1, ref testComp1.Value, targetEnt);
-        entMan.SetRelations(ownerEnt1, testComp1.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt1, testComp1.Set, [targetEnt]);
-        entMan.SetRelation(ownerEnt2, ref testComp2.Value, targetEnt);
-        entMan.SetRelations(ownerEnt2, testComp2.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt2, testComp2.Set, [targetEnt]);
+        SetRelations(ownerEnt1, testComp1, targetEnt, entMan);
+        SetRelations(ownerEnt2, testComp2, targetEnt, entMan);
 
         entMan.RemoveComponent(ownerEnt1, testComp1);
 
@@ -377,13 +322,51 @@ internal sealed partial class EntityRelationSystemTests
         Assert.That(entMan.HasComponent<EntityRelationsComponent>(targetEnt), Is.False);
     }
 
+    private static void Setup(
+        out IEntityManager entMan,
+        out EntityUid ownerEnt,
+        out EntityRelationsTestComponent testComp,
+        out EntityUid targetEnt)
+    {
+        entMan = SimulationFactory().Resolve<IEntityManager>();
+        ownerEnt = entMan.Spawn(RelationProto);
+        targetEnt = entMan.Spawn();
+        testComp = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt);
+    }
+
+    private static void SetupMany(
+        out IEntityManager entMan,
+        out EntityUid ownerEnt1,
+        out EntityRelationsTestComponent testComp1,
+        out EntityUid ownerEnt2,
+        out EntityRelationsTestComponent testComp2,
+        out EntityUid targetEnt)
+    {
+        entMan = SimulationFactory().Resolve<IEntityManager>();
+        ownerEnt1 = entMan.Spawn(RelationProto);
+        ownerEnt2 = entMan.Spawn(RelationProto);
+        targetEnt = entMan.Spawn();
+        testComp1 = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt1);
+        testComp2 = entMan.GetComponent<EntityRelationsTestComponent>(ownerEnt2);
+    }
+
+    private static void SetRelations(EntityUid ownerEnt, EntityRelationsTestComponent testComp, EntityUid targetEnt, IEntityManager entMan)
+    {
+        entMan.SetRelation(ownerEnt, ref testComp.Value, targetEnt);
+        entMan.SetRelation(ownerEnt, ref testComp.NullableValue, targetEnt);
+        entMan.SetRelations(ownerEnt, testComp.List, [targetEnt]);
+        entMan.SetRelations(ownerEnt, testComp.Set, [targetEnt]);
+        entMan.SetRelations(ownerEnt, testComp.DictKey, new Dictionary<EntityUid, int> { [targetEnt] = 1 });
+        entMan.SetRelations(ownerEnt, testComp.DictValue, new Dictionary<int, EntityUid> { [1] = targetEnt });
+    }
+
     private static ISimulation SimulationFactory()
     {
         var sim = RobustServerSimulation
             .NewSimulation()
             .RegisterEntitySystems(f =>
             {
-                f.LoadExtraSystemType<EntityRelationsTestComponent.EntityRelationsTestComponent_AutoRelationsSystem>();
+                f.LoadExtraSystemType<EntityRelationsTestSystem>();
             })
             .RegisterComponents(f => f.RegisterClass<EntityRelationsTestComponent>())
             .RegisterPrototypes(f => f.LoadString(Prototypes))
@@ -392,18 +375,74 @@ internal sealed partial class EntityRelationSystemTests
         return sim;
     }
 
-    [Reflect(false), AutoGenerateEntityRelations]
+    [Reflect(false)]
     private sealed partial class EntityRelationsTestComponent : Component
     {
-        public const int FieldCount = 3;
+        public const int FieldCount = 6;
 
-        [DataField, AutoRelationField]
+        [DataField]
         public EntityRelation Value;
 
-        [DataField, AutoRelationField]
+        [DataField]
+        public EntityRelation? NullableValue;
+
+        [DataField]
         public List<EntityRelation> List = new();
 
-        [DataField, AutoRelationField]
+        [DataField]
         public HashSet<EntityRelation> Set = new();
+
+        [DataField]
+        public Dictionary<EntityRelation, int> DictKey = new();
+
+        [DataField]
+        public Dictionary<int, EntityRelation> DictValue = new();
+
+        /// <summary>
+        /// Auto-generated method that clears all relations in a certain entity.
+        /// This has to be called on component shutdown to keep all relations correct.
+        /// </summary>
+        public static void ClearComponentRelations(Entity<EntityRelationsTestComponent> ent, IEntityManager entMan)
+        {
+            entMan.ClearRelation(ent.Owner, ref ent.Comp.Value);
+            entMan.ClearRelation(ent.Owner, ref ent.Comp.NullableValue);
+            entMan.ClearRelation(ent.Owner, ent.Comp.List);
+            entMan.ClearRelation(ent.Owner, ent.Comp.Set);
+            entMan.ClearRelation(ent.Owner, ent.Comp.DictKey);
+            entMan.ClearRelation(ent.Owner, ent.Comp.DictValue);
+        }
+    }
+
+    // This exists just because it's impossible to register auto-generated systems into the robust sim
+    [Reflect(false)]
+    private sealed partial class EntityRelationsTestSystem : EntitySystem
+    {
+        public override void Initialize()
+        {
+            base.Initialize();
+            SubscribeLocalEvent<EntityRelationsTestComponent, ComponentShutdown>(OnRelationShutdown);
+            SubscribeLocalEvent<EntityRelationsTestComponent, EntityRelationDeleteEvent>(OnRelationDeleted);
+        }
+
+        private void OnRelationDeleted(Entity<EntityRelationsTestComponent> ent, ref EntityRelationDeleteEvent args)
+        {
+            if (ent.Comp.Value == args.Relation)
+                ent.Comp.Value = EntityRelation.Null;
+            if (ent.Comp.NullableValue.HasValue && ent.Comp.NullableValue.Value == args.Relation)
+                ent.Comp.NullableValue = null;
+            ent.Comp.List.Remove(args.Relation);
+            ent.Comp.Set.Remove(args.Relation);
+            ent.Comp.DictKey.Remove(args.Relation);
+            foreach (var (key, value) in ent.Comp.DictValue)
+            {
+                if (value == args.Relation)
+                    ent.Comp.DictValue[key] = EntityRelation.Null;
+            }
+        }
+
+        private void OnRelationShutdown(Entity<EntityRelationsTestComponent> ent, ref ComponentShutdown args)
+        {
+            EntityRelationsTestComponent.ClearComponentRelations(ent, EntityManager);
+        }
     }
 }

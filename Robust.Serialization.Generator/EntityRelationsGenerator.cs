@@ -111,7 +111,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                         {
                             dictionaryValue = true;
                         }
-                        if (namedType.Name == "List" || namedType.Name == "HashSet" && namedType is { TypeArguments: [{ Name: "EntityRelation" }]})
+                        else if (namedType.Name == "List" || namedType.Name == "HashSet" && namedType is { TypeArguments: [{ Name: "EntityRelation" }]})
                         {
                             collection = true;
                         }

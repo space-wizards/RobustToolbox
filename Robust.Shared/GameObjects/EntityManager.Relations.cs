@@ -29,6 +29,14 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
+    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, EntityUid? entity)
+    {
+        var copy = relation ?? EntityRelation.Null;
+        SetRelation(owner, ref copy, entity);
+        relation = copy;
+    }
+
+    /// <inheritdoc/>
     public void SetRelations(Entity<EntityRelationsComponent?> owner, List<EntityRelation> relations, List<EntityUid> entities)
     {
         foreach (var entity in entities)
@@ -53,6 +61,34 @@ public partial class EntityManager
             var relation = EntityRelation.Null;
             SetRelation(owner, ref relation, entity);
             relations.Add(relation);
+        }
+    }
+
+    /// <inheritdoc/>
+    public void SetRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<EntityRelation, T> relations, Dictionary<EntityUid, T> entities)
+    {
+        foreach (var (entity, value) in entities)
+        {
+            DebugTools.Assert(owner.Owner != entity,
+                $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
+
+            var relation = EntityRelation.Null;
+            SetRelation(owner, ref relation, entity);
+            relations.Add(relation, value);
+        }
+    }
+
+    /// <inheritdoc/>
+    public void SetRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<T, EntityRelation> relations, Dictionary<T, EntityUid> entities) where T : notnull
+    {
+        foreach (var (key, entity) in entities)
+        {
+            DebugTools.Assert(owner.Owner != entity,
+                $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
+
+            var relation = EntityRelation.Null;
+            SetRelation(owner, ref relation, entity);
+            relations.Add(key, relation);
         }
     }
 

@@ -19,6 +19,9 @@ public partial interface IEntityManager
     /// </param>
     public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity);
 
+    /// <inheritdoc cref="SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation, EntityUid?)"/>
+    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, EntityUid? entity);
+
     /// <summary>
     /// Sets a list of entities to have a relation with an <see cref="owner"/> entity.
     /// </summary>
@@ -34,6 +37,22 @@ public partial interface IEntityManager
     /// <param name="relations">A set of relations to store the result in.</param>
     /// <param name="entities">A set of entities to add to the relations set.</param>
     public void SetRelations(Entity<EntityRelationsComponent?> owner, HashSet<EntityRelation> relations, HashSet<EntityUid> entities);
+
+    /// <summary>
+    /// Sets a dictionary of entities as keys to have a relation with an <see cref="owner"/> entity.
+    /// </summary>
+    /// <param name="owner">Owner of all provided relations.</param>
+    /// <param name="relations">A set of relations to store the result in.</param>
+    /// <param name="entities">A set of entities to add to the relations set.</param>
+    public void SetRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<EntityRelation, T> relations, Dictionary<EntityUid, T> entities);
+
+    /// <summary>
+    /// Sets a dictionary of entities as values to have a relation with an <see cref="owner"/> entity.
+    /// </summary>
+    /// <param name="owner">Owner of all provided relations.</param>
+    /// <param name="relations">A set of relations to store the result in.</param>
+    /// <param name="entities">A set of entities to add to the relations set.</param>
+    public void SetRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<T, EntityRelation> relations, Dictionary<T, EntityUid> entities) where T : notnull;
 
     /// <summary>
     /// Removes all relations to an <see cref="EntityRelation"/>.

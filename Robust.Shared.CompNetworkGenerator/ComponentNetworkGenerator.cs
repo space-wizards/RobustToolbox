@@ -405,17 +405,13 @@ namespace Robust.Shared.CompNetworkGenerator
                             named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat) == GlobalDictionaryName)
                         {
                             var key = named.TypeArguments[0].ToDisplayString(FullNullableFormat);
-                            var keyNullable = key.EndsWith("?");
 
                             var value = named.TypeArguments[1].ToDisplayString(FullNullableFormat);
                             var valueNullable = value.EndsWith("?");
 
-                            if (key is GlobalEntityUidName or GlobalNullableEntityUidName or GlobalEntityRelationName)
+                            if (key is GlobalEntityUidName or GlobalEntityRelationName)
                             {
-                                if (key == GlobalEntityRelationName)
-                                    key = GlobalNetEntityNullableName;
-                                else
-                                    key = keyNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+                                key = GlobalNetEntityName;
 
                                 var ensureGeneric = $"{componentName}, {value}";
                                 if (value is GlobalEntityUidName or GlobalNullableEntityUidName or GlobalEntityRelationName)

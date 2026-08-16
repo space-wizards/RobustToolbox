@@ -189,6 +189,22 @@ public partial interface IEntityManager
     /// <summary>
     /// Dictionary version of <see cref="GetNetEntity"/>
     /// </summary>
+    Dictionary<NetEntity, T> GetNetEntityDictionary<T>(Dictionary<EntityRelation, T> entities);
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityRelation> entities) where T : notnull;
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityRelation?> entities) where T : notnull;
+
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
     Dictionary<NetEntity, NetEntity> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid> entities);
 
     /// <summary>
@@ -259,6 +275,19 @@ public partial interface IEntityManager
 
     void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
         Dictionary<TKey, EntityUid?> entities) where TKey : notnull;
+
+    void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity,
+        Dictionary<EntityRelation, TValue> entities);
+
+    void EnsureEntityDictionaryNullableValue<TComp, TValue>(Dictionary<NetEntity, TValue?> netEntities,
+        EntityUid callerEntity,
+        Dictionary<EntityRelation, TValue?> entities);
+
+    void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
+        Dictionary<TKey, EntityRelation> entities) where TKey : notnull;
+
+    void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
+        Dictionary<TKey, EntityRelation?> entities) where TKey : notnull;
 
     void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity> netEntities, EntityUid callerEntity,
         Dictionary<EntityUid, EntityUid> entities);

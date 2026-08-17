@@ -36,6 +36,7 @@ public sealed partial class ReplayLoadManager : IReplayLoadManager
     private int _checkpointMinInterval;
     private int _checkpointEntitySpawnThreshold;
     private int _checkpointEntityStateThreshold;
+    private int _loadedBlockWindow;
     private ISawmill _sawmill = default!;
 
     public void Initialize()
@@ -50,6 +51,7 @@ public sealed partial class ReplayLoadManager : IReplayLoadManager
             true);
         _confMan.OnValueChanged(CVars.CheckpointEntityStateThreshold, value => _checkpointEntityStateThreshold = value,
             true);
+        _confMan.OnValueChanged(CVars.ReplayLoadedBlockWindow, value => _loadedBlockWindow = value, true);
         _metaId = _factory.GetRegistration(typeof(MetaDataComponent)).NetID!.Value;
         _sawmill = _logMan.GetSawmill("replay");
     }

@@ -115,7 +115,7 @@ internal partial class AudioManager
         if (!_audioInitialized) return;
 
         var az = (float)angle.Theta;
-        var at = new OpenTK.Mathematics.Vector3(0f, 0f, -1f);
+        var at = new OpenTK.Mathematics.Vector3(0f, 0f, 1f);
         var up = new OpenTK.Mathematics.Vector3(-MathF.Sin(az), MathF.Cos(az), 0f);
         AL.Listener(ALListenerfv.Orientation, ref at, ref up);
     }

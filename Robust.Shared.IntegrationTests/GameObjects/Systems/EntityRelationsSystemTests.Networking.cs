@@ -142,11 +142,7 @@ internal sealed partial class EntityRelationsSystemTests
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(testComp.Value.Entity, Is.EqualTo(targetEntC));
-                Assert.That(testComp.List, Has.Count.EqualTo(1));
-                Assert.That(testComp.Set, Has.Count.EqualTo(1));
-                Assert.That(testComp.List, Does.Contain(new EntityRelation(targetEntC)));
-                Assert.That(testComp.Set, Does.Contain(new EntityRelation(targetEntC)));
+                AssertTestCompTarget(testComp, targetEntC);
 
                 Assert.That(relationsComp.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
                 Assert.That(targetRelationsComp.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));

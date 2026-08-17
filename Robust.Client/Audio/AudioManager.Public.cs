@@ -494,6 +494,9 @@ internal partial class AudioManager
 
     public IReadOnlyList<string> GetAudioDevices()
     {
+        if (!_audioInitialized)
+            return [];
+
         if (ALC.EnumerateAll.IsExtensionPresent())
             return [.. ALC.EnumerateAll.GetStringList(GetEnumerateAllContextStringList.AllDevicesSpecifier)];
 
@@ -505,6 +508,9 @@ internal partial class AudioManager
 
     public string? GetDefaultAudioDevice()
     {
+        if (!_audioInitialized)
+            return null;
+
         if (ALC.EnumerateAll.IsExtensionPresent())
             return ALC.EnumerateAll.GetString(ALDevice.Null, GetEnumerateAllContextString.DefaultAllDevicesSpecifier);
 

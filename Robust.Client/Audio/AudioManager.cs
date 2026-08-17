@@ -192,11 +192,27 @@ internal sealed partial class AudioManager : IAudioInternal
 
     private void SwitchAudioDevice(string requestedDevice)
     {
-        OpenALSawmill.Info("Switching OpenAL output device to {0}.",
-            string.IsNullOrEmpty(requestedDevice) ? "<default>" : requestedDevice);
+        var target = string.IsNullOrEmpty(requestedDevice) ? null : requestedDevice;
 
-        if (TryReopenAudioDevice(requestedDevice))
+        OpenALSawmill.Info("Switching OpenAL output device to {0}.",
+            target ?? "<default>");
+
+        // Reject unknown names up front: an invalid CVar value must not cost us a rebuild.
+        if (target != null && !IsKnownDevice(target))
+        {
+            OpenALSawmill.Warning($"Audio device '{target}' is not available, keeping the current device.");
             return;
+        }
+
+        if (TryReopenAudioDevice(target))
+            return;
+
+        if (target != null)
+        {
+            OpenALSawmill.Warning($"Failed to switch to '{target}', falling back to the default device.");
+            if (TryReopenAudioDevice(null))
+                return;
+        }
 
         // The skrunkly path that's hopefully never needed.
         OpenALSawmill.Warning("ALC_SOFT_reopen_device is unavailable or failed. Falling back to a full audio device rebuild.");
@@ -229,6 +245,17 @@ internal sealed partial class AudioManager : IAudioInternal
         _audioInitialized = _openALContext != ALContext.Null;
         ApplyDistanceModel();
         ApplyMasterGain();
+    }
+
+    private bool IsKnownDevice(string name)
+    {
+        foreach (var device in GetAudioDevices())
+        {
+            if (string.Equals(device, name, StringComparison.Ordinal))
+                return true;
+        }
+
+        return false;
     }
 
     private bool AudioOpenDevice()
@@ -314,7 +341,17 @@ internal sealed partial class AudioManager : IAudioInternal
     private string? GetPreferredDeviceName()
     {
         var preferred = _cfg.GetCVar(CVars.AudioDevice);
-        return string.IsNullOrEmpty(preferred) ? null : preferred;
+
+        if (string.IsNullOrEmpty(preferred))
+            return null;
+
+        if (!IsKnownDevice(preferred))
+        {
+            OpenALSawmill.Warning($"Configured audio device '{preferred}' is unavailable, using the default.");
+            return null;
+        }
+
+        return preferred;
     }
 
     private bool IsDeviceConnected()

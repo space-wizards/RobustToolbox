@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `AppearanceChangeEvent` now has a `TryGetData` function that checks the type of the data at a given key.
+* `EntProtoId` and `ProtoId<EntityPrototype>` can now be implicitly converted between eachother.
 
 ### Bugfixes
 

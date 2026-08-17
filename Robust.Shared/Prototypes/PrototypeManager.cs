@@ -7,8 +7,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Robust.Shared.Asynchronous;
-using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -262,6 +260,12 @@ namespace Robust.Shared.Prototypes
 
         /// <inheritdoc />
         public EntityPrototype Index(EntProtoId id)
+        {
+            return Index<EntityPrototype>(id.Id);
+        }
+
+        /// <inheritdoc />
+        public EntityPrototype Index<T>(EntProtoId id) where T : IInheritingPrototype
         {
             return Index<EntityPrototype>(id.Id);
         }
@@ -804,6 +808,11 @@ namespace Robust.Shared.Prototypes
             return HasIndex<EntityPrototype>(id.Id);
         }
 
+        public bool HasIndex<T>(EntProtoId id) where T : class, IInheritingPrototype
+        {
+            return HasIndex(id);
+        }
+
         /// <inheritdoc />
         public bool HasIndex<T>(ProtoId<T> id) where T : class, IPrototype
         {
@@ -817,6 +826,11 @@ namespace Robust.Shared.Prototypes
                 return false;
 
             return HasIndex(id.Value);
+        }
+
+        public bool HasIndex<T>(EntProtoId? id) where T : class, IInheritingPrototype
+        {
+            return HasIndex(id);
         }
 
         /// <inheritdoc />
@@ -860,9 +874,19 @@ namespace Robust.Shared.Prototypes
             return false;
         }
 
+        public bool Resolve<T>(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype
+        {
+            return Resolve(id, out prototype);
+        }
+
         public bool TryIndex([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype)
         {
             return TryIndex(id.Id, out prototype);
+        }
+
+        public bool TryIndex<T>(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype
+        {
+            return TryIndex(id, out prototype);
         }
 
         public bool Resolve<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
@@ -891,6 +915,11 @@ namespace Robust.Shared.Prototypes
             return Resolve(id.Value, out prototype);
         }
 
+        public bool Resolve<T>(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype
+        {
+            return Resolve(id, out prototype);
+        }
+
         public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype)
         {
             if (id == null)
@@ -900,6 +929,11 @@ namespace Robust.Shared.Prototypes
             }
 
             return TryIndex(id.Value, out prototype);
+        }
+
+        public bool TryIndex<T>(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype
+        {
+            return TryIndex(id, out prototype);
         }
 
         public bool Resolve<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype

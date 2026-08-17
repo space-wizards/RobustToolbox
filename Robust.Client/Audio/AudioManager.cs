@@ -1,11 +1,4 @@
 using OpenTK.Audio.OpenAL;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Threading;
 using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -13,8 +6,16 @@ using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
-using Robust.Shared.Utility;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Robust.Client.Audio;
 
@@ -28,13 +29,13 @@ internal sealed partial class AudioManager : IAudioInternal
     [Shared.IoC.Dependency] private IClydeInternal _clyde = default!;
     [Shared.IoC.Dependency] private IGameTiming _gameTiming = default!;
 
-    private const string NullDeviceName = "No Output";
     private const int AlcConnected = 0x313;
     private static readonly TimeSpan DeviceCheckInterval = TimeSpan.FromSeconds(2);
 
     private bool _audioInitialized;
     private bool _silentFallback;
     private TimeSpan _nextDeviceCheck;
+    private TimeSpan _nextInitRetry;
     private int _nextClydeHandle;
     private bool _focused = true;
     private bool _muteUnfocused;
@@ -43,6 +44,12 @@ internal sealed partial class AudioManager : IAudioInternal
     private float _masterFadeStartGain = 1f;
     private float _masterFadeTargetGain = 1f;
     private static int _preloaded;
+    private int _reopenFailures;
+    private const int MaxReopenFailures = 3;
+
+    private string? _pendingDeviceSwitch;
+    private bool _hasPendingDeviceSwitch;
+
 
     private Thread? _gameThread;
 
@@ -68,29 +75,10 @@ internal sealed partial class AudioManager : IAudioInternal
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate byte ReopenDeviceSoftDelegate(ALDevice device, IntPtr deviceName, int[] attribs);
 
-    [LibraryImport("ucrtbase.dll", EntryPoint = "_wputenv_s", StringMarshalling = StringMarshalling.Utf16)]
-    private static partial int WPutEnvS(string name, string value);
-
-    private static void ForceEnv(string name, string value)
-    {
-        Environment.SetEnvironmentVariable(name, value);
-        if (!OperatingSystem.IsWindows())
-            return;
-
-        try { WPutEnvS(name, value); }
-        catch (DllNotFoundException) { }
-        catch (EntryPointNotFoundException) { }
-    }
-
     private static void PreloadOpenAl(ISawmill sawmill)
     {
         if (Interlocked.Exchange(ref _preloaded, 1) != 0)
             return;
-
-        // Must happen before the library initialises, i.e. before it is loaded.
-        // A leading comma appends to the default driver list instead of replacing it,
-        // so the null backend only kicks in when every real backend fails.
-        ForceEnv("ALSOFT_DRIVERS", ",null");
 
         if (!OperatingSystem.IsWindows())
             return;
@@ -128,6 +116,10 @@ internal sealed partial class AudioManager : IAudioInternal
 
     private void InitializeAudio()
     {
+        OpenALSawmill.Debug($"ALC extensions: {ALC.GetString(ALDevice.Null, AlcGetString.Extensions)}");
+        OpenALSawmill.Debug($"Devices: [{string.Join(" | ", EnumerateDevices())}]");
+        OpenALSawmill.Debug($"ALSOFT_DRIVERS: '{Environment.GetEnvironmentVariable("ALSOFT_DRIVERS") ?? "<unset>"}'");
+
         try
         {
             if (!AudioOpenDevice())
@@ -172,10 +164,33 @@ internal sealed partial class AudioManager : IAudioInternal
             return;
         }
 
-        _reopenDevice = LoadAlcDelegate<ReopenDeviceSoftDelegate>("alcReopenDeviceSOFT");
+        var ptr = ALC.GetProcAddress(_openALDevice, "alcReopenDeviceSOFT");
+        OpenALSawmill.Debug($"alcReopenDeviceSOFT resolved to 0x{ptr.ToInt64():X}");
 
-        if (_reopenDevice == null)
+        if (ptr == IntPtr.Zero)
+        {
             OpenALSawmill.Warning("ALC_SOFT_reopen_device is advertised but alcReopenDeviceSOFT is missing.");
+            return;
+        }
+
+        _reopenDevice = Marshal.GetDelegateForFunctionPointer<ReopenDeviceSoftDelegate>(ptr);
+    }
+
+    private void TryLateInitialize()
+    {
+        // Cheap probe: enumeration doesn't allocate a device.
+        if (!HasRealPlaybackDevice())
+            return;
+
+        OpenALSawmill.Info("An audio output device appeared, initializing audio.");
+
+        _alcDeviceExtensions.Clear();
+        _alContextExtensions.Clear();
+
+        InitializeAudio();
+
+        if (_audioInitialized)
+            ReloadAudioResources();
     }
 
     #endregion
@@ -187,38 +202,38 @@ internal sealed partial class AudioManager : IAudioInternal
         if (!_audioInitialized)
             return;
 
-        SwitchAudioDevice(deviceSpecifier);
+        _pendingDeviceSwitch = string.IsNullOrEmpty(deviceSpecifier) ? null : deviceSpecifier;
+        _hasPendingDeviceSwitch = true;
     }
 
-    private void SwitchAudioDevice(string requestedDevice)
+    private void SwitchAudioDevice(string? requestedDevice)
     {
-        var target = string.IsNullOrEmpty(requestedDevice) ? null : requestedDevice;
+        OpenALSawmill.Info($"Switching OpenAL output device to {requestedDevice ?? "<default>"}.");
 
-        OpenALSawmill.Info("Switching OpenAL output device to {0}.",
-            target ?? "<default>");
-
-        // Reject unknown names up front: an invalid CVar value must not cost us a rebuild.
-        if (target != null && !IsKnownDevice(target))
+        if (requestedDevice != null && !IsKnownDevice(requestedDevice))
         {
-            OpenALSawmill.Warning($"Audio device '{target}' is not available, keeping the current device.");
+            OpenALSawmill.Warning($"Audio device '{requestedDevice}' is not available, keeping the current device.");
             return;
         }
 
-        if (TryReopenAudioDevice(target))
+        if (TryReopenAudioDevice(requestedDevice))
             return;
 
-        if (target != null)
+        if (requestedDevice != null)
         {
-            OpenALSawmill.Warning($"Failed to switch to '{target}', falling back to the default device.");
+            OpenALSawmill.Warning($"Failed to switch to '{requestedDevice}', falling back to the default device.");
             if (TryReopenAudioDevice(null))
                 return;
         }
 
-        // The skrunkly path that's hopefully never needed.
-        OpenALSawmill.Warning("ALC_SOFT_reopen_device is unavailable or failed. Falling back to a full audio device rebuild.");
+        OpenALSawmill.Warning("Reopening the device failed, falling back to a full rebuild.");
+        RebuildAudioDevice();
+    }
 
-        DisposeAllAudio();
-        FlushALDisposeQueues();
+    private void RebuildAudioDevice()
+    {
+        AbandonAudioObjects();
+        _reopenDevice = null;
 
         if (_openALContext != ALContext.Null)
         {
@@ -234,29 +249,33 @@ internal sealed partial class AudioManager : IAudioInternal
         }
 
         _audioInitialized = false;
+        _alcDeviceExtensions.Clear();
+        _alContextExtensions.Clear();
 
         if (!AudioOpenDevice())
         {
-            OpenALSawmill.Error("Failed to reopen OpenAL device after device switch.");
+            OpenALSawmill.Warning("No audio device available after rebuild, waiting for one to appear.");
             return;
         }
 
         AudioCreateContext();
-        _audioInitialized = _openALContext != ALContext.Null;
+
+        if (_openALContext == ALContext.Null)
+        {
+            OpenALSawmill.Error("Failed to create an OpenAL context after rebuild.");
+            return;
+        }
+
+        LoadReopenExtension();
+        _audioInitialized = true;
+
         ApplyDistanceModel();
         ApplyMasterGain();
+        ReloadAudioResources();
     }
 
     private bool IsKnownDevice(string name)
-    {
-        foreach (var device in GetAudioDevices())
-        {
-            if (string.Equals(device, name, StringComparison.Ordinal))
-                return true;
-        }
-
-        return false;
-    }
+        => EnumerateDevices().Any(d => string.Equals(d, name, StringComparison.Ordinal));
 
     private bool AudioOpenDevice()
     {
@@ -275,14 +294,6 @@ internal sealed partial class AudioManager : IAudioInternal
 
         if (_openALDevice == ALDevice.Null)
         {
-            // No real output right now. Open the silent backend so the context, buffers
-            // and sources stay alive and can be switched to a real device later.
-            OpenALSawmill.Info("No audio output available, opening the null device to allow hot-plug later.");
-            _openALDevice = ALC.OpenDevice(NullDeviceName);
-        }
-
-        if (_openALDevice == ALDevice.Null)
-        {
             OpenALSawmill.Error($"Unable to open any OpenAL device: {ALC.GetError(ALDevice.Null)}");
             return false;
         }
@@ -296,11 +307,13 @@ internal sealed partial class AudioManager : IAudioInternal
         if (_reopenDevice == null)
             return false;
 
+        StopAllAudio();
+
         var namePtr = requestedDevice == null ? IntPtr.Zero : Marshal.StringToCoTaskMemUTF8(requestedDevice);
 
         try
         {
-            if (_reopenDevice(_openALDevice, namePtr, BuildContextAttributes()) == 0)
+            if (_reopenDevice(_openALDevice, namePtr, [0]) == 0)
             {
                 OpenALSawmill.Debug($"alcReopenDeviceSOFT('{requestedDevice ?? "default"}') failed: " +
                                     $"{ALC.GetError(_openALDevice)}");
@@ -329,13 +342,9 @@ internal sealed partial class AudioManager : IAudioInternal
 
         var name = GetCurrentDeviceName();
 
-        // openal-soft prefixes the backend device with "OpenAL Soft on ", so match
-        // the suffix rather than comparing the whole string.
-        _silentFallback = IsNullDevice(name);
-
         IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
-        OpenALSawmill.Info($"Audio device: '{name}'{(_silentFallback ? " (silent fallback)" : "")}");
+        OpenALSawmill.Info($"Audio device: '{name}'");
     }
 
     private string? GetPreferredDeviceName()
@@ -362,13 +371,24 @@ internal sealed partial class AudioManager : IAudioInternal
         return ALC.GetInteger(_openALDevice, (AlcGetInteger)AlcConnected) != 0;
     }
 
-    private bool HasRealPlaybackDevice()
-    {
-        foreach (var device in GetAudioDevices())
-            if (!string.IsNullOrEmpty(device) && !IsNullDevice(device))
-                return true;
+    private bool HasRealPlaybackDevice() => GetAudioDevices().Count > 0;
 
-        return false;
+    private IReadOnlyList<string> EnumerateDevices()
+    {
+        try
+        {
+            if (ALC.EnumerateAll.IsExtensionPresent())
+                return [.. ALC.EnumerateAll.GetStringList(GetEnumerateAllContextStringList.AllDevicesSpecifier)];
+
+            if (ALC.IsExtensionPresent(ALDevice.Null, "ALC_ENUMERATION_EXT"))
+                return [.. ALC.GetStringList(GetEnumerationStringList.DeviceSpecifier)];
+        }
+        catch (Exception e)
+        {
+            OpenALSawmill.Warning($"Failed to enumerate audio devices: {e.Message}");
+        }
+
+        return [];
     }
 
     #endregion
@@ -483,6 +503,11 @@ internal sealed partial class AudioManager : IAudioInternal
 
     private ClydeHandle RegisterBuffer(int buffer)
     {
+        // AL.GenBuffer returns 0 when there's no current context. Registering that
+        // collides with the next failure and masks the real problem.
+        if (buffer == 0)
+            throw new InvalidOperationException("AL.GenBuffer returned 0 - no current OpenAL context.");
+
         _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
         return new ClydeHandle(Interlocked.Increment(ref _nextClydeHandle));
     }
@@ -490,6 +515,48 @@ internal sealed partial class AudioManager : IAudioInternal
     #endregion
 
     #region Reload, Distance Model, Threading, EFX
+
+    private void AbandonAudioObjects()
+    {
+        foreach (var source in _audioSources.Values.ToArray())
+            if (source.TryGetTarget(out var target))
+                target.Abandon();
+
+        _audioSources.Clear();
+
+        foreach (var source in _bufferedAudioSources.Values.ToArray())
+            if (source.TryGetTarget(out var target))
+                target.Abandon();
+
+        _bufferedAudioSources.Clear();
+        _audioSampleBuffers.Clear();
+
+        // Anything queued for deletion belongs to the dying device too.
+        while (_sourceDisposeQueue.TryDequeue(out _)) { }
+        while (_bufferedSourceDisposeQueue.TryDequeue(out _)) { }
+        while (_bufferDisposeQueue.TryDequeue(out _)) { }
+    }
+
+    private void ReloadAudioResources()
+    {
+        var paths = _cache.GetAllResources<AudioResource>()
+            .Select(kv => kv.Key)
+            .ToArray();
+
+        OpenALSawmill.Info($"Reloading {paths.Length} audio resources after audio came up.");
+
+        foreach (var path in paths)
+        {
+            try
+            {
+                _cache.ReloadResource<AudioResource>(path);
+            }
+            catch (Exception e)
+            {
+                OpenALSawmill.Warning($"Failed to reload audio resource '{path}': {e.Message}");
+            }
+        }
+    }
 
     private void OnReload(ResPath args)
     {
@@ -511,6 +578,7 @@ internal sealed partial class AudioManager : IAudioInternal
             Attenuation.LinearDistanceClamped => ALDistanceModel.LinearDistanceClamped,
             Attenuation.ExponentDistance => ALDistanceModel.ExponentDistance,
             Attenuation.ExponentDistanceClamped => ALDistanceModel.ExponentDistanceClamped,
+            Attenuation.Invalid => ALDistanceModel.None,
             _ => throw new ArgumentOutOfRangeException($"No DistanceModel mapping for {_attenuation}!")
         };
 

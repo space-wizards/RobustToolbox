@@ -81,6 +81,13 @@ public abstract class BaseAudioSource : IAudioSource
         StartPlaying();
     }
 
+    internal void Abandon()
+    {
+        FilterHandle = 0;
+        SourceHandle = -1;
+        GC.SuppressFinalize(this);
+    }
+
     /// <inheritdoc />
     public virtual bool Playing
     {

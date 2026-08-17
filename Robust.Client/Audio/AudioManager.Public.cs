@@ -36,10 +36,8 @@ internal partial class AudioManager
     {
         _gameThread = Thread.CurrentThread;
 
-        // Starlight-start
         OpenALSawmill = _logMan.GetSawmill("clyde.oal");
         PreloadOpenAl(OpenALSawmill);
-        // Starlight-end
 
         InitializeAudio();
     }
@@ -77,6 +75,12 @@ internal partial class AudioManager
 
     public void FrameUpdate(float frameTime)
     {
+        if (_hasPendingDeviceSwitch)
+        {
+            _hasPendingDeviceSwitch = false;
+            SwitchAudioDevice(_pendingDeviceSwitch);
+        }
+
         UpdateDeviceState(_gameTiming.RealTime);
 
         if (MathF.Abs(FadeGain - _masterFadeTargetGain) < 0.001f)
@@ -490,27 +494,11 @@ internal partial class AudioManager
 
     #region Device Management
 
-    public static bool IsNullDevice(string name) => name.EndsWith(NullDeviceName, StringComparison.Ordinal);
-
     public IReadOnlyList<string> GetAudioDevices()
-    {
-        if (!_audioInitialized)
-            return [];
-
-        if (ALC.EnumerateAll.IsExtensionPresent())
-            return [.. ALC.EnumerateAll.GetStringList(GetEnumerateAllContextStringList.AllDevicesSpecifier)];
-
-        if (ALC.IsExtensionPresent(ALDevice.Null, "ALC_ENUMERATION_EXT"))
-            return [.. ALC.GetStringList(GetEnumerationStringList.DeviceSpecifier)];
-
-        return [];
-    }
+        => [.. EnumerateDevices().Where(d => !string.IsNullOrEmpty(d))];
 
     public string? GetDefaultAudioDevice()
     {
-        if (!_audioInitialized)
-            return null;
-
         if (ALC.EnumerateAll.IsExtensionPresent())
             return ALC.EnumerateAll.GetString(ALDevice.Null, GetEnumerateAllContextString.DefaultAllDevicesSpecifier);
 
@@ -522,24 +510,39 @@ internal partial class AudioManager
 
     public void UpdateDeviceState(TimeSpan curTime)
     {
-        if (!_audioInitialized || _reopenDevice == null || curTime < _nextDeviceCheck)
+        if (curTime < _nextDeviceCheck)
             return;
 
         _nextDeviceCheck = curTime + DeviceCheckInterval;
 
-        if (!_silentFallback && IsDeviceConnected())
+        if (!_audioInitialized)
+        {
+            TryLateInitialize();
             return;
+        }
+
+        if (IsDeviceConnected())
+        {
+            _reopenFailures = 0;
+            return;
+        }
 
         var preferred = GetPreferredDeviceName();
 
-        // There’s nothing to switch to yet - remain silent and try again later.
-        if (preferred == null && !HasRealPlaybackDevice())
+        if (TryReopenAudioDevice(preferred) || (preferred != null && TryReopenAudioDevice(null)))
+        {
+            _reopenFailures = 0;
+            return;
+        }
+
+        // The device is gone and reopen can't recover it. Retrying forever just spams
+        // the log and keeps issuing calls against a dead backend.
+        if (++_reopenFailures < MaxReopenFailures)
             return;
 
-        if (preferred != null && TryReopenAudioDevice(preferred) && !_silentFallback)
-            return;
-
-        TryReopenAudioDevice(null);
+        OpenALSawmill.Warning($"Reopen failed {_reopenFailures} times, rebuilding the audio device.");
+        _reopenFailures = 0;
+        RebuildAudioDevice();
     }
 
     public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);

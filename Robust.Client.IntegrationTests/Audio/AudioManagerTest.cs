@@ -149,10 +149,4 @@ public sealed class AudioAttenuationTest
             }
         }
     }
-
-    [TestCase("No Output", ExpectedResult = true)]
-    [TestCase("OpenAL Soft on No Output", ExpectedResult = true)]
-    [TestCase("OpenAL Soft on Headphones (Realtek)", ExpectedResult = false)]
-    [TestCase("", ExpectedResult = false)]
-    public bool RecognisesNullDevice(string name) => AudioManager.IsNullDevice(name);
 }

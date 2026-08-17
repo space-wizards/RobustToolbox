@@ -23,7 +23,9 @@ namespace Robust.Shared.CompNetworkGenerator
 
         private const string GlobalEntityUidName = "global::Robust.Shared.GameObjects.EntityUid";
         private const string GlobalNullableEntityUidName = "global::Robust.Shared.GameObjects.EntityUid?";
+
         private const string GlobalEntityRelationName = "global::Robust.Shared.GameObjects.EntityRelation";
+        private const string GlobalNullableEntityRelationName = "global::Robust.Shared.GameObjects.EntityRelation?";
 
         private const string GlobalNetEntityName = "global::Robust.Shared.GameObjects.NetEntity";
         private const string GlobalNetEntityNullableName = "global::Robust.Shared.GameObjects.NetEntity?";
@@ -280,6 +282,7 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         break;
                     case GlobalEntityRelationName:
+                    case GlobalNullableEntityRelationName:
                         networkedType = "NetEntity?";
 
                         stateFields.Append($@"
@@ -292,7 +295,7 @@ namespace Robust.Shared.CompNetworkGenerator
             component.{name} = EnsureEntityRelation<{componentName}>(state.{name}, uid);");
 
                         deltaHandleFields.Append($@"
-                    component.{name} = EnsureEntity<{componentName}>({cast} {fieldHandleValue}, uid);");
+                    component.{name} = EnsureEntityRelation<{componentName}>({cast} {fieldHandleValue}, uid);");
 
                         AppendShallowClone(name);
 
@@ -393,7 +396,7 @@ namespace Robust.Shared.CompNetworkGenerator
             EnsureEntityListRelation<{componentName}>(state.{name}, uid, component.{name});");
 
                         deltaHandleFields.Append($@"
-                    EnsureEntityList<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
+                    EnsureEntityListRelation<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
 
                         AppendCollectionClone(name, nullable);
 
@@ -414,7 +417,7 @@ namespace Robust.Shared.CompNetworkGenerator
                                 key = GlobalNetEntityName;
 
                                 var ensureGeneric = $"{componentName}, {value}";
-                                if (value is GlobalEntityUidName or GlobalNullableEntityUidName or GlobalEntityRelationName)
+                                if (value is GlobalEntityUidName or GlobalNullableEntityUidName or GlobalEntityRelationName or GlobalNullableEntityRelationName)
                                 {
                                     if (value == GlobalEntityRelationName)
                                         value = GlobalNetEntityNullableName;
@@ -458,7 +461,7 @@ namespace Robust.Shared.CompNetworkGenerator
                                 break;
                             }
 
-                            if (value is GlobalEntityUidName or GlobalNullableEntityUidName or GlobalEntityRelationName)
+                            if (value is GlobalEntityUidName or GlobalNullableEntityUidName or GlobalEntityRelationName or GlobalNullableEntityRelationName)
                             {
                                 if (value == GlobalEntityRelationName)
                                     value = GlobalNetEntityNullableName;

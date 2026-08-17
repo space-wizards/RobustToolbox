@@ -66,11 +66,18 @@ public sealed class EntityRelationsGeneratorTest
             base.Initialize();
             SubscribeLocalEvent<FooComponent, ComponentShutdown>(OnRelationShutdown);
             SubscribeLocalEvent<FooComponent, EntityRelationDeleteEvent>(OnRelationDeleted);
+            SubscribeLocalEvent<FooComponent, EntityRelationShutdownEvent>(OnRelationsClear);
         }
 
         private void OnRelationDeleted(Entity<FooComponent> ent, ref EntityRelationDeleteEvent args)
         {
             ent.Comp.Foo.Remove(args.Relation);
+
+        }
+
+        private void OnRelationsClear(Entity<FooComponent> ent, ref EntityRelationShutdownEvent args)
+        {
+            ent.Comp.Foo.Clear();
 
         }
 
@@ -86,7 +93,7 @@ public sealed class EntityRelationsGeneratorTest
         /// </summary>
         public static void ClearComponentRelations(Entity<FooComponent> ent, IEntityManager entMan)
         {
-            entMan.ClearRelation(ent.Owner, ent.Comp.Foo);
+            entMan.ClearRelation(ent.Owner, ent.Comp.Foo, false);
 
         }
     }
@@ -124,12 +131,19 @@ public sealed class EntityRelationsGeneratorTest
                     base.Initialize();
                     SubscribeLocalEvent<FooComponent, ComponentShutdown>(OnRelationShutdown);
                     SubscribeLocalEvent<FooComponent, EntityRelationDeleteEvent>(OnRelationDeleted);
+                    SubscribeLocalEvent<FooComponent, EntityRelationShutdownEvent>(OnRelationsClear);
                 }
 
                 private void OnRelationDeleted(Entity<FooComponent> ent, ref EntityRelationDeleteEvent args)
                 {
                     if (ent.Comp.Foo == args.Relation)
                         ent.Comp.Foo = EntityRelation.Null;
+
+                }
+
+                private void OnRelationsClear(Entity<FooComponent> ent, ref EntityRelationShutdownEvent args)
+                {
+                    ent.Comp.Foo = EntityRelation.Null;
 
                 }
 
@@ -145,7 +159,7 @@ public sealed class EntityRelationsGeneratorTest
                 /// </summary>
                 public static void ClearComponentRelations(Entity<FooComponent> ent, IEntityManager entMan)
                 {
-                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo);
+                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo, false);
 
                 }
             }
@@ -184,12 +198,19 @@ public sealed class EntityRelationsGeneratorTest
                     base.Initialize();
                     SubscribeLocalEvent<FooComponent, ComponentShutdown>(OnRelationShutdown);
                     SubscribeLocalEvent<FooComponent, EntityRelationDeleteEvent>(OnRelationDeleted);
+                    SubscribeLocalEvent<FooComponent, EntityRelationShutdownEvent>(OnRelationsClear);
                 }
 
                 private void OnRelationDeleted(Entity<FooComponent> ent, ref EntityRelationDeleteEvent args)
                 {
                     if (ent.Comp.Foo.HasValue && ent.Comp.Foo.Value == args.Relation)
                         ent.Comp.Foo = null;
+
+                }
+
+                private void OnRelationsClear(Entity<FooComponent> ent, ref EntityRelationShutdownEvent args)
+                {
+                    ent.Comp.Foo = null;
 
                 }
 
@@ -205,7 +226,7 @@ public sealed class EntityRelationsGeneratorTest
                 /// </summary>
                 public static void ClearComponentRelations(Entity<FooComponent> ent, IEntityManager entMan)
                 {
-                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo);
+                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo, false);
 
                 }
             }
@@ -298,6 +319,7 @@ public sealed class EntityRelationsGeneratorTest
                     base.Initialize();
                     SubscribeLocalEvent<FooComponent, ComponentShutdown>(OnRelationShutdown);
                     SubscribeLocalEvent<FooComponent, EntityRelationDeleteEvent>(OnRelationDeleted);
+                    SubscribeLocalEvent<FooComponent, EntityRelationShutdownEvent>(OnRelationsClear);
                 }
 
                 private void OnRelationDeleted(Entity<FooComponent> ent, ref EntityRelationDeleteEvent args)
@@ -306,6 +328,15 @@ public sealed class EntityRelationsGeneratorTest
                     {
                         if (value == args.Relation)
                             ent.Comp.Foo[key] = EntityRelation.Null;
+                    }
+
+                }
+
+                private void OnRelationsClear(Entity<FooComponent> ent, ref EntityRelationShutdownEvent args)
+                {
+                    foreach (var key in ent.Comp.Foo.Keys)
+                    {
+                        ent.Comp.Foo[key] = EntityRelation.Null;
                     }
 
                 }
@@ -322,7 +353,7 @@ public sealed class EntityRelationsGeneratorTest
                 /// </summary>
                 public static void ClearComponentRelations(Entity<FooComponent> ent, IEntityManager entMan)
                 {
-                    entMan.ClearRelation(ent.Owner, ent.Comp.Foo);
+                    entMan.ClearRelation(ent.Owner, ent.Comp.Foo, false);
 
                 }
             }
@@ -361,12 +392,20 @@ public sealed class EntityRelationsGeneratorTest
                     base.Initialize();
                     SubscribeLocalEvent<FooComponent, ComponentShutdown>(OnRelationShutdown);
                     SubscribeLocalEvent<FooComponent, EntityRelationDeleteEvent>(OnRelationDeleted);
+                    SubscribeLocalEvent<FooComponent, EntityRelationShutdownEvent>(OnRelationsClear);
                 }
 
                 private void OnRelationDeleted(Entity<FooComponent> ent, ref EntityRelationDeleteEvent args)
                 {
                     if (ent.Comp.Foo == args.Relation)
                         ent.Comp.Foo = EntityRelation.Null;
+                    Dirty(ent);
+
+                }
+
+                private void OnRelationsClear(Entity<FooComponent> ent, ref EntityRelationShutdownEvent args)
+                {
+                    ent.Comp.Foo = EntityRelation.Null;
                     Dirty(ent);
 
                 }
@@ -383,7 +422,9 @@ public sealed class EntityRelationsGeneratorTest
                 /// </summary>
                 public static void ClearComponentRelations(Entity<FooComponent> ent, IEntityManager entMan)
                 {
-                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo);
+                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo, false);
+                    if (entMan.GetEntityQuery<MetaDataComponent>().Comp(ent.Owner).EntityLifeStage < EntityLifeStage.Terminating)
+                        entMan.Dirty(ent);
 
                 }
             }
@@ -422,12 +463,20 @@ public sealed class EntityRelationsGeneratorTest
                     base.Initialize();
                     SubscribeLocalEvent<FooComponent, ComponentShutdown>(OnRelationShutdown);
                     SubscribeLocalEvent<FooComponent, EntityRelationDeleteEvent>(OnRelationDeleted);
+                    SubscribeLocalEvent<FooComponent, EntityRelationShutdownEvent>(OnRelationsClear);
                 }
 
                 private void OnRelationDeleted(Entity<FooComponent> ent, ref EntityRelationDeleteEvent args)
                 {
                     if (ent.Comp.Foo == args.Relation)
                         ent.Comp.Foo = EntityRelation.Null;
+                    Dirty(ent);
+
+                }
+
+                private void OnRelationsClear(Entity<FooComponent> ent, ref EntityRelationShutdownEvent args)
+                {
+                    ent.Comp.Foo = EntityRelation.Null;
                     Dirty(ent);
 
                 }
@@ -444,7 +493,9 @@ public sealed class EntityRelationsGeneratorTest
                 /// </summary>
                 public static void ClearComponentRelations(Entity<FooComponent> ent, IEntityManager entMan)
                 {
-                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo);
+                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo, false);
+                    if (entMan.GetEntityQuery<MetaDataComponent>().Comp(ent.Owner).EntityLifeStage < EntityLifeStage.Terminating)
+                        entMan.Dirty(ent);
 
                 }
             }
@@ -483,12 +534,19 @@ public sealed class EntityRelationsGeneratorTest
                     base.Initialize();
 
                     SubscribeLocalEvent<FooComponent, EntityRelationDeleteEvent>(OnRelationDeleted);
+                    SubscribeLocalEvent<FooComponent, EntityRelationShutdownEvent>(OnRelationsClear);
                 }
 
                 private void OnRelationDeleted(Entity<FooComponent> ent, ref EntityRelationDeleteEvent args)
                 {
                     if (ent.Comp.Foo == args.Relation)
                         ent.Comp.Foo = EntityRelation.Null;
+
+                }
+
+                private void OnRelationsClear(Entity<FooComponent> ent, ref EntityRelationShutdownEvent args)
+                {
+                    ent.Comp.Foo = EntityRelation.Null;
 
                 }
 
@@ -501,7 +559,7 @@ public sealed class EntityRelationsGeneratorTest
                 /// </summary>
                 public static void ClearComponentRelations(Entity<FooComponent> ent, IEntityManager entMan)
                 {
-                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo);
+                    entMan.ClearRelation(ent.Owner, ref ent.Comp.Foo, false);
 
                 }
             }

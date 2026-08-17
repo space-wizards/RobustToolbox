@@ -117,8 +117,15 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
             if (info.Fields.AsImmutableArray().Length == 0)
                 return;
 
+            // Clears a specific EntityRelation from all fields
             var relationBuilder = new StringBuilder();
+
+            // Silently sets all EntityRelations to null
+            var clearBuilder = new StringBuilder();
+
+            // Properly clears all EntityRelations and fixes them in target entities
             var shutdownBuilder = new StringBuilder();
+
             var anyValidField = false;
             foreach (var field in info.Fields)
             {
@@ -132,13 +139,17 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                                     ent.Comp.{field.Name} = null;
                         """);
 
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ref ent.Comp.{field.Name});");
+                    clearBuilder.AppendLine($"        ent.Comp.{field.Name} = null;");
+
+                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ref ent.Comp.{field.Name}, false);");
                 }
                 else if (field.DictionaryKey)
                 {
                     relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Remove(args.Relation);");
 
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ent.Comp.{field.Name});");
+                    clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
+
+                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ent.Comp.{field.Name}, false);");
                 }
                 else if (field.DictionaryValue)
                 {
@@ -150,12 +161,20 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                                 }
                         """);
 
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ent.Comp.{field.Name});");
+                    clearBuilder.AppendLine($$"""
+                                foreach (var key in ent.Comp.{{field.Name}}.Keys)
+                                {
+                                    ent.Comp.{{field.Name}}[key] = EntityRelation.Null;
+                                }
+                        """);
+
+                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ent.Comp.{field.Name}, false);");
                 }
                 else if (field.Collection)
                 {
                     relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Remove(args.Relation);");
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ent.Comp.{field.Name});");
+                    clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
+                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ent.Comp.{field.Name}, false);");
                 }
                 else
                 {
@@ -164,7 +183,9 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                                     ent.Comp.{field.Name} = EntityRelation.Null;
                         """);
 
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ref ent.Comp.{field.Name});");
+                    clearBuilder.AppendLine($"        ent.Comp.{field.Name} = EntityRelation.Null;");
+
+                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ref ent.Comp.{field.Name}, false);");
                 }
 
                 anyValidField = true;
@@ -174,7 +195,14 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                 return;
 
             if (info.Dirty)
+            {
                 relationBuilder.AppendLine("        Dirty(ent);");
+                clearBuilder.AppendLine("        Dirty(ent);");
+                shutdownBuilder.AppendLine("""
+                        if (entMan.GetEntityQuery<MetaDataComponent>().Comp(ent.Owner).EntityLifeStage < EntityLifeStage.Terminating)
+                            entMan.Dirty(ent);
+                """);
+            }
 
             var shutdownSub = info.ShutdownEvent
                 ? $"        SubscribeLocalEvent<{info.PartialTypeInfo.Name}, ComponentShutdown>(OnRelationShutdown);"
@@ -212,11 +240,17 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                         base.Initialize();
                 {{shutdownSub}}
                         SubscribeLocalEvent<{{info.PartialTypeInfo.Name}}, EntityRelationDeleteEvent>(OnRelationDeleted);
+                        SubscribeLocalEvent<{{info.PartialTypeInfo.Name}}, EntityRelationShutdownEvent>(OnRelationsClear);
                     }
 
                     private void OnRelationDeleted(Entity<{{info.PartialTypeInfo.Name}}> ent, ref EntityRelationDeleteEvent args)
                     {
                 {{relationBuilder}}
+                    }
+
+                    private void OnRelationsClear(Entity<{{info.PartialTypeInfo.Name}}> ent, ref EntityRelationShutdownEvent args)
+                    {
+                {{clearBuilder}}
                     }
 
                 {{shutdownSubMethod}}

@@ -10,7 +10,7 @@ namespace Robust.Shared.GameObjects;
 /// properly clean them when the entity is terminated.
 /// </summary>
 [Access(typeof(EntityManager), typeof(EntityRelationsSystem))]
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 public sealed partial class EntityRelationsComponent : Component
 {
     /// <summary>
@@ -23,4 +23,14 @@ public sealed partial class EntityRelationsComponent : Component
     /// </remarks>
     [DataField, AutoNetworkedField]
     public List<EntityRelation> Relations = new();
+
+    /// <summary>
+    /// If true, will remove the component when <see cref="Relations"/> list becomes empty.
+    /// Useful for conditional networking or performance sensitive EntityRelation interactions.
+    /// </summary>
+    /// <remarks>
+    /// This field is always networked to the client.
+    /// </remarks>
+    [DataField, AutoNetworkedField]
+    public bool RemoveOnEmpty = true;
 }

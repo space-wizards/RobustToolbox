@@ -1,19 +1,22 @@
 ﻿using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.UnitTesting;
 using Robust.UnitTesting.Server;
 
 namespace Robust.Shared.IntegrationTests.GameObjects.Systems;
 
 [TestFixture, Parallelizable, TestOf(typeof(EntityRelation))]
-internal sealed partial class EntityRelationSystemTests
+internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
 {
     private const string RelationProto = "relationEnt";
 
     private const string Prototypes = $@"
 - type: entity
-  name: anchoredEnt
+  name: relationEnt
   id: {RelationProto}
   components:
   - type: EntityRelationsTest";
@@ -39,11 +42,7 @@ internal sealed partial class EntityRelationSystemTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(testComp.Value.Entity, Is.EqualTo(targetEnt));
-            Assert.That(testComp.List, Has.Count.EqualTo(1));
-            Assert.That(testComp.Set, Has.Count.EqualTo(1));
-            Assert.That(testComp.List, Does.Contain(new EntityRelation(targetEnt)));
-            Assert.That(testComp.Set, Does.Contain(new EntityRelation(targetEnt)));
+            AssertTestCompTarget(testComp, targetEnt);
 
             Assert.That(relationsComp.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
             Assert.That(targetRelationsComp.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
@@ -80,17 +79,8 @@ internal sealed partial class EntityRelationSystemTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(testComp1.Value.Entity, Is.EqualTo(targetEnt));
-            Assert.That(testComp1.List, Has.Count.EqualTo(1));
-            Assert.That(testComp1.Set, Has.Count.EqualTo(1));
-            Assert.That(testComp1.List, Does.Contain(new EntityRelation(targetEnt)));
-            Assert.That(testComp1.Set, Does.Contain(new EntityRelation(targetEnt)));
-
-            Assert.That(testComp2.Value.Entity, Is.EqualTo(targetEnt));
-            Assert.That(testComp2.List, Has.Count.EqualTo(1));
-            Assert.That(testComp2.Set, Has.Count.EqualTo(1));
-            Assert.That(testComp2.List, Does.Contain(new EntityRelation(targetEnt)));
-            Assert.That(testComp2.Set, Does.Contain(new EntityRelation(targetEnt)));
+            AssertTestCompTarget(testComp1, targetEnt);
+            AssertTestCompTarget(testComp2, targetEnt);
 
             Assert.That(relationsComp1.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
             Assert.That(relationsComp2.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
@@ -119,9 +109,8 @@ internal sealed partial class EntityRelationSystemTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(testComp.Value.Entity, Is.Null);
-            Assert.That(testComp.List, Is.Empty);
-            Assert.That(testComp.Set, Is.Empty);
+            AssertTestCompEmpty(testComp);
+
             Assert.That(entMan.HasComponent<EntityRelationsComponent>(ownerEnt), Is.False);
         }
     }
@@ -154,14 +143,9 @@ internal sealed partial class EntityRelationSystemTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(testComp1.Value.Entity, Is.Null);
-            Assert.That(testComp1.List, Is.Empty);
-            Assert.That(testComp1.Set, Is.Empty);
-            Assert.That(entMan.HasComponent<EntityRelationsComponent>(ownerEnt1), Is.False);
+            AssertTestCompEmpty(testComp1);
+            AssertTestCompEmpty(testComp2);
 
-            Assert.That(testComp2.Value.Entity, Is.Null);
-            Assert.That(testComp2.List, Is.Empty);
-            Assert.That(testComp2.Set, Is.Empty);
             Assert.That(entMan.HasComponent<EntityRelationsComponent>(ownerEnt2), Is.False);
         }
     }
@@ -227,11 +211,7 @@ internal sealed partial class EntityRelationSystemTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(testComp2.Value.Entity, Is.EqualTo(targetEnt));
-            Assert.That(testComp2.List, Has.Count.EqualTo(1));
-            Assert.That(testComp2.Set, Has.Count.EqualTo(1));
-            Assert.That(testComp2.List, Does.Contain(new EntityRelation(targetEnt)));
-            Assert.That(testComp2.Set, Does.Contain(new EntityRelation(targetEnt)));
+            AssertTestCompTarget(testComp2, targetEnt);
 
             Assert.That(relationsComp2.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
             Assert.That(targetRelationsComp.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
@@ -307,11 +287,7 @@ internal sealed partial class EntityRelationSystemTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(testComp2.Value.Entity, Is.EqualTo(targetEnt));
-            Assert.That(testComp2.List, Has.Count.EqualTo(1));
-            Assert.That(testComp2.Set, Has.Count.EqualTo(1));
-            Assert.That(testComp2.List, Does.Contain(new EntityRelation(targetEnt)));
-            Assert.That(testComp2.Set, Does.Contain(new EntityRelation(targetEnt)));
+            AssertTestCompTarget(testComp2, targetEnt);
 
             Assert.That(relationsComp2.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
             Assert.That(targetRelationsComp.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
@@ -320,6 +296,90 @@ internal sealed partial class EntityRelationSystemTests
         entMan.RemoveComponent(ownerEnt2, testComp2);
 
         Assert.That(entMan.HasComponent<EntityRelationsComponent>(targetEnt), Is.False);
+    }
+
+    /// <summary>
+    /// Set relations between two entities and deletes the test component that referenced the target.
+    /// The test plan is:
+    /// <list type="number">
+    /// <item>An entity is assigned to a field in the component</item>
+    /// <item>EntityRelationsComponent was added to both entities</item>
+    /// <item>The owner's <see cref="EntityRelationsComponent"/> that stores the reference is removed</item>
+    /// <item><see cref="EntityRelationsComponent"/> was removed from the target</item>
+    /// <item>Test component is clear from any EntityRelation references</item>
+    /// </list>
+    /// </summary>
+    [Test]
+    public void Relation_RemoveRelationsComponent_Test()
+    {
+        Setup(out var entMan, out var ownerEnt, out var testComp, out var targetEnt);
+
+        SetRelations(ownerEnt, testComp, targetEnt, entMan);
+
+        entMan.RemoveComponent<EntityRelationsComponent>(ownerEnt);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(entMan.HasComponent<EntityRelationsComponent>(targetEnt), Is.False);
+
+            AssertTestCompEmpty(testComp);
+        }
+    }
+
+    /// <summary>
+    /// Set relations between 2 owner entities and 1 target and deletes
+    /// the test component that referenced the target on each owner one-by-one.
+    /// The test plan is:
+    /// <list type="number">
+    /// <item>An entity is assigned to a field in the component, EntityRelationsComponent was added to all ents</item>
+    /// <item>The first owner entity's component that stores the reference is removed</item>
+    /// <item>Half of the relations are removed on the target, Second owner is unchanged</item>
+    /// <item>The second owner entity's component that stores the reference is removed</item>
+    /// <item>EntityRelationsComponent was removed from all entities</item>
+    /// </list>
+    /// </summary>
+    [Test]
+    public void Relation_RemoveRelationsComponentsMany_Test()
+    {
+        SetupMany(
+            out var entMan,
+            out var ownerEnt1,
+            out var testComp1,
+            out var ownerEnt2,
+            out var testComp2,
+            out var targetEnt);
+
+        SetRelations(ownerEnt1, testComp1, targetEnt, entMan);
+        SetRelations(ownerEnt2, testComp2, targetEnt, entMan);
+
+        entMan.RemoveComponent<EntityRelationsComponent>(ownerEnt1);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(entMan.HasComponent<EntityRelationsComponent>(targetEnt), Is.True);
+            Assert.That(entMan.HasComponent<EntityRelationsComponent>(ownerEnt2), Is.True);
+        }
+
+        var relationsComp2 = entMan.GetComponent<EntityRelationsComponent>(ownerEnt2);
+        var targetRelationsComp = entMan.GetComponent<EntityRelationsComponent>(targetEnt);
+
+        using (Assert.EnterMultipleScope())
+        {
+            AssertTestCompEmpty(testComp1);
+            AssertTestCompTarget(testComp2, targetEnt);
+
+            Assert.That(relationsComp2.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
+            Assert.That(targetRelationsComp.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
+        }
+
+        entMan.RemoveComponent<EntityRelationsComponent>(ownerEnt2);
+
+        using (Assert.EnterMultipleScope())
+        {
+            AssertTestCompEmpty(testComp2);
+
+            Assert.That(entMan.HasComponent<EntityRelationsComponent>(targetEnt), Is.False);
+        }
     }
 
     private static void Setup(
@@ -352,12 +412,46 @@ internal sealed partial class EntityRelationSystemTests
 
     private static void SetRelations(EntityUid ownerEnt, EntityRelationsTestComponent testComp, EntityUid targetEnt, IEntityManager entMan)
     {
-        entMan.SetRelation(ownerEnt, ref testComp.Value, targetEnt);
-        entMan.SetRelation(ownerEnt, ref testComp.NullableValue, targetEnt);
-        entMan.SetRelations(ownerEnt, testComp.List, [targetEnt]);
-        entMan.SetRelations(ownerEnt, testComp.Set, [targetEnt]);
-        entMan.SetRelations(ownerEnt, testComp.DictKey, new Dictionary<EntityUid, int> { [targetEnt] = 1 });
-        entMan.SetRelations(ownerEnt, testComp.DictValue, new Dictionary<int, EntityUid> { [1] = targetEnt });
+        entMan.SetRelation(ownerEnt, ref testComp.Value, targetEnt, false);
+        entMan.SetRelation(ownerEnt, ref testComp.NullableValue, targetEnt, false);
+        entMan.SetRelations(ownerEnt, testComp.List, [targetEnt], false);
+        entMan.SetRelations(ownerEnt, testComp.Set, [targetEnt], false);
+        entMan.SetRelations(ownerEnt, testComp.DictKey, new Dictionary<EntityUid, int> { [targetEnt] = 1 }, false);
+        entMan.SetRelations(ownerEnt, testComp.DictValue, new Dictionary<int, EntityUid> { [testComp.DictValue.Count + 1] = targetEnt }, false);
+    }
+
+    private static void AssertTestCompTarget(EntityRelationsTestComponent testComp, EntityUid targetEnt)
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(testComp.Value.Entity, Is.EqualTo(targetEnt));
+            Assert.That(testComp.NullableValue?.Entity, Is.EqualTo(targetEnt));
+            Assert.That(testComp.List, Has.Count.EqualTo(1));
+            Assert.That(testComp.Set, Has.Count.EqualTo(1));
+            Assert.That(testComp.List, Does.Contain(new EntityRelation(targetEnt)));
+            Assert.That(testComp.Set, Does.Contain(new EntityRelation(targetEnt)));
+            Assert.That(testComp.DictKey, Has.Count.EqualTo(1));
+            Assert.That(testComp.DictValue, Has.Count.EqualTo(1));
+            Assert.That(testComp.DictKey, Does.ContainKey(new EntityRelation(targetEnt)));
+            Assert.That(testComp.DictValue, Does.ContainValue(new EntityRelation(targetEnt)));
+        }
+    }
+
+    private static void AssertTestCompEmpty(EntityRelationsTestComponent testComp)
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(testComp.Value.Entity, Is.Null);
+            Assert.That(testComp.NullableValue, Is.Null);
+            Assert.That(testComp.List, Is.Empty);
+            Assert.That(testComp.Set, Is.Empty);
+            Assert.That(testComp.DictKey, Is.Empty);
+            Assert.That(testComp.DictValue,
+                Is.EquivalentTo(new Dictionary<int, EntityRelation>
+                {
+                    [1] = EntityRelation.Null
+                }));
+        }
     }
 
     private static ISimulation SimulationFactory()
@@ -375,7 +469,7 @@ internal sealed partial class EntityRelationSystemTests
         return sim;
     }
 
-    [Reflect(false)]
+    [Reflect(false), NetworkedComponent]
     private sealed partial class EntityRelationsTestComponent : Component
     {
         public const int FieldCount = 6;
@@ -413,7 +507,18 @@ internal sealed partial class EntityRelationSystemTests
         }
     }
 
-    // This exists just because it's impossible to register auto-generated systems into the robust sim
+    [Serializable, NetSerializable]
+    private sealed partial class EntityRelationsTestComponentState : IComponentState
+    {
+        public NetEntity? Value = default!;
+        public NetEntity? NullableValue = default!;
+        public List<NetEntity> List = default!;
+        public HashSet<NetEntity> Set = default!;
+        public Dictionary<NetEntity, int> DictKey = default!;
+        public Dictionary<int, NetEntity?> DictValue = default!;
+    }
+
+    // This exists just because auto-generated code doesn't work for private test components and systems
     [Reflect(false)]
     private sealed partial class EntityRelationsTestSystem : EntitySystem
     {
@@ -422,6 +527,9 @@ internal sealed partial class EntityRelationSystemTests
             base.Initialize();
             SubscribeLocalEvent<EntityRelationsTestComponent, ComponentShutdown>(OnRelationShutdown);
             SubscribeLocalEvent<EntityRelationsTestComponent, EntityRelationDeleteEvent>(OnRelationDeleted);
+            SubscribeLocalEvent<EntityRelationsTestComponent, EntityRelationShutdownEvent>(OnRelationsClear);
+            SubscribeLocalEvent<EntityRelationsTestComponent, ComponentGetState>(OnGetState);
+            SubscribeLocalEvent<EntityRelationsTestComponent, ComponentHandleState>(OnHandleState);
         }
 
         private void OnRelationDeleted(Entity<EntityRelationsTestComponent> ent, ref EntityRelationDeleteEvent args)
@@ -440,9 +548,49 @@ internal sealed partial class EntityRelationSystemTests
             }
         }
 
+        private void OnRelationsClear(Entity<EntityRelationsTestComponent> ent, ref EntityRelationShutdownEvent args)
+        {
+            ent.Comp.Value = EntityRelation.Null;
+            ent.Comp.NullableValue = null;
+            ent.Comp.List.Clear();
+            ent.Comp.Set.Clear();
+            ent.Comp.DictKey.Clear();
+            foreach (var key in ent.Comp.DictValue.Keys)
+            {
+                ent.Comp.DictValue[key] = EntityRelation.Null;
+            }
+        }
+
         private void OnRelationShutdown(Entity<EntityRelationsTestComponent> ent, ref ComponentShutdown args)
         {
             EntityRelationsTestComponent.ClearComponentRelations(ent, EntityManager);
+        }
+
+        private void OnGetState(EntityUid uid, EntityRelationsTestComponent component, ref ComponentGetState args)
+        {
+            // Get full state
+            args.State = new EntityRelationsTestComponentState
+            {
+                Value = GetNetEntity(component.Value),
+                NullableValue = GetNetEntity(component.NullableValue),
+                List = GetNetEntityList(component.List),
+                Set = GetNetEntitySet(component.Set),
+                DictKey = GetNetEntityDictionary(component.DictKey),
+                DictValue = GetNetEntityDictionary(component.DictValue),
+            };
+        }
+
+        private void OnHandleState(EntityUid uid, EntityRelationsTestComponent component, ref ComponentHandleState args)
+        {
+            if (args.Current is not EntityRelationsTestComponentState state)
+                return;
+
+            component.Value = EnsureEntityRelation<EntityRelationsTestComponent>(state.Value, uid);
+            component.NullableValue = EnsureEntityRelation<EntityRelationsTestComponent>(state.NullableValue, uid);
+            EnsureEntityListRelation<EntityRelationsTestComponent>(state.List, uid, component.List);
+            EnsureEntitySetRelation<EntityRelationsTestComponent>(state.Set, uid, component.Set);
+            EnsureEntityDictionary<EntityRelationsTestComponent, int>(state.DictKey, uid, component.DictKey);
+            EnsureEntityDictionary<EntityRelationsTestComponent, int>(state.DictValue, uid, component.DictValue);
         }
     }
 }

@@ -21,10 +21,18 @@ public partial interface IEntityManager
     /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
     /// Use this if you want to make a custom networking setup.
     /// </param>
-    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity, bool dirty = true);
+    public void SetRelation(
+        Entity<EntityRelationsComponent?> owner,
+        ref EntityRelation relation,
+        Entity<EntityRelationsComponent?>? entity,
+        bool dirty = true);
 
-    /// <inheritdoc cref="SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation, EntityUid?, bool)"/>
-    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, EntityUid? entity, bool dirty = true);
+    /// <inheritdoc cref="SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation, Entity{EntityRelationsComponent?}?, bool)"/>
+    public void SetRelation(
+        Entity<EntityRelationsComponent?> owner,
+        ref EntityRelation? relation,
+        Entity<EntityRelationsComponent?>? entity,
+        bool dirty = true);
 
     /// <summary>
     /// Sets a list of entities to have a relation with an <see cref="owner"/> entity.
@@ -32,7 +40,15 @@ public partial interface IEntityManager
     /// <param name="owner">Owner of all provided relations.</param>
     /// <param name="relations">A list of relations to store the result in.</param>
     /// <param name="entities">A list of entities to add to the relations list.</param>
-    public void SetRelations(Entity<EntityRelationsComponent?> owner, List<EntityRelation> relations, List<EntityUid> entities);
+    /// <param name="dirty">
+    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
+    /// Use this if you want to make a custom networking setup.
+    /// </param>
+    public void SetRelations(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        List<EntityUid> entities,
+        bool dirty = true);
 
     /// <summary>
     /// Sets a set of entities to have a relation with an <see cref="owner"/> entity.
@@ -40,7 +56,15 @@ public partial interface IEntityManager
     /// <param name="owner">Owner of all provided relations.</param>
     /// <param name="relations">A set of relations to store the result in.</param>
     /// <param name="entities">A set of entities to add to the relations set.</param>
-    public void SetRelations(Entity<EntityRelationsComponent?> owner, HashSet<EntityRelation> relations, HashSet<EntityUid> entities);
+    /// <param name="dirty">
+    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
+    /// Use this if you want to make a custom networking setup.
+    /// </param>
+    public void SetRelations(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        HashSet<EntityUid> entities,
+        bool dirty = true);
 
     /// <summary>
     /// Sets a dictionary of entities as keys to have a relation with an <see cref="owner"/> entity.
@@ -48,7 +72,15 @@ public partial interface IEntityManager
     /// <param name="owner">Owner of all provided relations.</param>
     /// <param name="relations">A set of relations to store the result in.</param>
     /// <param name="entities">A set of entities to add to the relations set.</param>
-    public void SetRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<EntityRelation, T> relations, Dictionary<EntityUid, T> entities);
+    /// <param name="dirty">
+    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
+    /// Use this if you want to make a custom networking setup.
+    /// </param>
+    public void SetRelations<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<EntityRelation, T> relations,
+        Dictionary<EntityUid, T> entities,
+        bool dirty = true);
 
     /// <summary>
     /// Sets a dictionary of entities as values to have a relation with an <see cref="owner"/> entity.
@@ -56,7 +88,15 @@ public partial interface IEntityManager
     /// <param name="owner">Owner of all provided relations.</param>
     /// <param name="relations">A set of relations to store the result in.</param>
     /// <param name="entities">A set of entities to add to the relations set.</param>
-    public void SetRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<T, EntityRelation> relations, Dictionary<T, EntityUid> entities) where T : notnull;
+    /// <param name="dirty">
+    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
+    /// Use this if you want to make a custom networking setup.
+    /// </param>
+    public void SetRelations<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<T, EntityRelation> relations,
+        Dictionary<T, EntityUid> entities,
+        bool dirty = true) where T : notnull;
 
     /// <summary>
     /// Removes all relations to an <see cref="EntityRelation"/>.
@@ -66,7 +106,7 @@ public partial interface IEntityManager
     /// <remarks>
     /// This method is called automatically during the deletion of an <see cref="EntityRelationsComponent"/> entity.
     /// </remarks>
-    public void ClearRelations(EntityRelation relation, EntityRelationsComponent? relations = null);
+    public void ClearRelations(EntityRelation relation, EntityRelationsComponent? relations = null, bool dirty = true);
 
     /// <summary>
     /// Removes all relations to an entity with <see cref="EntityRelationsComponent"/>.
@@ -75,43 +115,42 @@ public partial interface IEntityManager
     /// </summary>
     /// <remarks>
     /// This method is called automatically during shutdown of the <see cref="EntityRelationsComponent"/> entity.
-    ///
     /// </remarks>
-    public void ClearRelations(Entity<EntityRelationsComponent?> ent);
+    public void ClearRelations(Entity<EntityRelationsComponent?> ent, bool dirty = true);
 
     /// <summary>
     /// Removes a relation from an entity with <see cref="EntityRelationsComponent"/>.
     /// The relation is set to <see cref="EntityRelation.Null"/> after the call.
     /// </summary>
-    public void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation relation);
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation relation, bool dirty = true);
 
     /// <summary>
     /// Removes a relation from an entity with <see cref="EntityRelationsComponent"/>.
     /// The relation is set to null after the call.
     /// </summary>
-    public void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation? relation);
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation? relation, bool dirty = true);
 
     /// <summary>
     /// Removes a list of relations from an entity with <see cref="EntityRelationsComponent"/>.
     /// The list is cleared after the call.
     /// </summary>
-    public void ClearRelation(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations);
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations, bool dirty = true);
 
     /// <summary>
     /// Removes a set of relations from an entity with <see cref="EntityRelationsComponent"/>.
     /// The set is cleared after the call.
     /// </summary>
-    public void ClearRelation(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relations);
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relations, bool dirty = true);
 
     /// <summary>
     /// Removes all dictionary keys of relations from an entity with <see cref="EntityRelationsComponent"/>.
     /// The dictionary is cleared after the call.
     /// </summary>
-    public void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relations);
+    public void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relations, bool dirty = true);
 
     /// <summary>
     /// Removes all dictionary values relations from an entity with <see cref="EntityRelationsComponent"/>.
     /// All values are set to null after the call.
     /// </summary>
-    public void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations) where T : notnull;
+    public void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations, bool dirty = true) where T : notnull;
 }

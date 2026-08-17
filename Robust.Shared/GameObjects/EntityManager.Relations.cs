@@ -6,7 +6,11 @@ namespace Robust.Shared.GameObjects;
 public partial class EntityManager
 {
     /// <inheritdoc/>
-    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity, bool dirty = true)
+    public void SetRelation(
+        Entity<EntityRelationsComponent?> owner,
+        ref EntityRelation relation,
+        Entity<EntityRelationsComponent?>? entity,
+        bool dirty = true)
     {
         DebugTools.Assert(owner.Owner != entity,
             $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
@@ -17,25 +21,29 @@ public partial class EntityManager
             return;
         }
 
-        var entityRelations = EnsureComponent<EntityRelationsComponent>(entity.Value);
+        var ent = entity.Value;
+
+        // TODO add EnsureComp methods to EntityQuery
+        if (!_relationsQuery.Resolve(ent.Owner, ref ent.Comp, false))
+            EnsureComponent<EntityRelationsComponent>(ent.Owner, out ent.Comp);
 
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
             EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
 
         relation.Entity = entity;
 
-        entityRelations.Relations.Add(new EntityRelation(owner));
+        ent.Comp.Relations.Add(new EntityRelation(owner));
         owner.Comp.Relations.Add(relation);
 
         if (!dirty)
             return;
 
-        Dirty(entity.Value, entityRelations);
-        Dirty(owner.Owner, owner.Comp);
+        DirtyRelations(ent!);
+        DirtyRelations(owner!);
     }
 
     /// <inheritdoc/>
-    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, EntityUid? entity, bool dirty = true)
+    public void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, Entity<EntityRelationsComponent?>? entity, bool dirty = true)
     {
         var copy = relation ?? EntityRelation.Null;
         SetRelation(owner, ref copy, entity, dirty);
@@ -43,63 +51,131 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void SetRelations(Entity<EntityRelationsComponent?> owner, List<EntityRelation> relations, List<EntityUid> entities)
+    public void SetRelations(Entity<EntityRelationsComponent?> owner, List<EntityRelation> relations, List<EntityUid> entities, bool dirty = true)
     {
+        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+            EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
+
         foreach (var entity in entities)
         {
             DebugTools.Assert(owner.Owner != entity,
                 $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
 
             var relation = EntityRelation.Null;
-            SetRelation(owner, ref relation, entity);
+            SetRelation(owner, ref relation, entity, false);
             relations.Add(relation);
         }
+
+        if (!dirty)
+            return;
+
+        foreach (var relation in relations)
+        {
+            if (!_relationsQuery.TryComp(relation.Entity, out var entityRelations))
+                continue;
+
+            DirtyRelations((relation.Entity.Value, entityRelations));
+        }
+
+        DirtyRelations(owner!);
     }
 
     /// <inheritdoc/>
-    public void SetRelations(Entity<EntityRelationsComponent?> owner, HashSet<EntityRelation> relations, HashSet<EntityUid> entities)
+    public void SetRelations(Entity<EntityRelationsComponent?> owner, HashSet<EntityRelation> relations, HashSet<EntityUid> entities, bool dirty = true)
     {
+        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+            EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
+
         foreach (var entity in entities)
         {
             DebugTools.Assert(owner.Owner != entity,
                 $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
 
             var relation = EntityRelation.Null;
-            SetRelation(owner, ref relation, entity);
+            SetRelation(owner, ref relation, entity, false);
             relations.Add(relation);
         }
+
+        if (!dirty)
+            return;
+
+        foreach (var relation in relations)
+        {
+            if (!_relationsQuery.TryComp(relation.Entity, out var entityRelations))
+                continue;
+
+            DirtyRelations((relation.Entity.Value, entityRelations));
+        }
+
+        DirtyRelations(owner!);
     }
 
     /// <inheritdoc/>
-    public void SetRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<EntityRelation, T> relations, Dictionary<EntityUid, T> entities)
+    public void SetRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<EntityRelation, T> relations, Dictionary<EntityUid, T> entities, bool dirty = true)
     {
+        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+            EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
+
         foreach (var (entity, value) in entities)
         {
             DebugTools.Assert(owner.Owner != entity,
                 $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
 
             var relation = EntityRelation.Null;
-            SetRelation(owner, ref relation, entity);
+            SetRelation(owner, ref relation, entity, false);
             relations.Add(relation, value);
         }
+
+        if (!dirty)
+            return;
+
+        foreach (var relation in relations.Keys)
+        {
+            if (!_relationsQuery.TryComp(relation.Entity, out var entityRelations))
+                continue;
+
+            DirtyRelations((relation.Entity.Value, entityRelations));
+        }
+
+        DirtyRelations(owner!);
     }
 
     /// <inheritdoc/>
-    public void SetRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<T, EntityRelation> relations, Dictionary<T, EntityUid> entities) where T : notnull
+    public void SetRelations<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<T, EntityRelation> relations,
+        Dictionary<T, EntityUid> entities,
+        bool dirty = true) where T : notnull
     {
+        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+            EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
+
         foreach (var (key, entity) in entities)
         {
             DebugTools.Assert(owner.Owner != entity,
                 $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
 
             var relation = EntityRelation.Null;
-            SetRelation(owner, ref relation, entity);
+            SetRelation(owner, ref relation, entity, false);
             relations.Add(key, relation);
         }
+
+        if (!dirty)
+            return;
+
+        foreach (var relation in relations.Values)
+        {
+            if (!_relationsQuery.TryComp(relation.Entity, out var entityRelations))
+                continue;
+
+            DirtyRelations((relation.Entity.Value, entityRelations));
+        }
+
+        DirtyRelations(owner!);
     }
 
     /// <inheritdoc/>
-    public void ClearRelations(EntityRelation relation, EntityRelationsComponent? relations = null)
+    public void ClearRelations(EntityRelation relation, EntityRelationsComponent? relations = null, bool dirty = true)
     {
         if (relation.Entity == null)
             return;
@@ -116,17 +192,23 @@ public partial class EntityManager
             EventBus.RaiseLocalEvent(related.Entity.Value, ref ev);
             RemoveRelationCompIfEmpty(related.Entity.Value);
         }
+
+        if (MetaQuery.Comp(relation.Entity.Value).EntityLifeStage >= EntityLifeStage.Terminating)
+            return;
+
+        var selfEv = new EntityRelationShutdownEvent();
+        EventBus.RaiseLocalEvent(relation.Entity.Value, ref selfEv);
     }
 
     /// <inheritdoc/>
-    public void ClearRelations(Entity<EntityRelationsComponent?> ent)
+    public void ClearRelations(Entity<EntityRelationsComponent?> ent, bool dirty = true)
     {
         var relation = new EntityRelation(ent.Owner);
         ClearRelations(relation, ent.Comp);
     }
 
     /// <inheritdoc/>
-    public void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation relation)
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation relation, bool dirty = true)
     {
         if (relation.Entity == null)
             return;
@@ -146,7 +228,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation? relation)
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, ref EntityRelation? relation, bool dirty = true)
     {
         if (relation == null)
             return;
@@ -157,7 +239,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void ClearRelation(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations)
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relations, bool dirty = true)
     {
         foreach (var relation in relations)
         {
@@ -168,7 +250,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void ClearRelation(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relations)
+    public void ClearRelation(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relations, bool dirty = true)
     {
         foreach (var relation in relations)
         {
@@ -179,7 +261,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relations)
+    public void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relations, bool dirty = true)
     {
         foreach (var relation in relations.Keys)
         {
@@ -190,7 +272,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations) where T : notnull
+    public void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relations, bool dirty = true) where T : notnull
     {
         foreach (var (key, relation) in relations)
         {
@@ -205,7 +287,15 @@ public partial class EntityManager
         if (!_relationsQuery.Resolve(ent.Owner, ref ent.Comp))
             return;
 
+        if (!ent.Comp.RemoveOnEmpty)
+            return;
+
         if (ent.Comp.Relations.Count == 0 && ent.Comp.LifeStage < ComponentLifeStage.Stopping)
             RemoveComponent(ent.Owner, ent.Comp);
+    }
+
+    private void DirtyRelations(Entity<EntityRelationsComponent> ent)
+    {
+        DirtyField(ent.Owner, ent.Comp, nameof(EntityRelationsComponent.Relations));
     }
 }

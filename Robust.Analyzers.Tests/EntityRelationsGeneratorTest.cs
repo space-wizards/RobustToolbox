@@ -93,7 +93,7 @@ public sealed class EntityRelationsGeneratorTest
         /// </summary>
         public static void ClearComponentRelations(Entity<FooComponent> ent, IEntityManager entMan)
         {
-            entMan.ClearRelation(ent.Owner, ent.Comp.Foo, false);
+            entMan.ClearRelations(ent.Owner, ent.Comp.Foo, false);
 
         }
     }
@@ -353,7 +353,7 @@ public sealed class EntityRelationsGeneratorTest
                 /// </summary>
                 public static void ClearComponentRelations(Entity<FooComponent> ent, IEntityManager entMan)
                 {
-                    entMan.ClearRelation(ent.Owner, ent.Comp.Foo, false);
+                    entMan.ClearRelations(ent.Owner, ent.Comp.Foo, false);
 
                 }
             }

@@ -500,10 +500,10 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
         {
             entMan.ClearRelation(ent.Owner, ref ent.Comp.Value);
             entMan.ClearRelation(ent.Owner, ref ent.Comp.NullableValue);
-            entMan.ClearRelation(ent.Owner, ent.Comp.List);
-            entMan.ClearRelation(ent.Owner, ent.Comp.Set);
-            entMan.ClearRelation(ent.Owner, ent.Comp.DictKey);
-            entMan.ClearRelation(ent.Owner, ent.Comp.DictValue);
+            entMan.ClearRelations(ent.Owner, ent.Comp.List);
+            entMan.ClearRelations(ent.Owner, ent.Comp.Set);
+            entMan.ClearRelations(ent.Owner, ent.Comp.DictKey);
+            entMan.ClearRelations(ent.Owner, ent.Comp.DictValue);
         }
     }
 

@@ -2085,7 +2085,7 @@ public partial class EntitySystem
     /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation, Entity{EntityRelationsComponent?}?, bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
-    protected void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, EntityUid? entity, bool dirty = true)
+    protected void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation relation, Entity<EntityRelationsComponent?>? entity, bool dirty = true)
     {
         EntityManager.SetRelation(owner, ref relation, entity, dirty);
     }
@@ -2093,7 +2093,7 @@ public partial class EntitySystem
     /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelation(Entity{EntityRelationsComponent?}, ref EntityRelation?, Entity{EntityRelationsComponent?}?, bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
-    protected void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, EntityUid? entity, bool dirty = true)
+    protected void SetRelation(Entity<EntityRelationsComponent?> owner, ref EntityRelation? relation, Entity<EntityRelationsComponent?>? entity, bool dirty = true)
     {
         EntityManager.SetRelation(owner, ref relation, entity, dirty);
     }
@@ -2122,6 +2122,80 @@ public partial class EntitySystem
         EntityManager.SetRelations(owner, relations, entities, dirty);
     }
 
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelations(Entity{EntityRelationsComponent?}, List{EntityRelation}, List{EntityUid}, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void SetRelation(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        Entity<EntityRelationsComponent?>? entity,
+        bool dirty = true)
+    {
+        EntityManager.SetRelation(owner, relations, entity, dirty);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelations(Entity{EntityRelationsComponent?}, HashSet{EntityRelation}, HashSet{EntityUid}, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void SetRelation(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        Entity<EntityRelationsComponent?>? entity,
+        bool dirty = true)
+    {
+        EntityManager.SetRelation(owner, relations, entity, dirty);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelation{T}(Entity{EntityRelationsComponent?}, Dictionary{EntityRelation, T}, Entity{EntityRelationsComponent?}?, T, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // TODO for some reason proxy don't work for this specific method???
+    protected void SetRelation<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<EntityRelation, T> relations,
+        Entity<EntityRelationsComponent?>? entity,
+        T value,
+        bool dirty = true)
+    {
+        EntityManager.SetRelation(owner, relations, entity, value, dirty);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelations(Entity{EntityRelationsComponent?}, HashSet{EntityRelation}, HashSet{EntityUid}, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void SetRelation<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<T, EntityRelation> relations,
+        Entity<EntityRelationsComponent?>? entity,
+        T key,
+        bool dirty = true) where T : notnull
+    {
+        EntityManager.SetRelation(owner, relations, entity, key, dirty);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelations(Entity{EntityRelationsComponent?}, List{EntityRelation}, List{EntityUid}, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void SetRelations<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<EntityRelation, T> relations,
+        Dictionary<EntityUid, T> entities,
+        bool dirty = true)
+    {
+        EntityManager.SetRelations(owner, relations, entities, dirty);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.SetRelations(Entity{EntityRelationsComponent?}, HashSet{EntityRelation}, HashSet{EntityUid}, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected void SetRelations<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<T, EntityRelation> relations,
+        Dictionary<T, EntityUid> entities,
+        bool dirty = true) where T : notnull
+    {
+        EntityManager.SetRelations(owner, relations, entities, dirty);
+    }
+
     /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation(Entity{EntityRelationsComponent?}, ref EntityRelation, bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
@@ -2138,36 +2212,36 @@ public partial class EntitySystem
         EntityManager.ClearRelation(ent, ref relation, dirty);
     }
 
-    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation(Entity{EntityRelationsComponent?}, List{EntityRelation}, bool)"/>
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelations(Entity{EntityRelationsComponent?}, List{Robust.Shared.GameObjects.EntityRelation}, bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
-    protected void ClearRelation(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relation, bool dirty = true)
+    protected void ClearRelations(Entity<EntityRelationsComponent?> ent, List<EntityRelation> relation, bool dirty = true)
     {
-        EntityManager.ClearRelation(ent, relation, dirty);
+        EntityManager.ClearRelations(ent, relation, dirty);
     }
 
-    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation(Entity{EntityRelationsComponent?}, HashSet{EntityRelation}, bool)"/>
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelations(Entity{EntityRelationsComponent?}, HashSet{EntityRelation}, bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
-    protected void ClearRelation(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relation, bool dirty = true)
+    protected void ClearRelations(Entity<EntityRelationsComponent?> ent, HashSet<EntityRelation> relation, bool dirty = true)
     {
-        EntityManager.ClearRelation(ent, relation, dirty);
+        EntityManager.ClearRelations(ent, relation, dirty);
     }
 
-    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation{T}(Entity{EntityRelationsComponent?}, Dictionary{EntityRelation, T}, bool)"/>
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelations{T}(Entity{EntityRelationsComponent?}, Dictionary{EntityRelation, T} ,bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
-    protected void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relation, bool dirty = true)
+    protected void ClearRelations<T>(Entity<EntityRelationsComponent?> ent, Dictionary<EntityRelation, T> relation, bool dirty = true)
     {
-        EntityManager.ClearRelation(ent, relation, dirty);
+        EntityManager.ClearRelations(ent, relation, dirty);
     }
 
-    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation{T}(Entity{EntityRelationsComponent?}, Dictionary{T, EntityRelation}, bool)"/>
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelations{T}(Entity{Robust.Shared.GameObjects.EntityRelationsComponent?}, Dictionary{T, EntityRelation}, bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
-    protected void ClearRelation<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relation, bool dirty = true) where T : notnull
+    protected void ClearRelations<T>(Entity<EntityRelationsComponent?> ent, Dictionary<T, EntityRelation> relation, bool dirty = true) where T : notnull
     {
-        EntityManager.ClearRelation(ent, relation, dirty);
+        EntityManager.ClearRelations(ent, relation, dirty);
     }
 
     /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelations(EntityRelation, EntityRelationsComponent?, bool)"/>
@@ -2184,6 +2258,86 @@ public partial class EntitySystem
     protected void ClearRelations(Entity<EntityRelationsComponent?> ent, bool dirty = true)
     {
         EntityManager.ClearRelations(ent, dirty);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation(Entity{EntityRelationsComponent?}, List{EntityRelation}, Entity{EntityRelationsComponent?}, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    public void ClearRelation(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        Entity<EntityRelationsComponent?> entity,
+        bool dirty = true)
+    {
+        EntityManager.ClearRelation(owner, relations, entity, dirty);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation(Entity{EntityRelationsComponent?}, HashSet{EntityRelation}, Entity{EntityRelationsComponent?}, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    public void ClearRelation(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        Entity<EntityRelationsComponent?> entity,
+        bool dirty = true)
+    {
+        EntityManager.ClearRelation(owner, relations, entity, dirty);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation{T}(Entity{EntityRelationsComponent?}, Dictionary{EntityRelation, T}, Entity{EntityRelationsComponent?}, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    public void ClearRelation<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<EntityRelation, T> relations,
+        Entity<EntityRelationsComponent?> entity,
+        bool dirty = true)
+    {
+        EntityManager.ClearRelation(owner, relations, entity, dirty);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation{T}(Entity{EntityRelationsComponent?}, Dictionary{T, EntityRelation}, Entity{EntityRelationsComponent?}, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    public void ClearRelation<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<T, EntityRelation> relations,
+        Entity<EntityRelationsComponent?> entity,
+        bool dirty = true) where T : notnull
+    {
+        EntityManager.ClearRelation(owner, relations, entity, dirty);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.HasRelation(List{EntityRelation}, EntityUid)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    public bool HasRelation(List<EntityRelation> relations, EntityUid entity)
+    {
+        return EntityManager.HasRelation(relations, entity);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.HasRelation(HashSet{EntityRelation}, EntityUid)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    public bool HasRelation(HashSet<EntityRelation> relations, EntityUid entity)
+    {
+        return EntityManager.HasRelation(relations, entity);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.HasRelation{T}(Dictionary{EntityRelation, T}, EntityUid)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, EntityUid entity)
+    {
+        return EntityManager.HasRelation(relations, entity);
+    }
+
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.HasRelation{T}(Dictionary{T, EntityRelation}, EntityUid)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, EntityUid entity) where T : notnull
+    {
+        return EntityManager.HasRelation(relations, entity);
     }
 
     #endregion

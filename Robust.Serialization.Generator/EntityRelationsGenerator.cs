@@ -149,7 +149,7 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
 
                     clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
 
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ent.Comp.{field.Name}, false);");
+                    shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
                 }
                 else if (field.DictionaryValue)
                 {
@@ -168,13 +168,13 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                                 }
                         """);
 
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ent.Comp.{field.Name}, false);");
+                    shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
                 }
                 else if (field.Collection)
                 {
                     relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Remove(args.Relation);");
                     clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ent.Comp.{field.Name}, false);");
+                    shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
                 }
                 else
                 {

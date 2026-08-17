@@ -14,6 +14,7 @@ namespace Robust.Client.Audio;
 /// </summary>
 internal sealed class HeadlessAudioManager : IAudioInternal
 {
+    public bool IsInitialized => true;
 
     private readonly IReadOnlyList<string> _emptyDevices = Array.Empty<string>();
     private int _audioBuffer;
@@ -111,7 +112,7 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     }
 
     /// <inheritdoc />
-    public void _checkAlError(string callerMember = "", int callerLineNumber = -1)
+    public void CheckAlError(string callerMember = "", int callerLineNumber = -1)
     {
     }
 
@@ -143,4 +144,12 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     {
         return new AudioStream(this, _audioBuffer++, null, metadata.Length, metadata.ChannelCount, name, metadata.Title, metadata.Artist);
     }
+
+    /// <inheritdoc />
+    public void UpdateDeviceState(TimeSpan curTime)
+    {
+    }
+
+    /// <inheritdoc />
+    public string GetCurrentDeviceName() => string.Empty;
 }

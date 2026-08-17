@@ -37,7 +37,7 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
         {
             _checkDisposed();
             var state = AL.GetSource(SourceHandle, ALGetSourcei.SourceState);
-            _master._checkAlError();
+            _master.CheckAlError();
             return state == (int)ALSourceState.Playing;
         }
         set
@@ -47,7 +47,7 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
                 _checkDisposed();
                 // IDK why this stackallocs but gonna leave it for now.
                 AL.SourcePlay(stackalloc int[] {SourceHandle});
-                _master._checkAlError();
+                _master.CheckAlError();
             }
             else
             {
@@ -55,7 +55,7 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
                     return;
 
                 AL.SourceStop(SourceHandle);
-                _master._checkAlError();
+                _master.CheckAlError();
             }
         }
     }
@@ -88,7 +88,7 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
             AL.DeleteSource(SourceHandle);
             AL.DeleteBuffers(BufferHandles);
             _master.RemoveBufferedAudioSource(SourceHandle);
-            _master._checkAlError();
+            _master.CheckAlError();
         }
 
         FilterHandle = 0;

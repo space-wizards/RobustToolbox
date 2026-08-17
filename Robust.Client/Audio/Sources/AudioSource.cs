@@ -30,7 +30,7 @@ internal sealed class AudioSource : BaseAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSource3f.Position, out var x, out var y, out _);
-            Master._checkAlError();
+            Master.CheckAlError();
             return new Vector2(x, y);
         }
         set
@@ -57,7 +57,7 @@ internal sealed class AudioSource : BaseAudioSource
 #endif
 
             AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
-            Master._checkAlError();
+            Master.CheckAlError();
         }
     }
 
@@ -80,7 +80,7 @@ internal sealed class AudioSource : BaseAudioSource
 
             AL.DeleteSource(SourceHandle);
             Master.RemoveAudioSource(SourceHandle);
-            Master._checkAlError();
+            Master.CheckAlError();
         }
 
         FilterHandle = 0;

@@ -30,7 +30,7 @@ internal interface IAudioInternal : IAudioManager
     /// Returns a buffered audio source.
     /// </summary>
     /// <returns>null if unable to create the source.</returns>
-    IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio=false);
+    IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio = false);
 
     /// <summary>
     /// Sets the velocity for the audio listener.
@@ -66,10 +66,16 @@ internal interface IAudioInternal : IAudioManager
     /// </summary>
     void SetZOffset(float f);
 
-    void _checkAlError([CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1);
+    void CheckAlError([CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1);
 
     /// <summary>
     /// Manually calculates the specified gain for an attenuation source with the specified distance.
     /// </summary>
     float GetAttenuationGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance);
+
+    /// <summary>
+    /// Polls for device availability and switches the output without tearing down
+    /// the context. Must run on the game thread.
+    /// </summary>
+    void UpdateDeviceState(TimeSpan curTime);
 }

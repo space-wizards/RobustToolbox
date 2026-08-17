@@ -14,6 +14,8 @@ namespace Robust.Client.Audio;
 [NotContentImplementable]
 public interface IAudioManager
 {
+    bool IsInitialized { get; }
+
     /// <summary>
     /// Provides list of audio devices available on the system. Those device names can be used to change device used by the game.
     /// </summary>
@@ -22,6 +24,8 @@ public interface IAudioManager
     IReadOnlyList<string> GetAudioDevices();
 
     string? GetDefaultAudioDevice();
+
+    string GetCurrentDeviceName();
 
     IAudioSource? CreateAudioSource(AudioStream stream);
 

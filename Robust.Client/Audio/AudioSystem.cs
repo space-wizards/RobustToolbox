@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -22,7 +18,12 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Replays;
 using Robust.Shared.Threading;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 
 namespace Robust.Client.Audio;
 
@@ -43,6 +44,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private SharedMapSystem _maps = default!;
     [Dependency] private SharedTransformSystem _xformSys = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     /// <summary>
     /// An optional method that, if provided, will override the behavior of <see cref="ProcessStream"/>.
@@ -313,6 +315,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     public override void FrameUpdate(float frameTime)
     {
+        _audio.UpdateDeviceState(_timing.RealTime);
+
         _audioFrameTimeRemaining -= frameTime;
 
         if (_audioFrameTimeRemaining > 0f)

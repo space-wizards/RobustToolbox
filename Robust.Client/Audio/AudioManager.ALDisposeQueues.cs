@@ -11,6 +11,22 @@ internal partial class AudioManager
     private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _bufferedSourceDisposeQueue = new();
     private readonly ConcurrentQueue<int> _bufferDisposeQueue = new();
 
+    #region Enqueue
+
+    internal void DeleteSourceOnMainThread(int sourceHandle, int filterHandle) => _sourceDisposeQueue.Enqueue((sourceHandle, filterHandle));
+
+    internal void DeleteBufferedSourceOnMainThread(int bufferedSourceHandle, int filterHandle) => _bufferedSourceDisposeQueue.Enqueue((bufferedSourceHandle, filterHandle));
+
+    internal void DeleteAudioBufferOnMainThread(int bufferHandle) => _bufferDisposeQueue.Enqueue(bufferHandle);
+
+    #endregion
+
+    #region Flush
+
+    /// <summary>
+    /// Drains all pending dispose queues and actually issues the AL delete calls.
+    /// Must be called from the game thread (typically once per frame/tick).
+    /// </summary>
     public void FlushALDisposeQueues()
     {
         // Clear out finalized audio sources.
@@ -19,7 +35,7 @@ internal partial class AudioManager
             OpenALSawmill.Debug("Cleaning out source {0} which finalized in another thread.", handles.sourceHandle);
             if (IsEfxSupported) RemoveEfx(handles);
             AL.DeleteSource(handles.sourceHandle);
-            _checkAlError();
+            CheckAlError();
             _audioSources.Remove(handles.sourceHandle);
         }
 
@@ -29,7 +45,7 @@ internal partial class AudioManager
             OpenALSawmill.Debug("Cleaning out buffered source {0} which finalized in another thread.", handles.sourceHandle);
             if (IsEfxSupported) RemoveEfx(handles);
             AL.DeleteSource(handles.sourceHandle);
-            _checkAlError();
+            CheckAlError();
             _bufferedAudioSources.Remove(handles.sourceHandle);
         }
 
@@ -37,22 +53,9 @@ internal partial class AudioManager
         while (_bufferDisposeQueue.TryDequeue(out var handle))
         {
             AL.DeleteBuffer(handle);
-            _checkAlError();
+            CheckAlError();
         }
     }
 
-    internal void DeleteSourceOnMainThread(int sourceHandle, int filterHandle)
-    {
-        _sourceDisposeQueue.Enqueue((sourceHandle, filterHandle));
-    }
-
-    internal void DeleteBufferedSourceOnMainThread(int bufferedSourceHandle, int filterHandle)
-    {
-        _bufferedSourceDisposeQueue.Enqueue((bufferedSourceHandle, filterHandle));
-    }
-
-    internal void DeleteAudioBufferOnMainThread(int bufferHandle)
-    {
-        _bufferDisposeQueue.Enqueue(bufferHandle);
-    }
+    #endregion
 }

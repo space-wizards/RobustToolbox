@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using System.Numerics;
-using System.Threading;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
@@ -10,6 +6,12 @@ using Robust.Shared.Audio;
 using Robust.Shared.Audio.AudioLoading;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Numerics;
+using System.Threading;
 
 namespace Robust.Client.Audio;
 
@@ -17,40 +19,34 @@ internal partial class AudioManager
 {
     private float _zOffset;
 
-    public void SetZOffset(float offset)
-    {
-        _zOffset = offset;
-    }
+    public float BaseGain { get; private set; }
 
-    /// <inheritdoc />
-    public float GetAttenuationGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance)
-    {
-        switch (_attenuation)
-        {
-            case Attenuation.LinearDistance:
-                return 1 - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance);
-            case Attenuation.LinearDistanceClamped:
-                distance = MathF.Max(referenceDistance, MathF.Min(distance, maxDistance));
-                return 1 - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance);
-            default:
-                // TODO: If you see this you can implement
-                throw new NotImplementedException();
-        }
-    }
+    public float FadeGain { get; private set; } = 1f;
 
+    #region Lifecycle
+
+    /// <summary>Whether the audio backend initialized successfully and is actually producing sound.</summary>
+    public bool IsInitialized => _audioInitialized;
+
+    /// <summary>
+    /// Finishes setting up the audio backend once a windowing/graphics context exists. Must be
+    /// called from the game thread; captures it for later <see cref="IsMainThread"/> checks.
+    /// </summary>
     public void InitializePostWindowing()
     {
         _gameThread = Thread.CurrentThread;
+
+        // Starlight-start
+        OpenALSawmill = _logMan.GetSawmill("clyde.oal");
+        PreloadOpenAl(OpenALSawmill);
+        // Starlight-end
+
         InitializeAudio();
     }
 
+    /// <summary>Disposes all live audio sources/buffers and tears down the OpenAL context and device.</summary>
     public void Shutdown()
     {
-        _clyde.OnWindowFocused -= OnWindowFocused;
-        _cfg.UnsubValueChanged(CVars.AudioMasterVolume, SetMasterGain);
-        _cfg.UnsubValueChanged(CVars.AudioMuteUnfocused, OnMuteUnfocusedChanged);
-        _cfg.UnsubValueChanged(CVars.AudioDevice, OnAudioDeviceChanged);
-
         DisposeAllAudio();
 
         if (_openALContext != ALContext.Null)
@@ -58,40 +54,31 @@ internal partial class AudioManager
             ALC.MakeContextCurrent(ALContext.Null);
 
             ALC.DestroyContext(_openALContext);
+
+            _openALContext = ALContext.Null;
         }
 
         if (_openALDevice != IntPtr.Zero)
         {
             ALC.CloseDevice(_openALDevice);
+
+            _openALDevice = ALDevice.Null;
         }
-    }
 
-    /// <inheritdoc/>
-    public void SetVelocity(Vector2 velocity)
-    {
-        AL.Listener(ALListener3f.Velocity, velocity.X, velocity.Y, 0f);
-    }
+        _cfg.UnsubValueChanged(CVars.AudioMasterVolume, SetMasterGain);
+        _cfg.UnsubValueChanged(CVars.AudioMuteUnfocused, OnMuteUnfocusedChanged);
+        _cfg.UnsubValueChanged(CVars.AudioDevice, OnAudioDeviceChanged);
+        _clyde.OnWindowFocused -= OnWindowFocused;
 
-    /// <inheritdoc/>
-    public void SetPosition(Vector2 position)
-    {
-        AL.Listener(ALListener3f.Position, position.X, position.Y, _zOffset);
-    }
+        _reload.OnChanged -= OnReload;
 
-    /// <inheritdoc/>
-    public void SetRotation(Angle angle)
-    {
-        var vec = angle.ToVec();
-
-        // Default orientation: at: (0, 0, -1)  up: (0, 1, 0)
-        var at = new OpenTK.Mathematics.Vector3(0f, 0f, -1f);
-        var up = new OpenTK.Mathematics.Vector3(vec.Y, vec.X, 0f);
-        AL.Listener(ALListenerfv.Orientation, new []{0, 0, -1, vec.X, vec.Y, 0});
-        AL.Listener(ALListenerfv.Orientation, ref at, ref up);
+        _audioInitialized = false;
     }
 
     public void FrameUpdate(float frameTime)
     {
+        UpdateDeviceState(_gameTiming.RealTime);
+
         if (MathF.Abs(FadeGain - _masterFadeTargetGain) < 0.001f)
             return;
 
@@ -101,23 +88,150 @@ internal partial class AudioManager
         ApplyMasterGain();
     }
 
-    void IAudioInternal.Remove(AudioStream stream)
-    {
-        if (stream.ClydeHandle == null)
-            return;
+    #endregion
 
-        if (!_audioSampleBuffers.Remove(stream.BufferId))
+    #region Listener State
+
+    /// <summary>Sets the world-space Z offset applied to the listener position.</summary>
+    public void SetZOffset(float offset) => _zOffset = offset;
+
+    /// <inheritdoc/>
+    public void SetVelocity(Vector2 velocity)
+    {
+        if (!_audioInitialized) return;
+        AL.Listener(ALListener3f.Velocity, velocity.X, velocity.Y, 0f);
+    }
+
+    /// <inheritdoc/>
+    public void SetPosition(Vector2 position)
+    {
+        if (!_audioInitialized) return;
+        AL.Listener(ALListener3f.Position, position.X, position.Y, _zOffset);
+    }
+
+    /// <inheritdoc/>
+    public void SetRotation(Angle angle)
+    {
+        if (!_audioInitialized) return;
+
+        var az = (float)angle.Theta;
+        var at = new OpenTK.Mathematics.Vector3(0f, 0f, -1f);
+        var up = new OpenTK.Mathematics.Vector3(-MathF.Sin(az), MathF.Cos(az), 0f);
+        AL.Listener(ALListenerfv.Orientation, ref at, ref up);
+    }
+
+    /// <summary>Sets the listener gain (master volume), clamped to be non-negative.</summary>
+    public void SetMasterGain(float newGain)
+    {
+        if (newGain < 0f)
         {
-            return;
+            OpenALSawmill.Error("Tried to set master gain below 0, clamping to 0");
+            newGain = 0f;
         }
 
-        AL.DeleteBuffer(stream.BufferId);
+        BaseGain = newGain;
+        ApplyMasterGain();
     }
+
+    /// <summary>Sets the active distance-attenuation model and, once initialized, applies it immediately.</summary>
+    public void SetAttenuation(Attenuation attenuation)
+    {
+        _attenuation = attenuation;
+        if (!_audioInitialized)
+            return;
+        ApplyDistanceModel();
+    }
+
+    public void SetDopplerFactor(float factor)
+    {
+        if (!_audioInitialized) return;
+
+        factor = Math.Max(factor, 0f);
+        AL.DopplerFactor(factor);
+        OpenALSawmill.Info($"Set doppler factor to {factor:F2}");
+    }
+
+    /// <inheritdoc/>
+    internal static float GetAttenuationGain(Attenuation attenuation, float distance, float rolloffFactor, float referenceDistance, float maxDistance)
+    {
+        // Mirrors the OpenAL 1.1 spec distance models (section 3.4.4) so callers can predict
+        // the gain OpenAL will apply without querying a source.
+        switch (attenuation)
+        {
+            case Attenuation.NoAttenuation:
+                return 1f;
+
+            case Attenuation.InverseDistance:
+                // Unclamped inverse still needs a floor, otherwise the denominator can reach
+                // zero and flip sign once distance drops far below the reference.
+                distance = MathF.Max(distance, referenceDistance);
+                return InverseGain(distance, rolloffFactor, referenceDistance);
+
+            case Attenuation.InverseDistanceClamped:
+                distance = MathF.Max(referenceDistance, MathF.Min(distance, maxDistance));
+                return InverseGain(distance, rolloffFactor, referenceDistance);
+
+            case Attenuation.LinearDistance:
+                // Spec clamps to maxDistance here to avoid negative gain.
+                distance = MathF.Min(distance, maxDistance);
+                return LinearGain(distance, rolloffFactor, referenceDistance, maxDistance);
+
+            case Attenuation.LinearDistanceClamped:
+                distance = MathF.Max(referenceDistance, MathF.Min(distance, maxDistance));
+                return LinearGain(distance, rolloffFactor, referenceDistance, maxDistance);
+
+            case Attenuation.ExponentDistance:
+                distance = MathF.Max(distance, referenceDistance);
+                return ExponentGain(distance, rolloffFactor, referenceDistance);
+
+            case Attenuation.ExponentDistanceClamped:
+                distance = MathF.Max(referenceDistance, MathF.Min(distance, maxDistance));
+                return ExponentGain(distance, rolloffFactor, referenceDistance);
+
+            default:
+                throw new ArgumentOutOfRangeException($"No attenuation formula for {attenuation}!");
+        }
+    }
+
+    public float GetAttenuationGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance)
+        => GetAttenuationGain(_attenuation, distance, rolloffFactor, referenceDistance, maxDistance);
+
+    private static float InverseGain(float distance, float rolloffFactor, float referenceDistance)
+    {
+        var denominator = referenceDistance + rolloffFactor * (distance - referenceDistance);
+        return denominator <= 0f ? 1f : Math.Clamp(referenceDistance / denominator, 0f, 1f);
+    }
+
+    private static float LinearGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance)
+    {
+        var range = maxDistance - referenceDistance;
+        // Degenerate range: everything inside the reference is full volume, everything past it silent.
+        if (range <= 0f)
+            return distance <= referenceDistance ? 1f : 0f;
+
+        return Math.Clamp(1f - rolloffFactor * (distance - referenceDistance) / range, 0f, 1f);
+    }
+
+    private static float ExponentGain(float distance, float rolloffFactor, float referenceDistance)
+    {
+        if (referenceDistance <= 0f || distance <= 0f)
+            return 1f;
+
+        return Math.Clamp(MathF.Pow(distance / referenceDistance, -rolloffFactor), 0f, 1f);
+    }
+
+    #endregion
+
+    #region Audio Loading
 
     /// <inheritdoc/>
     public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
     {
         var vorbis = AudioLoaderOgg.LoadAudioData(stream);
+        var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double)vorbis.SampleRate);
+
+        if (!_audioInitialized)
+            return new AudioStream(this, 0, new ClydeHandle(0), length, (int)vorbis.Channels, name, vorbis.Title, vorbis.Artist);
 
         var buffer = AL.GenBuffer();
 
@@ -142,23 +256,25 @@ internal partial class AudioManager
         {
             fixed (short* ptr = vorbis.Data.Span)
             {
-                AL.BufferData(buffer, format, (IntPtr) ptr, vorbis.Data.Length * sizeof(short),
-                    (int) vorbis.SampleRate);
+                AL.BufferData(buffer, format, (IntPtr)ptr, vorbis.Data.Length * sizeof(short),
+                    (int)vorbis.SampleRate);
             }
         }
 
-        _checkAlError();
+        CheckAlError();
 
-        var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
-        var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double) vorbis.SampleRate);
-        return new AudioStream(this, buffer, handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
+        var handle = RegisterBuffer(buffer);
+        return new AudioStream(this, buffer, handle, length, (int)vorbis.Channels, name, vorbis.Title, vorbis.Artist);
     }
 
     /// <inheritdoc/>
     public AudioStream LoadAudioWav(Stream stream, string? name = null)
     {
         var wav = AudioLoaderWav.LoadAudioData(stream);
+        var length = TimeSpan.FromSeconds(wav.Data.Length / (double)wav.BlockAlign / wav.SampleRate);
+
+        if (!_audioInitialized)
+            return new AudioStream(this, 0, new ClydeHandle(0), length, wav.NumChannels, name);
 
         var buffer = AL.GenBuffer();
 
@@ -202,21 +318,24 @@ internal partial class AudioManager
         {
             fixed (byte* ptr = wav.Data.Span)
             {
-                AL.BufferData(buffer, format, (IntPtr) ptr, wav.Data.Length, wav.SampleRate);
+                AL.BufferData(buffer, format, (IntPtr)ptr, wav.Data.Length, wav.SampleRate);
             }
         }
 
-        _checkAlError();
+        CheckAlError();
 
-        var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
-        var length = TimeSpan.FromSeconds(wav.Data.Length / (double) wav.BlockAlign / wav.SampleRate);
+        var handle = RegisterBuffer(buffer);
         return new AudioStream(this, buffer, handle, length, wav.NumChannels, name);
     }
 
     /// <inheritdoc/>
     public AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null)
     {
+        var length = TimeSpan.FromSeconds((double)samples.Length / channels / sampleRate);
+
+        if (!_audioInitialized)
+            return new AudioStream(this, 0, new ClydeHandle(0), length, channels, name);
+
         var fmt = channels switch
         {
             1 => ALFormat.Mono16,
@@ -226,122 +345,62 @@ internal partial class AudioManager
         };
 
         var buffer = AL.GenBuffer();
-        _checkAlError();
+        CheckAlError();
 
         unsafe
         {
             fixed (short* ptr = samples)
             {
-                AL.BufferData(buffer, fmt, (IntPtr) ptr, samples.Length * sizeof(short), sampleRate);
+                AL.BufferData(buffer, fmt, (IntPtr)ptr, samples.Length * sizeof(short), sampleRate);
             }
         }
 
-        _checkAlError();
+        CheckAlError();
 
-        var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
-        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
+        var handle = RegisterBuffer(buffer);
         return new AudioStream(this, buffer, handle, length, channels, name);
     }
 
-    public void SetMasterGain(float newGain)
+    /// <summary>Deletes the OpenAL buffer backing <paramref name="stream"/>, if it is still loaded.</summary>
+    void IAudioInternal.Remove(AudioStream stream)
     {
-        if (newGain < 0f)
+        if (stream.ClydeHandle == null)
+            return;
+
+        if (!_audioSampleBuffers.Remove(stream.BufferId))
         {
-            OpenALSawmill.Error("Tried to set master gain below 0, clamping to 0");
-            newGain = 0f;
-        }
-
-        BaseGain = newGain;
-        ApplyMasterGain();
-    }
-
-    public float BaseGain { get; private set; }
-
-    public float FadeGain { get; private set; } = 1f;
-
-    private void ApplyMasterGain()
-    {
-        var effectiveGain = BaseGain * FadeGain;
-
-
-        #region Platform hack for MacOS
-        // HACK/BUG: Apple's OpenAL implementation has a bug where values of 0f for listener gain don't actually
-        // HACK/BUG: prevent sound playback. Workaround is to cap the minimum gain at a value just above 0.
-        if (OperatingSystem.IsMacOS() && effectiveGain == 0f)
-        {
-            OpenALSawmill.Verbose("Not setting gain to 0 because Apple can't write an OpenAL implementation");
-            AL.Listener(ALListenerf.Gain, float.Epsilon);
             return;
         }
-        #endregion Platform hack for MacOS
 
-        AL.Listener(ALListenerf.Gain, effectiveGain);
+        AL.DeleteBuffer(stream.BufferId);
     }
 
-    public void SetAttenuation(Attenuation attenuation)
-    {
-        switch (attenuation)
-        {
-            case Attenuation.NoAttenuation:
-                AL.DistanceModel(ALDistanceModel.None);
-                break;
-            case Attenuation.InverseDistance:
-                AL.DistanceModel(ALDistanceModel.InverseDistance);
-                break;
-            case Attenuation.InverseDistanceClamped:
-                AL.DistanceModel(ALDistanceModel.InverseDistanceClamped);
-                break;
-            case Attenuation.LinearDistance:
-                AL.DistanceModel(ALDistanceModel.LinearDistance);
-                break;
-            case Attenuation.LinearDistanceClamped:
-                AL.DistanceModel(ALDistanceModel.LinearDistanceClamped);
-                break;
-            case Attenuation.ExponentDistance:
-                AL.DistanceModel(ALDistanceModel.ExponentDistance);
-                break;
-            case Attenuation.ExponentDistanceClamped:
-                AL.DistanceModel(ALDistanceModel.ExponentDistanceClamped);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException($"No implementation to set {attenuation.ToString()} for DistanceModel!");
-        }
+    #endregion
 
-        _attenuation = attenuation;
-        OpenALSawmill.Info($"Set audio attenuation to {attenuation.ToString()}");
-    }
+    #region Source Creation
 
-    public void SetDopplerFactor(float factor)
-    {
-        factor = Math.Max(factor, 0f);
-        AL.DopplerFactor(factor);
-        OpenALSawmill.Info($"Set doppler factor to {factor:F2}");
-    }
-
-    internal void RemoveAudioSource(int handle)
-    {
-        _audioSources.Remove(handle);
-    }
-
-    internal void RemoveBufferedAudioSource(int handle)
-    {
-        _bufferedAudioSources.Remove(handle);
-    }
-
+    /// <summary>Creates a one-shot AL source bound to the buffer of <paramref name="stream"/>.</summary>
     public IAudioSource? CreateAudioSource(AudioStream stream)
     {
+        if (!_audioInitialized)
+            return null;
+
         var source = AL.GenSource();
 
         if (!AL.IsSource(source))
         {
-            OpenALSawmill.Error("Failed to generate source. Too many simultaneous audio streams? {0}", Environment.StackTrace);
+            OpenALSawmill.Error($"Failed to generate source. Too many simultaneous audio streams? {Environment.StackTrace}");
             return null;
         }
 
-        // ReSharper disable once PossibleInvalidOperationException
-        // TODO: This really shouldn't be indexing based on the ClydeHandle...
-        AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[stream.BufferId].BufferHandle);
+        if (!_audioSampleBuffers.TryGetValue(stream.BufferId, out var sample))
+        {
+            OpenALSawmill.Warning($"Audio stream '{stream.Name}' has no backing buffer, skipping.");
+            AL.DeleteSource(source);
+            return null;
+        }
+
+        AL.Source(source, ALSourcei.Buffer, sample.BufferHandle);
 
         var audioSource = new AudioSource(this, source, stream);
         _audioSources.Add(source, new WeakReference<BaseAudioSource>(audioSource));
@@ -349,14 +408,18 @@ internal partial class AudioManager
         return audioSource;
     }
 
+    /// <summary>Creates a streaming/buffered AL source with <paramref name="buffers"/> backing buffers.</summary>
     /// <inheritdoc/>
     IBufferedAudioSource? IAudioInternal.CreateBufferedAudioSource(int buffers, bool floatAudio)
     {
+        if (!_audioInitialized)
+            return null;
+
         var source = AL.GenSource();
 
         if (!AL.IsSource(source))
         {
-            OpenALSawmill.Error("Failed to generate source. Too many simultaneous audio streams? {0}", Environment.StackTrace);
+            OpenALSawmill.Error($"Failed to generate source. Too many simultaneous audio streams? {Environment.StackTrace}");
             return null;
         }
 
@@ -368,6 +431,7 @@ internal partial class AudioManager
         return audioSource;
     }
 
+    /// <summary>Applies the shared default <see cref="AudioParams"/> to a freshly created source.</summary>
     private void ApplyDefaultParams(IAudioSource source)
     {
         source.MaxDistance = AudioParams.Default.MaxDistance;
@@ -376,54 +440,117 @@ internal partial class AudioManager
         source.RolloffFactor = AudioParams.Default.RolloffFactor;
     }
 
+    /// <summary>Drops the bookkeeping entry for a disposed one-shot source. Does not touch AL state.</summary>
+    internal void RemoveAudioSource(int handle) => _audioSources.Remove(handle);
+
+    /// <summary>Drops the bookkeeping entry for a disposed buffered source. Does not touch AL state.</summary>
+    internal void RemoveBufferedAudioSource(int handle) => _bufferedAudioSources.Remove(handle);
+
+    #endregion
+
+    #region Playback Control
+
     /// <inheritdoc />
     public void StopAllAudio()
     {
+        if (!_audioInitialized) return;
         foreach (var source in _audioSources.Values)
-        {
             if (source.TryGetTarget(out var target))
-            {
                 target.Playing = false;
-            }
-        }
 
         foreach (var source in _bufferedAudioSources.Values)
-        {
             if (source.TryGetTarget(out var target))
-            {
                 target.Playing = false;
-            }
-        }
     }
 
+    /// <summary>Disposes every live source and deletes every loaded buffer.</summary>
     public void DisposeAllAudio()
     {
-        // TODO: Do we even need to stop?
-        foreach (var source in _audioSources.Values)
-        {
+        // Snapshot first: disposing a source calls back into RemoveAudioSource, which mutates
+        // the very dictionary being enumerated.
+        foreach (var source in _audioSources.Values.ToArray())
             if (source.TryGetTarget(out var target))
-            {
                 target.Dispose();
-            }
-        }
 
         _audioSources.Clear();
 
-        foreach (var source in _bufferedAudioSources.Values)
-        {
+        foreach (var source in _bufferedAudioSources.Values.ToArray())
             if (source.TryGetTarget(out var target))
-            {
                 target.Dispose();
-            }
-        }
 
         _bufferedAudioSources.Clear();
 
-        foreach (var buffer in _audioSampleBuffers.Values)
-        {
+        foreach (var buffer in _audioSampleBuffers.Values.ToArray())
             DeleteAudioBufferOnMainThread(buffer.BufferHandle);
-        }
 
         _audioSampleBuffers.Clear();
     }
+
+    #endregion
+
+    #region Device Management
+
+    public static bool IsNullDevice(string name) => name.EndsWith(NullDeviceName, StringComparison.Ordinal);
+
+    public IReadOnlyList<string> GetAudioDevices()
+    {
+        if (ALC.EnumerateAll.IsExtensionPresent())
+            return [.. ALC.EnumerateAll.GetStringList(GetEnumerateAllContextStringList.AllDevicesSpecifier)];
+
+        if (ALC.IsExtensionPresent(ALDevice.Null, "ALC_ENUMERATION_EXT"))
+            return [.. ALC.GetStringList(GetEnumerationStringList.DeviceSpecifier)];
+
+        return [];
+    }
+
+    public string? GetDefaultAudioDevice()
+    {
+        if (ALC.EnumerateAll.IsExtensionPresent())
+            return ALC.EnumerateAll.GetString(ALDevice.Null, GetEnumerateAllContextString.DefaultAllDevicesSpecifier);
+
+        if (ALC.IsExtensionPresent(ALDevice.Null, "ALC_ENUMERATION_EXT"))
+            return ALC.GetString(ALDevice.Null, AlcGetString.DefaultDeviceSpecifier);
+
+        return null;
+    }
+
+    public void UpdateDeviceState(TimeSpan curTime)
+    {
+        if (!_audioInitialized || _reopenDevice == null || curTime < _nextDeviceCheck)
+            return;
+
+        _nextDeviceCheck = curTime + DeviceCheckInterval;
+
+        if (!_silentFallback && IsDeviceConnected())
+            return;
+
+        var preferred = GetPreferredDeviceName();
+
+        // There’s nothing to switch to yet - remain silent and try again later.
+        if (preferred == null && !HasRealPlaybackDevice())
+            return;
+
+        if (preferred != null && TryReopenAudioDevice(preferred) && !_silentFallback)
+            return;
+
+        TryReopenAudioDevice(null);
+    }
+
+    public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
+
+    public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
+
+    public string GetCurrentDeviceName()
+    {
+        if (ALC.EnumerateAll.IsExtensionPresent())
+        {
+            var name = ALC.EnumerateAll.GetString(_openALDevice, GetEnumerateAllContextString.AllDevicesSpecifier);
+            if (!string.IsNullOrEmpty(name))
+                return name;
+        }
+
+        return ALC.GetString(_openALDevice, AlcGetString.DeviceSpecifier) ?? "";
+    }
+
+    #endregion
 }

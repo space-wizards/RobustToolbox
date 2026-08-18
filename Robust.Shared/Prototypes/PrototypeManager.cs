@@ -265,9 +265,9 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public EntityPrototype Index<T>(EntProtoId id) where T : IPrototype
+        public T Index<T>(EntProtoId id) where T : class, IPrototype
         {
-            return Index<EntityPrototype>(id.Id);
+            return Index<T>(id.Id);
         }
 
         /// <inheritdoc />
@@ -810,7 +810,7 @@ namespace Robust.Shared.Prototypes
 
         public bool HasIndex<T>(EntProtoId id) where T : class, IPrototype
         {
-            return HasIndex(id);
+            return HasIndex<T>(id.Id);
         }
 
         /// <inheritdoc />
@@ -826,6 +826,15 @@ namespace Robust.Shared.Prototypes
                 return false;
 
             return HasIndex(id.Value);
+        }
+
+        /// <inheritdoc />
+        public bool HasIndex<T>(EntProtoId? id) where T : class, IPrototype
+        {
+            if (id == null)
+                return false;
+
+            return HasIndex<T>(id.Value);
         }
 
         /// <inheritdoc />
@@ -874,9 +883,9 @@ namespace Robust.Shared.Prototypes
             return TryIndex(id.Id, out prototype);
         }
 
-        public bool TryIndex<T>(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IPrototype
+        public bool TryIndex<T>(EntProtoId id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
         {
-            return TryIndex(id, out prototype);
+            return TryIndex(id.Id, out prototype);
         }
 
         public bool Resolve<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
@@ -916,9 +925,15 @@ namespace Robust.Shared.Prototypes
             return TryIndex(id.Value, out prototype);
         }
 
-        public bool TryIndex<T>(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IPrototype
+        public bool TryIndex<T>(EntProtoId? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
         {
-            return TryIndex(id, out prototype);
+            if (id == null)
+            {
+                prototype = null;
+                return false;
+            }
+
+            return TryIndex(id.Value, out prototype);
         }
 
         public bool Resolve<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype

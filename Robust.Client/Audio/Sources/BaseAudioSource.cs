@@ -47,13 +47,16 @@ public abstract class BaseAudioSource : IAudioSource
     /// <inheritdoc />
     public void Pause()
     {
+        if (_isDisposed())
+            return;
+
         AL.SourcePause(SourceHandle);
     }
 
     /// <inheritdoc />
     public void StartPlaying()
     {
-        if (Playing)
+        if (_isDisposed() || Playing)
             return;
 
         Playing = true;
@@ -62,7 +65,7 @@ public abstract class BaseAudioSource : IAudioSource
     /// <inheritdoc />
     public void StopPlaying()
     {
-        if (!Playing)
+        if (_isDisposed() || !Playing)
             return;
 
         Playing = false;
@@ -71,6 +74,9 @@ public abstract class BaseAudioSource : IAudioSource
     /// <inheritdoc />
     public void Restart()
     {
+        if (_isDisposed() || Playing)
+            return;
+
         AL.SourceRewind(SourceHandle);
         StartPlaying();
     }

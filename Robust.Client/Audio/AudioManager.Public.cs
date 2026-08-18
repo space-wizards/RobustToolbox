@@ -69,18 +69,21 @@ internal partial class AudioManager
     /// <inheritdoc/>
     public void SetVelocity(Vector2 velocity)
     {
+        if (!_audioInitialized) return;
         AL.Listener(ALListener3f.Velocity, velocity.X, velocity.Y, 0f);
     }
 
     /// <inheritdoc/>
     public void SetPosition(Vector2 position)
     {
+        if (!_audioInitialized) return;
         AL.Listener(ALListener3f.Position, position.X, position.Y, _zOffset);
     }
 
     /// <inheritdoc/>
     public void SetRotation(Angle angle)
     {
+        if (!_audioInitialized) return;
         var vec = angle.ToVec();
 
         // Default orientation: at: (0, 0, -1)  up: (0, 1, 0)
@@ -118,6 +121,9 @@ internal partial class AudioManager
     public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
     {
         var vorbis = AudioLoaderOgg.LoadAudioData(stream);
+        var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double)vorbis.SampleRate);
+
+        if (!_audioInitialized) return new AudioStream(this, 0, null, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
 
         var buffer = AL.GenBuffer();
 
@@ -151,7 +157,6 @@ internal partial class AudioManager
 
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
         _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
-        var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double) vorbis.SampleRate);
         return new AudioStream(this, buffer, handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
     }
 
@@ -159,6 +164,9 @@ internal partial class AudioManager
     public AudioStream LoadAudioWav(Stream stream, string? name = null)
     {
         var wav = AudioLoaderWav.LoadAudioData(stream);
+        var length = TimeSpan.FromSeconds(wav.Data.Length / (double)wav.BlockAlign / wav.SampleRate);
+
+        if (!_audioInitialized) return new AudioStream(this, 0, null, length, (int)wav.NumChannels, name);
 
         var buffer = AL.GenBuffer();
 
@@ -210,13 +218,16 @@ internal partial class AudioManager
 
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
         _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
-        var length = TimeSpan.FromSeconds(wav.Data.Length / (double) wav.BlockAlign / wav.SampleRate);
         return new AudioStream(this, buffer, handle, length, wav.NumChannels, name);
     }
 
     /// <inheritdoc/>
     public AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null)
     {
+        var length = TimeSpan.FromSeconds((double)samples.Length / channels / sampleRate);
+
+        if (!_audioInitialized) return new AudioStream(this, 0, null, length, channels, name);
+
         var fmt = channels switch
         {
             1 => ALFormat.Mono16,
@@ -239,7 +250,6 @@ internal partial class AudioManager
         _checkAlError();
 
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
         _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
         return new AudioStream(this, buffer, handle, length, channels, name);
     }
@@ -262,6 +272,8 @@ internal partial class AudioManager
 
     private void ApplyMasterGain()
     {
+        if (!_audioInitialized) return;
+
         var effectiveGain = BaseGain * FadeGain;
 
 
@@ -281,6 +293,7 @@ internal partial class AudioManager
 
     public void SetAttenuation(Attenuation attenuation)
     {
+        if (!_audioInitialized) return;
         switch (attenuation)
         {
             case Attenuation.NoAttenuation:
@@ -314,6 +327,7 @@ internal partial class AudioManager
 
     public void SetDopplerFactor(float factor)
     {
+        if (!_audioInitialized) return;
         factor = Math.Max(factor, 0f);
         AL.DopplerFactor(factor);
         OpenALSawmill.Info($"Set doppler factor to {factor:F2}");
@@ -331,6 +345,7 @@ internal partial class AudioManager
 
     public IAudioSource? CreateAudioSource(AudioStream stream)
     {
+        if (!_audioInitialized) return null;
         var source = AL.GenSource();
 
         if (!AL.IsSource(source))
@@ -352,6 +367,7 @@ internal partial class AudioManager
     /// <inheritdoc/>
     IBufferedAudioSource? IAudioInternal.CreateBufferedAudioSource(int buffers, bool floatAudio)
     {
+        if (!_audioInitialized) return null;
         var source = AL.GenSource();
 
         if (!AL.IsSource(source))

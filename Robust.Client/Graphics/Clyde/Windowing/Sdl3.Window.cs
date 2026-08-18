@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -176,7 +177,7 @@ internal partial class Clyde
                 SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_STENCIL_SIZE, 8);
                 SDL.SDL_GL_SetAttribute(
                     GLAttr.SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-                    s.Profile == GLContextProfile.Es && OperatingSystem.IsWindows() ? 0 : 1);
+                    s.Profile == GLContextProfile.Es ? 0 : 1);
                 int ctxFlags = 0;
 #if DEBUG
                 ctxFlags |= SDL.SDL_GL_CONTEXT_DEBUG_FLAG;
@@ -424,6 +425,13 @@ internal partial class Clyde
         {
             // API isn't really used and kinda wack, don't feel like figuring it out for SDL3 yet.
             _sawmill.Warning("WindowSetMonitor not implemented on SDL3");
+        }
+
+        public IClydeMonitor? WindowGetMonitor(WindowReg window)
+        {
+            var displayId = SDL.SDL_GetDisplayForWindow(WinPtr(window));
+            var monitorId = GetMonitorIdFromDisplayId(displayId);
+            return _clyde._monitorHandles.GetValueOrDefault(monitorId);
         }
 
         public void WindowSetSize(WindowReg window, Vector2i size)

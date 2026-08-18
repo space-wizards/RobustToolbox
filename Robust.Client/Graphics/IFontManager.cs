@@ -33,6 +33,17 @@ namespace Robust.Client.Graphics
 
     internal interface IFontInstanceHandle
     {
+        /// <summary>
+        ///     Fetches all data needed to draw a glyph.
+        /// </summary>
+        bool TryGetGlyph(
+            Rune codePoint,
+            float scale,
+            float outlineThickness,
+            out CharMetrics metrics,
+            out Texture? texture,
+            out OutlinedGlyph? outlinedGlyph);
+
         Texture? GetCharTexture(Rune codePoint, float scale);
         Texture? GetCharTexture(char chr, float scale) => GetCharTexture((Rune) chr, scale);
         OutlinedGlyph? GetOutlinedChar(Rune codePoint, float scale, float thickness);

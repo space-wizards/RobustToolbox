@@ -29,7 +29,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private IConfigurationManager _cfg = default!;
         [Dependency] private IEyeManager _eye = default!;
         [Dependency] private IGameTiming _timing = default!;
-        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private IResourceCacheInternal _resourceCache = default!;
         [Dependency] private IPrototypeManager _prototypes = default!;
 
         // Note that any new system dependencies have to be added to RobustUnitTest.BaseSetup()
@@ -59,7 +59,6 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(SpriteTreeSystem));
 
             SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-            SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
             _query = GetEntityQuery<SpriteComponent>();
@@ -70,6 +69,38 @@ namespace Robust.Client.GameObjects
             return layer.Visible && layer.CopyToShaderParameters == null;
         }
 
+        [SubscribeLocalEvent]
+        private void OnAdd(EntityUid uid, SpriteComponent component, ComponentAdd args)
+        {
+            LoadPrototypeData((uid, component));
+        }
+
+        private void LoadPrototypeData(Entity<SpriteComponent> sprite)
+        {
+            LoadBaseRsi(sprite, sprite);
+            LoadLayers(sprite);
+        }
+
+        private void LoadBaseRsi(EntityUid uid, SpriteComponent component)
+        {
+            _resourceCache.LoadBaseRsi(uid, component);
+        }
+
+        private void LoadLayers(Entity<SpriteComponent> sprite)
+        {
+            if (sprite.Comp.layerDatums.Count == 0)
+                return;
+
+            sprite.Comp.LayerMap.Clear();
+            sprite.Comp.Layers.Clear();
+            foreach (var datum in sprite.Comp.layerDatums)
+            {
+                var layer = new Layer(sprite, sprite.Comp.Layers.Count);
+                sprite.Comp.Layers.Add(layer);
+                LayerSetData(layer, datum);
+            }
+        }
+        [SubscribeLocalEvent]
         private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
         {
             try

@@ -265,7 +265,7 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public EntityPrototype Index<T>(EntProtoId id) where T : IInheritingPrototype
+        public EntityPrototype Index<T>(EntProtoId id) where T : IPrototype
         {
             return Index<EntityPrototype>(id.Id);
         }
@@ -808,7 +808,7 @@ namespace Robust.Shared.Prototypes
             return HasIndex<EntityPrototype>(id.Id);
         }
 
-        public bool HasIndex<T>(EntProtoId id) where T : class, IInheritingPrototype
+        public bool HasIndex<T>(EntProtoId id) where T : class, IPrototype
         {
             return HasIndex(id);
         }
@@ -826,11 +826,6 @@ namespace Robust.Shared.Prototypes
                 return false;
 
             return HasIndex(id.Value);
-        }
-
-        public bool HasIndex<T>(EntProtoId? id) where T : class, IInheritingPrototype
-        {
-            return HasIndex(id);
         }
 
         /// <inheritdoc />
@@ -874,17 +869,12 @@ namespace Robust.Shared.Prototypes
             return false;
         }
 
-        public bool Resolve<T>(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype
-        {
-            return Resolve(id, out prototype);
-        }
-
         public bool TryIndex([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype)
         {
             return TryIndex(id.Id, out prototype);
         }
 
-        public bool TryIndex<T>(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype
+        public bool TryIndex<T>(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IPrototype
         {
             return TryIndex(id, out prototype);
         }
@@ -915,11 +905,6 @@ namespace Robust.Shared.Prototypes
             return Resolve(id.Value, out prototype);
         }
 
-        public bool Resolve<T>(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype
-        {
-            return Resolve(id, out prototype);
-        }
-
         public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype)
         {
             if (id == null)
@@ -931,7 +916,7 @@ namespace Robust.Shared.Prototypes
             return TryIndex(id.Value, out prototype);
         }
 
-        public bool TryIndex<T>(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype
+        public bool TryIndex<T>(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IPrototype
         {
             return TryIndex(id, out prototype);
         }

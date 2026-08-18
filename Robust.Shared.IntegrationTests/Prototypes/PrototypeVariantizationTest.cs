@@ -39,9 +39,9 @@ internal sealed partial class PrototypeVariantizationTest : OurRobustUnitTest
     {
         Assert.Multiple(() =>
         {
-            Assert.That(protoManager.HasIndex<EntityPrototype>(TestProtoId));
-            Assert.That(protoManager.HasIndex<EntityPrototype>(TestProtoVariantAId));
-            Assert.That(protoManager.HasIndex<EntityPrototype>(TestProtoVariantBId));
+            Assert.That(protoManager.Resolve<EntityPrototype>(TestProtoId, out var _));
+            Assert.That(protoManager.Resolve<EntityPrototype>(TestProtoVariantAId, out _));
+            Assert.That(protoManager.Resolve<EntityPrototype>(TestProtoVariantBId, out _));
         });
     }
 

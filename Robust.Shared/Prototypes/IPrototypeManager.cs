@@ -107,7 +107,7 @@ public interface IPrototypeManager
 
     /// <inheritdoc cref="Index{T}(string)"/>
     [Obsolete("Do not specify T when using EntProtoId")]
-    EntityPrototype Index<T>(EntProtoId protoId) where T : IInheritingPrototype;
+    EntityPrototype Index<T>(EntProtoId protoId) where T : IPrototype;
 
     /// <inheritdoc cref="Index{T}(string)"/>
     T Index<T>([ForbidLiteral] ProtoId<T> id) where T : class, IPrototype;
@@ -130,17 +130,13 @@ public interface IPrototypeManager
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
     [Obsolete("Do not specify T when using EntProtoId")]
-    bool HasIndex<T>([ForbidLiteral] EntProtoId id) where T : class, IInheritingPrototype;
+    bool HasIndex<T>([ForbidLiteral] EntProtoId id) where T : class, IPrototype;
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
     bool HasIndex<T>([ForbidLiteral] ProtoId<T> id) where T : class, IPrototype;
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
     bool HasIndex([ForbidLiteral] EntProtoId? id);
-
-    /// <inheritdoc cref="HasIndex{T}(string)"/>
-    [Obsolete("Do not specify T when using EntProtoId")]
-    bool HasIndex<T>([ForbidLiteral] EntProtoId? id) where T : class, IInheritingPrototype;
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
     bool HasIndex<T>([ForbidLiteral] ProtoId<T>? id) where T : class, IPrototype;
@@ -187,10 +183,6 @@ public interface IPrototypeManager
     /// <seealso cref="TryIndex(EntProtoId,out EntityPrototype?)"/>
     bool Resolve([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
 
-    /// <inheritdoc cref="Resolve(EntProtoId,out EntityPrototype?)"/>
-    [Obsolete("Do not specify T when using EntProtoId")]
-    bool Resolve<T>([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype;
-
     /// <summary>
     /// Resolve an <see cref="EntityPrototype"/> by ID.
     /// </summary>
@@ -218,7 +210,7 @@ public interface IPrototypeManager
 
     /// <inheritdoc cref="TryIndex(EntProtoId,out EntityPrototype?)"/>
     [Obsolete("Do not specify T when using EntProtoId")]
-    bool TryIndex<T>([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype;
+    bool TryIndex<T>([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IPrototype;
 
     /// <summary>
     /// Resolve a prototype by ID, logging an error if it does not exist.
@@ -295,10 +287,6 @@ public interface IPrototypeManager
     /// <seealso cref="TryIndex(EntProtoId?,out EntityPrototype?)"/>
     bool Resolve([ForbidLiteral] EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
 
-    /// <inheritdoc cref="Resolve(EntProtoId?,out EntityPrototype?)"/>
-    [Obsolete("Do not specify T when using EntProtoId")]
-    bool Resolve<T>([ForbidLiteral] EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype;
-
     /// <summary>
     /// Resolve an <see cref="EntityPrototype"/> by ID, gracefully handling null.
     /// </summary>
@@ -326,7 +314,7 @@ public interface IPrototypeManager
 
     /// <inheritdoc cref="TryIndex(EntProtoId?,out EntityPrototype?)"/>
     [Obsolete("Do not specify T when using EntProtoId")]
-    bool TryIndex<T>([ForbidLiteral] EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IInheritingPrototype;
+    bool TryIndex<T>([ForbidLiteral] EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype) where T : IPrototype;
 
     /// <summary>
     /// Resolve a prototype by ID, gracefully handling null, and logging an error if it does not exist.

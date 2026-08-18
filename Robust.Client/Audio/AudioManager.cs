@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.Audio.Sources;
@@ -12,7 +14,6 @@ using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio;
@@ -42,6 +43,7 @@ internal sealed partial class AudioManager : IAudioInternal
     private readonly HashSet<string> _alContextExtensions = new();
     private Attenuation _attenuation;
     private bool _audioInitialized;
+    private int _preloaded;
     private bool _focused = true;
     private bool _muteUnfocused;
     private const float MasterFadeDuration = 0.25f;
@@ -168,6 +170,8 @@ internal sealed partial class AudioManager : IAudioInternal
     {
         OpenALSawmill = _logMan.GetSawmill("clyde.oal");
 
+        PreloadOpenAl();
+
         if (!_audioOpenDevice())
             return;
 
@@ -186,6 +190,40 @@ internal sealed partial class AudioManager : IAudioInternal
 
         _reload.OnChanged += OnReload;
         _audioInitialized = true;
+    }
+
+    private void PreloadOpenAl()
+    {
+        if (Interlocked.Exchange(ref _preloaded, 1) != 0)
+            return;
+
+        if (!OperatingSystem.IsWindows())
+            return;
+
+        var rid = Environment.Is64BitProcess ? "win-x64" : "win-x86";
+        var baseDir = AppContext.BaseDirectory;
+
+        string[] candidates =
+        [
+            Path.Combine(baseDir, "runtimes", rid, "native", "OpenAL32.dll"),
+            Path.Combine(baseDir, "OpenAL32.dll"),
+        ];
+
+        foreach (var candidate in candidates)
+        {
+            if (!File.Exists(candidate))
+                continue;
+
+            if (NativeLibrary.TryLoad(candidate, out _))
+            {
+                OpenALSawmill.Debug($"Preloaded bundled OpenAL from {candidate}");
+                return;
+            }
+
+            OpenALSawmill.Warning("Found {candidate} but failed to load it (architecture mismatch or missing dependencies).", candidate);
+        }
+
+        OpenALSawmill.Warning("No bundled OpenAL found, falling back to the system implementation. Hot-plug may be unavailable.");
     }
 
     private void OnMuteUnfocusedChanged(bool muteUnfocused)

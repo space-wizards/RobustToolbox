@@ -27,15 +27,59 @@ internal partial class AudioManager
     {
         switch (_attenuation)
         {
+            case Attenuation.NoAttenuation:
+                return 1f;
+
+            case Attenuation.InverseDistance:
+                distance = MathF.Max(distance, referenceDistance);
+                return InverseGain(distance, rolloffFactor, referenceDistance);
+
+            case Attenuation.InverseDistanceClamped:
+                distance = MathF.Max(referenceDistance, MathF.Min(distance, maxDistance));
+                return InverseGain(distance, rolloffFactor, referenceDistance);
+
             case Attenuation.LinearDistance:
-                return 1 - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance);
+                distance = MathF.Min(distance, maxDistance);
+                return LinearGain(distance, rolloffFactor, referenceDistance, maxDistance);
+
             case Attenuation.LinearDistanceClamped:
                 distance = MathF.Max(referenceDistance, MathF.Min(distance, maxDistance));
-                return 1 - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance);
+                return LinearGain(distance, rolloffFactor, referenceDistance, maxDistance);
+
+            case Attenuation.ExponentDistance:
+                distance = MathF.Max(distance, referenceDistance);
+                return ExponentGain(distance, rolloffFactor, referenceDistance);
+
+            case Attenuation.ExponentDistanceClamped:
+                distance = MathF.Max(referenceDistance, MathF.Min(distance, maxDistance));
+                return ExponentGain(distance, rolloffFactor, referenceDistance);
+
             default:
-                // TODO: If you see this you can implement
                 throw new NotImplementedException();
         }
+    }
+
+    private static float InverseGain(float distance, float rolloffFactor, float referenceDistance)
+    {
+        var denominator = referenceDistance + rolloffFactor * (distance - referenceDistance);
+        return denominator <= 0f ? 1f : Math.Clamp(referenceDistance / denominator, 0f, 1f);
+    }
+
+    private static float LinearGain(float distance, float rolloffFactor, float referenceDistance, float maxDistance)
+    {
+        var range = maxDistance - referenceDistance;
+        if (range <= 0f)
+            return distance <= referenceDistance ? 1f : 0f;
+
+        return Math.Clamp(1f - rolloffFactor * (distance - referenceDistance) / range, 0f, 1f);
+    }
+
+    private static float ExponentGain(float distance, float rolloffFactor, float referenceDistance)
+    {
+        if (referenceDistance <= 0f)
+            return 1f;
+
+        return Math.Clamp(MathF.Pow(distance / referenceDistance, -rolloffFactor), 0f, 1f);
     }
 
     public void InitializePostWindowing()

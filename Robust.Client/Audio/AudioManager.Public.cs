@@ -149,9 +149,8 @@ internal partial class AudioManager
 
         _checkAlError();
 
-        var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
         var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double) vorbis.SampleRate);
+        var handle = RegisterBuffer(buffer);
         return new AudioStream(this, buffer, handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
     }
 
@@ -208,9 +207,8 @@ internal partial class AudioManager
 
         _checkAlError();
 
-        var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
         var length = TimeSpan.FromSeconds(wav.Data.Length / (double) wav.BlockAlign / wav.SampleRate);
+        var handle = RegisterBuffer(buffer);
         return new AudioStream(this, buffer, handle, length, wav.NumChannels, name);
     }
 
@@ -238,9 +236,8 @@ internal partial class AudioManager
 
         _checkAlError();
 
-        var handle = new ClydeHandle(_audioSampleBuffers.Count);
         var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
-        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
+        var handle = RegisterBuffer(buffer);
         return new AudioStream(this, buffer, handle, length, channels, name);
     }
 
@@ -339,9 +336,14 @@ internal partial class AudioManager
             return null;
         }
 
-        // ReSharper disable once PossibleInvalidOperationException
-        // TODO: This really shouldn't be indexing based on the ClydeHandle...
-        AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[stream.BufferId].BufferHandle);
+        if (!_audioSampleBuffers.TryGetValue(stream.BufferId, out var sample))
+        {
+            OpenALSawmill.Warning($"Audio stream '{stream.Name}' has no backing buffer, skipping.");
+            AL.DeleteSource(source);
+            return null;
+        }
+
+        AL.Source(source, ALSourcei.Buffer, sample.BufferHandle);
 
         var audioSource = new AudioSource(this, source, stream);
         _audioSources.Add(source, new WeakReference<BaseAudioSource>(audioSource));

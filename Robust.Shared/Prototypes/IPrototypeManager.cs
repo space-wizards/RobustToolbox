@@ -455,9 +455,17 @@ public interface IPrototypeManager
     /// empty, everything was successfully validated.</returns>
     Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx);
 
-    void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
+    void LoadFromStream(
+        TextReader stream,
+        bool overwrite = false,
+        Dictionary<Type, HashSet<string>>? changed = null,
+        bool partial = false);
 
-    void LoadString(string str, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
+    void LoadString(
+        string str,
+        bool overwrite = false,
+        Dictionary<Type, HashSet<string>>? changed = null,
+        bool partial = false);
 
     void RemoveString(string prototypes);
 
@@ -604,51 +612,111 @@ public interface IPrototypeManager
     /// </code>
     /// </param>
     /// <example>
-    /// Add one value to a sequence if it exists, or adds the sequence otherwise:
+    /// Add 1 to a sequence if it exists, or adds the sequence otherwise:
     /// <code>
-    /// - type: myPrototype
-    ///   id: MyPrototypeOne
-    ///   list:
-    ///   - MyValue
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list:
+    ///     - 1
     /// </code>
     /// </example>
     /// <example>
-    /// Remove values from a sequence using the !Remove tag:
+    /// Remove 1 from a sequence if it exists, using the !Remove tag:
     /// <code>
-    /// - type: myPrototype
-    ///   id: MyPrototypeOne
-    ///   list:
-    ///   - !Remove: MyValue
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list:
+    ///     - !Remove 1
     /// </code>
     /// </example>
     /// <example>
-    /// Remove dictionary mapping data nodes using the !Remove tag:
+    /// Remove 1 and add 2 to a sequence:
     /// <code>
-    /// - type: myPrototype
-    ///   id: MyPrototypeOne
-    ///   dictionary: !Remove {}
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list:
+    ///     - !Remove 1
+    ///     - 2
     /// </code>
     /// </example>
     /// <example>
-    /// Add and remove values at the same time:
+    /// Clear a sequence and then add 1 to it:
     /// <code>
-    /// - type: myPrototype
-    ///   id: MyPrototypeOne
-    ///   list:
-    ///   - MyValue
-    ///   - !Remove: MyValue
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list: !Remove
+    ///     - 1
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove a mapping with the key 'a':
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     dictionary:
+    ///       "a": !Remove
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove a mapping with the key 'a' and add one with a key of 'b' and a value of 1:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list:
+    ///       "a": !Remove
+    ///       "b": 1
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Clear a mapping and then add a mapping with a key of 'a' and a value of 1 to it:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     dictionary: !Remove
+    ///       "a": 1
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove a component:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - !Remove type: MyComponent
+    /// </code>
+    /// Removing a component can be done the other way around as well:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: !Remove MyComponent
     /// </code>
     /// </example>
     /// <example>
     /// A partial prototype can be marked as partial only, which will ensure that the partial
     /// is not read if there is not a non-partial part for that prototype.
-    /// This is useful for cases where you don't want to add the prototype at all if the original
-    /// one does not exist.
+    /// This is useful for cases where you don't want to add the prototype at all if
+    /// the original one does not exist:
     /// <code>
-    /// - type: !PartialOnly myPrototype
-    ///   id: MyPrototypeOne
+    /// - type: !PartialOnly entity
+    ///   id: MyEntity
     /// </code>
     /// </example>
+    /// <remarks>This works with any prototype kind read by prototype manager.</remarks>
     void PartialDirectory(params ResPath[] paths);
 
     /// <summary>
@@ -665,7 +733,7 @@ public interface IPrototypeManager
     bool TryGetEntityPrototypesByCategory(ProtoId<EntityCategoryPrototype> category, [NotNullWhen(true)] out IReadOnlyList<EntityPrototype>? prototypes);
 
     /// <summary>
-    /// Tries to get the list of all associated variants for a given prototype. 
+    /// Tries to get the list of all associated variants for a given prototype.
     /// </summary>
     /// <param name="collectionMember">The prototype being indexed.</param>
     /// <param name="collectionVariants">The collection of variants this prototype belongs to.</param>

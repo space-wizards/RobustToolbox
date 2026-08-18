@@ -9,6 +9,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using JetBrains.Annotations;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 
 namespace Robust.Shared.Prototypes;
 
@@ -40,6 +42,15 @@ public partial class PrototypeManager
     /// DataNodes with this tag will be replaced with a new node using data supplied by <see cref="CreateVariants"/>.
     /// </summary>
     private const string CreateVariantsTag = "!type:CreateVariants";
+
+    /// <summary>
+    /// Mapping data nodes with this tag will not throw an error when the type
+    /// key is missing in <see cref="ComponentRegistrySerializer"/>.
+    /// This tag marks a component as having been modified by a partial.
+    /// This is necessary as components pretend to be a list but are actually
+    /// a dictionary.
+    /// </summary>
+    internal const string PartialModifiedTag = "!PartialModified";
 
     /// <inheritdoc />
     public void LoadDirectory(ResPath path, bool overwrite = false,
@@ -124,13 +135,17 @@ public partial class PrototypeManager
                 }
             });
 
-        var queue = Array.Empty<Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>>();
+        var queue = Array.Empty<Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>?>();
         foreach (var (file, result) in results)
         {
             if (IsFilePartial(file, out var index))
             {
-                Array.Resize(ref queue, index + 1);
-                queue[index].Enqueue((file, result));
+                if (index >= queue.Length)
+                    Array.Resize(ref queue, index + 1);
+
+                ref var indexQueue = ref queue[index];
+                indexQueue ??= new Queue<(ResPath File, IEnumerable<ExtractedMappingData> Result)>();
+                indexQueue.Enqueue((file, result));
                 continue;
             }
 
@@ -149,6 +164,9 @@ public partial class PrototypeManager
 
         foreach (var array in queue)
         {
+            if (array == null)
+                continue;
+
             foreach (var (file, result) in array)
             {
                 foreach (var mapping in result)
@@ -272,6 +290,7 @@ public partial class PrototypeManager
         var kindData = _kinds[kind];
         Dictionary<string, ExtractedMappingData>? variantData = null;
 
+        var partialOnly = NodeHasTag(typeNode, "!PartialOnly");
         if (!dataNode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
         {
             // Check if the ID node is a CreateVariants node instead of a value.
@@ -303,7 +322,7 @@ public partial class PrototypeManager
 
                         // Gather the outputs.
                         TryGetParents(kindData, clonedNode, out var clonedNodeParents);
-                        variantData.Add(clonedIdNode.Value, new ExtractedMappingData(kind, clonedIdNode.Value, clonedNodeParents, clonedNode));
+                        variantData.Add(clonedIdNode.Value, new ExtractedMappingData(kind, clonedIdNode.Value, clonedNodeParents, clonedNode, partialOnly));
                         variantCollection.Add(clonedIdNode.Value);
                     }
 
@@ -335,7 +354,7 @@ public partial class PrototypeManager
         }
 
         TryGetParents(kindData, dataNode, out var parents);
-        return new ExtractedMappingData(kind, idNode.Value, parents, dataNode, NodeHasTag(typeNode, "!PartialOnly"), variantData);
+        return new ExtractedMappingData(kind, idNode.Value, parents, dataNode, partialOnly, variantData);
     }
 
     private bool TryGetParents(KindData kindData, MappingDataNode mappingDataNode, [NotNullWhen(true)] out string[]? parents)
@@ -368,23 +387,33 @@ public partial class PrototypeManager
             throw new PrototypeLoadException($"Duplicate ID: '{id}' for kind '{kind}'");
         }
 
-        if (existing != null)
-            CombineMapNode(existing, data);
+        if (existing != null && partial)
+        {
+            CombineMapNode(existing, data, static parent => parent.Clear(), existing, out var fullDeleted);
+            if (fullDeleted && existing.IsEmpty)
+            {
+                kindData.RawResults.Remove(id);
+            }
+            else
+            {
+                kindData.RawResults[id] = existing;
+            }
+        }
         else if (partialOnly)
+        {
             return;
-
-        kindData.RawResults[id] = data;
+        }
+        else
+        {
+            kindData.RawResults[id] = data;
+        }
 
         if (kindData.Inheritance is { } inheritance)
         {
             if (parents != null)
-            {
                 inheritance.Add(id, parents);
-            }
             else
-            {
                 inheritance.Add(id);
-            }
         }
 
         if (changed == null)
@@ -394,8 +423,11 @@ public partial class PrototypeManager
         set.Add(id);
     }
 
-    public void LoadFromStream(TextReader stream, bool overwrite = false,
-        Dictionary<Type, HashSet<string>>? changed = null)
+    public void LoadFromStream(
+        TextReader stream,
+        bool overwrite = false,
+        Dictionary<Type, HashSet<string>>? changed = null,
+        bool partial = false)
     {
         _hasEverBeenReloaded = true;
 
@@ -413,18 +445,18 @@ public partial class PrototypeManager
                     if (extracted == null)
                         continue;
 
-                    MergeMapping(extracted, overwrite, changed, false);
+                    MergeMapping(extracted, overwrite, changed, partial);
 
                     // If the prototype has variants, we need to add each of these to the extracted list as well
-                    if (extracted.VariantData is not null)
-                    {
-                        foreach (var (variantId, variantExtracted) in extracted.VariantData)
-                        {
-                            if (variantExtracted is null)
-                                continue;
+                    if (extracted.VariantData is null)
+                        continue;
 
-                            MergeMapping(variantExtracted, overwrite, changed, false);
-                        }
+                    foreach (var (_, variantExtracted) in extracted.VariantData)
+                    {
+                        if (variantExtracted is null)
+                            continue;
+
+                        MergeMapping(variantExtracted, overwrite, changed, partial);
                     }
                 }
 
@@ -437,9 +469,9 @@ public partial class PrototypeManager
         }
     }
 
-    public void LoadString(string str, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
+    public void LoadString(string str, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null, bool partial = false)
     {
-        LoadFromStream(new StringReader(str), overwrite, changed);
+        LoadFromStream(new StringReader(str), overwrite, changed, partial);
     }
 
     public void RemoveString(string prototypes)
@@ -543,7 +575,7 @@ public partial class PrototypeManager
             for (index = 0; index < _partialDirectories.Count; index++)
             {
                 var partialDirectory = _partialDirectories[index];
-                if (!file.TryRelativeTo(partialDirectory.Directory, out _))
+                if (!file.TryRelativeTo(partialDirectory, out _))
                     continue;
 
                 return true;
@@ -571,58 +603,84 @@ public partial class PrototypeManager
         mapping.Add("abstract", "true");
     }
 
-    private static void CombineMapNode(MappingDataNode existing, MappingDataNode data)
+    private static void CombineMapNode<T>(
+        MappingDataNode existing,
+        MappingDataNode data,
+        [RequireStaticDelegate] Action<T> fullDelete,
+        T parent,
+        out bool fullDeleted
+    ) where T : DataNode
     {
+        fullDeleted = false;
         foreach (var (key, dataNode) in data)
         {
+            // !Remove "a": 1 -> Clear the whole dict
+            if (IsRemoveTag(data.GetKeyTag(key)))
+            {
+                fullDelete(parent);
+                fullDeleted = true;
+                continue;
+            }
+
+            // "a": !Remove 1 -> Remove the element matching 1
+            // "a": !Remove
+            // - "b": 2 -> Remove the element matching b
             if (IsRemoveTag(dataNode))
             {
                 existing.Remove(key);
-                continue;
+                existing.Tag = "!PartialModified";
+                if (dataNode is ValueDataNode)
+                    continue;
             }
 
             if (existing.TryGetValue(key, out var existingNode) &&
-                Combine(existingNode, dataNode))
+                Combine(existingNode, dataNode, out _))
             {
                 continue;
             }
 
-            existing[key] = dataNode;
+            if (!dataNode.IsEmpty)
+                existing[key] = dataNode;
         }
     }
 
     private static void CombineSeqNode(SequenceDataNode existing, SequenceDataNode data)
     {
-        for (var i = 0; i < data.Count; i++)
+        for (var i = data.Count - 1; i >= 0; i--)
         {
             var dataNode = data[i];
             if (existing.TryGetValue(i, out var existingNode) &&
-                Combine(existingNode, dataNode))
+                Combine(existingNode, dataNode, out var fullDeleted))
             {
+                if (fullDeleted && existingNode.IsEmpty)
+                    existing.RemoveAt(i);
+
                 continue;
             }
 
-            switch (dataNode)
+            if (IsRemoveTag(dataNode))
             {
-                case ValueDataNode dataValue:
-                    if (IsRemoveTag(dataValue))
-                    {
-                        existing.Remove(dataValue);
-                        continue;
-                    }
-
-                    existing.Add(dataNode);
-                    break;
+                existing.Remove(dataNode);
+                continue;
             }
+
+            existing.Add(dataNode);
         }
     }
 
-    private static bool Combine(DataNode existing, DataNode data)
+    private static bool Combine(DataNode existing, DataNode data, out bool fullDeleted)
     {
+        fullDeleted = false;
         switch (existing, data)
         {
             case (MappingDataNode existingMapping, MappingDataNode dataMapping):
-                CombineMapNode(existingMapping, dataMapping);
+                CombineMapNode(
+                    existingMapping,
+                    dataMapping,
+                    static parent => parent.Clear(),
+                    existingMapping,
+                    out fullDeleted
+                );
                 return true;
             case (SequenceDataNode existingSequence, SequenceDataNode dataSequence):
                 CombineSeqNode(existingSequence, dataSequence);
@@ -632,15 +690,20 @@ public partial class PrototypeManager
         }
     }
 
-    private static bool IsTag(DataNode node, string tag)
+    private static bool IsTag(string? nodeTag, string tag)
     {
-        return node.Tag != null &&
-               node.Tag.Equals(tag, StringComparison.OrdinalIgnoreCase);
+        return nodeTag != null &&
+               nodeTag.Equals(tag, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsRemoveTag(string? tag)
+    {
+        return IsTag(tag, "!Remove");
     }
 
     private static bool IsRemoveTag(DataNode node)
     {
-        return IsTag(node, "!Remove");
+        return IsRemoveTag(node.Tag);
     }
 
     private static bool NodeHasTag(DataNode node, string tag)

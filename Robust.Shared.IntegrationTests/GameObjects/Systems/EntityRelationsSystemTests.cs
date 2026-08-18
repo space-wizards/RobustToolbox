@@ -382,6 +382,45 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
         }
     }
 
+    /// <summary>
+    /// Sets a relation between the owner and the first target, then sets a relation between owner and the second target,
+    /// then checks if the relation was properly cut between the owner and the first target.
+    /// </summary>
+    [Test]
+    public void Relation_SetChangeRelation_Test()
+    {
+        Setup(out var entMan, out var ownerEnt, out var testComp, out var targetEnt1);
+        var targetEnt2 = entMan.Spawn();
+
+        SetRelations(ownerEnt, testComp, targetEnt1, entMan);
+
+        // Collections have to be cleared manually since there's no way to know which entity is being replaced.
+        entMan.ClearRelation(ownerEnt, testComp.List, targetEnt1, false);
+        entMan.ClearRelation(ownerEnt, testComp.Set, targetEnt1, false);
+        entMan.ClearRelation(ownerEnt, testComp.DictKey, targetEnt1, false);
+        entMan.ClearRelation(ownerEnt, testComp.DictValue, targetEnt1, false);
+
+        SetRelations(ownerEnt, testComp, targetEnt2, entMan);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(entMan.HasComponent<EntityRelationsComponent>(ownerEnt), Is.True);
+            Assert.That(entMan.HasComponent<EntityRelationsComponent>(targetEnt2), Is.True);
+            Assert.That(entMan.HasComponent<EntityRelationsComponent>(targetEnt1), Is.False);
+        }
+
+        var relationsComp = entMan.GetComponent<EntityRelationsComponent>(ownerEnt);
+        var targetRelationsComp = entMan.GetComponent<EntityRelationsComponent>(targetEnt2);
+
+        using (Assert.EnterMultipleScope())
+        {
+            AssertTestCompTarget(testComp, targetEnt2);
+
+            Assert.That(relationsComp.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
+            Assert.That(targetRelationsComp.Relations, Has.Count.EqualTo(EntityRelationsTestComponent.FieldCount));
+        }
+    }
+
     private static void Setup(
         out IEntityManager entMan,
         out EntityUid ownerEnt,
@@ -414,10 +453,10 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
     {
         entMan.SetRelation(ownerEnt, ref testComp.Value, targetEnt, false);
         entMan.SetRelation(ownerEnt, ref testComp.NullableValue, targetEnt, false);
-        entMan.SetRelations(ownerEnt, testComp.List, [targetEnt], false);
-        entMan.SetRelations(ownerEnt, testComp.Set, [targetEnt], false);
-        entMan.SetRelations(ownerEnt, testComp.DictKey, new Dictionary<EntityUid, int> { [targetEnt] = 1 }, false);
-        entMan.SetRelations(ownerEnt, testComp.DictValue, new Dictionary<int, EntityUid> { [testComp.DictValue.Count + 1] = targetEnt }, false);
+        entMan.SetRelation(ownerEnt, testComp.List, targetEnt, false);
+        entMan.SetRelation(ownerEnt, testComp.Set, targetEnt, false);
+        entMan.SetRelation(ownerEnt, testComp.DictKey, targetEnt, 1, false);
+        entMan.SetRelation(ownerEnt, testComp.DictValue, targetEnt, testComp.DictValue.Count + 1, false);
     }
 
     private static void AssertTestCompTarget(EntityRelationsTestComponent testComp, EntityUid targetEnt)

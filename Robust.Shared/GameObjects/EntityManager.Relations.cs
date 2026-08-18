@@ -31,6 +31,9 @@ public partial class EntityManager
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
             EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
 
+        if (relation.Entity != null)
+            ClearRelation(owner, ref relation, false);
+
         relation.Entity = entity;
 
         ent.Comp.Relations.Add(new EntityRelation(owner));
@@ -444,25 +447,25 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public bool HasRelation(List<EntityRelation> relations, EntityUid entity)
+    public bool HasRelation(List<EntityRelation> relations, EntityUid? entity)
     {
         return _relationsQuery.HasComp(entity) && relations.Contains(new EntityRelation(entity));
     }
 
     /// <inheritdoc/>
-    public bool HasRelation(HashSet<EntityRelation> relations, EntityUid entity)
+    public bool HasRelation(HashSet<EntityRelation> relations, EntityUid? entity)
     {
         return _relationsQuery.HasComp(entity) && relations.Contains(new EntityRelation(entity));
     }
 
     /// <inheritdoc/>
-    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, EntityUid entity)
+    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, EntityUid? entity)
     {
         return _relationsQuery.HasComp(entity) && relations.ContainsKey(new EntityRelation(entity));
     }
 
     /// <inheritdoc/>
-    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, EntityUid entity) where T : notnull
+    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, EntityUid? entity) where T : notnull
     {
         return _relationsQuery.HasComp(entity) && relations.ContainsValue(new EntityRelation(entity));
     }

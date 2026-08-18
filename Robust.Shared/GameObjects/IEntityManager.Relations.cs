@@ -5,11 +5,10 @@ namespace Robust.Shared.GameObjects;
 public partial interface IEntityManager
 {
     /// <summary>
-    /// Assign an entity to have a relation.
+    /// Assign an entity to have a relation. Clears the passed relation if it's not null.
     /// </summary>
     /// <param name="owner">
-    /// Owner of the provided <see cref="relation"/>.
-    /// An event will be raised to the owner when the specified <see cref="entity"/> gets deleted.
+    /// Owner of the provided <see cref="relation"/>, has a component that stores the reference.
     /// </param>
     /// <param name="relation">
     /// The relation struct will hold the reference to <see cref="entity"/>.
@@ -263,20 +262,20 @@ public partial interface IEntityManager
     /// <summary>
     /// Checks if an entity is contained in the specified list of relations.
     /// </summary>
-    public bool HasRelation(List<EntityRelation> relations, EntityUid entity);
+    public bool HasRelation(List<EntityRelation> relations, EntityUid? entity);
 
     /// <summary>
     /// Checks if an entity is contained in the specified set of relations.
     /// </summary>
-    public bool HasRelation(HashSet<EntityRelation> relations, EntityUid entity);
+    public bool HasRelation(HashSet<EntityRelation> relations, EntityUid? entity);
 
     /// <summary>
     /// Checks if an entity is contained in the specified dictionary of relations.
     /// </summary>
-    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, EntityUid entity);
+    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, EntityUid? entity);
 
     /// <summary>
     /// Checks if an entity is contained in the specified dictionary of relations.
     /// </summary>
-    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, EntityUid entity) where T : notnull;
+    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, EntityUid? entity) where T : notnull;
 }

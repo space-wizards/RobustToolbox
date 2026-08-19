@@ -573,6 +573,14 @@ public interface IPrototypeManager
     /// <param name="prototypes">List of entity prototypes that form part category or null.</param>
     /// <returns>True if the provided <see cref="EntityCategoryPrototype"/> id has a matching list of <see cref="EntityPrototype"/> False otherwise.</returns>
     bool TryGetEntityPrototypesByCategory(ProtoId<EntityCategoryPrototype> category, [NotNullWhen(true)] out IReadOnlyList<EntityPrototype>? prototypes);
+
+    /// <summary>
+    /// Tries to get the list of all associated variants for a given prototype. 
+    /// </summary>
+    /// <param name="collectionMember">The prototype being indexed.</param>
+    /// <param name="collectionVariants">The collection of variants this prototype belongs to.</param>
+    /// <returns>Returns true if the prototype is part of a variant collection, false otherwise.</returns>
+    bool TryGetVariantCollection<T>(ProtoId<T> collectionMember, [NotNullWhen(true)] out List<ProtoId<T>>? collectionVariants) where T : class, IPrototype;
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

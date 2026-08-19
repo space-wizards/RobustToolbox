@@ -290,6 +290,19 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.WindowSetMonitor(_mainWindow!, monitor);
         }
 
+        public IClydeMonitor? GetMainWindowMonitor()
+        {
+            return GetWindowMonitor(_mainWindow!.Owner!);
+        }
+
+        public IClydeMonitor? GetWindowMonitor(IClydeWindow window)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            var reg = ((WindowHandle)window).Reg;
+            return _windowing!.WindowGetMonitor(reg);
+        }
+
         public void RequestWindowAttention()
         {
             DebugTools.AssertNotNull(_windowing);

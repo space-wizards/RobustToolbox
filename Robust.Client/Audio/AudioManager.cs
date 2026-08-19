@@ -234,18 +234,24 @@ internal sealed partial class AudioManager : IAudioInternal
         foreach (var candidate in candidates)
         {
             if (!File.Exists(candidate))
-                continue;
-
-            if (NativeLibrary.TryLoad(candidate, out _))
             {
-                OpenALSawmill.Debug($"Preloaded bundled OpenAL from {candidate}");
-                return;
+                OpenALSawmill.Debug("No bundled OpenAL at {candidate}, trying next candidate.", candidate);
+                continue;
             }
 
-            OpenALSawmill.Warning("Found {candidate} but failed to load it (architecture mismatch or missing dependencies).", candidate);
+            try
+            {
+                NativeLibrary.Load(candidate);
+                OpenALSawmill.Info("Preloaded bundled OpenAL from {candidate}", candidate);
+                return;
+            }
+            catch (Exception ex)
+            {
+                OpenALSawmill.Error("Found bundled OpenAL at {candidate} but failed to load it. {ex}", candidate, ex);
+            }
         }
 
-        OpenALSawmill.Warning("No bundled OpenAL found, falling back to the system implementation. Hot-plug may be unavailable.");
+        OpenALSawmill.Warning("No usable bundled OpenAL found for {0}, falling back to the system implementation. ", rid);
     }
 
     private void OnMuteUnfocusedChanged(bool muteUnfocused)

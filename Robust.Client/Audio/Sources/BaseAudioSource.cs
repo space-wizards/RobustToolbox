@@ -78,7 +78,7 @@ public abstract class BaseAudioSource : IAudioSource
             return;
 
         AL.SourceRewind(SourceHandle);
-        StartPlaying();
+        Playing = true;
     }
 
     /// <inheritdoc />

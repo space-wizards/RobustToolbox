@@ -49,8 +49,12 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public ValueList<int> LineBreaks;
 
-        public readonly Dictionary<int, Control>? Controls;
+        /// <summary>
+        ///     The width of each line in the entry text.
+        /// </summary>
+        public ValueList<int> LineWidths;
 
+        public readonly Dictionary<int, Control>? Controls;
 
         public RichTextEntry(
             FormattedMessage message,
@@ -67,6 +71,7 @@ namespace Robust.Client.UserInterface
             Height = 0;
             Width = 0;
             LineBreaks = default;
+            LineWidths = default;
             _defaultColor = defaultColor ?? new(200, 200, 200);
             _tagsAllowed = tagsAllowed;
             Controls = GetControls(parent, tagManager);
@@ -184,6 +189,8 @@ namespace Robust.Client.UserInterface
             Width = wordWrap.FinalizeText(out breakLine);
             CheckLineBreak(ref this, breakLine);
 
+            CalculateLineWidths(ref this, tagManager, defaultFont, uiScale);
+
             return this;
 
             bool ProcessRune(ref RichTextEntry src, Rune rune, out int? outBreakLine)
@@ -227,13 +234,14 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private static List<int> CalculateLineWidths(
-            in RichTextEntry entry,
+        private void CalculateLineWidths(
+            ref RichTextEntry entry,
             MarkupTagManager tagManager,
             Font defaultFont,
             float uiScale)
         {
-            var widths = new List<int> { 0 };
+            entry.LineWidths.Clear();
+            entry.LineWidths.Add(0);
             var context = new MarkupDrawingContext();
             context.Color.Push(entry._defaultColor);
             context.Font.Push(defaultFont);
@@ -256,12 +264,12 @@ namespace Robust.Client.UserInterface
                         entry.LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
                         currentLine += 1;
-                        widths.Add(0);
+                        entry.LineWidths.Add(0);
                         lineBreakIndex += 1;
                     }
 
                     if (font.TryGetCharMetrics(rune, uiScale, out var metrics))
-                        widths[currentLine] += metrics.Advance;
+                        entry.LineWidths[currentLine] += metrics.Advance;
 
                     globalBreakCounter += 1;
                 }
@@ -273,15 +281,13 @@ namespace Robust.Client.UserInterface
                     entry.LineBreaks[lineBreakIndex] == globalBreakCounter)
                 {
                     currentLine += 1;
-                    widths.Add(0);
+                    entry.LineWidths.Add(0);
                     lineBreakIndex += 1;
                 }
 
                 control.Measure(new Vector2(entry.Width, entry.Height));
-                widths[currentLine] += control.DesiredPixelSize.X;
+                entry.LineWidths[currentLine] += control.DesiredPixelSize.X;
             }
-
-            return widths;
         }
 
         public readonly void Draw(
@@ -343,11 +349,10 @@ namespace Robust.Client.UserInterface
             context.Color.Push(_defaultColor);
             context.Font.Push(defaultFont);
 
-            var lineWidths = CalculateLineWidths(in this, tagManager, defaultFont, uiScale);
-
             var globalBreakCounter = 0;
             var lineBreakIndex = 0;
             var currentLine = 0;
+            var widths = LineWidths;
             var baseLine = drawBox.TopLeft + new Vector2(GetAlignedOffset(currentLine), defaultFont.GetAscent(uiScale) + verticalOffset);
             var controlYAdvance = 0f;
             var hasOutline = outline.HasValue;
@@ -425,10 +430,10 @@ namespace Robust.Client.UserInterface
 
             float GetAlignedOffset(int lineIndex)
             {
-                if (lineIndex < 0 || lineIndex >= lineWidths.Count)
+                if (lineIndex < 0 || lineIndex >= widths.Count)
                     return 0f;
 
-                var remainingWidth = drawBox.Width - lineWidths[lineIndex];
+                var remainingWidth = drawBox.Width - widths[lineIndex];
                 if (remainingWidth <= 0)
                     return 0f;
 

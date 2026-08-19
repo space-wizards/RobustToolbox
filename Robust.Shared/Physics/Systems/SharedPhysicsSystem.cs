@@ -6,9 +6,11 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Events;
+using Robust.Shared.Profiling;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -48,6 +50,7 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private SharedDebugPhysicsSystem _debugPhysics = default!;
         [Dependency] private SharedJointSystem _joints = default!;
         [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private ProfManager _prof = default!;
         [Dependency] private CollisionWakeSystem _wakeSystem = default!;
 
         private int _substeps;
@@ -268,13 +271,19 @@ namespace Robust.Shared.Physics.Systems
             for (int i = 0; i < _substeps; i++)
             {
                 var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
-                RaiseLocalEvent(ref updateBeforeSolve);
+                using (_prof.Group("PreSolve", Color.Green))
+                {
+                    RaiseLocalEvent(ref updateBeforeSolve);
+                }
 
                 // Find new contacts and (TODO: temporary) update any per-map virtual controllers
 
                 // Box2D does this at the end of a step and also here when there's a fixture update.
                 // Given external stuff can move bodies we'll just do this here.
-                _broadphase.FindNewContacts();
+                using (_prof.Group("Broadphase", Color.Cyan))
+                {
+                    _broadphase.FindNewContacts();
+                }
 
                 // TODO PHYSICS Fix Collision Mispredicts
                 // If a physics update induces a position update that brings fixtures into contact, the collision starts in the NEXT tick,
@@ -298,12 +307,21 @@ namespace Robust.Shared.Physics.Systems
                 // of to fix this would be to always call `CollideContacts` again at the very end of a physics update.
                 // But that might be unnecessarily expensive for what are hopefully only infrequent mispredicts.
 
-                CollideContacts();
+                using (_prof.Group("Collide", Color.Orange))
+                {
+                    CollideContacts();
+                }
 
-                Step(frameTime, prediction);
+                using (_prof.Group("Solve", Color.Red))
+                {
+                    Step(frameTime, prediction);
+                }
 
                 var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
-                RaiseLocalEvent(ref updateAfterSolve);
+                using (_prof.Group("PostSolve", Color.Yellow))
+                {
+                    RaiseLocalEvent(ref updateAfterSolve);
+                }
 
                 // On last substep (or main step where no substeps occured) we'll update all of the lerp data.
                 if (i == _substeps - 1)

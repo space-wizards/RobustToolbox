@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -23,10 +25,8 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
         readonly get => _left;
         set
         {
-            if (value > _right)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "Left cannot be greater than Right.");
-
-            _left = value;
+            Debug.Assert(!(value > _right), "Left cannot be greater than Right.");
+            _left = Math.Min(value, _right);
         }
     }
 
@@ -35,10 +35,8 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
         readonly get => _top;
         set
         {
-            if (value > _bottom)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "Top cannot be greater than Bottom.");
-
-            _top = value;
+            Debug.Assert(!(value > _bottom), "Top cannot be greater than Bottom.");
+            _top = Math.Min(value, _bottom);
         }
     }
 
@@ -47,10 +45,8 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
         readonly get => _right;
         set
         {
-            if (value < _left)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "Right cannot be less than Left.");
-
-            _right = value;
+            Debug.Assert(!(value < _left), "Right cannot be less than Left.");
+            _right = Math.Max(value, _left);
         }
     }
 
@@ -59,10 +55,8 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
         readonly get => _bottom;
         set
         {
-            if (value < _top)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "Bottom cannot be less than Top.");
-
-            _bottom = value;
+            Debug.Assert(!(value < _top), "Bottom cannot be less than Top.");
+            _bottom = Math.Max(value, _top);
         }
     }
 
@@ -71,13 +65,9 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
         readonly get => _topLeft;
         set
         {
-            if (value.X > _right)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "TopLeft.X cannot be greater than Right.");
-
-            if (value.Y > _bottom)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "TopLeft.Y cannot be greater than Bottom.");
-
-            _topLeft = value;
+            Debug.Assert(!(value.X > _right), "TopLeft.X cannot be greater than Right.");
+            Debug.Assert(!(value.Y > _bottom), "TopLeft.Y cannot be greater than Bottom.");
+            _topLeft = Vector2i.ComponentMin(value, _bottomRight);
         }
     }
 
@@ -86,13 +76,9 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
         readonly get => _bottomRight;
         set
         {
-            if (value.X < _left)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "BottomRight.X cannot be less than Left.");
-
-            if (value.Y < _top)
-                throw new ArgumentOutOfRangeException(nameof(value), value, "BottomRight.Y cannot be less than Top.");
-
-            _bottomRight = value;
+            Debug.Assert(!(value.X < _left), "BottomRight.X cannot be less than Left.");
+            Debug.Assert(!(value.Y < _top), "BottomRight.Y cannot be less than Top.");
+            _bottomRight = Vector2i.ComponentMax(value, _topLeft);
         }
     }
 
@@ -108,39 +94,53 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
 
     public readonly Vector2 Center => new Vector2(_left + _right, _top + _bottom) / 2f;
 
+    private static void Validate(int left, int top, int right, int bottom)
+    {
+        Debug.Assert(!(left > right), "Left cannot be greater than Right.");
+        Debug.Assert(!(top > bottom), "Top cannot be greater than Bottom.");
+    }
+
     public UIBox2i(Vector2i topLeft, Vector2i bottomRight)
     {
         Unsafe.SkipInit(out this);
 
+        Validate(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y);
+
         _topLeft = topLeft;
-        _bottomRight = bottomRight;
+        _bottomRight = Vector2i.ComponentMax(topLeft, bottomRight);
     }
 
     public UIBox2i(int left, int top, int right, int bottom)
     {
         Unsafe.SkipInit(out this);
 
+        Validate(left, top, right, bottom);
+
         _left = left;
-        _right = right;
+        _right = Math.Max(left, right);
         _top = top;
-        _bottom = bottom;
+        _bottom = Math.Max(top, bottom);
     }
 
+    [Pure]
     public static UIBox2i FromDimensions(int left, int top, int width, int height)
     {
         return new UIBox2i(left, top, left + width, top + height);
     }
 
+    [Pure]
     public static UIBox2i FromDimensions(Vector2i position, Vector2i size)
     {
         return FromDimensions(position.X, position.Y, size.X, size.Y);
     }
 
+    [Pure]
     public readonly bool Contains(int x, int y)
     {
         return Contains(new Vector2i(x, y));
     }
 
+    [Pure]
     public readonly bool Contains(Vector2i point, bool closedRegion = true)
     {
         var xOk = closedRegion
@@ -153,6 +153,7 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
     }
 
     /// <summary>Returns a UIBox2 translated by the given amount.</summary>
+    [Pure]
     public readonly UIBox2i Translated(Vector2i point)
     {
         return new UIBox2i(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);
@@ -166,6 +167,7 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
     /// <returns>
     ///     <c>null</c> if there is no intersection, otherwise the smallest region that fits in both boxes.
     /// </returns>
+    [Pure]
     public readonly UIBox2i? Intersection(in UIBox2i other)
     {
         if (!Intersects(other))
@@ -178,6 +180,7 @@ public struct UIBox2i : IEquatable<UIBox2i>, ISpanFormattable
             Vector2i.ComponentMin(BottomRight, other.BottomRight));
     }
 
+    [Pure]
     public readonly bool Intersects(in UIBox2i other)
     {
         return other._bottom >= _top

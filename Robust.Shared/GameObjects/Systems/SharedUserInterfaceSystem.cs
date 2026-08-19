@@ -34,21 +34,10 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
 
     private ActorRangeCheckJob _rangeJob;
 
-    /// Update type to apply
-    private enum QueuedUpdate
-    {
-        /// Upen a UI
-        Open,
-        /// Apply new state to the UI
-        ApplyState,
-        /// Close the UI
-        Close
-    };
-
     /// <summary>
     /// Defer BUIs during state handling so client doesn't spam a BUI constantly during prediction.
     /// </summary>
-    private readonly List<(BoundUserInterface bui, QueuedUpdate updateType)> _queuedBuis = new();
+    private readonly List<(BoundUserInterface Bui, bool value)> _queuedBuis = new();
 
     public override void Initialize()
     {
@@ -91,9 +80,9 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentShutdown>(OnActorShutdown);
     }
 
-    private void AddQueued(BoundUserInterface bui, QueuedUpdate type)
+    private void AddQueued(BoundUserInterface bui, bool value)
     {
-        _queuedBuis.Add((bui, type));
+        _queuedBuis.Add((bui, value));
     }
 
     /// <summary>
@@ -250,7 +239,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
 
         if (ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
         {
-            AddQueued(cBui, QueuedUpdate.Close);
+            AddQueued(cBui, false);
         }
 
         if (ent.Comp.Actors.Count == 0)
@@ -292,7 +281,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // PlayerAttachedEvent will catch some of these.
         foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
         {
-            AddQueued(bui, QueuedUpdate.Open);
+            AddQueued(bui, true);
         }
     }
 
@@ -312,7 +301,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             DebugTools.Assert(!ent.Comp.Actors.ContainsKey(key));
         }
 
-        DebugTools.Assert(ent.Comp.ClientOpenInterfaces.Values.All(x => _queuedBuis.Contains((x, QueuedUpdate.Close))));
+        DebugTools.Assert(ent.Comp.ClientOpenInterfaces.Values.All(x => _queuedBuis.Contains((x, false))));
     }
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
@@ -473,7 +462,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                 }
 
                 var bui = ent.Comp.ClientOpenInterfaces[key];
-                AddQueued(bui, QueuedUpdate.Close);
+                AddQueued(bui, false);
             }
         }
 
@@ -500,7 +489,9 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
                 if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui) || !cBui.IsOpened)
                     continue;
 
-                AddQueued(cBui, QueuedUpdate.ApplyState);
+                cBui.State = buiState;
+                cBui.UpdateState(buiState);
+                cBui.Update();
             }
         }
 
@@ -528,7 +519,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         // Existing BUI just keep it.
         if (entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var existing))
         {
-            _queuedBuis.Remove((existing, QueuedUpdate.Close));
+            _queuedBuis.Remove((existing, false));
             return;
         }
 
@@ -553,7 +544,7 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
         if (!open)
             return;
 
-        AddQueued(boundUserInterface, QueuedUpdate.Open);
+        AddQueued(boundUserInterface, true);
     }
 
     /// <summary>
@@ -1110,18 +1101,15 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     {
         if (_timing.IsFirstTimePredicted)
         {
-            foreach (var (bui, updateType) in _queuedBuis)
+            foreach (var (bui, open) in _queuedBuis)
             {
-                if (updateType == QueuedUpdate.Open || updateType == QueuedUpdate.ApplyState)
+                if (open)
                 {
 #if EXCEPTION_TOLERANCE
                     try
                     {
 #endif
-                    if (updateType == QueuedUpdate.Open)
-                    {
-                        bui.Open();
-                    }
+                    bui.Open();
 
                     if (UIQuery.TryComp(bui.Owner, out var uiComp))
                     {

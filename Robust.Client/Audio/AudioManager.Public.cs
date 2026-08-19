@@ -328,18 +328,17 @@ internal partial class AudioManager
 
     public IAudioSource? CreateAudioSource(AudioStream stream)
     {
+        if (!_audioSampleBuffers.TryGetValue(stream.BufferId, out var sample))
+        {
+            OpenALSawmill.Warning($"Audio stream '{stream.Name}' has no backing buffer, skipping.");
+            return null;
+        }
+
         var source = AL.GenSource();
 
         if (!AL.IsSource(source))
         {
             OpenALSawmill.Error("Failed to generate source. Too many simultaneous audio streams? {0}", Environment.StackTrace);
-            return null;
-        }
-
-        if (!_audioSampleBuffers.TryGetValue(stream.BufferId, out var sample))
-        {
-            OpenALSawmill.Warning($"Audio stream '{stream.Name}' has no backing buffer, skipping.");
-            AL.DeleteSource(source);
             return null;
         }
 

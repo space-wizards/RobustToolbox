@@ -572,44 +572,44 @@ public interface IPrototypeManager
     /// <summary>
     /// Like <see cref="PartialDirectory"/>, but only for a single file.
     /// </summary>
-    /// <param name="path">
+    /// <param name="file">
     /// The file to force prototypes to be abstract in.
     /// This must start from the Resources-level directory, but not include Resources itself.
     /// For example: /Prototypes/Guidebook/antagonist.yml
+    /// </param>
+    /// <param name="index">
+    /// The index to use when ordering partial modifications.
     /// A smaller index will make this file be processed before ones with a larger index.
-    /// This works the same way as the indexes of the paths argument in <see cref="PartialDirectory"/>.
     /// </param>
     /// <seealso cref="PartialDirectory"/>
-    void PartialFile(IEnumerable<(ResPath File, int Index)> path);
+    void PartialFile(ResPath file, int index);
 
     /// <summary>
-    /// Makes duplicate prototypes found recursively within files in the given <see cref="paths"/>
+    /// Makes duplicate prototypes found recursively within files in the given <see cref="path"/>
     /// combine with existing prototypes by kind and id, instead of throwing a 'Duplicate id' exception.
     /// Calling this method will not retroactively partial prototypes that have already been read.
     /// </summary>
-    /// <param name="paths">
-    /// The directories to make prototypes partial in.
-    /// Each must start from the Resources-level directory, but not include Resources itself.
-    /// For example: /Prototypes/_MyForkDirectory
+    /// <param name="path">
+    /// The directory to make prototypes partial in.
+    /// It must start from the Resources-level directory, but not include Resources itself.
+    /// For example: /Prototypes/_ForkOne
     ///
-    /// Partials found in these directories are applied in the order in which they appear in
-    /// this enumerable.
+    /// Partials found recursively in this directory are applied according to the <see cref="index"/>.
+    /// Smaller indexes are applied first.
     /// For example, this makes it so partials inside _ForkOne are applied first, if any,
     /// and then afterward, the ones in _ForkTwo, if any:
     /// <code>
-    ///     PartialDirectory(
-    ///         new ResPath("/Prototypes/_ForkOne"),
-    ///         new ResPath("/Prototypes/_ForkTwo")
-    ///     );
+    ///     PartialDirectory(new ResPath("/Prototypes/_ForkOne"), 0);
+    ///     PartialDirectory(new ResPath("/Prototypes/_ForkTwo"), 1);
     /// </code>
     ///
-    /// Later calls to this method will make all paths in the call be applied after any
-    /// earlier calls.
-    /// For example, this is equivalent to the snippet above:
-    /// <code>
-    ///     PartialDirectory(new ResPath("/Prototypes/_ForkOne"));
-    ///     PartialDirectory(new ResPath("/Prototypes/_ForkTwo"));
-    /// </code>
+    /// Space Station 14 provides a file in PartialPrototypes to make this easier to do
+    /// without having to manually call this method, specially with multiple upstreams.
+    /// </param>
+    /// <param name="index">
+    /// The index to use when ordering partial modifications.
+    /// A smaller index will cause files found recursively in this directory to be processed before
+    /// ones with a larger index.
     /// </param>
     /// <example>
     /// Add 1 to a sequence if it exists, or adds the sequence otherwise:
@@ -758,7 +758,7 @@ public interface IPrototypeManager
     /// </code>
     /// </example>
     /// <remarks>This works with any prototype kind read by prototype manager.</remarks>
-    void PartialDirectory(params ResPath[] paths);
+    void PartialDirectory(ResPath path, int index);
 
     /// <summary>
     /// Entity prototypes grouped by their categories.

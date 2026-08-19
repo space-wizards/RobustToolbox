@@ -34,7 +34,7 @@ public partial class PrototypeManager
     /// <summary>
     /// Which directories to force all prototypes recursively within to be partial.
     /// </summary>
-    private readonly List<ResPath> _partialDirectories = new();
+    private readonly List<(ResPath Path, int Index)> _partialDirectories = new();
 
     public event Action<DataNodeDocument>? LoadedData;
 
@@ -541,15 +541,15 @@ public partial class PrototypeManager
     }
 
     /// <inheritdoc/>
-    public void PartialFile(IEnumerable<(ResPath File, int Index)> path)
+    public void PartialFile(ResPath file, int index)
     {
-        _partialFiles.AddRange(path);
+        _partialFiles.Add((file, index));
     }
 
     /// <inheritdoc/>
-    public void PartialDirectory(params ResPath[] paths)
+    public void PartialDirectory(ResPath path, int index)
     {
-        _partialDirectories.AddRange(paths);
+        _partialDirectories.Add((path, index));
     }
 
     private bool IsFileAbstract(ResPath file)
@@ -591,12 +591,12 @@ public partial class PrototypeManager
 
         if (_partialDirectories.Count > 0)
         {
-            for (index = 0; index < _partialDirectories.Count; index++)
+            foreach (var partialDirectory in _partialDirectories)
             {
-                var partialDirectory = _partialDirectories[index];
-                if (!file.TryRelativeTo(partialDirectory, out _))
+                if (!file.TryRelativeTo(partialDirectory.Path, out _))
                     continue;
 
+                index = partialDirectory.Index;
                 return true;
             }
         }

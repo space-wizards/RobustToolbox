@@ -264,16 +264,9 @@ internal sealed partial class PrototypePartialTest
             .RegisterPrototypes(factory =>
             {
                 if (loadOrder != null)
-                {
                     loadOrder.Invoke(factory);
-                }
-                else
-                {
-                    if (partial)
-                    {
-                        factory.PartialDirectory(new ResPath("/Partials/"));
-                    }
-                }
+                else if (partial)
+                    factory.PartialDirectory(new ResPath("/Partials/"), 0);
 
                 factory.LoadDirectory(new ResPath("/"));
             })
@@ -396,6 +389,51 @@ internal sealed partial class PrototypePartialTest
     }
 
     [Test]
+    public void Index0SequenceTest()
+    {
+        var sim = StartSim(ymlToLoad: Index0Sequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(4));
+        Assert.That(partial.List, Is.EquivalentTo([4, 1, 2, 3]));
+        Assert.That(partial.Dictionary, Is.Empty);
+    }
+
+    [Test]
+    public void IndexMinus1SequenceTest()
+    {
+        var sim = StartSim(ymlToLoad: IndexMinus1Sequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(4));
+        Assert.That(partial.List, Is.EquivalentTo([1, 2, 4, 3]));
+        Assert.That(partial.Dictionary, Is.Empty);
+    }
+
+    [Test]
+    public void IndexOutOfBoundsSequenceTest()
+    {
+        var sim = StartSim(ymlToLoad: IndexOutOfBoundsSequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(5));
+        Assert.That(partial.List, Is.EquivalentTo([4, 1, 2, 3, 5]));
+        Assert.That(partial.Dictionary, Is.Empty);
+    }
+
+    [Test]
     public void AddMappingTest()
     {
         var sim = StartSim(ymlToLoad: AddMapping);
@@ -428,6 +466,20 @@ internal sealed partial class PrototypePartialTest
         Assert.That(partial.Dictionary, Does.Not.ContainValue(1));
         Assert.That(partial.Dictionary["b"], Is.EqualTo(2));
         Assert.That(partial.Dictionary["c"], Is.EqualTo(3));
+        Assert.That(partial.List, Is.Empty);
+    }
+
+    [Test]
+    public void RemoveAllMappingTest()
+    {
+        var sim = StartSim(ymlToLoad: RemoveAllMapping);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(MappingId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.Dictionary, Is.Empty);
         Assert.That(partial.List, Is.Empty);
     }
 
@@ -625,7 +677,8 @@ internal sealed partial class PrototypePartialTest
         var addDirectory = new ResPath($"/Partials/{nameof(LoadOrderSequenceAdd)}.yml");
         var sim = StartSim(loadOrder: factory =>
             {
-                factory.PartialDirectory(clearDirectory, addDirectory);
+                factory.PartialDirectory(clearDirectory, 0);
+                factory.PartialDirectory(addDirectory, 1);
             },
             addFiles: factory =>
             {
@@ -651,7 +704,8 @@ internal sealed partial class PrototypePartialTest
         var addDirectory = new ResPath($"/Partials/{nameof(LoadOrderSequenceAdd)}.yml");
         var sim = StartSim(loadOrder: factory =>
             {
-                factory.PartialDirectory(addDirectory, clearDirectory);
+                factory.PartialDirectory(addDirectory, 0);
+                factory.PartialDirectory(clearDirectory, 1);
             },
             addFiles: factory =>
             {

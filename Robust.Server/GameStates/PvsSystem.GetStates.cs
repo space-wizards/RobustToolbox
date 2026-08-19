@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Player;
@@ -125,6 +126,7 @@ return state;
         var fromTick = pvsSession.FromTick;
 
         var toSend = _uidSetPool.Get();
+        var chunkStates = new ValueList<EntityState>();
         DebugTools.Assert(toSend.Count == 0);
         bool enumerateAll = false;
         DebugTools.AssertEqual(toTick, _gameTiming.CurTick);
@@ -170,7 +172,7 @@ Metadata last modified: {md.LastModifiedTick}
 Transform last modified: {Transform(uid).LastModifiedTick}");
                 }
 
-                pvsSession.States.Add(state);
+                AddOrderedState(pvsSession, state, md, ref chunkStates);
             }
         }
         else
@@ -207,7 +209,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                         continue;
                     }
 
-                    pvsSession.States.Add(state);
+                    AddOrderedState(pvsSession, state, md, ref chunkStates);
                 }
 
                 foreach (var uid in dirty)
@@ -223,13 +225,32 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
                     var state = GetEntityState(session, uid, fromTick, md);
                     if (!state.Empty)
-                        pvsSession.States.Add(state);
+                        AddOrderedState(pvsSession, state, md, ref chunkStates);
                     else
                         ReturnEntityState(state);
                 }
             }
         }
 
+        pvsSession.States.AddRange(chunkStates);
         _uidSetPool.Return(toSend);
+    }
+
+    private static void AddOrderedState(
+        PvsSession pvsSession,
+        EntityState state,
+        MetaDataComponent meta,
+        ref ValueList<EntityState> chunkStates)
+    {
+        if ((meta.Flags & MetaDataFlags.ChunkEntity) != 0)
+        {
+            chunkStates.Add(state);
+            return;
+        }
+
+        // Chunk entities are nullspace entities, so their root relationship is not captured by the client's
+        // transform-parent state sort. Keep all-game-state emission consistent with PVS chunk emission: roots first,
+        // attached chunk entities second.
+        pvsSession.States.Add(state);
     }
 }

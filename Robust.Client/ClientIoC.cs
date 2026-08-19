@@ -129,8 +129,16 @@ namespace Robust.Client
                     deps.Register<IClyde, Clyde>();
                     deps.Register<IClipboardManager, Clyde>();
                     deps.Register<IClydeInternal, Clyde>();
-                    deps.Register<IAudioManager, AudioManager>();
-                    deps.Register<IAudioInternal, AudioManager>();
+                    if (AudioManager.IsAudioAvailable())
+                    {
+                        deps.Register<IAudioManager, AudioManager>();
+                        deps.Register<IAudioInternal, AudioManager>();
+                    }
+                    else
+                    {
+                        deps.Register<IAudioManager, HeadlessAudioManager>();
+                        deps.Register<IAudioInternal, HeadlessAudioManager>();
+                    }
                     deps.Register<IInputManager, ClydeInputManager>();
                     deps.Register<IUriOpener, UriOpener>();
                     deps.Register<ISystemFontManager, SystemFontManager>();

@@ -192,21 +192,43 @@ internal sealed partial class AudioManager : IAudioInternal
         _audioInitialized = true;
     }
 
+    /// <summary>
+    /// Preloads bundled OpenAL before OpenTK initialization, preventing it from using system variant with potentially different behavior.
+    /// </summary>
     private void PreloadOpenAl()
     {
         if (Interlocked.Exchange(ref _preloaded, 1) != 0)
             return;
 
-        if (!OperatingSystem.IsWindows())
-            return;
+        (string rid, string fileName) platform;
+        var arm = RuntimeInformation.ProcessArchitecture == Architecture.Arm;
+        var arm64 = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
 
-        var rid = Environment.Is64BitProcess ? "win-x64" : "win-x86";
+        if (OperatingSystem.IsWindows())
+            platform = arm64 ? ("win-arm64", "OpenAL32.dll")
+                : Environment.Is64BitProcess
+                ? ("win-x64", "OpenAL32.dll")
+                : ("win-x86", "OpenAL32.dll");
+        else if (OperatingSystem.IsLinux())
+            platform = arm64
+                ? ("linux-arm64", "libopenal.so.1")
+                : ("linux-x64", "libopenal.so.1");
+        else if (OperatingSystem.IsMacOS())
+            platform = arm64
+                ? ("osx-arm64", "libopenal.1.dylib")
+                : ("osx-x64", "libopenal.1.dylib");
+        else
+        {
+            OpenALSawmill.Info("No bundled OpenAL for this platform, using the system implementation.");
+            return;
+        }
+
         var baseDir = AppContext.BaseDirectory;
 
         string[] candidates =
         [
-            Path.Combine(baseDir, "runtimes", rid, "native", "OpenAL32.dll"),
-            Path.Combine(baseDir, "OpenAL32.dll"),
+            Path.Combine(baseDir, "runtimes", rid, "native", fileName),
+            Path.Combine(baseDir, fileName),
         ];
 
         foreach (var candidate in candidates)

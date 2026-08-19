@@ -703,7 +703,48 @@ public interface IPrototypeManager
     /// - type: entity
     ///   id: MyEntityOne
     ///   components:
-    ///   - type: !Remove MyComponent
+    ///   - !Remove type: MyComponent
+    /// </code>
+    /// </example>
+    /// <example>
+    /// This can be combined with prototype variants.
+    /// For example, to remove all conditions from these three plushies:
+    /// <code>
+    /// - type: !PartialOnly listing
+    ///   id: !type:CreateVariants
+    ///   values:
+    ///   - VendorPlushieHuman
+    ///   - VendorPlushieMoth
+    ///   - VendorPlushieVulp
+    ///   conditions: !Remove
+    /// </code>
+    /// </example>
+    /// <example>
+    /// To remove one blacklist from an emote prototype:
+    /// <code>
+    /// - type: !PartialOnly emote
+    ///   id: Snap
+    ///   blacklist:
+    ///   tags:
+    ///   - !Remove MyTag
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Sometimes you might want elements inserted at a specific position in a sequence
+    /// without rewriting the full sequence yourself with !Remove.
+    /// You can achieve this using !Index.
+    /// Indexes will be automatically clamped between a minimum of 0 and a maximum of
+    /// the sequence length.
+    /// Negative numbers will be treated as indexing from the end, or ^Index in C#.
+    /// For example, -1 will insert the element as the second to last element.
+    /// You can use this combined with !Remove to re-order existing elements as well.
+    /// <code>
+    /// - type: !PartialOnly borgType
+    ///   id: MyBorgType
+    ///   defaultModules:
+    ///   - !Index:0 BorgModuleNew
+    ///   - !Remove BorgModuleExisting
+    ///   - !Index:-1 BorgModuleExisting
     /// </code>
     /// </example>
     /// <example>

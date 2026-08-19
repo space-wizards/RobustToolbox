@@ -52,6 +52,11 @@ public partial class PrototypeManager
     /// </summary>
     internal const string PartialModifiedTag = "!PartialModified";
 
+    /// <summary>
+    /// Tag used to position a partial addition to a sequence at a specific index.
+    /// </summary>
+    private const string PartialIndexTag = "!Index:";
+
     /// <inheritdoc />
     public void LoadDirectory(ResPath path, bool overwrite = false,
         Dictionary<Type, HashSet<string>>? changed = null)
@@ -389,6 +394,20 @@ public partial class PrototypeManager
 
         if (existing != null && partial)
         {
+            if (kindData.PartialOriginals.TryGetValue(id, out var original))
+            {
+                if (changed == null ||
+                    !changed.TryGetValue(kind, out var kindChanged) ||
+                    !kindChanged.Contains(id))
+                {
+                    existing = original;
+                }
+            }
+            else
+            {
+                kindData.PartialOriginals[id] = existing;
+            }
+
             CombineMapNode(existing, data, static parent => parent.Clear(), existing, out var fullDeleted);
             if (fullDeleted && existing.IsEmpty)
             {
@@ -628,7 +647,7 @@ public partial class PrototypeManager
             if (IsRemoveTag(dataNode))
             {
                 existing.Remove(key);
-                existing.Tag = "!PartialModified";
+                existing.Tag = PartialModifiedTag;
                 if (dataNode is ValueDataNode)
                     continue;
             }
@@ -664,7 +683,32 @@ public partial class PrototypeManager
                 continue;
             }
 
-            existing.Add(dataNode);
+            if (dataNode.Tag?.StartsWith(PartialIndexTag) ?? false)
+            {
+                var indexStr = dataNode.Tag.AsSpan(PartialIndexTag.Length);
+                var fromEnd = false;
+                if (indexStr.StartsWith('-'))
+                {
+                    indexStr = indexStr[1..];
+                    fromEnd = true;
+                }
+
+                if (!int.TryParse(indexStr, out var index))
+                {
+                    throw new PrototypeLoadException(
+                        $"Found partial prototype node with index tag, but could not parse its index as a number. Expected tag in format !Index:0, got tag {dataNode.Tag} for data node {dataNode}");
+                }
+
+                if (fromEnd)
+                    index = existing.Count - index;
+
+                index = Math.Clamp(index, 0, existing.Count);
+                existing.Insert(index, dataNode);
+            }
+            else
+            {
+                existing.Add(dataNode);
+            }
         }
     }
 

@@ -59,6 +59,34 @@ internal sealed partial class PrototypePartialTest
     - !Remove 2
 ";
 
+    private static readonly string Index0Sequence = $@"
+- type: entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - !Index:0 4
+";
+
+    private static readonly string IndexMinus1Sequence = $@"
+- type: entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - !Index:-1 4
+";
+
+    private static readonly string IndexOutOfBoundsSequence = $@"
+- type: entity
+  id: {SequenceId}
+  components:
+  - type: PrototypePartial
+    list:
+    - !Index:-999 4
+    - !Index:999 5
+";
+
     private static readonly string Mapping = $"""
         - type: entity
           id: {MappingId}
@@ -323,6 +351,51 @@ internal sealed partial class PrototypePartialTest
     }
 
     [Test]
+    public void Index0SequenceTest()
+    {
+        var sim = StartSim(ymlToLoad: Index0Sequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(4));
+        Assert.That(partial.List, Is.EquivalentTo([4, 1, 2, 3]));
+        Assert.That(partial.Dictionary, Is.Empty);
+    }
+
+    [Test]
+    public void IndexMinus1SequenceTest()
+    {
+        var sim = StartSim(ymlToLoad: IndexMinus1Sequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(4));
+        Assert.That(partial.List, Is.EquivalentTo([1, 2, 4, 3]));
+        Assert.That(partial.Dictionary, Is.Empty);
+    }
+
+    [Test]
+    public void IndexOutOfBoundsSequenceTest()
+    {
+        var sim = StartSim(ymlToLoad: IndexOutOfBoundsSequence);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(SequenceId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.List, Has.Count.EqualTo(5));
+        Assert.That(partial.List, Is.EquivalentTo([4, 1, 2, 3, 5]));
+        Assert.That(partial.Dictionary, Is.Empty);
+    }
+
+    [Test]
     public void AddMappingTest()
     {
         var sim = StartSim(ymlToLoad: AddMapping);
@@ -355,6 +428,20 @@ internal sealed partial class PrototypePartialTest
         Assert.That(partial.Dictionary, Does.Not.ContainValue(1));
         Assert.That(partial.Dictionary["b"], Is.EqualTo(2));
         Assert.That(partial.Dictionary["c"], Is.EqualTo(3));
+        Assert.That(partial.List, Is.Empty);
+    }
+
+    [Test]
+    public void RemoveAllMappingTest()
+    {
+        var sim = StartSim(ymlToLoad: RemoveAllMapping);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(MappingId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? partial, comps), Is.True);
+        Assert.That(partial, Is.Not.Null);
+        Assert.That(partial.Dictionary, Is.Empty);
         Assert.That(partial.List, Is.Empty);
     }
 

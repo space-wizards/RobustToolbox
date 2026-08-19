@@ -47,7 +47,7 @@ public abstract class BaseAudioSource : IAudioSource
     /// <inheritdoc />
     public void Pause()
     {
-        if (_isDisposed())
+        if (!Playing)
             return;
 
         AL.SourcePause(SourceHandle);
@@ -56,7 +56,7 @@ public abstract class BaseAudioSource : IAudioSource
     /// <inheritdoc />
     public void StartPlaying()
     {
-        if (_isDisposed() || Playing)
+        if (Playing)
             return;
 
         Playing = true;
@@ -65,7 +65,7 @@ public abstract class BaseAudioSource : IAudioSource
     /// <inheritdoc />
     public void StopPlaying()
     {
-        if (_isDisposed() || !Playing)
+        if (!Playing)
             return;
 
         Playing = false;
@@ -74,7 +74,7 @@ public abstract class BaseAudioSource : IAudioSource
     /// <inheritdoc />
     public void Restart()
     {
-        if (_isDisposed() || Playing)
+        if (Playing)
             return;
 
         AL.SourceRewind(SourceHandle);

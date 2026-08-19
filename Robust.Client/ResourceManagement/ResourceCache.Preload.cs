@@ -422,21 +422,26 @@ namespace Robust.Client.ResourceManagement
                 }
             }
 
-            Parallel.ForEach(rsiList, data =>
-            {
-                if (data.Bad)
-                    return;
+            Parallel.For(
+                0,
+                rsiList.Length,
+                i =>
+                {
+                    ref var data = ref rsiList[i];
+                    if (data.Bad)
+                        return;
 
-                try
-                {
-                    RSIResource.LoadPostTexture(ref data);
+                    try
+                    {
+                        RSIResource.LoadPostTexture(ref data);
+                    }
+                    catch (Exception e)
+                    {
+                        data.Bad = true;
+                        sawmill.Error($"Exception while loading RSI {data.Path}:\n{e}");
+                    }
                 }
-                catch (Exception e)
-                {
-                    data.Bad = true;
-                    sawmill.Error($"Exception while loading RSI {data.Path}:\n{e}");
-                }
-            });
+            );
 
             var errors = 0;
             foreach (ref var data in rsiList.AsSpan())

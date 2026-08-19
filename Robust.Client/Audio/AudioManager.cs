@@ -227,8 +227,8 @@ internal sealed partial class AudioManager : IAudioInternal
 
         string[] candidates =
         [
-            Path.Combine(baseDir, "runtimes", rid, "native", fileName),
-            Path.Combine(baseDir, fileName),
+            Path.Combine(baseDir, "runtimes", platform.rid, "native", platform.fileName),
+            Path.Combine(baseDir, platform.fileName),
         ];
 
         foreach (var candidate in candidates)
@@ -251,7 +251,7 @@ internal sealed partial class AudioManager : IAudioInternal
             }
         }
 
-        OpenALSawmill.Warning("No usable bundled OpenAL found for {0}, falling back to the system implementation. ", rid);
+        OpenALSawmill.Warning("No usable bundled OpenAL found for {0}, falling back to the system implementation. ", platform.rid);
     }
 
     private void OnMuteUnfocusedChanged(bool muteUnfocused)

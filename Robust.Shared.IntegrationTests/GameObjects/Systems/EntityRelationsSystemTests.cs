@@ -387,7 +387,7 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
     /// then checks if the relation was properly cut between the owner and the first target.
     /// </summary>
     [Test]
-    public void Relation_SetChangeRelation_Test()
+    public void Relation_ReplaceRelation_Test()
     {
         Setup(out var entMan, out var ownerEnt, out var testComp, out var targetEnt1);
         var targetEnt2 = entMan.Spawn();
@@ -453,10 +453,10 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
     {
         entMan.SetRelation(ownerEnt, ref testComp.Value, targetEnt, false);
         entMan.SetRelation(ownerEnt, ref testComp.NullableValue, targetEnt, false);
-        entMan.SetRelation(ownerEnt, testComp.List, targetEnt, false);
-        entMan.SetRelation(ownerEnt, testComp.Set, targetEnt, false);
-        entMan.SetRelation(ownerEnt, testComp.DictKey, targetEnt, 1, false);
-        entMan.SetRelation(ownerEnt, testComp.DictValue, targetEnt, testComp.DictValue.Count + 1, false);
+        entMan.AddRelation(ownerEnt, testComp.List, targetEnt, false);
+        entMan.AddRelation(ownerEnt, testComp.Set, targetEnt, false);
+        entMan.AddRelation(ownerEnt, testComp.DictKey, targetEnt, 1, false);
+        entMan.AddRelation(ownerEnt, testComp.DictValue, targetEnt, testComp.DictValue.Count + 1, false);
     }
 
     private static void AssertTestCompTarget(EntityRelationsTestComponent testComp, EntityUid targetEnt)

@@ -59,7 +59,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void SetRelation(
+    public void AddRelation(
         Entity<EntityRelationsComponent?> owner,
         List<EntityRelation> relations,
         Entity<EntityRelationsComponent?>? entity,
@@ -71,7 +71,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void SetRelation(
+    public void AddRelation(
         Entity<EntityRelationsComponent?> owner,
         HashSet<EntityRelation> relations,
         Entity<EntityRelationsComponent?>? entity,
@@ -83,7 +83,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void SetRelation<T>(
+    public void AddRelation<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<EntityRelation, T> relations,
         Entity<EntityRelationsComponent?>? entity,
@@ -96,7 +96,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void SetRelation<T>(
+    public void AddRelation<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,
         Entity<EntityRelationsComponent?>? entity,
@@ -109,7 +109,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void SetRelations(
+    public void AddRelations(
         Entity<EntityRelationsComponent?> owner,
         List<EntityRelation> relations,
         List<EntityUid> entities,
@@ -143,7 +143,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void SetRelations(
+    public void AddRelations(
         Entity<EntityRelationsComponent?> owner,
         HashSet<EntityRelation> relations,
         HashSet<EntityUid> entities,
@@ -177,7 +177,71 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void SetRelations<T>(
+    public void AddRelations(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        bool dirty = true,
+        params Entity<EntityRelationsComponent?>?[] entities)
+    {
+        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+            EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
+
+        foreach (var entity in entities)
+        {
+            DebugTools.Assert(owner.Owner != entity,
+                $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
+
+            var relation = EntityRelation.Null;
+            SetRelation(owner, ref relation, entity, false);
+            relations.Add(relation);
+        }
+
+        if (!dirty)
+            return;
+
+        foreach (var relation in relations)
+        {
+            if (!_relationsQuery.TryComp(relation.Entity, out var entityRelations))
+                continue;
+
+            DirtyRelations((relation.Entity.Value, entityRelations));
+        }
+
+        DirtyRelations(owner!);
+    }
+
+    /// <inheritdoc/>
+    public void AddRelations(Entity<EntityRelationsComponent?> owner, HashSet<EntityRelation> relations, bool dirty = true, params Entity<EntityRelationsComponent?>?[] entities)
+    {
+        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
+            EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
+
+        foreach (var entity in entities)
+        {
+            DebugTools.Assert(owner.Owner != entity,
+                $"Entity {ToPrettyString(owner.Owner)} attempted to set an {nameof(EntityRelation)} to itself!");
+
+            var relation = EntityRelation.Null;
+            SetRelation(owner, ref relation, entity, false);
+            relations.Add(relation);
+        }
+
+        if (!dirty)
+            return;
+
+        foreach (var relation in relations)
+        {
+            if (!_relationsQuery.TryComp(relation.Entity, out var entityRelations))
+                continue;
+
+            DirtyRelations((relation.Entity.Value, entityRelations));
+        }
+
+        DirtyRelations(owner!);
+    }
+
+    /// <inheritdoc/>
+    public void AddRelations<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<EntityRelation, T> relations,
         Dictionary<EntityUid, T> entities,
@@ -211,7 +275,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void SetRelations<T>(
+    public void AddRelations<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,
         Dictionary<T, EntityUid> entities,
@@ -242,6 +306,34 @@ public partial class EntityManager
         }
 
         DirtyRelations(owner!);
+    }
+
+    /// <inheritdoc/>
+    public void SetRelations(Entity<EntityRelationsComponent?> owner, List<EntityRelation> relations, List<EntityUid> entities, bool dirty = true)
+    {
+        ClearRelations(owner, relations, false);
+        AddRelations(owner, relations, entities, dirty);
+    }
+
+    /// <inheritdoc/>
+    public void SetRelations(Entity<EntityRelationsComponent?> owner, HashSet<EntityRelation> relations, HashSet<EntityUid> entities, bool dirty = true)
+    {
+        ClearRelations(owner, relations, false);
+        AddRelations(owner, relations, entities, dirty);
+    }
+
+    /// <inheritdoc/>
+    public void SetRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<EntityRelation, T> relations, Dictionary<EntityUid, T> entities, bool dirty = true)
+    {
+        ClearRelations(owner, relations, false);
+        AddRelations(owner, relations, entities, dirty);
+    }
+
+    /// <inheritdoc/>
+    public void SetRelations<T>(Entity<EntityRelationsComponent?> owner, Dictionary<T, EntityRelation> relations, Dictionary<T, EntityUid> entities, bool dirty = true) where T : notnull
+    {
+        ClearRelations(owner, relations, false);
+        AddRelations(owner, relations, entities, dirty);
     }
 
     /// <inheritdoc/>
@@ -447,25 +539,25 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public bool HasRelation(List<EntityRelation> relations, EntityUid? entity)
+    public bool HasRelation(List<EntityRelation> relations, Entity<EntityRelationsComponent?>? entity)
     {
         return _relationsQuery.HasComp(entity) && relations.Contains(new EntityRelation(entity));
     }
 
     /// <inheritdoc/>
-    public bool HasRelation(HashSet<EntityRelation> relations, EntityUid? entity)
+    public bool HasRelation(HashSet<EntityRelation> relations, Entity<EntityRelationsComponent?>? entity)
     {
         return _relationsQuery.HasComp(entity) && relations.Contains(new EntityRelation(entity));
     }
 
     /// <inheritdoc/>
-    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, EntityUid? entity)
+    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, Entity<EntityRelationsComponent?>? entity)
     {
         return _relationsQuery.HasComp(entity) && relations.ContainsKey(new EntityRelation(entity));
     }
 
     /// <inheritdoc/>
-    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, EntityUid? entity) where T : notnull
+    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, Entity<EntityRelationsComponent?>? entity) where T : notnull
     {
         return _relationsQuery.HasComp(entity) && relations.ContainsValue(new EntityRelation(entity));
     }

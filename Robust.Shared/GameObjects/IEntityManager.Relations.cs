@@ -7,19 +7,10 @@ public partial interface IEntityManager
     /// <summary>
     /// Assign an entity to have a relation. Clears the passed relation if it's not null.
     /// </summary>
-    /// <param name="owner">
-    /// Owner of the provided <see cref="relation"/>, has a component that stores the reference.
-    /// </param>
-    /// <param name="relation">
-    /// The relation struct will hold the reference to <see cref="entity"/>.
-    /// </param>
-    /// <param name="entity">
-    /// An entity that will become related to <see cref="owner"/> and stored in the <see cref="relation"/>.
-    /// </param>
-    /// <param name="dirty">
-    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
-    /// Use this if you want to make a custom networking setup.
-    /// </param>
+    /// <param name="owner">Owner of the provided <see cref="relation"/> that has a component that stores the reference.</param>
+    /// <param name="relation">The relation struct that will hold the reference to <see cref="entity"/>.</param>
+    /// <param name="entity">An entity that will become related to <see cref="owner"/> and stored in the <see cref="relation"/>.</param>
+    /// <param name="dirty">If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.</param>
     public void SetRelation(
         Entity<EntityRelationsComponent?> owner,
         ref EntityRelation relation,
@@ -34,49 +25,43 @@ public partial interface IEntityManager
         bool dirty = true);
 
     /// <summary>
-    /// Sets a list of entities to have a relation with an <see cref="owner"/> entity.
+    /// Sets a relation between the <see cref="entity"/> and the <see cref="owner"/>
+    /// and adds the entity to a list of <see cref="relations"/>.
     /// </summary>
-    /// <param name="owner">Owner of all provided relations.</param>
+    /// <param name="owner">Owner of a list of relations.</param>
     /// <param name="relations">A list of relations to store the result in.</param>
     /// <param name="entity">An entity that will become related to <see cref="owner"/> and stored in <see cref="relations"/>.</param>
-    /// <param name="dirty">
-    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
-    /// Use this if you want to make a custom networking setup.
-    /// </param>
-    public void SetRelation(
+    /// <param name="dirty">If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.</param>
+    public void AddRelation(
         Entity<EntityRelationsComponent?> owner,
         List<EntityRelation> relations,
         Entity<EntityRelationsComponent?>? entity,
         bool dirty = true);
 
     /// <summary>
-    /// Sets a set of entities to have a relation with an <see cref="owner"/> entity.
+    /// Sets a relation between the <see cref="entity"/> and the <see cref="owner"/>
+    /// and adds the entity to a set of <see cref="relations"/>.
     /// </summary>
     /// <param name="owner">Owner of all provided relations.</param>
     /// <param name="relations">A set of relations to store the result in.</param>
     /// <param name="entity">An entity that will become related to <see cref="owner"/> and stored in <see cref="relations"/>.</param>
-    /// <param name="dirty">
-    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
-    /// Use this if you want to make a custom networking setup.
-    /// </param>
-    public void SetRelation(
+    /// <param name="dirty">If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.</param>
+    public void AddRelation(
         Entity<EntityRelationsComponent?> owner,
         HashSet<EntityRelation> relations,
         Entity<EntityRelationsComponent?>? entity,
         bool dirty = true);
 
     /// <summary>
-    /// Sets a dictionary of entities as keys to have a relation with an <see cref="owner"/> entity.
+    /// Sets a relation between the <see cref="entity"/> and the <see cref="owner"/>
+    /// and adds the entity to a dictionary of <see cref="relations"/> together with a <see cref="value"/>.
     /// </summary>
     /// <param name="owner">Owner of all provided relations.</param>
     /// <param name="relations">A set of relations to store the result in.</param>
     /// <param name="entity">An entity that will become related to <see cref="owner"/> and stored in <see cref="relations"/>.</param>
     /// <param name="value">The value to add paired with the new relation.</param>
-    /// <param name="dirty">
-    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
-    /// Use this if you want to make a custom networking setup.
-    /// </param>
-    public void SetRelation<T>(
+    /// <param name="dirty">If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.</param>
+    public void AddRelation<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<EntityRelation, T> relations,
         Entity<EntityRelationsComponent?>? entity,
@@ -84,17 +69,15 @@ public partial interface IEntityManager
         bool dirty = true);
 
     /// <summary>
-    /// Sets a dictionary of entities as values to have a relation with an <see cref="owner"/> entity.
+    /// Sets a relation between the <see cref="entity"/> and the <see cref="owner"/>
+    /// and adds the entity to a dictionary of <see cref="relations"/> together with a <see cref="key"/>.
     /// </summary>
     /// <param name="owner">Owner of all provided relations.</param>
     /// <param name="relations">A set of relations to store the result in.</param>
     /// <param name="entity">An entity that will become related to <see cref="owner"/> and stored in <see cref="relations"/>.</param>
     /// <param name="key">The key to add paired with the new relation.</param>
-    /// <param name="dirty">
-    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
-    /// Use this if you want to make a custom networking setup.
-    /// </param>
-    public void SetRelation<T>(
+    /// <param name="dirty">If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.</param>
+    public void AddRelation<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,
         Entity<EntityRelationsComponent?>? entity,
@@ -107,10 +90,85 @@ public partial interface IEntityManager
     /// <param name="owner">Owner of all provided relations.</param>
     /// <param name="relations">A list of relations to store the result in.</param>
     /// <param name="entities">A list of entities to add to the relations list.</param>
-    /// <param name="dirty">
-    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
-    /// Use this if you want to make a custom networking setup.
-    /// </param>
+    /// <param name="dirty"> If set to false, will prevent <see cref="owner"/>'s <see cref="EntityRelationsComponent"/> from sending to clients.</param>
+    public void AddRelations(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        List<EntityUid> entities,
+        bool dirty = true);
+
+    /// <summary>
+    /// Sets a set of entities to have a relation with an <see cref="owner"/> entity.
+    /// </summary>
+    /// <param name="owner">Owner of all provided relations.</param>
+    /// <param name="relations">A set of relations to store the result in.</param>
+    /// <param name="entities">A set of entities to add to the relations set.</param>
+    /// <param name="dirty"> If set to false, will prevent <see cref="owner"/>'s <see cref="EntityRelationsComponent"/> from sending to clients.</param>
+    public void AddRelations(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        HashSet<EntityUid> entities,
+        bool dirty = true);
+
+    /// <summary>
+    /// Sets an array of entities to have a relation with an <see cref="owner"/> entity.
+    /// </summary>
+    /// <param name="owner">Owner of all provided relations.</param>
+    /// <param name="relations">A list of relations to store the result in.</param>
+    /// <param name="dirty"> If set to false, will prevent <see cref="owner"/>'s <see cref="EntityRelationsComponent"/> from sending to clients.</param>
+    /// <param name="entities">An array of entities to add to the relations list.</param>
+    public void AddRelations(
+        Entity<EntityRelationsComponent?> owner,
+        List<EntityRelation> relations,
+        bool dirty = true,
+        params Entity<EntityRelationsComponent?>?[] entities);
+
+    /// <summary>
+    /// Sets an array of entities to have a relation with an <see cref="owner"/> entity.
+    /// </summary>
+    /// <param name="owner">Owner of all provided relations.</param>
+    /// <param name="relations">A set of relations to store the result in.</param>
+    /// <param name="dirty"> If set to false, will prevent <see cref="owner"/>'s <see cref="EntityRelationsComponent"/> from sending to clients.</param>
+    /// <param name="entities">An array of entities to add to the relations set.</param>
+    public void AddRelations(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        bool dirty = true,
+        params Entity<EntityRelationsComponent?>?[] entities);
+
+    /// <summary>
+    /// Sets a dictionary of entities as keys to have a relation with an <see cref="owner"/> entity.
+    /// </summary>
+    /// <param name="owner">Owner of all provided relations.</param>
+    /// <param name="relations">A set of relations to store the result in.</param>
+    /// <param name="entities">A set of entities to add to the relations set.</param>
+    /// <param name="dirty"> If set to false, will prevent <see cref="owner"/>'s <see cref="EntityRelationsComponent"/> from sending to clients.</param>
+    public void AddRelations<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<EntityRelation, T> relations,
+        Dictionary<EntityUid, T> entities,
+        bool dirty = true);
+
+    /// <summary>
+    /// Sets a dictionary of entities as values to have a relation with an <see cref="owner"/> entity.
+    /// </summary>
+    /// <param name="owner">Owner of all provided relations.</param>
+    /// <param name="relations">A set of relations to store the result in.</param>
+    /// <param name="entities">A set of entities to add to the relations set.</param>
+    /// <param name="dirty"> If set to false, will prevent <see cref="owner"/>'s <see cref="EntityRelationsComponent"/> from sending to clients.</param>
+    public void AddRelations<T>(
+        Entity<EntityRelationsComponent?> owner,
+        Dictionary<T, EntityRelation> relations,
+        Dictionary<T, EntityUid> entities,
+        bool dirty = true) where T : notnull;
+
+    /// <summary>
+    /// Sets a list of entities to have a relation with an <see cref="owner"/> entity.
+    /// </summary>
+    /// <param name="owner">Owner of all provided relations.</param>
+    /// <param name="relations">A list of relations to store the result in.</param>
+    /// <param name="entities">A list of entities to add to the relations list.</param>
+    /// <param name="dirty"> If set to false, will prevent <see cref="owner"/>'s <see cref="EntityRelationsComponent"/> from sending to clients.</param>
     public void SetRelations(
         Entity<EntityRelationsComponent?> owner,
         List<EntityRelation> relations,
@@ -123,10 +181,7 @@ public partial interface IEntityManager
     /// <param name="owner">Owner of all provided relations.</param>
     /// <param name="relations">A set of relations to store the result in.</param>
     /// <param name="entities">A set of entities to add to the relations set.</param>
-    /// <param name="dirty">
-    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
-    /// Use this if you want to make a custom networking setup.
-    /// </param>
+    /// <param name="dirty"> If set to false, will prevent <see cref="owner"/>'s <see cref="EntityRelationsComponent"/> from sending to clients.</param>
     public void SetRelations(
         Entity<EntityRelationsComponent?> owner,
         HashSet<EntityRelation> relations,
@@ -139,10 +194,7 @@ public partial interface IEntityManager
     /// <param name="owner">Owner of all provided relations.</param>
     /// <param name="relations">A set of relations to store the result in.</param>
     /// <param name="entities">A set of entities to add to the relations set.</param>
-    /// <param name="dirty">
-    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
-    /// Use this if you want to make a custom networking setup.
-    /// </param>
+    /// <param name="dirty"> If set to false, will prevent <see cref="owner"/>'s <see cref="EntityRelationsComponent"/> from sending to clients.</param>
     public void SetRelations<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<EntityRelation, T> relations,
@@ -150,15 +202,16 @@ public partial interface IEntityManager
         bool dirty = true);
 
     /// <summary>
-    /// Sets a dictionary of entities as values to have a relation with an <see cref="owner"/> entity.
+    /// Clears all <see cref="EntityRelation"/>s in the <see cref="relations"/> dictionary and assigns new ones
+    /// from the <see cref="entities"/> dictionary.
+    /// The cleared relation values are set to <see cref="EntityRelation.Null"/>
+    /// if the <see cref="T"/> key doesn't appear in the <see cref="entities"/> dictionary.
+    /// The result is a dictionary with merged keys and pairs of relations that may be now empty.
     /// </summary>
     /// <param name="owner">Owner of all provided relations.</param>
-    /// <param name="relations">A set of relations to store the result in.</param>
-    /// <param name="entities">A set of entities to add to the relations set.</param>
-    /// <param name="dirty">
-    /// If set to false, will prevent both <see cref="EntityRelationsComponent"/>s from sending to clients.
-    /// Use this if you want to make a custom networking setup.
-    /// </param>
+    /// <param name="relations">A dictionary of relations to store the result in.</param>
+    /// <param name="entities">A dictionary of entities to set into the dictionary.</param>
+    /// <param name="dirty"> If set to false, will prevent <see cref="owner"/>'s <see cref="EntityRelationsComponent"/> from sending to clients.</param>
     public void SetRelations<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,
@@ -262,20 +315,20 @@ public partial interface IEntityManager
     /// <summary>
     /// Checks if an entity is contained in the specified list of relations.
     /// </summary>
-    public bool HasRelation(List<EntityRelation> relations, EntityUid? entity);
+    public bool HasRelation(List<EntityRelation> relations, Entity<EntityRelationsComponent?>? entity);
 
     /// <summary>
     /// Checks if an entity is contained in the specified set of relations.
     /// </summary>
-    public bool HasRelation(HashSet<EntityRelation> relations, EntityUid? entity);
+    public bool HasRelation(HashSet<EntityRelation> relations, Entity<EntityRelationsComponent?>? entity);
 
     /// <summary>
-    /// Checks if an entity is contained in the specified dictionary of relations.
+    /// Checks if an entity is contained in the specified dictionary of relations as a key.
     /// </summary>
-    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, EntityUid? entity);
+    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, Entity<EntityRelationsComponent?>? entity);
 
     /// <summary>
-    /// Checks if an entity is contained in the specified dictionary of relations.
+    /// Checks if an entity is contained in the specified dictionary of relations as a value.
     /// </summary>
-    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, EntityUid? entity) where T : notnull;
+    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, Entity<EntityRelationsComponent?>? entity) where T : notnull;
 }

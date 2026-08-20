@@ -56,12 +56,12 @@ public sealed partial class MapLoaderSystem : EntitySystem
     /// <summary>
     /// A dictionary of file paths that are being saved and wait handles of the jobs that save them.
     /// </summary>
-    private readonly Dictionary<ResPath, WaitHandle> SavingHandlers = new();
+    private readonly Dictionary<ResPath, WaitHandle> _savingHandlers = new();
 
     /// <summary>
     /// A queue of events that will be raised after the save job was finished.
     /// </summary>
-    private readonly ConcurrentQueue<AfterSerializationWriteEvent> WriteEventQueue = new();
+    private readonly ConcurrentQueue<AfterSerializationWriteEvent> _writeEventQueue = new();
 
     public override void Initialize()
     {
@@ -74,21 +74,21 @@ public sealed partial class MapLoaderSystem : EntitySystem
     {
         base.Shutdown();
 
-        // Wait for all of them to finish.
-        foreach (var (_, handle) in SavingHandlers)
+        // Wait for all jobs to finish.
+        foreach (var (_, handle) in _savingHandlers)
         {
             handle.WaitOne();
         }
 
-        SavingHandlers.Clear();
-        WriteEventQueue.Clear();
+        _savingHandlers.Clear();
+        _writeEventQueue.Clear();
     }
 
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
-        while (WriteEventQueue.TryDequeue(out var ev))
+        while (_writeEventQueue.TryDequeue(out var ev))
         {
             RaiseLocalEvent(ev);
         }
@@ -141,7 +141,7 @@ public sealed partial class MapLoaderSystem : EntitySystem
     /// <param name="data">Mapping data node to write.</param>
     public void Write(ResPath path, MappingDataNode data)
     {
-        if (SavingHandlers.ContainsKey(path))
+        if (_savingHandlers.ContainsKey(path))
         {
             // Either some admin is spamming with these commands, or the code works wrong.
             Log.Error($"Tried to write to a file {path} which is already being saved!");
@@ -154,7 +154,7 @@ public sealed partial class MapLoaderSystem : EntitySystem
             Data = data
         };
         var handler = _parallel.Process(job);
-        SavingHandlers.Add(path, handler);
+        _savingHandlers.Add(path, handler);
     }
 
     public void Write(ResPath path, MappingDataNode data, bool immediate)
@@ -367,10 +367,10 @@ public sealed partial class MapLoaderSystem : EntitySystem
         public void Execute()
         {
             System.WriteNow(Path, Data);
-            System.WriteEventQueue.Enqueue(new AfterSerializationWriteEvent(Path));
-            lock (System.SavingHandlers)
+            System._writeEventQueue.Enqueue(new AfterSerializationWriteEvent(Path));
+            lock (System._savingHandlers)
             {
-                System.SavingHandlers.Remove(Path);
+                System._savingHandlers.Remove(Path);
             }
         }
     }

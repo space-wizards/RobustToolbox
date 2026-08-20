@@ -68,7 +68,7 @@ public sealed partial class MapLoaderSystem
     /// </summary>
     public bool TrySaveEntity(EntityUid entity, ResPath target, SerializationOptions? options = null, bool immediate = false)
     {
-        if (SavingHandlers.ContainsKey(target))
+        if (_savingHandlers.ContainsKey(target))
         {
             Log.Error($"Tried to write to a file {target} which is already being saved!");
             return false;
@@ -162,7 +162,7 @@ public sealed partial class MapLoaderSystem
     /// </summary>
     public bool TrySaveMap(EntityUid map, ResPath target, SerializationOptions? options = null, bool immediate = false)
     {
-        if (SavingHandlers.ContainsKey(target))
+        if (_savingHandlers.ContainsKey(target))
         {
             Log.Error($"Tried to write to a file {target} which is already being saved!");
             return false;
@@ -232,7 +232,7 @@ public sealed partial class MapLoaderSystem
     /// </summary>
     public bool TrySaveGrid(EntityUid grid, ResPath target, SerializationOptions? options = null, bool immediate = false)
     {
-        if (SavingHandlers.ContainsKey(target))
+        if (_savingHandlers.ContainsKey(target))
         {
             Log.Error($"Tried to write to a file {target} which is already being saved!");
             return false;
@@ -353,7 +353,7 @@ public sealed partial class MapLoaderSystem
         bool immediate = false)
     {
         category = FileCategory.Unknown;
-        if (SavingHandlers.ContainsKey(target))
+        if (_savingHandlers.ContainsKey(target))
         {
             Log.Error($"Tried to write to a file {target} which is already being saved!");
             return false;
@@ -439,7 +439,7 @@ public sealed partial class MapLoaderSystem
     /// <inheritdoc cref="TrySerializeAllEntities(out MappingDataNode, SerializationOptions?)"/>
     public bool TrySaveAllEntities(ResPath path, SerializationOptions? options = null, bool immediate = false)
     {
-        if (SavingHandlers.ContainsKey(path))
+        if (_savingHandlers.ContainsKey(path))
         {
             Log.Error($"Tried to write to a file {path} which is already being saved!");
             return false;

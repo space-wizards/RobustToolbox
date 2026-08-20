@@ -276,7 +276,8 @@ internal sealed partial class PrototypePartialTest
     [Test]
     public void NoPartialLogsDuplicateError()
     {
-        var sim = StartSim(false,
+        var sim = StartSim(
+            false,
             dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
             changeCVar: factory => factory.SetCVar(RTCVars.FailureLogLevel, LogLevel.Fatal),
             ymlToLoad: AddSequence
@@ -292,10 +293,17 @@ internal sealed partial class PrototypePartialTest
     public void PartialDoesNotThrow()
     {
         Assert.DoesNotThrow(() =>
-            {
-                StartSim(ymlToLoad: AddSequence);
-            }
-        );
+        {
+            var sim = StartSim(
+                dependencies: factory => factory.Register<ILogManager, SpyLogManager>(true),
+                ymlToLoad: AddSequence
+            );
+
+            Assert.That(
+                ((SpyLogManager)sim.Resolve<ILogManager>()).CountError,
+                Is.Zero
+            );
+        });
     }
 
     [Test]

@@ -62,7 +62,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             Contents = ContentsContainer;
 
-            CloseButton.OnPressed += CloseButtonPressed;
             XamlChildren = new SS14ContentCollection(this);
         }
 
@@ -126,11 +125,18 @@ namespace Robust.Client.UserInterface.CustomControls
 
         // Drag resizing and moving code is mostly taken from Godot's WindowDialog.
 
+        protected override void EnteredTree()
+        {
+            base.EnteredTree();
+
+            CloseButton.OnPressed += CloseButtonPressed;
+        }
+
         protected override void ExitedTree()
         {
-            base.ExitedTree();
-
             CloseButton.OnPressed -= CloseButtonPressed;
+
+            base.ExitedTree();
         }
 
         private void CloseButtonPressed(BaseButton.ButtonEventArgs args)

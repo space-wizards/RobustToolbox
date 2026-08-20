@@ -10,6 +10,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameStates;
@@ -33,6 +34,7 @@ public abstract partial class ChunkEntitySystem : EntitySystem
     [Dependency] private EntityQuery<MapGridComponent> _gridQuery;
     [Dependency] private EntityQuery<TransformComponent> _xformQuery;
     [Dependency] private EntityQuery<ChunkContainerComponent> _containerQuery;
+    [Dependency] private IGameTiming _timing = default!;
     [Dependency] private MetaDataSystem _metaData = default!;
 
     /// <summary>
@@ -378,7 +380,17 @@ public abstract partial class ChunkEntitySystem : EntitySystem
                 return;
             }
 
-            DebugTools.Assert($"Duplicate chunk entity for root {ToPrettyString(comp.Root)} and chunk {comp.Chunk}.");
+            if (_timing.ApplyingState)
+            {
+                // State application can receive a replacement chunk before the old
+                // chunk's deletion has been processed. Clear the stale slot so the
+                // incoming authoritative chunk state can own it.
+                RemoveChunk(oldChunk);
+            }
+            else
+            {
+                DebugTools.Assert($"Duplicate chunk entity for root {ToPrettyString(comp.Root)} and chunk {comp.Chunk}.");
+            }
         }
 
         meta.Flags |= MetaDataFlags.ChunkEntity;

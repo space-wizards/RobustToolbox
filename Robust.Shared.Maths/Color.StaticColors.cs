@@ -1,5 +1,6 @@
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Robust.Shared.Maths;
 
@@ -793,6 +794,7 @@ public partial struct Color
         ["fuchsia"] = Fuchsia,
         ["gainsboro"] = Gainsboro,
         ["ghostwhite"] = GhostWhite,
+        ["gluongrey"] = GluonGrey,
         ["gold"] = Gold,
         ["goldenrod"] = Goldenrod,
         ["gray"] = Gray,
@@ -841,6 +843,7 @@ public partial struct Color
         ["moccasin"] = Moccasin,
         ["navajowhite"] = NavajoWhite,
         ["navy"] = Navy,
+        ["nobleblack"] = NobleBlack,
         ["oldlace"] = OldLace,
         ["olive"] = Olive,
         ["olivedrab"] = OliveDrab,
@@ -889,4 +892,17 @@ public partial struct Color
         ["yellow"] = Yellow,
         ["yellowgreen"] = YellowGreen,
     }.ToFrozenDictionary();
+
+    private static readonly FrozenDictionary<Color, string> DefaultColorsInverted =
+        DefaultColors.ToLookup(pair => pair.Value).ToFrozenDictionary(i => i.Key, i => i.First().Key);
+
+    /// <summary>
+    ///     Gets the associated color name with this color instance by using an inverted version of <see cref="DefaultColors"/>.
+    ///     Returns <see langword="null"/> if there is no possible name with this color instance.
+    /// </summary>
+    /// <returns>The associated color name if any, usable with <see cref="DefaultColors"/>.</returns>
+    public readonly string? Name()
+    {
+        return DefaultColorsInverted.GetValueOrDefault(this);
+    }
 }

@@ -652,12 +652,12 @@ public interface IPrototypeManager
     ///   id: MyEntityOne
     ///   components:
     ///   - type: MyComponent
-    ///     list: !Remove
+    ///     list: !Clear
     ///     - 1
     /// </code>
     /// </example>
     /// <example>
-    /// Remove a mapping with the key 'a':
+    /// Remove a mapping with the key 'a' regardless of value:
     /// <code>
     /// - type: entity
     ///   id: MyEntityOne
@@ -668,7 +668,18 @@ public interface IPrototypeManager
     /// </code>
     /// </example>
     /// <example>
-    /// Remove a mapping with the key 'a' and add one with a key of 'b' and a value of 1:
+    /// Remove a mapping with the key 'a' only if its value is 1:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     dictionary:
+    ///       "a": !Remove 1
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove a mapping with the key 'a' and add one with a key of 'b' and a value of 2:
     /// <code>
     /// - type: entity
     ///   id: MyEntityOne
@@ -676,7 +687,19 @@ public interface IPrototypeManager
     ///   - type: MyComponent
     ///     list:
     ///       "a": !Remove
-    ///       "b": 1
+    ///       "b": 2
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove a mapping with the key 'a', only if its value is 1, and add one with a key of 'b' and a value of 2:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list:
+    ///       "a": !Remove 1
+    ///       "b": 2
     /// </code>
     /// </example>
     /// <example>
@@ -716,7 +739,7 @@ public interface IPrototypeManager
     ///   - VendorPlushieHuman
     ///   - VendorPlushieMoth
     ///   - VendorPlushieVulp
-    ///   conditions: !Remove
+    ///   conditions: !Clear
     /// </code>
     /// </example>
     /// <example>

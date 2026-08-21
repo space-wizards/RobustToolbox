@@ -410,8 +410,6 @@ public partial class PrototypeManager
 
         if (existing != null && partial)
         {
-            kindData.Partials[id] = data;
-
             if (kindData.PartialOriginals.TryGetValue(id, out var original))
             {
                 if (changed == null ||
@@ -426,7 +424,7 @@ public partial class PrototypeManager
                 kindData.PartialOriginals[id] = existing;
             }
 
-            CombineMapNode(existing, data, static parent => parent.Clear(), existing, out var fullDeleted);
+            CombineMapNode(existing, data, out var fullDeleted);
             if (fullDeleted && existing.IsEmpty)
                 kindData.RawResults.Remove(id);
             else
@@ -636,14 +634,7 @@ public partial class PrototypeManager
         mapping.Add("abstract", "true");
     }
 
-    private static void CombineMapNode<T>(
-        MappingDataNode existing,
-        MappingDataNode data,
-        [RequireStaticDelegate] Action<T> fullDelete,
-        T parent,
-        out bool fullDeleted,
-        bool removalOnly = false
-    ) where T : DataNode
+    private static void CombineMapNode(MappingDataNode existing, MappingDataNode data, out bool fullDeleted)
     {
         fullDeleted = false;
         foreach (var (key, dataNode) in data)
@@ -683,29 +674,23 @@ public partial class PrototypeManager
             }
 
             if (existing.TryGetValue(key, out var existingNode) &&
-                Combine(existingNode, dataNode, out _, removalOnly))
+                Combine(existingNode, dataNode, out _))
             {
                 continue;
             }
-
-            if (removalOnly)
-                continue;
 
             if (!dataNode.IsEmpty)
                 existing[key] = dataNode;
         }
     }
 
-    private static void CombineSeqNode(
-        SequenceDataNode existing,
-        SequenceDataNode data,
-        bool removalOnly = false)
+    private static void CombineSeqNode(SequenceDataNode existing, SequenceDataNode data)
     {
         for (var i = data.Count - 1; i >= 0; i--)
         {
             var dataNode = data[i];
             if (existing.TryGetValue(i, out var existingNode) &&
-                Combine(existingNode, dataNode, out var fullDeleted, removalOnly))
+                Combine(existingNode, dataNode, out var fullDeleted))
             {
                 if (fullDeleted && existingNode.IsEmpty)
                     existing.RemoveAt(i);
@@ -718,9 +703,6 @@ public partial class PrototypeManager
                 existing.Remove(dataNode);
                 continue;
             }
-
-            if (removalOnly)
-                continue;
 
             if (dataNode.Tag?.StartsWith(PartialIndexTag) ?? false)
             {
@@ -758,24 +740,16 @@ public partial class PrototypeManager
     private static bool Combine(
         DataNode existing,
         DataNode data,
-        out bool fullDeleted,
-        bool removalOnly = false)
+        out bool fullDeleted)
     {
         fullDeleted = false;
         switch (existing, data)
         {
             case (MappingDataNode existingMapping, MappingDataNode dataMapping):
-                CombineMapNode(
-                    existingMapping,
-                    dataMapping,
-                    static parent => parent.Clear(),
-                    existingMapping,
-                    out fullDeleted,
-                    removalOnly
-                );
+                CombineMapNode(existingMapping, dataMapping, out fullDeleted);
                 return true;
             case (SequenceDataNode existingSequence, SequenceDataNode dataSequence):
-                CombineSeqNode(existingSequence, dataSequence, removalOnly);
+                CombineSeqNode(existingSequence, dataSequence);
                 return true;
             default:
                 return false;

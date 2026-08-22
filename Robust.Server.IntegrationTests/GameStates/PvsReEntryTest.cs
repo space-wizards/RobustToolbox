@@ -106,6 +106,12 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
         Assert.That(meta!.Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.Detached));
         Assert.That(stateMan.IsQueuedForDetach(entity), Is.False);
 
+        // Entities can queue a predicted deletion after they have already left PVS. PVS is still authoritative
+        // and should take priority.
+        await client.WaitPost(() => cEntMan.PredictedQueueDeleteEntity(cEntMan.GetEntity(entity)));
+        await RunTicksSync(server, client, 2);
+        Assert.That(meta.Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.Detached));
+
         // Move the player back into range
         await server.WaitPost( () => xforms.SetCoordinates(sEntMan.GetEntity(player), coords));
         await RunTicksSync(server, client, 10);

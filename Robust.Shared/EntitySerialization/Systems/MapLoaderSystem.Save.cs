@@ -7,6 +7,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Events;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.EntitySerialization.Systems;
@@ -28,7 +29,9 @@ public sealed partial class MapLoaderSystem
         HashSet<EntityUid> entities,
         SerializationOptions? options = null)
     {
-        _stopwatch.Restart();
+        var stopwatch = new RStopwatch();
+        stopwatch.Start();
+
         if (!entities.All(Exists))
             throw new Exception($"Cannot serialize deleted entities");
 
@@ -55,25 +58,57 @@ public sealed partial class MapLoaderSystem
         var ev2 = new AfterSerializationEvent(entities, data, cat);
         RaiseLocalEvent(ev2);
 
-        Log.Debug($"Serialized {serializer.EntityData.Count} entities in {_stopwatch.Elapsed}");
+        Log.Debug($"Serialized {serializer.EntityData.Count} entities in {stopwatch.Elapsed}");
         return (data, cat);
     }
 
     /// <summary>
-    ///     Serialize a standard (non-grid, non-map) entity and all of its children and write the result to a YAML file.
+    ///     Serialize a standard (non-grid, non-map) entity and all of its children and write the result to a file.
+    ///     Data gets compressed if the file has .rtsave extension.
     /// </summary>
-    public bool TrySaveEntity(EntityUid entity, ResPath target, SerializationOptions? options = null)
+    public bool TrySaveEntity(EntityUid entity, ResPath target, SerializationOptions? options = null, bool immediate = false)
     {
-        using var writer = GetWriterForPath(target);
-        return TrySaveEntity(entity, writer, options);
+        if (_savingHandlers.ContainsKey(target))
+        {
+            Log.Error($"Tried to write to a file {target} which is already being saved!");
+            return false;
+        }
+
+        if (!TrySaveEntity(entity, out var data, options))
+            return false;
+
+        Write(target, data, immediate);
+        return true;
     }
 
     /// <summary>
-    ///     Serialize a standard (non-grid, non-map) entity and all of its children and write the result to a YAML text
-    ///     stream.
+    ///     Serialize a standard (non-grid, non-map) entity and all of its children
+    ///     and write the result to a text writer in plain YAML.
     /// </summary>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
     public bool TrySaveEntity(EntityUid entity, TextWriter target, SerializationOptions? options = null)
     {
+        if (!TrySaveEntity(entity, out var data, options))
+            return false;
+
+        WriteYaml(target, data);
+        return true;
+    }
+
+    /// <summary>
+    ///     Serialize a standard (non-grid, non-map) entity and all of its children
+    ///     and write the result to a YAML data node.
+    /// </summary>
+    public bool TrySaveEntity(
+        EntityUid entity,
+        [NotNullWhen(true)] out MappingDataNode? data,
+        SerializationOptions? options = null)
+    {
+        data = null;
         if (_mapQuery.HasComp(entity))
         {
             Log.Error($"{ToPrettyString(entity)} is a map. Use {nameof(TrySaveMap)}.");
@@ -89,7 +124,6 @@ public sealed partial class MapLoaderSystem
         var opts = options ?? SerializationOptions.Default;
         opts.Category = FileCategory.Entity;
 
-        MappingDataNode data;
         FileCategory cat;
         try
         {
@@ -107,17 +141,17 @@ public sealed partial class MapLoaderSystem
             return false;
         }
 
-        Write(target, data);
         return true;
     }
 
     /// <summary>
     /// Serialize a map and all of its children and write the result to a YAML file.
     /// </summary>
-    public bool TrySaveMap(MapId mapId, ResPath path, SerializationOptions? options = null)
+    /// <see cref=""/>
+    public bool TrySaveMap(MapId mapId, ResPath path, SerializationOptions? options = null, bool immediate = false)
     {
         if (_mapSystem.TryGetMap(mapId, out var mapUid))
-            return TrySaveMap(mapUid.Value, path, options);
+            return TrySaveMap(mapUid.Value, path, options, immediate);
 
         Log.Error($"Unable to find map {mapId}");
         return false;
@@ -126,17 +160,44 @@ public sealed partial class MapLoaderSystem
     /// <summary>
     ///     Serialize a map and all of its children and write the result to a YAML file.
     /// </summary>
-    public bool TrySaveMap(EntityUid map, ResPath target, SerializationOptions? options = null)
+    public bool TrySaveMap(EntityUid map, ResPath target, SerializationOptions? options = null, bool immediate = false)
     {
-        using var writer = GetWriterForPath(target);
-        return TrySaveMap(map, writer, options);
+        if (_savingHandlers.ContainsKey(target))
+        {
+            Log.Error($"Tried to write to a file {target} which is already being saved!");
+            return false;
+        }
+
+        if (!TrySaveMap(map, out var data, options))
+            return false;
+
+        Write(target, data, immediate);
+        return true;
     }
 
     /// <summary>
     ///     Serialize a map and all of its children and write the result to a YAML text stream.
     /// </summary>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
     public bool TrySaveMap(EntityUid map, TextWriter target, SerializationOptions? options = null)
     {
+        if (!TrySaveMap(map, out var data, options))
+            return false;
+
+        WriteYaml(target, data);
+        return true;
+    }
+
+    /// <summary>
+    ///     Serialize a map and all of its children and write the result to a YAML data node.
+    /// </summary>
+    public bool TrySaveMap(EntityUid map, [NotNullWhen(true)] out MappingDataNode? data, SerializationOptions? options = null)
+    {
+        data = null;
         if (!_mapQuery.HasComp(map))
         {
             Log.Error($"{ToPrettyString(map)} is not a map.");
@@ -146,7 +207,6 @@ public sealed partial class MapLoaderSystem
         var opts = options ?? SerializationOptions.Default;
         opts.Category = FileCategory.Map;
 
-        MappingDataNode data;
         FileCategory cat;
         try
         {
@@ -164,24 +224,53 @@ public sealed partial class MapLoaderSystem
             return false;
         }
 
-        Write(target, data);
         return true;
     }
 
     /// <summary>
     ///     Serialize a grid and all of its children and write the result to a YAML file.
     /// </summary>
-    public bool TrySaveGrid(EntityUid map, ResPath target, SerializationOptions? options = null)
+    public bool TrySaveGrid(EntityUid grid, ResPath target, SerializationOptions? options = null, bool immediate = false)
     {
-        using var writer = GetWriterForPath(target);
-        return TrySaveGrid(map, writer, options);
+        if (_savingHandlers.ContainsKey(target))
+        {
+            Log.Error($"Tried to write to a file {target} which is already being saved!");
+            return false;
+        }
+
+        if (!TrySaveGrid(grid, out var data, options))
+            return false;
+
+        Write(target, data, immediate);
+        return true;
     }
 
     /// <summary>
     ///     Serialize a grid and all of its children and write the result to a YAML text stream.
     /// </summary>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
     public bool TrySaveGrid(EntityUid grid, TextWriter target, SerializationOptions? options = null)
     {
+        if (!TrySaveGrid(grid, out var data, options))
+            return false;
+
+        WriteYaml(target, data);
+        return true;
+    }
+
+    /// <summary>
+    ///     Serialize a grid and all of its children and write the result to a YAML data node.
+    /// </summary>
+    public bool TrySaveGrid(
+        EntityUid grid,
+        [NotNullWhen(true)] out MappingDataNode? data,
+        SerializationOptions? options = null)
+    {
+        data = null;
         if (!_gridQuery.HasComp(grid))
         {
             Log.Error($"{ToPrettyString(grid)} is not a grid.");
@@ -197,7 +286,6 @@ public sealed partial class MapLoaderSystem
         var opts = options ?? SerializationOptions.Default;
         opts.Category = FileCategory.Grid;
 
-        MappingDataNode data;
         FileCategory cat;
         try
         {
@@ -215,7 +303,6 @@ public sealed partial class MapLoaderSystem
             return false;
         }
 
-        Write(target, data);
         return true;
     }
 
@@ -228,10 +315,10 @@ public sealed partial class MapLoaderSystem
         EntityUid uid,
         ResPath target,
         out FileCategory category,
-        SerializationOptions? options = null)
+        SerializationOptions? options = null,
+        bool immediate = false)
     {
-        using var writer = GetWriterForPath(target);
-        return TrySaveGeneric(uid, writer, out category, options);
+        return TrySaveGeneric([uid], target, out category, options, immediate);
     }
 
     /// <summary>
@@ -239,6 +326,11 @@ public sealed partial class MapLoaderSystem
     ///     This makes no assumptions about the expected entity or resulting file category.
     ///     If possible, use the map/grid specific variants instead.
     /// </summary>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
     public bool TrySaveGeneric(
         EntityUid uid,
         TextWriter target,
@@ -254,13 +346,47 @@ public sealed partial class MapLoaderSystem
     ///     If possible, use the map/grid specific variants instead.
     /// </summary>
     public bool TrySaveGeneric(
-        HashSet<EntityUid> uid,
+        HashSet<EntityUid> entities,
         ResPath target,
+        out FileCategory category,
+        SerializationOptions? options = null,
+        bool immediate = false)
+    {
+        category = FileCategory.Unknown;
+        if (_savingHandlers.ContainsKey(target))
+        {
+            Log.Error($"Tried to write to a file {target} which is already being saved!");
+            return false;
+        }
+
+        if (!TrySaveGeneric(entities, out var data, out category, options))
+            return false;
+
+        Write(target, data, immediate);
+        return true;
+    }
+
+    /// <summary>
+    ///     Serialize one or more entities and all of their children to a YAML text stream.
+    ///     This makes no assumptions about the expected entity or resulting file category.
+    ///     If possible, use the map/grid specific variants instead.
+    /// </summary>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
+    public bool TrySaveGeneric(
+        HashSet<EntityUid> entities,
+        TextWriter target,
         out FileCategory category,
         SerializationOptions? options = null)
     {
-        using var writer = GetWriterForPath(target);
-        return TrySaveGeneric(uid, writer, out category, options);
+        if (!TrySaveGeneric(entities, out var data, out category, options))
+            return false;
+
+        WriteYaml(target, data);
+        return true;
     }
 
     /// <summary>
@@ -270,17 +396,17 @@ public sealed partial class MapLoaderSystem
     /// </summary>
     public bool TrySaveGeneric(
         HashSet<EntityUid> entities,
-        TextWriter target,
+        [NotNullWhen(true)] out MappingDataNode? data,
         out FileCategory category,
         SerializationOptions? options = null)
     {
         category = FileCategory.Unknown;
+        data = null;
         if (entities.Count == 0)
             return false;
 
         var opts = options ?? SerializationOptions.Default;
 
-        MappingDataNode data;
         try
         {
             (data, category) = SerializeEntitiesRecursive(entities, opts);
@@ -291,28 +417,38 @@ public sealed partial class MapLoaderSystem
             return false;
         }
 
-        Write(target, data);
         return true;
     }
 
     /// <inheritdoc cref="TrySerializeAllEntities(out MappingDataNode, SerializationOptions?)"/>
+    /// <remarks>
+    ///     All methods that accept <see cref="TextWriter"/> immediately write the resulting YAML data node,
+    ///     meaning it will always block the main thread. This essentially makes saving 2 times longer in real gameplay.
+    ///     Use this only for tests and other out-of-simulation code.
+    /// </remarks>
+    /// <seealso cref="TrySerializeAllEntities(out MappingDataNode, SerializationOptions?)"/>
     public bool TrySaveAllEntities(TextWriter target, SerializationOptions? options = null)
     {
         if (!TrySerializeAllEntities(out var data, options))
             return false;
 
-        Write(target, data);
+        WriteYaml(target, data);
         return true;
     }
 
-
     /// <inheritdoc cref="TrySerializeAllEntities(out MappingDataNode, SerializationOptions?)"/>
-    public bool TrySaveAllEntities(ResPath path, SerializationOptions? options = null)
+    public bool TrySaveAllEntities(ResPath path, SerializationOptions? options = null, bool immediate = false)
     {
+        if (_savingHandlers.ContainsKey(path))
+        {
+            Log.Error($"Tried to write to a file {path} which is already being saved!");
+            return false;
+        }
+
         if (!TrySerializeAllEntities(out var data, options))
             return false;
 
-        Write(path, data);
+        Write(path, data, immediate);
         return true;
     }
 
@@ -320,8 +456,9 @@ public sealed partial class MapLoaderSystem
     /// Attempt to serialize all entities.
     /// </summary>
     /// <remarks>
-    /// Note that this alone is not sufficient for a proper full-game save, as the game may contain things like chat
-    /// logs or resources and prototypes that were uploaded mid-game.
+    /// Note that this alone is not sufficient for a proper full-game save, as the game may contain data
+    /// that is not stored in entities, for example chat logs or loaded prototypes.
+    /// For this to function as a full game save, all in-simulation data must be stored in entities.
     /// </remarks>
     public bool TrySerializeAllEntities([NotNullWhen(true)] out MappingDataNode? data, SerializationOptions? options = null)
     {
@@ -332,7 +469,10 @@ public sealed partial class MapLoaderSystem
         };
 
         opts.Category = FileCategory.Save;
-        _stopwatch.Restart();
+
+        var stopwatch = new RStopwatch();
+        stopwatch.Start();
+
         Log.Info($"Serializing all entities");
 
         var entities = EntityManager.GetEntities().ToHashSet();
@@ -379,8 +519,6 @@ public sealed partial class MapLoaderSystem
             DebugTools.AssertEqual(cat, FileCategory.Save);
             var ev2 = new AfterSerializationEvent(entities, data, cat);
             RaiseLocalEvent(ev2);
-
-            Log.Debug($"Serialized {serializer.EntityData.Count} entities in {_stopwatch.Elapsed}");
         }
         catch (Exception e)
         {

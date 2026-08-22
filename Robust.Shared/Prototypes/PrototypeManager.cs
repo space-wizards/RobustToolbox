@@ -62,6 +62,7 @@ namespace Robust.Shared.Prototypes
                 return;
 
             Sawmill = _logManager.GetSawmill("proto");
+            _prototypeLoadContext = new PrototypeLoadContext(_serializationManager);
 
             _initialized = true;
             ReloadPrototypeKinds();
@@ -295,7 +296,6 @@ namespace Robust.Shared.Prototypes
         {
             _kindNames.Clear();
             _kinds = FrozenDictionary<Type, KindData>.Empty;
-            _entityComponentCache = FrozenDictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>.Empty;
         }
 
         /// <inheritdoc />
@@ -488,9 +488,6 @@ namespace Robust.Shared.Prototypes
 
             Freeze(modifiedKinds);
 
-            if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype)))
-                RebuildEntityComponentCache();
-
             if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
                 UpdateCategories();
 
@@ -572,7 +569,6 @@ namespace Robust.Shared.Prototypes
                 InstantiateKinds(kinds, inheritanceTasks);
             }
 
-            RebuildEntityComponentCache();
             UpdateCategories();
         }
 
@@ -669,7 +665,7 @@ namespace Robust.Shared.Prototypes
 
             try
             {
-                return (IPrototype)_serializationManager.Read(kind, mapping, hookCtx)!;
+                return (IPrototype)_serializationManager.Read(kind, mapping, hookCtx, _prototypeLoadContext)!;
             }
             catch (Exception e)
             {

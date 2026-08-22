@@ -1,16 +1,18 @@
-﻿using Robust.Shared.Serialization.Markdown;
-using Robust.Shared.Serialization.Markdown.Mapping;
-using Robust.Shared.Serialization.Markdown.Sequence;
-using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Utility;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
+using Robust.Shared.Random;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes;
 
@@ -37,6 +39,12 @@ public partial class PrototypeManager
     private readonly List<(ResPath Path, int Index)> _partialDirectories = new();
 
     public event Action<DataNodeDocument>? LoadedData;
+
+    /// <summary>
+    /// Custom context use when reading YML into prototypes.
+    /// It ensures that the same mapping always returns the same component instance.
+    /// </summary>
+    private PrototypeLoadContext _prototypeLoadContext = default!;
 
     /// <summary>
     /// DataNodes with this tag will be replaced with a new node using data supplied by <see cref="CreateVariants"/>.
@@ -386,7 +394,7 @@ public partial class PrototypeManager
             || !mappingDataNode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
             return false;
 
-        parents = _serializationManager.Read<string[]>(parentNode, notNullableOverride: true);
+        parents = NodeToParentArray(parentNode);
 
         return true;
     }
@@ -537,9 +545,6 @@ public partial class PrototypeManager
         }
 
         Freeze(modified);
-
-        if (modified.Any(x => x.Type == typeof(EntityPrototype)))
-            RebuildEntityComponentCache();
     }
 
     public void AbstractFile(ResPath path)
@@ -632,6 +637,38 @@ public partial class PrototypeManager
         }
 
         mapping.Add("abstract", "true");
+    }
+
+    /// <summary>
+    /// Turns a node used to note the parents of a prototype into a string array
+    /// of those parent ids.
+    /// </summary>
+    /// <param name="node">The node to read.</param>
+    /// <returns>A string array of the parent id or parent ids.</returns>
+    /// <exception cref="ArgumentException">
+    /// raised if the given <see cref="node"/> is not of type
+    /// <see cref="SequenceDataNode"/> or <see cref="ValueDataNode"/>
+    /// </exception>
+    private string[] NodeToParentArray(DataNode node)
+    {
+        switch (node)
+        {
+            case SequenceDataNode sequence:
+            {
+                var parents = new string[sequence.Count];
+                for (var i = 0; i < sequence.Count; i++)
+                {
+                    parents[i] = ((ValueDataNode) sequence[i]).Value;
+                }
+
+                return parents;
+            }
+            case ValueDataNode value:
+                return [value.Value];
+        }
+
+        throw new ArgumentException(
+            $"Node of type {node.GetType()} cannot be used as a single parent or list of parents! Expected {typeof(SequenceDataNode)} or {typeof(ValueDataNode)}. Node string:\n{node}");
     }
 
     private static void CombineMapNode(MappingDataNode existing, MappingDataNode data, out bool fullDeleted)
@@ -776,4 +813,16 @@ public partial class PrototypeManager
         bool PartialOnly,
         Dictionary<string, ExtractedMappingData>? VariantData = null
     );
+
+    private sealed class PrototypeLoadContext : ISerializationContext
+    {
+        public SerializationManager.SerializerProvider SerializerProvider { get; }
+        public bool WritingReadingPrototypes { get; }
+
+        public PrototypeLoadContext(ISerializationManager serialization)
+        {
+            SerializerProvider = new SerializationManager.SerializerProvider(serialization);
+            SerializerProvider.RegisterSerializer<ComponentRegistrySerializer>()?.CacheComponents = true;
+        }
+    }
 }

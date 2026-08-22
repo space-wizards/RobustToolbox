@@ -80,6 +80,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private ClydeShaderInstance _queuedShaderInstance = default!;
 
+        private static readonly Vector4 DefaultScreenUvRect = new(0, 0, 1, 1);
+        private Vector4 _queuedScreenUvRect = DefaultScreenUvRect;
+
         // Current projection & view matrices that are being used ot render.
         // This gets updated to keep track during (queue) and (misc), but not during (submit).
         private Matrix3x2 _currentMatrixProj;
@@ -296,6 +299,7 @@ namespace Robust.Client.Graphics.Clyde
             program.SetUniformMaybe(UniIModelMatrix, command.ModelMatrix);
             // Reset ModUV to ensure it's identity and doesn't touch anything.
             program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
+            program.SetUniformMaybe(UniIScreenUvRect, command.ScreenUvRect);
 
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
@@ -367,6 +371,7 @@ namespace Robust.Client.Graphics.Clyde
             // Reset renderer state.
             _currentMatrixModel = Matrix3x2.Identity;
             _queuedShaderInstance = _defaultShader;
+            _queuedScreenUvRect = DefaultScreenUvRect;
             SetScissorFull(null);
         }
 
@@ -933,6 +938,15 @@ namespace Robust.Client.Graphics.Clyde
             _queuedShaderInstance = instance;
         }
 
+        private void DrawSetScreenUvRect(in Vector4 screenUvRect)
+        {
+            if (_queuedScreenUvRect == screenUvRect)
+                return;
+
+            BreakBatch();
+            _queuedScreenUvRect = screenUvRect;
+        }
+
         private void DrawClear(Color color, int stencil, ClearBufferMask mask)
         {
             BreakBatch();
@@ -977,7 +991,8 @@ namespace Robust.Client.Graphics.Clyde
                 if (metaData.TextureId == textureId &&
                     indexed == metaData.Indexed &&
                     metaData.PrimitiveType == primitiveType &&
-                    metaData.ShaderInstance == shaderInstance)
+                    metaData.ShaderInstance == shaderInstance &&
+                    metaData.ScreenUvRect == _queuedScreenUvRect)
                 {
                     // Data matches, don't have to do anything.
                     return;
@@ -989,7 +1004,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // ... and start another.
             _batchMetaData = new BatchMetaData(textureId, indexed, primitiveType,
-                indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance);
+                indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance, _queuedScreenUvRect);
 
             /*
             if (textureId != default)
@@ -1022,6 +1037,7 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.PrimitiveType = metaData.PrimitiveType;
             command.DrawBatch.TextureId = metaData.TextureId;
             command.DrawBatch.ShaderInstance = metaData.ShaderInstance;
+            command.DrawBatch.ScreenUvRect = metaData.ScreenUvRect;
 
             command.DrawBatch.Count = currentIndex - metaData.StartIndex;
             command.DrawBatch.ModelMatrix = Matrix3x2.Identity;
@@ -1079,6 +1095,7 @@ namespace Robust.Client.Graphics.Clyde
                 _currentBoundRenderTarget,
                 _currentRenderTarget,
                 _queuedShaderInstance,
+                _queuedScreenUvRect,
                 _currentScissorState,
                 _glCaps);
         }
@@ -1089,6 +1106,7 @@ namespace Robust.Client.Graphics.Clyde
             BindRenderTargetImmediate(state.BoundRenderTarget);
 
             _queuedShaderInstance = state.QueuedShaderInstance;
+            _queuedScreenUvRect = state.ScreenUvRect;
             _currentRenderTarget = state.RenderTarget;
             var (width, height) = state.BoundRenderTarget.Size;
             GL.Viewport(0, 0, width, height);
@@ -1121,6 +1139,7 @@ namespace Robust.Client.Graphics.Clyde
             BindRenderTargetFull(_mainWindow!.RenderTarget);
             _batchMetaData = null;
             _queuedShaderInstance = _defaultShader;
+            _queuedScreenUvRect = DefaultScreenUvRect;
 
             GL.Viewport(0, 0, _mainWindow!.FramebufferSize.X, _mainWindow!.FramebufferSize.Y);
         }
@@ -1197,6 +1216,8 @@ namespace Robust.Client.Graphics.Clyde
             public bool Indexed;
             public BatchPrimitiveType PrimitiveType;
 
+            public Vector4 ScreenUvRect;
+
             // TODO: this makes the render commands so much more large please remove.
             public Matrix3x2 ModelMatrix;
         }
@@ -1268,15 +1289,17 @@ namespace Robust.Client.Graphics.Clyde
             public readonly BatchPrimitiveType PrimitiveType;
             public readonly int StartIndex;
             public readonly ClydeHandle ShaderInstance;
+            public readonly Vector4 ScreenUvRect;
 
             public BatchMetaData(ClydeHandle textureId, bool indexed, BatchPrimitiveType primitiveType,
-                int startIndex, ClydeHandle shaderInstance)
+                int startIndex, ClydeHandle shaderInstance, Vector4 screenUvRect)
             {
                 TextureId = textureId;
                 Indexed = indexed;
                 PrimitiveType = primitiveType;
                 StartIndex = startIndex;
                 ShaderInstance = shaderInstance;
+                ScreenUvRect = screenUvRect;
             }
         }
 
@@ -1298,6 +1321,7 @@ namespace Robust.Client.Graphics.Clyde
             public readonly LoadedRenderTarget BoundRenderTarget;
             public readonly LoadedRenderTarget RenderTarget;
             public readonly ClydeShaderInstance QueuedShaderInstance;
+            public readonly Vector4 ScreenUvRect;
 
             public readonly UIBox2i? ScissorState;
 
@@ -1309,6 +1333,7 @@ namespace Robust.Client.Graphics.Clyde
                 LoadedRenderTarget boundRenderTarget,
                 LoadedRenderTarget renderTarget,
                 ClydeShaderInstance queuedShaderInstance,
+                Vector4 screenUvRect,
                 UIBox2i? scissorState,
                 GLCaps glcaps
                 )
@@ -1318,6 +1343,7 @@ namespace Robust.Client.Graphics.Clyde
                 BoundRenderTarget = boundRenderTarget;
                 RenderTarget = renderTarget;
                 QueuedShaderInstance = queuedShaderInstance;
+                ScreenUvRect = screenUvRect;
 
                 ScissorState = scissorState;
                 GLCaps = glcaps;

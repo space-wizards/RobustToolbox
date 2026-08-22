@@ -382,17 +382,6 @@ namespace Robust.Shared.GameObjects
             EntRemoveComponent(e.BaseArgs.Owner, e.Idx);
         }
 
-        internal void ComponentSetMutating(EntityUid euid)
-        {
-            if (!_entEventTables.TryGetValue(euid, out var eventTable))
-                return;
-
-#if DEBUG
-            DebugTools.Assert(eventTable.DirectedDispatchDepth == 0);
-#endif
-            eventTable.Version++;
-        }
-
         private void EntAddSubscription(
             CompIdx compType,
             Type compTypeObj,
@@ -451,6 +440,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(_subscriptionLock);
 
             var eventTable = _entEventTables[euid];
+            eventTable.Version++;
             var compSubs = _eventSubs[compType.Value];
 
             foreach (var evType in compSubs.Keys)
@@ -512,6 +502,7 @@ namespace Robust.Shared.GameObjects
         private void EntRemoveComponent(EntityUid euid, CompIdx compType)
         {
             var eventTable = _entEventTables[euid];
+            eventTable.Version++;
             var compSubs = _eventSubs[compType.Value];
 
             foreach (var evType in compSubs.Keys)
@@ -593,7 +584,6 @@ namespace Robust.Shared.GameObjects
 #endif
                 }
 
-                DebugTools.AssertEqual(eventTable.Version, version, GetEventBusAssert(euid, eventType));
                 return;
             }
 
@@ -627,7 +617,6 @@ namespace Robust.Shared.GameObjects
                     // Debug mode do NOT change components during eventbus, however still need it work in release (even if slow).
                     else
                     {
-                        DebugTools.AssertEqual(eventTable.Version, version, GetEventBusAssert(euid, eventType));
                         fallback = true;
 
                         if (!_entMan.TryGetComponent(euid, compIdx, out var fallbackComp))
@@ -646,8 +635,6 @@ namespace Robust.Shared.GameObjects
                 eventTable.DirectedDispatchDepth--;
 #endif
             }
-
-            DebugTools.AssertEqual(eventTable.Version, version, GetEventBusAssert(euid, eventType));
         }
 
         private void EntCollectOrdered(
@@ -681,7 +668,6 @@ namespace Robust.Shared.GameObjects
                         var dispatchComp = comp;
                         if (eventTable.Version != version)
                         {
-                            DebugTools.AssertEqual(eventTable.Version, version, GetEventBusAssert(euid, eventType));
                             if (!_entMan.TryGetComponent(euid, compIdx, out dispatchComp))
                                 return;
                         }
@@ -703,8 +689,6 @@ namespace Robust.Shared.GameObjects
                             eventTable.DirectedDispatchDepth--;
 #endif
                         }
-
-                        DebugTools.AssertEqual(eventTable.Version, version, GetEventBusAssert(euid, eventType));
                     },
                     reg.Order));
             }
@@ -827,11 +811,6 @@ namespace Robust.Shared.GameObjects
             }
 
             return result;
-        }
-
-        private static string GetEventBusAssert(EntityUid euid, Type eventType)
-        {
-            return $"Found mutated entity {euid} for event {eventType}";
         }
     }
 

@@ -54,12 +54,12 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         var mapCoords = new EntityCoordinates(map, new Vector2(2, 2));
         await server.WaitPost(() =>
         {
-            player = sEntMan.SpawnEntity(null, gridCoords);
-            other = sEntMan.SpawnEntity(null, gridCoords);
+            player = sEntMan.SpawnAttachedTo(null, gridCoords);
+            other = sEntMan.SpawnAttachedTo(null, gridCoords);
             otherXform = sEntMan.GetComponent<TransformComponent>(other);
 
             // Ensure map PVS chunk is not empty
-            sEntMan.SpawnEntity(null, mapCoords);
+            sEntMan.SpawnAttachedTo(null, mapCoords);
 
             // Attach player.
             var session = sPlayerMan.Sessions.First();

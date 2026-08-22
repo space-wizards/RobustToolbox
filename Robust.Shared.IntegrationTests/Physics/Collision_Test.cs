@@ -129,8 +129,8 @@ internal sealed class Collision_Test
         var mapId = sim.CreateMap().MapId;
         var mapId2 = sim.CreateMap().MapId;
 
-        var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
-        var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var ent1 = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
+        var ent2 = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
 
         var body1 = entManager.AddComponent<PhysicsComponent>(ent1);
         physics.SetBodyType(ent1, BodyType.Dynamic, body: body1);

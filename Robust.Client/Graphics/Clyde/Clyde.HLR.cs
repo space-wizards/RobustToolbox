@@ -152,8 +152,6 @@ namespace Robust.Client.Graphics.Clyde
                 if (!overlay.BeforeDraw(args))
                     return;
 
-                ResetOverlayDrawState();
-
                 if (overlay.RequestScreenTexture)
                 {
                     FlushRenderQueue();
@@ -238,9 +236,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (!overlay.BeforeDraw(args))
                         continue;
-
-                    ResetOverlayDrawState(handle.DrawingHandleScreen);
-
+                    
                     if (overlay.RequestScreenTexture)
                     {
                         FlushRenderQueue();

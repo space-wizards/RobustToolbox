@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface.Controls
     ///     A label is a GUI control that displays simple text.
     /// </summary>
     [Virtual]
-    public class Label : Control
+    public class Label : SelectableTextControl
     {
         public const string StylePropertyFontColor = "font-color";
         public const string StylePropertyFont = "font";
@@ -63,6 +63,7 @@ namespace Robust.Client.UserInterface.Controls
                 _text = value;
                 _textMemory = value.AsMemory();
                 _textDimensionCacheValid = false;
+                ClearSelection();
                 InvalidateMeasure();
             }
         }
@@ -87,6 +88,7 @@ namespace Robust.Client.UserInterface.Controls
                 _text = null;
                 _textMemory = value;
                 _textDimensionCacheValid = false;
+                ClearSelection();
                 InvalidateMeasure();
             }
         }
@@ -343,6 +345,80 @@ namespace Robust.Client.UserInterface.Controls
                 var advance = font.DrawChar(handle, rune, baseLine, UIScale, actualFontColor);
                 baseLine.X += advance;
             }
+        }
+
+        protected override ReadOnlySpan<char> GetTextSpan() => _textMemory.Span;
+
+        protected override int GetIndexAtPosition(Vector2 relativePosition)
+        {
+            return BuildSelectionMap().GetIndexAtPosition(relativePosition * UIScale);
+        }
+
+        protected override void DrawSelectionRange(DrawingHandleScreen handle, int selectionLower, int selectionUpper, Color color)
+        {
+            BuildSelectionMap().DrawSelection(handle, selectionLower, selectionUpper, color);
+        }
+
+        private TextSelectionGeometry.SelectionMap BuildSelectionMap()
+        {
+            if (!_textDimensionCacheValid)
+                _calculateTextDimension();
+
+            var map = new TextSelectionGeometry.SelectionMap();
+            if (_textMemory.IsEmpty)
+                return map;
+
+            var font = ActualFont;
+            var lineHeight = font.GetLineHeight(UIScale);
+            var top = VAlign switch
+            {
+                VAlignMode.Top => 0,
+                VAlignMode.Fill or VAlignMode.Center => (PixelSize.Y - _cachedTextHeight) / 2,
+                VAlignMode.Bottom => PixelSize.Y - _cachedTextHeight,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            var line = 0;
+            var index = 0;
+            var lineStart = GetLineStart(_cachedTextWidths[line]);
+            var x = lineStart;
+            map.BeginLine(index, x, top, top + lineHeight);
+
+            foreach (var rune in _textMemory.Span.EnumerateRunes())
+            {
+                if (rune == new Rune('\n'))
+                {
+                    map.EndLine(index, x);
+                    index += rune.Utf16SequenceLength;
+                    line++;
+                    lineStart = GetLineStart(_cachedTextWidths[line]);
+                    x = lineStart;
+                    top += lineHeight;
+                    map.BeginLine(index, x, top, top + lineHeight);
+                    continue;
+                }
+
+                map.AddBoundary(index, x);
+                if (font.TryGetCharMetrics(rune, UIScale, out var metrics))
+                    x += metrics.Advance;
+
+                index += rune.Utf16SequenceLength;
+                map.AddBoundary(index, x);
+            }
+
+            map.EndLine(index, x);
+            return map;
+        }
+
+        private float GetLineStart(int width)
+        {
+            return Align switch
+            {
+                AlignMode.Left => 0,
+                AlignMode.Center or AlignMode.Fill => (PixelSize.X - width) / 2f,
+                AlignMode.Right => PixelSize.X - width,
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         public enum AlignMode : byte

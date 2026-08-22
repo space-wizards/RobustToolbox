@@ -39,7 +39,9 @@ END TEMPLATE-->
 
 ### New features
 
-* `LayerSetShader` now supports setting shaders to `null` when using an `object` layer key.
+* `TextEdit.GetLineCount` is now public. Also the `TextEdit` control now has a `MaxLines` property that limits the ammount of newlines you can place
+* `IRobustRandom` can now make random longs with `NextLong`.
+* `AppearanceChangeEvent` now has a `TryGetData` function that checks the type of the data at a given key.
 
 ### Bugfixes
 
@@ -48,10 +50,27 @@ END TEMPLATE-->
 ### Other
 
 * `SpawnEntity` and the `EntityCoordinates` version of `SpawnEntities` have been marked as obsolete.
+* Render handle shaders and transforms are reset after every overlay call.
 
 ### Internal
 
 *None yet*
+
+
+## 288.1.0
+
+### New features
+
+* `LayerSetShader` now supports setting shaders to `null` when using an `object` layer key.
+* Reject nullable parameters for entity event subscription generation.
+* Add physics queries EntityLookupSystem and obsolete the old sharedphysicssystem ones.
+
+### Bugfixes
+
+* Fix close button not working on DefaultWindow.
+* Revert sRGB framebuffer change due to causing more issues.
+* Fix potential deadlock on nvidia/wayland.
+* Fix inconsistent bug with state handling caused by chunk entity changes / ac13da4328c0305f3284f4770004c67bc03b9bbe
 
 
 ## 288.0.1

@@ -580,6 +580,16 @@ public abstract partial class SharedTransformSystem
                     throw new InvalidOperationException($"Attempted to re-parent to a terminating object. Entity: {ToPrettyString(uid)}, new parent: {ToPrettyString(value.EntityId)}");
                 }
 
+#if DEBUG
+                if (_metaQuery.TryGetComponent(value.EntityId, out var newParentMeta) &&
+                    (newParentMeta.Flags & MetaDataFlags.Detached) != 0x0 &&
+                    (meta.Flags & MetaDataFlags.Detached) == 0x0)
+                {
+                    DebugTools.Assert(false,
+                        $"Attempted to parent an attached entity to a detached entity. Entity: {ToPrettyString(uid, meta)}, new parent: {ToPrettyString(value.EntityId, newParentMeta)}");
+                }
+#endif
+
                 InitializeMapUid(value.EntityId, newParent);
 
                 // Check for recursive/circular transform hierarchies.

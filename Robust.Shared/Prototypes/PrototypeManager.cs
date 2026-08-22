@@ -7,8 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Robust.Shared.Asynchronous;
-using Robust.Shared.Collections;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -37,6 +36,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private IComponentFactory _factory = default!;
         [Dependency] private IEntityManager _entMan = default!;
         [Dependency] private IRobustRandom _random = default!;
+        [Dependency] private IConfigurationManager _config = default!;
 
         private readonly Dictionary<string, FrozenDictionary<string, MappingDataNode>> _prototypeDataCache = new();
 

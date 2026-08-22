@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.Audio.Sources;
@@ -12,7 +14,6 @@ using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio;
@@ -42,6 +43,7 @@ internal sealed partial class AudioManager : IAudioInternal
     private readonly HashSet<string> _alContextExtensions = new();
     private Attenuation _attenuation;
     private bool _audioInitialized;
+    private int _preloaded;
     private bool _focused = true;
     private bool _muteUnfocused;
     private const float MasterFadeDuration = 0.25f;
@@ -168,6 +170,8 @@ internal sealed partial class AudioManager : IAudioInternal
     {
         OpenALSawmill = _logMan.GetSawmill("clyde.oal");
 
+        PreloadOpenAl();
+
         if (!_audioOpenDevice())
             return;
 
@@ -186,6 +190,68 @@ internal sealed partial class AudioManager : IAudioInternal
 
         _reload.OnChanged += OnReload;
         _audioInitialized = true;
+    }
+
+    /// <summary>
+    /// Preloads bundled OpenAL before OpenTK initialization, preventing it from using system variant with potentially different behavior.
+    /// </summary>
+    private void PreloadOpenAl()
+    {
+        if (Interlocked.Exchange(ref _preloaded, 1) != 0)
+            return;
+
+        (string rid, string fileName) platform;
+        var arm = RuntimeInformation.ProcessArchitecture == Architecture.Arm;
+        var arm64 = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
+
+        if (OperatingSystem.IsWindows())
+            platform = arm64 ? ("win-arm64", "OpenAL32.dll")
+                : Environment.Is64BitProcess
+                ? ("win-x64", "OpenAL32.dll")
+                : ("win-x86", "OpenAL32.dll");
+        else if (OperatingSystem.IsLinux())
+            platform = arm64
+                ? ("linux-arm64", "libopenal.so.1")
+                : ("linux-x64", "libopenal.so.1");
+        else if (OperatingSystem.IsMacOS())
+            platform = arm64
+                ? ("osx-arm64", "libopenal.1.dylib")
+                : ("osx-x64", "libopenal.1.dylib");
+        else
+        {
+            OpenALSawmill.Info("No bundled OpenAL for this platform, using the system implementation.");
+            return;
+        }
+
+        var baseDir = AppContext.BaseDirectory;
+
+        string[] candidates =
+        [
+            Path.Combine(baseDir, "runtimes", platform.rid, "native", platform.fileName),
+            Path.Combine(baseDir, platform.fileName),
+        ];
+
+        foreach (var candidate in candidates)
+        {
+            if (!File.Exists(candidate))
+            {
+                OpenALSawmill.Debug("No bundled OpenAL at {candidate}, trying next candidate.", candidate);
+                continue;
+            }
+
+            try
+            {
+                NativeLibrary.Load(candidate);
+                OpenALSawmill.Info("Preloaded bundled OpenAL from {candidate}", candidate);
+                return;
+            }
+            catch (Exception ex)
+            {
+                OpenALSawmill.Error("Found bundled OpenAL at {candidate} but failed to load it. {ex}", candidate, ex);
+            }
+        }
+
+        OpenALSawmill.Warning("No usable bundled OpenAL found for {0}, falling back to the system implementation. ", platform.rid);
     }
 
     private void OnMuteUnfocusedChanged(bool muteUnfocused)

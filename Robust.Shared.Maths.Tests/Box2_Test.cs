@@ -511,7 +511,7 @@ namespace Robust.Shared.Maths.Tests
             var (left, bottom, right, top) = test;
 
             var controlBox = new Box2(left, bottom, right, top);
-            var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
+            var differentBox = new Box2(-MathF.PI, -MathF.PI, MathF.PI, MathF.PI);
             var sameBox = new Box2(left, bottom, right, top);
             Object sameBoxAsObject = sameBox;
             Box2? nullBox = null;
@@ -533,7 +533,7 @@ namespace Robust.Shared.Maths.Tests
             var (left, bottom, right, top) = test;
 
             var controlBox = new Box2(left, bottom, right, top);
-            var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
+            var differentBox = new Box2(-MathF.PI, -MathF.PI, MathF.PI, MathF.PI);
             var sameBox = new Box2(left, bottom, right, top);
 
 #pragma warning disable CS1718 // Comparison made to same variable
@@ -550,7 +550,7 @@ namespace Robust.Shared.Maths.Tests
             var (left, bottom, right, top) = test;
 
             var controlBox = new Box2(left, bottom, right, top);
-            var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
+            var differentBox = new Box2(-MathF.PI, -MathF.PI, MathF.PI, MathF.PI);
             var sameBox = new Box2(left, bottom, right, top);
 
 #pragma warning disable CS1718 // Comparison made to same variable

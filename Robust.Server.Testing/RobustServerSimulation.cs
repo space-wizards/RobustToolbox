@@ -60,6 +60,8 @@ namespace Robust.UnitTesting.Server
         ISimulationFactory RegisterDependencies(DiContainerDelegate factory);
         ISimulationFactory RegisterEntitySystems(EntitySystemRegistrationDelegate factory);
         ISimulationFactory RegisterPrototypes(PrototypeRegistrationDelegate factory);
+        ISimulationFactory AddRoot(AddRootDelegate factory);
+        ISimulationFactory ChangeCVar(ChangeCVarDelegate factory);
         ISimulation InitializeInstance();
     }
 
@@ -113,12 +115,18 @@ namespace Robust.UnitTesting.Server
 
     public delegate void PrototypeRegistrationDelegate(IPrototypeManager protoMan);
 
+    public delegate void AddRootDelegate(IResourceManager resourceMan);
+
+    public delegate void ChangeCVarDelegate(IConfigurationManager configMan);
+
     public sealed class RobustServerSimulation : ISimulation, ISimulationFactory
     {
         private DiContainerDelegate? _diFactory;
         private CompRegistrationDelegate? _regDelegate;
         private EntitySystemRegistrationDelegate? _systemDelegate;
         private PrototypeRegistrationDelegate? _protoDelegate;
+        private AddRootDelegate? _addRootDelegate;
+        private ChangeCVarDelegate? _changeCVarDelegate;
 
         public IDependencyCollection Collection { get; private set; } = default!;
 
@@ -156,6 +164,18 @@ namespace Robust.UnitTesting.Server
         public ISimulationFactory RegisterPrototypes(PrototypeRegistrationDelegate factory)
         {
             _protoDelegate += factory;
+            return this;
+        }
+
+        public ISimulationFactory AddRoot(AddRootDelegate factory)
+        {
+            _addRootDelegate += factory;
+            return this;
+        }
+
+        public ISimulationFactory ChangeCVar(ChangeCVarDelegate factory)
+        {
+            _changeCVarDelegate += factory;
             return this;
         }
 
@@ -245,7 +265,6 @@ namespace Robust.UnitTesting.Server
             container.RegisterInstance<IBaseServerInternal>(new Mock<IBaseServerInternal>().Object);
             container.RegisterInstance<IReflectionManager>(reflectionManager.Object); // tests should not be searching for types
             container.RegisterInstance<IRobustSerializer>(new Mock<IRobustSerializer>().Object);
-            container.RegisterInstance<IResourceManager>(new Mock<IResourceManager>().Object); // no disk access for tests
             container.RegisterInstance<IGameTiming>(new Mock<IGameTiming>().Object); // TODO: get timing working similar to RobustIntegrationTest
 
             //Tier 2: Simulation
@@ -265,6 +284,7 @@ namespace Robust.UnitTesting.Server
             container.Register<ITileDefinitionManager, TileDefinitionManager>();
             container.Register<IParallelManager, TestingParallelManager>();
             container.Register<IParallelManagerInternal, TestingParallelManager>();
+            container.Register<IResourceManager, ResourceManager>();
             // Needed for grid fixture debugging.
             container.Register<IConGroupController, ConGroupController>();
             container.Register<EntityConsoleHost>();
@@ -289,6 +309,8 @@ namespace Robust.UnitTesting.Server
             configMan.LoadCVarsFromAssembly(typeof(ProgramShared).Assembly); // Shared
             configMan.LoadCVarsFromAssembly(typeof(RobustServerSimulation).Assembly); // Tests
             configMan.LoadCVarsFromAssembly(typeof(RTCVars).Assembly); // Tests
+
+            _changeCVarDelegate?.Invoke(configMan);
 
             var logMan = container.Resolve<ILogManager>();
             logMan.RootSawmill.AddHandler(new TestLogHandler(configMan, "SIM"));
@@ -356,6 +378,10 @@ namespace Robust.UnitTesting.Server
             var protoMan = container.Resolve<IPrototypeManager>();
             protoMan.Initialize();
             protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
+
+            var resourceMan = container.Resolve<IResourceManager>();
+            _addRootDelegate?.Invoke(resourceMan);
+
             _protoDelegate?.Invoke(protoMan);
 
             // This just exists to set protoMan._hasEverBeenReloaded to True

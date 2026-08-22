@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Text;
 using System.Threading;
 using Robust.Shared.Utility;
 
@@ -35,6 +36,11 @@ public sealed class MemoryContentRoot : IContentRoot, IDisposable
         {
             _lock.ExitWriteLock();
         }
+    }
+
+    public void AddOrUpdateFile(ResPath relPath, string data)
+    {
+        AddOrUpdateFile(relPath, Encoding.UTF8.GetBytes(data));
     }
 
     /// <summary>

@@ -62,6 +62,12 @@ namespace Robust.Shared
             CVarDef.Create("net.max_rapid_connections", 3, CVar.ARCHIVE);
 
         /// <summary>
+        /// Whether Lidgren should send disconnection reasons when rejecting connections due to internal limits.
+        /// </summary>
+        public static readonly CVarDef<bool> NetSendConnectionRejectionReasons =
+            CVarDef.Create("net.send_connection_rejection_reasons", true, CVar.ARCHIVE);
+
+        /// <summary>
         /// How many seconds until connection count decays for <c>net.max_rapid_connections</c>.
         /// </summary>
         public static readonly CVarDef<double> NetRapidConnectionWindow =
@@ -145,6 +151,18 @@ namespace Robust.Shared
         /// <seealso cref="NetMtuExpand"/>
         public static readonly CVarDef<int> NetMtuExpandFailAttempts =
             CVarDef.Create("net.mtu_expand_fail_attempts", 5, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum bytes used by incomplete Lidgren fragment groups for one connection.
+        /// </summary>
+        public static readonly CVarDef<int> NetMaxFragmentReassemblyBytesPerConnection =
+            CVarDef.Create("net.max_fragment_reassembly_bytes_per_connection", 32 * 1024 * 1024, CVar.ARCHIVE);
+
+        /// <summary>
+        /// How many seconds Lidgren keeps an incomplete fragment group alive.
+        /// </summary>
+        public static readonly CVarDef<float> NetFragmentGroupTimeout =
+            CVarDef.Create("net.fragment_group_timeout", 30.0f, CVar.ARCHIVE);
 
         /// <summary>
         /// Whether to enable verbose debug logging in Lidgren.
@@ -938,7 +956,7 @@ namespace Robust.Shared
         /// outside of our viewport.
         /// </remarks>
         public static readonly CVarDef<float> MaxLightRadius =
-            CVarDef.Create("light.max_radius", 32.1f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("light.max_radius", 32.1f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Maximum number of lights that the client will draw.
@@ -993,6 +1011,14 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> LookupEnlargementRange =
             CVarDef.Create("lookup.enlargement_range", 10.0f, CVar.ARCHIVE | CVar.REPLICATED | CVar.CHEAT);
+
+        /// <summary>
+        /// Whether to enable the server-side point light lookup tree. To help with performance, this should only be
+        /// enabled if the server needs to be able to compute light levels.
+        /// This is only read during system startup; changing it at runtime does not initialize or shut down the tree.
+        /// </summary>
+        public static readonly CVarDef<bool> LookupEnableServerLightTree =
+            CVarDef.Create("lookup.enable_server_light_tree", false, CVar.ARCHIVE | CVar.SERVERONLY);
 
         /*
          * LOKI
@@ -1289,6 +1315,13 @@ namespace Robust.Shared
             CVarDef.Create("display.input_buffer_size", 32, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Maximum estimated size in bytes of an individual post-shader render target retained in Clyde's pool.
+        /// Set to zero to disable retaining post-shader render targets.
+        /// </summary>
+        public static readonly CVarDef<int> DisplayPostShaderRenderTargetPoolMaxSize =
+            CVarDef.Create("display.post_shader_render_target_pool_max_size", 8 * 1024 * 1024, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Insert stupid performance hitches into the windowing thread, to test how the game thread handles it.
         /// </summary>
         public static readonly CVarDef<bool> DisplayWin32Experience =
@@ -1348,6 +1381,17 @@ namespace Robust.Shared
             CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
+        /// Scales listener & source velocities, which (if less than 1) de-emphasizes the doppler pitch-shifting effect
+        /// and (if more than 1) exaggerates the effect. Setting this to 0 will disable the doppler effect.
+        /// </summary>
+        /// <remarks>
+        /// This is replicated rather than client-only because it makes more sense to control this on a server-level depending on
+        /// what the game in question requires: servers with fast-moving grids may want to de-emphasize doppler even more than usual, etc.
+        /// </remarks>
+        public static readonly CVarDef<float> AudioDopplerFactor =
+            CVarDef.Create("audio.doppler_factor", 1f, CVar.REPLICATED | CVar.ARCHIVE);
+
+        /// <summary>
         /// Whether to enable HRTF (head-related transfer function) support for positional audio.
         /// </summary>
         /// <remarks>
@@ -1368,6 +1412,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> AudioMasterVolume =
             CVarDef.Create("audio.mastervolume", 0.50f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Whether to mute audio while the game window is unfocused.
+        /// </summary>
+        public static readonly CVarDef<bool> AudioMuteUnfocused =
+            CVarDef.Create("audio.mute_unfocused", false, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Maximum raycast distance for audio occlusion.
@@ -1424,7 +1474,7 @@ namespace Robust.Shared
         /// Can grids split if not connected by cardinals
         /// </summary>
         public static readonly CVarDef<bool> GridSplitting =
-            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE);
+            CVarDef.Create("physics.grid_splitting", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// How much to enlarge grids when determining their fixture bounds.
@@ -1872,6 +1922,14 @@ namespace Robust.Shared
         /// The max amount of pending write commands while recording replays.
         /// </summary>
         public static readonly CVarDef<int> ReplayWriteChannelSize = CVarDef.Create("replay.write_channel_size", 5);
+
+        /// <summary>
+        /// Number of replay data blocks (each ≈ one <c>data_N</c> file) the client keeps resident in memory
+        /// at once during playback. The full replay is no longer loaded entirely into RAM; blocks are read
+        /// lazily and evicted (LRU) once this window is exceeded. Higher values use more memory but reduce
+        /// re-reads when scrubbing back and forth. Minimum effective value is 2.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayLoadedBlockWindow = CVarDef.Create("replay.loaded_block_window", 8);
 
         /// <summary>
         /// Whether or not server-side replay recording is enabled.

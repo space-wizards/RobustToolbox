@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -9,17 +10,20 @@ using System.Text;
 using System.Threading.Tasks;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Definition;
+using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
     public sealed partial class SerializationManager : ISerializationManager
     {
-        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly INetManager _net = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         public IReflectionManager ReflectionManager => _reflectionManager;
 
@@ -30,13 +34,12 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly ConcurrentDictionary<Type, DataDefinition> _dataDefinitions = new();
 
-        // Always has a dummy value of 0 for any types that should be copied by ref
-        private readonly ConcurrentDictionary<Type, byte> _copyByRefRegistrations = new();
+        private ImmutableHashSet<Type> _copyByRefRegistrations = ImmutableHashSet<Type>.Empty;
 
-        [IoC.Dependency]
-        private IDependencyCollection _dependencyCollection = null!;
+        [field: Dependency]
+        public IDependencyCollection DependencyCollection { get; } = default!;
 
-        public IDependencyCollection DependencyCollection => _dependencyCollection;
+        public bool IsServer { get; private set; }
 
         public void Initialize()
         {
@@ -46,17 +49,27 @@ namespace Robust.Shared.Serialization.Manager
             if (_initialized)
                 throw new InvalidOperationException($"{nameof(SerializationManager)} has already been initialized.");
 
+            IsServer = _net.IsServer;
             _initializing = true;
 
-            var flagsTypes = new ConcurrentBag<Type>();
-            var constantsTypes = new ConcurrentBag<Type>();
-            var typeSerializers = new ConcurrentBag<Type>();
-            var meansDataDef = new ConcurrentBag<Type>();
-            var meansDataRecord = new ConcurrentBag<Type>();
-            var implicitDataDef = new ConcurrentBag<Type>();
-            var implicitDataRecord = new ConcurrentBag<Type>();
+            _read = typeof(SerializationManager)
+                .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+                .First(m => m.Name == nameof(ReadObject) &&
+                            m.GetGenericArguments().Length == 1 &&
+                            GetParametersBase(m)
+                                .SequenceEqual([
+                                    typeof(DataNode), typeof(SerializationHookContext), typeof(ISerializationContext),
+                                    typeof(bool)
+                                ]));
 
-            CollectAttributedTypes(flagsTypes, constantsTypes, typeSerializers, meansDataDef, meansDataRecord, implicitDataDef, implicitDataRecord);
+            var flagsTypes = _reflectionManager.FindTypesWithAttribute<FlagsForAttribute>();
+            var constantsTypes = _reflectionManager.FindTypesWithAttribute<ConstantsForAttribute>();
+            var typeSerializers = _reflectionManager.FindTypesWithAttribute<TypeSerializerAttribute>();
+            var meansDataDef = _reflectionManager.FindTypesWithAttribute<MeansDataDefinitionAttribute>();
+            var meansDataRecord = _reflectionManager.FindTypesWithAttribute<MeansDataRecordAttribute>();
+            var implicitDataDef = _reflectionManager.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>();
+            var implicitDataRecord = _reflectionManager.FindTypesWithAttribute<ImplicitDataRecordAttribute>();
+            _copyByRefRegistrations = _reflectionManager.FindTypesWithAttributeSet<CopyByRefAttribute>();
 
             InitializeFlagsAndConstants(flagsTypes, constantsTypes);
             InitializeTypeSerializers(typeSerializers);
@@ -103,14 +116,42 @@ namespace Robust.Shared.Serialization.Manager
 
             Parallel.ForEach(_reflectionManager.FindAllTypes(), type =>
             {
-                if (meansDataDef.Any(type.IsDefined))
+                var meansDef = false;
+                foreach (var meansAttr in meansDataDef)
+                {
+                    if (!_reflectionManager.IsAttributeDefined(type, meansAttr))
+                        continue;
+
+                    meansDef = true;
+                    break;
+                }
+
+                if (meansDef)
                     registrations.Add(type);
 
-                if (type.IsDefined(typeof(DataRecordAttribute)) || meansDataRecord.Any(type.IsDefined))
+                if (_reflectionManager.IsAttributeDefined(type, typeof(DataRecordAttribute)))
+                {
                     records[type] = 0;
+                }
+                else
+                {
+                    var meansRecord = false;
+                    foreach (var meansAttr in meansDataRecord)
+                    {
+                        if (!_reflectionManager.IsAttributeDefined(type, meansAttr))
+                            continue;
+
+                        meansRecord = true;
+                        break;
+                    }
+
+                    if (meansRecord)
+                        records[type] = 0;
+                }
             });
 
             var sawmill = Logger.GetSawmill(LogCategory);
+            _serializerSawmill = Logger.GetSawmill("szr");
 
             Parallel.ForEach(registrations, type =>
             {
@@ -122,7 +163,9 @@ namespace Robust.Shared.Serialization.Manager
                 }
 
                 var isRecord = records.ContainsKey(type);
-                if (!type.IsValueType && !isRecord && !type.HasParameterlessConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                if (!type.IsValueType &&
+                    !isRecord &&
+                    !type.HasParameterlessConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                 {
                     // If someone attempts to save or load an entity that uses this DataDefinition, this will lead to errors.
                     sawmill.Warning(
@@ -142,10 +185,7 @@ namespace Robust.Shared.Serialization.Manager
             foreach (var (type, definition) in _dataDefinitions)
             {
                 var invalidTypes = new List<string>();
-                foreach (var includedField in definition.BaseFieldDefinitions.Where(x => x.Attribute is IncludeDataFieldAttribute
-                         {
-                             CustomTypeSerializer: null
-                         }))
+                foreach (var includedField in definition.BaseFieldDefinitions.Where(x => x is { IsIncludeDataField: true, CustomTypeSerializer: null }))
                 {
                     if (!dataDefs.Contains(includedField.FieldType))
                     {
@@ -196,7 +236,7 @@ namespace Robust.Shared.Serialization.Manager
                     if (field.FieldType.ContainsGenericParameters)
                         continue; // This just isn't supported yet, can't validate it so just skip it.
 
-                    if (field.Attribute.CustomTypeSerializer != null)
+                    if (field.CustomTypeSerializer != null)
                         continue; // Assume that anything with a custom type serializer can be handled.
 
                     if (!ValidateIsSerializable(field.FieldType, forbidden))
@@ -204,7 +244,7 @@ namespace Robust.Shared.Serialization.Manager
                 }
             }
 
-            _copyByRefRegistrations[typeof(Type)] = 0;
+            _copyByRefRegistrations = _copyByRefRegistrations.Add(typeof(Type));
 
             _initialized = true;
             _initializing = false;
@@ -239,50 +279,14 @@ namespace Robust.Shared.Serialization.Manager
             return true;
         }
 
-        private void CollectAttributedTypes(
-            ConcurrentBag<Type> flagsTypes,
-            ConcurrentBag<Type> constantsTypes,
-            ConcurrentBag<Type> typeSerializers,
-            ConcurrentBag<Type> meansDataDef,
-            ConcurrentBag<Type> meansDataRecord,
-            ConcurrentBag<Type> implicitDataDef,
-            ConcurrentBag<Type> implicitDataRecord)
-        {
-            // IsDefined is extremely slow. Great.
-            Parallel.ForEach(_reflectionManager.FindAllTypes(), type =>
-            {
-                if (type.IsDefined(typeof(FlagsForAttribute), false))
-                    flagsTypes.Add(type);
-
-                if (type.IsDefined(typeof(ConstantsForAttribute), false))
-                    constantsTypes.Add(type);
-
-                if (type.IsDefined(typeof(TypeSerializerAttribute)))
-                    typeSerializers.Add(type);
-
-                if (type.IsDefined(typeof(MeansDataDefinitionAttribute)))
-                    meansDataDef.Add(type);
-
-                if (type.IsDefined(typeof(MeansDataRecordAttribute)))
-                    meansDataRecord.Add(type);
-
-                if (type.IsDefined(typeof(ImplicitDataDefinitionForInheritorsAttribute), true))
-                    implicitDataDef.Add(type);
-
-                if (type.IsDefined(typeof(ImplicitDataRecordAttribute), true))
-                    implicitDataRecord.Add(type);
-
-                if (type.IsDefined(typeof(CopyByRefAttribute)))
-                    _copyByRefRegistrations[type] = 0;
-            });
-        }
-
         private DataDefinition CreateDataDefinition(Type t, bool isRecord)
         {
             return (DataDefinition)typeof(DataDefinition<>).MakeGenericType(t)
-                .GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, new[]
-                    { typeof(SerializationManager), typeof(bool) })!
-                .Invoke(new object[]{this, isRecord});
+                .GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic,
+                [
+                    typeof(SerializationManager), typeof(bool)
+                ])!
+                .Invoke([this, isRecord]);
         }
 
         public void Shutdown()
@@ -301,19 +305,17 @@ namespace Robust.Shared.Serialization.Manager
             _initialized = false;
         }
 
-        internal DataDefinition<T>? GetDefinition<T>() where T : notnull
+        internal DataDefinition<T>? GetDefinition<T>() where T : ISerializationGenerated<T>
         {
             return GetDefinition(typeof(T)) as DataDefinition<T>;
         }
 
         internal DataDefinition? GetDefinition(Type type)
         {
-            return _dataDefinitions.TryGetValue(type, out var dataDefinition)
-                ? dataDefinition
-                : null;
+            return _dataDefinitions.GetValueOrDefault(type);
         }
 
-        internal bool TryGetDefinition<T>([NotNullWhen(true)] out DataDefinition<T>? dataDefinition) where T : notnull
+        internal bool TryGetDefinition<T>([NotNullWhen(true)] out DataDefinition<T>? dataDefinition) where T : ISerializationGenerated<T>
         {
             dataDefinition = GetDefinition<T>();
             return dataDefinition != null;
@@ -332,48 +334,59 @@ namespace Robust.Shared.Serialization.Manager
                 variableType = null;
                 return false;
             }
-            var foundFieldDef = definition.BaseFieldDefinitions.FirstOrDefault(fieldDef => fieldDef?.Attribute is DataFieldAttribute attr && attr.Tag==variableName, null);
-            if(foundFieldDef != null)
+
+            var foundFieldDef = definition.BaseFieldDefinitions.FirstOrDefault(fieldDef => fieldDef.IsDataField && fieldDef.Tag == variableName, default);
+            if (foundFieldDef != default)
             {
-                variableType = foundFieldDef.BackingField.FieldType;
+                variableType = foundFieldDef.FieldType;
                 return true;
             }
-            else
-            {
-                variableType = null;
-                return false;
-            }
+
+            variableType = null;
+            return false;
+        }
+
+        private bool TryResolveConcreteType(Type baseType, string typeName, [NotNullWhen(true)] out Type? concreteType)
+        {
+            concreteType = ReflectionManager.YamlTypeTagLookup(baseType, typeName);
+            return concreteType != null;
         }
 
         private Type ResolveConcreteType(Type baseType, string typeName)
         {
-            var type = ReflectionManager.YamlTypeTagLookup(baseType, typeName);
-            if (type == null)
-            {
-                throw new InvalidOperationException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
-            }
+            if (TryResolveConcreteType(baseType, typeName, out var concreteType))
+                return concreteType;
 
-            return type;
+            throw new InvalidOperationException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
         }
 
 #pragma warning disable CS0618
-        private static void RunAfterHook<TValue>(TValue instance, SerializationHookContext ctx)
-        {
-            if (instance is ISerializationHooks hooks)
-                RunAfterHookGenerated(hooks, ctx);
-        }
-
-        private static void RunAfterHookGenerated<TValue>(TValue instance, SerializationHookContext ctx) where TValue : ISerializationHooks
+        internal static void TryRunAfterHook<TValue>(TValue instance, SerializationHookContext ctx)
         {
             if (ctx.SkipHooks)
                 return;
 
+            if (instance is ISerializationHooks hooks)
+                ForceRunAfterHookGenerated(hooks, ctx);
+        }
+
+        private static void ForceRunAfterHookGenerated<TValue>(TValue instance, SerializationHookContext ctx) where TValue : ISerializationHooks
+        {
             DebugTools.Assert(!typeof(TValue).IsValueType, "ISerializationHooks must only be used on reference types");
 
             if (ctx.DeferQueue != null)
                 ctx.DeferQueue.TryWrite(instance);
             else
                 instance.AfterDeserialization();
+        }
+
+        private static IEnumerable<Type> GetParametersBase(MethodInfo method)
+        {
+            return method.GetParameters()
+                .Select(p =>
+                    p.ParameterType.IsGenericType
+                        ? p.ParameterType.GetGenericTypeDefinition()
+                        : p.ParameterType);
         }
 #pragma warning restore CS0618
     }

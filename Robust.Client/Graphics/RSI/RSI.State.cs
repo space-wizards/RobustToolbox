@@ -25,9 +25,10 @@ namespace Robust.Client.Graphics
             public readonly float[] Delays;
 
             // 2D array for the texture to use for each animation frame at each direction.
-            public readonly Texture[][] Icons;
+            public readonly AtlasTexture[][] Icons;
 
-            internal State(Vector2i size, RSI rsi, StateId stateId, RsiDirectionType rsiDirection, float[] delays, Texture[][] icons)
+            internal State(Vector2i size, RSI rsi, StateId stateId, RsiDirectionType rsiDirection, float[] delays,
+                AtlasTexture[][] icons)
             {
                 DebugTools.Assert(size.X > 0);
                 DebugTools.Assert(size.Y > 0);
@@ -93,6 +94,11 @@ namespace Robust.Client.Graphics
             int IRsiStateLike.AnimationFrameCount => DelayCount;
 
             public Texture GetFrame(RsiDirection rsiDirection, int frame)
+            {
+                return Icons[(int) rsiDirection][frame];
+            }
+
+            internal AtlasTexture GetAtlasFrame(RsiDirection rsiDirection, int frame)
             {
                 return Icons[(int) rsiDirection][frame];
             }

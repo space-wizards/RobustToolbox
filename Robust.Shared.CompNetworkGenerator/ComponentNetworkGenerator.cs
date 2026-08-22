@@ -24,16 +24,21 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string GlobalEntityUidName = "global::Robust.Shared.GameObjects.EntityUid";
         private const string GlobalNullableEntityUidName = "global::Robust.Shared.GameObjects.EntityUid?";
 
+        private const string GlobalEntityRelationName = "global::Robust.Shared.GameObjects.EntityRelation";
+        private const string GlobalNullableEntityRelationName = "global::Robust.Shared.GameObjects.EntityRelation?";
+
         private const string GlobalNetEntityName = "global::Robust.Shared.GameObjects.NetEntity";
         private const string GlobalNetEntityNullableName = "global::Robust.Shared.GameObjects.NetEntity?";
 
         private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
         private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
 
-        private const string GlobalEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.EntityUid>";
+        private const string GlobalEntityUidSetName = $"global::System.Collections.Generic.HashSet<{GlobalEntityUidName}>";
+        private const string GlobalEntityRelationSetName = $"global::System.Collections.Generic.HashSet<{GlobalEntityRelationName}>";
         private const string GlobalNetEntityUidSetName = $"global::System.Collections.Generic.HashSet<{GlobalNetEntityName}>";
 
-        private const string GlobalEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.EntityUid>";
+        private const string GlobalEntityUidListName = $"global::System.Collections.Generic.List<{GlobalEntityUidName}>";
+        private const string GlobalEntityRelationListName = $"global::System.Collections.Generic.List<{GlobalEntityRelationName}>";
         private const string GlobalNetEntityUidListName = $"global::System.Collections.Generic.List<{GlobalNetEntityName}>";
 
         private const string GlobalDictionaryName = "global::System.Collections.Generic.Dictionary<TKey, TValue>";
@@ -276,6 +281,27 @@ namespace Robust.Shared.CompNetworkGenerator
                         deltaApply.Add($"fullState.{name} = {name};");
 
                         break;
+                    case GlobalEntityRelationName:
+                    case GlobalNullableEntityRelationName:
+                        networkedType = "NetEntity?";
+
+                        stateFields.Append($@"
+        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetEntity(component.{name})";
+                        cast = "(NetEntity?)";
+
+                        handleStateSetters.Append($@"
+            component.{name} = EnsureEntityRelation<{componentName}>(state.{name}, uid);");
+
+                        deltaHandleFields.Append($@"
+                    component.{name} = EnsureEntityRelation<{componentName}>({cast} {fieldHandleValue}, uid);");
+
+                        AppendShallowClone(name);
+
+                        deltaApply.Add($"fullState.{name} = {name};");
+
+                        break;
                     case GlobalEntityCoordinatesName:
                     case GlobalNullableEntityCoordinatesName:
                         networkedType = $"NetCoordinates{nullableAnnotation}";
@@ -337,24 +363,66 @@ namespace Robust.Shared.CompNetworkGenerator
                         deltaApply.Add($@"fullState.{name} = {name};");
 
                         break;
+                    case GlobalEntityRelationSetName:
+                        networkedType = $"{GlobalNetEntityUidSetName}";
+
+                        stateFields.Append($@"
+        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetEntitySet(component.{name})";
+                        cast = $"({GlobalNetEntityUidSetName})";
+
+                        handleStateSetters.Append($@"
+            EnsureEntitySetRelation<{componentName}>(state.{name}, uid, component.{name});");
+
+                        deltaHandleFields.Append($@"
+                    EnsureEntitySetRelation<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
+
+                        AppendCollectionClone(name, nullable);
+
+                        deltaApply.Add($@"fullState.{name} = {name};");
+
+                        break;
+                    case GlobalEntityRelationListName:
+                        networkedType = $"{GlobalNetEntityUidListName}";
+
+                        stateFields.Append($@"
+        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetEntityList(component.{name})";
+                        cast = $"({GlobalNetEntityUidListName})";
+
+                        handleStateSetters.Append($@"
+            EnsureEntityListRelation<{componentName}>(state.{name}, uid, component.{name});");
+
+                        deltaHandleFields.Append($@"
+                    EnsureEntityListRelation<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
+
+                        AppendCollectionClone(name, nullable);
+
+                        deltaApply.Add($@"fullState.{name} = {name};");
+
+                        break;
                     default:
                         if (type is INamedTypeSymbol { TypeArguments.Length: 2 } named &&
                             named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat) == GlobalDictionaryName)
                         {
                             var key = named.TypeArguments[0].ToDisplayString(FullNullableFormat);
-                            var keyNullable = key.EndsWith("?");
 
                             var value = named.TypeArguments[1].ToDisplayString(FullNullableFormat);
                             var valueNullable = value.EndsWith("?");
 
-                            if (key is GlobalEntityUidName or GlobalNullableEntityUidName)
+                            if (key is GlobalEntityUidName or GlobalEntityRelationName)
                             {
-                                key = keyNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+                                key = GlobalNetEntityName;
 
                                 var ensureGeneric = $"{componentName}, {value}";
-                                if (value is GlobalEntityUidName or GlobalNullableEntityUidName)
+                                if (value is GlobalEntityUidName or GlobalNullableEntityUidName or GlobalEntityRelationName or GlobalNullableEntityRelationName)
                                 {
-                                    value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+                                    if (value == GlobalEntityRelationName)
+                                        value = GlobalNetEntityNullableName;
+                                    else
+                                        value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
                                     ensureGeneric = componentName;
                                 }
 
@@ -393,9 +461,12 @@ namespace Robust.Shared.CompNetworkGenerator
                                 break;
                             }
 
-                            if (value is GlobalEntityUidName or GlobalNullableEntityUidName)
+                            if (value is GlobalEntityUidName or GlobalNullableEntityUidName or GlobalEntityRelationName or GlobalNullableEntityRelationName)
                             {
-                                value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+                                if (value == GlobalEntityRelationName)
+                                    value = GlobalNetEntityNullableName;
+                                else
+                                    value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
                                 networkedType = $"Dictionary<{key}, {value}>";
 
                                 stateFields.Append($@"

@@ -62,6 +62,11 @@ public partial interface IEntityManager
     public EntityUid? EnsureEntity<T>(NetEntity? nEntity, EntityUid callerEntity);
 
     /// <summary>
+    /// Tries to get a corresponding <see cref="EntityRelation"/> if it exists and nEntity is not null.
+    /// </summary>
+    public EntityRelation EnsureEntityRelation<T>(NetEntity? nEntity, EntityUid callerEntity);
+
+    /// <summary>
     /// Returns the corresponding local <see cref="EntityUid"/>.
     /// </summary>
     public EntityUid GetEntity(NetEntity nEntity);
@@ -127,9 +132,19 @@ public partial interface IEntityManager
     public HashSet<NetEntity> GetNetEntitySet(HashSet<EntityUid> entities);
 
     /// <summary>
+    /// HashSet version of <see cref="GetNetEntity"/>
+    /// </summary>
+    public HashSet<NetEntity> GetNetEntitySet(HashSet<EntityRelation> entities);
+
+    /// <summary>
     /// List version of <see cref="GetNetEntity"/>
     /// </summary>
     public List<NetEntity> GetNetEntityList(List<EntityUid> entities);
+
+    /// <summary>
+    /// List version of <see cref="GetNetEntity"/>
+    /// </summary>
+    public List<NetEntity> GetNetEntityList(List<EntityRelation> entities);
 
     /// <summary>
     /// List version of <see cref="GetNetEntity"/>
@@ -170,6 +185,22 @@ public partial interface IEntityManager
     /// Dictionary version of <see cref="GetNetEntity"/>
     /// </summary>
     Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityUid?> entities) where T : notnull;
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<NetEntity, T> GetNetEntityDictionary<T>(Dictionary<EntityRelation, T> entities);
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityRelation> entities) where T : notnull;
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityRelation?> entities) where T : notnull;
+
 
     /// <summary>
     /// Dictionary version of <see cref="GetNetEntity"/>
@@ -222,6 +253,14 @@ public partial interface IEntityManager
 
     public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity);
 
+    public HashSet<EntityRelation> EnsureEntitySetRelation<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity);
+
+    public void EnsureEntitySetRelation<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity, HashSet<EntityRelation> relations);
+
+    public void EnsureEntityListRelation<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityRelation> relations);
+
+    public List<EntityRelation> EnsureEntityListRelation<T>(List<NetEntity> netEntities, EntityUid callerEntity);
+
     void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities);
 
     void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity,
@@ -236,6 +275,19 @@ public partial interface IEntityManager
 
     void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
         Dictionary<TKey, EntityUid?> entities) where TKey : notnull;
+
+    void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity,
+        Dictionary<EntityRelation, TValue> entities);
+
+    void EnsureEntityDictionaryNullableValue<TComp, TValue>(Dictionary<NetEntity, TValue?> netEntities,
+        EntityUid callerEntity,
+        Dictionary<EntityRelation, TValue?> entities);
+
+    void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
+        Dictionary<TKey, EntityRelation> entities) where TKey : notnull;
+
+    void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
+        Dictionary<TKey, EntityRelation?> entities) where TKey : notnull;
 
     void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity> netEntities, EntityUid callerEntity,
         Dictionary<EntityUid, EntityUid> entities);

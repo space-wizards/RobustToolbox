@@ -3,6 +3,7 @@ using Robust.Shared.Player;
 
 namespace Robust.Server.GameObjects
 {
+    [NotContentImplementable]
     public interface IServerEntityNetworkManager : IEntityNetworkManager
     {
         uint GetLastMessageSequence(ICommonSession session);

@@ -1,0 +1,6 @@
+﻿<Project>
+  <!-- Include this .props file from content to get access to the APIs in these projects. -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Benchmarks\Robust.Benchmarks.csproj" />
+  </ItemGroup>
+</Project>

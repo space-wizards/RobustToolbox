@@ -42,32 +42,22 @@ public sealed partial class DebugConsole
 
     private void InitCompletions()
     {
-        CommandBar.OnTextTyped += CommandBarOnOnTextTyped;
         CommandBar.OnFocusExit += CommandBarOnOnFocusExit;
-        CommandBar.OnTextRemoved += CommandBarOnTextRemoved;
+        CommandBar.OnTextChanged += CommandBarOnTextChanged;
     }
 
     private void CommandBarOnOnFocusExit(LineEdit.LineEditEventArgs obj)
     {
-        AbortActiveCompletions();
+        // Clicking a completion entry moves keyboard focus away from the command bar before the entry receives its
+        // click. Keep the displayed result alive long enough for that entry to insert it.
+        _compPopup.Close();
+        CancelActiveCompletionRequest();
     }
 
-    private void CommandBarOnOnTextTyped(GUITextEnteredEventArgs obj)
+    private void CommandBarOnTextChanged(LineEdit.LineEditEventArgs args)
     {
-        TypeUpdateCompletions(true);
-    }
-
-    private void CommandBarOnTextRemoved(LineEdit.LineEditTextRemovedEventArgs eventArgs)
-    {
-        if (eventArgs.OldCursorPosition == 0 || eventArgs.OldSelectionStart != eventArgs.OldCursorPosition)
+        if (args.Text.Length == 0)
         {
-            AbortActiveCompletions();
-            return;
-        }
-
-        if (CommandBar.CursorPosition == 0)
-        {
-            // Don't do completions if you have nothing typed.
             AbortActiveCompletions();
             return;
         }
@@ -84,6 +74,11 @@ public sealed partial class DebugConsole
         _compVerticalOffset = 0;
         _compPopup.Close();
 
+        CancelActiveCompletionRequest();
+    }
+
+    private void CancelActiveCompletionRequest()
+    {
         _compCancel.Cancel();
         _compCancel.Dispose();
         _compCancel = new CancellationTokenSource();
@@ -194,6 +189,7 @@ public sealed partial class DebugConsole
         for (var i = _compVerticalOffset; i < _compFiltered.Length && c < maxCount; i++, c++)
         {
             var (value, hint, _) = _compFiltered[i];
+            var completionIndex = i;
 
             var labelValue = new Label
             {
@@ -201,26 +197,52 @@ public sealed partial class DebugConsole
                 FontColorOverride = i == _compSelected ? Color.White : Color.DarkGray
             };
 
+            var entry = new ContainerButton
+            {
+                MuteSounds = true,
+                HorizontalExpand = true,
+                DefaultCursorShape = Control.CursorShape.Hand,
+            };
+
+            entry.OnButtonDown += _ =>
+            {
+                CommandBar.GrabKeyboardFocus();
+                if (InsertCompletion(completionIndex))
+                    TypeUpdateCompletions(true);
+            };
+
+            Label? labelHint = null;
+            entry.OnMouseEntered += _ =>
+            {
+                labelValue.FontColorOverride = Color.White;
+                if (labelHint != null)
+                    labelHint.FontColorOverride = Color.White;
+            };
+            entry.OnMouseExited += _ =>
+            {
+                labelValue.FontColorOverride = completionIndex == _compSelected ? Color.White : Color.DarkGray;
+                if (labelHint != null)
+                    labelHint.FontColorOverride = Color.Gray;
+            };
+
+            var entryContents = new BoxContainer
+            {
+                Orientation = BoxContainer.LayoutOrientation.Horizontal,
+                Children = { labelValue },
+            };
+
             if (hint != null)
             {
-                _compPopup.Contents.AddChild(new BoxContainer
+                labelHint = new Label
                 {
-                    Orientation = BoxContainer.LayoutOrientation.Horizontal,
-                    Children =
-                    {
-                        labelValue,
-                        new Label
-                        {
-                            Text = $" - {hint}",
-                            FontColorOverride = Color.Gray
-                        }
-                    }
-                });
+                    Text = $" - {hint}",
+                    FontColorOverride = Color.Gray
+                };
+                entryContents.AddChild(labelHint);
             }
-            else
-            {
-                _compPopup.Contents.AddChild(labelValue);
-            }
+
+            entry.AddChild(entryContents);
+            _compPopup.Contents.AddChild(entry);
         }
 
         if (_compPopup.Contents.ChildCount != 0)
@@ -262,7 +284,8 @@ public sealed partial class DebugConsole
     private CompletionOption[] FilterCompletions(IEnumerable<CompletionOption> completions, string curTyping)
     {
         return completions
-            .Where(c => c.Value.StartsWith(curTyping, StringComparison.CurrentCultureIgnoreCase))
+            .Where(c => c.Value.Contains(curTyping, StringComparison.CurrentCultureIgnoreCase))
+            .OrderByDescending(c => c.Value.StartsWith(curTyping, StringComparison.CurrentCultureIgnoreCase))
             .ToArray();
     }
 
@@ -270,43 +293,8 @@ public sealed partial class DebugConsole
     {
         if (args.Function == EngineKeyFunctions.TextTabComplete)
         {
-            if (_compFiltered != null && _compSelected < _compFiltered.Length)
-            {
-                // Figure out typing word so we know how much to replace.
-                var (completion, _, completionFlags) = _compFiltered[_compSelected];
-                var (_, _, lastRange, _) = CalcTypingArgs();
-
-                // Replace the full word from the start.
-                // This means that letter casing will match the completion suggestion.
-                CommandBar.CursorPosition = lastRange.end;
-                CommandBar.SelectionStart = lastRange.start;
-
-                var insertValue = (completionFlags & CompletionOptionFlags.NoEscape) == 0
-                    ? CommandParsing.Escape(completion)
-                    : completion;
-
-                // If the replacement contains a space, we must quote it to treat it as a single argument.
-                var mustQuote = (completionFlags & CompletionOptionFlags.NoQuote) == 0 && insertValue.Contains(' ');
-
-                if ((completionFlags & CompletionOptionFlags.PartialCompletion) == 0)
-                {
-                    if (mustQuote)
-                        insertValue = $"\"{insertValue}\"";
-
-                    insertValue += " ";
-                }
-                else if (mustQuote)
-                {
-                    // If it's a partial completion, only quote the start.
-                    insertValue = '"' + insertValue;
-                }
-
-                CommandBar.InsertAtCursor(insertValue);
-
-                TypeUpdateCompletions(true);
-
+            if (InsertCompletion(_compSelected))
                 args.Handle();
-            }
 
             return;
         }
@@ -361,6 +349,47 @@ public sealed partial class DebugConsole
 
         if (_compSelected < _compVerticalOffset + margin)
             _compVerticalOffset = Math.Max(0, _compSelected - margin);
+    }
+
+    /// <summary>
+    ///     Inserts a displayed completion using the same escaping and quoting rules for mouse and keyboard selection.
+    /// </summary>
+    private bool InsertCompletion(int index)
+    {
+        if (_compFiltered == null || index < 0 || index >= _compFiltered.Length)
+            return false;
+
+        // Figure out typing word so we know how much to replace.
+        var (completion, _, completionFlags) = _compFiltered[index];
+        var (_, _, lastRange, _) = CalcTypingArgs();
+
+        // Replace the full word from the start.
+        // This means that letter casing will match the completion suggestion.
+        CommandBar.CursorPosition = lastRange.end;
+        CommandBar.SelectionStart = lastRange.start;
+
+        var insertValue = (completionFlags & CompletionOptionFlags.NoEscape) == 0
+            ? CommandParsing.Escape(completion)
+            : completion;
+
+        // If the replacement contains a space, we must quote it to treat it as a single argument.
+        var mustQuote = (completionFlags & CompletionOptionFlags.NoQuote) == 0 && insertValue.Contains(' ');
+
+        if ((completionFlags & CompletionOptionFlags.PartialCompletion) == 0)
+        {
+            if (mustQuote)
+                insertValue = $"\"{insertValue}\"";
+
+            insertValue += " ";
+        }
+        else if (mustQuote)
+        {
+            // If it's a partial completion, only quote the start.
+            insertValue = '"' + insertValue;
+        }
+
+        CommandBar.InsertAtCursor(insertValue);
+        return true;
     }
 
     private void CompletionCommandEntered()

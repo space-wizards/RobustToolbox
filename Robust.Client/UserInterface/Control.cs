@@ -11,6 +11,7 @@ using Robust.Client.UserInterface.Themes;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -73,6 +74,8 @@ namespace Robust.Client.UserInterface
         //{
         //    _nameScope = nameScope;
         //}
+
+        public virtual ISawmill Log => UserInterfaceManager.ControlSawmill;
 
         public UITheme Theme { get; internal set; }
 
@@ -381,8 +384,6 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public event EventHandler? OnShowTooltip;
 
-
-
         /// <summary>
         /// If this control is currently showing a tooltip provided via TooltipSupplier,
         /// returns that tooltip. Do not move this control within the tree, it should remain in PopupRoot.
@@ -531,7 +532,7 @@ namespace Robust.Client.UserInterface
         public Control()
         {
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
-            StyleClasses = new StyleClassCollection(this);
+            _styleClasses = new StyleClassCollection(this);
             Children = new OrderedChildCollection(this);
             Theme = UserInterfaceManagerInternal.CurrentTheme;
             XamlChildren = Children;
@@ -633,6 +634,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Dispose all children, but leave this one intact.
         /// </summary>
+        [Obsolete("Use RemoveAllChildren")]
         public void DisposeAllChildren()
         {
             // Cache because the children modify the dictionary.

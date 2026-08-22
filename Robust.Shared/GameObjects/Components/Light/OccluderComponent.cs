@@ -2,23 +2,48 @@ using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 using System;
+using System.Numerics;
 
 namespace Robust.Shared.GameObjects;
 
 [RegisterComponent]
 [NetworkedComponent()]
-[Access(typeof(OccluderSystem))]
+[AutoGenerateComponentState(true)]
+[Access(typeof(OccluderSystem), Other = AccessPermissions.ReadExecute)]
 public sealed partial class OccluderComponent : Component, IComponentTreeEntry<OccluderComponent>
 {
-    [DataField("enabled")]
+    [DataField, AutoNetworkedField]
     public bool Enabled = true;
 
-    [DataField("boundingBox")]
-    public Box2 BoundingBox = new(-0.5f, -0.5f, 0.5f, 0.5f);
+    /// <summary>
+    /// Local-space convex polygon vertices.
+    /// </summary>
+    [DataField("polygon", customTypeSerializer: typeof(PhysicsHullSerializer)), AutoNetworkedField]
+    private Vector2[] _polygon =
+    [
+        new(-0.5f, 0.5f),
+        new(0.5f, 0.5f),
+        new(0.5f, -0.5f),
+        new(-0.5f, -0.5f),
+    ];
+
+    public ReadOnlySpan<Vector2> Polygon => _polygon;
+
+    internal Vector2[] PolygonArray
+    {
+        get => _polygon;
+        set => _polygon = value;
+    }
+
+    /// <summary>
+    /// Cached local-space bounds for <see cref="Polygon"/>.
+    /// </summary>
+    [ViewVariables]
+    public Box2 LocalBounds { get; internal set; } = Box2.Empty; // Leave as empty so we remember to always update the cache on init.
 
     public EntityUid? TreeUid { get; set; }
     public DynamicTree<ComponentTreeEntry<OccluderComponent>>? Tree { get; set; }
@@ -26,29 +51,16 @@ public sealed partial class OccluderComponent : Component, IComponentTreeEntry<O
     public bool AddToTree => Enabled;
     public bool TreeUpdateQueued { get; set; } = false;
 
-    [ViewVariables] public (EntityUid Grid, Vector2i Tile)? LastPosition;
-    [ViewVariables] public OccluderDir Occluding;
+    /// <summary>
+    /// Cached client-side shared-edge mask. Bit <c>i</c> is set when polygon render edge <c>i</c> is exactly shared
+    /// with another enabled occluder edge.
+    /// </summary>
+    [ViewVariables]
+    public byte OccludingEdges;
 
-    [Flags]
-    public enum OccluderDir : byte
-    {
-        None = 0,
-        North = 1,
-        East = 1 << 1,
-        South = 1 << 2,
-        West = 1 << 3,
-    }
-
-    [NetSerializable, Serializable]
-    public sealed class OccluderComponentState : ComponentState
-    {
-        public bool Enabled { get; }
-        public Box2 BoundingBox { get; }
-
-        public OccluderComponentState(bool enabled, Box2 boundingBox)
-        {
-            Enabled = enabled;
-            BoundingBox = boundingBox;
-        }
-    }
+    /// <summary>
+    /// Last tree-local bounds used to dirty neighbours when this occluder moves, changes polygon, or is removed.
+    /// </summary>
+    [ViewVariables]
+    public (EntityUid TreeUid, Box2 Bounds)? LastTreeBounds;
 }

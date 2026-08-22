@@ -1,16 +1,25 @@
+using System;
 using System.IO;
 using System.Text;
-using Robust.Shared.Graphics;
 
 namespace Robust.Client.Graphics
 {
+    [NotContentImplementable]
     public interface IFontManager
     {
         public void ClearFontCache();
     }
     internal interface IFontManagerInternal : IFontManager
     {
-        IFontFaceHandle Load(Stream stream);
+        IFontFaceHandle Load(Stream stream, int index = 0);
+        IFontFaceHandle Load(IFontMemoryHandle memory, int index = 0);
+
+        /// <summary>
+        /// Load a specified font in a font collection.
+        /// </summary>
+        /// <param name="memory">Memory for the entire font collection.</param>
+        /// <param name="postscriptName">The postscript name of the font to load.</param>
+        IFontFaceHandle LoadWithPostscriptName(IFontMemoryHandle memory, string postscriptName);
         IFontInstanceHandle MakeInstance(IFontFaceHandle handle, int size);
         void SetFontDpi(uint fontDpi);
     }
@@ -20,12 +29,24 @@ namespace Robust.Client.Graphics
 
     }
 
+    internal readonly record struct OutlinedGlyph(Texture Texture, int Left, int Top);
+
     internal interface IFontInstanceHandle
     {
-
+        /// <summary>
+        ///     Fetches all data needed to draw a glyph.
+        /// </summary>
+        bool TryGetGlyph(
+            Rune codePoint,
+            float scale,
+            float outlineThickness,
+            out CharMetrics metrics,
+            out Texture? texture,
+            out OutlinedGlyph? outlinedGlyph);
 
         Texture? GetCharTexture(Rune codePoint, float scale);
         Texture? GetCharTexture(char chr, float scale) => GetCharTexture((Rune) chr, scale);
+        OutlinedGlyph? GetOutlinedChar(Rune codePoint, float scale, float thickness);
         CharMetrics? GetCharMetrics(Rune codePoint, float scale);
         CharMetrics? GetCharMetrics(char chr, float scale) => GetCharMetrics((Rune) chr, scale);
 
@@ -33,6 +54,12 @@ namespace Robust.Client.Graphics
         int GetDescent(float scale);
         int GetHeight(float scale);
         int GetLineHeight(float scale);
+    }
+
+    internal unsafe interface IFontMemoryHandle : IDisposable
+    {
+        byte* GetData();
+        nint GetDataSize();
     }
 
     /// <summary>

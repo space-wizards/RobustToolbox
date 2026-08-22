@@ -15,8 +15,11 @@ namespace Robust.Client.Graphics
 {
     public delegate void CopyPixelsDelegate<T>(Image<T> pixels) where T : unmanaged, IPixel<T>;
 
+    [NotContentImplementable]
     public interface IClyde
     {
+        internal bool IsInitialized { get; }
+
         IClydeWindow MainWindow { get; }
         IRenderTarget MainWindowRenderTarget => MainWindow.RenderTarget;
 
@@ -33,6 +36,16 @@ namespace Robust.Client.Graphics
 
         void SetWindowTitle(string title);
         void SetWindowMonitor(IClydeMonitor monitor);
+
+        /// <summary>
+        ///     Gets the monitor the specified window is currently on.
+        /// </summary>
+        IClydeMonitor? GetWindowMonitor(IClydeWindow window);
+
+        /// <summary>
+        ///     Gets the monitor the main game window is currently on.
+        /// </summary>
+        IClydeMonitor? GetMainWindowMonitor();
 
         /// <summary>
         ///     This is the magic method to make the game window ping you in the task bar.

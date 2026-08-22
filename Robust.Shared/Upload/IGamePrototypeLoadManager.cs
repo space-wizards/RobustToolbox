@@ -3,6 +3,7 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Upload;
 
+[NotContentImplementable]
 public interface IGamePrototypeLoadManager
 {
     public void Initialize();

@@ -7,6 +7,7 @@ namespace Robust.Shared.Input
     /// <summary>
     ///     Contains a set of created <see cref="InputCmdContext"/>s.
     /// </summary>
+    [NotContentImplementable]
     public interface IInputContextContainer
     {
         /// <summary>

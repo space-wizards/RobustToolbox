@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 
@@ -19,10 +20,28 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            foreach (var sig in AssemblyTypeChecker.DumpMetaMembers(type))
+            var members = AssemblyTypeChecker.DumpMetaMembers(type)
+                .GroupBy(x => x.IsField)
+                .ToDictionary(x => x.Key, x => x.Select(t => t.Value).ToList());
+
+            if (members.TryGetValue(true, out var fields))
             {
-                System.Console.WriteLine(@$"- ""{sig}""");
-                shell.WriteLine(sig);
+                fields.Sort(StringComparer.Ordinal);
+
+                foreach (var member in fields)
+                {
+                    System.Console.WriteLine(@$"- ""{member}""");
+                }
+            }
+
+            if (members.TryGetValue(false, out var methods))
+            {
+                methods.Sort(StringComparer.Ordinal);
+
+                foreach (var member in methods)
+                {
+                    System.Console.WriteLine(@$"- ""{member}""");
+                }
             }
         }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -21,6 +21,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -29,19 +30,19 @@ namespace Robust.Shared.Prototypes
 {
     public abstract partial class PrototypeManager : IPrototypeManagerInternal
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] protected readonly IResourceManager Resources = default!;
-        [Dependency] protected readonly ITaskManager TaskManager = default!;
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly ILocalizationManager _locMan = default!;
-        [Dependency] private readonly IComponentFactory _factory = default!;
-        [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IRobustRandom _random = default!;
-        [Dependency] private readonly INetManager _net = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] protected IResourceManager Resources = default!;
+        [Dependency] private ISerializationManager _serializationManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private ILocalizationManager _locMan = default!;
+        [Dependency] private IComponentFactory _factory = default!;
+        [Dependency] private IEntityManager _entMan = default!;
+        [Dependency] private IRobustRandom _random = default!;
+        [Dependency] private INetManager _net = default!;
 
-        private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
-        private EntityDiffContext _context = new();
+        private readonly Dictionary<string, FrozenDictionary<string, MappingDataNode>> _prototypeDataCache = new();
+
+        private readonly Dictionary<string, MappingDataNode> _tempMappingData = new();
 
         private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _kindPriorities = new();
@@ -63,6 +64,7 @@ namespace Robust.Shared.Prototypes
                 return;
 
             Sawmill = _logManager.GetSawmill("proto");
+            _prototypeLoadContext = new PrototypeLoadContext(_serializationManager);
 
             _initialized = true;
             ReloadPrototypeKinds();
@@ -349,6 +351,21 @@ namespace Robust.Shared.Prototypes
             Dictionary<Type, HashSet<string>> modified,
             Dictionary<Type, HashSet<string>>? removed = null)
         {
+            ReloadPrototypes(modified, removed, false);
+        }
+
+        void IPrototypeManagerInternal.ReloadPrototypesOrThrow(
+            Dictionary<Type, HashSet<string>> modified,
+            Dictionary<Type, HashSet<string>>? removed)
+        {
+            ReloadPrototypes(modified, removed, true);
+        }
+
+        private void ReloadPrototypes(
+            Dictionary<Type, HashSet<string>> modified,
+            Dictionary<Type, HashSet<string>>? removed,
+            bool throwOnFailure)
+        {
             var prototypeTypeOrder = modified.Keys.ToList();
             prototypeTypeOrder.Sort(SortPrototypesByPriority);
 
@@ -356,6 +373,7 @@ namespace Robust.Shared.Prototypes
             var modifiedKinds = new HashSet<KindData>();
             var toProcess = new HashSet<string>();
             var processQueue = new Queue<string>();
+            var validationContext = throwOnFailure ? new YamlValidationContext(_serializationManager) : null;
 
             foreach (var kind in prototypeTypeOrder)
             {
@@ -446,7 +464,15 @@ namespace Robust.Shared.Prototypes
 
                     toProcess.Remove(id);
 
-                    var prototype = TryReadPrototype(kind, id, kindData.Results[id], SerializationHookContext.DontSkipHooks);
+                    if (validationContext != null)
+                        ValidatePrototype(kind, id, kindData.Results[id], validationContext);
+
+                    var prototype = TryReadPrototype(
+                        kind,
+                        id,
+                        kindData.Results[id],
+                        SerializationHookContext.DontSkipHooks,
+                        throwOnFailure);
                     if (prototype == null)
                         continue;
 
@@ -474,6 +500,31 @@ namespace Robust.Shared.Prototypes
             var ev = new PrototypesReloadedEventArgs(modifiedTypes, byType, removed);
             PrototypesReloaded?.Invoke(ev);
             _entMan.EventBus.RaiseEvent(EventSource.Local, ev);
+        }
+
+        private void ValidatePrototype(
+            Type kind,
+            string id,
+            MappingDataNode mapping,
+            YamlValidationContext context)
+        {
+            var validationMapping = mapping;
+            if (mapping.Has("type"))
+            {
+                // Runtime-loaded mappings still include "type"; field validation already knows the prototype kind.
+                validationMapping = mapping.Copy();
+                validationMapping.Remove("type");
+            }
+
+            var errors = _serializationManager.ValidateNode(kind, validationMapping, context)
+                .GetErrors()
+                .ToArray();
+
+            if (errors.Length == 0)
+                return;
+
+            var errorText = string.Join("\n", errors.Select(x => x.ErrorReason));
+            throw new PrototypeLoadException($"Validation failed for {kind}({id})\n{errorText}");
         }
 
         private void Freeze(IEnumerable<KindData> kinds)
@@ -607,7 +658,8 @@ namespace Robust.Shared.Prototypes
             Type kind,
             string id,
             MappingDataNode mapping,
-            SerializationHookContext hookCtx)
+            SerializationHookContext hookCtx,
+            bool throwOnReadFailure = false)
         {
             if (mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) &&
                 abstractNode.AsBool())
@@ -615,10 +667,13 @@ namespace Robust.Shared.Prototypes
 
             try
             {
-                return (IPrototype)_serializationManager.Read(kind, mapping, hookCtx)!;
+                return (IPrototype)_serializationManager.Read(kind, mapping, hookCtx, _prototypeLoadContext)!;
             }
             catch (Exception e)
             {
+                if (throwOnReadFailure)
+                    throw new PrototypeLoadException($"Failed reading {kind}({id})", e);
+
                 Sawmill.Error($"Reading {kind}({id}) threw the following exception: {e}");
                 return null;
             }
@@ -803,14 +858,6 @@ namespace Robust.Shared.Prototypes
             return false;
         }
 
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
-        }
-
         public bool TryIndex([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype)
         {
             return TryIndex(id.Id, out prototype);
@@ -823,15 +870,6 @@ namespace Robust.Shared.Prototypes
 
             Sawmill.Error($"Attempted to resolve invalid ProtoId<{typeof(T).Name}>: {id.Id}\n{Environment.StackTrace}");
             return false;
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-            where T : class, IPrototype
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype)
@@ -849,14 +887,6 @@ namespace Robust.Shared.Prototypes
             }
 
             return Resolve(id.Value, out prototype);
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype)
@@ -879,15 +909,6 @@ namespace Robust.Shared.Prototypes
             }
 
             return Resolve(id.Value, out prototype);
-        }
-
-        [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-        public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-            where T : class, IPrototype
-        {
-            if (logError)
-                return Resolve(id, out prototype);
-            return TryIndex(id, out prototype);
         }
 
         public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype)
@@ -921,6 +942,11 @@ namespace Robust.Shared.Prototypes
             return _kinds[kind].Results.TryGetValue(id, out mappings);
         }
 
+        public bool TryGetMapping<T>(string id, [NotNullWhen(true)] out MappingDataNode? mappings)
+        {
+            return _kinds[typeof(T)].Results.TryGetValue(id, out mappings);
+        }
+
         public bool HasKind(string kind)
         {
             return _kindNames.ContainsKey(kind);
@@ -951,7 +977,7 @@ namespace Robust.Shared.Prototypes
             if (TryGetInstances<T>(out var dict))
                 return dict;
 
-            throw new Exception($"Failed to fetch instances for kind {nameof(T)}");
+            throw new Exception($"Failed to fetch instances for kind {typeof(T).Name}");
         }
 
         public bool TryGetInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)
@@ -1007,12 +1033,7 @@ namespace Robust.Shared.Prototypes
 
         static string CalculatePrototypeName(Type type)
         {
-            const string prototype = "Prototype";
-            if (!type.Name.EndsWith(prototype))
-                throw new InvalidPrototypeNameException($"Prototype {type} must end with the word Prototype");
-
-            var name = type.Name.AsSpan();
-            return $"{char.ToLowerInvariant(name[0])}{name[1..^prototype.Length]}";
+            return PrototypeUtility.CalculatePrototypeName(type.Name);
         }
 
         /// <inheritdoc />
@@ -1067,7 +1088,7 @@ namespace Robust.Shared.Prototypes
             {
                 throw new InvalidImplementationException(kind,
                     typeof(IPrototype),
-                    $"Duplicate prototype type ID: {attribute.Type}. Current: {existing}");
+                    $"Duplicate prototype type ID: {name}. Current: {existing}");
             }
 
             var foundIdAttribute = false;
@@ -1164,6 +1185,25 @@ namespace Robust.Shared.Prototypes
             /// </summary>
             public readonly Dictionary<string, MappingDataNode> RawResults = new();
 
+            /// <summary>
+            /// The original mapping before it was modified by a partial prototype.
+            /// This will not have an element for a given ID if there are no partial prototypes
+            /// affecting that ID.
+            /// </summary>
+            public readonly Dictionary<string, MappingDataNode> PartialOriginals = new();
+
+            /// <summary>
+            /// The unfrozen instance of <see cref="Variants"/>.
+            /// This is only populated if the kind has prototype variants.
+            /// </summary>
+            public Dictionary<string, List<string>>? UnfrozenVariants;
+
+            /// <summary>
+            /// A dictionary that maps a prototype to a list of all variants of that prototype.
+            /// This is only populated if the kind has prototype variants.
+            /// </summary>
+            public FrozenDictionary<string, IReadOnlyList<string>> Variants = FrozenDictionary<string, IReadOnlyList<string>>.Empty;
+
             public readonly Type Type = kind;
             public readonly string Name = name;
 
@@ -1194,6 +1234,14 @@ namespace Robust.Shared.Prototypes
                 DebugTools.AssertNotNull(UnfrozenInstances);
                 Instances = UnfrozenInstances?.ToFrozenDictionary() ?? FrozenDictionary<string, IPrototype>.Empty;
                 UnfrozenInstances = null;
+
+                // Freeze prototype variants associated with this kind
+                if (UnfrozenVariants != null)
+                {
+                    Variants = UnfrozenVariants.ToFrozenDictionary(kvp => kvp.Key, kvp => (IReadOnlyList<string>)kvp.Value);
+                    UnfrozenVariants = null;
+                }
+
                 _freezeDirectInfo.Invoke(this, null);
             }
         }
@@ -1222,28 +1270,25 @@ namespace Robust.Shared.Prototypes
             if (_prototypeDataCache.TryGetValue(prototype.ID, out var data))
                 return data;
 
-            _context.WritingReadingPrototypes = true;
-            data = new();
+            _tempMappingData.Clear();
 
-            var xform = _factory.GetRegistration(typeof(TransformComponent)).Name;
-            try
+            if (TryGetMapping<EntityPrototype>(prototype.ID, out var mapping)
+                && mapping.TryGet<SequenceDataNode>("components", out var components))
             {
-                foreach (var (compType, comp) in prototype.Components)
+                foreach (var component in components)
                 {
-                    if (compType == xform)
+                    if (component is not MappingDataNode componentMapping
+                        || !componentMapping.TryGet<ValueDataNode>("type", out var type))
+                    {
                         continue;
+                    }
 
-                    var node = _serializationManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component,
-                        alwaysWrite: true, context: _context);
-                    data.Add(compType, node);
+                    var copy = componentMapping.CopyNoType();
+                    _tempMappingData[type.Value] = copy;
                 }
             }
-            catch (Exception e)
-            {
-                Sawmill.Error($"Failed to convert prototype {prototype.ID} into yaml. Exception: {e.Message}");
-            }
 
-            _context.WritingReadingPrototypes = false;
+            data = _tempMappingData.ToFrozenDictionary();
             _prototypeDataCache[prototype.ID] = data;
             return data;
         }
@@ -1274,13 +1319,6 @@ namespace Robust.Shared.Prototypes
             }
 
             throw new ArgumentOutOfRangeException($"Unable to pick valid prototype for {typeof(T)}?");
-        }
-    }
-
-    public sealed class InvalidPrototypeNameException : Exception
-    {
-        public InvalidPrototypeNameException(string message) : base(message)
-        {
         }
     }
 }

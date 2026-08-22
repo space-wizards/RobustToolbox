@@ -1,7 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -9,6 +5,10 @@ using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
@@ -40,6 +40,7 @@ public partial class PrototypeManager
     /// <exception cref="PrototypeLoadException"></exception>
     private IEnumerable<(Type, PrototypeValidationData)> ValidateStreams(IEnumerable<ResPath> streams)
     {
+        var validationData = new List<(Type, PrototypeValidationData)>();
         foreach (var resPath in streams)
         {
             using var reader = ReadFile(resPath);
@@ -47,7 +48,14 @@ public partial class PrototypeManager
                 continue;
 
             var yamlStream = new YamlStream();
-            yamlStream.Load(reader);
+            try
+            {
+                yamlStream.Load(reader);
+            }
+            catch (Exception e)
+            {
+                throw new PrototypeLoadException($"Error loading file: '{resPath}'\n{e}");
+            }
 
             foreach (var doc in yamlStream.Documents)
             {
@@ -65,12 +73,25 @@ public partial class PrototypeManager
                     }
 
                     var mapping = node.ToDataNodeCast<MappingDataNode>();
-                    var id = mapping.Get<ValueDataNode>("id").Value;
+                    var extracted = ExtractMapping(mapping);
 
-                    yield return (type, new(id, mapping, resPath.ToString()));
+                    if (extracted is not null)
+                    {
+                        var id = mapping.Get<ValueDataNode>("id").Value;
+                        validationData.Add((type, new(id, mapping, resPath.ToString())));
+
+                        if (extracted.VariantData is not null)
+                        {
+                            foreach (var (variantId, variantExtracted) in extracted.VariantData)
+                            {
+                                validationData.Add((type, new(variantId, mapping, resPath.ToString())));
+                            }
+                        }
+                    }
                 }
             }
         }
+        return validationData;
     }
 
     public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path) => ValidateDirectory(path, out _);
@@ -86,12 +107,12 @@ public partial class PrototypeManager
         foreach (var (type, data) in ValidateStreams(streams))
         {
             data.Mapping.Remove("type");
-
             if (DisallowedIdChars.TryFirstOrNull(c => data.Id.Contains(c), out var letter))
             {
                 dict.GetOrNew(data.File)
                     .Add(new ErrorNode(data.Mapping,
-                        $"Prototype '{data.Id}' ({type}) contains disallowed character '{letter}'."));
+                    $"Prototype '{data.Id}' ({type}) contains disallowed "
+                    + $"character '{letter}'."));
             }
 
             if (prototypes.GetOrNew(type).TryAdd(data.Id, data))
@@ -101,7 +122,7 @@ public partial class PrototypeManager
             dict.GetOrNew(data.File).Add(error);
         }
 
-        var ctx = new YamlValidationContext();
+        var ctx = new YamlValidationContext(_serializationManager);
         var errors = new List<ErrorNode>();
         var saveProto = !path.FilenameWithoutExtension.Contains("Engine") && _net.IsServer;
         var dir = Directory.CreateDirectory("prototypes");
@@ -276,7 +297,7 @@ public partial class PrototypeManager
 
         DebugTools.AssertNull(data.Parents);
         DebugTools.AssertNull(data.ParentMappings);
-        data.Parents = _serializationManager.Read<string[]>(parentNode, notNullableOverride: true);
+        data.Parents = NodeToParentArray(parentNode);
         data.ParentMappings = new MappingDataNode[data.Parents.Length];
 
         var i = 0;

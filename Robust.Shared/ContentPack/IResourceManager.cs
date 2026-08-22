@@ -11,6 +11,7 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Virtual file system for all disk resources.
     /// </summary>
+    [NotContentImplementable]
     public interface IResourceManager
     {
         /// <summary>

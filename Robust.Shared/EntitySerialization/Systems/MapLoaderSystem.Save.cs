@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -18,6 +20,10 @@ public sealed partial class MapLoaderSystem
     /// <summary>
     /// Recursively serialize the given entities and all of their children.
     /// </summary>
+    /// <remarks>
+    /// This method is not optimized for being given a large set of entities. I.e., this should be a small handful of
+    /// maps or grids, not something like <see cref="EntityManager.AllEntityUids"/>.
+    /// </remarks>
     public (MappingDataNode Node, FileCategory Category) SerializeEntitiesRecursive(
         HashSet<EntityUid> entities,
         SerializationOptions? options = null)
@@ -29,8 +35,6 @@ public sealed partial class MapLoaderSystem
         Log.Info($"Serializing entities: {string.Join(", ", entities.Select(x => ToPrettyString(x).ToString()))}");
 
         var maps = entities.Select(x => Transform(x).MapID).ToHashSet();
-        var ev = new BeforeSerializationEvent(entities, maps);
-        RaiseLocalEvent(ev);
 
         // In case no options were provided, we assume that if all of the starting entities are pre-init, we should
         // expect that **all** entities that get serialized should be pre-init.
@@ -38,6 +42,9 @@ public sealed partial class MapLoaderSystem
         {
             ExpectPreInit = (entities.All(x => LifeStage(x) < EntityLifeStage.MapInitialized))
         };
+
+        var ev = new BeforeSerializationEvent(entities, maps, opts.Category);
+        RaiseLocalEvent(ev);
 
         var serializer = new EntitySerializer(_dependency, opts);
         serializer.OnIsSerializeable += OnIsSerializable;
@@ -53,10 +60,19 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
-    /// Serialize a standard (non-grid, non-map) entity and all of its children and write the result to a
-    /// yaml file.
+    ///     Serialize a standard (non-grid, non-map) entity and all of its children and write the result to a YAML file.
     /// </summary>
-    public bool TrySaveEntity(EntityUid entity, ResPath path, SerializationOptions? options = null)
+    public bool TrySaveEntity(EntityUid entity, ResPath target, SerializationOptions? options = null)
+    {
+        using var writer = GetWriterForPath(target);
+        return TrySaveEntity(entity, writer, options);
+    }
+
+    /// <summary>
+    ///     Serialize a standard (non-grid, non-map) entity and all of its children and write the result to a YAML text
+    ///     stream.
+    /// </summary>
+    public bool TrySaveEntity(EntityUid entity, TextWriter target, SerializationOptions? options = null)
     {
         if (_mapQuery.HasComp(entity))
         {
@@ -91,12 +107,12 @@ public sealed partial class MapLoaderSystem
             return false;
         }
 
-        Write(path, data);
+        Write(target, data);
         return true;
     }
 
     /// <summary>
-    /// Serialize a map and all of its children and write the result to a yaml file.
+    /// Serialize a map and all of its children and write the result to a YAML file.
     /// </summary>
     public bool TrySaveMap(MapId mapId, ResPath path, SerializationOptions? options = null)
     {
@@ -108,9 +124,18 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
-    /// Serialize a map and all of its children and write the result to a yaml file.
+    ///     Serialize a map and all of its children and write the result to a YAML file.
     /// </summary>
-    public bool TrySaveMap(EntityUid map, ResPath path, SerializationOptions? options = null)
+    public bool TrySaveMap(EntityUid map, ResPath target, SerializationOptions? options = null)
+    {
+        using var writer = GetWriterForPath(target);
+        return TrySaveMap(map, writer, options);
+    }
+
+    /// <summary>
+    ///     Serialize a map and all of its children and write the result to a YAML text stream.
+    /// </summary>
+    public bool TrySaveMap(EntityUid map, TextWriter target, SerializationOptions? options = null)
     {
         if (!_mapQuery.HasComp(map))
         {
@@ -139,14 +164,23 @@ public sealed partial class MapLoaderSystem
             return false;
         }
 
-        Write(path, data);
+        Write(target, data);
         return true;
     }
 
     /// <summary>
-    /// Serialize a grid and all of its children and write the result to a yaml file.
+    ///     Serialize a grid and all of its children and write the result to a YAML file.
     /// </summary>
-    public bool TrySaveGrid(EntityUid grid, ResPath path, SerializationOptions? options = null)
+    public bool TrySaveGrid(EntityUid map, ResPath target, SerializationOptions? options = null)
+    {
+        using var writer = GetWriterForPath(target);
+        return TrySaveGrid(map, writer, options);
+    }
+
+    /// <summary>
+    ///     Serialize a grid and all of its children and write the result to a YAML text stream.
+    /// </summary>
+    public bool TrySaveGrid(EntityUid grid, TextWriter target, SerializationOptions? options = null)
     {
         if (!_gridQuery.HasComp(grid))
         {
@@ -181,32 +215,62 @@ public sealed partial class MapLoaderSystem
             return false;
         }
 
-        Write(path, data);
+        Write(target, data);
         return true;
     }
 
     /// <summary>
-    /// Serialize an entities and all of their children to a yaml file.
-    /// This makes no assumptions about the expected entity or resulting file category.
-    /// If possible, use the map/grid specific variants instead.
+    ///     Serialize an entity and all of their children to a YAML file.
+    ///     This makes no assumptions about the expected entity or resulting file category.
+    ///     If possible, use the map/grid specific variants instead.
     /// </summary>
     public bool TrySaveGeneric(
         EntityUid uid,
-        ResPath path,
+        ResPath target,
         out FileCategory category,
         SerializationOptions? options = null)
     {
-        return TrySaveGeneric([uid], path, out category, options);
+        using var writer = GetWriterForPath(target);
+        return TrySaveGeneric(uid, writer, out category, options);
     }
 
     /// <summary>
-    /// Serialize one or more entities and all of their children to a yaml file.
-    /// This makes no assumptions about the expected entity or resulting file category.
-    /// If possible, use the map/grid specific variants instead.
+    ///     Serialize an entity and all of their children to a YAML text stream.
+    ///     This makes no assumptions about the expected entity or resulting file category.
+    ///     If possible, use the map/grid specific variants instead.
+    /// </summary>
+    public bool TrySaveGeneric(
+        EntityUid uid,
+        TextWriter target,
+        out FileCategory category,
+        SerializationOptions? options = null)
+    {
+        return TrySaveGeneric([uid], target, out category, options);
+    }
+
+    /// <summary>
+    ///     Serialize one or more entities and all of their children to a YAML file.
+    ///     This makes no assumptions about the expected entity or resulting file category.
+    ///     If possible, use the map/grid specific variants instead.
+    /// </summary>
+    public bool TrySaveGeneric(
+        HashSet<EntityUid> uid,
+        ResPath target,
+        out FileCategory category,
+        SerializationOptions? options = null)
+    {
+        using var writer = GetWriterForPath(target);
+        return TrySaveGeneric(uid, writer, out category, options);
+    }
+
+    /// <summary>
+    ///     Serialize one or more entities and all of their children to a YAML text stream.
+    ///     This makes no assumptions about the expected entity or resulting file category.
+    ///     If possible, use the map/grid specific variants instead.
     /// </summary>
     public bool TrySaveGeneric(
         HashSet<EntityUid> entities,
-        ResPath path,
+        TextWriter target,
         out FileCategory category,
         SerializationOptions? options = null)
     {
@@ -227,7 +291,103 @@ public sealed partial class MapLoaderSystem
             return false;
         }
 
+        Write(target, data);
+        return true;
+    }
+
+    /// <inheritdoc cref="TrySerializeAllEntities(out MappingDataNode, SerializationOptions?)"/>
+    public bool TrySaveAllEntities(TextWriter target, SerializationOptions? options = null)
+    {
+        if (!TrySerializeAllEntities(out var data, options))
+            return false;
+
+        Write(target, data);
+        return true;
+    }
+
+
+    /// <inheritdoc cref="TrySerializeAllEntities(out MappingDataNode, SerializationOptions?)"/>
+    public bool TrySaveAllEntities(ResPath path, SerializationOptions? options = null)
+    {
+        if (!TrySerializeAllEntities(out var data, options))
+            return false;
+
         Write(path, data);
+        return true;
+    }
+
+    /// <summary>
+    /// Attempt to serialize all entities.
+    /// </summary>
+    /// <remarks>
+    /// Note that this alone is not sufficient for a proper full-game save, as the game may contain things like chat
+    /// logs or resources and prototypes that were uploaded mid-game.
+    /// </remarks>
+    public bool TrySerializeAllEntities([NotNullWhen(true)] out MappingDataNode? data, SerializationOptions? options = null)
+    {
+        data  = null;
+        var opts = options ?? SerializationOptions.Default with
+        {
+            MissingEntityBehaviour = MissingEntityBehaviour.Error
+        };
+
+        opts.Category = FileCategory.Save;
+        _stopwatch.Restart();
+        Log.Info($"Serializing all entities");
+
+        var entities = EntityManager.GetEntities().ToHashSet();
+        var maps = _mapSystem.Maps.Keys.ToHashSet();
+        var ev = new BeforeSerializationEvent(entities, maps, FileCategory.Save);
+        var serializer = new EntitySerializer(_dependency, opts);
+
+        // Remove any non-serializable entities and their children (prevent error spam)
+        var toRemove = new Queue<EntityUid>();
+        foreach (var entity in entities)
+        {
+            // TODO SERIALIZATION Perf
+            // IsSerializable gets called again by serializer.SerializeEntities()
+            if (!serializer.IsSerializable(entity))
+                toRemove.Enqueue(entity);
+        }
+
+        if (toRemove.Count > 0)
+        {
+            if (opts.MissingEntityBehaviour == MissingEntityBehaviour.Error)
+            {
+                // The save will probably contain references to the non-serializable entities, and we avoid spamming errors.
+                opts.MissingEntityBehaviour = MissingEntityBehaviour.Ignore;
+                Log.Error($"Attempted to serialize one or more non-serializable entities");
+            }
+
+            while (toRemove.TryDequeue(out var next))
+            {
+                entities.Remove(next);
+                foreach (var uid in Transform(next)._children)
+                {
+                    toRemove.Enqueue(uid);
+                }
+            }
+        }
+
+        try
+        {
+            RaiseLocalEvent(ev);
+            serializer.OnIsSerializeable += OnIsSerializable;
+            serializer.SerializeEntities(entities);
+            data = serializer.Write();
+            var cat = serializer.GetCategory();
+            DebugTools.AssertEqual(cat, FileCategory.Save);
+            var ev2 = new AfterSerializationEvent(entities, data, cat);
+            RaiseLocalEvent(ev2);
+
+            Log.Debug($"Serialized {serializer.EntityData.Count} entities in {_stopwatch.Elapsed}");
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Caught exception while trying to serialize all entities:\n{e}");
+            return false;
+        }
+
         return true;
     }
 }

@@ -12,12 +12,12 @@ using Robust.Shared.Profiling;
 
 namespace Robust.Client.UserInterface;
 
-internal sealed class ProfGraphView : Control
+internal sealed partial class ProfGraphView : Control
 {
     private const int HeightFps = 15;
-    private const float MaxHeightMs = 1 / (float) HeightFps;
+    private const float MaxHeightMs = 1 / (float)HeightFps;
 
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     private ProfViewManager.Snapshot? _snapshot;
 
@@ -72,7 +72,7 @@ internal sealed class ProfGraphView : Control
             return;
 
         var trackedFrameCount = _snapshot.EndFrame - _snapshot.StartFrame + 1;
-        var frame = MathHelper.Clamp((int)(pos.X / Width * trackedFrameCount), 0, trackedFrameCount-1);
+        var frame = MathHelper.Clamp((int)(pos.X / Width * trackedFrameCount), 0, trackedFrameCount - 1);
 
         FrameSelected?.Invoke(frame + _snapshot.StartFrame);
     }
@@ -88,7 +88,7 @@ internal sealed class ProfGraphView : Control
 
         ref var buffer = ref _snapshot.Buffer;
 
-        var barWidth = PixelWidth / (float) trackedFrameCount;
+        var barWidth = PixelWidth / (float)trackedFrameCount;
         var x = PixelWidth - barWidth;
         var controlHeight = PixelHeight;
 

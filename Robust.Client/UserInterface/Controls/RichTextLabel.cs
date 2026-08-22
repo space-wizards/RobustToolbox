@@ -13,13 +13,20 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.UserInterface.Controls
 {
     [Virtual]
-    public class RichTextLabel : Control
+    public partial class RichTextLabel : Control
     {
-        [Dependency] private readonly MarkupTagManager _tagManager = default!;
+        [Dependency] private MarkupTagManager _tagManager = default!;
 
         private RichTextEntry? _entry;
         private float _lineHeightScale = 1;
         private bool _lineHeightOverride;
+        private readonly MarkupDrawingContext _drawingContext = new();
+        private Font? _actualFont;
+        private bool _fontCacheValid;
+        private float? _outlineThicknessOverride;
+        private Color? _outlineColorOverride;
+        private TextOutline? _actualFontOutline;
+        private bool _fontOutlineCacheValid;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public float LineHeightScale
@@ -39,6 +46,20 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        /// <summary>
+        /// Gets or sets the markup string displayed by this control.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This method converts the given string with <see cref="FormattedMessage.FromMarkupPermissive(string)"/>.
+        /// The original markup string is not kept,
+        /// so setting and then getting the function may provide a different result.
+        /// </para>
+        /// <para>
+        /// Unlike <see cref="M:SetMessage(FormattedMessage,Color?)"/>,
+        /// no tag whitelist will be set on the rendered message. Do not pass untrusted user input to this!
+        /// </para>
+        /// </remarks>
         public string? Text
         {
             get => _entry?.Message.ToMarkup();
@@ -47,7 +68,7 @@ namespace Robust.Client.UserInterface.Controls
                 if (value == null)
                     Clear();
                 else
-                    SetMessage(FormattedMessage.FromMarkupPermissive(value));
+                    SetMessage(FormattedMessage.FromMarkupPermissive(value), tagsAllowed: null);
             }
         }
 
@@ -67,14 +88,45 @@ namespace Robust.Client.UserInterface.Controls
             VerticalAlignment = VAlignment.Center;
         }
 
-        public void SetMessage(FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        /// <summary>
+        /// Sets the formatted message displayed by this control.
+        /// </summary>
+        /// <param name="message">The message to display.</param>
+        /// <param name="defaultColor">If provided, the default color to use for this message rendering.</param>
+        /// <remarks>
+        /// This method sets the set of allowed tags to only include a small amount of safe formatting tags.
+        /// Use <see cref="M:SetMessage(FormattedMessage,Type[],Color?)"/> if this is not desired.
+        /// </remarks>
+        public void SetMessage(FormattedMessage message, Color? defaultColor = null)
+        {
+            SetMessage(message, RichTextEntry.DefaultTags, defaultColor);
+        }
+
+        /// <summary>
+        /// Sets the formatted message displayed by this control.
+        /// </summary>
+        /// <param name="message">The message to display.</param>
+        /// <param name="tagsAllowed">
+        /// The set of allowed markup tags that will be displayed.
+        /// If <c>null</c>, all tags are allowed.</param>
+        /// <param name="defaultColor">If provided, the default color to use for this message rendering.</param>
+        /// <remarks>
+        /// This method sets the set of allowed tags to only include a small amount of safe formatting tags.
+        /// Use <see cref="M:SetMessage(FormattedMessage,Type[],Color?)"/> if this is not desired.
+        /// </remarks>
+        public void SetMessage(FormattedMessage message, Type[]? tagsAllowed, Color? defaultColor = null)
         {
             _entry?.RemoveControls();
             _entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
             InvalidateMeasure();
         }
 
-        public void SetMessage(string message, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        public void SetMessage(string message, Color? defaultColor = null)
+        {
+            SetMessage(message, RichTextEntry.DefaultTags, defaultColor);
+        }
+
+        public void SetMessage(string message, Type[]? tagsAllowed, Color? defaultColor = null)
         {
             var msg = new FormattedMessage();
             msg.AddText(message);
@@ -87,6 +139,53 @@ namespace Robust.Client.UserInterface.Controls
         /// Returns a copy of the currently used formatted message.
         /// </summary>
         public FormattedMessage? GetFormattedMessage() => _entry == null ? null : new FormattedMessage(_entry.Value.Message);
+
+        public float? OutlineThicknessOverride
+        {
+            get => _outlineThicknessOverride;
+            set
+            {
+                if (_outlineThicknessOverride == value)
+                    return;
+
+                _outlineThicknessOverride = value;
+                _fontOutlineCacheValid = false;
+            }
+        }
+
+        public Color? OutlineColorOverride
+        {
+            get => _outlineColorOverride;
+            set
+            {
+                if (_outlineColorOverride == value)
+                    return;
+
+                _outlineColorOverride = value;
+                _fontOutlineCacheValid = false;
+            }
+        }
+
+        private TextOutline? ActualFontOutline
+        {
+            get
+            {
+                if (_fontOutlineCacheValid)
+                    return _actualFontOutline;
+
+                var thickness = OutlineThicknessOverride;
+                if (!thickness.HasValue && TryGetStyleProperty<float>(Label.StylePropertyFontOutlineThickness, out var styleThickness))
+                    thickness = styleThickness;
+
+                var color = OutlineColorOverride;
+                if (!color.HasValue && TryGetStyleProperty<Color>(Label.StylePropertyFontOutlineColor, out var styleColor))
+                    color = styleColor;
+
+                _actualFontOutline = TextOutline.FromOverrides(thickness, color);
+                _fontOutlineCacheValid = true;
+                return _actualFontOutline;
+            }
+        }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
@@ -105,18 +204,33 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale);
+            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, _drawingContext, UIScale, LineHeightScale, ActualFontOutline);
+        }
+
+        protected override void StylePropertiesChanged()
+        {
+            _fontOutlineCacheValid = false;
+            _fontCacheValid = false;
+
+            base.StylePropertiesChanged();
         }
 
         [Pure]
         private Font _getFont()
         {
+            if (_fontCacheValid)
+                return _actualFont!;
+
             if (TryGetStyleProperty<Font>("font", out var font))
             {
-                return font;
+                _actualFont = font;
+                _fontCacheValid = true;
+                return _actualFont;
             }
 
-            return UserInterfaceManager.ThemeDefaults.DefaultFont;
+            _actualFont = UserInterfaceManager.ThemeDefaults.DefaultFont;
+            _fontCacheValid = true;
+            return _actualFont;
         }
     }
 }

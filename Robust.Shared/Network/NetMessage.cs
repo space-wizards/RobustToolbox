@@ -86,6 +86,12 @@ namespace Robust.Shared.Network
         /// <param name="serializer"></param>
         public abstract void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer);
 
+        /// <summary>
+        /// Estimated size of the serialized payload, excluding transport encryption overhead.
+        /// Used to size Lidgren's outgoing buffer before <see cref="WriteToBuffer"/>.
+        /// </summary>
+        public virtual int EstimateBufferSize() => 4;
+
         public virtual NetDeliveryMethod DeliveryMethod
         {
             get
@@ -105,5 +111,13 @@ namespace Robust.Shared.Network
                 }
             }
         }
+
+        /// <summary>
+        /// The lidgren sequence channel to send this message on.
+        /// </summary>
+        /// <remarks>
+        /// Channels 16 and higher are reserved for internal RT usage.
+        /// </remarks>
+        public virtual int SequenceChannel => 0;
     }
 }

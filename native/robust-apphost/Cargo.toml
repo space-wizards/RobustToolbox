@@ -1,0 +1,10 @@
+[package]
+name = "robust-apphost"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+cef_sandbox = ["dep:cef"]
+
+[dependencies]
+cef = { workspace = true, default-features = false, features = ["sandbox"], optional = true }

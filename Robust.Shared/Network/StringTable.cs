@@ -38,6 +38,8 @@ namespace Robust.Shared.Network
         private InitCallback? _callback;
         private StringTableUpdateCallback? _updateCallback;
 
+        internal Dictionary<int, string> Strings => _strings;
+
         public ISawmill Sawmill = default!;
 
         /// <summary>

@@ -16,6 +16,7 @@ cmd-parse-failure-grid = {$arg} is not a valid grid.
 cmd-parse-failure-cultureinfo = "{$arg}" is not valid CultureInfo.
 cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 cmd-parse-failure-session = There is no session with username: {$username}
+cmd-parse-failure-session-guid = There is no session with the GUID: {$guid}
 
 cmd-error-file-not-found = Could not find file: {$file}.
 cmd-error-dir-not-found = Could not find directory: {$dir}.
@@ -235,6 +236,22 @@ cmd-togglelightbuf-help = Usage: {$command}
 cmd-chunkinfo-desc = Gets info about a chunk under your mouse cursor.
 cmd-chunkinfo-help = Usage: {$command}
 
+cmd-chunkentities-desc = Lists chunk entities in the client viewport OR in the specified range.
+cmd-chunkentities-help = Usage: {$command} [<root entity> <x> <y> <range>]
+cmd-chunkentities-error-invalid-root = Invalid root entity: {$root}
+cmd-chunkentities-error-parse = x, y, and range must be numbers.
+cmd-chunkentities-error-nullspace = Current eye is in nullspace.
+cmd-chunkentities-error-no-map = No map entity for current eye map {$map}.
+cmd-chunkentities-range-header = Chunk entities for {$root} around ({$x}, {$y}) range {$range}:
+cmd-chunkentities-viewport-header = Chunk entities in client viewport on map {$map} ({$viewport}):
+cmd-chunkentities-total = Total: {$count}
+cmd-chunkentities-root-count = Root {$root}: {$count}
+cmd-chunkentities-entry = {$netEntity} uid={$uid} root={$root} chunk={$chunk} comps={$componentCount} {$name}
+cmd-chunkentities-arg-root = <root entity>
+cmd-chunkentities-arg-x = <x>
+cmd-chunkentities-arg-y = <y>
+cmd-chunkentities-arg-range = <range>
+
 cmd-rldshader-desc = Reloads all shaders.
 cmd-rldshader-help = Usage: {$command}
 
@@ -305,6 +322,15 @@ cmd-addmap-help = Usage: {$command} <mapID> [pre-init]
 
 cmd-rmmap-desc = Removes a map from the world. You cannot remove nullspace.
 cmd-rmmap-help = Usage: {$command} <mapId>
+
+cmd-pausemap-desc = Pauses a map, pausing all simulation processing on it.
+cmd-pausemap-help = Usage: pausemap <map ID>
+
+cmd-unpausemap-desc = Unpauses a map, resuming all simulation processing on it.
+cmd-unpausemap-help = Usage: unpausemap <map ID>
+
+cmd-querymappaused-desc = Check whether a map is paused or not.
+cmd-querymappaused-help = Usage: querymappaused <map ID>
 
 cmd-savegrid-desc = Serializes a grid to disk.
 cmd-savegrid-help = Usage: {$command} <gridID> <Path>
@@ -377,7 +403,7 @@ cmd-restart-desc = Gracefully restarts the server (not just the round).
 cmd-restart-help = Usage: {$command}
 
 cmd-shutdown-desc = Gracefully shuts down the server.
-cmd-shutdown-help = Usage: {$command}
+cmd-shutdown-help = Usage: {$command} [<Reason>]
 
 cmd-saveconfig-desc = Saves the server configuration to the config file.
 cmd-saveconfig-help = Usage: {$command}

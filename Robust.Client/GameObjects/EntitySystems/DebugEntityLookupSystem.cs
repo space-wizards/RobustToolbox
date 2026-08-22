@@ -11,9 +11,9 @@ using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.GameObjects;
 
-public sealed class DebugEntityLookupCommand : LocalizedEntityCommands
+public sealed partial class DebugEntityLookupCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly DebugEntityLookupSystem _system = default!;
+    [Dependency] private DebugEntityLookupSystem _system = default!;
 
     public override string Command => "togglelookup";
 
@@ -127,7 +127,5 @@ public sealed class EntityLookupOverlay : Overlay
                 worldHandle.DrawRect(aabb, Color.Blue.WithAlpha(0.2f));
             }
         });
-
-        worldHandle.SetTransform(Matrix3x2.Identity);
     }
 }

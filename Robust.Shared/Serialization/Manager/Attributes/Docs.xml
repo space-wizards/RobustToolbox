@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<entries>
+  <entry name="MeansDataDefinitionHaver"> <!-- Commentary on all MeansDataDefinition. -->
+    <remarks>
+      <para>
+        Data-serializable types <b>must</b> be <see langword="partial"/>. They can be serialized/deserialized with <see cref="T:Robust.Shared.Serialization.Manager.ISerializationManager" />.
+        Properties to be serialized should be annotated with <see cref="T:Robust.Shared.Serialization.Manager.Attributes.DataFieldAttribute"/>, though this is automatic for <see cref="T:Robust.Shared.Serialization.Manager.Attributes.DataRecordAttribute" />.
+      </para>
+      <para>
+        This also allows this type to be used from <c>!type:name</c> annotations in YAML if its name is unique.
+        Fields not marked with <see cref="T:Robust.Shared.Serialization.Manager.Attributes.DataFieldAttribute"/> or its
+        relatives are never serialized.
+      </para>
+      <para>
+        Has no relation to <see cref="T:System.SerializableAttribute"/>, which is only used with
+        <see cref="T:Robust.Shared.Serialization.NetSerializableAttribute"/> in RobustToolbox games.
+      </para>
+    </remarks>
+  </entry>
+  <entry name="ImpliesDataDefinition">
+    <summary>
+      Also implies <see cref="T:Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute"/>, you don't
+      need to specify it yourself.
+    </summary>
+  </entry>
+  <entry name="ImpliesDataRecord">
+    <summary>
+      Also implies <see cref="T:Robust.Shared.Serialization.Manager.Attributes.DataRecordAttribute"/>, you don't
+      need to specify it yourself.
+    </summary>
+  </entry>
+  <entry name="DataDefinitionExample">
+    <example>
+      Starting with a definition in C#:
+      <code>
+        [DataDefinition] // Mark our type as being serializable by ISerializationManager.
+        public partial class MyData
+        {
+            // Mark this field as being a data field, it'll be named "enabled" implicitly as we
+            // didn't specify any names.
+            // If a field is not required, it is best practice to specify a default value.
+            [DataField]
+            public bool Enabled = true;
+            <br/> <!-- Yea so tip to the next person: Rider will eat your whitespace in code blocks. use breaks. -->
+            [DataField(required: true)]
+            public int Counter;
+        }
+      </code>
+      This definition describes a YAML schema, which when serialized could look like this:
+      <code>
+        enabled: false
+        counter: 3
+      </code>
+    </example>
+  </entry>
+</entries>

@@ -1,0 +1,8 @@
+﻿<Project>
+  <!-- Include this .props file from content to get access to the APIs in these projects. -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Shared\Robust.Shared.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\NetSerializer\NetSerializer\NetSerializer.csproj" />
+  </ItemGroup>
+</Project>

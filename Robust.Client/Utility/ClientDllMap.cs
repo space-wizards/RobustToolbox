@@ -14,15 +14,6 @@ namespace Robust.Client.Utility
         {
             NativeLibrary.SetDllImportResolver(typeof(ClientDllMap).Assembly, (name, assembly, path) =>
             {
-                if (name == "swnfd.dll")
-                {
-#if LINUX || FREEBSD
-                    return NativeLibrary.Load("libswnfd.so", assembly, path);
-#elif MACOS
-                    return NativeLibrary.Load("libswnfd.dylib", assembly, path);
-#endif
-                }
-
                 if (name == "libEGL.dll")
                 {
 #if LINUX || FREEBSD

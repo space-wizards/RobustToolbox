@@ -21,10 +21,10 @@ namespace Robust.Client.UserInterface.Screens;
 [GenerateTypedNameReferences, ContentAccessAllowed]
 public sealed partial class DebugBuiltinConnectionScreen : UIScreen
 {
-    [Dependency] private readonly IBaseClient _client = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly IUserInterfaceManager _userInterface = default!;
-    [Dependency] private readonly IClientNetManager _net = default!;
+    [Dependency] private IBaseClient _client = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IUserInterfaceManager _userInterface = default!;
+    [Dependency] private IClientNetManager _net = default!;
 
     // ReSharper disable once InconsistentNaming
     private static readonly Regex IPv6Regex = new(@"\[(.*:.*:.*)](?::(\d+))?");

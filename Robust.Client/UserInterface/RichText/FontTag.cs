@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -11,13 +12,13 @@ namespace Robust.Client.UserInterface.RichText;
 /// Applies the font provided as the tags parameter to the markup drawing context.
 /// Definitely not save for user supplied markup
 /// </summary>
-public sealed class FontTag : IMarkupTagHandler
+public sealed partial class FontTag : IMarkupTagHandler
 {
     public const string DefaultFont = "Default";
     public const int DefaultSize = 12;
 
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     public string Name => "font";
 
@@ -40,12 +41,31 @@ public sealed class FontTag : IMarkupTagHandler
     /// Creates the a vector font from the supplied font id.<br/>
     /// The size of the resulting font will be either the size supplied as a parameter to the tag, the previous font size or 12
     /// </summary>
+    [Obsolete("Stop using font prototypes")]
     public static Font CreateFont(
         Stack<Font> contextFontStack,
         MarkupNode node,
         IResourceCache cache,
         IPrototypeManager prototypeManager,
         string fontId)
+    {
+        var size = GetSizeForFontTag(contextFontStack, node);
+
+        var hijack = IoCManager.Resolve<FontTagHijackHolder>();
+        if (hijack.Hijack?.Invoke(fontId, size) is { } overriden)
+            return overriden;
+
+        if (!prototypeManager.TryIndex<FontPrototype>(fontId, out var prototype))
+            prototype = prototypeManager.Index<FontPrototype>(DefaultFont);
+
+        var fontResource = cache.GetResource<FontResource>(prototype.Path);
+        return new VectorFont(fontResource, size);
+    }
+
+    /// <summary>
+    /// Get the desired font size for the given markup node.
+    /// </summary>
+    public static int GetSizeForFontTag(Stack<Font> contextFontStack, MarkupNode node)
     {
         var size = DefaultSize;
 
@@ -66,12 +86,8 @@ public sealed class FontTag : IMarkupTagHandler
         }
 
         if (node.Attributes.TryGetValue("size", out var sizeParameter))
-            size = (int) (sizeParameter.LongValue ?? size);
+            size = (int)(sizeParameter.LongValue ?? size);
 
-        if (!prototypeManager.TryIndex<FontPrototype>(fontId, out var prototype))
-            prototype = prototypeManager.Index<FontPrototype>(DefaultFont);
-
-        var fontResource = cache.GetResource<FontResource>(prototype.Path);
-        return new VectorFont(fontResource, size);
+        return size;
     }
 }

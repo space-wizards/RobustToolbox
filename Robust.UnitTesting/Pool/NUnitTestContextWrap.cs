@@ -8,6 +8,7 @@ namespace Robust.UnitTesting.Pool;
 /// </summary>
 public sealed class NUnitTestContextWrap(TestContext context, TextWriter writer) : ITestContextLike
 {
-    public string FullName => context.Test.FullName;
+    public readonly TestContext Context = context;
+    public string FullName => Context.Test.FullName;
     public TextWriter Out => writer;
 }

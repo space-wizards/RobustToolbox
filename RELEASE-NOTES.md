@@ -35,7 +35,8 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Obsolete LocalRotation in favor of the system method. The angle is now also normalized to 2PI and no longer grows indefinitely.
+* Removed the obsolete TransformComponent methods. The remaining methods have been marked as obsolete and are subject to removal in future.
 
 ### New features
 

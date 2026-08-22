@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `AppearanceChangeEvent` now has a `TryGetData` function that checks the type of the data at a given key.
+* Added the `RenderStage` field to `SpriteComponent` with `Default` and `Late` modes, allowing sprites to be rendered in separate entity passes around effects such as hard FOV.
 
 ### Bugfixes
 

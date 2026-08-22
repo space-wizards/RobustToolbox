@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -81,7 +82,7 @@ public sealed record PartialTypeInfo(
         return Namespace == null ? Name : $"{Namespace}.{Name}";
     }
 
-    public string GetGeneratedFileName()
+    public string GetGeneratedFileName(string? suffix = null)
     {
         var name = Namespace == null ? "" : $"{Namespace}.";
 
@@ -96,6 +97,9 @@ public sealed record PartialTypeInfo(
             if (index < Parts.Length - 1)
                 name += ".";
         }
+
+        if (suffix != null)
+            name += $"_{suffix}";
 
         name += ".g.cs";
 

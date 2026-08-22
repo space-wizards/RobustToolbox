@@ -24,9 +24,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
         [Virtual]
         public class ESystemA : ESystemBase { }
-        internal sealed class ESystemC : ESystemA { }
+        internal sealed partial class ESystemC : ESystemA { }
         public abstract class ESystemBase2 : ESystemBase { }
-        internal sealed class ESystemB : ESystemBase2 { }
+        internal sealed partial class ESystemB : ESystemBase2 { }
 
         internal sealed partial class ESystemDepA : ESystemBase
         {

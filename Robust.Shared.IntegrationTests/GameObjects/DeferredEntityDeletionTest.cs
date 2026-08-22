@@ -99,7 +99,7 @@ internal sealed partial class DeferredEntityDeletionTest : RobustIntegrationTest
     }
 
     [Reflect(false)]
-    private sealed class DeferredDeletionTestSystem : EntitySystem
+    private sealed partial class DeferredDeletionTestSystem : EntitySystem
     {
         public override void Initialize()
         {
@@ -115,7 +115,7 @@ internal sealed partial class DeferredEntityDeletionTest : RobustIntegrationTest
     }
 
     [Reflect(false)]
-    private sealed class OtherDeferredDeletionTestSystem : EntitySystem
+    private sealed partial class OtherDeferredDeletionTestSystem : EntitySystem
     {
         public override void Initialize() => SubscribeLocalEvent<OtherDeferredDeletionTestComponent, DeferredDeletionTestEvent>(OnTestEvent);
 

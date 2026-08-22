@@ -53,6 +53,13 @@ internal sealed partial class PvsSystem
                 continue;
 
             var state = ComponentState(entityUid, component, netId, ref stateEv, out var excludeReplays);
+
+            if (state is IComponentDeltaState && fromTick <= component.CreationTick)
+            {
+                var fullStateEv = new ComponentGetState(player, GameTick.Zero);
+                state = ComponentState(entityUid, component, netId, ref fullStateEv, out excludeReplays);
+            }
+
             if (excludeReplays && player == null)
                 continue;
 
@@ -75,13 +82,15 @@ internal sealed partial class PvsSystem
     private IComponentState? ComponentState(EntityUid uid, IComponent comp, ushort netId, ref ComponentGetState stateEv, out bool excludeReplays)
     {
         DebugTools.Assert(comp.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {comp.GetType()}");
-// Reset the ComponentGetState data.
-stateEv.State = null;
-stateEv.ExcludeReplays = false;
-_getStateHandlers![netId]?.Invoke(uid, comp, ref Unsafe.As<ComponentGetState, EntityEventBus.Unit>(ref stateEv));
-var state = stateEv.State;
+        // Reset the ComponentGetState data.
+        stateEv.State = null;
+        stateEv.ExcludeReplays = false;
+
+        _getStateHandlers![netId]?.Invoke(uid, comp, ref Unsafe.As<ComponentGetState, EntityEventBus.Unit>(ref stateEv));
+
+        var state = stateEv.State;
         excludeReplays = stateEv.ExcludeReplays;
-return state;
+        return state;
     }
 
     /// <summary>
@@ -160,7 +169,9 @@ return state;
                 if (md.EntityLastModifiedTick <= fromTick)
                     continue;
 
-                var state = GetEntityState(session, uid, fromTick, md);
+                var state = pvsSession.RequestedFull && session != null
+                    ? GetFullEntityState(session, uid, md)
+                    : GetEntityState(session, uid, fromTick, md);
 
                 if (state.Empty)
                 {

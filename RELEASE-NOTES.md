@@ -35,11 +35,12 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* As `EntProtoId` can now be converted into both `ProtoId<EntityPrototype>` and `string`, things expecting one or the other will need an explicit cast first to avoid ambiguous invocation.
 
 ### New features
 
 * `AppearanceChangeEvent` now has a `TryGetData` function that checks the type of the data at a given key.
+* `EntProtoId` and `ProtoId<EntityPrototype>` can now be implicitly converted between eachother.
 
 ### Bugfixes
 

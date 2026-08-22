@@ -40,6 +40,26 @@ public readonly record struct EntProtoId(string Id) : IEquatable<string>, ICompa
         return id == null ? default(EntProtoId?) : new EntProtoId(id);
     }
 
+    public static implicit operator EntProtoId(ProtoId<EntityPrototype> id)
+    {
+        return new EntProtoId(id.Id);
+    }
+
+    public static implicit operator EntProtoId?(ProtoId<EntityPrototype>? id)
+    {
+        return id == null ? default(EntProtoId?) : new EntProtoId(id.Value.Id);
+    }
+
+    public static implicit operator ProtoId<EntityPrototype>(EntProtoId id)
+    {
+        return new ProtoId<EntityPrototype>(id.Id);
+    }
+
+    public static implicit operator ProtoId<EntityPrototype>?(EntProtoId? id)
+    {
+        return id == null ? default(ProtoId<EntityPrototype>?) : new ProtoId<EntityPrototype>(id.Value.Id);
+    }
+
     public bool Equals(string? other)
     {
         return Id == other;

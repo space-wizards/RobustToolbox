@@ -109,6 +109,7 @@ internal sealed class ToolshedCommandImplementor
 
         foreach (var arg in method.Args)
         {
+            ctx.CurrentArgument = arg;
             object? parsed;
             if (arg.IsParamsCollection)
             {
@@ -123,6 +124,7 @@ internal sealed class ToolshedCommandImplementor
             ctx.Bundle.Arguments[arg.Name] = parsed;
         }
 
+        ctx.CurrentArgument = null;
         DebugTools.AssertNull(ctx.Error);
         DebugTools.AssertNull(ctx.Completions);
         return true;
@@ -376,13 +378,18 @@ internal sealed class ToolshedCommandImplementor
             argType = argType.GetElementType()!;
         }
 
+        // TODO TOOLSHED
+        // Find a good way to give parsers access to argument attributes.
+        // I don't want to give just content access to all (possibly internal) attributes/
+        // Currently ListLengthAttribute is just hardcoded.
         return new CommandArgument(
             arg.Name!,
             argType,
             GetArgumentParser(arg, argType),
             arg.IsOptional,
             arg.DefaultValue,
-            isParamsCollection);
+            isParamsCollection,
+            arg.GetCustomAttribute<ListLengthAttribute>());
     }
 
     private ITypeParser? GetArgumentParser(ParameterInfo param, Type type)
@@ -763,7 +770,8 @@ public readonly record struct CommandArgument(
     ITypeParser? Parser,
     bool IsOptional,
     object? DefaultValue,
-    bool IsParamsCollection);
+    bool IsParamsCollection,
+    ListLengthAttribute? ListLengthAttribute);
 
 public sealed class ArgumentParseError(Type type, Type parser) : ConError
 {

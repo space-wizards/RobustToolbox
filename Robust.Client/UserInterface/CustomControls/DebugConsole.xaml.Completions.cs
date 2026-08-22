@@ -284,7 +284,7 @@ public sealed partial class DebugConsole
     private CompletionOption[] FilterCompletions(IEnumerable<CompletionOption> completions, string curTyping)
     {
         return completions
-            .Where(c => c.Value.Contains(curTyping, StringComparison.CurrentCultureIgnoreCase) || (c.Flags & CompletionOptionFlags.NoFilter) != 0x0)
+            .Where(c => c.Value.Contains(curTyping, StringComparison.CurrentCultureIgnoreCase))
             .OrderByDescending(c => c.Value.StartsWith(curTyping, StringComparison.CurrentCultureIgnoreCase))
             .ToArray();
     }
@@ -363,17 +363,10 @@ public sealed partial class DebugConsole
         var (completion, _, completionFlags) = _compFiltered[index];
         var (_, _, lastRange, _) = CalcTypingArgs();
 
-        if ((completionFlags & CompletionOptionFlags.AppendOnly) != 0)
-        {
-            CommandBar.SelectionStart = CommandBar.CursorPosition;
-        }
-        else
-        {
-            // Replace the full word from the start.
-            // This means that letter casing will match the completion suggestion.
-            CommandBar.CursorPosition = lastRange.end;
-            CommandBar.SelectionStart = lastRange.start;
-        }
+        // Replace the full word from the start.
+        // This means that letter casing will match the completion suggestion.
+        CommandBar.CursorPosition = lastRange.end;
+        CommandBar.SelectionStart = lastRange.start;
 
         var insertValue = (completionFlags & CompletionOptionFlags.NoEscape) == 0
             ? CommandParsing.Escape(completion)

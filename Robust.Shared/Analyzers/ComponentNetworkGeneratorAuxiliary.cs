@@ -48,7 +48,7 @@ public sealed class AutoGenerateComponentStateAttribute : Attribute
     public readonly bool RaiseAfterAutoHandleState;
 
     /// <summary>
-    ///     Should delta states be generated for changed fields.
+    ///     Should delta states be generated for every field.
     /// </summary>
     public readonly bool FieldDeltas;
 

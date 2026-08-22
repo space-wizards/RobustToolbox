@@ -36,16 +36,23 @@ internal sealed partial class EntityEventBus : IEventBus
     /// <see cref="CompIdx.Value"/>, while the dictionary is indexed by the event type. This does not include events
     /// with the <see cref="ComponentEventAttribute"/>, unless <see cref="ComponentEventAttribute.Exclusive"/> is false.
     /// </summary>
+    /// <remarks>
+    /// The dictionary value is the <i>head</i> of a singly linked list of registrations, chained through
+    /// <see cref="DirectedRegistration.Next"/> in subscription order. Several registrars may subscribe to the same
+    /// component &amp; event pair provided they order themselves against each other, but any single registrar may
+    /// only subscribe to a given pair once. See EntAddSubscription for the exact rules.
+    /// </remarks>
     private FrozenDictionary<Type, DirectedRegistration>[] _eventSubs = default!;
 
     /// <summary>
-    /// Variant of <see cref="_eventSubs"/> that only includes events with the <see cref="ComponentEventAttribute"/>
+    /// Variant of <see cref="_eventSubs"/> that only includes events with the <see cref="ComponentEventAttribute"/>.
+    /// Unlike <see cref="_eventSubs"/>, these are always limited to a single handler.
     /// </summary>
     private FrozenDictionary<Type, DirectedEventHandler>[] _compEventSubs = default!;
 
     // pre-freeze event subscription data
     private Dictionary<Type, DirectedRegistration>?[] _eventSubsUnfrozen = [];
-    private Dictionary<Type, DirectedEventHandler>?[] _compEventSubsUnfrozen = [];
+    private Dictionary<Type, CompEventRegistration>?[] _compEventSubsUnfrozen = [];
 
     /// <summary>
     /// Inverse of <see cref="_eventSubs"/>, mapping event types to sets of components.
@@ -88,6 +95,13 @@ internal sealed partial class EntityEventBus : IEventBus
             subs.OrderingUpToDate = false;
         }
     }
+
+    /// <summary>
+    /// Pre-freeze entry for <see cref="_compEventSubs"/>. Tracks the registrar alongside the handler so that
+    /// unsubscribing cannot remove a handler belonging to somebody else. The owner is dropped when freezing, as it is
+    /// only needed while subscriptions are still mutable
+    /// </summary>
+    private readonly record struct CompEventRegistration(DirectedEventHandler Handler, Type? Owner);
 
     /// <summary>
     /// Information for a single event type handled by EventBus. Not specific to broadcast registrations.

@@ -138,8 +138,6 @@ namespace Robust.Client.Physics
 
                         return true;
                     }, true);
-
-                worldHandle.SetTransform(Matrix3x2.Identity);
             }
         }
     }

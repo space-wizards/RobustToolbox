@@ -145,20 +145,22 @@ namespace Robust.Client.Graphics.Clyde
             var mapId = vp.Eye?.Position.MapId ?? MapId.Nullspace;
             var args = new OverlayDrawArgs(space, null, vp, _renderHandle, new UIBox2i((0, 0), vp.Size), _mapSystem.GetMapOrInvalid(mapId), mapId, worldBox, worldBounds);
 
-            if (!overlay.BeforeDraw(args))
-                return;
-
-            if (overlay.RequestScreenTexture)
-            {
-                FlushRenderQueue();
-                overlay.ScreenTexture = CopyScreenTexture(vp.RenderTarget);
-            }
-
-            if (overlay.OverwriteTargetFrameBuffer)
-                ClearFramebuffer(default);
+            ResetOverlayDrawState();
 
             try
             {
+                if (!overlay.BeforeDraw(args))
+                    return;
+
+                if (overlay.RequestScreenTexture)
+                {
+                    FlushRenderQueue();
+                    overlay.ScreenTexture = CopyScreenTexture(vp.RenderTarget);
+                }
+
+                if (overlay.OverwriteTargetFrameBuffer)
+                    ClearFramebuffer(default);
+
                 overlay.Draw(args);
             }
             catch (Exception e)
@@ -170,9 +172,20 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // cleanup state so shaders/transforms dont leak into future overlays
                 // many overlays already do cleanup manually, but ideally they don't have to at all
-                _renderHandle.SetModelTransform(Matrix3x2.Identity);
-                _renderHandle.UseShader(null);
+                ResetOverlayDrawState();
             }
+        }
+
+        private void ResetOverlayDrawState()
+        {
+            _renderHandle.SetModelTransform(Matrix3x2.Identity);
+            _renderHandle.UseShader(null);
+        }
+
+        private static void ResetOverlayDrawState(DrawingHandleBase handle)
+        {
+            handle.SetTransform(Matrix3x2.Identity);
+            handle.UseShader(null);
         }
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
@@ -217,11 +230,13 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var overlay in list)
             {
+                ResetOverlayDrawState(handle.DrawingHandleScreen);
+
                 try
                 {
                     if (!overlay.BeforeDraw(args))
                         continue;
-
+                    
                     if (overlay.RequestScreenTexture)
                     {
                         FlushRenderQueue();
@@ -243,8 +258,7 @@ namespace Robust.Client.Graphics.Clyde
                     // cleanup state so shaders/transforms dont leak into future overlays
                     // many overlays already do cleanup manually, but ideally they don't have to at all
                     // screen and world handles are backed by the same renderhandle, so we only need to do this for one
-                    handle.DrawingHandleScreen.SetTransform(Matrix3x2.Identity);
-                    handle.DrawingHandleScreen.UseShader(null);
+                    ResetOverlayDrawState(handle.DrawingHandleScreen);
                 }
             }
         }

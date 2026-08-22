@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
@@ -25,6 +26,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         [Dependency] private IComponentFactory _factory = default!;
 
         private IDynamicTypeFactoryInternal _dynamicTypeFactoryInternal = default!;
+
+        internal bool CacheComponents;
+        private readonly ConcurrentDictionary<MappingDataNode, Component> _cache = new(new ComponentMappingComparer());
 
         public ComponentRegistry Read(ISerializationManager serializationManager,
             SequenceDataNode node,
@@ -76,12 +80,34 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
                 referenceTypes[refIdx++] = compIdx;
 
-                var comp = (Component) _dynamicTypeFactoryInternal.CreateInstanceUnchecked(registration.Type, inject: false);
-#pragma warning disable CS0618 // Type or member is obsolete
-                comp = comp.Instantiate();
-#pragma warning restore CS0618 // Type or member is obsolete
-                comp.ReadComp(ref comp, componentMapping, serializationManager, hookCtx, context);
-                SerializationManager.TryRunAfterHook(comp, hookCtx);
+                Component comp;
+                var tuple = (inst: this, type: registration.Type, serialization: serializationManager, hookCtx, context);
+                if (CacheComponents)
+                {
+                    comp = _cache.GetOrAdd(
+                        componentMapping,
+                        static (componentMapping, tuple) => ReadComponent(
+                            tuple.inst,
+                            componentMapping,
+                            tuple.type,
+                            tuple.serialization,
+                            tuple.hookCtx,
+                            tuple.context
+                        ),
+                        tuple
+                    );
+                }
+                else
+                {
+                    comp = ReadComponent(
+                        this,
+                        componentMapping,
+                        registration.Type,
+                        serializationManager,
+                        hookCtx,
+                        context
+                    );
+                }
 
                 // The full YAML mapping is already retained by PrototypeManager.
                 components[compType] = new ComponentRegistryEntry(comp);
@@ -245,9 +271,95 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return dict;
         }
 
+        private static Component ReadComponent(
+            ComponentRegistrySerializer inst,
+            MappingDataNode mapping,
+            Type type,
+            ISerializationManager serializationManager,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context)
+        {
+            var comp = (Component) inst._dynamicTypeFactoryInternal.CreateInstanceUnchecked(type, inject: false);
+#pragma warning disable CS0618 // Type or member is obsolete
+            comp = comp.Instantiate();
+#pragma warning restore CS0618 // Type or member is obsolete
+            comp.ReadComp(ref comp, mapping, serializationManager, hookCtx, context);
+            SerializationManager.TryRunAfterHook(comp, hookCtx);
+            return comp;
+        }
+
         void IPostInjectInit.PostInject()
         {
             _dynamicTypeFactoryInternal = (IDynamicTypeFactoryInternal) _dynamicTypeFactory;
+        }
+
+        private sealed class ComponentMappingComparer : IEqualityComparer<MappingDataNode>
+        {
+            public bool Equals(MappingDataNode? x, MappingDataNode? y)
+            {
+                if (ReferenceEquals(x, y))
+                    return true;
+
+                if (x == null || y == null || x.Count != y.Count || x.Tag != y.Tag)
+                    return false;
+
+                foreach (var (key, value) in x)
+                {
+                    if (!y.TryGet(key, out var other) || !DataNodesEqual(value, other))
+                        return false;
+                }
+
+                return true;
+            }
+
+            public int GetHashCode(MappingDataNode node)
+                => node.GetCanonicalHashCode();
+
+            private static bool DataNodesEqual(DataNode x, DataNode y)
+            {
+                if (ReferenceEquals(x, y))
+                    return true;
+
+                if (x.GetType() != y.GetType() || x.Tag != y.Tag || x.IsNull != y.IsNull)
+                    return false;
+
+                return x switch
+                {
+                    ValueDataNode value => value.Value == ((ValueDataNode) y).Value,
+                    SequenceDataNode sequence => SequenceEqual(sequence, (SequenceDataNode) y),
+                    MappingDataNode mapping => MappingEqual(mapping, (MappingDataNode) y),
+                    _ => false
+                };
+            }
+
+            private static bool SequenceEqual(SequenceDataNode x, SequenceDataNode y)
+            {
+                if (x.Count != y.Count)
+                    return false;
+
+                for (var i = 0; i < x.Count; i++)
+                {
+                    if (!DataNodesEqual(x[i], y[i]))
+                        return false;
+                }
+
+                return true;
+            }
+
+            private static bool MappingEqual(MappingDataNode x, MappingDataNode y)
+            {
+                if (x.Count != y.Count)
+                    return false;
+
+                foreach (var (key, value) in x)
+                {
+                    if (!y.TryGet(key, out var other) || !DataNodesEqual(value, other))
+                        return false;
+                }
+
+                return true;
+            }
+
         }
     }
 }

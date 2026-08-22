@@ -104,6 +104,27 @@ internal sealed partial class AudioManager : IAudioInternal
         OpenALSawmill.Debug("HRTF status: {0}", hrtfEnabled == 1 ? "Enabled" : "Disabled");
     }
 
+    internal static bool IsAudioAvailable()
+    {
+        var device = ALC.OpenDevice(null);
+        if (device == ALDevice.Null)
+            return false;
+
+        try
+        {
+            var context = ALC.CreateContext(device, new[] { 0 });
+            if (context == ALContext.Null)
+                return false;
+
+            ALC.DestroyContext(context);
+            return true;
+        }
+        finally
+        {
+            ALC.CloseDevice(device);
+        }
+    }
+
     public IReadOnlyList<string> GetAudioDevices()
     {
         if (ALC.EnumerateAll.IsExtensionPresent())

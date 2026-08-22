@@ -251,15 +251,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             var newSource = _audio.CreateAudioSource(audioResource);
 
-            if (newSource == null)
-            {
-                Log.Error($"Error creating audio source for {audioResource}");
-                DebugTools.Assert(false);
-            }
-            else
-            {
+            if (newSource != null)
                 component.Source = newSource;
-            }
         }
 
         // Need to set all initial data for first frame.

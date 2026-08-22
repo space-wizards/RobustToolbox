@@ -5,6 +5,8 @@ using System.Numerics;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.AudioLoading;
 using Robust.Shared.Audio.Sources;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio;
@@ -12,8 +14,9 @@ namespace Robust.Client.Audio;
 /// <summary>
 /// Headless client audio.
 /// </summary>
-internal sealed class HeadlessAudioManager : IAudioInternal
+internal sealed partial class HeadlessAudioManager : IAudioInternal
 {
+    [Dependency] private ILogManager _logMan = default!;
 
     private readonly IReadOnlyList<string> _emptyDevices = Array.Empty<string>();
     private int _audioBuffer;
@@ -21,6 +24,7 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     /// <inheritdoc />
     public void InitializePostWindowing()
     {
+        _logMan.GetSawmill("clyde.oal").Info("Application running Headless mode or misses audio device.");
     }
 
     /// <inheritdoc />

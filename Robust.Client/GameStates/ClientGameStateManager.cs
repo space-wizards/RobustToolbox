@@ -881,6 +881,7 @@ namespace Robust.Client.GameStates
                         DebugTools.Assert(_entities.EntityExists(uid));
                         _resolvedEntityStates.Add((es, uid.Value, meta));
 
+                        // Existing entities in a full state still need their implicit prototype state merged into the full-rep cache.
                         if (curState.FromSequence == GameTick.Zero)
                             _created.Add(es.NetEntity);
 

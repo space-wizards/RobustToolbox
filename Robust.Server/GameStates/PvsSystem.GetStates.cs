@@ -169,6 +169,7 @@ internal sealed partial class PvsSystem
                 if (md.EntityLastModifiedTick <= fromTick)
                     continue;
 
+                // Full-state requests must include implicit prototype-backed component data, not just deltas.
                 var state = pvsSession.RequestedFull && session != null
                     ? GetFullEntityState(session, uid, md)
                     : GetEntityState(session, uid, fromTick, md);

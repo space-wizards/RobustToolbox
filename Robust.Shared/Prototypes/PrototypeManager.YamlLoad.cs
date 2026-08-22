@@ -53,9 +53,25 @@ public partial class PrototypeManager
     internal const string PartialModifiedTag = "!PartialModified";
 
     /// <summary>
+    /// Partial prototypes that have this tag in their type node will not
+    /// create a new prototype if a non-partial one is not found.
+    /// </summary>
+    internal const string PartialOnlyTag = "!PartialOnly";
+
+    /// <summary>
     /// Tag used to position a partial addition to a sequence at a specific index.
     /// </summary>
     private const string PartialIndexTag = "!Index:";
+
+    /// <summary>
+    /// Tag used to remove a node.
+    /// </summary>
+    internal const string PartialRemoveTag = "!Remove";
+
+    /// <summary>
+    /// Tag used to clear a node.
+    /// </summary>
+    private const string PartialClearTag = "!Clear";
 
     /// <inheritdoc />
     public void LoadDirectory(ResPath path, bool overwrite = false,
@@ -295,7 +311,7 @@ public partial class PrototypeManager
         var kindData = _kinds[kind];
         Dictionary<string, ExtractedMappingData>? variantData = null;
 
-        var partialOnly = NodeHasTag(typeNode, "!PartialOnly");
+        var partialOnly = IsTag(typeNode, "!PartialOnly");
         if (!dataNode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
         {
             // Check if the ID node is a CreateVariants node instead of a value.
@@ -408,15 +424,11 @@ public partial class PrototypeManager
                 kindData.PartialOriginals[id] = existing;
             }
 
-            CombineMapNode(existing, data, static parent => parent.Clear(), existing, out var fullDeleted);
+            CombineMapNode(existing, data, out var fullDeleted);
             if (fullDeleted && existing.IsEmpty)
-            {
                 kindData.RawResults.Remove(id);
-            }
             else
-            {
                 kindData.RawResults[id] = existing;
-            }
         }
         else if (partialOnly)
         {
@@ -431,7 +443,7 @@ public partial class PrototypeManager
         {
             if (parents != null)
                 inheritance.Add(id, parents);
-            else
+            else if (!partial) // If this is partial we don't want to mess up the inheritance graph
                 inheritance.Add(id);
         }
 
@@ -622,34 +634,43 @@ public partial class PrototypeManager
         mapping.Add("abstract", "true");
     }
 
-    private static void CombineMapNode<T>(
-        MappingDataNode existing,
-        MappingDataNode data,
-        [RequireStaticDelegate] Action<T> fullDelete,
-        T parent,
-        out bool fullDeleted
-    ) where T : DataNode
+    private static void CombineMapNode(MappingDataNode existing, MappingDataNode data, out bool fullDeleted)
     {
         fullDeleted = false;
         foreach (var (key, dataNode) in data)
         {
-            // !Remove "a": 1 -> Clear the whole dict
-            if (IsRemoveTag(data.GetKeyTag(key)))
+            if (IsTag(data.GetKeyTag(key), PartialClearTag) || IsTag(dataNode, PartialClearTag))
             {
-                fullDelete(parent);
-                fullDeleted = true;
-                continue;
+                if (existing.TryGet(key, out MappingDataNode? existingMapping))
+                {
+                    existingMapping.Clear();
+                    existingMapping.Tag = PartialModifiedTag;
+                }
+                else if (existing.TryGet(key, out SequenceDataNode? existingSequence))
+                {
+                    existingSequence.Clear();
+                    existingSequence.Tag = PartialModifiedTag;
+                }
+
+                // We might want to add after clearing
             }
 
-            // "a": !Remove 1 -> Remove the element matching 1
-            // "a": !Remove
-            // - "b": 2 -> Remove the element matching b
-            if (IsRemoveTag(dataNode))
+            if (IsTag(data.GetKeyTag(key), PartialRemoveTag) || IsTag(dataNode, PartialRemoveTag))
             {
-                existing.Remove(key);
-                existing.Tag = PartialModifiedTag;
-                if (dataNode is ValueDataNode)
-                    continue;
+                // "a": !Remove -> Remove regardless of value
+                // "a": !Remove 1 -> Remove only if value is 1
+                if (dataNode.IsEmpty ||
+                    (existing.TryGetValue(key, out var existingValue) &&
+                     existingValue.Equals(dataNode)))
+                {
+                    existing.Remove(key);
+                    existing.Tag = PartialModifiedTag;
+
+                    if (existing.IsEmpty)
+                        fullDeleted = true;
+                }
+
+                continue;
             }
 
             if (existing.TryGetValue(key, out var existingNode) &&
@@ -677,7 +698,7 @@ public partial class PrototypeManager
                 continue;
             }
 
-            if (IsRemoveTag(dataNode))
+            if (IsTag(dataNode, PartialRemoveTag))
             {
                 existing.Remove(dataNode);
                 continue;
@@ -705,26 +726,27 @@ public partial class PrototypeManager
                 index = Math.Clamp(index, 0, existing.Count);
                 existing.Insert(index, dataNode);
             }
-            else
+            // If this is a mapping with a single !Remove key, we don't want to add it if it doesn't already exist
+            else if (dataNode is not MappingDataNode mapping ||
+                     mapping.Count == 0 ||
+                     mapping.Count > 1 ||
+                     mapping.GetKeyTag(mapping.Keys.First()) != PartialRemoveTag)
             {
                 existing.Add(dataNode);
             }
         }
     }
 
-    private static bool Combine(DataNode existing, DataNode data, out bool fullDeleted)
+    private static bool Combine(
+        DataNode existing,
+        DataNode data,
+        out bool fullDeleted)
     {
         fullDeleted = false;
         switch (existing, data)
         {
             case (MappingDataNode existingMapping, MappingDataNode dataMapping):
-                CombineMapNode(
-                    existingMapping,
-                    dataMapping,
-                    static parent => parent.Clear(),
-                    existingMapping,
-                    out fullDeleted
-                );
+                CombineMapNode(existingMapping, dataMapping, out fullDeleted);
                 return true;
             case (SequenceDataNode existingSequence, SequenceDataNode dataSequence):
                 CombineSeqNode(existingSequence, dataSequence);
@@ -740,20 +762,9 @@ public partial class PrototypeManager
                nodeTag.Equals(tag, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsRemoveTag(string? tag)
+    private static bool IsTag(DataNode node, string tag)
     {
-        return IsTag(tag, "!Remove");
-    }
-
-    private static bool IsRemoveTag(DataNode node)
-    {
-        return IsRemoveTag(node.Tag);
-    }
-
-    private static bool NodeHasTag(DataNode node, string tag)
-    {
-        return node.Tag != null &&
-               node.Tag.Equals(tag, StringComparison.OrdinalIgnoreCase);
+        return IsTag(node.Tag, tag);
     }
 
     // All these fields can be null in case the

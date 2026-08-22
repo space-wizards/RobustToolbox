@@ -270,6 +270,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             }
 
             newMapping._keyNodes = _keyNodes;
+            newMapping._keyTags = _keyTags;
             return newMapping;
         }
 

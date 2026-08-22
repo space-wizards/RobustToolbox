@@ -45,6 +45,8 @@ public partial class SharedPhysicsSystem
 
     private void OnPhysicsInit(EntityUid uid, PhysicsComponent component, ComponentInit args)
     {
+        component.CanSleep = component.SleepingAllowed && component.SleepBlockers == 0;
+
         var xform = Transform(uid);
         var manager = EnsureComp<FixturesComponent>(uid);
 
@@ -69,6 +71,7 @@ public partial class SharedPhysicsSystem
 
         var ev = new CollisionChangeEvent(uid, component, component.CanCollide);
         RaiseLocalEvent(ref ev);
+        _joints.UpdateJointSleep(uid);
     }
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
@@ -675,8 +678,26 @@ public partial class SharedPhysicsSystem
             SetAwake((uid, body), true);
 
         body.SleepingAllowed = value;
+        body.CanSleep = value && body.SleepBlockers == 0;
         if (dirty)
             DirtyField(uid, body, nameof(PhysicsComponent.SleepingAllowed));
+    }
+
+    internal void AddSleepBlocker(EntityUid uid, PhysicsComponent body)
+    {
+        body.SleepBlockers++;
+        body.CanSleep = false;
+        SetAwake((uid, body), true);
+    }
+
+    internal void RemoveSleepBlocker(PhysicsComponent body)
+    {
+        DebugTools.Assert(body.SleepBlockers > 0);
+        if (body.SleepBlockers > 0)
+        {
+            body.SleepBlockers--;
+            body.CanSleep = body.SleepingAllowed && body.SleepBlockers == 0;
+        }
     }
 
     public void SetSleepTime(PhysicsComponent body, float value)

@@ -28,9 +28,17 @@ public abstract partial class SharedJointSystem
 
     private void InitializeRelay()
     {
+        SubscribeLocalEvent<JointRelayTargetComponent, ComponentInit>(OnRelayInit);
         SubscribeLocalEvent<JointRelayTargetComponent, ComponentShutdown>(OnRelayShutdown);
         SubscribeLocalEvent<JointRelayTargetComponent, ComponentGetState>(OnRelayGetState);
         SubscribeLocalEvent<JointRelayTargetComponent, ComponentHandleState>(OnRelayHandleState);
+        SubscribeLocalEvent<JointRelayTargetComponent, GridUidChangedEvent>(OnRelayGridChanged);
+        SubscribeLocalEvent<JointRelayTargetComponent, MetaFlagRemoveAttemptEvent>(OnRelayFlagRemoveAttempt);
+    }
+
+    private void OnRelayInit(EntityUid uid, JointRelayTargetComponent component, ComponentInit args)
+    {
+        _metadata.AddFlag(uid, MetaDataFlags.ExtraTransformEvents);
     }
 
     private void OnRelayGetState(EntityUid uid, JointRelayTargetComponent component, ref ComponentGetState args)
@@ -48,6 +56,8 @@ public abstract partial class SharedJointSystem
 
     private void OnRelayShutdown(EntityUid uid, JointRelayTargetComponent component, ComponentShutdown args)
     {
+        _metadata.RemoveFlag(uid, MetaDataFlags.ExtraTransformEvents);
+
         if (_gameTiming.ApplyingState)
             return;
 
@@ -58,6 +68,17 @@ public abstract partial class SharedJointSystem
 
             RefreshRelay(relay, component: joint);
         }
+    }
+
+    private void OnRelayGridChanged(EntityUid uid, JointRelayTargetComponent component, ref GridUidChangedEvent args)
+    {
+        UpdateJointSleep(uid);
+    }
+
+    private void OnRelayFlagRemoveAttempt(EntityUid uid, JointRelayTargetComponent component, ref MetaFlagRemoveAttemptEvent args)
+    {
+        if (component.LifeStage <= ComponentLifeStage.Running)
+            args.ToRemove &= ~MetaDataFlags.ExtraTransformEvents;
     }
 
     /// <summary>
@@ -124,6 +145,11 @@ public abstract partial class SharedJointSystem
                 _physics.WakeBody(relay.Value);
                 Dirty(relay.Value, relayTarget);
             }
+        }
+
+        foreach (var joint in component.Joints.Values)
+        {
+            UpdateJointSleep(joint);
         }
 
         Dirty(uid, component);

@@ -615,6 +615,9 @@ namespace Robust.Client.GameStates
             // This is terrible, and I hate it. This also needs to run even when prediction is disabled.
             _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
 
+            if (!PredictionNeedsResetting)
+                return;
+
             // Handle predicted entity spawns before applying state-created entities. This
             // keeps predicted chunk entities from colliding with authoritative chunk entities.
             var predicted = new ValueList<EntityUid>();
@@ -630,9 +633,6 @@ namespace Robust.Client.GameStates
             {
                 _entities.DeleteEntity(ent);
             }
-
-            if (!PredictionNeedsResetting)
-                return;
 
             PredictionNeedsResetting = false;
             var countReset = 0;

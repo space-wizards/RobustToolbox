@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Client.Graphics.Clyde;
 using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Collections;
@@ -79,10 +80,17 @@ namespace Robust.Client.ResourceManagement
 
         public void AfterDeserialization()
         {
-            foreach (var sprite in _toDeserialize)
-            {
-                LoadBaseRsi(default, sprite);
+            try
+			{
+        		foreach (var sprite in _toDeserialize)
+        		{
+            		LoadBaseRsi(default, sprite);
+        		}
             }
+			finally
+			{
+				_toDeserialize.Clear();
+			}
         }
 
         private void PreloadTextures(ISawmill sawmill)
@@ -279,14 +287,8 @@ namespace Robust.Client.ResourceManagement
             #else
             // For tests
             var maxSize = 12288;
-            try
-            {
+            if (_clyde is not ClydeHeadless)
                 maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
             #endif
 
             // THIS IS NOT GUARANTEED TO HAVE ANY PARTICULARLY LOGICAL ORDERING.
@@ -422,21 +424,26 @@ namespace Robust.Client.ResourceManagement
                 }
             }
 
-            Parallel.ForEach(rsiList, data =>
-            {
-                if (data.Bad)
-                    return;
+            Parallel.For(
+                0,
+                rsiList.Length,
+                i =>
+                {
+                    ref var data = ref rsiList[i];
+                    if (data.Bad)
+                        return;
 
-                try
-                {
-                    RSIResource.LoadPostTexture(ref data);
+                    try
+                    {
+                        RSIResource.LoadPostTexture(ref data);
+                    }
+                    catch (Exception e)
+                    {
+                        data.Bad = true;
+                        sawmill.Error($"Exception while loading RSI {data.Path}:\n{e}");
+                    }
                 }
-                catch (Exception e)
-                {
-                    data.Bad = true;
-                    sawmill.Error($"Exception while loading RSI {data.Path}:\n{e}");
-                }
-            });
+            );
 
             var errors = 0;
             foreach (ref var data in rsiList.AsSpan())

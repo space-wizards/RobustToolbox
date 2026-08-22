@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -62,6 +62,7 @@ namespace Robust.Shared.Prototypes
                 return;
 
             Sawmill = _logManager.GetSawmill("proto");
+            _prototypeLoadContext = new PrototypeLoadContext(_serializationManager);
 
             _initialized = true;
             ReloadPrototypeKinds();
@@ -295,7 +296,6 @@ namespace Robust.Shared.Prototypes
         {
             _kindNames.Clear();
             _kinds = FrozenDictionary<Type, KindData>.Empty;
-            _entityComponentCache = FrozenDictionary<MappingDataNode, EntityPrototype.ComponentRegistryEntry>.Empty;
         }
 
         /// <inheritdoc />
@@ -488,9 +488,6 @@ namespace Robust.Shared.Prototypes
 
             Freeze(modifiedKinds);
 
-            if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype)))
-                RebuildEntityComponentCache();
-
             if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
                 UpdateCategories();
 
@@ -572,7 +569,6 @@ namespace Robust.Shared.Prototypes
                 InstantiateKinds(kinds, inheritanceTasks);
             }
 
-            RebuildEntityComponentCache();
             UpdateCategories();
         }
 
@@ -669,7 +665,7 @@ namespace Robust.Shared.Prototypes
 
             try
             {
-                return (IPrototype)_serializationManager.Read(kind, mapping, hookCtx)!;
+                return (IPrototype)_serializationManager.Read(kind, mapping, hookCtx, _prototypeLoadContext)!;
             }
             catch (Exception e)
             {
@@ -1187,6 +1183,25 @@ namespace Robust.Shared.Prototypes
             /// </summary>
             public readonly Dictionary<string, MappingDataNode> RawResults = new();
 
+            /// <summary>
+            /// The original mapping before it was modified by a partial prototype.
+            /// This will not have an element for a given ID if there are no partial prototypes
+            /// affecting that ID.
+            /// </summary>
+            public readonly Dictionary<string, MappingDataNode> PartialOriginals = new();
+
+            /// <summary>
+            /// The unfrozen instance of <see cref="Variants"/>.
+            /// This is only populated if the kind has prototype variants.
+            /// </summary>
+            public Dictionary<string, List<string>>? UnfrozenVariants;
+
+            /// <summary>
+            /// A dictionary that maps a prototype to a list of all variants of that prototype.
+            /// This is only populated if the kind has prototype variants.
+            /// </summary>
+            public FrozenDictionary<string, IReadOnlyList<string>> Variants = FrozenDictionary<string, IReadOnlyList<string>>.Empty;
+
             public readonly Type Type = kind;
             public readonly string Name = name;
 
@@ -1217,6 +1232,14 @@ namespace Robust.Shared.Prototypes
                 DebugTools.AssertNotNull(UnfrozenInstances);
                 Instances = UnfrozenInstances?.ToFrozenDictionary() ?? FrozenDictionary<string, IPrototype>.Empty;
                 UnfrozenInstances = null;
+
+                // Freeze prototype variants associated with this kind
+                if (UnfrozenVariants != null)
+                {
+                    Variants = UnfrozenVariants.ToFrozenDictionary(kvp => kvp.Key, kvp => (IReadOnlyList<string>)kvp.Value);
+                    UnfrozenVariants = null;
+                }
+
                 _freezeDirectInfo.Invoke(this, null);
             }
         }

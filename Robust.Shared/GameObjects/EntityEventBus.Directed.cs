@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -570,6 +569,9 @@ namespace Robust.Shared.GameObjects
                 var compIdx = entry.Component;
                 var compSubs = _eventSubs[compIdx.Value];
 
+                if (comp.Deleted)
+                    return;
+
 #if DEBUG
                 eventTable.DirectedDispatchDepth++;
 #endif
@@ -625,6 +627,9 @@ namespace Robust.Shared.GameObjects
                         comp = fallbackComp;
                     }
 
+                    if (comp.Deleted)
+                        continue;
+
                     var compSubs = _eventSubs[compIdx.Value];
                     compSubs[eventType].Handler(euid, comp, ref args);
                 }
@@ -675,6 +680,9 @@ namespace Robust.Shared.GameObjects
                         {
                             dispatchComp = eventTable.ComponentLists[entryIdx].ComponentInstance;
                         }
+
+                        if (dispatchComp.Deleted)
+                            return;
 
 #if DEBUG
                         eventTable.DirectedDispatchDepth++;

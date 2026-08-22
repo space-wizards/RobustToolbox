@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* `IRobustRandom` can now make random longs with `NextLong`.
 * `AppearanceChangeEvent` now has a `TryGetData` function that checks the type of the data at a given key.
 
 ### Bugfixes

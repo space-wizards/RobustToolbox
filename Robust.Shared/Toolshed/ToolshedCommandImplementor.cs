@@ -400,7 +400,7 @@ internal sealed class ToolshedCommandImplementor
         return parser;
     }
 
-    private (CommandMethod, MethodInfo)? GetConcreteMethodInternal(Type? pipedType, Type[]? typeArguments)
+    internal IEnumerable<CommandMethod> MethodsByPipedType(Type? pipedType, bool allowGeneric = true)
     {
         return Methods
             .Where(x =>
@@ -411,8 +411,28 @@ internal sealed class ToolshedCommandImplementor
                 if (pipedType == null)
                     return false;
 
-                return x.Generic || _toolshed.IsTransformableTo(pipedType, param.ParameterType);
-            })
+                return _toolshed.IsTransformableTo(pipedType, param.ParameterType, allowGeneric);
+            });
+    }
+
+    internal IEnumerable<CommandMethod> MethodsByReturnType(Type? returnType, bool allowGeneric = true)
+    {
+        return Methods
+            .Where(x =>
+            {
+                if (x.Info.ReturnType is not { } type)
+                    return returnType is null;
+
+                if (returnType == null)
+                    return false;
+
+                return _toolshed.IsTransformableTo(type, returnType, allowGeneric);
+            });
+    }
+
+    private (CommandMethod, MethodInfo)? GetConcreteMethodInternal(Type? pipedType, Type[]? typeArguments)
+    {
+        return MethodsByPipedType(pipedType)
             .OrderByDescending(x =>
             {
                 if (x.PipeArg is not { } param)

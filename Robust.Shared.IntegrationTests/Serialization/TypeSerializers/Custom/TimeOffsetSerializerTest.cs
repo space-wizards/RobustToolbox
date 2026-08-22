@@ -20,6 +20,20 @@ internal sealed class TimeOffsetSerializerTest : OurSerializationTest
     }
 
     [Test]
+    public void ReadSupportsStandardTimeSpanFormats()
+    {
+        var result1 = Serialization.Read<TimeSpan, ValueDataNode, TimeOffsetSerializer>(new ValueDataNode("21600s"));
+        var result2 = Serialization.Read<TimeSpan, ValueDataNode, TimeOffsetSerializer>(new ValueDataNode("360m"));
+        var result3 = Serialization.Read<TimeSpan, ValueDataNode, TimeOffsetSerializer>(new ValueDataNode("6h"));
+        var result4 = Serialization.Read<TimeSpan, ValueDataNode, TimeOffsetSerializer>(new ValueDataNode("6.0h"));
+
+        Assert.That(result1, Is.EqualTo(TimeSpan.FromHours(6)));
+        Assert.That(result2, Is.EqualTo(TimeSpan.FromHours(6)));
+        Assert.That(result3, Is.EqualTo(TimeSpan.FromHours(6)));
+        Assert.That(result4, Is.EqualTo(TimeSpan.FromHours(6)));
+    }
+
+    [Test]
     public void CreateCopyAppliesCurrentTime()
     {
         WithCurTime(TimeSpan.FromSeconds(10), () =>

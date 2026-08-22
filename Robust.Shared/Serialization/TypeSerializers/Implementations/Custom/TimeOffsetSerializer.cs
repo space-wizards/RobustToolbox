@@ -30,15 +30,17 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
     {
-        var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
-        return TimeSpan.FromSeconds(seconds);
+        if (TimeSpanExt.TryTimeSpan(node, out var time))
+            return time;
+
+        throw new FormatException($"The input string '{node.Value}' can't be converted to TimeSpan");
     }
 
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies,
         ISerializationContext? context = null)
     {
-        return double.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+        return TimeSpanExt.TryTimeSpan(node, out _)
             ? new ValidatedValueNode(node)
             : new ErrorNode(node, "Failed parsing TimeSpan");
     }

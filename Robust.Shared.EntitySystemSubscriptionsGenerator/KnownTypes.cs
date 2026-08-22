@@ -16,6 +16,8 @@ public static class KnownTypes
 
     public const string AllSubscriptionMemberAttributeName = "Robust.Shared.Analyzers.EventSubscriptionAttribute";
 
+    public const string GenericEventAttributeName = "Robust.Shared.Analyzers.GenericEventAttribute";
+
     public static readonly string ComponentSubscriptionHandlerTypes = string.Join(
         ", ",
         "Robust.Shared.GameObjects.ComponentEventHandler",
@@ -54,5 +56,5 @@ public enum SubscriptionType
 {
     All,
     Network,
-    Local,
+    Local
 }

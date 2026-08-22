@@ -258,11 +258,15 @@ internal partial class Clyde
             if (window == 0)
                 return default;
 
-            nint glContext = SDL.SDL_GL_CreateContext(window);
-            if (glContext == 0)
+            nint glContext = 0;
+            if (spec is not null)
             {
-                SDL.SDL_DestroyWindow(window);
-                return default;
+                glContext = SDL.SDL_GL_CreateContext(window);
+                if (glContext == 0)
+                {
+                    SDL.SDL_DestroyWindow(window);
+                    return default;
+                }
             }
 
             if ((parameters.Styles & OSWindowStyles.NoTitleOptions) != 0)

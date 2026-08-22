@@ -44,7 +44,16 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             foreach (var sequenceEntry in node.Sequence)
             {
                 var componentMapping = (MappingDataNode)sequenceEntry;
-                var compType = ((ValueDataNode) componentMapping.Get("type")).Value;
+
+                if (!componentMapping.TryGet("type", out ValueDataNode? typeNode))
+                {
+                    if (componentMapping.Tag == PrototypeManager.PartialModifiedTag)
+                        continue;
+
+                    throw new KeyNotFoundException("The given key 'type' was not present in the dictionary.");
+                }
+
+                var compType = typeNode.Value;
                 // See if type exists to detect errors.
                 switch (_factory.GetComponentAvailability(compType))
                 {
@@ -124,7 +133,16 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                     list.Add(new ErrorNode(sequenceEntry, $"Expected {nameof(MappingDataNode)}"));
                     continue;
                 }
-                string compType = ((ValueDataNode) componentMapping.Get("type")).Value;
+
+                if (!componentMapping.TryGet("type", out ValueDataNode? typeNode))
+                {
+                    if (componentMapping.Tag == PrototypeManager.PartialModifiedTag)
+                        continue;
+
+                    throw new KeyNotFoundException("The given key 'type' was not present in the dictionary.");
+                }
+
+                string compType = typeNode.Value;
                 // See if type exists to detect errors.
                 switch (_factory.GetComponentAvailability(compType))
                 {

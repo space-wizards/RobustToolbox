@@ -103,7 +103,7 @@ namespace Robust.Client.Map
             if (defList.Count <= 0)
                 return;
 
-            const int tileSize = EyeManager.PixelsPerMeter;
+            var tileSize = EyeManager.PixelsPerMeter;
 
             var tileCount = defList.Select(x => x.Variants + x.EdgeSprites.Count).Sum() + 1;
 

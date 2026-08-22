@@ -85,16 +85,4 @@ public enum CompletionOptionFlags
     /// Prevents suggestions from being escaped using <see cref="CommandParsing.Escape"/>.
     /// </summary>
     NoEscape = 1 << 2,
-
-    /// <summary>
-    /// Prevents suggestions from being filtered based on what the client has "currently typed"
-    /// so that your completion shows up anyway based on the defined rules in your parser.
-    /// </summary>
-    NoFilter = 1 << 3,
-
-    /// <summary>
-    /// Instead of replacing the entire argument, the suggestion will
-    /// be appended to what already exists.
-    /// </summary>
-    AppendOnly = 1 << 4,
 }

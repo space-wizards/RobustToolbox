@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Toolshed now supports parsing array and list arguments.
+*None yet*
 
 ### Bugfixes
 
@@ -58,7 +58,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* PrototypeIdSerializers and prototype ID validation attributes have been removed in lieu of directly using `ProtoId<T>`.
+* PrototypeIdSerializers have been removed in lieu of directly using `ProtoId<T>`.
 
 ### New features
 

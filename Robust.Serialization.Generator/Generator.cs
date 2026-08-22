@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Robust.Roslyn.Shared;
 using static Robust.Roslyn.Shared.DataDefinitionHelper;
 using static Robust.Serialization.Generator.CustomSerializerType;
 using static Robust.Serialization.Generator.Types;
@@ -36,6 +37,7 @@ public class Generator : IIncrementalGenerator
     private const string SequenceDataNodeName = "Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode";
     private const string ValueDataNodeName = "Robust.Shared.Serialization.Markdown.Value.ValueDataNode";
     private const string EntityUidName = "Robust.Shared.GameObjects.EntityUid";
+    private const string ComponentName = "Robust.Shared.GameObjects.Component";
 
     public void Initialize(IncrementalGeneratorInitializationContext initContext)
     {
@@ -193,7 +195,7 @@ public class Generator : IIncrementalGenerator
 
                 {{GetCopiers(definition)}}
 
-                {{GetReader(definition)}}
+                {{GetReaders(definition)}}
 
                 {{GetWriter(definition)}}
 
@@ -612,6 +614,41 @@ public class Generator : IIncrementalGenerator
         return builder.ToString();
     }
 
+    private static string GetReadCompMethod(DataDefinition definition)
+    {
+        var inheritsComp = TypeSymbolHelper.Inherits(definition.Type, ComponentName);
+        if (!inheritsComp)
+        {
+            if (!TypeSymbolHelper.ShittyTypeMatch(definition.Type, ComponentName)) return string.Empty;
+
+            return """
+                public virtual void ReadComp(
+                    ref Component target,
+                    MappingDataNode mappingDataNode,
+                    ISerializationManager serialization,
+                    SerializationHookContext hookCtx,
+                    ISerializationContext? context)
+                {
+                    Component.Read(ref target, mappingDataNode, serialization, hookCtx, context);
+                }
+                """;
+        }
+
+        return $$"""
+            public override void ReadComp(
+                ref Component target,
+                MappingDataNode mappingDataNode,
+                ISerializationManager serialization,
+                SerializationHookContext hookCtx,
+                ISerializationContext? context)
+            {
+                var cast = ({{definition.GenericTypeName}}) target;
+                {{definition.GenericTypeName}}.Read(ref cast, mappingDataNode, serialization, hookCtx, context);
+                target = (Component) cast;
+            }
+            """;
+    }
+
     private static string GetInstantiators(DataDefinition definition)
     {
         var builder = new StringBuilder();
@@ -773,32 +810,8 @@ public class Generator : IIncrementalGenerator
         if (!definition.IsDataDefinition(type, out _))
             return;
 
-        var sameType = definition.Type.Equals(type, SymbolEqualityComparer.Default) &&
-                       targetType == definition.GenericTypeName &&
-                       targetType != "object";
-        var isSealedOrStruct = definition.Type.IsSealed || definition.Type.IsValueType;
         var isAbstract = definition.Type.IsAbstract;
-        var isInterface = definition.Type.TypeKind == TypeKind.Interface;
-        var modifier = (sameType, targetType == "object", isSealedOrStruct, isInterface) switch
-        {
-            (true, _, true, _) => string.Empty,
-            (true, _, false, _) => "virtual ",
-            (false, true, true, _) => string.Empty,
-            (false, true, false, _) => "virtual ",
-            (false, false, _, true) => string.Empty,
-            (false, false, _, false) => "override ",
-        };
-
-        if (!sameType && targetType == "object" && forceOverride)
-            modifier = "override ";
-
-        if (forceOverride && modifier is "" or "virtual ")
-        {
-            if (modifier is "")
-                modifier += "override ";
-            else if (modifier == "virtual ")
-                modifier = "override ";
-        }
+        var modifier = GetModifier(definition, type, targetType, forceOverride, out var sameType);
 
         builder.AppendLine($"""
             public {modifier}void Copy(
@@ -876,7 +889,43 @@ public class Generator : IIncrementalGenerator
         }
     }
 
-    private static string GetReader(DataDefinition definition)
+    private static object GetModifier(
+        DataDefinition definition,
+        ITypeSymbol type,
+        string targetType,
+        bool forceOverride,
+        out bool sameType)
+    {
+        sameType = definition.Type.Equals(type, SymbolEqualityComparer.Default) &&
+                       targetType == definition.GenericTypeName &&
+                       targetType != "object";
+        var isSealedOrStruct = definition.Type.IsSealed || definition.Type.IsValueType;
+        var isInterface = definition.Type.TypeKind == TypeKind.Interface;
+        var modifier = (sameType, targetType == "object", isSealedOrStruct, isInterface) switch
+        {
+            (true, _, true, _) => string.Empty,
+            (true, _, false, _) => "virtual ",
+            (false, true, true, _) => string.Empty,
+            (false, true, false, _) => "virtual ",
+            (false, false, _, true) => string.Empty,
+            (false, false, _, false) => "override ",
+        };
+
+        if (!sameType && targetType == "object" && forceOverride)
+            modifier = "override ";
+
+        if (forceOverride && modifier is "" or "virtual ")
+        {
+            if (modifier is "")
+                modifier += "override ";
+            else if (modifier == "virtual ")
+                modifier = "override ";
+        }
+
+        return modifier;
+    }
+
+    private static string GetReaders(DataDefinition definition)
     {
         string body;
         if (definition.Type.IsAbstract)
@@ -947,6 +996,8 @@ public class Generator : IIncrementalGenerator
             {
                 {{body}}
             }
+
+            {{GetReadCompMethod(definition)}}
             """;
     }
 

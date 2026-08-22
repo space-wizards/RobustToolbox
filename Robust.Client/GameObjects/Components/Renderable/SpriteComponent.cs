@@ -39,7 +39,7 @@ namespace Robust.Client.GameObjects
     {
         public const string LogCategory = "go.comp.sprite";
 
-        [Dependency] private IResourceCache resourceCache = default!;
+        [Dependency] private IResourceCacheInternal resourceCache = default!;
         [Dependency] private IPrototypeManager prototypes = default!;
         [Dependency] private EntityManager entities = default!;
         [Dependency] private IReflectionManager reflection = default!;
@@ -166,8 +166,8 @@ namespace Robust.Client.GameObjects
             set => Sys.SetBaseRsi((Owner, this), value);
         }
 
-        [DataField("sprite", readOnly: true)] private string? rsi;
-        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
+        [DataField("sprite", readOnly: true)] internal string? rsi;
+        [DataField("layers", readOnly: true)] internal List<PrototypeLayerData> layerDatums = new();
 
         [DataField(readOnly: true)] private string? state;
         [DataField(readOnly: true)] private string? texture;
@@ -274,16 +274,11 @@ namespace Robust.Client.GameObjects
         {
             // Please somebody burn this to the ground. There is so much spaghetti.
             // Why has no one answered my prayers.
+            // I answered half of your prayer someone please answer the rest
 
             IoCManager.InjectDependencies(this);
-            if (!string.IsNullOrWhiteSpace(rsi))
-            {
-                var rsiPath = TextureRoot / rsi;
-                if (resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
-                    _baseRsi = resource.RSI;
-                else
-                    Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
-            }
+
+            resourceCache.AddToDeserialize(this);
 
             if (layerDatums.Count == 0)
             {
@@ -302,19 +297,6 @@ namespace Robust.Client.GameObjects
                     state = null;
                     texture = null;
                 }
-            }
-
-            if (layerDatums.Count != 0)
-            {
-                LayerMap.Clear();
-                Layers.Clear();
-                foreach (var datum in layerDatums)
-                {
-                    var layer = new Layer((Owner, this), Layers.Count);
-                    Layers.Add(layer);
-                    LayerSetData(layer, datum);
-                }
-
             }
 
             BoundsDirty = true;
@@ -990,7 +972,7 @@ namespace Robust.Client.GameObjects
             theLayer.ShaderPrototype = prototype;
         }
 
-        public void LayerSetShader(object layerKey, ShaderInstance shader, string? prototype = null)
+        public void LayerSetShader(object layerKey, ShaderInstance? shader, string? prototype = null)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;

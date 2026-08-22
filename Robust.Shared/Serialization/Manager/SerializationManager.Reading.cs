@@ -193,6 +193,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             var baseType = typeof(T);
             var nullable = baseType.IsNullable();
+            var isArray = ReadTypeMetadata<T>.IsArray;
 
             T val = default!;
 
@@ -321,7 +322,7 @@ namespace Robust.Shared.Serialization.Manager
 
                 if (!hasSerializer)
                 {
-                    if (baseType.IsArray)
+                    if (isArray)
                     {
                         val = node switch
                         {
@@ -381,7 +382,7 @@ namespace Robust.Shared.Serialization.Manager
                                 throw new ArgumentException($"No mapping or value node provided for type {baseType}.");
                         }
 
-                        RunAfterHook(val, hookCtx);
+                        TryRunAfterHook(val, hookCtx);
                     }
                 }
             }
@@ -581,7 +582,8 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             var baseType = typeof(T);
-            if (baseType.IsEnum || baseType.IsArray ||
+            if (baseType.IsEnum ||
+                ReadTypeMetadata<T>.IsArray ||
                 (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(Nullable<>)))
             {
                 return ((ReadGenericDelegate<T>)_readGenericDelegates.GetOrAdd((typeof(T), node.GetType()!, notNullableOverride),
@@ -771,7 +773,7 @@ namespace Robust.Shared.Serialization.Manager
                                 throw new ArgumentException($"No mapping or value node provided for type {baseType}.");
                         }
 
-                        RunAfterHook(val, hookCtx);
+                        TryRunAfterHook(val, hookCtx);
                     }
                 }
             }
@@ -992,7 +994,7 @@ namespace Robust.Shared.Serialization.Manager
                                 throw new ArgumentException($"No mapping or value node provided for type {baseType}.");
                         }
 
-                        RunAfterHook(val, hookCtx);
+                        TryRunAfterHook(val, hookCtx);
                     }
                 }
             }
@@ -1427,7 +1429,7 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"No mapping node provided for type {type} at line: {node.Start.Line}");
             }
 
-            RunAfterHook(instance, hookCtx);
+            TryRunAfterHook(instance, hookCtx);
 
             return instance;
         }
@@ -1447,7 +1449,7 @@ namespace Robust.Shared.Serialization.Manager
 
             definition.Populate(ref instance, node, this, hookCtx, context);
 
-            RunAfterHook(instance, hookCtx);
+            TryRunAfterHook(instance, hookCtx);
 
             return instance;
         }
@@ -1455,6 +1457,17 @@ namespace Robust.Shared.Serialization.Manager
         private TValue ReadNoSerializer<TValue>(DataNode node)
         {
             throw new ArgumentException($"No type serializer or data definition found for type {typeof(TValue)} with node type {node.GetType()} when reading");
+        }
+
+        private static class ReadTypeMetadata<T>
+        {
+            // ReSharper disable once StaticMemberInGenericType
+            public static bool IsArray;
+
+            static ReadTypeMetadata()
+            {
+                IsArray = typeof(T).IsArray;
+            }
         }
     }
 }

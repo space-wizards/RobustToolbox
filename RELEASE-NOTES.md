@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Render handle shaders and transforms are reset after every overlay call.
 
 ### Internal
 

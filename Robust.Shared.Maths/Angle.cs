@@ -72,7 +72,7 @@ namespace Robust.Shared.Maths
         [Pure]
         public Vector2 ToVec()
         {
-            var (x, y) = Math.SinCos(Theta);
+            var (y, x) = Math.SinCos(Theta);
             return new Vector2((float)x, (float)y);
         }
 
@@ -84,7 +84,7 @@ namespace Robust.Shared.Maths
         public Vector2 ToWorldVec()
         {
             var theta = Theta - PiOver2;
-            var (x, y) = Math.SinCos(theta);
+            var (y, x) = Math.SinCos(theta);
             return new Vector2((float)x, (float)y);
         }
 

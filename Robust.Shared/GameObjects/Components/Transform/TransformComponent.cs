@@ -21,7 +21,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     /// <seealso cref="SharedTransformSystem"/>
     [RegisterComponent, NetworkedComponent]
-    public sealed partial class TransformComponent : Component, IComponentDebug, IComponentDelta
+    public sealed partial class TransformComponent : Component, IComponentDebug
     {
         [Dependency] private IEntityManager _entMan = default!;
 
@@ -39,12 +39,6 @@ namespace Robust.Shared.GameObjects
 
         [DataField("anchored")]
         internal bool _anchored;
-
-        /// <inheritdoc />
-        public GameTick LastUnclassifiedDirty { get; set; }
-
-        /// <inheritdoc />
-        public GameTick[] LastModifiedFields { get; set; } = default!;
 
         /// <summary>
         /// Indicates this entity can traverse grids.
@@ -144,7 +138,7 @@ namespace Robust.Shared.GameObjects
                     LocalRotation = Angle.Zero;
 
                 _noLocalRotation = value;
-                _entMan.DirtyField(Owner, this, nameof(NoLocalRotation));
+                _entMan.Dirty(Owner, this);
             }
         }
 
@@ -170,7 +164,7 @@ namespace Robust.Shared.GameObjects
                 var oldRotation = _localRotation;
                 _localRotation = value;
                 var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
-                _entMan.DirtyField(Owner, this, nameof(LocalRotation), meta);
+                _entMan.Dirty(Owner, this, meta);
                 MatricesDirty = true;
 
                 if (!Initialized)
@@ -356,7 +350,7 @@ namespace Robust.Shared.GameObjects
 
                 _localPosition = value;
                 var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
-                _entMan.DirtyField(Owner, this, nameof(LocalPosition), meta);
+                _entMan.Dirty(Owner, this, meta);
                 MatricesDirty = true;
 
                 if (!Initialized)

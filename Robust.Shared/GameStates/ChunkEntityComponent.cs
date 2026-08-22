@@ -7,7 +7,7 @@ namespace Robust.Shared.GameStates;
 /// <summary>
 /// Marks an entity as server-managed chunk data for a map or grid PVS chunk.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true, fieldDeltas: false)]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true)]
 public sealed partial class ChunkEntityComponent : Component
 {
     [DataField, AutoNetworkedField]

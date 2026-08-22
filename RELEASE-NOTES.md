@@ -39,7 +39,6 @@ END TEMPLATE-->
 
 ### New features
 
-* `AppearanceChangeEvent` now has a `TryGetData` function that checks the type of the data at a given key.
 * Toolshed now supports parsing array and list arguments.
 
 ### Bugfixes
@@ -53,6 +52,43 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 289.0.0
+
+### Breaking changes
+
+* PrototypeIdSerializers and prototype ID validation attributes have been removed in lieu of directly using `ProtoId<T>`.
+
+### New features
+
+* `TextEdit.GetLineCount` is now public. Also the `TextEdit` control now has a `MaxLines` property that limits the ammount of newlines you can place
+* `IRobustRandom` can now make random longs with `NextLong`.
+* `AppearanceChangeEvent` now has a `TryGetData` function that checks the type of the data at a given key.
+* Add SCREEN_UV property to shaders for post-shader usage. It returns the texture's UV in relation to the SCREEN_TEXTURE.
+* Draw state is now reset after every overlay.
+* Allow CompletionHelper entries to be clicked.
+* Partial prototypes have been added that allow specifying prototype entry removals.
+* Automatically generate prototype variants at runtime.
+* PrototypeTypeParser now returns its results sorted.
+* Add API for getting the current and main IClydeMonitors.
+
+### Bugfixes
+
+* Update CompletionHelper entries on text changed rather than key events.
+* Potentially fix steam overlay leaking memory when secondary windows are open.
+* Fix StyleBoxTexture potentially using negative bounds.
+
+### Other
+
+* Render handle shaders and transforms are reset after every overlay call.
+
+### Internal
+
+* Move component interning to ComponentRegistrySerializer.
+* Manually read parent nodes rather than using SerializationManager.
+* Optimise EventBus dispatch with versions and directly using components.
+* Disable analysis of generated code.
 
 
 ## 288.1.0

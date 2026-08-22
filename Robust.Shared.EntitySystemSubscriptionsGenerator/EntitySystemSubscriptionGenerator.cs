@@ -19,15 +19,6 @@ namespace Robust.Shared.EntitySystemSubscriptionsGenerator;
 [Generator(LanguageNames.CSharp)]
 public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
 {
-    private static readonly DiagnosticDescriptor NotPartial = new(
-        Diagnostics.IdNonPartialContainingTypeForGeneratedSubscription,
-        "Containing class must be declared as Partial",
-        "Method is declared in type \"{0}\" which is not Partial",
-        "Usage",
-        DiagnosticSeverity.Error,
-        true
-    );
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var annotatedEntitySystems = Aggregate(
@@ -68,7 +59,7 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
             (productionContext, info) =>
             {
                 var (partialTypeInfo, subscriptions) = info;
-                if (partialTypeInfo.CheckPartialDiagnostic(productionContext, NotPartial))
+                if (!partialTypeInfo.IsValid)
                     return;
 
                 var subscriptionsSyntax = new StringBuilder();
@@ -196,6 +187,7 @@ using JetBrains.Annotations;
 
         if (entityType.OriginalDefinition.ToDisplayString() != EntityTypeName ||
             entityType.TypeArguments is not [INamedTypeSymbol componentType] ||
+            componentType.NullableAnnotation == NullableAnnotation.Annotated ||
             !TypeSymbolHelper.ImplementsInterface(componentType, IComponentTypeName))
             return null;
 
@@ -211,6 +203,7 @@ using JetBrains.Annotations;
             method.Parameters[1].Type is not INamedTypeSymbol componentType ||
             method.Parameters[2].Type is not INamedTypeSymbol eventType ||
             !TypeSymbolHelper.ShittyTypeMatch(entityUidType, EntityUidTypeName) ||
+            componentType.NullableAnnotation == NullableAnnotation.Annotated ||
             !TypeSymbolHelper.ImplementsInterface(componentType, IComponentTypeName))
             return null;
 

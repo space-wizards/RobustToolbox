@@ -48,6 +48,7 @@ internal sealed partial class AudioManager : IAudioInternal
     private float _masterFadeElapsed = MasterFadeDuration;
     private float _masterFadeStartGain = 1f;
     private float _masterFadeTargetGain = 1f;
+    private int _nextClydeHandle;
 
     public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
     public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -301,6 +302,15 @@ internal sealed partial class AudioManager : IAudioInternal
     internal bool IsMainThread()
     {
         return Thread.CurrentThread == _gameThread;
+    }
+
+    private ClydeHandle RegisterBuffer(int buffer)
+    {
+        if (buffer == 0)
+            throw new InvalidOperationException("AL.GenBuffer returned 0 - no current OpenAL context.");
+
+        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
+        return new ClydeHandle(Interlocked.Increment(ref _nextClydeHandle));
     }
 
     private static void RemoveEfx((int sourceHandle, int filterHandle) handles)

@@ -35,15 +35,16 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* SpawnNextToOrDrop methods have been changed to take `EntProtoId?, Entity<TransformComponent?>, Vector2 = default` instead of `string?, EntityUid, TransformComponent? null`. Because of this, some `Entity<T>`s will need to first be explicity converted into `EntityUid`s.
 
 ### New features
 
 * `AppearanceChangeEvent` now has a `TryGetData` function that checks the type of the data at a given key.
+* SpawnNextToOrDrop methods can now offset their spawns by passing in a Vector2. This offset is always relative to the target.
 
 ### Bugfixes
 
-*None yet*
+* SpawnNextToOrDrop no longer runs mapinit on entities in nullspace.
 
 ### Other
 

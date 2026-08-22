@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
 {
@@ -30,9 +32,26 @@ namespace Robust.Shared.Configuration
         HashSet<string> LoadFromFile(string configFile);
 
         /// <summary>
+        /// Sets up the ConfigurationManager and loads a TOML configuration file from a writable directory.
+        /// </summary>
+        /// <param name="provider">The writable directory provider to load from.</param>
+        /// <param name="path">The rooted path to the config file.</param>
+        HashSet<string> LoadFromFile(IWritableDirProvider provider, ResPath path);
+
+        /// <summary>
         ///     Specifies the location where the config file should be saved, without trying to load from it.
         /// </summary>
         void SetSaveFile(string configFile);
+
+        /// <summary>
+        ///     Specifies the virtual location where the config file should be saved, without trying to load from it.
+        /// </summary>
+        void SetSaveFile(IWritableDirProvider provider, ResPath path);
+
+        /// <summary>
+        ///     Specifies the virtual location where fork-specific CVars should be saved, without trying to load from it.
+        /// </summary>
+        void SetForkSaveFile(IWritableDirProvider provider, ResPath path);
 
         /// <summary>
         /// Check the list of CVars to make sure there's no unused CVars set, which might indicate a typo or such.

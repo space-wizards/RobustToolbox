@@ -77,5 +77,10 @@ namespace Robust.Shared.Configuration
         ///     Only the client can change this variable.
         /// </summary>
         CLIENT = 512,
+
+        /// <summary>
+        ///     Non-default values are saved to a fork-specific configuration file.
+        /// </summary>
+        FORK = 1024,
     }
 }

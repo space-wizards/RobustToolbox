@@ -60,6 +60,8 @@ public sealed partial class SpriteSystem
             return;
 
         target.Comp._baseRsi = source.Comp._baseRsi;
+        target.Comp.rsi = source.Comp.rsi;
+        target.Comp.layerDatums = new List<PrototypeLayerData>(source.Comp.layerDatums);
         target.Comp._bounds = source.Comp._bounds;
         target.Comp._visible = source.Comp._visible;
         target.Comp.color = source.Comp.color;
@@ -76,17 +78,26 @@ public sealed partial class SpriteSystem
         target.Comp.NoRotation = source.Comp.NoRotation;
         target.Comp.DirectionOverride = source.Comp.DirectionOverride;
         target.Comp.EnableDirectionOverride = source.Comp.EnableDirectionOverride;
-        target.Comp.Layers = new List<SpriteComponent.Layer>(source.Comp.Layers.Count);
-        foreach (var otherLayer in source.Comp.Layers)
+        if (source.Comp.Layers.Count == 0 && source.Comp.layerDatums.Count != 0)
         {
-            var layer = new SpriteComponent.Layer(otherLayer, target.Comp);
-            layer.Index = target.Comp.Layers.Count;
-            layer.Owner = target!;
-            target.Comp.Layers.Add(layer);
+            LoadPrototypeData(target!);
+            QueueUpdateIsInert(target!);
+        }
+        else
+        {
+            target.Comp.Layers = new List<SpriteComponent.Layer>(source.Comp.Layers.Count);
+            foreach (var otherLayer in source.Comp.Layers)
+            {
+                var layer = new SpriteComponent.Layer(otherLayer, target.Comp);
+                layer.Index = target.Comp.Layers.Count;
+                layer.Owner = target!;
+                target.Comp.Layers.Add(layer);
+            }
+
+            target.Comp.LayerMap = source.Comp.LayerMap.ShallowClone();
         }
 
         target.Comp.IsInert = source.Comp.IsInert;
-        target.Comp.LayerMap = source.Comp.LayerMap.ShallowClone();
         target.Comp.PostShaders = new List<SpriteComponent.PostShaderEntry>(source.Comp.PostShaders.Count);
         foreach (var postShader in source.Comp.PostShaders)
         {

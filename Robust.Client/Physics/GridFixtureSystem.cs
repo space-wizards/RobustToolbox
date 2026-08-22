@@ -10,7 +10,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Physics
 {
-    internal sealed partial class GridFixtureSystem : SharedGridFixtureSystem
+    public sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private IOverlayManager _overlay = default!;
         [Dependency] private SharedTransformSystem _transform = default!;
@@ -138,8 +138,6 @@ namespace Robust.Client.Physics
 
                         return true;
                     }, true);
-
-                worldHandle.SetTransform(Matrix3x2.Identity);
             }
         }
     }

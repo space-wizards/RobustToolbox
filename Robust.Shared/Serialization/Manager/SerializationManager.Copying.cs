@@ -277,7 +277,7 @@ public sealed partial class SerializationManager
         return type.IsPrimitive ||
                type.IsEnum ||
                type == typeof(string) ||
-               _copyByRefRegistrations.ContainsKey(type);
+               _copyByRefRegistrations.Contains(type);
     }
 
     private bool CopyToInternal<TCommon>(

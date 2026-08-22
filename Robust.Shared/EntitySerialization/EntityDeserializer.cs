@@ -697,7 +697,10 @@ public sealed partial class EntityDeserializer :
         _components.Clear();
         CurrentComponent = null;
         if (missingComps is {Count: > 0})
+        {
+            EntMan.DirtyEntity(uid, meta);
             meta.LastComponentRemoved = Timing.CurTick;
+        }
     }
 
     private void GetRootEntities()

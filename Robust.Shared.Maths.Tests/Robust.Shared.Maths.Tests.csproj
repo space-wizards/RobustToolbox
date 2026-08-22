@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Engine.props"/>
 
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,4 +22,6 @@
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets"/>
+  <Import Project="..\MSBuild\Robust.CompNetworkGenerator.targets" />
+  <Import Project="..\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />
 </Project>

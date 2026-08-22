@@ -1,5 +1,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
-  <ItemGroup>
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)analyzers\dotnet\cs\Robust.Analyzers.dll')">
+    <Analyzer Include="$(MSBuildThisFileDirectory)analyzers\dotnet\cs\Robust.Analyzers.dll" />
+  </ItemGroup>
+  <ItemGroup Condition="!Exists('$(MSBuildThisFileDirectory)analyzers\dotnet\cs\Robust.Analyzers.dll')">
     <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Analyzers\Robust.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
   </ItemGroup>
 </Project>

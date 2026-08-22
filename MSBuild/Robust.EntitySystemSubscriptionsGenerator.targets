@@ -1,5 +1,8 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
-  <ItemGroup>
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)analyzers\dotnet\cs\Robust.Shared.EntitySystemSubscriptionsGenerator.dll')">
+    <Analyzer Include="$(MSBuildThisFileDirectory)analyzers\dotnet\cs\Robust.Shared.EntitySystemSubscriptionsGenerator.dll" />
+  </ItemGroup>
+  <ItemGroup Condition="!Exists('$(MSBuildThisFileDirectory)analyzers\dotnet\cs\Robust.Shared.EntitySystemSubscriptionsGenerator.dll')">
     <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Shared.EntitySystemSubscriptionsGenerator\Robust.Shared.EntitySystemSubscriptionsGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
   </ItemGroup>
 </Project>

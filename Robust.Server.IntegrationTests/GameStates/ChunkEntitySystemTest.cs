@@ -261,6 +261,33 @@ public sealed partial class ChunkEntitySystemTest
     }
 
     /// <summary>
+    /// Ensures grid-rooted chunk entities follow map pause state even though they live in nullspace.
+    /// </summary>
+    [Test]
+    public void GridRootedChunkEntityFollowsMapPause()
+    {
+        var sim = Simulation();
+        var entMan = sim.Resolve<IEntityManager>();
+        var maps = entMan.System<SharedMapSystem>();
+        var chunks = entMan.System<ChunkEntitySystem>();
+
+        var map = maps.CreateMap();
+        var grid = maps.CreateGridEntity(map);
+
+        maps.SetPaused(map, true);
+
+        var chunk = chunks.GetOrCreateChunk(grid, Vector2i.Zero);
+
+        Assert.That(entMan.GetComponent<MetaDataComponent>(chunk.Owner).EntityPaused, Is.True);
+
+        maps.SetPaused(map, false);
+
+        Assert.That(entMan.GetComponent<MetaDataComponent>(chunk.Owner).EntityPaused, Is.False);
+
+        entMan.DeleteEntity(map);
+    }
+
+    /// <summary>
     /// Ensures deleting a map deletes any chunk entities rooted on that map.
     /// </summary>
     [Test]

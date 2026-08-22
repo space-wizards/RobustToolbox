@@ -634,6 +634,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Dispose all children, but leave this one intact.
         /// </summary>
+        [Obsolete("Use RemoveAllChildren")]
         public void DisposeAllChildren()
         {
             // Cache because the children modify the dictionary.

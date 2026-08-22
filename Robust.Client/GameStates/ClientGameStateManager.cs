@@ -618,13 +618,8 @@ namespace Robust.Client.GameStates
             if (!PredictionNeedsResetting)
                 return;
 
-            PredictionNeedsResetting = false;
-            var countReset = 0;
-            var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
-            var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
-            RemQueue<IComponent> toRemove = new();
-
-            // Handle predicted entity spawns.
+            // Handle predicted entity spawns before applying state-created entities. This
+            // keeps predicted chunk entities from colliding with authoritative chunk entities.
             var predicted = new ValueList<EntityUid>();
             var predictedQuery = _entities.AllEntityQueryEnumerator<PredictedSpawnComponent>();
 
@@ -638,6 +633,12 @@ namespace Robust.Client.GameStates
             {
                 _entities.DeleteEntity(ent);
             }
+
+            PredictionNeedsResetting = false;
+            var countReset = 0;
+            var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
+            var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
+            RemQueue<IComponent> toRemove = new();
 
             foreach (var entity in system.DirtyEntities)
             {
@@ -1189,8 +1190,13 @@ namespace Robust.Client.GameStates
             // store MetaData & Transform information separately.
             if (data.CurState != null && TryGetComponentChange(data.CurState, _xformCompNetId, out var found))
             {
-                var state = (TransformComponentState)found.State!;
-                return _entities.GetEntity(state.ParentID);
+                switch (found.State)
+                {
+                    case TransformComponentState state:
+                        return _entities.GetEntity(state.ParentID);
+                    case TransformComponentDeltaState delta when delta.IsChanged(SharedTransformSystem.TransformParentIndex):
+                        return _entities.GetEntity(delta.ParentID);
+                }
             }
 
             return _entities.TransformQuery.GetComponent(uid).ParentUid;

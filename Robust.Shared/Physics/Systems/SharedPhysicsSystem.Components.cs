@@ -73,53 +73,56 @@ public partial class SharedPhysicsSystem
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
     {
-        var aspects = EntityManager.GetModifiedAspects(component, args.FromTick);
-
-        if (aspects > 0 && aspects < DeltaAspect.Unclassified)
+        if (args.FromTick > component.CreationTick)
         {
-            var deltaState = new PhysicsComponentDeltaState
+            var aspects = EntityManager.GetModifiedAspects(component, args.FromTick);
+
+            if (aspects > 0 && aspects < DeltaAspect.Unclassified)
             {
-                ChangedFields = aspects,
-            };
+                var deltaState = new PhysicsComponentDeltaState
+                {
+                    ChangedFields = aspects,
+                };
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.CanCollideIndex)) != 0)
-                deltaState.CanCollide = component.CanCollide;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.CanCollideIndex)) != 0)
+                    deltaState.CanCollide = component.CanCollide;
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.StatusIndex)) != 0)
-                deltaState.Status = component.BodyStatus;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.StatusIndex)) != 0)
+                    deltaState.Status = component.BodyStatus;
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.BodyTypeIndex)) != 0)
-                deltaState.BodyType = component.BodyType;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.BodyTypeIndex)) != 0)
+                    deltaState.BodyType = component.BodyType;
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.SleepingAllowedIndex)) != 0)
-                deltaState.SleepingAllowed = component.SleepingAllowed;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.SleepingAllowedIndex)) != 0)
+                    deltaState.SleepingAllowed = component.SleepingAllowed;
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.FixedRotationIndex)) != 0)
-                deltaState.FixedRotation = component.FixedRotation;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.FixedRotationIndex)) != 0)
+                    deltaState.FixedRotation = component.FixedRotation;
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.FrictionIndex)) != 0)
-                deltaState.Friction = component._friction;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.FrictionIndex)) != 0)
+                    deltaState.Friction = component._friction;
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.ForceIndex)) != 0)
-                deltaState.Force = component.Force;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.ForceIndex)) != 0)
+                    deltaState.Force = component.Force;
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.TorqueIndex)) != 0)
-                deltaState.Torque = component.Torque;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.TorqueIndex)) != 0)
+                    deltaState.Torque = component.Torque;
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.LinearDampingIndex)) != 0)
-                deltaState.LinearDamping = component.LinearDamping;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.LinearDampingIndex)) != 0)
+                    deltaState.LinearDamping = component.LinearDamping;
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.AngularDampingIndex)) != 0)
-                deltaState.AngularDamping = component.AngularDamping;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.AngularDampingIndex)) != 0)
+                    deltaState.AngularDamping = component.AngularDamping;
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.AngularVelocityIndex)) != 0)
-                deltaState.AngularVelocity = component.AngularVelocity;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.AngularVelocityIndex)) != 0)
+                    deltaState.AngularVelocity = component.AngularVelocity;
 
-            if ((aspects & (1UL << PhysicsComponentDeltaState.LinearVelocityIndex)) != 0)
-                deltaState.LinearVelocity = component.LinearVelocity;
+                if ((aspects & (1UL << PhysicsComponentDeltaState.LinearVelocityIndex)) != 0)
+                    deltaState.LinearVelocity = component.LinearVelocity;
 
-            args.State = deltaState;
-            return;
+                args.State = deltaState;
+                return;
+            }
         }
 
         args.State = new PhysicsComponentState

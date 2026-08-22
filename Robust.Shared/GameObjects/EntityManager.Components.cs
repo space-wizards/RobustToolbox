@@ -398,6 +398,7 @@ namespace Robust.Shared.GameObjects
             {
                 var curTick = _gameTiming.CurTick;
                 delta.LastUnclassifiedDirty = curTick;
+                delta.LastModifiedFields = new GameTick[reg.NetworkedFields.Length];
                 DebugTools.Assert(
                     delta.LastModifiedFields.Length == reg.NetworkedFields.Length,
                     $"Component {reg.Name} has {delta.LastModifiedFields.Length} modified field slots, expected {reg.NetworkedFields.Length}.");

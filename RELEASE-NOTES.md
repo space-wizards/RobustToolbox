@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* `TextEdit.GetLineCount` is now public. Also the `TextEdit` control now has a `MaxLines` property that limits the ammount of newlines you can place
 * `IRobustRandom` can now make random longs with `NextLong`.
 * `AppearanceChangeEvent` now has a `TryGetData` function that checks the type of the data at a given key.
 

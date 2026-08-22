@@ -77,14 +77,14 @@ namespace Robust.Client.GameObjects
         private SpriteSystem Sys => _sys ??= (entities.Started ? entities.System<SpriteSystem>() : null)!;
         private SpriteTreeSystem TreeSys => _treeSys ??= (entities.Started ? entities.System<SpriteTreeSystem>() : null)!;
 
-        [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
-        internal int drawDepth = DrawDepthTag.Default;
+        [DataField("drawdepth", customTypeSerializer: typeof(ByteConstantSerializer<DrawDepthTag>))]
+        internal byte drawDepth = DrawDepthTag.Default;
 
         /// <summary>
         ///     Z-index for drawing.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public int DrawDepth
+        public byte DrawDepth
         {
             get => drawDepth;
             [Obsolete("Use SpriteSystem.SetDrawDepth() instead.")]

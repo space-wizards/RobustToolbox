@@ -222,7 +222,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float DegreesToRadians(float degrees)
         {
-            const float degToRad = Pi / 180.0f;
+            const float degToRad = MathF.PI / 180.0f;
             return degrees * degToRad;
         }
 
@@ -234,7 +234,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float RadiansToDegrees(float radians)
         {
-            const float radToDeg = 180.0f / Pi;
+            const float radToDeg = 180.0f / MathF.PI;
             return radians * radToDeg;
         }
 

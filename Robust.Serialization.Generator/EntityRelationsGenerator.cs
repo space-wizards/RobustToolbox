@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -25,62 +26,60 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
         var componentInfos = context.SyntaxProvider.ForAttributeWithMetadataName(
             AutoGenerateEntityRelationsAttributeName,
             (syntaxNode, _) => syntaxNode is TypeDeclarationSyntax,
-            (syntaxContext, _) =>
+            Transform
+        );
+
+        context.RegisterImplementationSourceOutput(componentInfos, Generate);
+    }
+
+    /// <summary> Extracts valid EntityRelations fields that needs code generated (with additional info about field/property). </summary>
+    private ComponentInfo Transform(GeneratorAttributeSyntaxContext syntaxContext, CancellationToken _)
+    {
+        var symbol = (INamedTypeSymbol)syntaxContext.TargetSymbol;
+
+        var typeDeclarationSyntax = (TypeDeclarationSyntax)syntaxContext.TargetNode;
+        var partialTypeInfo = PartialTypeInfo.FromSymbol(symbol, typeDeclarationSyntax);
+
+        var autoGenerateRelationshipAttribute = syntaxContext.Attributes[0];
+        if (autoGenerateRelationshipAttribute.ConstructorArguments.Length > 0)
+            AttributeHelper.GetNamedArgumentBool(autoGenerateRelationshipAttribute, "Dirty", false);
+
+        var dirty = false;
+        if (autoGenerateRelationshipAttribute.ConstructorArguments[0].Value is bool dirtyBool)
+            dirty = dirtyBool;
+
+        var shutdownSub = false;
+        if (autoGenerateRelationshipAttribute.ConstructorArguments[1].Value is bool shutdownSubBool)
+            shutdownSub = shutdownSubBool;
+
+        var fieldBuilder = ImmutableArray.CreateBuilder<FieldInfo>();
+        foreach (var member in symbol.GetMembers())
+        {
+            if (!TryGetValidFieldOrProperty(member, out var namedType))
+                continue;
+
+            bool invalid = false,
+                 nullable = false,
+                 dictionaryKey = false,
+                 dictionaryValue = false,
+                 collection = false;
+
+            if (namedType.Name != "EntityRelation")
             {
-                var symbol = (INamedTypeSymbol)syntaxContext.TargetSymbol;
-
-                var typeDeclarationSyntax = (TypeDeclarationSyntax) syntaxContext.TargetNode;
-                var partialTypeInfo = PartialTypeInfo.FromSymbol(
-                    symbol,
-                    typeDeclarationSyntax);
-
-                if (syntaxContext.Attributes[0].ConstructorArguments.Length > 0)
-                    AttributeHelper.GetNamedArgumentBool(syntaxContext.Attributes[0], "Dirty", false);
-
-                var dirty = false;
-                if (syntaxContext.Attributes[0].ConstructorArguments[0].Value is bool dirtyBool)
-                    dirty = dirtyBool;
-
-                var shutdownSub = false;
-                if (syntaxContext.Attributes[0].ConstructorArguments[1].Value is bool shutdownSubBool)
-                    shutdownSub = shutdownSubBool;
-
-                var fieldBuilder = ImmutableArray.CreateBuilder<FieldInfo>();
-                foreach (var member in symbol.GetMembers())
+                switch (namedType)
                 {
-                    if (!AttributeHelper.HasAttribute(member, AutoRelationFieldAttributeName, out var _))
-                        continue;
-
-                    var type = member switch
+                    case { Name: "Nullable", TypeArguments: [{ Name: "EntityRelation" }] }:
+                        nullable = true;
+                        break;
+                    case { Name: "Dictionary", TypeArguments: [{ Name: "EntityRelation" }, { }] }:
+                        dictionaryKey = true;
+                        break;
+                    case { Name: "Dictionary", TypeArguments: [{ }, { Name: "EntityRelation" }] }:
+                        dictionaryValue = true;
+                        break;
+                    default:
                     {
-                        IPropertySymbol property => property.Type,
-                        IFieldSymbol field => field.Type,
-                        _ => null
-                    };
-
-                    if (type is not INamedTypeSymbol namedType)
-                        continue;
-
-                    var invalid = false;
-                    var nullable = false;
-                    var dictionaryKey = false;
-                    var dictionaryValue = false;
-                    var collection = false;
-                    if (namedType.Name != "EntityRelation")
-                    {
-                        if (namedType is { Name: "Nullable", TypeArguments: [{Name: "EntityRelation"}] })
-                        {
-                            nullable = true;
-                        }
-                        else if (namedType is { Name: "Dictionary", TypeArguments: [{Name: "EntityRelation"}, {}]})
-                        {
-                            dictionaryKey = true;
-                        }
-                        else if (namedType is { Name: "Dictionary", TypeArguments: [{}, {Name: "EntityRelation"}]})
-                        {
-                            dictionaryValue = true;
-                        }
-                        else if (namedType.Name == "List" || namedType.Name == "HashSet" && namedType is { TypeArguments: [{ Name: "EntityRelation" }]})
+                        if (namedType.Name == "List" || namedType.Name == "HashSet" && namedType is { TypeArguments: [{ Name: "EntityRelation" }] })
                         {
                             collection = true;
                         }
@@ -88,189 +87,213 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
                         {
                             invalid = true;
                         }
+
+                        break;
                     }
-
-                    // If any relation field has [AutoNetworkedField], automatically mark it to dirty on reference reset.
-                    if (AttributeHelper.HasAttribute(member, AutoNetworkFieldAttributeName, out var _))
-                        dirty = true;
-
-                    fieldBuilder.Add(new FieldInfo(member.Name, nullable, invalid, dictionaryKey, dictionaryValue, collection));
                 }
-
-                return new ComponentInfo(
-                    partialTypeInfo,
-                    EquatableArray<FieldInfo>.FromImmutableArray(fieldBuilder.ToImmutable()),
-                    dirty,
-                    shutdownSub,
-                    !TypeSymbolHelper.ImplementsInterface(symbol, IComponentTypeName));
-            });
-
-        context.RegisterImplementationSourceOutput(componentInfos,
-            static (productionContext, info) =>
-        {
-            if (info.NotComponent)
-                return;
-
-            if (!info.PartialTypeInfo.IsValid)
-                return;
-
-            if (info.Fields.AsImmutableArray().Length == 0)
-                return;
-
-            // Clears a specific EntityRelation from all fields
-            var relationBuilder = new StringBuilder();
-
-            // Silently sets all EntityRelations to null
-            var clearBuilder = new StringBuilder();
-
-            // Properly clears all EntityRelations and fixes them in target entities
-            var shutdownBuilder = new StringBuilder();
-
-            var anyValidField = false;
-            foreach (var field in info.Fields)
-            {
-                if (field.Invalid)
-                    continue;
-
-                if (field.Nullable)
-                {
-                    relationBuilder.AppendLine($"""
-                                if (ent.Comp.{field.Name}.HasValue && ent.Comp.{field.Name}.Value == args.Relation)
-                                    ent.Comp.{field.Name} = null;
-                        """);
-
-                    clearBuilder.AppendLine($"        ent.Comp.{field.Name} = null;");
-
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ref ent.Comp.{field.Name}, false);");
-                }
-                else if (field.DictionaryKey)
-                {
-                    relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Remove(args.Relation);");
-
-                    clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
-
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
-                }
-                else if (field.DictionaryValue)
-                {
-                    relationBuilder.AppendLine($$"""
-                                foreach (var (key, value) in ent.Comp.{{field.Name}})
-                                {
-                                    if (value == args.Relation)
-                                        ent.Comp.{{field.Name}}[key] = EntityRelation.Null;
-                                }
-                        """);
-
-                    clearBuilder.AppendLine($$"""
-                                foreach (var key in ent.Comp.{{field.Name}}.Keys)
-                                {
-                                    ent.Comp.{{field.Name}}[key] = EntityRelation.Null;
-                                }
-                        """);
-
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
-                }
-                else if (field.Collection)
-                {
-                    relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Remove(args.Relation);");
-                    clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
-                }
-                else
-                {
-                    relationBuilder.AppendLine($"""
-                                if (ent.Comp.{field.Name} == args.Relation)
-                                    ent.Comp.{field.Name} = EntityRelation.Null;
-                        """);
-
-                    clearBuilder.AppendLine($"        ent.Comp.{field.Name} = EntityRelation.Null;");
-
-                    shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ref ent.Comp.{field.Name}, false);");
-                }
-
-                anyValidField = true;
             }
 
-            if (!anyValidField)
-                return;
+            // If any relation field has [AutoNetworkedField], automatically mark it to dirty on reference reset.
+            if (AttributeHelper.HasAttribute(member, AutoNetworkFieldAttributeName, out var _))
+                dirty = true;
 
-            if (info.Dirty)
+            fieldBuilder.Add(new FieldInfo(member.Name, nullable, invalid, dictionaryKey, dictionaryValue, collection));
+        }
+
+        return new ComponentInfo(partialTypeInfo,
+            EquatableArray<FieldInfo>.FromImmutableArray(fieldBuilder.ToImmutable()),
+            dirty,
+            shutdownSub,
+            !TypeSymbolHelper.ImplementsInterface(symbol, IComponentTypeName)
+        );
+    }
+
+    private static bool TryGetValidFieldOrProperty(ISymbol member,[NotNullWhen(true)] out INamedTypeSymbol? namedTypeSymbol)
+    {
+        if (AttributeHelper.HasAttribute(member, AutoRelationFieldAttributeName, out var _))
+        {
+            var type = member switch
             {
-                relationBuilder.AppendLine("        Dirty(ent);");
-                clearBuilder.AppendLine("        Dirty(ent);");
-                shutdownBuilder.AppendLine("""
+                IPropertySymbol property => property.Type,
+                IFieldSymbol field => field.Type,
+                _ => null
+            };
+
+            if (type is INamedTypeSymbol namedType)
+            {
+                namedTypeSymbol = namedType;
+                return true;
+            }
+        }
+
+        namedTypeSymbol = null;
+        return false;
+    }
+
+    private static void Generate(SourceProductionContext productionContext, ComponentInfo info)
+    {
+        if (info.NotComponent)
+            return;
+
+        if (!info.PartialTypeInfo.IsValid)
+            return;
+
+        if (info.Fields.AsImmutableArray().Length == 0)
+            return;
+
+        // Clears a specific EntityRelation from all fields
+        var relationBuilder = new StringBuilder();
+
+        // Silently sets all EntityRelations to null
+        var clearBuilder = new StringBuilder();
+
+        // Properly clears all EntityRelations and fixes them in target entities
+        var shutdownBuilder = new StringBuilder();
+
+        var anyValidField = false;
+        foreach (var field in info.Fields)
+        {
+            if (field.Invalid)
+                continue;
+
+            if (field.Nullable)
+            {
+                relationBuilder.AppendLine($"""
+                            if (ent.Comp.{field.Name}.HasValue && ent.Comp.{field.Name}.Value == args.Relation)
+                                ent.Comp.{field.Name} = null;
+                    """);
+
+                clearBuilder.AppendLine($"        ent.Comp.{field.Name} = null;");
+
+                shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ref ent.Comp.{field.Name}, false);");
+            }
+            else if (field.DictionaryKey)
+            {
+                relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Remove(args.Relation);");
+
+                clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
+
+                shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
+            }
+            else if (field.DictionaryValue)
+            {
+                relationBuilder.AppendLine($$"""
+                            foreach (var (key, value) in ent.Comp.{{field.Name}})
+                            {
+                                if (value == args.Relation)
+                                    ent.Comp.{{field.Name}}[key] = EntityRelation.Null;
+                            }
+                    """);
+
+                clearBuilder.AppendLine($$"""
+                            foreach (var key in ent.Comp.{{field.Name}}.Keys)
+                            {
+                                ent.Comp.{{field.Name}}[key] = EntityRelation.Null;
+                            }
+                    """);
+
+                shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
+            }
+            else if (field.Collection)
+            {
+                relationBuilder.AppendLine($"        ent.Comp.{field.Name}.Remove(args.Relation);");
+                clearBuilder.AppendLine($"        ent.Comp.{field.Name}.Clear();");
+                shutdownBuilder.AppendLine($"        entMan.ClearRelations(ent.Owner, ent.Comp.{field.Name}, false);");
+            }
+            else
+            {
+                relationBuilder.AppendLine($"""
+                            if (ent.Comp.{field.Name} == args.Relation)
+                                ent.Comp.{field.Name} = EntityRelation.Null;
+                    """);
+
+                clearBuilder.AppendLine($"        ent.Comp.{field.Name} = EntityRelation.Null;");
+
+                shutdownBuilder.AppendLine($"        entMan.ClearRelation(ent.Owner, ref ent.Comp.{field.Name}, false);");
+            }
+
+            anyValidField = true;
+        }
+
+        if (!anyValidField)
+            return;
+
+        if (info.Dirty)
+        {
+            relationBuilder.AppendLine("        Dirty(ent);");
+            clearBuilder.AppendLine("        Dirty(ent);");
+            shutdownBuilder.AppendLine("""
                         if (entMan.GetEntityQuery<MetaDataComponent>().Comp(ent.Owner).EntityLifeStage < EntityLifeStage.Terminating)
                             entMan.Dirty(ent);
                 """);
+        }
+
+        var shutdownSub = info.ShutdownEvent
+            ? $"        SubscribeLocalEvent<{info.PartialTypeInfo.Name}, ComponentShutdown>(OnRelationShutdown);"
+            : string.Empty;
+
+        var shutdownSubMethod = info.ShutdownEvent
+            ? $$"""
+                private void OnRelationShutdown(Entity<{{info.PartialTypeInfo.Name}}> ent, ref ComponentShutdown args)
+                {
+                    {{info.PartialTypeInfo.Name}}.ClearComponentRelations(ent, EntityManager);
+                }
+            """
+            : string.Empty;
+
+        var result = new StringBuilder();
+
+        result.AppendLine("""
+            // <auto-generated />
+
+            using Robust.Shared.GameObjects;
+
+            """);
+
+        info.PartialTypeInfo.WriteHeader(result);
+
+        result.AppendLine($$"""
+
+            {
+            [RobustAutoGenerated]
+            [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+            public sealed partial class {{info.PartialTypeInfo.Name}}_AutoRelationsSystem : EntitySystem
+            {
+                public override void Initialize()
+                {
+                    base.Initialize();
+            {{shutdownSub}}
+                    SubscribeLocalEvent<{{info.PartialTypeInfo.Name}}, EntityRelationDeleteEvent>(OnRelationDeleted);
+                    SubscribeLocalEvent<{{info.PartialTypeInfo.Name}}, EntityRelationShutdownEvent>(OnRelationsClear);
+                }
+
+                private void OnRelationDeleted(Entity<{{info.PartialTypeInfo.Name}}> ent, ref EntityRelationDeleteEvent args)
+                {
+            {{relationBuilder}}
+                }
+
+                private void OnRelationsClear(Entity<{{info.PartialTypeInfo.Name}}> ent, ref EntityRelationShutdownEvent args)
+                {
+            {{clearBuilder}}
+                }
+
+            {{shutdownSubMethod}}
             }
 
-            var shutdownSub = info.ShutdownEvent
-                ? $"        SubscribeLocalEvent<{info.PartialTypeInfo.Name}, ComponentShutdown>(OnRelationShutdown);"
-                : string.Empty;
-
-            var shutdownSubMethod = info.ShutdownEvent
-                ? $$"""
-                        private void OnRelationShutdown(Entity<{{info.PartialTypeInfo.Name}}> ent, ref ComponentShutdown args)
-                        {
-                            {{info.PartialTypeInfo.Name}}.ClearComponentRelations(ent, EntityManager);
-                        }
-                    """
-                : string.Empty;
-
-            var result = new StringBuilder();
-
-            result.AppendLine("""
-                // <auto-generated />
-
-                using Robust.Shared.GameObjects;
-
-                """);
-
-            info.PartialTypeInfo.WriteHeader(result);
-
-            result.AppendLine($$"""
-
+                /// <summary>
+                /// Auto-generated method that clears all relations in a certain entity.
+                /// This has to be called on component shutdown to keep all relations correct.
+                /// </summary>
+                public static void ClearComponentRelations(Entity<{{info.PartialTypeInfo.Name}}> ent, IEntityManager entMan)
                 {
-                [RobustAutoGenerated]
-                [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-                public sealed partial class {{info.PartialTypeInfo.Name}}_AutoRelationsSystem : EntitySystem
-                {
-                    public override void Initialize()
-                    {
-                        base.Initialize();
-                {{shutdownSub}}
-                        SubscribeLocalEvent<{{info.PartialTypeInfo.Name}}, EntityRelationDeleteEvent>(OnRelationDeleted);
-                        SubscribeLocalEvent<{{info.PartialTypeInfo.Name}}, EntityRelationShutdownEvent>(OnRelationsClear);
-                    }
-
-                    private void OnRelationDeleted(Entity<{{info.PartialTypeInfo.Name}}> ent, ref EntityRelationDeleteEvent args)
-                    {
-                {{relationBuilder}}
-                    }
-
-                    private void OnRelationsClear(Entity<{{info.PartialTypeInfo.Name}}> ent, ref EntityRelationShutdownEvent args)
-                    {
-                {{clearBuilder}}
-                    }
-
-                {{shutdownSubMethod}}
+            {{shutdownBuilder}}
                 }
+            }
+            """);
 
-                    /// <summary>
-                    /// Auto-generated method that clears all relations in a certain entity.
-                    /// This has to be called on component shutdown to keep all relations correct.
-                    /// </summary>
-                    public static void ClearComponentRelations(Entity<{{info.PartialTypeInfo.Name}}> ent, IEntityManager entMan)
-                    {
-                {{shutdownBuilder}}
-                    }
-                }
-                """);
+        info.PartialTypeInfo.WriteFooter(result);
 
-            info.PartialTypeInfo.WriteFooter(result);
-
-            productionContext.AddSource(info.PartialTypeInfo.GetGeneratedFileName(), result.ToString());
-        });
+        productionContext.AddSource(info.PartialTypeInfo.GetGeneratedFileName(), result.ToString());
     }
 
     private record struct ComponentInfo(
@@ -278,7 +301,8 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
         EquatableArray<FieldInfo> Fields,
         bool Dirty,
         bool ShutdownEvent,
-        bool NotComponent);
+        bool NotComponent
+    );
 
     private record struct FieldInfo(
         string Name,
@@ -286,5 +310,6 @@ public sealed class EntityRelationsGenerator : IIncrementalGenerator
         bool Invalid,
         bool DictionaryKey,
         bool DictionaryValue,
-        bool Collection);
+        bool Collection
+    );
 }

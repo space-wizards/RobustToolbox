@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -51,4 +52,16 @@ public static class DataNodeHelpers
     {
         yield return node;
     }
+
+    /// <summary>
+    ///     Converts provided DataNodes to an unordered MappingDataNode dictionary.
+    /// </summary>
+    public static MappingDataNode ToMappingDataNode(this IEnumerable<KeyValuePair<string, DataNode>> entries)
+        => new(entries.ToDictionary());
+
+    /// <summary>
+    ///     Converts provided DataNodes to an ordered SequenceDataNode list.
+    /// </summary>
+    public static SequenceDataNode ToSequenceDataNode(this IEnumerable<DataNode> entries)
+        => new(entries.ToList());
 }

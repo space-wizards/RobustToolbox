@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Toolshed now supports parsing array and list arguments.
+* Toolshed commands can now use CommandDescriptionAttribute and CommandHelpAttribute to define default description and help strings. Localized strings will still take priority, and if neither is defined, the raw localization string is returned, same as before.
 
 ### Bugfixes
 

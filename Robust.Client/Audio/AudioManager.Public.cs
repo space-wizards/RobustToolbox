@@ -330,7 +330,7 @@ internal partial class AudioManager
     {
         if (!_audioSampleBuffers.TryGetValue(stream.BufferId, out var sample))
         {
-            OpenALSawmill.Warning($"Audio stream '{stream.Name}' has no backing buffer, skipping.");
+            OpenALSawmill.Error($"Audio stream '{stream.Name}' has no backing buffer, skipping.");
             return null;
         }
 

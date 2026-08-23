@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -59,7 +59,8 @@ public sealed class EntityRelationsAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeNamedType(SymbolAnalysisContext context)
     {
-        var symbol = (INamedTypeSymbol) context.Symbol;
+        if (context.Symbol is not INamedTypeSymbol symbol)
+            return;
 
         if (!AttributeHelper.HasAttribute(symbol, EntityRelationsGenerator.AutoGenerateEntityRelationsAttributeName))
             return;
@@ -71,16 +72,19 @@ public sealed class EntityRelationsAnalyzer : DiagnosticAnalyzer
         if (!TypeSymbolHelper.ImplementsInterface(symbol, EntityRelationsGenerator.IComponentTypeName))
         {
             context.ReportDiagnostic(
-                Diagnostic.Create(NotComponentDiagnostic, location, symbol.Name));
+                Diagnostic.Create(NotComponentDiagnostic, location, symbol.Name)
+            );
         }
 
         // Check if it has any fields with [AutoRelationField]
         var hasFields = false;
         foreach (var member in symbol.GetMembers())
         {
-            if ((member is not IFieldSymbol && member is not IPropertySymbol) ||
-                !AttributeHelper.HasAttribute(member, EntityRelationsGenerator.AutoRelationFieldAttributeName))
+            if (member is not IFieldSymbol and not IPropertySymbol
+                || !AttributeHelper.HasAttribute(member, EntityRelationsGenerator.AutoRelationFieldAttributeName))
+            {
                 continue;
+            }
 
             hasFields = true;
             break;
@@ -140,6 +144,7 @@ public sealed class EntityRelationsAnalyzer : DiagnosticAnalyzer
         }
 
         context.ReportDiagnostic(
-            Diagnostic.Create(WrongTypeAttributeDiagnostic, symbol.Locations[0], symbol.Name));
+            Diagnostic.Create(WrongTypeAttributeDiagnostic, symbol.Locations[0], symbol.Name)
+        );
     }
 }

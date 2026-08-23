@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using Robust.Shared.IoC;
 
 namespace Robust.Shared.GameObjects;
@@ -9,14 +9,16 @@ namespace Robust.Shared.GameObjects;
 /// </summary>
 public sealed partial class EntityRelationsSystem : EntitySystem
 {
-    [Dependency] private EntityQuery<EntityRelationsComponent> _relationsQuery = default!;
+    [Dependency] private EntityQuery<EntityRelationsComponent> _relationsQuery;
 
     /// <summary>
     /// Sets whether the component should be removed when it's empty or not.
     /// </summary>
     /// <param name="ent">The target entity with relations.</param>
-    /// <param name="value">The value to set. If true,
-    /// the component will be removed when this entity isn't related to anything.</param>
+    /// <param name="value">
+    /// The value to set. If true, the component will be removed
+    /// when this entity isn't related to anything.
+    /// </param>
     [PublicAPI]
     public void SetRemoveOnEmpty(Entity<EntityRelationsComponent?> ent, bool value)
     {

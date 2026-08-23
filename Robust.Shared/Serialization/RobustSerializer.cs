@@ -110,6 +110,7 @@ namespace Robust.Shared.Serialization
                     MappedStringSerializer.TypeSerializer,
                     new NetMathSerializer(),
                     new NetBitArraySerializer(),
+                    new NetComponentDeltaStateSerializer(),
                     new NetFormattedStringSerializer(),
                     new NetUnsafeFloatSerializer(),
                 }

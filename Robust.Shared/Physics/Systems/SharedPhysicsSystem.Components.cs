@@ -73,42 +73,54 @@ public partial class SharedPhysicsSystem
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)
     {
-        if (component.LastUnclassifiedDirty <= args.FromTick)
+        if (args.FromTick > component.CreationTick)
         {
-            var slowPath = false;
+            var aspects = EntityManager.GetModifiedAspects(component, args.FromTick);
 
-            for (var i = 0; i < _angularVelocityIndex; i++)
+            if (aspects > 0 && aspects < DeltaAspect.Unclassified)
             {
-                var field = component.LastModifiedFields[i];
-
-                if (field <= args.FromTick)
-                    continue;
-
-                slowPath = true;
-                break;
-            }
-
-            // We can do a smaller delta with no list index overhead.
-            if (!slowPath)
-            {
-                var angularDirty = component.LastModifiedFields[_angularVelocityIndex] > args.FromTick;
-
-                if (angularDirty)
+                var deltaState = new PhysicsComponentDeltaState
                 {
-                    args.State = new PhysicsVelocityDeltaState()
-                    {
-                        AngularVelocity = component.AngularVelocity,
-                        LinearVelocity = component.LinearVelocity,
-                    };
-                }
-                else
-                {
-                    args.State = new PhysicsLinearVelocityDeltaState()
-                    {
-                        LinearVelocity = component.LinearVelocity,
-                    };
-                }
+                    ChangedFields = aspects,
+                };
 
+                if ((aspects & (1UL << PhysicsComponentDeltaState.CanCollideIndex)) != 0)
+                    deltaState.CanCollide = component.CanCollide;
+
+                if ((aspects & (1UL << PhysicsComponentDeltaState.StatusIndex)) != 0)
+                    deltaState.Status = component.BodyStatus;
+
+                if ((aspects & (1UL << PhysicsComponentDeltaState.BodyTypeIndex)) != 0)
+                    deltaState.BodyType = component.BodyType;
+
+                if ((aspects & (1UL << PhysicsComponentDeltaState.SleepingAllowedIndex)) != 0)
+                    deltaState.SleepingAllowed = component.SleepingAllowed;
+
+                if ((aspects & (1UL << PhysicsComponentDeltaState.FixedRotationIndex)) != 0)
+                    deltaState.FixedRotation = component.FixedRotation;
+
+                if ((aspects & (1UL << PhysicsComponentDeltaState.FrictionIndex)) != 0)
+                    deltaState.Friction = component._friction;
+
+                if ((aspects & (1UL << PhysicsComponentDeltaState.ForceIndex)) != 0)
+                    deltaState.Force = component.Force;
+
+                if ((aspects & (1UL << PhysicsComponentDeltaState.TorqueIndex)) != 0)
+                    deltaState.Torque = component.Torque;
+
+                if ((aspects & (1UL << PhysicsComponentDeltaState.LinearDampingIndex)) != 0)
+                    deltaState.LinearDamping = component.LinearDamping;
+
+                if ((aspects & (1UL << PhysicsComponentDeltaState.AngularDampingIndex)) != 0)
+                    deltaState.AngularDamping = component.AngularDamping;
+
+                if ((aspects & (1UL << PhysicsComponentDeltaState.AngularVelocityIndex)) != 0)
+                    deltaState.AngularVelocity = component.AngularVelocity;
+
+                if ((aspects & (1UL << PhysicsComponentDeltaState.LinearVelocityIndex)) != 0)
+                    deltaState.LinearVelocity = component.LinearVelocity;
+
+                args.State = deltaState;
                 return;
             }
         }
@@ -139,14 +151,45 @@ public partial class SharedPhysicsSystem
         // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
         _fixturesQuery.TryComp(uid, out var manager);
 
-        if (args.Current is PhysicsLinearVelocityDeltaState linearState)
+        if (args.Current is PhysicsComponentDeltaState deltaState)
         {
-            SetLinearVelocity(uid, linearState.LinearVelocity, dirty: false, body: component, manager: manager);
-        }
-        else if (args.Current is PhysicsVelocityDeltaState velocityState)
-        {
-            SetLinearVelocity(uid, velocityState.LinearVelocity, dirty: false, body: component, manager: manager);
-            SetAngularVelocity(uid, velocityState.AngularVelocity, dirty: false, body: component, manager: manager);
+            var changed = deltaState.ChangedFields;
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.SleepingAllowedIndex)) != 0)
+                SetSleepingAllowed(uid, component, deltaState.SleepingAllowed, dirty: false);
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.FixedRotationIndex)) != 0)
+                SetFixedRotation(uid, deltaState.FixedRotation, body: component, dirty: false);
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.CanCollideIndex)) != 0)
+                SetCanCollide(uid, deltaState.CanCollide, body: component, dirty: false);
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.StatusIndex)) != 0)
+                SetBodyStatus(uid, component, deltaState.Status, dirty: false);
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.LinearVelocityIndex)) != 0)
+                SetLinearVelocity(uid, deltaState.LinearVelocity, dirty: false, body: component, manager: manager);
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.AngularVelocityIndex)) != 0)
+                SetAngularVelocity(uid, deltaState.AngularVelocity, dirty: false, body: component, manager: manager);
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.BodyTypeIndex)) != 0)
+                SetBodyType(uid, deltaState.BodyType, manager, component);
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.FrictionIndex)) != 0)
+                SetFriction(uid, component, deltaState.Friction, dirty: false);
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.LinearDampingIndex)) != 0)
+                SetLinearDamping(uid, component, deltaState.LinearDamping, dirty: false);
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.AngularDampingIndex)) != 0)
+                SetAngularDamping(uid, component, deltaState.AngularDamping, dirty: false);
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.ForceIndex)) != 0)
+                component.Force = deltaState.Force;
+
+            if ((changed & (1UL << PhysicsComponentDeltaState.TorqueIndex)) != 0)
+                component.Torque = deltaState.Torque;
         }
         else if (args.Current is PhysicsComponentState newState)
         {

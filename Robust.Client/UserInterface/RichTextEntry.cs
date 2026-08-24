@@ -189,7 +189,7 @@ namespace Robust.Client.UserInterface
             Width = wordWrap.FinalizeText(out breakLine);
             CheckLineBreak(ref this, breakLine);
 
-            CalculateLineWidths(ref this, tagManager, defaultFont, uiScale);
+            CalculateLineWidths(ref this, tagManager, context, defaultFont, uiScale);
 
             return this;
 
@@ -237,14 +237,12 @@ namespace Robust.Client.UserInterface
         private void CalculateLineWidths(
             ref RichTextEntry entry,
             MarkupTagManager tagManager,
+            MarkupDrawingContext context,
             Font defaultFont,
             float uiScale)
         {
             entry.LineWidths.Clear();
             entry.LineWidths.Add(0);
-            var context = new MarkupDrawingContext();
-            context.Color.Push(entry._defaultColor);
-            context.Font.Push(defaultFont);
 
             var globalBreakCounter = 0;
             var lineBreakIndex = 0;

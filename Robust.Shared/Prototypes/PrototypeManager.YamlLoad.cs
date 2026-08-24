@@ -84,11 +84,6 @@ public partial class PrototypeManager
     private const string PartialClearTag = "!Clear";
 
     /// <summary>
-    /// Tag used to replace a node at an index on a sequence, instead of adding to it.
-    /// </summary>
-    private const string PartialReplaceIndexTag = "!ReplaceIndex:";
-
-    /// <summary>
     /// Tag used to combine a node at an index on a sequence, instead of adding to it.
     /// </summary>
     private const string PartialCombineIndexTag = "!CombineIndex:";
@@ -778,16 +773,8 @@ public partial class PrototypeManager
             LogVerbose($"Sequence processing index {i}");
             var dataNode = data[i];
 
-            // - !ReplaceIndex:0 "a"
-            // - !ReplaceIndex:0 "a": 1
-            if (StartsWithTagOrMappingKeyTag(dataNode, PartialReplaceIndexTag, out var actualTag))
-            {
-                SequenceReplaceIndex(existing, dataNode, actualTag, i);
-                continue;
-            }
-
             // - !CombineIndex:0 "a": 1
-            if (StartsWithTagOrMappingKeyTag(dataNode, PartialCombineIndexTag, out actualTag))
+            if (StartsWithTagOrMappingKeyTag(dataNode, PartialCombineIndexTag, out var actualTag))
             {
                 SequenceCombineIndex(existing, dataNode, actualTag, i);
                 continue;
@@ -876,13 +863,6 @@ public partial class PrototypeManager
                 existing.Add(dataNode);
             }
         }
-    }
-
-    private void SequenceReplaceIndex(SequenceDataNode existing, DataNode dataNode, ReadOnlySpan<char> tag, int i)
-    {
-        var indexStr = tag[PartialReplaceIndexTag.Length..];
-        var index = ProcessPartialSeqNodeIndex(existing, indexStr, dataNode);
-        LogVerbose($"Sequence index {i} found {PartialReplaceIndexTag}, replaced index {index}");
     }
 
     private void SequenceCombineIndex(SequenceDataNode existing, DataNode dataNode, ReadOnlySpan<char> tag, int i)

@@ -7,6 +7,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using static Robust.Shared.Containers.ContainerManagerComponent;
@@ -19,6 +20,7 @@ public sealed partial class ContainerSystem : SharedContainerSystem
     [Dependency] private IDynamicTypeFactoryInternal _dynFactory = default!;
     [Dependency] private PointLightSystem _lightSys = default!;
     [Dependency] private SpriteSystem _sprite = default!;
+    [Dependency] private IReflectionManager _reflection = default!;
 
     [Dependency] private EntityQuery<PointLightComponent> _pointLightQuery = default!;
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
@@ -113,12 +115,7 @@ public sealed partial class ContainerSystem : SharedContainerSystem
         {
             if (!component.Containers.TryGetValue(id, out var container))
             {
-                var type = data.ContainerType switch
-                {
-                    nameof(Container) => typeof(Container),
-                    nameof(ContainerSlot) => typeof(ContainerSlot),
-                    _ => null,
-                };
+                var type = _reflection.YamlTypeTagLookup(typeof(BaseContainer), data.ContainerType);
                 container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type!, inject: false);
                 container.Init(this, id, (uid, component));
                 component.Containers.Add(id, container);

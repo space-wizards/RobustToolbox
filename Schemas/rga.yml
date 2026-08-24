@@ -6,7 +6,7 @@ attribution:
   files: list(str())
   license: license()
   copyright: str()
-  source: url()
+  source: list(url())
 
 # Example
 # - files: ["deprecated.png"]
@@ -18,3 +18,9 @@ attribution:
 #   license: "CC-BY-NC-SA-3.0"
 #   copyright: "by WALPVRGIS for Goonstation, taken at commit 236551b95a5b24917c72f3069223026b2dc4e690 from floors.dmi"
 #   source: "https://github.com/goonstation/goonstation"
+#
+# - files: ["place_wires_1.ogg", "place_wires_2.ogg"]
+#   license: "CC-BY-4.0"
+#   copyright: "Foley by Clearwavsound and SiriusBizdness on freesound.org. Mixed by iaada (GitHub)."
+#   source: ["https://freesound.org/people/Clearwavsound/sounds/541035/",
+#           "https://freesound.org/people/SiriusBizdness/sounds/565193/"]

@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using Robust.Shared.ColorNaming;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
@@ -11,8 +12,10 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations;
 
 [TypeSerializer]
-public sealed class ColorSerializer : ITypeSerializer<Color, ValueDataNode>, ITypeCopyCreator<Color>
+public sealed partial class ColorSerializer : ITypeSerializer<Color, ValueDataNode>, ITypeCopyCreator<Color>
 {
+    [Dependency] private IPaletteManager _paletteMan = default!;
+
     public Color Read(
         ISerializationManager serializationManager,
         ValueDataNode node,
@@ -21,11 +24,13 @@ public sealed class ColorSerializer : ITypeSerializer<Color, ValueDataNode>, ITy
         ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<Color>? instanceProvider = null)
     {
-        var deserializedColor = Color.TryFromName(node.Value, out var color)
-            ? color
-            : Color.FromHex(node.Value);
+        if (Color.TryFromName(node.Value, out var color))
+            return color;
 
-        return deserializedColor;
+        if (_paletteMan.TryGetQualifiedColor(node.Value, out var qualifiedColor))
+            return qualifiedColor.Value;
+
+        return Color.FromHex(node.Value);
     }
 
     public ValidationNode Validate(
@@ -34,7 +39,7 @@ public sealed class ColorSerializer : ITypeSerializer<Color, ValueDataNode>, ITy
         IDependencyCollection dependencies,
         ISerializationContext? context = null)
     {
-        return Color.TryFromName(node.Value, out _) || Color.TryFromHex(node.Value, out _)
+        return Color.TryFromName(node.Value, out _) || _paletteMan.TryGetQualifiedColor(node.Value, out _) || Color.TryFromHex(node.Value, out _)
             ? new ValidatedValueNode(node)
             : new ErrorNode(node, "Failed parsing Color.");
     }

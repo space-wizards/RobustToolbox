@@ -31,6 +31,7 @@ using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
+using Robust.Shared.ColorNaming;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
@@ -75,6 +76,7 @@ namespace Robust.Client
             deps.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             deps.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
             deps.Register<ClydeTileDefinitionManager, ClydeTileDefinitionManager>();
+            deps.Register<IPaletteManager, PaletteManager>();
             deps.Register<GameController, GameController>();
             deps.Register<IGameController, GameController>();
             deps.Register<IGameControllerInternal, GameController>();

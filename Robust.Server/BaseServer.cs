@@ -28,7 +28,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Transfer;
 using Robust.Shared.Player;
@@ -45,6 +44,7 @@ using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
+using Robust.Shared.ColorNaming;
 
 namespace Robust.Server
 {
@@ -98,6 +98,7 @@ namespace Robust.Server
         [Dependency] private IParallelManagerInternal _parallelMgr = default!;
         [Dependency] private ProfManager _prof = default!;
         [Dependency] private IPrototypeManagerInternal _prototype = default!;
+        [Dependency] private IPaletteManager _palette = default!;
         [Dependency] private IPlacementManager _placement = default!;
         [Dependency] private IServerViewVariablesInternal _viewVariables = default!;
         [Dependency] private ISerializationManager _serialization = default!;
@@ -367,6 +368,7 @@ namespace Robust.Server
             _playerManager.Initialize(MaxPlayers);
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
             _placement.Initialize();
+            _palette.Initialize();
             _viewVariables.Initialize();
 
             // Call Init in game assemblies.

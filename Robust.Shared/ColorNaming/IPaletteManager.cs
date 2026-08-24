@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.ColorNaming;

@@ -429,7 +429,7 @@ public interface IPrototypeManager
     /// <param name="path">The directory containing the yaml files that need validating.</param>
     /// <param name="prototypes">The prototypes ids that were present in the directory.</param>
     /// <param name="partialNoOriginalError">
-    /// Whether a partial existing without an original to modify is an error ot not.
+    /// Whether a partial existing without an original to modify is an error or not.
     /// !PartialOnly prototypes will not error, even if this is set to true.
     /// </param>
     /// <returns>A dictionary containing sets of errors for each file that failed validation.</returns>

@@ -474,7 +474,7 @@ public partial class PrototypeManager
         {
             if (parents != null)
                 inheritance.Add(id, parents);
-            else if (!partial) // If this is partial we don't want to mess up the inheritance graph
+            else if (!partial || existing == null) // If this is partial we don't want to mess up the inheritance graph
                 inheritance.Add(id);
         }
 

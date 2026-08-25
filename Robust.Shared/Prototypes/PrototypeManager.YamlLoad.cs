@@ -412,7 +412,7 @@ public partial class PrototypeManager
         Dictionary<Type, HashSet<string>>? changed,
         bool partial)
     {
-        var (kind, id, parents, data, partialOnly, _) = mapping;
+        var (kind, id, _, _, _, _) = mapping;
 
         var kindData = _kinds[kind];
 
@@ -423,6 +423,17 @@ public partial class PrototypeManager
             throw new PrototypeLoadException($"Duplicate ID: '{id}' for kind '{kind}'");
         }
 
+        MergeMappingExisting(mapping, changed, partial, kindData, existing);
+    }
+
+    private MappingDataNode MergeMappingExisting(
+        ExtractedMappingData mapping,
+        Dictionary<Type, HashSet<string>>? changed,
+        bool partial,
+        KindData kindData,
+        MappingDataNode? existing)
+    {
+        var (kind, id, parents, data, partialOnly, _) = mapping;
         if (existing != null && partial)
         {
             if (kindData.PartialOriginals.TryGetValue(id, out var original))
@@ -463,7 +474,7 @@ public partial class PrototypeManager
         }
         else if (partialOnly)
         {
-            return;
+            return existing ?? data;
         }
         else
         {
@@ -479,10 +490,11 @@ public partial class PrototypeManager
         }
 
         if (changed == null)
-            return;
+            return existing ?? data;
 
         var set = changed.GetOrNew(kind);
         set.Add(id);
+        return existing ?? data;
     }
 
     public void LoadFromStream(

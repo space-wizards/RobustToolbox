@@ -438,17 +438,23 @@ public partial class PrototypeManager
         {
             if (kindData.PartialOriginals.TryGetValue(id, out var original))
             {
-                if (changed == null ||
-                    !changed.TryGetValue(kind, out var kindChanged) ||
-                    !kindChanged.Contains(id))
+                if (changed != null &&
+                    kindData.Partials.TryGetValue(id, out var partialsToProcess))
                 {
-                    existing = original;
+                    foreach (var partialData in partialsToProcess)
+                    {
+                        existing = MergeMappingExisting(partialData, null, true, kindData, original);
+                    }
                 }
             }
             else
             {
                 kindData.PartialOriginals[id] = existing.Copy();
             }
+
+            var partials = kindData.Partials.GetOrNew(id);
+            if (!partials.Contains(mapping))
+                partials.Add(mapping);
 
             LogVerbose($"Combining {kind.Name} {id} with partial");
 

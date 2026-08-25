@@ -1191,6 +1191,13 @@ namespace Robust.Shared.Prototypes
             public readonly Dictionary<string, MappingDataNode> PartialOriginals = new();
 
             /// <summary>
+            /// The original mapping before it was modified by a partial prototype.
+            /// This will not have an element for a given ID if there are no partial prototypes
+            /// affecting that ID.
+            /// </summary>
+            public readonly Dictionary<string, List<ExtractedMappingData>> Partials = new();
+
+            /// <summary>
             /// The unfrozen instance of <see cref="Variants"/>.
             /// This is only populated if the kind has prototype variants.
             /// </summary>

@@ -447,7 +447,7 @@ public partial class PrototypeManager
             }
             else
             {
-                kindData.PartialOriginals[id] = existing;
+                kindData.PartialOriginals[id] = existing.Copy();
             }
 
             LogVerbose($"Combining {kind.Name} {id} with partial");

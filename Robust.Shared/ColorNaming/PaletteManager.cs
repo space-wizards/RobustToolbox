@@ -14,14 +14,14 @@ public sealed partial class PaletteManager : IPaletteManager
     [Dependency] private IPrototypeManager _protoMan = default!;
     [Dependency] private IRobustRandom _random = default!;
 
-    private FrozenDictionary<string, List<Color>> _colorsByPalette;
+    private FrozenDictionary<ProtoId<PalettePrototype>, List<Color>> _colorsByPalette;
     private FrozenDictionary<string, Color> _colorsByQualifiedName;
 
     private bool _initialized;
 
     public PaletteManager()
     {
-        _colorsByPalette = new Dictionary<string, List<Color>>().ToFrozenDictionary();
+        _colorsByPalette = new Dictionary<ProtoId<PalettePrototype>, List<Color>>().ToFrozenDictionary();
         _colorsByQualifiedName = new Dictionary<string, Color>().ToFrozenDictionary();
     }
 
@@ -119,7 +119,7 @@ public sealed partial class PaletteManager : IPaletteManager
     private void ReloadPalettes()
     {
         var count = _protoMan.Count<PalettePrototype>();
-        Dictionary<string, List<Color>> colorsByPalette = new(count);
+        Dictionary<ProtoId<PalettePrototype>, List<Color>> colorsByPalette = new(count);
         Dictionary<string, Color> colorsByQualifiedName = new(count);
 
         foreach (var palette in _protoMan.EnumeratePrototypes<PalettePrototype>())

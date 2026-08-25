@@ -350,6 +350,7 @@ namespace Robust.Server
 
             _loc.Initialize();
             _loc.AddLoadedToStringSerializer(_stringSerializer);
+            _palette.Initialize();
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
@@ -368,7 +369,6 @@ namespace Robust.Server
             _playerManager.Initialize(MaxPlayers);
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
             _placement.Initialize();
-            _palette.Initialize();
             _viewVariables.Initialize();
 
             // Call Init in game assemblies.

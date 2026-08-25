@@ -965,8 +965,8 @@ public partial class PrototypeManager
     private void LogVerbose([InterpolatedStringHandlerArgument] ref DefaultInterpolatedStringHandler handler)
     {
         // Check if it's enabled first so we don't allocate for fun
-        // if (Sawmill.IsLogLevelEnabled(LogLevel.Verbose))
-            Sawmill.Info(handler.ToStringAndClear());
+        if (Sawmill.IsLogLevelEnabled(LogLevel.Verbose))
+            Sawmill.Verbose(handler.ToStringAndClear());
     }
 
     private string GetValueNodeValueToLog(DataNode node)

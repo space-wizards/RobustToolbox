@@ -835,7 +835,7 @@ public partial class PrototypeManager
                 var found = false;
                 for (var j = 0; j < existing.Count; j++)
                 {
-                    if (!existing.TryGetValue(i, out var existingNode) ||
+                    if (!existing.TryGetValue(j, out var existingNode) ||
                         existingNode is not MappingDataNode existingMapping)
                     {
                         continue;

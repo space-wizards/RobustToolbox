@@ -86,7 +86,7 @@ public partial class PrototypeManager
             }
 
             var partial = IsFilePartial(resourcePath, out var index);
-            var partialResults = new List<ExtractedMappingData>(0);
+            var partialResults = new List<ExtractedMappingData>();
             foreach (var (type, mapping) in extractedNodes)
             {
                 if (partial && ExtractMapping(mapping) is { } extracted)

@@ -189,7 +189,7 @@ public partial class PrototypeManager
             {
                 try
                 {
-                    MergeMapping(mapping, overwrite, changed, false);
+                    MergeMapping(mapping, overwrite, changed, false, file);
                 }
                 catch (Exception e)
                 {
@@ -203,13 +203,13 @@ public partial class PrototypeManager
             if (array == null)
                 continue;
 
-            foreach (var (file, result) in array)
+            foreach (var (file, result) in array.OrderBy(f => f.File.CanonPath))
             {
                 foreach (var mapping in result)
                 {
                     try
                     {
-                        MergeMapping(mapping, overwrite, changed, true);
+                        MergeMapping(mapping, overwrite, changed, true, file);
                     }
                     catch (Exception e)
                     {
@@ -279,7 +279,7 @@ public partial class PrototypeManager
                         if (ignored)
                             AbstractPrototype(extracted.Data);
 
-                        MergeMapping(extracted, overwrite, changed, partial);
+                        MergeMapping(extracted, overwrite, changed, partial, file);
 
                         // If the prototype has variants, we need to add each of these to the extracted list as well
                         if (extracted.VariantData is not null)
@@ -292,7 +292,7 @@ public partial class PrototypeManager
                                 if (ignored)
                                     AbstractPrototype(variantExtracted.Data);
 
-                                MergeMapping(variantExtracted, overwrite, changed, partial);
+                                MergeMapping(variantExtracted, overwrite, changed, partial, file);
                             }
                         }
                     }
@@ -410,7 +410,8 @@ public partial class PrototypeManager
         ExtractedMappingData mapping,
         bool overwrite,
         Dictionary<Type, HashSet<string>>? changed,
-        bool partial)
+        bool partial,
+        ResPath? file)
     {
         var (kind, id, _, _, _, _) = mapping;
 
@@ -423,7 +424,7 @@ public partial class PrototypeManager
             throw new PrototypeLoadException($"Duplicate ID: '{id}' for kind '{kind}'");
         }
 
-        MergeMappingExisting(mapping, changed, partial, kindData, existing);
+        MergeMappingExisting(mapping, changed, partial, kindData, existing, file);
     }
 
     private MappingDataNode MergeMappingExisting(
@@ -431,19 +432,32 @@ public partial class PrototypeManager
         Dictionary<Type, HashSet<string>>? changed,
         bool partial,
         KindData kindData,
-        MappingDataNode? existing)
+        MappingDataNode? existing,
+        ResPath? file)
     {
         var (kind, id, parents, data, partialOnly, _) = mapping;
+        int? existingPartialDataIndex = null;
         if (existing != null && partial)
         {
             if (kindData.PartialOriginals.TryGetValue(id, out var original))
             {
+                // AKA: Are we yaml hot-reloading
+                // If so, reprocess all partials in order
                 if (changed != null &&
                     kindData.Partials.TryGetValue(id, out var partialsToProcess))
                 {
-                    foreach (var partialData in partialsToProcess)
+                    existing = original;
+
+                    for (var i = 0; i < partialsToProcess.Count; i++)
                     {
-                        existing = MergeMappingExisting(partialData, null, true, kindData, original);
+                        var partialData = partialsToProcess[i];
+                        if (partialData.File == file)
+                        {
+                            existingPartialDataIndex = i;
+                            continue;
+                        }
+
+                        existing = MergeMappingExisting(partialData.Data, null, true, kindData, original, file);
                     }
                 }
             }
@@ -453,8 +467,10 @@ public partial class PrototypeManager
             }
 
             var partials = kindData.Partials.GetOrNew(id);
-            if (!partials.Contains(mapping))
-                partials.Add(mapping);
+            if (existingPartialDataIndex == null)
+                partials.Add((mapping, file));
+            else
+                partials[existingPartialDataIndex.Value] = (mapping, file);
 
             LogVerbose($"Combining {kind.Name} {id} with partial");
 
@@ -525,7 +541,7 @@ public partial class PrototypeManager
                     if (extracted == null)
                         continue;
 
-                    MergeMapping(extracted, overwrite, changed, partial);
+                    MergeMapping(extracted, overwrite, changed, partial, null);
 
                     // If the prototype has variants, we need to add each of these to the extracted list as well
                     if (extracted.VariantData is null)
@@ -536,7 +552,7 @@ public partial class PrototypeManager
                         if (variantExtracted is null)
                             continue;
 
-                        MergeMapping(variantExtracted, overwrite, changed, partial);
+                        MergeMapping(variantExtracted, overwrite, changed, partial, null);
                     }
                 }
 

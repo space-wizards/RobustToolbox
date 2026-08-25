@@ -150,7 +150,7 @@ public partial class PrototypeManager
 
                     try
                     {
-                        original.Mapping = MergeMappingExisting(mapping, null, true, _kinds[mapping.Kind], original.Mapping);
+                        original.Mapping = MergeMappingExisting(mapping, null, true, _kinds[mapping.Kind], original.Mapping, file);
 
                         // Re-remove "type" from merged partials
                         original.Mapping.Remove("type");

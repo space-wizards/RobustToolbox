@@ -1195,7 +1195,7 @@ namespace Robust.Shared.Prototypes
             /// This will not have an element for a given ID if there are no partial prototypes
             /// affecting that ID.
             /// </summary>
-            public readonly Dictionary<string, List<ExtractedMappingData>> Partials = new();
+            public readonly Dictionary<string, List<(ExtractedMappingData Data, ResPath? File)>> Partials = new();
 
             /// <summary>
             /// The unfrozen instance of <see cref="Variants"/>.

@@ -407,7 +407,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
                  mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
-                 sParentId = sEntManager.SpawnEntity(null, mapPos);
+                 sParentId = sEntManager.Spawn(null, mapPos);
                  sMetadataSys.SetEntityName(sParentId, "Container");
                  sContainerSys.EnsureContainer<Container>(sParentId, "dummy");
 

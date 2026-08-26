@@ -17,8 +17,8 @@ public sealed partial class EntityRelationsComponent : Component
     /// A list of currently active entity relations.
     /// </summary>
     /// <remarks>
-    /// This type is a list since the entity may be related
-    /// by 2 different components on the same owner, and to handle that safely
+    /// Not HashSet because one entity can relate by
+    /// 2+ different components on the same owner, and to handle that safely
     /// the relation is listed multiple times.
     /// </remarks>
     [DataField, AutoNetworkedField]
@@ -28,9 +28,6 @@ public sealed partial class EntityRelationsComponent : Component
     /// If true, will remove the component when <see cref="Relations"/> list becomes empty.
     /// Useful for conditional networking or performance sensitive EntityRelation interactions.
     /// </summary>
-    /// <remarks>
-    /// This field is always networked to the client.
-    /// </remarks>
     [DataField, AutoNetworkedField]
     public bool RemoveOnEmpty = true;
 }

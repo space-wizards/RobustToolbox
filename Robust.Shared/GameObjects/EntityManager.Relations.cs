@@ -18,6 +18,9 @@ public partial class EntityManager
 
         if (!entity.HasValue)
         {
+            if (relation.Entity != null)
+                ClearRelation(owner, ref relation, dirty);
+
             relation.Entity = null;
             return;
         }
@@ -32,7 +35,7 @@ public partial class EntityManager
             EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
 
         if (relation.Entity != null)
-            ClearRelation(owner, ref relation, false);
+            ClearRelation(owner, ref relation, dirty);
 
         relation.Entity = entity;
 
@@ -211,7 +214,11 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public void AddRelations(Entity<EntityRelationsComponent?> owner, HashSet<EntityRelation> relations, bool dirty = true, params Entity<EntityRelationsComponent?>?[] entities)
+    public void AddRelations(
+        Entity<EntityRelationsComponent?> owner,
+        HashSet<EntityRelation> relations,
+        bool dirty = true,
+        params Entity<EntityRelationsComponent?>?[] entities)
     {
         if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp, false))
             EnsureComponent<EntityRelationsComponent>(owner.Owner, out owner.Comp);
@@ -381,9 +388,15 @@ public partial class EntityManager
         var relationComp = _relationsQuery.Comp(relation.Entity.Value);
 
         ent.Comp.Relations.Remove(relation);
-        RemoveRelationCompIfEmpty(ent);
-
         relationComp.Relations.Remove(new EntityRelation(ent.Owner));
+
+        if (dirty)
+        {
+            DirtyRelations(ent!);
+            DirtyRelations((relation.Entity.Value, relationComp));
+        }
+
+        RemoveRelationCompIfEmpty(ent);
         RemoveRelationCompIfEmpty((relation.Entity.Value, relationComp));
 
         relation = EntityRelation.Null;
@@ -565,7 +578,7 @@ public partial class EntityManager
     private void RemoveRelationCompIfEmpty(Entity<EntityRelationsComponent?> ent)
     {
         // Don't log missing here because on flushing all entities this will fail
-        //  even though the relation actually existed.
+        // even though the relation actually existed.
         if (!_relationsQuery.Resolve(ent.Owner, ref ent.Comp, false))
             return;
 

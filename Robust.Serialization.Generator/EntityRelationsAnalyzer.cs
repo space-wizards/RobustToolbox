@@ -36,7 +36,7 @@ public sealed class EntityRelationsAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor WrongTypeAttributeDiagnostic = new(
         Diagnostics.IdComponentRelationWrongTypeAttribute,
         "AutoRelationField has wrong type",
-        "Field '{0}' has [AutoRelationField] but is not of type EntityRelation",
+        "Field '{0}' has [AutoRelationField] but is not of type EntityRelation, EntityRelation? or any supported collection containing EntityRelation",
         "Usage",
         DiagnosticSeverity.Error,
         true);

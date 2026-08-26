@@ -64,6 +64,10 @@ public partial interface IEntityManager
     /// <summary>
     /// Tries to get a corresponding <see cref="EntityRelation"/> if it exists and nEntity is not null.
     /// </summary>
+    /// <returns>
+    /// An entity relation corresponding to the specified NetEntity,
+    /// or <see cref="EntityRelation.Null"/> if it's null.
+    /// </returns>
     public EntityRelation EnsureEntityRelation<T>(NetEntity? nEntity, EntityUid callerEntity);
 
     /// <summary>

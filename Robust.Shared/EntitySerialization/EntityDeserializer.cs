@@ -1294,35 +1294,35 @@ public sealed partial class EntityDeserializer :
         return seri.WriteValue(_map.GetMapOrInvalid(value), alwaysWrite, ctx);
     }
 
-    #endregion
-
-    public ValidationNode Validate(
+    ValidationNode ITypeValidator<EntityRelation, ValueDataNode>.Validate(
         ISerializationManager seri,
         ValueDataNode node,
         IDependencyCollection dependencies,
-        ISerializationContext? context = null)
+        ISerializationContext? context)
     {
         return seri.ValidateNode<EntityUid?>(node, context);
     }
 
-    public EntityRelation Read(
+    EntityRelation ITypeReader<EntityRelation, ValueDataNode>.Read(
         ISerializationManager seri,
         ValueDataNode node,
         IDependencyCollection dependencies,
         SerializationHookContext hookCtx,
-        ISerializationContext? context = null,
-        ISerializationManager.InstantiationDelegate<EntityRelation>? instanceProvider = null)
+        ISerializationContext? context,
+        ISerializationManager.InstantiationDelegate<EntityRelation>? instanceProvider)
     {
         return new EntityRelation(seri.Read<EntityUid?>(node, context));
     }
 
-    public DataNode Write(
+    DataNode ITypeWriter<EntityRelation>.Write(
         ISerializationManager seri,
         EntityRelation value,
         IDependencyCollection dependencies,
-        bool alwaysWrite = false,
-        ISerializationContext? context = null)
+        bool alwaysWrite,
+        ISerializationContext? context)
     {
         return seri.WriteValue(value.Entity, alwaysWrite, context);
     }
+
+    #endregion
 }

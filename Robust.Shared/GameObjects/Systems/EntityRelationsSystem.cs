@@ -27,6 +27,9 @@ public sealed partial class EntityRelationsSystem : EntitySystem
 
         ent.Comp.RemoveOnEmpty = value;
         DirtyField(ent, nameof(ent.Comp.RemoveOnEmpty));
+
+        if (value && ent.Comp.Relations.Count == 0 && ent.Comp.LifeStage < ComponentLifeStage.Stopping)
+            RemComp(ent.Owner, ent.Comp);
     }
 
     [SubscribeLocalEvent]

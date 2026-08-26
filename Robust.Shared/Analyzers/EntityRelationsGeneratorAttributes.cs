@@ -10,8 +10,8 @@ namespace Robust.Shared.Analyzers;
 /// </summary>
 /// <remarks>
 /// When this attribute is set on a <see cref="Component"/>, an <see cref="EntitySystem"/> will automatically be
-/// generated that increments any fields tagged with <see cref="AutoPausedFieldAttribute"/> when the entity is unpaused
-/// (<see cref="EntityUnpausedEvent"/>).
+/// generated that clears any relation fields tagged with <see cref="AutoRelationFieldAttribute"/> when the entity stored inside is deleted
+/// (<see cref="EntityRelationDeleteEvent"/>).
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 [BaseTypeRequired(typeof(IComponent))]
@@ -22,6 +22,10 @@ public sealed class AutoGenerateEntityRelationsAttribute(bool dirty = false, boo
     /// <see cref="IEntityManager.Dirty(EntityUid,IComponent,MetaDataComponent)"/> after resetting the related entity.
     /// This is automatically inferred for fields marked <see cref="AutoNetworkedFieldAttribute"/>.
     /// </summary>
+    /// <remarks>
+    /// This is useful for custom component network handling in order to properly send a new state
+    /// when the related entity is deleted.
+    /// </remarks>
     public readonly bool Dirty = dirty;
 
     /// <summary>
@@ -35,11 +39,11 @@ public sealed class AutoGenerateEntityRelationsAttribute(bool dirty = false, boo
 /// Mark a field or property to automatically handle setting an entity relation to null when the related entity is deleted.
 /// </summary>
 /// <remarks>
-/// The type of the field must be <see cref="EntityRelation"/>,
-/// an <see cref="IEnumerable{T}"/> listing EntityRelations,
+/// The type of the field must be <see cref="EntityRelation"/>, <see cref="Nullable{EntityRelation}"/>,
+/// <see cref="List{EntityRelation}"/>, <see cref="HashSet{EntityRelation}"/>,
 /// or a Dictionary with EntityRelation as a key or a value.
 /// For all other use cases handle the relations deletion manually using
-/// <see cref="EntityRelationDeleteEvent"/> and <see cref="ComponentShutdown"/>.
+/// <see cref="EntityRelationDeleteEvent"/>, <see cref="ComponentShutdown"/> and <see cref="EntityRelationShutdownEvent"/>.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public sealed class AutoRelationFieldAttribute : Attribute;

@@ -586,27 +586,31 @@ public partial class EntityManager
     }
 
     /// <inheritdoc/>
-    public bool HasRelation(List<EntityRelation> relations, Entity<EntityRelationsComponent?>? entity)
+    public bool HasRelation(List<EntityRelation> relations, EntityUid? entity)
     {
-        return _relationsQuery.HasComp(entity) && relations.Contains(new EntityRelation(entity));
+        DebugTools.Assert(_relationsQuery.HasComp(entity));
+        return relations.Contains(new EntityRelation(entity));
     }
 
     /// <inheritdoc/>
-    public bool HasRelation(HashSet<EntityRelation> relations, Entity<EntityRelationsComponent?>? entity)
+    public bool HasRelation(HashSet<EntityRelation> relations, EntityUid? entity)
     {
-        return _relationsQuery.HasComp(entity) && relations.Contains(new EntityRelation(entity));
+        DebugTools.Assert(_relationsQuery.HasComp(entity));
+        return relations.Contains(new EntityRelation(entity));
     }
 
     /// <inheritdoc/>
-    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, Entity<EntityRelationsComponent?>? entity)
+    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, EntityUid? entity)
     {
-        return _relationsQuery.HasComp(entity) && relations.ContainsKey(new EntityRelation(entity));
+        DebugTools.Assert(_relationsQuery.HasComp(entity));
+        return relations.ContainsKey(new EntityRelation(entity));
     }
 
     /// <inheritdoc/>
-    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, Entity<EntityRelationsComponent?>? entity) where T : notnull
+    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, EntityUid? entity) where T : notnull
     {
-        return _relationsQuery.HasComp(entity) && relations.ContainsValue(new EntityRelation(entity));
+        DebugTools.Assert(_relationsQuery.HasComp(entity));
+        return relations.ContainsValue(new EntityRelation(entity));
     }
 
     private void RemoveRelationCompIfEmpty(Entity<EntityRelationsComponent?> ent)

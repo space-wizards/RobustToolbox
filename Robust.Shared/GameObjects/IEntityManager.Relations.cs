@@ -316,20 +316,20 @@ public partial interface IEntityManager
     /// <summary>
     /// Checks if an entity is contained in the specified list of relations.
     /// </summary>
-    public bool HasRelation(List<EntityRelation> relations, Entity<EntityRelationsComponent?>? entity);
+    public bool HasRelation(List<EntityRelation> relations, EntityUid? entity);
 
     /// <summary>
     /// Checks if an entity is contained in the specified set of relations.
     /// </summary>
-    public bool HasRelation(HashSet<EntityRelation> relations, Entity<EntityRelationsComponent?>? entity);
+    public bool HasRelation(HashSet<EntityRelation> relations, EntityUid? entity);
 
     /// <summary>
     /// Checks if an entity is contained in the specified dictionary of relations as a key.
     /// </summary>
-    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, Entity<EntityRelationsComponent?>? entity);
+    public bool HasRelation<T>(Dictionary<EntityRelation, T> relations, EntityUid? entity);
 
     /// <summary>
     /// Checks if an entity is contained in the specified dictionary of relations as a value.
     /// </summary>
-    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, Entity<EntityRelationsComponent?>? entity) where T : notnull;
+    public bool HasRelation<T>(Dictionary<T, EntityRelation> relations, EntityUid? entity) where T : notnull;
 }

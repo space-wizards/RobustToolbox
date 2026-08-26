@@ -75,7 +75,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 if (referenceTypes[..refIdx].Contains(compIdx))
                 {
                     throw new InvalidOperationException(
-                        $"Duplicate component reference in prototype: '{compIdx}'");
+                        $"Duplicate component reference in prototype: '{registration.Name}'");
                 }
 
                 referenceTypes[refIdx++] = compIdx;

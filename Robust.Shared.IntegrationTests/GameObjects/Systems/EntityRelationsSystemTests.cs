@@ -398,7 +398,7 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
         entMan.ClearRelation(ownerEnt, testComp.List, targetEnt1, false);
         entMan.ClearRelation(ownerEnt, testComp.Set, targetEnt1, false);
         entMan.ClearRelation(ownerEnt, testComp.DictKey, targetEnt1, false);
-        entMan.ClearRelation(ownerEnt, testComp.DictValue, targetEnt1, false);
+        entMan.ClearRelation(ownerEnt, testComp.DictValue, targetEnt1, false, true);
 
         SetRelations(ownerEnt, testComp, targetEnt2, entMan);
 
@@ -537,12 +537,12 @@ internal sealed partial class EntityRelationsSystemTests : RobustIntegrationTest
         /// </summary>
         public static void ClearComponentRelations(Entity<EntityRelationsTestComponent> ent, IEntityManager entMan)
         {
-            entMan.ClearRelation(ent.Owner, ref ent.Comp.Value);
-            entMan.ClearRelation(ent.Owner, ref ent.Comp.NullableValue);
-            entMan.ClearRelations(ent.Owner, ent.Comp.List);
-            entMan.ClearRelations(ent.Owner, ent.Comp.Set);
-            entMan.ClearRelations(ent.Owner, ent.Comp.DictKey);
-            entMan.ClearRelations(ent.Owner, ent.Comp.DictValue);
+            entMan.ClearRelation(ent.Owner, ref ent.Comp.Value, false);
+            entMan.ClearRelation(ent.Owner, ref ent.Comp.NullableValue, false);
+            entMan.ClearRelations(ent.Owner, ent.Comp.List, false);
+            entMan.ClearRelations(ent.Owner, ent.Comp.Set, false);
+            entMan.ClearRelations(ent.Owner, ent.Comp.DictKey, false);
+            entMan.ClearRelations(ent.Owner, ent.Comp.DictValue, false);
         }
     }
 

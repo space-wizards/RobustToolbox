@@ -409,7 +409,7 @@ public partial class EntityManager
             return;
 
         var copy = relation.Value;
-        ClearRelation(ent, ref copy);
+        ClearRelation(ent, ref copy, dirty);
         relation = null;
     }
 
@@ -419,7 +419,7 @@ public partial class EntityManager
         foreach (var relation in relations)
         {
             var copy = relation;
-            ClearRelation(ent, ref copy);
+            ClearRelation(ent, ref copy, dirty);
         }
         relations.Clear();
     }
@@ -430,7 +430,7 @@ public partial class EntityManager
         foreach (var relation in relations)
         {
             var copy = relation;
-            ClearRelation(ent, ref copy);
+            ClearRelation(ent, ref copy, dirty);
         }
         relations.Clear();
     }
@@ -441,7 +441,7 @@ public partial class EntityManager
         foreach (var relation in relations.Keys)
         {
             var copy = relation;
-            ClearRelation(ent, ref copy);
+            ClearRelation(ent, ref copy, dirty);
         }
         relations.Clear();
     }
@@ -452,7 +452,7 @@ public partial class EntityManager
         foreach (var (key, relation) in relations)
         {
             var copy = relation;
-            ClearRelation(ent, ref copy);
+            ClearRelation(ent, ref copy, dirty);
             relations[key] = copy;
         }
     }
@@ -464,21 +464,27 @@ public partial class EntityManager
         Entity<EntityRelationsComponent?> entity,
         bool dirty = true)
     {
-        var toRemove = new ValueList<EntityRelation>(relations.Count);
-        foreach (var relation in relations)
+        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp)
+            || !_relationsQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        var relation = new EntityRelation(entity.Owner);
+        foreach (var rel in relations)
         {
-            if (relation.Entity != entity.Owner)
+            if (rel != relation)
                 continue;
 
             var copy = relation;
-            ClearRelation(owner, ref copy);
-            toRemove.Add(relation);
+            ClearRelation(owner, ref copy, false);
         }
 
-        foreach (var remove in toRemove)
-        {
-            relations.Remove(remove);
-        }
+        relations.RemoveAll(x => x == relation);
+
+        if (!dirty)
+            return;
+
+        DirtyRelations(owner!);
+        DirtyRelations(entity!);
     }
 
     /// <inheritdoc/>
@@ -488,20 +494,27 @@ public partial class EntityManager
         Entity<EntityRelationsComponent?> entity,
         bool dirty = true)
     {
-        EntityRelation? toRemove = null;
-        foreach (var relation in relations)
+        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp)
+            || !_relationsQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        var relation = new EntityRelation(entity.Owner);
+        foreach (var rel in relations)
         {
-            if (relation.Entity != entity.Owner)
+            if (rel != relation)
                 continue;
 
             var copy = relation;
-            ClearRelation(owner, ref copy);
-            toRemove = relation;
-            break;
+            ClearRelation(owner, ref copy, false);
         }
 
-        if (toRemove != null)
-            relations.Remove(toRemove.Value);
+        relations.Remove(relation);
+
+        if (!dirty)
+            return;
+
+        DirtyRelations(owner!);
+        DirtyRelations(entity!);
     }
 
     /// <inheritdoc/>
@@ -511,20 +524,27 @@ public partial class EntityManager
         Entity<EntityRelationsComponent?> entity,
         bool dirty = true)
     {
-        EntityRelation? toRemove = null;
-        foreach (var relation in relations.Keys)
+        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp)
+            || !_relationsQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        var relation = new EntityRelation(entity.Owner);
+        foreach (var rel in relations.Keys)
         {
-            if (relation.Entity != entity.Owner)
+            if (rel != relation)
                 continue;
 
             var copy = relation;
-            ClearRelation(owner, ref copy);
-            toRemove = relation;
-            break;
+            ClearRelation(owner, ref copy, false);
         }
 
-        if (toRemove != null)
-            relations.Remove(toRemove.Value);
+        relations.Remove(relation);
+
+        if (!dirty)
+            return;
+
+        DirtyRelations(owner!);
+        DirtyRelations(entity!);
     }
 
     /// <inheritdoc/>
@@ -532,8 +552,13 @@ public partial class EntityManager
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,
         Entity<EntityRelationsComponent?> entity,
-        bool dirty = true) where T : notnull
+        bool dirty = true,
+        bool removeKey = false) where T : notnull
     {
+        if (!_relationsQuery.Resolve(owner.Owner, ref owner.Comp)
+            || !_relationsQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
         var toRemove = new ValueList<T>(relations.Count);
         foreach (var (key, relation) in relations)
         {
@@ -541,14 +566,23 @@ public partial class EntityManager
                 continue;
 
             var copy = relation;
-            ClearRelation(owner, ref copy);
+            ClearRelation(owner, ref copy, false);
             toRemove.Add(key);
         }
 
         foreach (var remove in toRemove)
         {
-            relations.Remove(remove);
+            if (removeKey)
+                relations.Remove(remove);
+            else
+                relations[remove] = EntityRelation.Null;
         }
+
+        if (!dirty)
+            return;
+
+        DirtyRelations(owner!);
+        DirtyRelations(entity!);
     }
 
     /// <inheritdoc/>

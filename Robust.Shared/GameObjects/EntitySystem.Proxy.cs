@@ -2368,16 +2368,17 @@ public partial class EntitySystem
         EntityManager.ClearRelation(owner, relations, entity, dirty);
     }
 
-    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation{T}(Entity{EntityRelationsComponent?}, Dictionary{T, EntityRelation}, Entity{EntityRelationsComponent?}, bool)"/>
+    /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.ClearRelation{T}(Entity{EntityRelationsComponent?}, Dictionary{T, EntityRelation}, Entity{EntityRelationsComponent?}, bool, bool)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
     public void ClearRelation<T>(
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,
         Entity<EntityRelationsComponent?> entity,
-        bool dirty = true) where T : notnull
+        bool dirty = true,
+        bool removeKey = false) where T : notnull
     {
-        EntityManager.ClearRelation(owner, relations, entity, dirty);
+        EntityManager.ClearRelation(owner, relations, entity, dirty, removeKey);
     }
 
     /// <inheritdoc cref="M:Robust.Shared.GameObjects.EntityManager.HasRelation(List{EntityRelation}, Entity{EntityRelationsComponent?}?)"/>

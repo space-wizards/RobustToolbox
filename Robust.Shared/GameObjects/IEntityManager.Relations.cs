@@ -310,7 +310,8 @@ public partial interface IEntityManager
         Entity<EntityRelationsComponent?> owner,
         Dictionary<T, EntityRelation> relations,
         Entity<EntityRelationsComponent?> entity,
-        bool dirty = true) where T : notnull;
+        bool dirty = true,
+        bool removeKey = false) where T : notnull;
 
     /// <summary>
     /// Checks if an entity is contained in the specified list of relations.

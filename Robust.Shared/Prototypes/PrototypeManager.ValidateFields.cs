@@ -94,7 +94,14 @@ public partial class PrototypeManager
     private bool TryGetIds(FieldInfo field, [NotNullWhen(true)] out string[]? ids)
     {
         ids = null;
-        var value = field.GetValue(null);
+        if (field.DeclaringType?.IsGenericTypeDefinition == true)
+        {
+            // field's class has generic parameters, rethrow to say what the field is because
+            // c# is a great language and doesn't tell you anything in its exception in GetValue
+            throw new InvalidOperationException($"Field {field.FieldType} {field.Name} cannot be a static field inside a generic class");
+        }
+
+        object? value = field.GetValue(null);
         if (value == null)
             return false;
 
@@ -170,13 +177,6 @@ public partial class PrototypeManager
     private bool TryGetFieldPrototype(FieldInfo field, [NotNullWhen(true)] out Type? proto)
     {
         // Validate anything with the attribute
-        var attrib = field.GetCustomAttribute(typeof(ValidatePrototypeIdAttribute<>), false);
-        if (attrib != null)
-        {
-            proto = attrib.GetType().GetGenericArguments().First();
-            return true;
-        }
-
         if (TryGetPrototypeFromType(field.FieldType, out proto))
             return true;
 

@@ -19,11 +19,11 @@ namespace Robust.UnitTesting
 {
     public partial class RobustIntegrationTest
     {
-        internal sealed class IntegrationNetManager : IClientNetManager, IServerNetManager
+        internal sealed partial class IntegrationNetManager : IClientNetManager, IServerNetManager
         {
-            [Dependency] private readonly IGameTiming _gameTiming = default!;
-            [Dependency] private readonly ITaskManager _taskManager = default!;
-            [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
+            [Dependency] private IGameTiming _gameTiming = default!;
+            [Dependency] private ITaskManager _taskManager = default!;
+            [Dependency] private IRobustSerializer _robustSerializer = default!;
 
             public bool IsServer { get; private set; }
             public bool IsClient => !IsServer;
@@ -234,7 +234,7 @@ namespace Robust.UnitTesting
                 }
             }
 
-            private async Task<NetConnectingArgs> OnConnecting(IPEndPoint ip, NetUserData userData, LoginType loginType)
+            internal async Task<NetConnectingArgs> OnConnecting(IPEndPoint ip, NetUserData userData, LoginType loginType)
             {
                 var args = new NetConnectingArgs(userData, ip, loginType);
                 foreach (var conn in _connectingEvent)
@@ -495,6 +495,11 @@ namespace Robust.UnitTesting
                 {
                     // Don't handle bye sending in here I guess.
                     Disconnect(reason);
+                }
+
+                public bool CanSendImmediately(NetDeliveryMethod method, int sequenceChannel)
+                {
+                    return true;
                 }
             }
 

@@ -93,12 +93,20 @@ internal partial class Clyde
                     WinThreadWinRequestAttention(cmd);
                     break;
 
+                case CmdWinSetProgress cmd:
+                    WinThreadWinSetProgress(cmd);
+                    break;
+
                 case CmdWinSetSize cmd:
                     WinThreadWinSetSize(cmd);
                     break;
 
                 case CmdWinSetVisible cmd:
                     WinThreadWinSetVisible(cmd);
+                    break;
+
+                case CmdWinSetRelativeMouseMode cmd:
+                    WinThreadWinSetRelativeMouseMode(cmd);
                     break;
 
                 case CmdCursorCreate cmd:
@@ -261,6 +269,13 @@ internal partial class Clyde
             public nint Window;
         }
 
+        private sealed class CmdWinSetProgress : CmdBase
+        {
+            public nint Window;
+            public SDL.SDL_ProgressState State;
+            public float Value;
+        }
+
         private sealed class CmdWinSetSize : CmdBase
         {
             public nint Window;
@@ -272,6 +287,12 @@ internal partial class Clyde
         {
             public nint Window;
             public bool Visible;
+        }
+
+        private sealed class CmdWinSetRelativeMouseMode : CmdBase
+        {
+            public nint Window;
+            public bool Enabled;
         }
 
         private sealed class CmdWinSetTitle : CmdBase

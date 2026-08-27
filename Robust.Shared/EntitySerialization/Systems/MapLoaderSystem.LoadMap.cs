@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using Robust.Shared.GameObjects;
@@ -15,14 +16,41 @@ namespace Robust.Shared.EntitySerialization.Systems;
 public sealed partial class MapLoaderSystem
 {
     /// <summary>
-    /// Attempts to load a file containing a single map.
-    /// If the file does not contain exactly one map, this will return false and delete all loaded entities.
+    ///     Attempts to load a YAML file containing a single map.
+    ///     If the file does not contain exactly one map, this will return false and delete all loaded entities.
     /// </summary>
     /// <remarks>
-    /// Note that this will not automatically initialize the map, unless specified via the <see cref="DeserializationOptions"/>.
+    ///     Note that this will not automatically initialize the map, unless specified via the <see cref="DeserializationOptions"/>.
     /// </remarks>
     public bool TryLoadMap(
-        ResPath path,
+        ResPath file,
+        [NotNullWhen(true)] out Entity<MapComponent>? map,
+        [NotNullWhen(true)] out HashSet<Entity<MapGridComponent>>? grids,
+        DeserializationOptions? options = null,
+        Vector2 offset = default,
+        Angle rot = default)
+    {
+        map = null;
+        grids = null;
+        if (!TryGetReader(file.ToRootedPath(), out var reader))
+            return false;
+
+        using (reader)
+        {
+            return TryLoadMap(reader, file.ToString(), out map, out grids, options, offset, rot);
+        }
+    }
+
+    /// <summary>
+    ///     Attempts to load a YAML stream containing a single map.
+    ///     If the file does not contain exactly one map, this will return false and delete all loaded entities.
+    /// </summary>
+    /// <remarks>
+    ///     Note that this will not automatically initialize the map, unless specified via the <see cref="DeserializationOptions"/>.
+    /// </remarks>
+    public bool TryLoadMap(
+        TextReader reader,
+        string source,
         [NotNullWhen(true)] out Entity<MapComponent>? map,
         [NotNullWhen(true)] out HashSet<Entity<MapGridComponent>>? grids,
         DeserializationOptions? options = null,
@@ -39,7 +67,7 @@ public sealed partial class MapLoaderSystem
 
         map = null;
         grids = null;
-        if (!TryLoadGeneric(path, out var result, opts))
+        if (!TryLoadGeneric(reader, source, out var result, opts))
             return false;
 
         if (result.Maps.Count == 1)
@@ -54,17 +82,47 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
-    /// Attempts to load a file containing a single map, assign it the given map id.
+    ///     Attempts to load a YAML file containing a single map, assign it the given map id.
     /// </summary>
     /// <remarks>
-    /// If possible, it is better to use <see cref="TryLoadMap"/> which automatically assigns a <see cref="MapId"/>.
+    ///     If possible, it is better to use <see cref="TryLoadMap"/> which automatically assigns a <see cref="MapId"/>.
     /// </remarks>
     /// <remarks>
-    /// Note that this will not automatically initialize the map, unless specified via the <see cref="DeserializationOptions"/>.
+    ///     Note that this will not automatically initialize the map, unless specified via the <see cref="DeserializationOptions"/>.
     /// </remarks>
     public bool TryLoadMapWithId(
         MapId mapId,
-        ResPath path,
+        ResPath file,
+        [NotNullWhen(true)] out Entity<MapComponent>? map,
+        [NotNullWhen(true)] out HashSet<Entity<MapGridComponent>>? grids,
+        DeserializationOptions? options = null,
+        Vector2 offset = default,
+        Angle rot = default)
+    {
+        map = null;
+        grids = null;
+        if (!TryGetReader(file.ToRootedPath(), out var reader))
+            return false;
+
+        using (reader)
+        {
+            return TryLoadMapWithId(mapId, reader, file.ToString(), out map, out grids, options, offset, rot);
+        }
+    }
+
+    /// <summary>
+    ///     Attempts to load a YAML text stream containing a single map, assign it the given map id.
+    /// </summary>
+    /// <remarks>
+    ///     If possible, it is better to use <see cref="TryLoadMap"/> which automatically assigns a <see cref="MapId"/>.
+    /// </remarks>
+    /// <remarks>
+    ///     Note that this will not automatically initialize the map, unless specified via the <see cref="DeserializationOptions"/>.
+    /// </remarks>
+    public bool TryLoadMapWithId(
+        MapId mapId,
+        TextReader reader,
+        string source,
         [NotNullWhen(true)] out Entity<MapComponent>? map,
         [NotNullWhen(true)] out HashSet<Entity<MapGridComponent>>? grids,
         DeserializationOptions? options = null,
@@ -86,7 +144,7 @@ public sealed partial class MapLoaderSystem
             throw new Exception($"Target map already exists");
 
         opts.ForceMapId = mapId;
-        if (!TryLoadGeneric(path, out var result, opts))
+        if (!TryLoadGeneric(reader, source, out var result, opts))
             return false;
 
         if (!_mapSystem.TryGetMap(mapId, out var uid) || !TryComp(uid, out MapComponent? comp))
@@ -98,12 +156,35 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
-    /// Attempts to load a file containing a single map, and merge its children onto another map. After which the
-    /// loaded map gets deleted.
+    ///     Attempts to load a YAML text stream containing a single map, and merge its children onto another map. After which
+    ///     the loaded map gets deleted.
     /// </summary>
     public bool TryMergeMap(
         MapId mapId,
-        ResPath path,
+        ResPath file,
+        [NotNullWhen(true)] out HashSet<Entity<MapGridComponent>>? grids,
+        DeserializationOptions? options = null,
+        Vector2 offset = default,
+        Angle rot = default)
+    {
+        grids = null;
+        if (!TryGetReader(file.ToRootedPath(), out var reader))
+            return false;
+
+        using (reader)
+        {
+            return TryMergeMap(mapId, reader, file.ToString(), out grids, options, offset, rot);
+        }
+    }
+
+    /// <summary>
+    ///     Attempts to load a YAML file containing a single map, and merge its children onto another map. After which
+    ///     the loaded map gets deleted.
+    /// </summary>
+    public bool TryMergeMap(
+        MapId mapId,
+        TextReader reader,
+        string source,
         [NotNullWhen(true)] out HashSet<Entity<MapGridComponent>>? grids,
         DeserializationOptions? options = null,
         Vector2 offset = default,
@@ -123,7 +204,7 @@ public sealed partial class MapLoaderSystem
             throw new Exception($"Target map {mapId} does not exist");
 
         opts.MergeMap = mapId;
-        if (!TryLoadGeneric(path, out var result, opts))
+        if (!TryLoadGeneric(reader, source, out var result, opts))
             return false;
 
         if (!_mapSystem.TryGetMap(mapId, out var uid) || !TryComp(uid, out MapComponent? comp))

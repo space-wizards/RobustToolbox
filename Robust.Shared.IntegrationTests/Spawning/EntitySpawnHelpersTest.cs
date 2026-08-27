@@ -16,7 +16,6 @@ namespace Robust.UnitTesting.Shared.Spawning;
 /// <see cref="IEntityManager.TrySpawnNextTo"/>) work as intended.
 /// </summary>
 [TestFixture]
-[Virtual]
 public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
 {
     protected ServerIntegrationInstance Server = default!;
@@ -24,9 +23,6 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
     protected SharedMapSystem MapSys = default!;
     protected SharedTransformSystem Xforms = default!;
     protected SharedContainerSystem Container = default!;
-
-    // Even if unused, content / downstream tests might use this class, so removal would be a breaking change?
-    protected IMapManager MapMan = default!;
 
     protected EntityUid Map;
     protected MapId MapId;
@@ -45,7 +41,6 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
     {
         Server = StartServer();
         await Server.WaitIdleAsync();
-        MapMan = Server.ResolveDependency<IMapManager>();
         EntMan = Server.ResolveDependency<IEntityManager>();
         MapSys = EntMan.System<SharedMapSystem>();
         Xforms = EntMan.System<SharedTransformSystem>();
@@ -112,7 +107,6 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
     /// <summary>
     /// Simple container that can store up to 2 entities.
     /// </summary>
-    [SerializedType(nameof(TestContainer))]
     private sealed partial class TestContainer : BaseContainer
     {
         private readonly List<EntityUid> _ents = new();

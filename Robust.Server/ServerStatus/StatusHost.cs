@@ -14,6 +14,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
+using System.Net.WebSockets;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -32,11 +33,11 @@ namespace Robust.Server.ServerStatus
     {
         private const string Sawmill = "statushost";
 
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IServerNetManager _netManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IDependencyCollection _deps = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IServerNetManager _netManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IDependencyCollection _deps = default!;
+        [Dependency] private ILogManager _logMan = default!;
 
         private readonly List<StatusHostHandlerAsync> _handlers = new();
         private HttpListener? _listener;
@@ -242,6 +243,7 @@ namespace Robust.Server.ServerStatus
             public Uri Url => _context.Request.Url!;
             public bool IsGetLike => RequestMethod == HttpMethod.Head || RequestMethod == HttpMethod.Get;
             public IReadOnlyDictionary<string, StringValues> RequestHeaders { get; }
+            public bool IsWebSocketRequest => _context.Request.IsWebSocketRequest;
 
             public bool KeepAlive
             {
@@ -351,6 +353,12 @@ namespace Robust.Server.ServerStatus
                 _context.Response.StatusCode = (int)code;
 
                 return Task.FromResult(_context.Response.OutputStream);
+            }
+
+            public async Task<WebSocket> AcceptWebSocketAsync()
+            {
+                var context = await _context.AcceptWebSocketAsync(null);
+                return context.WebSocket;
             }
 
             private void RespondShared()

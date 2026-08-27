@@ -10,7 +10,7 @@ namespace Robust.Client.WebView.Cef
 {
     internal partial class WebViewManagerCef
     {
-        [Dependency] private readonly IClydeInternal _clyde = default!;
+        [Dependency] private IClydeInternal _clyde = default!;
 
         private readonly List<WebViewWindowImpl> _browserWindows = new();
 

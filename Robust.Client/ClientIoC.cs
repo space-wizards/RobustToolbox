@@ -1,9 +1,7 @@
-using System;
 using Robust.Client.Audio;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Configuration;
 using Robust.Client.Console;
-using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
@@ -13,6 +11,7 @@ using Robust.Client.HWId;
 using Robust.Client.Input;
 using Robust.Client.Localization;
 using Robust.Client.Map;
+using Robust.Client.Network.Transfer;
 using Robust.Client.Placement;
 using Robust.Client.Player;
 using Robust.Client.Profiling;
@@ -28,7 +27,6 @@ using Robust.Client.Timing;
 using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
-using Robust.Client.UserInterface.Themes;
 using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
@@ -41,7 +39,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Physics;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -51,6 +49,8 @@ using Robust.Shared.Timing;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using System;
+using System.Text;
 
 namespace Robust.Client
 {
@@ -58,15 +58,14 @@ namespace Robust.Client
     {
         public static void RegisterIoC(GameController.DisplayMode mode, IDependencyCollection deps)
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             SharedIoC.RegisterIoC(deps);
 
             deps.Register<IGameTiming, ClientGameTiming>();
             deps.Register<IClientGameTiming, ClientGameTiming>();
             deps.Register<IPrototypeManager, ClientPrototypeManager>();
             deps.Register<IPrototypeManagerInternal, ClientPrototypeManager>();
-            deps.Register<IMapManager, NetworkedMapManager>();
-            deps.Register<IMapManagerInternal, NetworkedMapManager>();
-            deps.Register<INetworkedMapManager, NetworkedMapManager>();
             deps.Register<IEntityManager, ClientEntityManager>();
             deps.Register<FontTagHijackHolder>();
             deps.Register<IReflectionManager, ClientReflectionManager>();
@@ -174,6 +173,8 @@ namespace Robust.Client
             deps.Register<IXamlProxyHelper, XamlProxyHelper>();
             deps.Register<MarkupTagManager>();
             deps.Register<IHWId, BasicHWId>();
+            deps.Register<ITransferManager, ClientTransferManager>();
+            deps.Register<ClientTransferTestManager>();
         }
     }
 }

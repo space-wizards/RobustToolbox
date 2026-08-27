@@ -12,9 +12,9 @@ namespace Robust.Server.GameObjects
     /// <summary>
     ///     Server side processing of incoming user commands.
     /// </summary>
-    public sealed class InputSystem : SharedInputSystem
+    public sealed partial class InputSystem : SharedInputSystem
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
 
         private readonly Dictionary<ICommonSession, IPlayerCommandStates> _playerInputs = new();
 
@@ -38,7 +38,7 @@ namespace Robust.Server.GameObjects
 
         private void InputMessageHandler(InputCmdMessage message, EntitySessionEventArgs eventArgs)
         {
-            if (!(message is FullInputCmdMessage msg))
+            if (message is not FullInputCmdMessage msg)
                 return;
 
             //Client Sanitization: out of bounds functionID
@@ -46,7 +46,7 @@ namespace Robust.Server.GameObjects
                 return;
 
             //Client Sanitization: bad enum key state value
-            if (!Enum.IsDefined(typeof(BoundKeyState), msg.State))
+            if (!Enum.IsDefined(msg.State))
                 return;
 
             var session = eventArgs.SenderSession;

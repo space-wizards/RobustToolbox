@@ -220,7 +220,14 @@ namespace Robust.Shared.Network
 
                 // Expect login success here.
                 response = await AwaitData(connection, cancel);
-                encryption?.Decrypt(response);
+
+                // Attempt to decrypt the message, only logging if we fail to decrypt and we actually have encryption.
+                if ((!encryption?.TryDecrypt(response)) ?? false)
+                {
+                    const string msg = "Failed to decrypt login success.";
+                    connection.Disconnect(msg);
+                    throw new Exception(msg);
+                }
             }
 
             var msgSuc = new MsgLoginSuccess();
@@ -316,7 +323,7 @@ namespace Robust.Shared.Network
                         // Connection failed, clean up and yeet an exception
                         peer.Shutdown(reason);
                         _toCleanNetPeers.Add(peer);
-                        throw new Exception($"Connection failed: {reason}");
+                        throw new ConnectionFailedException(reason);
                     }
 
                     return new ConnectionAttempt(peerData, connection, this);
@@ -370,11 +377,30 @@ namespace Robust.Shared.Network
             catch (AggregateException ae)
             {
                 // ParallelTask throws AggregateException with all connection failures
-                // We just take the first one
-                var message = ae.InnerExceptions.First().Message;
+                // We'll try to take the most useful one.
+                var message = SelectConnectionFailureMessage(ae);
                 OnConnectFailed(message);
                 return null;
             }
+        }
+
+        private static string SelectConnectionFailureMessage(AggregateException aggregateException)
+        {
+            var connectionFailures = aggregateException.InnerExceptions
+                .OfType<ConnectionFailedException>()
+                .ToArray();
+
+            if (connectionFailures.Length == 0)
+                return aggregateException.InnerExceptions.First().Message;
+
+            return connectionFailures.FirstOrDefault(e => !e.IsNoResponseFromRemoteHost)?.Message
+                   ?? connectionFailures[0].Message;
+        }
+
+        private sealed class ConnectionFailedException(string reason) : Exception($"Connection failed: {reason}")
+        {
+            public bool IsNoResponseFromRemoteHost { get; } =
+                reason.Contains("no response from remote host", StringComparison.OrdinalIgnoreCase);
         }
 
         private Task<string> AwaitStatusChange(NetConnection connection, CancellationToken cancellationToken = default)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Robust.Shared.Configuration;
@@ -28,14 +29,30 @@ internal static class ProgramShared
     }
 
 #if !FULL_RELEASE
-    private static string FindContentRootDir(bool contentStart)
+    private static string FindContentRootDir(StartType startType)
     {
-        return PathOffset + (contentStart ? "../../" : "../../../");
+        var relative = startType switch
+        {
+            StartType.Engine => "../../../",
+            StartType.Content => "../../",
+            StartType.Loader => throw new InvalidOperationException(),
+            StartType.ContentAppBundle => "../../../../../",
+            _ => throw new ArgumentOutOfRangeException(nameof(startType), startType, null)
+        };
+        return PathOffset + relative;
     }
 
-    private static string FindEngineRootDir(bool contentStart)
+    private static string FindEngineRootDir(StartType startType)
     {
-        return PathOffset + (contentStart ? "../../RobustToolbox/" : "../../");
+        var relative = startType switch
+        {
+            StartType.Engine => "../../",
+            StartType.Content => "../../RobustToolbox/",
+            StartType.Loader => throw new InvalidOperationException(),
+            StartType.ContentAppBundle => "../../../../../RobustToolbox/",
+            _ => throw new ArgumentOutOfRangeException(nameof(startType), startType, null)
+        };
+        return PathOffset + relative;
     }
 #endif
 
@@ -47,19 +64,35 @@ internal static class ProgramShared
         }
     }
 
-    internal static void DoMounts(IResourceManagerInternal res, MountOptions? options, string contentBuildDir, ResPath assembliesPath, bool loadContentResources = true,
-        bool loader = false, bool contentStart = false)
+    internal static void DoMounts(
+        IResourceManagerInternal res,
+        MountOptions? options,
+        string contentBuildDir,
+        ResPath assembliesPath,
+        bool loadContentResources = true,
+        StartType startType = StartType.Engine)
     {
 #if FULL_RELEASE
-            if (!loader)
-                res.MountContentDirectory(@"Resources/");
+        if (startType != StartType.Loader)
+            res.MountContentDirectory(@"Resources/");
 #else
-        res.MountContentDirectory($@"{FindEngineRootDir(contentStart)}Resources/");
+        var engineRoot = FindEngineRootDir(startType);
+        // System.Console.WriteLine($"ENGINE DIR IS {engineRoot}");
+        res.MountContentDirectory($@"{engineRoot}Resources/");
 
         if (loadContentResources)
         {
-            var contentRootDir = FindContentRootDir(contentStart);
-            res.MountContentDirectory($@"{contentRootDir}bin/{contentBuildDir}/", assembliesPath);
+            var contentRootDir = FindContentRootDir(startType);
+            // System.Console.WriteLine($"CONTENT DIR IS {Path.GetFullPath(contentRootDir)}");
+            if (startType == StartType.ContentAppBundle)
+            {
+                res.MountContentDirectory("./", assembliesPath);
+            }
+            else
+            {
+                res.MountContentDirectory($@"{contentRootDir}bin/{contentBuildDir}/", assembliesPath);
+            }
+
             res.MountContentDirectory($@"{contentRootDir}Resources/");
         }
 #endif
@@ -102,4 +135,28 @@ internal static class ProgramShared
     {
         task.Wait();
     }
+}
+
+internal enum StartType
+{
+    /// <summary>
+    /// We've been started from <c>RobustToolbox/bin/Client/Robust.Client</c>
+    /// </summary>
+    Engine,
+
+    /// <summary>
+    /// We've been started from e.g. <c>bin/Content.Client/Content.Client</c>
+    /// </summary>
+    Content,
+
+    /// <summary>
+    /// We've been started from the launcher loader.
+    /// </summary>
+    Loader,
+
+    /// <summary>
+    /// (macOS only)
+    /// We've been started from e.g. <c>bin/Content.Client/Space Station 14.app/Contents/MacOS/Content.Client</c>
+    /// </summary>
+    ContentAppBundle
 }

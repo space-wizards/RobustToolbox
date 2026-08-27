@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -10,7 +10,6 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes;
@@ -176,19 +175,6 @@ public interface IPrototypeManager
     bool Resolve([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
 
     /// <summary>
-    /// Retrieve an <see cref="EntityPrototype"/> by ID, optionally logging an error if it does not exist.
-    /// </summary>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if it does not.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex(
-        [ForbidLiteral] EntProtoId id,
-        [NotNullWhen(true)] out EntityPrototype? prototype,
-        bool logError = true);
-
-    /// <summary>
     /// Resolve an <see cref="EntityPrototype"/> by ID.
     /// </summary>
     /// <remarks>
@@ -235,17 +221,6 @@ public interface IPrototypeManager
     /// <returns>True if the prototype exists, false if it does not.</returns>
     /// <seealso cref="TryIndex{T}(ProtoId{T},out T?)"/>
     bool Resolve<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
-
-    /// <summary>
-    /// Retrieve a prototype by ID, optionally logging an error if it does not exist.
-    /// </summary>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if it does not.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true)
-        where T : class, IPrototype;
 
     /// <summary>
     /// Resolve a prototype by ID.
@@ -300,25 +275,6 @@ public interface IPrototypeManager
     bool Resolve([ForbidLiteral] EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
 
     /// <summary>
-    /// Retrieve an <see cref="EntityPrototype"/> by ID, gracefully handling null,
-    /// and optionally logging an error if it does not exist.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// No error is logged if <paramref name="id"/> is null.
-    /// </para>
-    /// </remarks>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex(
-        [ForbidLiteral] EntProtoId? id,
-        [NotNullWhen(true)] out EntityPrototype? prototype,
-        bool logError = true);
-
-    /// <summary>
     /// Resolve an <see cref="EntityPrototype"/> by ID, gracefully handling null.
     /// </summary>
     /// <remarks>
@@ -370,22 +326,6 @@ public interface IPrototypeManager
     bool Resolve<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
 
     /// <summary>
-    /// Retrieve a prototype by ID, gracefully handling null,
-    /// and optionally logging an error if it does not exist.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// No error is logged if <paramref name="id"/> is null.
-    /// </para>
-    /// </remarks>
-    /// <param name="id">The prototype ID to look up.</param>
-    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
-    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
-    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
-    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
-    bool TryIndex<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype;
-
-    /// <summary>
     /// Resolve a prototype by ID, gracefully handling null.
     /// </summary>
     /// <remarks>
@@ -413,7 +353,10 @@ public interface IPrototypeManager
     // ReSharper restore MethodOverloadWithOptionalParameter
 
     bool HasMapping<T>(string id);
+
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
+
+    bool TryGetMapping<T>(string id, [NotNullWhen(true)] out MappingDataNode? mappings);
 
     /// <summary>
     ///     Returns whether a prototype kind <param name="kind"/> exists.
@@ -473,25 +416,34 @@ public interface IPrototypeManager
     /// Validate all prototypes defined in yaml files contained in the given directory.
     /// </summary>
     /// <param name="path">The directory containing the yaml files that need validating.</param>
+    /// <param name="partialNoOriginalError">
+    /// Whether a partial existing without an original to modify is an error or not.
+    /// !PartialOnly prototypes will not error, even if this is set to true.
+    /// </param>
     /// <returns>A dictionary containing sets of errors for each file that failed validation.</returns>
-    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path);
+    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path, bool partialNoOriginalError = false);
 
     /// <summary>
     /// Validate all prototypes defined in yaml files contained in the given directory.
     /// </summary>
     /// <param name="path">The directory containing the yaml files that need validating.</param>
     /// <param name="prototypes">The prototypes ids that were present in the directory.</param>
+    /// <param name="partialNoOriginalError">
+    /// Whether a partial existing without an original to modify is an error or not.
+    /// !PartialOnly prototypes will not error, even if this is set to true.
+    /// </param>
     /// <returns>A dictionary containing sets of errors for each file that failed validation.</returns>
-    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
-        out Dictionary<Type, HashSet<string>> prototypes);
+    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(
+        ResPath path,
+        out Dictionary<Type, HashSet<string>> prototypes,
+        bool partialNoOriginalError = false);
 
     /// <summary>
     /// This method uses reflection to validate that all static prototype id fields correspond to valid prototypes.
     /// This will validate all known to <see cref="IReflectionManager"/>
     /// </summary>
     /// <remarks>
-    /// This will validate any field that has either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
-    /// <see cref="DataFieldAttribute"/> with a <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.
+    /// This will validate any field that uses <see cref="ProtoId"/> or <see cref="EntProtoId"/>.
     /// </remarks>
     /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection
     /// will be considered invalid.</param>
@@ -510,9 +462,17 @@ public interface IPrototypeManager
     /// empty, everything was successfully validated.</returns>
     Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx);
 
-    void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
+    void LoadFromStream(
+        TextReader stream,
+        bool overwrite = false,
+        Dictionary<Type, HashSet<string>>? changed = null,
+        bool partial = false);
 
-    void LoadString(string str, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
+    void LoadString(
+        string str,
+        bool overwrite = false,
+        Dictionary<Type, HashSet<string>>? changed = null,
+        bool partial = false);
 
     void RemoveString(string prototypes);
 
@@ -617,14 +577,248 @@ public interface IPrototypeManager
     bool TryGetRandom<T>(IRobustRandom random, [NotNullWhen(true)] out IPrototype? prototype) where T : class, IPrototype;
 
     /// <summary>
+    /// Like <see cref="PartialDirectory"/>, but only for a single file.
+    /// </summary>
+    /// <param name="file">
+    /// The file to force prototypes to be abstract in.
+    /// This must start from the Resources-level directory, but not include Resources itself.
+    /// For example: /Prototypes/Guidebook/antagonist.yml
+    /// </param>
+    /// <param name="index">
+    /// The index to use when ordering partial modifications.
+    /// A smaller index will make this file be processed before ones with a larger index.
+    /// </param>
+    /// <seealso cref="PartialDirectory"/>
+    void PartialFile(ResPath file, int index);
+
+    /// <summary>
+    /// Makes duplicate prototypes found recursively within files in the given <see cref="path"/>
+    /// combine with existing prototypes by kind and id, instead of throwing a 'Duplicate id' exception.
+    /// Calling this method will not retroactively partial prototypes that have already been read.
+    /// </summary>
+    /// <param name="path">
+    /// The directory to make prototypes partial in.
+    /// It must start from the Resources-level directory, but not include Resources itself.
+    /// For example: /Prototypes/_ForkOne
+    ///
+    /// Partials found recursively in this directory are applied according to the <see cref="index"/>.
+    /// Smaller indexes are applied first.
+    /// For example, this makes it so partials inside _ForkOne are applied first, if any,
+    /// and then afterward, the ones in _ForkTwo, if any:
+    /// <code>
+    ///     PartialDirectory(new ResPath("/Prototypes/_ForkOne"), 0);
+    ///     PartialDirectory(new ResPath("/Prototypes/_ForkTwo"), 1);
+    /// </code>
+    ///
+    /// Space Station 14 provides a file in PartialPrototypes to make this easier to do
+    /// without having to manually call this method, specially with multiple upstreams.
+    /// </param>
+    /// <param name="index">
+    /// The index to use when ordering partial modifications.
+    /// A smaller index will cause files found recursively in this directory to be processed before
+    /// ones with a larger index.
+    /// </param>
+    /// <example>
+    /// Add 1 to a sequence if it exists, or adds the sequence otherwise:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list:
+    ///     - 1
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove 1 from a sequence if it exists, using the !Remove tag:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list:
+    ///     - !Remove 1
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove 1 and add 2 to a sequence:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list:
+    ///     - !Remove 1
+    ///     - 2
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Clear a sequence and then add 1 to it:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list: !Clear
+    ///     - 1
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove a mapping with the key 'a' regardless of value:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     dictionary:
+    ///       "a": !Remove
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove a mapping with the key 'a' only if its value is 1:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     dictionary:
+    ///       "a": !Remove 1
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove a mapping with the key 'a' and add one with a key of 'b' and a value of 2:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list:
+    ///       "a": !Remove
+    ///       "b": 2
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove a mapping with the key 'a', only if its value is 1, and add one with a key of 'b' and a value of 2:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     list:
+    ///       "a": !Remove 1
+    ///       "b": 2
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Clear a mapping and then add a mapping with a key of 'a' and a value of 1 to it:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - type: MyComponent
+    ///     dictionary: !Remove
+    ///       "a": 1
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Remove a component:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - !Remove type: MyComponent
+    /// </code>
+    /// Removing a component can be done the other way around as well:
+    /// <code>
+    /// - type: entity
+    ///   id: MyEntityOne
+    ///   components:
+    ///   - !Remove type: MyComponent
+    /// </code>
+    /// </example>
+    /// <example>
+    /// This can be combined with prototype variants.
+    /// For example, to remove all conditions from these three plushies:
+    /// <code>
+    /// - type: !PartialOnly listing
+    ///   id: !type:CreateVariants
+    ///   values:
+    ///   - VendorPlushieHuman
+    ///   - VendorPlushieMoth
+    ///   - VendorPlushieVulp
+    ///   conditions: !Clear
+    /// </code>
+    /// </example>
+    /// <example>
+    /// To remove one blacklist from an emote prototype:
+    /// <code>
+    /// - type: !PartialOnly emote
+    ///   id: Snap
+    ///   blacklist:
+    ///   tags:
+    ///   - !Remove MyTag
+    /// </code>
+    /// </example>
+    /// <example>
+    /// Sometimes you might want elements inserted at a specific position in a sequence
+    /// without rewriting the full sequence yourself with !Remove.
+    /// You can achieve this using !Index.
+    /// Indexes will be automatically clamped between a minimum of 0 and a maximum of
+    /// the sequence length.
+    /// Negative numbers will be treated as indexing from the end, or ^Index in C#.
+    /// For example, -1 will insert the element as the second to last element.
+    /// You can use this combined with !Remove to re-order existing elements as well.
+    /// <code>
+    /// - type: !PartialOnly borgType
+    ///   id: MyBorgType
+    ///   defaultModules:
+    ///   - !Index:0 BorgModuleNew
+    ///   - !Remove BorgModuleExisting
+    ///   - !Index:-1 BorgModuleExisting
+    /// </code>
+    /// </example>
+    /// <example>
+    /// A partial prototype can be marked as partial only, which will ensure that the partial
+    /// is not read if there is not a non-partial part for that prototype.
+    /// This is useful for cases where you don't want to add the prototype at all if
+    /// the original one does not exist:
+    /// <code>
+    /// - type: !PartialOnly entity
+    ///   id: MyEntity
+    /// </code>
+    /// </example>
+    /// <remarks>This works with any prototype kind read by prototype manager.</remarks>
+    void PartialDirectory(ResPath path, int index);
+
+    /// <summary>
     /// Entity prototypes grouped by their categories.
     /// </summary>
     FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; }
+
+    /// <summary>
+    /// Attempts to get a list of <see cref="EntityPrototype"/> that belongs to the provided <see cref="EntityCategoryPrototype"/>.
+    /// </summary>
+    /// <param name="category">Category id of the entity prototypes we want to get.</param>
+    /// <param name="prototypes">List of entity prototypes that form part category or null.</param>
+    /// <returns>True if the provided <see cref="EntityCategoryPrototype"/> id has a matching list of <see cref="EntityPrototype"/> False otherwise.</returns>
+    bool TryGetEntityPrototypesByCategory(ProtoId<EntityCategoryPrototype> category, [NotNullWhen(true)] out IReadOnlyList<EntityPrototype>? prototypes);
+
+    /// <summary>
+    /// Tries to get the list of all associated variants for a given prototype.
+    /// </summary>
+    /// <param name="collectionMember">The prototype being indexed.</param>
+    /// <param name="collectionVariants">The collection of variants this prototype belongs to.</param>
+    /// <returns>Returns true if the prototype is part of a variant collection, false otherwise.</returns>
+    bool TryGetVariantCollection<T>(ProtoId<T> collectionMember, [NotNullWhen(true)] out List<ProtoId<T>>? collectionVariants) where T : class, IPrototype;
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager
 {
     event Action<DataNodeDocument>? LoadedData;
+
+    void ReloadPrototypesOrThrow(
+        Dictionary<Type, HashSet<string>> modified,
+        Dictionary<Type, HashSet<string>>? removed = null);
 }
 
 /// <summary>

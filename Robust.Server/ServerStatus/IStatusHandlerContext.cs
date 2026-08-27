@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Primitives;
 
@@ -24,6 +25,8 @@ namespace Robust.Server.ServerStatus
 
         IDictionary<string, string> ResponseHeaders { get; }
         bool KeepAlive { get; set; }
+
+        bool IsWebSocketRequest { get; }
 
         Task<T?> RequestBodyJsonAsync<T>();
 
@@ -54,5 +57,7 @@ namespace Robust.Server.ServerStatus
         Task RespondJsonAsync(object jsonData, HttpStatusCode code = HttpStatusCode.OK);
 
         Task<Stream> RespondStreamAsync(HttpStatusCode code = HttpStatusCode.OK);
+
+        Task<WebSocket> AcceptWebSocketAsync();
     }
 }

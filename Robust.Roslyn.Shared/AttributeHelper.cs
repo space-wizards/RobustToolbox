@@ -25,6 +25,11 @@ public static class AttributeHelper
         return false;
     }
 
+    public static bool HasAttribute(ISymbol symbol, string attributeMetadataName)
+    {
+        return HasAttribute(symbol, attributeMetadataName, out _);
+    }
+
     public static bool GetNamedArgumentBool(AttributeData data, string name, bool defaultValue)
     {
         foreach (var kv in data.NamedArguments)
@@ -45,7 +50,7 @@ public static class AttributeHelper
     }
 
     public static bool HasAttribute(
-        ITypeSymbol symbol,
+        ISymbol symbol,
         ITypeSymbol attribute,
         [NotNullWhen(true)] out AttributeData? matchedAttribute)
     {

@@ -427,10 +427,10 @@ internal sealed class CollisionTestMoveEvent(NetEntity ent, MapCoordinates coord
     public MapCoordinates Coords = coords;
 }
 
-internal sealed class CollisionPredictionTestSystem : EntitySystem
+internal sealed partial class CollisionPredictionTestSystem : EntitySystem
 {
-    [Dependency] private readonly SharedTransformSystem _xform = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private SharedTransformSystem _xform = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     public bool CollisionStarted;
     public bool CollisionEnded;

@@ -27,6 +27,12 @@ public static class EquatableArray
     {
         return new(array);
     }
+
+    public static EquatableArray<T> AsEquatableArray<T>(this IEnumerable<T> enumerable)
+        where T : IEquatable<T>
+    {
+        return enumerable.ToImmutableArray().AsEquatableArray();
+    }
 }
 
 /// <summary>
@@ -60,6 +66,8 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnume
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref AsImmutableArray().ItemRef(index);
     }
+
+    public int Length => AsImmutableArray().Length;
 
     /// <summary>
     /// Gets a value indicating whether the current array is empty.
@@ -107,7 +115,16 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnume
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ImmutableArray<T> AsImmutableArray()
     {
-        return Unsafe.As<T[]?, ImmutableArray<T>>(ref Unsafe.AsRef(in this.array));
+        if (array == null)
+            return ImmutableArray<T>.Empty;
+
+        // If you check for null, you get a null warning here
+        // If you introduce a variable, you also get null if you use it in both places instead of just 1
+        // I don't know man
+        // Regardless, this fixes [] resulting in a default EquatableArray which means a null array
+        // Which leads to calling IsEmpty throwing an NRE, which is not very intuitive
+        // You could also just not use Unsafe.As here, but I guess we need to save 0.001 nanoseconds
+        return Unsafe.As<T[]?, ImmutableArray<T>>(ref Unsafe.AsRef(in array)!);
     }
 
     /// <summary>

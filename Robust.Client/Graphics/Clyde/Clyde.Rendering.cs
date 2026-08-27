@@ -80,6 +80,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private ClydeShaderInstance _queuedShaderInstance = default!;
 
+        private static readonly Vector4 DefaultScreenUvRect = new(0, 0, 1, 1);
+        private Vector4 _queuedScreenUvRect = DefaultScreenUvRect;
+
         // Current projection & view matrices that are being used ot render.
         // This gets updated to keep track during (queue) and (misc), but not during (submit).
         private Matrix3x2 _currentMatrixProj;
@@ -296,6 +299,7 @@ namespace Robust.Client.Graphics.Clyde
             program.SetUniformMaybe(UniIModelMatrix, command.ModelMatrix);
             // Reset ModUV to ensure it's identity and doesn't touch anything.
             program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
+            program.SetUniformMaybe(UniIScreenUvRect, command.ScreenUvRect);
 
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
@@ -367,6 +371,7 @@ namespace Robust.Client.Graphics.Clyde
             // Reset renderer state.
             _currentMatrixModel = Matrix3x2.Identity;
             _queuedShaderInstance = _defaultShader;
+            _queuedScreenUvRect = DefaultScreenUvRect;
             SetScissorFull(null);
         }
 
@@ -620,14 +625,189 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, new Vector2(0, 0), modulate);
-            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, new Vector2(1, 0), modulate);
-            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, new Vector2(1, 1), modulate);
-            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, new Vector2(0, 1), modulate);
+            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, Vector2.Zero, modulate);
+            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, Vector2.UnitX, modulate);
+            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, Vector2.One, modulate);
+            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, Vector2.UnitY, modulate);
             BatchVertexIndex += 4;
             QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
 
             _debugStats.LastClydeDrawCalls += 1;
+        }
+
+        private void DrawTextureBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldTextureRect> rects,
+            Color modulate,
+            in Box2 texCoords)
+        {
+            DrawTextureBatch(texture, rects, modulate, in texCoords, true);
+        }
+
+        private void DrawTextureBatchUnmodulated(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldTextureRect> rects,
+            in Box2 texCoords)
+        {
+            DrawTextureBatch(texture, rects, Color.White, in texCoords, false);
+        }
+
+        private void DrawTextureBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldTextureRect> rects,
+            Color modulate,
+            in Box2 texCoords,
+            bool applyModulation)
+        {
+            if (rects.Length == 0)
+                return;
+
+            // Avoids calling EnsureBatchSpaceAvailable / EnsureBatchState for each individual quad.
+            var primitiveType = GetQuadBatchPrimitiveType();
+            var indexCount = GetQuadBatchIndexCount();
+            var rectIndex = 0;
+
+            while (rectIndex < rects.Length)
+            {
+                var availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                EnsureBatchState(texture, true, primitiveType, _queuedShader);
+
+                availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                var count = Math.Min(availableQuads, rects.Length - rectIndex);
+
+                for (var i = 0; i < count; i++)
+                {
+                    ref readonly var rect = ref rects[rectIndex + i];
+                    var color = rect.Modulate ?? Color.White;
+
+                    if (applyModulation)
+                        color *= modulate;
+
+                    // Can probably SIMD this more somehow but future concern.
+                    var quad = rect.Quad;
+                    var transform = quad.Transform * _currentMatrixModel;
+
+                    var bl = Vector2.Transform(quad.Box.BottomLeft, transform);
+                    var br = Vector2.Transform(quad.Box.BottomRight, transform);
+                    var tr = Vector2.Transform(quad.Box.TopRight, transform);
+                    var tl = tr + bl - br;
+
+                    var vIdx = BatchVertexIndex;
+                    BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, Vector2.Zero, color);
+                    BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, Vector2.UnitX, color);
+                    BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, Vector2.One, color);
+                    BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, Vector2.UnitY, color);
+                    BatchVertexIndex += 4;
+                    QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
+                }
+
+                rectIndex += count;
+                _debugStats.LastClydeDrawCalls += count;
+            }
+        }
+
+        private void DrawRectBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldRect> rects,
+            Color modulate,
+            in Box2 texCoords)
+        {
+            DrawRectBatch(texture, rects, modulate, in texCoords, true);
+        }
+
+        private void DrawRectBatchUnmodulated(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldRect> rects,
+            in Box2 texCoords)
+        {
+            DrawRectBatch(texture, rects, Color.White, in texCoords, false);
+        }
+
+        private void DrawRectBatch(
+            ClydeHandle texture,
+            ReadOnlySpan<WorldRect> rects,
+            Color modulate,
+            in Box2 texCoords,
+            bool applyModulation)
+        {
+            if (rects.Length == 0)
+                return;
+
+            var primitiveType = GetQuadBatchPrimitiveType();
+            var indexCount = GetQuadBatchIndexCount();
+            var rectIndex = 0;
+
+            while (rectIndex < rects.Length)
+            {
+                var availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                EnsureBatchState(texture, true, primitiveType, _queuedShader);
+
+                availableQuads = GetAvailableBatchQuads(indexCount);
+
+                if (availableQuads <= 0)
+                {
+                    FlushBatchQueue();
+                    continue;
+                }
+
+                var count = Math.Min(availableQuads, rects.Length - rectIndex);
+
+                for (var i = 0; i < count; i++)
+                {
+                    ref readonly var rect = ref rects[rectIndex + i];
+                    var color = rect.Color;
+
+                    if (applyModulation)
+                        color *= modulate;
+
+                    var box = rect.Rect;
+
+                    var bl = Vector2.Transform(box.BottomLeft, _currentMatrixModel);
+                    var br = Vector2.Transform(box.BottomRight, _currentMatrixModel);
+                    var tr = Vector2.Transform(box.TopRight, _currentMatrixModel);
+                    var tl = tr + bl - br;
+
+                    var vIdx = BatchVertexIndex;
+                    BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft, Vector2.Zero, color);
+                    BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight, Vector2.UnitX, color);
+                    BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight, Vector2.One, color);
+                    BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft, Vector2.UnitY, color);
+                    BatchVertexIndex += 4;
+                    QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
+                }
+
+                rectIndex += count;
+                _debugStats.LastClydeDrawCalls += count;
+            }
+        }
+
+        private int GetAvailableBatchQuads(int indexCount)
+        {
+            // The vertex size is so comically high you're probably never hitting it.
+            var availableVertices = Math.Max(0, BatchVertexData.Length - BatchVertexIndex - 1);
+            var availableIndices = Math.Max(0, BatchIndexData.Length - BatchIndexIndex);
+            return Math.Min(availableVertices / 4, availableIndices / indexCount);
         }
 
         private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,
@@ -758,6 +938,15 @@ namespace Robust.Client.Graphics.Clyde
             _queuedShaderInstance = instance;
         }
 
+        private void DrawSetScreenUvRect(in Vector4 screenUvRect)
+        {
+            if (_queuedScreenUvRect == screenUvRect)
+                return;
+
+            BreakBatch();
+            _queuedScreenUvRect = screenUvRect;
+        }
+
         private void DrawClear(Color color, int stencil, ClearBufferMask mask)
         {
             BreakBatch();
@@ -802,7 +991,8 @@ namespace Robust.Client.Graphics.Clyde
                 if (metaData.TextureId == textureId &&
                     indexed == metaData.Indexed &&
                     metaData.PrimitiveType == primitiveType &&
-                    metaData.ShaderInstance == shaderInstance)
+                    metaData.ShaderInstance == shaderInstance &&
+                    metaData.ScreenUvRect == _queuedScreenUvRect)
                 {
                     // Data matches, don't have to do anything.
                     return;
@@ -814,7 +1004,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // ... and start another.
             _batchMetaData = new BatchMetaData(textureId, indexed, primitiveType,
-                indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance);
+                indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance, _queuedScreenUvRect);
 
             /*
             if (textureId != default)
@@ -847,6 +1037,7 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.PrimitiveType = metaData.PrimitiveType;
             command.DrawBatch.TextureId = metaData.TextureId;
             command.DrawBatch.ShaderInstance = metaData.ShaderInstance;
+            command.DrawBatch.ScreenUvRect = metaData.ScreenUvRect;
 
             command.DrawBatch.Count = currentIndex - metaData.StartIndex;
             command.DrawBatch.ModelMatrix = Matrix3x2.Identity;
@@ -904,6 +1095,7 @@ namespace Robust.Client.Graphics.Clyde
                 _currentBoundRenderTarget,
                 _currentRenderTarget,
                 _queuedShaderInstance,
+                _queuedScreenUvRect,
                 _currentScissorState,
                 _glCaps);
         }
@@ -914,6 +1106,7 @@ namespace Robust.Client.Graphics.Clyde
             BindRenderTargetImmediate(state.BoundRenderTarget);
 
             _queuedShaderInstance = state.QueuedShaderInstance;
+            _queuedScreenUvRect = state.ScreenUvRect;
             _currentRenderTarget = state.RenderTarget;
             var (width, height) = state.BoundRenderTarget.Size;
             GL.Viewport(0, 0, width, height);
@@ -946,6 +1139,7 @@ namespace Robust.Client.Graphics.Clyde
             BindRenderTargetFull(_mainWindow!.RenderTarget);
             _batchMetaData = null;
             _queuedShaderInstance = _defaultShader;
+            _queuedScreenUvRect = DefaultScreenUvRect;
 
             GL.Viewport(0, 0, _mainWindow!.FramebufferSize.X, _mainWindow!.FramebufferSize.Y);
         }
@@ -969,6 +1163,9 @@ namespace Robust.Client.Graphics.Clyde
                         break;
                     case ShaderBlendMode.Normal:
                         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+                        break;
+                    case ShaderBlendMode.Premultiplied:
+                        GL.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
                         break;
                 }
         }
@@ -1018,6 +1215,8 @@ namespace Robust.Client.Graphics.Clyde
             public int Count;
             public bool Indexed;
             public BatchPrimitiveType PrimitiveType;
+
+            public Vector4 ScreenUvRect;
 
             // TODO: this makes the render commands so much more large please remove.
             public Matrix3x2 ModelMatrix;
@@ -1090,15 +1289,17 @@ namespace Robust.Client.Graphics.Clyde
             public readonly BatchPrimitiveType PrimitiveType;
             public readonly int StartIndex;
             public readonly ClydeHandle ShaderInstance;
+            public readonly Vector4 ScreenUvRect;
 
             public BatchMetaData(ClydeHandle textureId, bool indexed, BatchPrimitiveType primitiveType,
-                int startIndex, ClydeHandle shaderInstance)
+                int startIndex, ClydeHandle shaderInstance, Vector4 screenUvRect)
             {
                 TextureId = textureId;
                 Indexed = indexed;
                 PrimitiveType = primitiveType;
                 StartIndex = startIndex;
                 ShaderInstance = shaderInstance;
+                ScreenUvRect = screenUvRect;
             }
         }
 
@@ -1120,6 +1321,7 @@ namespace Robust.Client.Graphics.Clyde
             public readonly LoadedRenderTarget BoundRenderTarget;
             public readonly LoadedRenderTarget RenderTarget;
             public readonly ClydeShaderInstance QueuedShaderInstance;
+            public readonly Vector4 ScreenUvRect;
 
             public readonly UIBox2i? ScissorState;
 
@@ -1131,6 +1333,7 @@ namespace Robust.Client.Graphics.Clyde
                 LoadedRenderTarget boundRenderTarget,
                 LoadedRenderTarget renderTarget,
                 ClydeShaderInstance queuedShaderInstance,
+                Vector4 screenUvRect,
                 UIBox2i? scissorState,
                 GLCaps glcaps
                 )
@@ -1140,6 +1343,7 @@ namespace Robust.Client.Graphics.Clyde
                 BoundRenderTarget = boundRenderTarget;
                 RenderTarget = renderTarget;
                 QueuedShaderInstance = queuedShaderInstance;
+                ScreenUvRect = screenUvRect;
 
                 ScissorState = scissorState;
                 GLCaps = glcaps;

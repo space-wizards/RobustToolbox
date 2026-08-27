@@ -9,11 +9,14 @@ using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Localization;
+using Robust.Server.Network.Transfer;
 using Robust.Server.Physics;
 using Robust.Server.Player;
+using Robust.Server.Physics.Components;
 using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
 using Robust.Server.Replays;
+using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
@@ -22,12 +25,14 @@ using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Transfer;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
@@ -55,6 +60,8 @@ namespace Robust.UnitTesting.Server
         ISimulationFactory RegisterDependencies(DiContainerDelegate factory);
         ISimulationFactory RegisterEntitySystems(EntitySystemRegistrationDelegate factory);
         ISimulationFactory RegisterPrototypes(PrototypeRegistrationDelegate factory);
+        ISimulationFactory AddRoot(AddRootDelegate factory);
+        ISimulationFactory ChangeCVar(ChangeCVarDelegate factory);
         ISimulation InitializeInstance();
     }
 
@@ -72,8 +79,6 @@ namespace Robust.UnitTesting.Server
         /// Adds a new map directly to the map manager.
         /// </summary>
         (EntityUid Uid, MapId MapId) CreateMap();
-        EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates);
-        EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates);
     }
 
     /// <summary>
@@ -86,19 +91,19 @@ namespace Robust.UnitTesting.Server
             return simulation.Resolve<IEntitySystemManager>().GetEntitySystem<T>();
         }
 
-        public static bool HasComp<T>(this ISimulation simulation, EntityUid entity) where T : IComponent
+        public static bool HasComp<T>(this ISimulation simulation, EntityUid entity, IEntityManager entMan) where T : IComponent
         {
-            return simulation.Resolve<IEntityManager>().HasComponent<T>(entity);
+            return entMan.HasComponent<T>(entity);
         }
 
-        public static T Comp<T>(this ISimulation simulation, EntityUid entity) where T : IComponent
+        public static T Comp<T>(this ISimulation simulation, EntityUid entity, IEntityManager entMan) where T : IComponent
         {
-            return simulation.Resolve<IEntityManager>().GetComponent<T>(entity);
+            return entMan.GetComponent<T>(entity);
         }
 
-        public static TransformComponent Transform(this ISimulation simulation, EntityUid entity)
+        public static TransformComponent Transform(this ISimulation simulation, EntityUid entity, IEntityManager entMan)
         {
-            return simulation.Comp<TransformComponent>(entity);
+            return simulation.Comp<TransformComponent>(entity, entMan);
         }
     }
 
@@ -110,12 +115,18 @@ namespace Robust.UnitTesting.Server
 
     public delegate void PrototypeRegistrationDelegate(IPrototypeManager protoMan);
 
+    public delegate void AddRootDelegate(IResourceManager resourceMan);
+
+    public delegate void ChangeCVarDelegate(IConfigurationManager configMan);
+
     public sealed class RobustServerSimulation : ISimulation, ISimulationFactory
     {
         private DiContainerDelegate? _diFactory;
         private CompRegistrationDelegate? _regDelegate;
         private EntitySystemRegistrationDelegate? _systemDelegate;
         private PrototypeRegistrationDelegate? _protoDelegate;
+        private AddRootDelegate? _addRootDelegate;
+        private ChangeCVarDelegate? _changeCVarDelegate;
 
         public IDependencyCollection Collection { get; private set; } = default!;
 
@@ -128,18 +139,6 @@ namespace Robust.UnitTesting.Server
         {
             var uid = Collection.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var mapId);
             return (uid, mapId);
-        }
-
-        public EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates)
-        {
-            var entMan = Collection.Resolve<IEntityManager>();
-            return entMan.SpawnEntity(protoId, coordinates);
-        }
-
-        public EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates)
-        {
-            var entMan = Collection.Resolve<IEntityManager>();
-            return entMan.SpawnEntity(protoId, coordinates);
         }
 
         private RobustServerSimulation() { }
@@ -165,6 +164,18 @@ namespace Robust.UnitTesting.Server
         public ISimulationFactory RegisterPrototypes(PrototypeRegistrationDelegate factory)
         {
             _protoDelegate += factory;
+            return this;
+        }
+
+        public ISimulationFactory AddRoot(AddRootDelegate factory)
+        {
+            _addRootDelegate += factory;
+            return this;
+        }
+
+        public ISimulationFactory ChangeCVar(ChangeCVarDelegate factory)
+        {
+            _changeCVarDelegate += factory;
             return this;
         }
 
@@ -198,6 +209,9 @@ namespace Robust.UnitTesting.Server
             container.Register<HttpClientHolder>();
             container.Register<IHttpClientHolder, HttpClientHolder>();
             container.Register<IHWId, DummyHWId>();
+            container.Register<IServerNetManager, NetManager>();
+            container.Register<IStatusHost, StatusHost>();
+            container.Register<ITransferManager, ServerTransferManager>();
 
             var realReflection = new ServerReflectionManager();
             realReflection.LoadAssemblies(new List<Assembly>(2)
@@ -205,36 +219,52 @@ namespace Robust.UnitTesting.Server
                 AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"),
                 AppDomain.CurrentDomain.GetAssemblyByName("Robust.Server"),
             });
+            realReflection.EnsureGetAllTypesCache();
 
             var reflectionManager = new Mock<IReflectionManager>();
             reflectionManager
-                .Setup(x => x.FindTypesWithAttribute<MeansDataDefinitionAttribute>())
-                .Returns(() => new[]
-                {
-                    typeof(DataDefinitionAttribute)
-                });
+                .Setup(x => x.FindTypesWithAttribute<FlagsForAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<FlagsForAttribute>);
 
             reflectionManager
-                .Setup(x => x.FindTypesWithAttribute(typeof(DataDefinitionAttribute)))
-                .Returns(() => new[]
-                {
-                    typeof(EntityPrototype),
-                    typeof(TransformComponent),
-                    typeof(MetaDataComponent)
-                });
+                .Setup(x => x.FindTypesWithAttribute<ConstantsForAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<ConstantsForAttribute>);
 
             reflectionManager
                 .Setup(x => x.FindTypesWithAttribute<TypeSerializerAttribute>())
-                .Returns(() => realReflection.FindTypesWithAttribute<TypeSerializerAttribute>());
+                .Returns(realReflection.FindTypesWithAttribute<TypeSerializerAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttribute<MeansDataDefinitionAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<MeansDataDefinitionAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttribute<MeansDataRecordAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<MeansDataRecordAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttribute<ImplicitDataRecordAttribute>())
+                .Returns(realReflection.FindTypesWithAttribute<ImplicitDataRecordAttribute>);
+
+            reflectionManager
+                .Setup(x => x.FindTypesWithAttributeSet<CopyByRefAttribute>())
+                .Returns(realReflection.FindTypesWithAttributeSet<CopyByRefAttribute>);
 
             reflectionManager
                 .Setup(x => x.FindAllTypes())
-                .Returns(() => realReflection.FindAllTypes());
+                .Returns(realReflection.FindAllTypes);
+
+            reflectionManager
+                .Setup(x => x.IsAttributeDefined(It.IsAny<Type>(), It.IsAny<Type>()))
+                .Returns((Type type1, Type type2) => realReflection.IsAttributeDefined(type1, type2));
 
             container.RegisterInstance<IBaseServerInternal>(new Mock<IBaseServerInternal>().Object);
             container.RegisterInstance<IReflectionManager>(reflectionManager.Object); // tests should not be searching for types
             container.RegisterInstance<IRobustSerializer>(new Mock<IRobustSerializer>().Object);
-            container.RegisterInstance<IResourceManager>(new Mock<IResourceManager>().Object); // no disk access for tests
             container.RegisterInstance<IGameTiming>(new Mock<IGameTiming>().Object); // TODO: get timing working similar to RobustIntegrationTest
 
             //Tier 2: Simulation
@@ -242,12 +272,10 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntityManager, ServerEntityManager>();
             container.Register<IServerEntityNetworkManager, ServerEntityManager>();
             container.Register<EntityManager, ServerEntityManager>();
-            container.Register<IMapManager, NetworkedMapManager>();
-            container.Register<INetworkedMapManager, NetworkedMapManager>();
-            container.Register<IMapManagerInternal, NetworkedMapManager>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IRobustRandom, RobustRandom>();
             container.Register<IPrototypeManager, ServerPrototypeManager>();
+            container.Register<IPrototypeManagerInternal, ServerPrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IManifoldManager, CollisionManager>();
@@ -256,13 +284,13 @@ namespace Robust.UnitTesting.Server
             container.Register<ITileDefinitionManager, TileDefinitionManager>();
             container.Register<IParallelManager, TestingParallelManager>();
             container.Register<IParallelManagerInternal, TestingParallelManager>();
+            container.Register<IResourceManager, ResourceManager>();
             // Needed for grid fixture debugging.
             container.Register<IConGroupController, ConGroupController>();
             container.Register<EntityConsoleHost>();
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();
-            container.Register<IServerNetManager, NetManager>();
             // god help you if you actually need to test pvs functions
             container.RegisterInstance<IPlayerManager>(new Mock<IPlayerManager>().Object);
             container.RegisterInstance<ISharedPlayerManager>(new Mock<ISharedPlayerManager>().Object);
@@ -281,6 +309,8 @@ namespace Robust.UnitTesting.Server
             configMan.LoadCVarsFromAssembly(typeof(ProgramShared).Assembly); // Shared
             configMan.LoadCVarsFromAssembly(typeof(RobustServerSimulation).Assembly); // Tests
             configMan.LoadCVarsFromAssembly(typeof(RTCVars).Assembly); // Tests
+
+            _changeCVarDelegate?.Invoke(configMan);
 
             var logMan = container.Resolve<ILogManager>();
             logMan.RootSawmill.AddHandler(new TestLogHandler(configMan, "SIM"));
@@ -306,6 +336,9 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<OccluderTreeComponent>();
             compFactory.RegisterClass<CollideOnAnchorComponent>();
             compFactory.RegisterClass<ActorComponent>();
+            compFactory.RegisterClass<GridSplitNodeComponent>();
+            compFactory.RegisterClass<ChunkEntityComponent>();
+            compFactory.RegisterClass<ChunkContainerComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -331,16 +364,13 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
             entitySystemMan.LoadExtraSystemType<PvsSystem>();
+            entitySystemMan.LoadExtraSystemType<ServerChunkEntitySystem>();
             entitySystemMan.LoadExtraSystemType<InputSystem>();
             entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 
-            var mapManager = container.Resolve<IMapManager>();
-            mapManager.Initialize();
-
             entityMan.Startup();
-            mapManager.Startup();
 
             container.Resolve<INetManager>().Initialize(true);
             container.Resolve<ISerializationManager>().Initialize();
@@ -348,6 +378,10 @@ namespace Robust.UnitTesting.Server
             var protoMan = container.Resolve<IPrototypeManager>();
             protoMan.Initialize();
             protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
+
+            var resourceMan = container.Resolve<IResourceManager>();
+            _addRootDelegate?.Invoke(resourceMan);
+
             _protoDelegate?.Invoke(protoMan);
 
             // This just exists to set protoMan._hasEverBeenReloaded to True

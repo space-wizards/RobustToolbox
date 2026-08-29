@@ -59,7 +59,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public event Action<TextEnteredEventArgs>? TextEntered { add { } remove { } }
         public event Action<TextEditingEventArgs>? TextEditing { add { } remove { } }
-        public event Action<MouseMoveEventArgs>? MouseMove { add { } remove { } }
+        public event Action<MouseMoveEventArgs> MouseMove { add { } remove { } }
         public event Action<MouseEnterLeaveEventArgs>? MouseEnterLeave { add { } remove { } }
         public event Action<KeyEventArgs>? KeyUp { add { } remove { } }
         public event Action<KeyEventArgs>? KeyDown { add { } remove { } }

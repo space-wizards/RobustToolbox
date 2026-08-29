@@ -70,6 +70,7 @@
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />
 
   <Import Project="..\MSBuild\Robust.Trimming.targets" />
 </Project>

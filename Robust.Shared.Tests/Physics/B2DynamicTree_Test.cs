@@ -66,5 +66,39 @@ namespace Robust.Shared.Tests.Physics
                 }
             });
         }
+
+        [Test]
+        public void RebuildFullPreservesQueries()
+        {
+            var dt = new B2DynamicTree<int>();
+
+            for (var i = 0; i < aabbs1.Length; ++i)
+            {
+                dt.CreateProxy(aabbs1[i], uint.MaxValue, i);
+            }
+
+            dt.Rebuild(true);
+
+            var point = new Vector2(0, 0);
+            var box = Box2.CenteredAround(point, new Vector2(0.1f, 0.1f));
+            var results = new HashSet<int>();
+
+            dt.Query(proxy =>
+            {
+                results.Add(dt.GetUserData(proxy));
+                return true;
+            }, box);
+
+            Assert.Multiple(() =>
+            {
+                for (var i = 0; i < aabbs1.Length; i++)
+                {
+                    if (aabbs1[i].Intersects(box))
+                    {
+                        Assert.That(results, Does.Contain(i));
+                    }
+                }
+            });
+        }
     }
 }

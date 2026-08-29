@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 using Nett;
 using Robust.Shared.Collections;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
@@ -27,6 +28,7 @@ namespace Robust.Shared.Configuration
         private const char TABLE_DELIMITER = '.';
         protected readonly Dictionary<string, ConfigVar> _configVars = new();
         private ConfigFileStorage? _configFile;
+        private ConfigFileStorage? _forkConfigFile;
         protected bool _isServer;
 
         protected readonly ReaderWriterLockSlim Lock = new();
@@ -55,6 +57,7 @@ namespace Robust.Shared.Configuration
 
             _configVars.Clear();
             _configFile = null;
+            _forkConfigFile = null;
         }
 
         /// <inheritdoc />
@@ -223,14 +226,56 @@ namespace Robust.Shared.Configuration
             }
         }
 
+        public HashSet<string> LoadFromFile(IWritableDirProvider provider, ResPath path)
+        {
+            if (!path.IsValidFilePath(rooted: true))
+                throw new ArgumentException("Config load path must be rooted, point to a file, and not contain relative traversal.", nameof(path));
+
+            try
+            {
+                HashSet<string> result;
+                using (var file = provider.OpenRead(path))
+                {
+                    result = LoadFromTomlStream(file);
+                }
+
+                SetSaveFile(provider, path);
+                ApplyRollback();
+                _sawmill.Info("Configuration loaded from file '{0}'.", path);
+                return result;
+            }
+            catch (Exception e)
+            {
+                _sawmill.Error("Unable to load configuration file '{0}':\n{1}", path, e);
+                return new HashSet<string>(0);
+            }
+        }
+
         public void SetSaveFile(string configFile)
         {
             _configFile = new ConfigFileStorageDisk { Path = configFile };
         }
 
+        public void SetSaveFile(IWritableDirProvider provider, ResPath path)
+        {
+            if (!path.IsValidFilePath(rooted: true))
+                throw new ArgumentException("Config save path must be rooted, point to a file, and not contain relative traversal.", nameof(path));
+
+            _configFile = new ConfigFileStorageWritableDir { Provider = provider, Path = path };
+        }
+
+        public void SetForkSaveFile(IWritableDirProvider provider, ResPath path)
+        {
+            if (!path.IsValidFilePath(rooted: true))
+                throw new ArgumentException("Config save path must be rooted, point to a file, and not contain relative traversal.", nameof(path));
+
+            _forkConfigFile = new ConfigFileStorageWritableDir { Provider = provider, Path = path };
+        }
+
         public void SetVirtualConfig()
         {
             _configFile = new ConfigFileStorageVirtual();
+            _forkConfigFile = new ConfigFileStorageVirtual();
         }
 
         public void CheckUnusedCVars()
@@ -356,33 +401,30 @@ namespace Robust.Shared.Configuration
                 // Always write if it was present when reading from the config file, otherwise:
                 // Don't write if Archive flag is not set.
                 // Don't write if the cVar is the default value.
-                var cvars = _configVars.Where(x => x.Value.ConfigModified
-                                                   || ((x.Value.Flags & CVar.ARCHIVE) != 0 && x.Value.Value != null &&
-                                                       !x.Value.Value.Equals(x.Value.DefaultValue))).Select(x => x.Key);
+                var cvars = _configVars
+                    .Where(x => ShouldSaveCVar(x.Value) && (x.Value.Flags & CVar.FORK) == 0)
+                    .Select(x => x.Key)
+                    .ToArray();
 
                 // Write in-memory to avoid bulldozing config file on exception.
                 var memoryStream = new MemoryStream();
                 SaveToTomlStream(memoryStream, cvars);
                 memoryStream.Position = 0;
 
-                switch (_configFile)
+                SaveStreamToStorage(_configFile, memoryStream);
+
+                if (_forkConfigFile != null)
                 {
-                    case ConfigFileStorageDisk disk:
-                    {
-                        using var file = File.Create(disk.Path);
-                        memoryStream.CopyTo(file);
-                        break;
-                    }
-                    case ConfigFileStorageVirtual @virtual:
-                    {
-                        @virtual.Stream.SetLength(0);
-                        memoryStream.CopyTo(@virtual.Stream);
-                        break;
-                    }
-                    default:
-                    {
-                        throw new UnreachableException();
-                    }
+                    var forkCvars = _configVars
+                        .Where(x => ShouldSaveCVar(x.Value)
+                                    && (x.Value.Flags & CVar.FORK) != 0)
+                        .Select(x => x.Key)
+                        .ToArray();
+
+                    var forkMemoryStream = new MemoryStream();
+                    SaveToTomlStream(forkMemoryStream, forkCvars);
+                    forkMemoryStream.Position = 0;
+                    SaveStreamToStorage(_forkConfigFile, forkMemoryStream);
                 }
 
                 _sawmill.Info($"config saved to '{_configFile}'.");
@@ -541,6 +583,9 @@ namespace Robust.Shared.Configuration
 
         public void LoadCVarsFromType(Type containingType)
         {
+            var attribute = containingType.GetCustomAttribute<CVarDefsAttribute>();
+            var extraFlags = attribute?.Fork == true ? CVar.FORK : CVar.NONE;
+
             foreach (var defField in containingType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
             {
                 var fieldType = defField.FieldType;
@@ -565,7 +610,59 @@ namespace Robust.Shared.Configuration
                         $"CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' is null.");
                 }
 
-                RegisterCVar(def.Name, type, def.DefaultValue, def.Flags);
+                RegisterCVar(def.Name, type, def.DefaultValue, def.Flags | extraFlags);
+            }
+        }
+
+        private bool ShouldSaveCVar(ConfigVar cVar)
+        {
+            if (!cVar.Registered)
+                return false;
+
+            if (!_isServer && (cVar.Flags & (CVar.SERVER | CVar.SERVERONLY)) != 0)
+                return false;
+
+            if (_isServer && (cVar.Flags & (CVar.CLIENT | CVar.CLIENTONLY)) != 0)
+                return false;
+
+            return cVar.ConfigModified
+                   || ((cVar.Flags & CVar.ARCHIVE) != 0
+                       && cVar.Value != null
+                       && !cVar.Value.Equals(cVar.DefaultValue));
+        }
+
+        private static void SaveStreamToStorage(ConfigFileStorage storage, MemoryStream memoryStream)
+        {
+            switch (storage)
+            {
+                case ConfigFileStorageDisk disk:
+                {
+                    var directory = Path.GetDirectoryName(disk.Path);
+                    if (!string.IsNullOrEmpty(directory))
+                        Directory.CreateDirectory(directory);
+
+                    using var file = File.Create(disk.Path);
+                    memoryStream.CopyTo(file);
+                    break;
+                }
+                case ConfigFileStorageVirtual @virtual:
+                {
+                    // Trim it just in case.
+                    @virtual.Stream.SetLength(0);
+                    memoryStream.CopyTo(@virtual.Stream);
+                    break;
+                }
+                case ConfigFileStorageWritableDir writable:
+                {
+                    writable.Provider.CreateDir(writable.Path.Directory);
+                    using var file = writable.Provider.OpenWrite(writable.Path);
+                    memoryStream.CopyTo(file);
+                    break;
+                }
+                default:
+                {
+                    throw new UnreachableException();
+                }
             }
         }
 
@@ -1048,6 +1145,17 @@ namespace Robust.Shared.Configuration
             public override string ToString()
             {
                 return Path;
+            }
+        }
+
+        private sealed class ConfigFileStorageWritableDir : ConfigFileStorage
+        {
+            public required IWritableDirProvider Provider;
+            public required ResPath Path;
+
+            public override string ToString()
+            {
+                return Path.ToString();
             }
         }
 

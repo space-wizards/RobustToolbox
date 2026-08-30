@@ -934,7 +934,7 @@ public partial class PrototypeManager
         if (!int.TryParse(indexStr, out var index))
         {
             throw new PrototypeLoadException(
-                $"Found partial prototype node with index tag, but could not parse its index as a number. Expected tag in format !Index:0 or !ReplaceIndex:0, got tag {dataNode.Tag} for data node {dataNode}");
+                $"Found partial prototype node with index tag, but could not parse its index as a number. Expected tag in format !Index:0 or !CombineIndex:0, got tag {dataNode.Tag} for data node {dataNode}");
         }
 
         if (fromEnd)

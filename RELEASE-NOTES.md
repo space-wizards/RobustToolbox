@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Using partial prototypes, use the tag !CombineIndex to combine a node in a sequence. This fixes a bug where modifying sequences (lists) in partial prototypes was buggy and inconsistent. If you are adding to a sequence or removing from it you don't need to change anything. If you were trying to modify existing sequence elements, you will need to replace - "a": 1 with - !CombineIndex:0 "a": 1 for example.
 
 ### New features
 
@@ -44,7 +44,13 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed partial component additions and removals being inconsistent and sometimes overwriting components.
+* Fixed partial prototypes not being able to modify existing sequence indexes. Use !CombineIndex:0 to modify the first element of a list, for example.
+* Fixed the game not loading if you partially load a non-partial prototype.
+* Fixed the YML linter not working with partial prototypes, and added a partialNoOriginalError parameter to ValidateDirectory that when set to true will error when a non !PartialOnly partial prototype is found without an original to reference. This is set to false by default. This can be useful if you are not mixing partials and non-partials in the same directory.
+* Fixed not copying the original YML that is kept in PartialOriginals, resulting in duplicated data after applying partials.
+* Fixed YML hot reload not working with prototype partials.
+* Fixed inconsistent partial ordering if the same prototype is modified more than once in the same directory. Now it is ordered by the file path's name.
 
 ### Other
 
@@ -52,7 +58,9 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* TransformComponent now uses delta states, reducing bandwidth usage.
+* Debug asserts in EntityManager.Dirty calls now check Component.Networked instead of checking for NetworkedComponentAttribute, reducing heap allocations on Debug.
+* Added per-step verbose logging for prototype partials that logs every step of applying a partial prototype, if PrototypeManager's sawmill is set to show verbose logs.
 
 
 ## 289.0.0

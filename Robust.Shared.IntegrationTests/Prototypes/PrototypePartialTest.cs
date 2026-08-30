@@ -20,6 +20,7 @@ internal sealed partial class PrototypePartialTest
     private static readonly EntProtoId MappingSequenceId = $"{nameof(PrototypePartialTest)}MappingSequence";
     private static readonly EntProtoId InheritanceIdBase = $"{nameof(PrototypePartialTest)}InheritanceBase";
     private static readonly EntProtoId InheritanceIdInheritor = $"{nameof(PrototypePartialTest)}InheritanceInheritor";
+    private static readonly EntProtoId ReloadId = $"{nameof(PrototypePartialTest)}Reload";
 
     private static readonly string Sequence = $@"
 - type: entity
@@ -164,8 +165,8 @@ internal sealed partial class PrototypePartialTest
           components:
           - type: PrototypePartial
             dictionaryList:
-            - "g": 7
-            - "h": 8
+            - !CombineIndex:0 "g": 7
+            - !CombineIndex:1 "h": 8
         """;
 
     private static readonly string RemoveMappingSequence = $"""
@@ -174,8 +175,8 @@ internal sealed partial class PrototypePartialTest
           components:
           - type: PrototypePartial
             dictionaryList:
-            - "b": !Remove
-            - "e": !Remove
+            - !CombineIndex:0 "b": !Remove
+            - !CombineIndex:1 "e": !Remove
         """;
 
     private static readonly string AddAndRemoveMappingSequence = $"""
@@ -184,9 +185,9 @@ internal sealed partial class PrototypePartialTest
           components:
           - type: PrototypePartial
             dictionaryList:
-            - "g": 7
+            - !CombineIndex:0 "g": 7
               "b": !Remove
-            - "h": 8
+            - !CombineIndex:1 "h": 8
               "e": !Remove
         """;
 
@@ -265,6 +266,36 @@ internal sealed partial class PrototypePartialTest
   - !Remove type: PrototypePartialInheritor
 ";
 
+    private static readonly string InheritanceBaseAddInheritor = $@"
+- type: entity
+  id: {InheritanceIdBase}
+  components:
+  - type: PrototypePartialInheritor
+";
+
+    private static readonly string InheritanceBaseAddPartial = $@"
+- type: entity
+  id: {InheritanceIdBase}
+  components:
+  - type: PrototypePartial
+";
+
+    private static readonly string Reload = $@"
+- type: entity
+  id: {ReloadId}
+  components:
+  - type: PrototypePartial
+";
+
+    private static readonly string ReloadAddSequenceData = $@"
+- type: entity
+  id: {ReloadId}
+  components:
+  - type: PrototypePartial
+    list:
+    - 1
+";
+
     private ISimulation StartSim(
         bool partial = true,
         bool addBase = true,
@@ -288,10 +319,11 @@ internal sealed partial class PrototypePartialTest
                 var root = new MemoryContentRoot();
                 if (addBase)
                 {
-                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(Sequence)}.yml"), Sequence);
-                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(Mapping)}.yml"), Mapping);
-                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(MappingSequence)}.yml"), MappingSequence);
-                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(Inheritance)}.yml"), Inheritance);
+                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(SequenceId)}.yml"), Sequence);
+                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(MappingId)}.yml"), Mapping);
+                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(MappingSequenceId)}.yml"), MappingSequence);
+                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(InheritanceIdBase)}.yml"), Inheritance);
+                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(ReloadId)}.yml"), Reload);
                 }
 
                 for (var i = 0; i < ymlToLoad.Length; i++)
@@ -774,6 +806,93 @@ internal sealed partial class PrototypePartialTest
         var inheritorEnt = prototypes.Index(InheritanceIdInheritor);
         Assert.That(inheritorEnt.HasComp<PrototypePartialBaseComponent>(comps), Is.True);
         Assert.That(inheritorEnt.HasComp<PrototypePartialInheritorComponent>(comps), Is.False);
+    }
+
+    [Test]
+    public void TestInheritanceBaseAddInheritor()
+    {
+        var sim = StartSim(ymlToLoad: InheritanceBaseAddInheritor);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var baseEnt = prototypes.Index(InheritanceIdBase);
+        Assert.That(baseEnt.HasComp<PrototypePartialBaseComponent>(comps), Is.True);
+        Assert.That(baseEnt.HasComp<PrototypePartialInheritorComponent>(comps), Is.True);
+
+        var inheritorEnt = prototypes.Index(InheritanceIdInheritor);
+        Assert.That(inheritorEnt.HasComp<PrototypePartialBaseComponent>(comps), Is.True);
+        Assert.That(inheritorEnt.HasComp<PrototypePartialInheritorComponent>(comps), Is.True);
+    }
+
+    [Test]
+    public void TestInheritanceBaseAddPartial()
+    {
+        var sim = StartSim(ymlToLoad: InheritanceBaseAddPartial);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var baseEnt = prototypes.Index(InheritanceIdBase);
+        Assert.That(baseEnt.HasComp<PrototypePartialBaseComponent>(comps), Is.True);
+        Assert.That(baseEnt.HasComp<PrototypePartialInheritorComponent>(comps), Is.False);
+        Assert.That(baseEnt.HasComp<PrototypePartialComponent>(comps), Is.True);
+
+        var inheritorEnt = prototypes.Index(InheritanceIdInheritor);
+        Assert.That(inheritorEnt.HasComp<PrototypePartialBaseComponent>(comps), Is.True);
+        Assert.That(inheritorEnt.HasComp<PrototypePartialInheritorComponent>(comps), Is.True);
+        Assert.That(inheritorEnt.HasComp<PrototypePartialComponent>(comps), Is.True);
+    }
+
+    [Test]
+    public void TestReloadAdd()
+    {
+        MemoryContentRoot root = null!;
+        var add = new ResPath($"/Partials/{nameof(ReloadAddSequenceData)}.yml");
+        var sim = StartSim(loadOrder: factory =>
+            {
+                factory.PartialDirectory(add, 0);
+            },
+            addFiles: factory =>
+            {
+                root = factory;
+                factory.AddOrUpdateFile(add, string.Empty);
+            }
+        );
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = (PrototypeManager) sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(ReloadId);
+        Assert.That(ent.TryComp(out PrototypePartialComponent? comp, comps), Is.True);
+        Assert.That(ent.HasComp<PrototypePartialBaseComponent>(comps), Is.False);
+        Assert.That(ent.HasComp<PrototypePartialInheritorComponent>(comps), Is.False);
+        Assert.That(comp, Is.Not.Null);
+        Assert.That(comp.List, Is.Empty);
+
+        root.AddOrUpdateFile(add, ReloadAddSequenceData);
+
+        var changedPrototypes = new Dictionary<Type, HashSet<string>>();
+        prototypes.LoadFile(add, true, changedPrototypes);
+        prototypes.ReloadPrototypes(changedPrototypes);
+
+        ent = prototypes.Index(ReloadId);
+        Assert.That(ent.TryComp(out comp, comps), Is.True);
+        Assert.That(ent.HasComp<PrototypePartialBaseComponent>(comps), Is.False);
+        Assert.That(ent.HasComp<PrototypePartialInheritorComponent>(comps), Is.False);
+        Assert.That(comp.List, Is.Not.Empty);
+        Assert.That(comp.List, Has.Count.EqualTo(1));
+        Assert.That(comp.List, Is.EquivalentTo([1]));
+
+        // Reload again, should not add another 1 to the list
+        changedPrototypes.Clear();
+        prototypes.LoadFile(add, true, changedPrototypes);
+        prototypes.ReloadPrototypes(changedPrototypes);
+
+        ent = prototypes.Index(ReloadId);
+        Assert.That(ent.TryComp(out comp, comps), Is.True);
+        Assert.That(ent.HasComp<PrototypePartialBaseComponent>(comps), Is.False);
+        Assert.That(ent.HasComp<PrototypePartialInheritorComponent>(comps), Is.False);
+        Assert.That(comp.List, Is.Not.Empty);
+        Assert.That(comp.List, Has.Count.EqualTo(1));
+        Assert.That(comp.List, Is.EquivalentTo([1]));
     }
 
     internal sealed partial class PrototypePartialComponent : Component

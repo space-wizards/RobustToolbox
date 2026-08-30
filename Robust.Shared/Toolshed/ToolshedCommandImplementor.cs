@@ -27,6 +27,9 @@ internal sealed class ToolshedCommandImplementor
     /// </summary>
     public readonly string LocName;
 
+    private readonly string? AttributeDescription;
+    private readonly string? AttributeHelp;
+
     private readonly ToolshedManager _toolshed;
     private readonly ILocalizationManager _loc;
     public readonly Dictionary<CommandDiscriminator, Func<CommandInvocationArguments, object?>> Implementations = new();
@@ -43,7 +46,13 @@ internal sealed class ToolshedCommandImplementor
 
     public CommandSpec Spec => new(Owner, SubCommand);
 
-    public ToolshedCommandImplementor(string? subCommand, ToolshedCommand owner, ToolshedManager toolshed, ILocalizationManager loc)
+    public ToolshedCommandImplementor(
+        string? subCommand,
+        string? attributeDescription,
+        string? attributeHelp,
+        ToolshedCommand owner,
+        ToolshedManager toolshed,
+        ILocalizationManager loc)
     {
         Owner = owner;
         _loc = loc;
@@ -61,6 +70,9 @@ internal sealed class ToolshedCommandImplementor
 
         if (SubCommand != null)
             LocName =  $"{LocName}-{SubCommand}";
+
+        AttributeDescription = attributeDescription;
+        AttributeHelp = attributeHelp;
     }
 
     /// <summary>
@@ -617,6 +629,9 @@ internal sealed class ToolshedCommandImplementor
         if (_loc.TryGetString($"command-help-{LocName}", out var str))
             return str;
 
+        if (AttributeHelp != null)
+            return AttributeHelp;
+
         var builder = new StringBuilder();
 
         // If any of the commands are invertible via the "not" prefix, we point that out in the help string
@@ -711,7 +726,11 @@ internal sealed class ToolshedCommandImplementor
     /// <inheritdoc cref="ToolshedCommand.Description"/>
     public string Description()
     {
-        return _loc.GetString(DescriptionLocKey());
+        var key = DescriptionLocKey();
+        if (_loc.TryGetString(key, out var desc))
+            return desc;
+
+        return AttributeDescription ?? key;
     }
 }
 

@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 289.0.1
+
+### Breaking changes
+
 * Using partial prototypes, use the tag !CombineIndex to combine a node in a sequence. This fixes a bug where modifying sequences (lists) in partial prototypes was buggy and inconsistent. If you are adding to a sequence or removing from it you don't need to change anything. If you were trying to modify existing sequence elements, you will need to replace - "a": 1 with - !CombineIndex:0 "a": 1 for example.
 
 ### New features
@@ -51,10 +74,6 @@ END TEMPLATE-->
 * Fixed not copying the original YML that is kept in PartialOriginals, resulting in duplicated data after applying partials.
 * Fixed YML hot reload not working with prototype partials.
 * Fixed inconsistent partial ordering if the same prototype is modified more than once in the same directory. Now it is ordered by the file path's name.
-
-### Other
-
-*None yet*
 
 ### Internal
 

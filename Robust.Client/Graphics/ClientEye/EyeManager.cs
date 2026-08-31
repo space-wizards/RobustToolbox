@@ -15,12 +15,26 @@ namespace Robust.Client.Graphics
     /// <inheritdoc />
     public sealed partial class EyeManager : IEyeManager
     {
-        // If you modify this make sure to edit the value in the Robust.Shared.Audio.AudioParams struct default too!
-        // No I can't be bothered to make this a shared constant.
         /// <summary>
-        /// Default scaling for the projection matrix.
+        /// Defaults to 32.
+        /// How many texture pixels map to one world meter (one tile). Driven by the server-authoritative <c>display.pixels_per_meter</c> CVar (default 32).
         /// </summary>
-        public const int PixelsPerMeter = 32;
+        public static int PixelsPerMeter { get; private set; } = DefaultPixelsPerMeter;
+
+        /// <summary>
+        /// Default for <see cref="PixelsPerMeter"/>, used before the replicated CVar value is applied.
+        /// </summary>
+        public const int DefaultPixelsPerMeter = 32;
+
+        /// <summary>
+        /// Applies the <c>display.pixels_per_meter</c> CVar to <see cref="PixelsPerMeter"/>. Invoked with the
+        /// local default at startup and again with the server's value on connect. Non-positive values fall
+        /// back to <see cref="DefaultPixelsPerMeter"/>.
+        /// </summary>
+        internal static void SetPixelsPerMeter(int value)
+        {
+            PixelsPerMeter = value > 0 ? value : DefaultPixelsPerMeter;
+        }
 
         [Dependency] private IClyde _displayManager = default!;
         [Dependency] private IEntityManager _entityManager = default!;

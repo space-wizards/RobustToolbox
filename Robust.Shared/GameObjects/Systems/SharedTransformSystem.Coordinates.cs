@@ -3,6 +3,7 @@ using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects;
 
@@ -24,7 +25,7 @@ public abstract partial class SharedTransformSystem
         if (!entity.IsValid() || !Exists(entity))
             return false;
 
-        if (!float.IsFinite(coordinates.Position.X) || !float.IsFinite(coordinates.Position.Y))
+        if (!float.IsFinite(coordinates.Position.X) || !float.IsFinite(coordinates.Position.Y) || !float.IsFinite(coordinates.Position.Z))
             return false;
 
         return true;
@@ -54,12 +55,12 @@ public abstract partial class SharedTransformSystem
             return MapCoordinates.Nullspace;
         }
 
-        Vector2 pos = xform._localRotation.RotateVec(coordinates.Position) + xform._localPosition;
+        Vector3 pos = xform._localRotation.Rotate(coordinates.Position) + xform._localPosition;
 
         while (xform.ParentUid != xform.MapUid && xform.ParentUid.IsValid())
         {
             xform = XformQuery.GetComponent(xform.ParentUid);
-            pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
+            pos = xform._localRotation.Rotate(pos) + xform._localPosition;
         }
         return new MapCoordinates(pos, xform.MapID);
     }
@@ -78,21 +79,21 @@ public abstract partial class SharedTransformSystem
     /// Converts entity-local coordinates into map terms.
     /// The same as ToMapCoordinates(coordinates, logError).Position, but doesn't have to construct the MapCoordinates first.
     /// </summary>
-    public Vector2 ToWorldPosition(EntityCoordinates coordinates, bool logError = true)
+    public Vector3 ToWorldPosition(EntityCoordinates coordinates, bool logError = true)
     {
         if (!TryComp(coordinates.EntityId, out TransformComponent? xform))
         {
             if (logError)
                 Log.Error($"Attempted to convert coordinates with invalid entity: {coordinates}. Trace: {Environment.StackTrace}");
-            return Vector2.Zero;
+            return Vector3.Zero;
         }
 
-        Vector2 pos = xform._localRotation.RotateVec(coordinates.Position) + xform._localPosition;
+        Vector3 pos = xform._localRotation.Rotate(coordinates.Position) + xform._localPosition;
 
         while (xform.ParentUid != xform.MapUid && xform.ParentUid.IsValid())
         {
             xform = XformQuery.GetComponent(xform.ParentUid);
-            pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
+            pos = xform._localRotation.Rotate(pos) + xform._localPosition;
         }
 
         return pos;
@@ -103,7 +104,7 @@ public abstract partial class SharedTransformSystem
     /// The same as ToMapCoordinates(coordinates).Position, but doesn't have to construct the MapCoordinates first.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector2 ToWorldPosition(NetCoordinates coordinates)
+    public Vector3 ToWorldPosition(NetCoordinates coordinates)
     {
         var eCoords = GetCoordinates(coordinates);
         return ToWorldPosition(eCoords);
@@ -126,7 +127,7 @@ public abstract partial class SharedTransformSystem
             return default;
         }
 
-        var localPos = Vector2.Transform(coordinates.Position, GetInvWorldMatrix(entity.Comp));
+        var localPos = Vector3.Transform(coordinates.Position, GetInvWorldMatrix(entity.Comp));
         return new EntityCoordinates(entity, localPos);
     }
 

@@ -31,9 +31,11 @@ namespace Robust.Shared.GameObjects
 
         [DataField("parent")] internal EntityUid _parent;
 
-        [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from parent
+        [DataField("pos")] internal Vector3 _localPosition = Vector3.Zero; // holds offset from parent
 
-        [DataField("rot")] internal Angle _localRotation; // local rotation
+        [DataField("rot")] internal Quaternion _localRotation = Quaternion.Identity; // local orientation
+
+        [DataField("scale")] internal Vector3 _localScale = Vector3.One;
 
         [DataField("noRot")] internal bool _noLocalRotation;
 
@@ -57,12 +59,12 @@ namespace Robust.Shared.GameObjects
         internal BroadphaseData? Broadphase;
 
         internal bool MatricesDirty = true;
-        private Matrix3x2 _localMatrix = Matrix3x2.Identity;
-        private Matrix3x2 _invLocalMatrix = Matrix3x2.Identity;
+        private Matrix4x4 _localMatrix = Matrix4x4.Identity;
+        private Matrix4x4 _invLocalMatrix = Matrix4x4.Identity;
 
         // these should just be system methods, but existing component functions like InvWorldMatrix still rely on
         // getting these so those have to be fully ECS-ed first.
-        public Matrix3x2 LocalMatrix
+        public Matrix4x4 LocalMatrix
         {
             get
             {
@@ -71,7 +73,7 @@ namespace Robust.Shared.GameObjects
                 return _localMatrix;
             }
         }
-        public Matrix3x2 InvLocalMatrix
+        public Matrix4x4 InvLocalMatrix
         {
             get
             {
@@ -84,16 +86,22 @@ namespace Robust.Shared.GameObjects
         // used for lerping
 
         [ViewVariables]
-        public Vector2? NextPosition { get; internal set; }
+        public Vector3? NextPosition { get; internal set; }
 
         [ViewVariables]
-        public Angle? NextRotation { get; internal set; }
+        public Quaternion? NextRotation { get; internal set; }
 
         [ViewVariables]
-        public Vector2 PrevPosition { get; internal set; }
+        public Vector3 PrevPosition { get; internal set; }
 
         [ViewVariables]
-        public Angle PrevRotation { get; internal set; }
+        public Quaternion PrevRotation { get; internal set; } = Quaternion.Identity;
+
+        [ViewVariables]
+        public Vector3? NextScale { get; internal set; }
+
+        [ViewVariables]
+        public Vector3 PrevScale { get; internal set; } = Vector3.One;
 
         [ViewVariables] public bool ActivelyLerping;
 
@@ -135,7 +143,7 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (value)
-                    LocalRotation = Angle.Zero;
+                    LocalRotation = Quaternion.Identity;
 
                 _noLocalRotation = value;
                 _entMan.Dirty(Owner, this);
@@ -147,7 +155,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
-        public Angle LocalRotation
+        public Quaternion LocalRotation
         {
             get => _localRotation;
             [Obsolete("Use SharedTransformSystem.SetLocalRotation() instead")]
@@ -156,9 +164,9 @@ namespace Robust.Shared.GameObjects
                 if(_noLocalRotation)
                     return;
 
-                value = SharedTransformSystem.NormalizeRotation(value);
+                value = Quaternion.Normalize(value);
 
-                if (_localRotation.EqualsApprox(value))
+                if (MathF.Abs(Quaternion.Dot(_localRotation, value)) > 0.999999f)
                     return;
 
                 var oldRotation = _localRotation;
@@ -175,11 +183,42 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
+        ///     Scale of the entity relative to its parent on the X, Y and Z axes.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
+        public Vector3 LocalScale
+        {
+            get => _localScale;
+            [Obsolete("Use SharedTransformSystem.SetLocalScale() instead")]
+            set
+            {
+                if (!float.IsFinite(value.X) || !float.IsFinite(value.Y) || !float.IsFinite(value.Z) ||
+                    value.X == 0f || value.Y == 0f || value.Z == 0f)
+                    throw new ArgumentOutOfRangeException(nameof(value), "Transform scale must be finite and non-zero on every axis.");
+
+                if (_localScale.EqualsApprox(value))
+                    return;
+
+                var oldScale = _localScale;
+                _localScale = value;
+                MatricesDirty = true;
+                _entMan.Dirty(Owner, this);
+
+                if (Initialized)
+                {
+                    var ev = new TransformScaleChangedEvent(Owner, oldScale, value);
+                    _entMan.EventBus.RaiseLocalEvent(Owner, ref ev);
+                }
+            }
+        }
+
+        /// <summary>
         ///     Current world rotation of the entity.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [Obsolete("Use SharedTransformSystem.Get/SetWorldRotation() instead")]
-        public Angle WorldRotation
+        public Quaternion WorldRotation
         {
             get
             {
@@ -190,7 +229,7 @@ namespace Robust.Shared.GameObjects
                 while (parent.IsValid())
                 {
                     var parentXform = xformQuery.GetComponent(parent);
-                    rotation += parentXform._localRotation;
+                    rotation = Quaternion.Normalize(Quaternion.Concatenate(rotation, parentXform._localRotation));
                     parent = parentXform.ParentUid;
                 }
 
@@ -201,9 +240,10 @@ namespace Robust.Shared.GameObjects
                 if (NoLocalRotation)
                     return;
 
-                var current = WorldRotation;
-                var diff = value - current;
-                LocalRotation += diff;
+                var parentRotation = _parent.IsValid()
+                    ? _entMan.GetComponent<TransformComponent>(_parent).WorldRotation
+                    : Quaternion.Identity;
+                LocalRotation = Quaternion.Normalize(Quaternion.Concatenate(value, Quaternion.Inverse(parentRotation)));
             }
         }
 
@@ -220,7 +260,7 @@ namespace Robust.Shared.GameObjects
         ///     Matrix for transforming points from local to world space.
         /// </summary>
         [Obsolete("Use SharedTransformSystem.GetWorldMatrix() instead")]
-        public Matrix3x2 WorldMatrix
+        public Matrix4x4 WorldMatrix
         {
             get
             {
@@ -234,7 +274,7 @@ namespace Robust.Shared.GameObjects
                     var parentMatrix = parentXform.LocalMatrix;
                     parent = parentXform.ParentUid;
 
-                    var result = Matrix3x2.Multiply(myMatrix, parentMatrix);
+                    var result = Matrix4x4.Multiply(myMatrix, parentMatrix);
                     myMatrix = result;
                 }
 
@@ -246,7 +286,7 @@ namespace Robust.Shared.GameObjects
         ///     Matrix for transforming points from world to local space.
         /// </summary>
         [Obsolete("Use SharedTransformSystem.GetInvWorldMatrix() instead")]
-        public Matrix3x2 InvWorldMatrix
+        public Matrix4x4 InvWorldMatrix
         {
             get
             {
@@ -260,7 +300,7 @@ namespace Robust.Shared.GameObjects
                     var parentMatrix = parentXform.InvLocalMatrix;
                     parent = parentXform.ParentUid;
 
-                    var result = Matrix3x2.Multiply(parentMatrix, myMatrix);
+                    var result = Matrix4x4.Multiply(parentMatrix, myMatrix);
                     myMatrix = result;
                 }
 
@@ -275,18 +315,18 @@ namespace Robust.Shared.GameObjects
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
         [Obsolete("Use SharedTransformSystem.Get/SetWorldPosition() instead")]
-        public Vector2 WorldPosition
+        public Vector3 WorldPosition
         {
             get
             {
                 if (_parent.IsValid())
                 {
                     // parent coords to world coords
-                    return Vector2.Transform(_localPosition, _entMan.GetComponent<TransformComponent>(ParentUid).WorldMatrix);
+                    return Vector3.Transform(_localPosition, _entMan.GetComponent<TransformComponent>(ParentUid).WorldMatrix);
                 }
                 else
                 {
-                    return Vector2.Zero;
+                    return Vector3.Zero;
                 }
             }
             set
@@ -298,7 +338,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 // world coords to parent coords
-                var newPos = Vector2.Transform(value, _entMan.GetComponent<TransformComponent>(ParentUid).InvWorldMatrix);
+                var newPos = Vector3.Transform(value, _entMan.GetComponent<TransformComponent>(ParentUid).InvWorldMatrix);
 
                 LocalPosition = newPos;
             }
@@ -313,7 +353,7 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var valid = _parent.IsValid();
-                return new EntityCoordinates(valid ? _parent : Owner, valid ? LocalPosition : Vector2.Zero);
+                return new EntityCoordinates(valid ? _parent : Owner, valid ? LocalPosition : Vector3.Zero);
             }
             [Obsolete("Use SharedTransformSystem.SetCoordinates() instead")]
             set => _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(Owner, this, value);
@@ -333,7 +373,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LocalPosition
+        public Vector3 LocalPosition
         {
             get => _localPosition;
             [Obsolete("Use SharedTransformSystem.SetLocalPosition() instead")]
@@ -415,7 +455,7 @@ namespace Robust.Shared.GameObjects
         /// Get the WorldPosition and WorldRotation of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use SharedTransformSystem.GetWorldPositionRotation() instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation()
+        public (Vector3 WorldPosition, Quaternion WorldRotation) GetWorldPositionRotation()
         {
             // Worldmatrix needs calculating anyway for worldpos so we'll just drop it.
             var (worldPos, worldRot, _) = GetWorldPositionRotationMatrix();
@@ -426,7 +466,7 @@ namespace Robust.Shared.GameObjects
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use SharedTransformSystem.GetWorldPositionRotationMatrix() instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix) GetWorldPositionRotationMatrix(EntityQuery<TransformComponent> xforms)
+        public (Vector3 WorldPosition, Quaternion WorldRotation, Matrix4x4 WorldMatrix) GetWorldPositionRotationMatrix(EntityQuery<TransformComponent> xforms)
         {
             var parent = _parent;
             var worldRot = _localRotation;
@@ -436,9 +476,9 @@ namespace Robust.Shared.GameObjects
             while (parent.IsValid())
             {
                 var xform = xforms.GetComponent(parent);
-                worldRot += xform.LocalRotation;
+                worldRot = Quaternion.Normalize(Quaternion.Concatenate(worldRot, xform.LocalRotation));
                 var parentMatrix = xform.LocalMatrix;
-                var result = Matrix3x2.Multiply(worldMatrix, parentMatrix);
+                var result = Matrix4x4.Multiply(worldMatrix, parentMatrix);
                 worldMatrix = result;
                 parent = xform.ParentUid;
             }
@@ -452,7 +492,7 @@ namespace Robust.Shared.GameObjects
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use SharedTransformSystem.GetWorldPositionRotationMatrix() instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix) GetWorldPositionRotationMatrix()
+        public (Vector3 WorldPosition, Quaternion WorldRotation, Matrix4x4 WorldMatrix) GetWorldPositionRotationMatrix()
         {
             var xforms = _entMan.GetEntityQuery<TransformComponent>();
             return GetWorldPositionRotationMatrix(xforms);
@@ -462,7 +502,7 @@ namespace Robust.Shared.GameObjects
         /// Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use SharedTransformSystem.WorldPositionRotationInvMatrix() instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityQuery<TransformComponent> xformQuery)
+        public (Vector3 WorldPosition, Quaternion WorldRotation, Matrix4x4 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityQuery<TransformComponent> xformQuery)
         {
             var (worldPos, worldRot, _, invWorldMatrix) = GetWorldPositionRotationMatrixWithInv(xformQuery);
             return (worldPos, worldRot, invWorldMatrix);
@@ -472,7 +512,7 @@ namespace Robust.Shared.GameObjects
         /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use SharedTransformSystem.GetWorldPositionRotationMatrixWithInv() instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv()
+        public (Vector3 WorldPosition, Quaternion WorldRotation, Matrix4x4 WorldMatrix, Matrix4x4 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv()
         {
             var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
             return GetWorldPositionRotationMatrixWithInv(xformQuery);
@@ -482,7 +522,7 @@ namespace Robust.Shared.GameObjects
         /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use SharedTransformSystem.GetWorldPositionRotationMatrixWithInv() instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv(EntityQuery<TransformComponent> xformQuery)
+        public (Vector3 WorldPosition, Quaternion WorldRotation, Matrix4x4 WorldMatrix, Matrix4x4 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv(EntityQuery<TransformComponent> xformQuery)
         {
             var parent = _parent;
             var worldRot = _localRotation;
@@ -493,14 +533,14 @@ namespace Robust.Shared.GameObjects
             while (parent.IsValid())
             {
                 var xform = xformQuery.GetComponent(parent);
-                worldRot += xform.LocalRotation;
+                worldRot = Quaternion.Normalize(Quaternion.Concatenate(worldRot, xform.LocalRotation));
 
                 var parentMatrix = xform.LocalMatrix;
-                var result = Matrix3x2.Multiply(worldMatrix, parentMatrix);
+                var result = Matrix4x4.Multiply(worldMatrix, parentMatrix);
                 worldMatrix = result;
 
                 var parentInvMatrix = xform.InvLocalMatrix;
-                var invResult = Matrix3x2.Multiply(parentInvMatrix, invMatrix);
+                var invResult = Matrix4x4.Multiply(parentInvMatrix, invMatrix);
                 invMatrix = invResult;
 
                 parent = xform.ParentUid;
@@ -517,12 +557,12 @@ namespace Robust.Shared.GameObjects
 
             if (!_parent.IsValid()) // Root Node
             {
-                _localMatrix = Matrix3x2.Identity;
-                _invLocalMatrix = Matrix3x2.Identity;
+                _localMatrix = Matrix4x4.Identity;
+                _invLocalMatrix = Matrix4x4.Identity;
             }
 
-            _localMatrix = Matrix3Helpers.CreateTransform(_localPosition, _localRotation);
-            _invLocalMatrix = Matrix3Helpers.CreateInverseTransform(_localPosition, _localRotation);
+            _localMatrix = SpatialMath.CreateTransform(_localPosition, _localRotation, _localScale);
+            _invLocalMatrix = SpatialMath.CreateInverseTransform(_localPosition, _localRotation, _localScale);
         }
 
         [Obsolete("Use SharedTransformSystem.GetDebugString() instead")]
@@ -531,6 +571,9 @@ namespace Robust.Shared.GameObjects
             return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
         }
     }
+
+    [ByRefEvent]
+    public readonly record struct TransformScaleChangedEvent(EntityUid Entity, Vector3 OldScale, Vector3 NewScale);
 
     /// <summary>
     /// Raised directed at an entity whenever is position or rotation changes relative to their parent, or if their
@@ -542,14 +585,14 @@ namespace Robust.Shared.GameObjects
         Entity<TransformComponent, MetaDataComponent> entity,
         EntityCoordinates oldPos,
         EntityCoordinates newPos,
-        Angle oldRotation,
-        Angle newRotation)
+        Quaternion oldRotation,
+        Quaternion newRotation)
     {
         public readonly Entity<TransformComponent, MetaDataComponent> Entity = entity;
         public readonly EntityCoordinates OldPosition = oldPos;
         public readonly EntityCoordinates NewPosition = newPos;
-        public readonly Angle OldRotation = oldRotation;
-        public readonly Angle NewRotation = newRotation;
+        public readonly Quaternion OldRotation = oldRotation;
+        public readonly Quaternion NewRotation = newRotation;
 
         public EntityUid Sender => Entity.Owner;
         public TransformComponent Component => Entity.Comp1;

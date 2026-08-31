@@ -16,7 +16,7 @@ namespace Robust.Shared.Map
     [PublicAPI, DataRecord]
     public readonly partial record struct EntityCoordinates : ISpanFormattable
     {
-        public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector2.Zero);
+        public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector3.Zero);
 
         /// <summary>
         ///     ID of the entity that this position is relative to.
@@ -26,7 +26,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Position in the entity's local space.
         /// </summary>
-        public readonly Vector2 Position;
+        public readonly Vector3 Position;
 
         /// <summary>
         ///     Location of the X axis local to the entity.
@@ -38,10 +38,15 @@ namespace Robust.Shared.Map
         /// </summary>
         public float Y => Position.Y;
 
+        /// <summary>
+        ///     Location of the Z axis local to the entity.
+        /// </summary>
+        public float Z => Position.Z;
+
         public EntityCoordinates()
         {
             EntityId = EntityUid.Invalid;
-            Position = Vector2.Zero;
+            Position = Vector3.Zero;
         }
 
         /// <summary>
@@ -49,16 +54,16 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entityId">ID of the entity that this position is relative to.</param>
         /// <param name="position">Position in the entity's local space.</param>
-        public EntityCoordinates(EntityUid entityId, Vector2 position)
+        public EntityCoordinates(EntityUid entityId, Vector3 position)
         {
             EntityId = entityId;
             Position = position;
         }
 
-        public EntityCoordinates(EntityUid entityId, float x, float y)
+        public EntityCoordinates(EntityUid entityId, float x, float y, float z)
         {
             EntityId = entityId;
-            Position = new Vector2(x, y);
+            Position = new Vector3(x, y, z);
         }
 
         /// <summary>
@@ -71,7 +76,7 @@ namespace Robust.Shared.Map
             if (!EntityId.IsValid() || !entityManager.EntityExists(EntityId))
                 return false;
 
-            if (!float.IsFinite(Position.X) || !float.IsFinite(Position.Y))
+            if (!float.IsFinite(Position.X) || !float.IsFinite(Position.Y) || !float.IsFinite(Position.Z))
                 return false;
 
             return true;
@@ -84,7 +89,7 @@ namespace Robust.Shared.Map
         }
 
         [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
-        public Vector2 ToMapPos(IEntityManager entityManager, SharedTransformSystem transformSystem)
+        public Vector3 ToMapPos(IEntityManager entityManager, SharedTransformSystem transformSystem)
         {
             return ToMap(entityManager, transformSystem).Position;
         }
@@ -124,7 +129,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="newPosition">The position the new EntityCoordinates will be in</param>
         /// <returns>A new set of EntityCoordinates with the specified position and same <see cref="EntityId"/> as this one.</returns>
-        public EntityCoordinates WithPosition(Vector2 newPosition)
+        public EntityCoordinates WithPosition(Vector3 newPosition)
         {
             return new(EntityId, newPosition);
         }
@@ -139,7 +144,7 @@ namespace Robust.Shared.Map
         public EntityCoordinates WithEntityId(IEntityManager entityManager, EntityUid entityId)
         {
             if (!entityManager.EntityExists(entityId))
-                return new EntityCoordinates(entityId, Vector2.Zero);
+                return new EntityCoordinates(entityId, Vector3.Zero);
 
             return WithEntityId(entityId);
         }
@@ -212,7 +217,7 @@ namespace Robust.Shared.Map
         /// <param name="position">The vector to offset by local to the entity.</param>
         /// <returns>Newly offset coordinates.</returns>
         [Pure]
-        public EntityCoordinates Offset(Vector2 position)
+        public EntityCoordinates Offset(Vector3 position)
         {
             return new(EntityId, Position + position);
         }
@@ -284,9 +289,9 @@ namespace Robust.Shared.Map
             IEntityManager entityManager,
             SharedTransformSystem transformSystem,
             EntityCoordinates otherCoordinates,
-            out Vector2 delta)
+            out Vector3 delta)
         {
-            delta = Vector2.Zero;
+            delta = Vector3.Zero;
 
             if (!IsValid(entityManager) || !otherCoordinates.IsValid(entityManager))
                 return false;
@@ -370,7 +375,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entId">ID of the entity that this position is relative to.</param>
         /// <param name="localPos">Position in the entity's local space.</param>
-        public void Deconstruct(out EntityUid entId, out Vector2 localPos)
+        public void Deconstruct(out EntityUid entId, out Vector3 localPos)
         {
             entId = EntityId;
             localPos = Position;
@@ -379,7 +384,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"EntId={EntityId}, X={Position.X:N2}, Y={Position.Y:N2}";
+            return $"EntId={EntityId}, X={Position.X:N2}, Y={Position.Y:N2}, Z={Position.Z:N2}";
         }
 
         public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
@@ -393,7 +398,7 @@ namespace Robust.Shared.Map
             return FormatHelpers.TryFormatInto(
             destination,
             out charsWritten,
-            $"EntId={EntityId}, X={Position.X:N2}, Y={Position.Y:N2}");
+            $"EntId={EntityId}, X={Position.X:N2}, Y={Position.Y:N2}, Z={Position.Z:N2}");
         }
     }
 }

@@ -135,6 +135,7 @@
   <Project Path="Robust.Shared.IntegrationTests/Robust.Shared.IntegrationTests.csproj" />
   <Project Path="Robust.Shared.Maths.Testing/Robust.Shared.Maths.Testing.csproj" />
   <Project Path="Robust.Shared.Maths.Tests/Robust.Shared.Maths.Tests.csproj" />
+  <Project Path="Robust.Shared.Maths3D.Tests/Robust.Shared.Maths3D.Tests.csproj" />
   <Project Path="Robust.Shared.Maths/Robust.Shared.Maths.csproj" />
   <Project Path="Robust.Shared.Scripting/Robust.Shared.Scripting.csproj" />
   <Project Path="Robust.Shared.Testing/Robust.Shared.Testing.csproj" />

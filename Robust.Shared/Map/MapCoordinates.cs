@@ -15,12 +15,12 @@ namespace Robust.Shared.Map
     [Serializable, NetSerializable]
     public readonly partial record struct MapCoordinates : ISpanFormattable
     {
-        public static readonly MapCoordinates Nullspace = new(Vector2.Zero, MapId.Nullspace);
+        public static readonly MapCoordinates Nullspace = new(Vector3.Zero, MapId.Nullspace);
 
         /// <summary>
         ///     World Position coordinates.
         /// </summary>
-        public readonly Vector2 Position;
+        public readonly Vector3 Position;
 
         /// <summary>
         ///     Map identifier relevant to this position.
@@ -38,11 +38,16 @@ namespace Robust.Shared.Map
         public float Y => Position.Y;
 
         /// <summary>
+        ///     World position on the Z axis.
+        /// </summary>
+        public float Z => Position.Z;
+
+        /// <summary>
         ///     Constructs a new instance of <c>MapCoordinates</c>.
         /// </summary>
         /// <param name="position">World position coordinates.</param>
         /// <param name="mapId">Map identifier relevant to this position.</param>
-        public MapCoordinates(Vector2 position, MapId mapId)
+        public MapCoordinates(Vector3 position, MapId mapId)
         {
             Position = position;
             MapId = mapId;
@@ -54,13 +59,13 @@ namespace Robust.Shared.Map
         /// <param name="x">World position coordinate on the X axis.</param>
         /// <param name="y">World position coordinate on the Y axis.</param>
         /// <param name="mapId">Map identifier relevant to this position.</param>
-        public MapCoordinates(float x, float y, MapId mapId)
-            : this(new Vector2(x, y), mapId) { }
+        public MapCoordinates(float x, float y, float z, MapId mapId)
+            : this(new Vector3(x, y, z), mapId) { }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"Map={MapId}, X={Position.X:N2}, Y={Position.Y:N2}";
+            return $"Map={MapId}, X={Position.X:N2}, Y={Position.Y:N2}, Z={Position.Z:N2}";
         }
 
         public string ToString(string? format, IFormatProvider? formatProvider)
@@ -77,7 +82,7 @@ namespace Robust.Shared.Map
             return FormatHelpers.TryFormatInto(
                 destination,
                 out charsWritten,
-                $"Map={MapId}, X={Position.X:N2}, Y={Position.Y:N2}");
+                $"Map={MapId}, X={Position.X:N2}, Y={Position.Y:N2}, Z={Position.Z:N2}");
         }
 
         /// <summary>
@@ -101,10 +106,11 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="x">World position coordinate on the X axis.</param>
         /// <param name="y">World position coordinate on the Y axis.</param>
-        public void Deconstruct(out float x, out float y)
+        public void Deconstruct(out float x, out float y, out float z)
         {
             x = X;
             y = Y;
+            z = Z;
         }
 
         /// <summary>
@@ -113,11 +119,12 @@ namespace Robust.Shared.Map
         /// <param name="mapId">Map identifier relevant to this position.</param>
         /// <param name="x">World position coordinate on the X axis.</param>
         /// <param name="y">World position coordinate on the Y axis.</param>
-        public void Deconstruct(out MapId mapId, out float x, out float y)
+        public void Deconstruct(out MapId mapId, out float x, out float y, out float z)
         {
             mapId = MapId;
             x = X;
             y = Y;
+            z = Z;
         }
 
         /// <summary>
@@ -125,7 +132,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="offset">Offset to apply to these coordinates</param>
         /// <returns>A copy of these coordinates, but offset.</returns>
-        public MapCoordinates Offset(Vector2 offset)
+        public MapCoordinates Offset(Vector3 offset)
         {
             return new MapCoordinates(Position + offset, MapId);
         }
@@ -136,9 +143,9 @@ namespace Robust.Shared.Map
         /// <param name="x">X axis offset to apply to these coordinates</param>
         /// <param name="y">Y axis offset to apply to these coordinates</param>
         /// <returns>A copy of these coordinates, but offset.</returns>
-        public MapCoordinates Offset(float x, float y)
+        public MapCoordinates Offset(float x, float y, float z)
         {
-            return Offset(new Vector2(x, y));
+            return Offset(new Vector3(x, y, z));
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Robust.Shared.Map;
 [Serializable, NetSerializable]
 public readonly struct NetCoordinates : IEquatable<NetCoordinates>, ISpanFormattable
 {
-    public static readonly NetCoordinates Invalid = new(NetEntity.Invalid, Vector2.Zero);
+    public static readonly NetCoordinates Invalid = new(NetEntity.Invalid, Vector3.Zero);
 
     /// <summary>
     ///     Networked ID of the entity that this position is relative to.
@@ -24,7 +24,7 @@ public readonly struct NetCoordinates : IEquatable<NetCoordinates>, ISpanFormatt
     /// <summary>
     ///     Position in the entity's local space.
     /// </summary>
-    public readonly Vector2 Position;
+    public readonly Vector3 Position;
 
     /// <summary>
     ///     Location of the X axis local to the entity.
@@ -36,16 +36,21 @@ public readonly struct NetCoordinates : IEquatable<NetCoordinates>, ISpanFormatt
     /// </summary>
     public float Y => Position.Y;
 
-    public NetCoordinates(NetEntity netEntity, Vector2 position)
+    /// <summary>
+    ///     Location of the Z axis local to the entity.
+    /// </summary>
+    public float Z => Position.Z;
+
+    public NetCoordinates(NetEntity netEntity, Vector3 position)
     {
         NetEntity = netEntity;
         Position = position;
     }
 
-    public NetCoordinates(NetEntity netEntity, float x, float y)
+    public NetCoordinates(NetEntity netEntity, float x, float y, float z)
     {
         NetEntity = netEntity;
-        Position = new Vector2(x, y);
+        Position = new Vector3(x, y, z);
     }
     #region IEquatable
 
@@ -74,7 +79,7 @@ public readonly struct NetCoordinates : IEquatable<NetCoordinates>, ISpanFormatt
     /// </summary>
     /// <param name="entId">ID of the entity that this position is relative to.</param>
     /// <param name="localPos">Position in the entity's local space.</param>
-    public void Deconstruct(out NetEntity entId, out Vector2 localPos)
+    public void Deconstruct(out NetEntity entId, out Vector3 localPos)
     {
         entId = NetEntity;
         localPos = Position;
@@ -83,7 +88,7 @@ public readonly struct NetCoordinates : IEquatable<NetCoordinates>, ISpanFormatt
     /// <inheritdoc />
     public override string ToString()
     {
-        return $"NetEntity={NetEntity}, X={Position.X:N2}, Y={Position.Y:N2}";
+        return $"NetEntity={NetEntity}, X={Position.X:N2}, Y={Position.Y:N2}, Z={Position.Z:N2}";
     }
 
     public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
@@ -97,6 +102,6 @@ public readonly struct NetCoordinates : IEquatable<NetCoordinates>, ISpanFormatt
         return FormatHelpers.TryFormatInto(
             destination,
             out charsWritten,
-            $"NetEntity={NetEntity}, X={Position.X:N2}, Y={Position.Y:N2}");
+            $"NetEntity={NetEntity}, X={Position.X:N2}, Y={Position.Y:N2}, Z={Position.Z:N2}");
     }
 }

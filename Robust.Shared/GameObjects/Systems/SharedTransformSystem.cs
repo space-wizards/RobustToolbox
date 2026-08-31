@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
                 if (!XformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
                     continue;
 
-                if (!aabb.Contains(xform.LocalPosition))
+                if (!aabb.Contains(xform.LocalPosition.XY()))
                     continue;
 
                 // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
@@ -142,7 +142,7 @@ namespace Robust.Shared.GameObjects
 
             return xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, worldPos)
-                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
+                : new EntityCoordinates(xform.GridUid.Value, Vector3.Transform(worldPos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
         }
 
         public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
@@ -179,17 +179,17 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(!HasComp<MapGridComponent>(parentUid) && !HasComp<MapComponent>(parentUid));
 
             // Not parented to grid so convert their pos back to the grid.
-            var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(parentXform, XformQuery));
+            var worldPos = Vector3.Transform(coordinates.Position, GetWorldMatrix(parentXform, XformQuery));
 
             return parentXform.GridUid == null
                 ? new EntityCoordinates(mapId ?? parentUid, worldPos)
-                : new EntityCoordinates(parentXform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix));
+                : new EntityCoordinates(parentXform.GridUid.Value, Vector3.Transform(worldPos, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix));
         }
 
         /// <summary>
         ///     Variant of <see cref="GetMoverCoordinates()"/> that also returns the entity's world rotation
         /// </summary>
-        public (EntityCoordinates Coords, Angle worldRot) GetMoverCoordinateRotation(EntityUid uid, TransformComponent xform)
+        public (EntityCoordinates Coords, Quaternion worldRot) GetMoverCoordinateRotation(EntityUid uid, TransformComponent xform)
         {
             // Nullspace (or map)
             if (!xform.ParentUid.IsValid())
@@ -209,7 +209,7 @@ namespace Robust.Shared.GameObjects
 
             var coords = xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, pos)
-                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(pos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
+                : new EntityCoordinates(xform.GridUid.Value, Vector3.Transform(pos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
 
             return (coords, worldRot);
         }
@@ -224,7 +224,7 @@ namespace Robust.Shared.GameObjects
 
             // Fast path, we're not on a grid.
             if (xform.GridUid == null)
-                return GetWorldPosition(xform).Floored();
+                return GetWorldPosition(xform).XY().Floored();
 
             // We're on a grid, need to convert the coordinates to grid tiles.
             return _map.CoordinatesToTile(xform.GridUid.Value, Comp<MapGridComponent>(xform.GridUid.Value), xform.Coordinates);
@@ -265,8 +265,8 @@ namespace Robust.Shared.GameObjects
         internal void RaiseMoveEvent(
             Entity<TransformComponent, MetaDataComponent> ent,
             EntityUid oldParent,
-            Vector2 oldPosition,
-            Angle oldRotation,
+            Vector3 oldPosition,
+            Quaternion oldRotation,
             EntityUid? oldMap,
             bool checkTraversal = true)
         {
@@ -330,12 +330,17 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Current position offset of the entity.
         /// </summary>
-        public readonly Vector2 LocalPosition;
+        public readonly Vector3 LocalPosition;
 
         /// <summary>
         ///     Current rotation offset of the entity.
         /// </summary>
-        public readonly Angle Rotation;
+        public readonly Quaternion Rotation;
+
+        /// <summary>
+        ///     Current local scale of the entity.
+        /// </summary>
+        public readonly Vector3 LocalScale;
 
         /// <summary>
         /// Is the transform able to be locally rotated?
@@ -354,10 +359,11 @@ namespace Robust.Shared.GameObjects
         /// <param name="rotation">Current direction offset of this entity.</param>
         /// <param name="parentId">Current parent transform of this entity.</param>
         /// <param name="noLocalRotation"></param>
-        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored)
+        public TransformComponentState(Vector3 localPosition, Quaternion rotation, Vector3 localScale, NetEntity parentId, bool noLocalRotation, bool anchored)
         {
             LocalPosition = localPosition;
             Rotation = rotation;
+            LocalScale = localScale;
             ParentID = parentId;
             NoLocalRotation = noLocalRotation;
             Anchored = anchored;

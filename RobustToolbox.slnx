@@ -134,11 +134,13 @@
   <Project Path="Robust.Server.IntegrationTests/Robust.Server.IntegrationTests.csproj" />
   <Project Path="Robust.Server.Testing/Robust.Server.Testing.csproj" />
   <Project Path="Robust.Server/Robust.Server.csproj" />
+  <Project Path="Robust.Server3D/Robust.Server3D.csproj" />
   <Project Path="Robust.Shared.IntegrationTests/Robust.Shared.IntegrationTests.csproj" />
   <Project Path="Robust.Shared.Maths.Testing/Robust.Shared.Maths.Testing.csproj" />
   <Project Path="Robust.Shared.Maths.Tests/Robust.Shared.Maths.Tests.csproj" />
   <Project Path="Robust.Shared.Maths3D.Tests/Robust.Shared.Maths3D.Tests.csproj" />
   <Project Path="Robust.Shared.Maths/Robust.Shared.Maths.csproj" />
+  <Project Path="Robust.Shared3D/Robust.Shared3D.csproj" />
   <Project Path="Robust.Shared.Scripting/Robust.Shared.Scripting.csproj" />
   <Project Path="Robust.Shared.Testing/Robust.Shared.Testing.csproj" />
   <Project Path="Robust.Shared.Tests/Robust.Shared.Tests.csproj" />

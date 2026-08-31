@@ -3,19 +3,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>..\bin\Client3D</OutputPath>
+    <OutputPath>..\bin\Server3D</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenToolkit.Graphics" />
-    <PackageReference Include="SpaceWizards.Sdl" />
-    <PackageReference Include="Robust.Natives" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared3D\Robust.Shared3D.csproj" />
   </ItemGroup>
 

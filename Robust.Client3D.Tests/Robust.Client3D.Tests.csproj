@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Robust.Client3D\Robust.Client3D.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
+    <ProjectReference Include="..\Robust.Shared3D\Robust.Shared3D.csproj" />
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />

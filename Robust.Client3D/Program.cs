@@ -5,6 +5,7 @@ using System.IO;
 using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Maths;
+using Robust.Shared3D;
 using SDL3;
 
 namespace Robust.Client3D;

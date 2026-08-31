@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using Robust.Shared.Maths;
 
-namespace Robust.Client3D;
+namespace Robust.Shared3D;
 
 public readonly record struct WorldObject3D(SpatialTransform Transform, bool Solid = true)
 {
@@ -16,6 +13,11 @@ public readonly record struct WorldObject3D(SpatialTransform Transform, bool Sol
 public static class DemoWorld3D
 {
     public static readonly Vector3 SpawnPosition = new(0f, -1.8f, 0.9f);
+
+    public static Vector3 GetPlayerSpawnPosition(int playerId)
+    {
+        return SpawnPosition + new Vector3(((playerId - 1) % 4) * 0.8f, 0f, 0f);
+    }
 
     public static readonly IReadOnlyList<WorldObject3D> Objects = new WorldObject3D[]
     {

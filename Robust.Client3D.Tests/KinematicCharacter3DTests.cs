@@ -1,6 +1,7 @@
 using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Maths;
+using Robust.Shared3D;
 
 namespace Robust.Client3D.Tests;
 

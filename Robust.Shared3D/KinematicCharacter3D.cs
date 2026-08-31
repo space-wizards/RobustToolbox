@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Maths;
 
-namespace Robust.Client3D;
+namespace Robust.Shared3D;
 
 public readonly record struct CharacterInput3D(Vector2 Movement, bool Jump);
 
 /// <summary>
-/// A deterministic, server-portable kinematic character body for the first playable 3D slice.
+/// A deterministic kinematic character body shared by server simulation and client prediction.
 /// </summary>
 public sealed class KinematicCharacter3D
 {
@@ -32,6 +30,13 @@ public sealed class KinematicCharacter3D
     {
         Position = spawnPosition;
         _obstacles = obstacles;
+    }
+
+    public void ApplyAuthoritativeState(Vector3 position, Vector3 velocity, bool grounded)
+    {
+        Position = position;
+        Velocity = velocity;
+        IsGrounded = grounded;
     }
 
     public void Step(CharacterInput3D input, float deltaTime)

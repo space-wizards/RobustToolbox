@@ -181,6 +181,6 @@ internal sealed class NetComponentDeltaStateSerializer : IDynamicTypeSerializer
     [UsedImplicitly]
     private static void ReadFieldObject(Serializer serializer, Stream stream, out object value)
     {
-        serializer.DeserializeDirect(stream, out value);
+        serializer.Deserialize(stream, out value);
     }
 }

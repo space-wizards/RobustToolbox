@@ -45,9 +45,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed a partial prototype exception message mentioning the wrong tag to use to combine data at a specific index on a sequence. The correct one is !CombineIndex:0 for example.
-* Fixed components with delta states causing a serializer error if they contain an automatically networked field of an abstract type. This fixes usages of SoundSpecifier, for example.
-* Fixed an exception caused by inheriting an entity that has had a component removed by a partial prototype without removing the component data.
+*None yet*
 
 ### Other
 
@@ -60,6 +58,11 @@ END TEMPLATE-->
 
 ## 289.0.2
 
+### Bugfixes
+
+* Fixed a partial prototype exception message mentioning the wrong tag to use to combine data at a specific index on a sequence. The correct one is !CombineIndex:0 for example.
+* Fixed components with delta states causing a serializer error if they contain an automatically networked field of an abstract type. This fixes usages of SoundSpecifier, for example.
+* Fixed an exception caused by inheriting an entity that has had a component removed by a partial prototype without removing the component data.
 
 ## 289.0.1
 

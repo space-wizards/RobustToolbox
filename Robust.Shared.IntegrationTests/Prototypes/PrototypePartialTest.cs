@@ -236,6 +236,7 @@ internal sealed partial class PrototypePartialTest
   id: {InheritanceIdBase}
   components:
   - type: PrototypePartialBase
+    int: 1
 
 - type: entity
   parent: {InheritanceIdBase}
@@ -910,7 +911,11 @@ internal sealed partial class PrototypePartialTest
         public Dictionary<string, List<int>> ListDictionary = new();
     }
 
-    internal sealed partial class PrototypePartialBaseComponent : Component;
+    internal sealed partial class PrototypePartialBaseComponent : Component
+    {
+        [DataField]
+        public int Int;
+    }
 
     internal sealed partial class PrototypePartialInheritorComponent : Component;
 }

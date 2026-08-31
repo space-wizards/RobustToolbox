@@ -66,6 +66,10 @@ namespace Robust.Client.Input
         [ViewVariables] private readonly List<KeyBinding> _bindings = new();
         private readonly bool[] _keysPressed = new bool[256];
 
+        // Windows fakes AltGr as left control + right alt so while AltGr is held neither Key.Control
+        // nor Key.Alt means the user actually pressed a modifier
+        private bool _altGrPressed;
+
         private ValueList<Func<BoundKeyEventArgs, bool>> _uiKeyBindStateChanged;
         private ValueList<Func<bool>> _checkUIIsFocused;
 
@@ -217,6 +221,8 @@ namespace Robust.Client.Input
         /// <inheritdoc />
         public void KeyDown(KeyEventArgs args)
         {
+            _altGrPressed = args.AltGr;
+
             if (!Enabled || args.Key == Key.Unknown)
             {
                 return;
@@ -316,6 +322,8 @@ namespace Robust.Client.Input
         /// <inheritdoc />
         public void KeyUp(KeyEventArgs args)
         {
+            _altGrPressed = args.AltGr;
+
             if (args.Key == Key.Unknown)
             {
                 return;
@@ -330,8 +338,9 @@ namespace Robust.Client.Input
                 if (!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function))
                     continue;
 
+                // Releases go by physical state
                 if (PackedContainsKey(binding.PackedKeyCombo, args.Key) &&
-                    PackedMatchesPressedState(binding.PackedKeyCombo))
+                    PackedMatchesPressedState(binding.PackedKeyCombo, _keysPressed, altGr: false))
                 {
                     hasCanFocus |= binding.CanFocus;
                     UpBind(binding);
@@ -503,15 +512,27 @@ namespace Robust.Client.Input
         }
 
         private bool PackedMatchesPressedState(PackedKeyCombo packed)
+            => PackedMatchesPressedState(packed, _keysPressed, _altGrPressed);
+
+        internal static bool PackedMatchesPressedState(PackedKeyCombo packed, bool[] keysPressed, bool altGr)
         {
             var (baseKey, mod1, mod2, mod3) = packed;
 
-            if (!_keysPressed[(int)baseKey]) return false;
-            if (mod1 != Key.Unknown && !_keysPressed[(int)mod1]) return false;
-            if (mod2 != Key.Unknown && !_keysPressed[(int)mod2]) return false;
-            if (mod3 != Key.Unknown && !_keysPressed[(int)mod3]) return false;
+            if (!IsHeld(baseKey)) return false;
+            if (mod1 != Key.Unknown && !IsHeld(mod1)) return false;
+            if (mod2 != Key.Unknown && !IsHeld(mod2)) return false;
+            if (mod3 != Key.Unknown && !IsHeld(mod3)) return false;
 
             return true;
+
+            bool IsHeld(Key key)
+            {
+                // Ignore while AltGr is held
+                if (altGr && key is Key.Control or Key.Alt)
+                    return false;
+
+                return keysPressed[(int)key];
+            }
         }
 
         private static bool PackedContainsKey(PackedKeyCombo packed, Key key)
@@ -899,7 +920,7 @@ namespace Robust.Client.Input
         }
 
         [StructLayout(LayoutKind.Explicit)]
-        private readonly struct PackedKeyCombo : IEquatable<PackedKeyCombo>
+        internal readonly struct PackedKeyCombo : IEquatable<PackedKeyCombo>
         {
             [FieldOffset(0)] public readonly int Packed;
             [FieldOffset(0)] public readonly Key Mod3;

@@ -64,11 +64,7 @@ internal sealed class NetComponentDeltaStateSerializer : IDynamicTypeSerializer
             il.Emit(OpCodes.And);
             il.Emit(OpCodes.Brfalse, endField);
 
-            // Primitive types count as sealed
-            // We need this to handle inheritors of abstract types, such as SoundSpecifier
-            var writeField = field.FieldType.IsSealed
-                ? WriteFieldMethod.MakeGenericMethod(field.FieldType)
-                : WriteFieldObjectMethod;
+            var writeField = WriteFieldMethod.MakeGenericMethod(field.FieldType);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_2);
@@ -125,11 +121,7 @@ internal sealed class NetComponentDeltaStateSerializer : IDynamicTypeSerializer
             il.Emit(OpCodes.And);
             il.Emit(OpCodes.Brfalse, endField);
 
-            // Primitive types count as sealed
-            // We need this to handle inheritors of abstract types, such as SoundSpecifier
-            var readField = field.FieldType.IsSealed
-                ? ReadFieldMethod.MakeGenericMethod(field.FieldType)
-                : ReadFieldObjectMethod;
+            var readField = ReadFieldMethod.MakeGenericMethod(field.FieldType);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_2);
@@ -155,14 +147,8 @@ internal sealed class NetComponentDeltaStateSerializer : IDynamicTypeSerializer
     private static readonly MethodInfo WriteFieldMethod = typeof(NetComponentDeltaStateSerializer)
         .GetMethod(nameof(WriteField), BindingFlags.Static | BindingFlags.NonPublic)!;
 
-    private static readonly MethodInfo WriteFieldObjectMethod = typeof(NetComponentDeltaStateSerializer)
-        .GetMethod(nameof(WriteFieldObject), BindingFlags.Static | BindingFlags.NonPublic)!;
-
     private static readonly MethodInfo ReadFieldMethod = typeof(NetComponentDeltaStateSerializer)
         .GetMethod(nameof(ReadField), BindingFlags.Static | BindingFlags.NonPublic)!;
-
-    private static readonly MethodInfo ReadFieldObjectMethod = typeof(NetComponentDeltaStateSerializer)
-        .GetMethod(nameof(ReadFieldObject), BindingFlags.Static | BindingFlags.NonPublic)!;
 
     [UsedImplicitly]
     private static void WriteField<T>(Serializer serializer, Stream stream, T value)
@@ -171,20 +157,8 @@ internal sealed class NetComponentDeltaStateSerializer : IDynamicTypeSerializer
     }
 
     [UsedImplicitly]
-    private static void WriteFieldObject(Serializer serializer, Stream stream, object value)
-    {
-        serializer.Serialize(stream, value);
-    }
-
-    [UsedImplicitly]
     private static void ReadField<T>(Serializer serializer, Stream stream, out T value)
     {
         serializer.DeserializeDirect(stream, out value);
-    }
-
-    [UsedImplicitly]
-    private static void ReadFieldObject(Serializer serializer, Stream stream, out object value)
-    {
-        serializer.Deserialize(stream, out value);
     }
 }

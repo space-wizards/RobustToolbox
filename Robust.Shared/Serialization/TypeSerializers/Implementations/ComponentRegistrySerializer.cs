@@ -75,7 +75,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 if (referenceTypes[..refIdx].Contains(compIdx))
                 {
                     throw new InvalidOperationException(
-                        $"Duplicate component reference in prototype: '{registration.Name}'");
+                        $"Duplicate component reference in prototype: '{compIdx}'");
                 }
 
                 referenceTypes[refIdx++] = compIdx;
@@ -260,15 +260,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             for (var i = 0; i < node.Count; i++)
             {
                 var mapping = (MappingDataNode)node[i];
-                if (!mapping.TryGet("type", out ValueDataNode? typeNode))
-                {
-                    if (mapping.Tag == PrototypeManager.PartialModifiedTag)
-                        continue;
-
-                    throw new KeyNotFoundException("The given key 'type' was not present in the dictionary.");
-                }
-
-                var type = typeNode.Value;
+                var type = mapping.Get<ValueDataNode>("type").Value;
                 var availability = _factory.GetComponentAvailability(type);
                 if (availability == ComponentAvailability.Ignore)
                     continue;

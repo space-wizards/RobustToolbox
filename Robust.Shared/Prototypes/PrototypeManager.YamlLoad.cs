@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using JetBrains.Annotations;
-using Robust.Shared.Log;
 using Robust.Shared.Random;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
@@ -82,11 +80,6 @@ public partial class PrototypeManager
     /// Tag used to clear a node.
     /// </summary>
     private const string PartialClearTag = "!Clear";
-
-    /// <summary>
-    /// Tag used to combine a node at an index on a sequence, instead of adding to it.
-    /// </summary>
-    private const string PartialCombineIndexTag = "!CombineIndex:";
 
     /// <inheritdoc />
     public void LoadDirectory(ResPath path, bool overwrite = false,
@@ -189,7 +182,7 @@ public partial class PrototypeManager
             {
                 try
                 {
-                    MergeMapping(mapping, overwrite, changed, false, file);
+                    MergeMapping(mapping, overwrite, changed, false);
                 }
                 catch (Exception e)
                 {
@@ -203,13 +196,13 @@ public partial class PrototypeManager
             if (array == null)
                 continue;
 
-            foreach (var (file, result) in array.OrderBy(f => f.File.CanonPath))
+            foreach (var (file, result) in array)
             {
                 foreach (var mapping in result)
                 {
                     try
                     {
-                        MergeMapping(mapping, overwrite, changed, true, file);
+                        MergeMapping(mapping, overwrite, changed, true);
                     }
                     catch (Exception e)
                     {
@@ -279,7 +272,7 @@ public partial class PrototypeManager
                         if (ignored)
                             AbstractPrototype(extracted.Data);
 
-                        MergeMapping(extracted, overwrite, changed, partial, file);
+                        MergeMapping(extracted, overwrite, changed, partial);
 
                         // If the prototype has variants, we need to add each of these to the extracted list as well
                         if (extracted.VariantData is not null)
@@ -292,7 +285,7 @@ public partial class PrototypeManager
                                 if (ignored)
                                     AbstractPrototype(variantExtracted.Data);
 
-                                MergeMapping(variantExtracted, overwrite, changed, partial, file);
+                                MergeMapping(variantExtracted, overwrite, changed, partial);
                             }
                         }
                     }
@@ -326,7 +319,7 @@ public partial class PrototypeManager
         var kindData = _kinds[kind];
         Dictionary<string, ExtractedMappingData>? variantData = null;
 
-        var partialOnly = IsTag(typeNode, PartialOnlyTag);
+        var partialOnly = IsTag(typeNode, "!PartialOnly");
         if (!dataNode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
         {
             // Check if the ID node is a CreateVariants node instead of a value.
@@ -410,10 +403,9 @@ public partial class PrototypeManager
         ExtractedMappingData mapping,
         bool overwrite,
         Dictionary<Type, HashSet<string>>? changed,
-        bool partial,
-        ResPath? file)
+        bool partial)
     {
-        var (kind, id, _, _, _, _) = mapping;
+        var (kind, id, parents, data, partialOnly, _) = mapping;
 
         var kindData = _kinds[kind];
 
@@ -424,79 +416,31 @@ public partial class PrototypeManager
             throw new PrototypeLoadException($"Duplicate ID: '{id}' for kind '{kind}'");
         }
 
-        MergeMappingExisting(mapping, changed, partial, kindData, existing, file);
-    }
-
-    private MappingDataNode MergeMappingExisting(
-        ExtractedMappingData mapping,
-        Dictionary<Type, HashSet<string>>? changed,
-        bool partial,
-        KindData kindData,
-        MappingDataNode? existing,
-        ResPath? file)
-    {
-        var (kind, id, parents, data, partialOnly, _) = mapping;
-        int? existingPartialDataIndex = null;
         if (existing != null && partial)
         {
             if (kindData.PartialOriginals.TryGetValue(id, out var original))
             {
-                // AKA: Are we yaml hot-reloading
-                // If so, reprocess all partials in order
-                if (changed != null &&
-                    kindData.Partials.TryGetValue(id, out var partialsToProcess))
+                if (changed == null ||
+                    !changed.TryGetValue(kind, out var kindChanged) ||
+                    !kindChanged.Contains(id))
                 {
                     existing = original;
-
-                    for (var i = 0; i < partialsToProcess.Count; i++)
-                    {
-                        var partialData = partialsToProcess[i];
-                        if (partialData.File == file)
-                        {
-                            existingPartialDataIndex = i;
-                            continue;
-                        }
-
-                        existing = MergeMappingExisting(partialData.Data, null, true, kindData, original, file);
-                    }
                 }
             }
             else
             {
-                kindData.PartialOriginals[id] = existing.Copy();
+                kindData.PartialOriginals[id] = existing;
             }
 
-            var partials = kindData.Partials.GetOrNew(id);
-            if (existingPartialDataIndex == null)
-                partials.Add((mapping, file));
-            else
-                partials[existingPartialDataIndex.Value] = (mapping, file);
-
-            LogVerbose($"Combining {kind.Name} {id} with partial");
-
-            // Also known as, components pretend to be a list, while being a dictionary
-            // Chaos ensues
-            // You could expose this someway if Content decided to also do this
-            // for whatever reason
-            Func<string, string?>? onProcessAsMappingKey = kind == typeof(EntityPrototype)
-                ? key => key == "components" ? "type" : null
-                : null;
-
-            CombineMapNode(existing, data, out var fullDeleted, onProcessAsMappingKey);
+            CombineMapNode(existing, data, out var fullDeleted);
             if (fullDeleted && existing.IsEmpty)
-            {
-                LogVerbose($"Full deleted and empty, removing prototype data");
                 kindData.RawResults.Remove(id);
-            }
             else
-            {
-                LogVerbose($"Replacing node with combined partial");
                 kindData.RawResults[id] = existing;
-            }
         }
         else if (partialOnly)
         {
-            return existing ?? data;
+            return;
         }
         else
         {
@@ -507,16 +451,15 @@ public partial class PrototypeManager
         {
             if (parents != null)
                 inheritance.Add(id, parents);
-            else if (!partial || existing == null) // If this is partial we don't want to mess up the inheritance graph
+            else if (!partial) // If this is partial we don't want to mess up the inheritance graph
                 inheritance.Add(id);
         }
 
         if (changed == null)
-            return existing ?? data;
+            return;
 
         var set = changed.GetOrNew(kind);
         set.Add(id);
-        return existing ?? data;
     }
 
     public void LoadFromStream(
@@ -541,7 +484,7 @@ public partial class PrototypeManager
                     if (extracted == null)
                         continue;
 
-                    MergeMapping(extracted, overwrite, changed, partial, null);
+                    MergeMapping(extracted, overwrite, changed, partial);
 
                     // If the prototype has variants, we need to add each of these to the extracted list as well
                     if (extracted.VariantData is null)
@@ -552,7 +495,7 @@ public partial class PrototypeManager
                         if (variantExtracted is null)
                             continue;
 
-                        MergeMapping(variantExtracted, overwrite, changed, partial, null);
+                        MergeMapping(variantExtracted, overwrite, changed, partial);
                     }
                 }
 
@@ -728,30 +671,20 @@ public partial class PrototypeManager
             $"Node of type {node.GetType()} cannot be used as a single parent or list of parents! Expected {typeof(SequenceDataNode)} or {typeof(ValueDataNode)}. Node string:\n{node}");
     }
 
-    private void CombineMapNode(
-        MappingDataNode existing,
-        MappingDataNode data,
-        out bool fullDeleted,
-        Func<string, string?>? onProcessAsMappingKey = null)
+    private static void CombineMapNode(MappingDataNode existing, MappingDataNode data, out bool fullDeleted)
     {
         fullDeleted = false;
         foreach (var (key, dataNode) in data)
         {
-            LogVerbose($"Mapping processing key {key}");
-            if (IsTag(data.GetKeyTag(key), PartialClearTag) ||
-                IsTag(dataNode, PartialClearTag))
+            if (IsTag(data.GetKeyTag(key), PartialClearTag) || IsTag(dataNode, PartialClearTag))
             {
-                LogVerbose($"Mapping found {PartialClearTag}");
-
                 if (existing.TryGet(key, out MappingDataNode? existingMapping))
                 {
-                    LogVerbose($"Mapping clearing mapping with key {key}");
                     existingMapping.Clear();
                     existingMapping.Tag = PartialModifiedTag;
                 }
                 else if (existing.TryGet(key, out SequenceDataNode? existingSequence))
                 {
-                    LogVerbose($"Mapping clearing sequence with key {key}");
                     existingSequence.Clear();
                     existingSequence.Tag = PartialModifiedTag;
                 }
@@ -759,195 +692,92 @@ public partial class PrototypeManager
                 // We might want to add after clearing
             }
 
-            if (IsTag(data.GetKeyTag(key), PartialRemoveTag) ||
-                IsTag(dataNode, PartialRemoveTag))
+            if (IsTag(data.GetKeyTag(key), PartialRemoveTag) || IsTag(dataNode, PartialRemoveTag))
             {
-                LogVerbose($"Found {PartialRemoveTag}");
-
                 // "a": !Remove -> Remove regardless of value
                 // "a": !Remove 1 -> Remove only if value is 1
                 if (dataNode.IsEmpty ||
                     (existing.TryGetValue(key, out var existingValue) &&
                      existingValue.Equals(dataNode)))
                 {
-                    LogVerbose($"Mapping removing key {key}");
                     existing.Remove(key);
                     existing.Tag = PartialModifiedTag;
 
                     if (existing.IsEmpty)
-                    {
-                        LogVerbose($"Mapping node is empty after removal, full deleting");
                         fullDeleted = true;
-                    }
                 }
 
                 continue;
             }
 
-            if (existing.TryGetValue(key, out var existingNode))
+            if (existing.TryGetValue(key, out var existingNode) &&
+                Combine(existingNode, dataNode, out _))
             {
-                var processAsMappingKey = onProcessAsMappingKey?.Invoke(key);
-                if (Combine(existingNode, dataNode, out _, processAsMappingKey))
-                    continue;
+                continue;
             }
 
             if (!dataNode.IsEmpty)
-            {
-                LogVerbose(
-                    $"Mapping Node{GetValueNodeValueToLog(dataNode)} with key {key} is not empty, adding it to the mapping");
                 existing[key] = dataNode;
-            }
         }
     }
 
-    private void CombineSeqNode(SequenceDataNode existing, SequenceDataNode data, string? processAsMappingKey)
+    private static void CombineSeqNode(SequenceDataNode existing, SequenceDataNode data)
     {
         for (var i = data.Count - 1; i >= 0; i--)
         {
-            LogVerbose($"Sequence processing index {i}");
             var dataNode = data[i];
-
-            // - !CombineIndex:0 "a": 1
-            if (StartsWithTagOrMappingKeyTag(dataNode, PartialCombineIndexTag, out var actualTag))
+            if (existing.TryGetValue(i, out var existingNode) &&
+                Combine(existingNode, dataNode, out var fullDeleted))
             {
-                SequenceCombineIndex(existing, dataNode, actualTag, i);
+                if (fullDeleted && existingNode.IsEmpty)
+                    existing.RemoveAt(i);
+
                 continue;
             }
 
             if (IsTag(dataNode, PartialRemoveTag))
             {
-                LogVerbose($"Sequence index {i} found {PartialRemoveTag}, removing node{GetValueNodeValueToLog(dataNode)} from sequence");
-                if (!existing.Remove(dataNode))
-                    LogVerbose($"Could not find node{GetValueNodeValueToLog(dataNode)} by equality to remove from sequence {i}");
-
+                existing.Remove(dataNode);
                 continue;
             }
 
             if (dataNode.Tag?.StartsWith(PartialIndexTag) ?? false)
             {
-                LogVerbose($"Sequence index {i} found {PartialIndexTag}");
                 var indexStr = dataNode.Tag.AsSpan(PartialIndexTag.Length);
-                var index = ProcessPartialSeqNodeIndex(existing, indexStr, dataNode);
-                LogVerbose($"Sequence index {i} inserting node{GetValueNodeValueToLog(dataNode)} at index {index}");
+                var fromEnd = false;
+                if (indexStr.StartsWith('-'))
+                {
+                    indexStr = indexStr[1..];
+                    fromEnd = true;
+                }
+
+                if (!int.TryParse(indexStr, out var index))
+                {
+                    throw new PrototypeLoadException(
+                        $"Found partial prototype node with index tag, but could not parse its index as a number. Expected tag in format !Index:0, got tag {dataNode.Tag} for data node {dataNode}");
+                }
+
+                if (fromEnd)
+                    index = existing.Count - index;
+
+                index = Math.Clamp(index, 0, existing.Count);
                 existing.Insert(index, dataNode);
-                continue;
             }
-
-            if (processAsMappingKey != null)
-            {
-                LogVerbose($"Sequence index {i} being processed as a mapping using key {processAsMappingKey}");
-                if (dataNode is not MappingDataNode dataNodeMap)
-                {
-                    LogVerbose($"Sequence index {i} is not a {nameof(MappingDataNode)}, cannot process as a mapping, skipping");
-                    continue;
-                }
-
-                if (dataNodeMap.Count == 0)
-                {
-                    LogVerbose($"Sequence index {i} mapping has no nodes, cannot process as a mapping, skipping");
-                    continue;
-                }
-
-                if (!dataNodeMap.TryGet(processAsMappingKey, out ValueDataNode? key))
-                {
-                    LogVerbose($"Sequence index {i} mapping has no {nameof(ValueDataNode)} key {key}, cannot process as a mapping, skipping");
-                    continue;
-                }
-
-                var found = false;
-                for (var j = 0; j < existing.Count; j++)
-                {
-                    if (!existing.TryGetValue(j, out var existingNode) ||
-                        existingNode is not MappingDataNode existingMapping)
-                    {
-                        continue;
-                    }
-
-                    if (!existingMapping.TryGet(processAsMappingKey, out ValueDataNode? existingKey) ||
-                        existingKey.Value != key.Value)
-                    {
-                        continue;
-                    }
-
-                    LogVerbose($"Sequence index {i} found mapping with key {key}, combining mapping nodes");
-                    CombineMapNode(existingMapping, dataNodeMap, out var fullDeleted);
-                    if (fullDeleted && existingMapping.IsEmpty)
-                    {
-                        LogVerbose($"Sequence index {i} found mapping with key {key} that full deleted, removing from sequence");
-                        existing.RemoveAt(j);
-                    }
-
-                    found = true;
-                    break;
-                }
-
-                if (found)
-                    continue;
-
-                LogVerbose($"Sequence index {i} could not find mapping with key {key} in original node, adding the full partial node to the original sequence");
-            }
-
             // If this is a mapping with a single !Remove key, we don't want to add it if it doesn't already exist
-            if (dataNode is not MappingDataNode mapping ||
-                mapping.Count == 0 ||
-                mapping.Count > 1 ||
-                mapping.GetKeyTag(mapping.Keys.First()) != PartialRemoveTag)
+            else if (dataNode is not MappingDataNode mapping ||
+                     mapping.Count == 0 ||
+                     mapping.Count > 1 ||
+                     mapping.GetKeyTag(mapping.Keys.First()) != PartialRemoveTag)
             {
-                LogVerbose($"Sequence index {i} adding its data node{GetValueNodeValueToLog(dataNode)} to existing sequence");
                 existing.Add(dataNode);
             }
         }
     }
 
-    private void SequenceCombineIndex(SequenceDataNode existing, DataNode dataNode, ReadOnlySpan<char> tag, int i)
-    {
-        var indexStr = tag[PartialCombineIndexTag.Length..];
-        var index = ProcessPartialSeqNodeIndex(existing, indexStr, dataNode);
-        LogVerbose($"Sequence index {i} found {PartialCombineIndexTag}");
-
-        if (existing.TryGetValue(index, out var existingNode) &&
-            Combine(existingNode, dataNode, out var fullDeleted, null))
-        {
-            LogVerbose($"Sequence index {i} combined index {index}");
-            if (fullDeleted && existingNode.IsEmpty)
-            {
-                LogVerbose($"Sequence index {i} full deleted, removing it from the sequence");
-                existing.RemoveAt(i);
-            }
-        }
-        else
-        {
-            LogVerbose($"Sequence index {i} could not find index {index} to combine");
-        }
-    }
-
-    private int ProcessPartialSeqNodeIndex(SequenceDataNode existing, ReadOnlySpan<char> indexStr, DataNode dataNode)
-    {
-        var fromEnd = false;
-        if (indexStr.StartsWith('-'))
-        {
-            LogVerbose($"Index {indexStr} is negative, searching from the end");
-            indexStr = indexStr[1..];
-            fromEnd = true;
-        }
-
-        if (!int.TryParse(indexStr, out var index))
-        {
-            throw new PrototypeLoadException(
-                $"Found partial prototype node with index tag, but could not parse its index as a number. Expected tag in format !Index:0 or !ReplaceIndex:0, got tag {dataNode.Tag} for data node {dataNode}");
-        }
-
-        if (fromEnd)
-            index = existing.Count - index;
-
-        if (index < 0 || index > existing.Count)
-            LogVerbose($"Index {index} is outside of bounds, clamping to minimum 0 and maximum {existing.Count}");
-
-        index = Math.Clamp(index, 0, existing.Count);
-        return index;
-    }
-
-    private bool Combine(DataNode existing, DataNode data, out bool fullDeleted, string? processAsMappingKey)
+    private static bool Combine(
+        DataNode existing,
+        DataNode data,
+        out bool fullDeleted)
     {
         fullDeleted = false;
         switch (existing, data)
@@ -956,56 +786,22 @@ public partial class PrototypeManager
                 CombineMapNode(existingMapping, dataMapping, out fullDeleted);
                 return true;
             case (SequenceDataNode existingSequence, SequenceDataNode dataSequence):
-                CombineSeqNode(existingSequence, dataSequence, processAsMappingKey);
+                CombineSeqNode(existingSequence, dataSequence);
                 return true;
             default:
                 return false;
         }
     }
 
-    private bool IsTag(string? nodeTag, string tag)
+    private static bool IsTag(string? nodeTag, string tag)
     {
         return nodeTag != null &&
                nodeTag.Equals(tag, StringComparison.OrdinalIgnoreCase);
     }
 
-    private bool IsTag(DataNode node, string tag)
+    private static bool IsTag(DataNode node, string tag)
     {
         return IsTag(node.Tag, tag);
-    }
-
-    private bool StartsWithTagOrMappingKeyTag(DataNode dataNode, string tag, [NotNullWhen(true)] out string? actualTag)
-    {
-        if (IsTag(dataNode, tag))
-        {
-            DebugTools.AssertNotNull(dataNode.Tag);
-            actualTag = dataNode.Tag;
-            return true;
-        }
-
-        if (dataNode is MappingDataNode dataNodeMapping &&
-            dataNodeMapping.Count > 0 &&
-            dataNodeMapping.GetKeyTag(dataNodeMapping[0].Key) is { } keyTag &&
-            keyTag.StartsWith(tag))
-        {
-            actualTag = keyTag;
-            return true;
-        }
-
-        actualTag = null;
-        return false;
-    }
-
-    private void LogVerbose([InterpolatedStringHandlerArgument] ref DefaultInterpolatedStringHandler handler)
-    {
-        // Check if it's enabled first so we don't allocate for fun
-        if (Sawmill.IsLogLevelEnabled(LogLevel.Verbose))
-            Sawmill.Verbose(handler.ToStringAndClear());
-    }
-
-    private string GetValueNodeValueToLog(DataNode node)
-    {
-        return node is not ValueDataNode value ? string.Empty : $" {value.Value}";
     }
 
     // All these fields can be null in case the

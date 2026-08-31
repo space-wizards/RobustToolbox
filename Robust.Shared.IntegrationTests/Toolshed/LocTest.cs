@@ -36,7 +36,7 @@ internal sealed class LocTest : ToolshedTest
 
                     var descLoc = cmd.DescLocStr();
                     Assert.That(locStrings.Add(descLoc), $"Duplicate command description key: {descLoc}");
-                    Assert.That(cmd.Cmd.Description(cmd.SubCommand), Is.Not.EqualTo(descLoc), $"Failed to get command description for command {cmd.FullName()}");
+                    Assert.That(locMan.TryGetString(descLoc, out _), $"Failed to get command description for command {cmd.FullName()}");
                 }
             });
         });

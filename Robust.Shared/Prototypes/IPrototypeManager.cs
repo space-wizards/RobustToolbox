@@ -416,27 +416,17 @@ public interface IPrototypeManager
     /// Validate all prototypes defined in yaml files contained in the given directory.
     /// </summary>
     /// <param name="path">The directory containing the yaml files that need validating.</param>
-    /// <param name="partialNoOriginalError">
-    /// Whether a partial existing without an original to modify is an error or not.
-    /// !PartialOnly prototypes will not error, even if this is set to true.
-    /// </param>
     /// <returns>A dictionary containing sets of errors for each file that failed validation.</returns>
-    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path, bool partialNoOriginalError = false);
+    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path);
 
     /// <summary>
     /// Validate all prototypes defined in yaml files contained in the given directory.
     /// </summary>
     /// <param name="path">The directory containing the yaml files that need validating.</param>
     /// <param name="prototypes">The prototypes ids that were present in the directory.</param>
-    /// <param name="partialNoOriginalError">
-    /// Whether a partial existing without an original to modify is an error or not.
-    /// !PartialOnly prototypes will not error, even if this is set to true.
-    /// </param>
     /// <returns>A dictionary containing sets of errors for each file that failed validation.</returns>
-    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(
-        ResPath path,
-        out Dictionary<Type, HashSet<string>> prototypes,
-        bool partialNoOriginalError = false);
+    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
+        out Dictionary<Type, HashSet<string>> prototypes);
 
     /// <summary>
     /// This method uses reflection to validate that all static prototype id fields correspond to valid prototypes.

@@ -64,6 +64,8 @@ internal sealed class NetComponentDeltaStateSerializer : IDynamicTypeSerializer
             il.Emit(OpCodes.And);
             il.Emit(OpCodes.Brfalse, endField);
 
+            // Primitive types count as sealed
+            // We need this to handle inheritors of abstract types, such as SoundSpecifier
             var writeField = field.FieldType.IsSealed
                 ? WriteFieldMethod.MakeGenericMethod(field.FieldType)
                 : WriteFieldObjectMethod;
@@ -123,6 +125,8 @@ internal sealed class NetComponentDeltaStateSerializer : IDynamicTypeSerializer
             il.Emit(OpCodes.And);
             il.Emit(OpCodes.Brfalse, endField);
 
+            // Primitive types count as sealed
+            // We need this to handle inheritors of abstract types, such as SoundSpecifier
             var readField = field.FieldType.IsSealed
                 ? ReadFieldMethod.MakeGenericMethod(field.FieldType)
                 : ReadFieldObjectMethod;

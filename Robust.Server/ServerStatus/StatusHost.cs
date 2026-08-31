@@ -194,6 +194,12 @@ namespace Robust.Server.ServerStatus
                 SetCVarIfUnmodified(CVars.BuildManifestHash, info.ManifestHash ?? "");
                 SetCVarIfUnmodified(CVars.BuildManifestDownloadUrl, info.ManifestDownloadUrl ?? "");
                 SetCVarIfUnmodified(CVars.BuildManifestUrl, info.ManifestUrl ?? "");
+                SetCVarIfUnmodified(CVars.SourceUrl, info.SourceUrl ?? "");
+                SetCVarIfUnmodified(CVars.SourceCommitId, info.SourceCommitId ?? "");
+                SetCVarIfUnmodified(CVars.SourceBranchName, info.SourceBranchName ?? "");
+                SetCVarIfUnmodified(CVars.EngineSourceBranchName, info.EngineSourceBranchName ?? "");
+                SetCVarIfUnmodified(CVars.EngineSourceUrl, info.EngineSourceUrl ?? "");
+                SetCVarIfUnmodified(CVars.EngineSourceCommitId, info.EngineSourceCommitId ?? "");
             }
 
             void SetCVarIfUnmodified(CVarDef<string> cvar, string val)
@@ -231,7 +237,20 @@ namespace Robust.Server.ServerStatus
             [property: JsonPropertyName("manifest_url")]
             string? ManifestUrl,
             [property: JsonPropertyName("manifest_download_url")]
-            string? ManifestDownloadUrl);
+            string? ManifestDownloadUrl,
+            [property: JsonPropertyName("built_on_source_url")]
+            string? SourceUrl,
+            [property: JsonPropertyName("built_on_commit_id")]
+            string? SourceCommitId,
+            [property: JsonPropertyName("built_on_branch_name")]
+            string? SourceBranchName,
+            [property: JsonPropertyName("built_on_engine_url")]
+            string? EngineSourceUrl,
+            [property: JsonPropertyName("built_on_engine_commit_id")]
+            string? EngineSourceCommitId,
+            [property: JsonPropertyName("built_on_engine_branch_name")]
+            string? EngineSourceBranchName
+        );
 
         private sealed class ContextImpl : IStatusHandlerContext
         {

@@ -161,7 +161,7 @@ internal static class Program
 
                     if (type == SDL.SDL_EventType.SDL_EVENT_MOUSE_MOTION && interactive)
                     {
-                        yaw -= ev.motion.xrel * 0.0025f;
+                        yaw += ev.motion.xrel * 0.0025f;
                         pitch = Math.Clamp(pitch - ev.motion.yrel * 0.0025f, -1.15f, 0.45f);
                     }
 

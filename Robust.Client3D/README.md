@@ -1,0 +1,23 @@
+# Robust.Client3D
+
+This is the first runnable client of the incompatible 3D engine fork. It is a
+small bootstrap executable rather than a compatibility mode for the legacy 2D
+client. It consumes the new `SpatialTransform` contract directly and owns its
+OpenGL window, perspective camera, depth buffer, mesh upload, and render loop.
+
+Build and run from the RobustToolbox directory:
+
+```powershell
+dotnet build Robust.Client3D\Robust.Client3D.csproj
+bin\Client3D\Robust.Client3D.exe
+```
+
+For a deterministic smoke run that exits and captures the final framebuffer:
+
+```powershell
+bin\Client3D\Robust.Client3D.exe --frames=12 --screenshot=bin\Client3D\world-smoke.bmp
+```
+
+The default run remains open until the window is closed. The room and its
+objects use full XYZ positions, quaternion rotations, non-uniform 3D scales,
+perspective projection, and depth-tested rendering.

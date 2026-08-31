@@ -127,6 +127,7 @@
   <Project Path="Robust.Client.IntegrationTests/Robust.Client.IntegrationTests.csproj" />
   <Project Path="Robust.Client.Tests/Robust.Client.Tests.csproj" />
   <Project Path="Robust.Client/Robust.Client.csproj" />
+  <Project Path="Robust.Client3D/Robust.Client3D.csproj" />
   <Project Path="Robust.Packaging.Tests/Robust.Packaging.Tests.csproj" />
   <Project Path="Robust.Packaging/Robust.Packaging.csproj" />
   <Project Path="Robust.Server.IntegrationTests/Robust.Server.IntegrationTests.csproj" />

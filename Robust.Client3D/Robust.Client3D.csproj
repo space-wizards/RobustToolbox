@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\MSBuild\Robust.Engine.props" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\bin\Client3D</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenToolkit.Graphics" />
+    <PackageReference Include="SpaceWizards.Sdl" />
+    <PackageReference Include="Robust.Natives" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
+</Project>

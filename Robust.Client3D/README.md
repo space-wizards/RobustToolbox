@@ -12,12 +12,21 @@ dotnet build Robust.Client3D\Robust.Client3D.csproj
 bin\Client3D\Robust.Client3D.exe
 ```
 
+Controls:
+
+- `WASD` moves relative to the camera.
+- Mouse movement rotates the third-person camera.
+- `Space` jumps.
+- `Escape` exits.
+
 For a deterministic smoke run that exits and captures the final framebuffer:
 
 ```powershell
-bin\Client3D\Robust.Client3D.exe --frames=12 --screenshot=bin\Client3D\world-smoke.bmp
+bin\Client3D\Robust.Client3D.exe --frames=150 --autoplay --screenshot=bin\Client3D\playable-smoke.bmp
 ```
 
 The default run remains open until the window is closed. The room and its
 objects use full XYZ positions, quaternion rotations, non-uniform 3D scales,
-perspective projection, and depth-tested rendering.
+perspective projection, and depth-tested rendering. The player uses a fixed-step
+kinematic controller with gravity, jumping, and collision against the `Box3`
+bounds generated from the visible room geometry.

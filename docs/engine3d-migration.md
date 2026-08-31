@@ -37,7 +37,11 @@ The first layer has started:
 - Local scale is part of the transform and network state.
 - `SpatialMath`, `SpatialTransform`, and `Box3` define the initial 3D math core.
 - `Robust.Client3D` is a runnable bootstrap client with an OpenGL 3.3 mesh pass,
-  perspective camera, depth buffer, and a small animated 3D room.
+  perspective camera, depth buffer, and a volumetric 3D room.
+- The local playable slice has camera-relative movement, mouse look, gravity,
+  jumping, and fixed-step character collision against transformed `Box3` bounds.
+- `Robust.Client3D.Tests` locks down grounding, obstacle blocking, jump/landing,
+  and deterministic movement before the controller is moved server-side.
 
 The bootstrap client is intentionally isolated from the legacy client assembly.
 It proves the new spatial contract and GPU path can run while the old planar

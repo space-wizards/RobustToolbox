@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
@@ -17,12 +18,13 @@ internal static class Program
         layout(location = 1) in vec3 aColor;
 
         uniform mat4 uMvp;
+        uniform vec3 uTint;
 
         out vec3 vColor;
 
         void main()
         {
-            vColor = aColor;
+            vColor = mix(aColor, uTint, 0.72);
             gl_Position = uMvp * vec4(aPosition, 1.0);
         }
         """;
@@ -44,6 +46,7 @@ internal static class Program
     {
         var frameLimit = ReadFrameLimit(args);
         var screenshotPath = ReadScreenshotPath(args);
+        var autoPlay = HasArgument(args, "--autoplay");
 
         if (!SDL.SDL_Init(SDL.SDL_InitFlags.SDL_INIT_VIDEO | SDL.SDL_InitFlags.SDL_INIT_EVENTS))
         {
@@ -94,6 +97,9 @@ internal static class Program
             var mvpLocation = GL.GetUniformLocation((int) program, "uMvp");
             if (mvpLocation < 0)
                 throw new InvalidOperationException("The 3D shader has no uMvp uniform.");
+            var tintLocation = GL.GetUniformLocation((int) program, "uTint");
+            if (tintLocation < 0)
+                throw new InvalidOperationException("The 3D shader has no uTint uniform.");
 
             var vertices = CreateCubeVertices();
             GL.GenVertexArrays(1, out vertexArray);
@@ -120,7 +126,25 @@ internal static class Program
             GL.DepthFunc(DepthFunction.Less);
             GL.ClearColor(0.025f, 0.035f, 0.065f, 1f);
 
-            var startTime = Environment.TickCount64;
+            var interactive = frameLimit is null && !autoPlay;
+            if (interactive && !SDL.SDL_SetWindowRelativeMouseMode(window, true))
+                Console.Error.WriteLine($"Relative mouse mode unavailable: {SDL.SDL_GetError()}");
+
+            Console.WriteLine("Controls: WASD move, mouse look, Space jump, Escape quit");
+
+            var character = new KinematicCharacter3D(DemoWorld3D.SpawnPosition, DemoWorld3D.CollisionBounds);
+            var yaw = MathF.PI;
+            var pitch = -0.34f;
+            var moveForward = false;
+            var moveBackward = false;
+            var moveLeft = false;
+            var moveRight = false;
+            var jumpRequested = false;
+            var autoPlayTime = 0f;
+            var autoJumpSent = false;
+            var previousTimestamp = Stopwatch.GetTimestamp();
+            var simulationAccumulator = 0f;
+            const float fixedStep = 1f / 120f;
             var frame = 0;
             var running = true;
 
@@ -134,6 +158,72 @@ internal static class Program
                     {
                         running = false;
                     }
+
+                    if (type == SDL.SDL_EventType.SDL_EVENT_MOUSE_MOTION && interactive)
+                    {
+                        yaw -= ev.motion.xrel * 0.0025f;
+                        pitch = Math.Clamp(pitch - ev.motion.yrel * 0.0025f, -1.15f, 0.45f);
+                    }
+
+                    if (type is SDL.SDL_EventType.SDL_EVENT_KEY_DOWN or SDL.SDL_EventType.SDL_EVENT_KEY_UP)
+                    {
+                        var pressed = type == SDL.SDL_EventType.SDL_EVENT_KEY_DOWN;
+                        switch (ev.key.scancode)
+                        {
+                            case SDL.SDL_Scancode.SDL_SCANCODE_W:
+                                moveForward = pressed;
+                                break;
+                            case SDL.SDL_Scancode.SDL_SCANCODE_S:
+                                moveBackward = pressed;
+                                break;
+                            case SDL.SDL_Scancode.SDL_SCANCODE_A:
+                                moveLeft = pressed;
+                                break;
+                            case SDL.SDL_Scancode.SDL_SCANCODE_D:
+                                moveRight = pressed;
+                                break;
+                            case SDL.SDL_Scancode.SDL_SCANCODE_SPACE when pressed && !ev.key.repeat:
+                                jumpRequested = true;
+                                break;
+                            case SDL.SDL_Scancode.SDL_SCANCODE_ESCAPE when pressed:
+                                running = false;
+                                break;
+                        }
+                    }
+                }
+
+                var currentTimestamp = Stopwatch.GetTimestamp();
+                var frameTime = Math.Min(
+                    (currentTimestamp - previousTimestamp) / (float) Stopwatch.Frequency,
+                    0.1f);
+                previousTimestamp = currentTimestamp;
+                simulationAccumulator += frameTime;
+
+                var forward = new Vector2(MathF.Sin(yaw), MathF.Cos(yaw));
+                var right = new Vector2(forward.Y, -forward.X);
+                var movement = forward * ((moveForward ? 1f : 0f) - (moveBackward ? 1f : 0f)) +
+                               right * ((moveRight ? 1f : 0f) - (moveLeft ? 1f : 0f));
+
+                while (simulationAccumulator >= fixedStep)
+                {
+                    var stepMovement = movement;
+                    var stepJump = jumpRequested;
+                    if (autoPlay)
+                    {
+                        autoPlayTime += fixedStep;
+                        stepMovement = autoPlayTime switch
+                        {
+                            < 0.9f => forward,
+                            < 1.5f => right,
+                            _ => Vector2.Zero,
+                        };
+                        stepJump = !autoJumpSent && autoPlayTime >= 0.25f;
+                        autoJumpSent |= stepJump;
+                    }
+
+                    character.Step(new CharacterInput3D(stepMovement, stepJump), fixedStep);
+                    jumpRequested = false;
+                    simulationAccumulator -= fixedStep;
                 }
 
                 SDL.SDL_GetWindowSizeInPixels(window, out var width, out var height);
@@ -143,13 +233,16 @@ internal static class Program
                 GL.Viewport(0, 0, width, height);
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-                var elapsed = (Environment.TickCount64 - startTime) / 1000f;
-                var orbit = elapsed * 0.22f;
-                var camera = new Vector3(
-                    MathF.Sin(orbit) * 12f,
-                    -MathF.Cos(orbit) * 12f,
-                    7.5f);
-                var view = Matrix4x4.CreateLookAt(camera, new Vector3(0f, 0f, 1.2f), Vector3.UnitZ);
+                var horizontalLook = MathF.Cos(pitch);
+                var lookDirection = Vector3.Normalize(new Vector3(
+                    MathF.Sin(yaw) * horizontalLook,
+                    MathF.Cos(yaw) * horizontalLook,
+                    MathF.Sin(pitch)));
+                var cameraTarget = character.Position + Vector3.UnitZ * 0.35f;
+                var cameraDirection = -lookDirection;
+                var cameraDistance = ResolveCameraDistance(cameraTarget, cameraDirection, 3.5f);
+                var camera = cameraTarget + cameraDirection * cameraDistance;
+                var view = Matrix4x4.CreateLookAt(camera, cameraTarget, Vector3.UnitZ);
                 var projection = Matrix4x4.CreatePerspectiveFieldOfView(
                     MathF.PI / 3f,
                     width / (float) height,
@@ -158,7 +251,7 @@ internal static class Program
 
                 GL.UseProgram(program);
                 GL.BindVertexArray(vertexArray);
-                DrawWorld(mvpLocation, view, projection, elapsed);
+                DrawWorld(mvpLocation, tintLocation, view, projection, character.Position, yaw);
 
                 if (screenshotPath is not null &&
                     (frameLimit is null ? frame == 0 : frame + 1 >= frameLimit.Value))
@@ -172,6 +265,10 @@ internal static class Program
                 if (frameLimit is not null && frame >= frameLimit.Value)
                     running = false;
             }
+
+            Console.WriteLine(
+                $"Player: {character.Position.X:F3}, {character.Position.Y:F3}, {character.Position.Z:F3}; " +
+                $"grounded={character.IsGrounded}");
 
             return 0;
         }
@@ -209,6 +306,31 @@ internal static class Program
         }
 
         return null;
+    }
+
+    private static bool HasArgument(string[] args, string expected)
+    {
+        foreach (var argument in args)
+        {
+            if (string.Equals(argument, expected, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static float ResolveCameraDistance(Vector3 target, Vector3 direction, float desiredDistance)
+    {
+        var ray = new Ray3(target, direction);
+        var distance = desiredDistance;
+
+        foreach (var bounds in DemoWorld3D.CollisionBounds)
+        {
+            if (ray.TryIntersect(bounds, out var hitDistance) && hitDistance <= desiredDistance)
+                distance = MathF.Min(distance, MathF.Max(0.4f, hitDistance - 0.08f));
+        }
+
+        return distance;
     }
 
     private static string? ReadScreenshotPath(string[] args)
@@ -273,45 +395,49 @@ internal static class Program
         Console.WriteLine($"Rendered frame: {path}");
     }
 
-    private static unsafe void DrawWorld(int mvpLocation, Matrix4x4 view, Matrix4x4 projection, float elapsed)
+    private static unsafe void DrawWorld(
+        int mvpLocation,
+        int tintLocation,
+        Matrix4x4 view,
+        Matrix4x4 projection,
+        Vector3 playerPosition,
+        float playerYaw)
     {
-        DrawCube(new SpatialTransform(
-            new Vector3(0f, 0f, -0.3f),
-            Quaternion.Identity,
-            new Vector3(9f, 9f, 0.6f)), mvpLocation, view, projection);
+        foreach (var worldObject in DemoWorld3D.Objects)
+            DrawCube(
+                worldObject.Transform,
+                mvpLocation,
+                tintLocation,
+                new Vector3(0.25f, 0.55f, 0.75f),
+                view,
+                projection);
 
+        var playerRotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, -playerYaw);
         DrawCube(new SpatialTransform(
-            new Vector3(0f, 4.6f, 2.2f),
-            Quaternion.Identity,
-            new Vector3(9f, 0.35f, 5f)), mvpLocation, view, projection);
+            playerPosition - Vector3.UnitZ * 0.2f,
+            playerRotation,
+            new Vector3(0.62f, 0.42f, 1.2f)),
+            mvpLocation,
+            tintLocation,
+            new Vector3(1f, 0.25f, 0.08f),
+            view,
+            projection);
         DrawCube(new SpatialTransform(
-            new Vector3(-4.6f, 0f, 2.2f),
-            Quaternion.Identity,
-            new Vector3(0.35f, 9f, 5f)), mvpLocation, view, projection);
-
-        DrawCube(new SpatialTransform(
-            new Vector3(2.4f, 1.5f, 0.65f),
-            Quaternion.CreateFromYawPitchRoll(0.35f, 0f, 0f),
-            new Vector3(2.3f, 1.4f, 1.3f)), mvpLocation, view, projection);
-        DrawCube(new SpatialTransform(
-            new Vector3(-2.3f, 2.1f, 1f),
-            Quaternion.CreateFromYawPitchRoll(-0.25f, 0f, 0f),
-            new Vector3(1.25f, 1.25f, 2f)), mvpLocation, view, projection);
-        DrawCube(new SpatialTransform(
-            new Vector3(2.8f, -2.4f, 1.5f),
-            Quaternion.CreateFromYawPitchRoll(0.65f, 0.2f, 0f),
-            new Vector3(0.7f, 0.7f, 3f)), mvpLocation, view, projection);
-
-        var animatedRotation = Quaternion.CreateFromYawPitchRoll(elapsed * 0.8f, elapsed * 0.35f, 0f);
-        DrawCube(new SpatialTransform(
-            new Vector3(-0.4f, -0.6f, 1.45f + MathF.Sin(elapsed * 1.5f) * 0.2f),
-            animatedRotation,
-            new Vector3(1.45f)), mvpLocation, view, projection);
+            playerPosition + Vector3.UnitZ * 0.56f,
+            playerRotation,
+            new Vector3(0.55f)),
+            mvpLocation,
+            tintLocation,
+            new Vector3(1f, 0.58f, 0.22f),
+            view,
+            projection);
     }
 
     private static unsafe void DrawCube(
         SpatialTransform transform,
         int mvpLocation,
+        int tintLocation,
+        Vector3 tint,
         Matrix4x4 view,
         Matrix4x4 projection)
     {
@@ -319,6 +445,7 @@ internal static class Program
         // bytes as a column-major matrix, which already provides the required transpose.
         var mvp = transform.Matrix * view * projection;
         GL.UniformMatrix4(mvpLocation, 1, false, (float*) &mvp);
+        GL.Uniform3(tintLocation, tint.X, tint.Y, tint.Z);
         GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
     }
 

@@ -623,7 +623,7 @@ public abstract partial class SharedContainerSystem
                 continue;
 
             Remove(ent, container, force: true);
-            PredictedDel(ent);
+            Del(ent);
         }
     }
 

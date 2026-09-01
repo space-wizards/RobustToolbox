@@ -910,6 +910,7 @@ namespace Robust.Client.GameStates
                     DebugTools.Assert(!_toApply.ContainsKey(uid));
 
                     meta.Flags &= ~MetaDataFlags.Detached;
+                    _entities.ClearPredictedDeletion(uid);
                     if (isEnteringPvs)
                         enteringPvs++;
                 }
@@ -1751,7 +1752,7 @@ namespace Robust.Client.GameStates
             if (!_entities.IsClientSide(uid) && _entities.TryGetComponent(uid, out TransformComponent? xform))
                 _recursiveRemoveState(meta.NetEntity, xform, _entities.GetEntityQuery<MetaDataComponent>(), _entities.GetEntityQuery<TransformComponent>());
 
-            // Set ApplyingState to true to avoid logging errors about predicting the deletion of networked entities.
+            // DeleteEntity predicts the deletion of networked entities.
             using (_timing.StartStateApplicationArea())
             {
                 _entities.DeleteEntity(uid);

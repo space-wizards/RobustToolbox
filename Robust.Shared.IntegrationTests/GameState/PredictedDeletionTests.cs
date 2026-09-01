@@ -97,6 +97,57 @@ internal sealed partial class PredictedDeletionTests : RobustIntegrationTest
     }
 
     [Test]
+    public async Task PredictedQueueDeletionRaisesQueueDeletedEvent()
+    {
+        await using var pair = await StartConnectedPair();
+
+        var (_, client, _, clientTarget, _) = await SetupTarget(pair.Server, pair.Client);
+
+        await client.WaitPost(() =>
+        {
+            var entMan = (ClientEntityManager) client.EntMan;
+            EntityUid? raised = null;
+            void OnQueueDeleted(EntityUid uid) => raised = uid;
+
+            entMan.EntityQueueDeleted += OnQueueDeleted;
+            try
+            {
+                entMan.QueueDeleteEntity(clientTarget);
+            }
+            finally
+            {
+                entMan.EntityQueueDeleted -= OnQueueDeleted;
+            }
+
+            // Physics relies on this to purge contacts before the entity gets detached.
+            Assert.That(raised, Is.EqualTo(clientTarget));
+        });
+    }
+
+    [Test]
+    public async Task ClearingAQueuedPredictedDeletionCancelsIt()
+    {
+        await using var pair = await StartConnectedPair();
+
+        var (_, client, _, clientTarget, clientParent) = await SetupTarget(pair.Server, pair.Client);
+
+        await client.WaitPost(() =>
+        {
+            var entMan = (ClientEntityManager) client.EntMan;
+            entMan.QueueDeleteEntity(clientTarget);
+            Assert.That(entMan.IsQueuedForDeletion(clientTarget), Is.True);
+
+            // Rolling back the prediction cancels the deletion before the queue gets processed.
+            entMan.ClearPredictedDeletion(clientTarget);
+            Assert.That(entMan.IsQueuedForDeletion(clientTarget), Is.False);
+        });
+
+        await client.WaitRunTicks(1);
+
+        await AssertRolledBack(client, clientTarget, clientParent);
+    }
+
+    [Test]
     public async Task PredictedDeletionFollowedByAuthoritativeDeletionDeletesEntity()
     {
         await using var pair = await StartConnectedPair();

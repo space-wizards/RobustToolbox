@@ -910,6 +910,7 @@ namespace Robust.Client.GameStates
                     DebugTools.Assert(!_toApply.ContainsKey(uid));
 
                     meta.Flags &= ~MetaDataFlags.Detached;
+                    _entities.ClearPredictedDeletion(uid);
                     if (isEnteringPvs)
                         enteringPvs++;
                 }

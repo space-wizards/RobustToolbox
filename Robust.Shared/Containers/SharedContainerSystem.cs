@@ -115,7 +115,7 @@ public abstract partial class SharedContainerSystem
     {
         container.InternalShutdown(EntityManager, this, _net.IsClient);
         container.Manager.Containers.Remove(container.ID);
-        container.ExpectedEntities.Clear();
+        container.PvsDetachedEntities.Clear();
     }
 
     public T EnsureContainer<T>(

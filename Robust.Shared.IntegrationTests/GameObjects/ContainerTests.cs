@@ -3,287 +3,406 @@ using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
-using Robust.Client.Timing;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     internal sealed class ContainerTests : RobustIntegrationTest
     {
+        private const string ContainerId = "dummy";
+        private const string OtherContainerId = "other";
+        private const int HiddenVisibilityLayer = 10;
+
+        private async Task<(EntityUid Owner, MapCoordinates MapPosition)> SpawnContainerOwner(
+            ServerIntegrationInstance server,
+            IEntityManager entManager,
+            IPlayerManager playerManager,
+            SharedContainerSystem containerSystem,
+            MetaDataSystem metadataSystem,
+            string containerId = ContainerId)
+        {
+            var mapPos = MapCoordinates.Nullspace;
+            EntityUid owner = default;
+
+            await server.WaitAssertion(() =>
+            {
+                entManager.System<SharedMapSystem>().CreateMap(out var mapId);
+                mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
+
+                owner = entManager.SpawnEntity(null, mapPos);
+                metadataSystem.SetEntityName(owner, "Container");
+                containerSystem.EnsureContainer<Container>(owner, containerId);
+
+                entManager.AddComponent<EyeComponent>(owner);
+                var player = playerManager.Sessions.First();
+                server.PlayerMan.SetAttachedEntity(player, owner);
+                playerManager.JoinGame(player);
+            });
+
+            return (owner, mapPos);
+        }
+
+        private static EntityUid GetClientEntity(IEntityManager entManager, NetEntity netEntity)
+        {
+            Assert.That(entManager.TryGetEntity(netEntity, out var entity), Is.True);
+            return entity!.Value;
+        }
+
+        private static BaseContainer GetClientContainer(
+            IEntityManager entManager,
+            ContainerSystem containerSystem,
+            NetEntity ownerNetEntity,
+            string containerId = ContainerId)
+        {
+            return containerSystem.GetContainer(GetClientEntity(entManager, ownerNetEntity), containerId);
+        }
+
+        private static void AssertPendingContainerState(
+            ClientEntityManager entManager,
+            NetEntity missingEntity,
+            EntityUid owner)
+        {
+            Assert.That(entManager.PendingNetEntityStates.TryGetValue(missingEntity, out var pending), Is.True);
+            Assert.That(pending, Has.Some.Matches<(System.Type, EntityUid)>(entry =>
+                entry.Item1 == typeof(ContainerManagerComponent) && entry.Item2 == owner));
+        }
+
         /// <summary>
         /// Tests container states with children that do not exist on the client
         /// and tests that said children are added to the container when they do arrive on the client.
         /// </summary>
-        /// <returns></returns>
         [Test]
-        public async Task TestContainerNonexistantItems()
+        public async Task ContainerStateMissingEntitySpawnsLater()
         {
-             var server = StartServer();
-             var client = StartClient();
+            await using var pair = await StartConnectedPair();
+            var server = pair.Server;
+            var client = pair.Client;
 
-             await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+            await RunTicksSync(server, client, 10);
 
-             var cEntManager = client.ResolveDependency<IEntityManager>();
-             var clientNetManager = client.ResolveDependency<IClientNetManager>();
+            var cEntManager = client.ResolveDependency<IEntityManager>();
+            var cClientEntManager = (ClientEntityManager) cEntManager;
+            var cContainerSys = cEntManager.System<ContainerSystem>();
 
-             var sEntManager = server.ResolveDependency<IEntityManager>();
-             var sPlayerManager = server.ResolveDependency<IPlayerManager>();
+            var sEntManager = server.ResolveDependency<IEntityManager>();
+            var sPlayerManager = server.ResolveDependency<IPlayerManager>();
+            var sContainerSys = sEntManager.System<SharedContainerSystem>();
+            var sMetadataSys = sEntManager.System<MetaDataSystem>();
+            var sVisibilitySys = sEntManager.System<SharedVisibilitySystem>();
 
-             Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-             client.Post(() =>
-             {
-                 clientNetManager.ClientConnect(null!, 0, null!);
-             });
+            var (owner, mapPos) = await SpawnContainerOwner(server, sEntManager, sPlayerManager, sContainerSys, sMetadataSys);
+            var ownerNet = sEntManager.GetNetEntity(owner);
 
-             for (int i = 0; i < 10; i++)
-             {
-                 await server.WaitRunTicks(1);
-                 await client.WaitRunTicks(1);
-             }
+            await RunTicksSync(server, client, 10);
+            var cOwner = GetClientEntity(cEntManager, ownerNet);
 
-             // Setup
-             var mapId = MapId.Nullspace;
-             var mapPos = MapCoordinates.Nullspace;
-
-             EntityUid entityUid = default!;
-
-             var cContainerSys = cEntManager.System<ContainerSystem>();
-             var sContainerSys = sEntManager.System<SharedContainerSystem>();
-             var sMetadataSys = sEntManager.System<MetaDataSystem>();
-
-             await server.WaitAssertion(() =>
-             {
-                 sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
-                 mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
-
-                 entityUid = sEntManager.SpawnEntity(null, mapPos);
-                 sMetadataSys.SetEntityName(entityUid, "Container");
-                 sContainerSys.EnsureContainer<Container>(entityUid, "dummy");
-
-                 // Setup PVS
-                 sEntManager.AddComponent<EyeComponent>(entityUid);
-                 var player = sPlayerManager.Sessions.First();
-                 server.PlayerMan.SetAttachedEntity(player, entityUid);
-                 sPlayerManager.JoinGame(player);
-             });
-
-             for (int i = 0; i < 10; i++)
-             {
-                 await server.WaitRunTicks(1);
-                 await client.WaitRunTicks(1);
-             }
-
-             EntityUid itemUid = default!;
-             await server.WaitAssertion(() =>
-             {
-                 itemUid = sEntManager.SpawnEntity(null, mapPos);
-                 sMetadataSys.SetEntityName(itemUid, "Item");
-                 var container = sContainerSys.EnsureContainer<Container>(entityUid, "dummy");
-                 Assert.That(sContainerSys.Insert(itemUid, container));
-
-                 // Modify visibility layer so that the item does not get sent ot the player
-                 sEntManager.System<SharedVisibilitySystem>().AddLayer(itemUid, 10 );
-             });
-
-             // Needs minimum 4 to sync to client because buffer size is 3
-             await server.WaitRunTicks(4);
-             await client.WaitRunTicks(10);
-
-             EntityUid cEntityUid = default!;
-             await client.WaitAssertion(() =>
-             {
-                 cEntityUid = client.EntMan.GetEntity(server.EntMan.GetNetEntity(entityUid));
-                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cEntityUid, out var containerManagerComp))
-                 {
-                     Assert.Fail();
-                     return;
-                 }
-
-                 var container = cContainerSys.GetContainer(cEntityUid, "dummy", containerManagerComp);
-                 Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
-                 Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
-
-                 Assert.That(cContainerSys.ExpectedEntities.ContainsKey(sEntManager.GetNetEntity(itemUid)));
-                 Assert.That(cContainerSys.ExpectedEntities.Count, Is.EqualTo(1));
-             });
-
-             await server.WaitAssertion(() =>
-             {
-                 // Modify visibility layer so it now gets sent to the client
-                 sEntManager.System<SharedVisibilitySystem>().RemoveLayer(itemUid, 10 );
-             });
-
-             await server.WaitRunTicks(1);
-             await client.WaitRunTicks(4);
-
-             await client.WaitAssertion(() =>
-             {
-                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cEntityUid, out var containerManagerComp))
-                 {
-                     Assert.Fail();
-                     return;
-                 }
-
-                 var container = cContainerSys.GetContainer(cEntityUid, "dummy", containerManagerComp);
-                 Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
-                 Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
-
-                 Assert.That(!cContainerSys.ExpectedEntities.ContainsKey(sEntManager.GetNetEntity(itemUid)));
-                 Assert.That(cContainerSys.ExpectedEntities, Is.Empty);
-             });
-
-             await client.WaitPost(() => clientNetManager.ClientDisconnect(""));
-             await server.WaitRunTicks(5);
-             await client.WaitRunTicks(5);
-         }
-
-         /// <summary>
-         /// Tests container states with children that do not exist on the client
-         /// and that if those children are deleted that they get properly removed from the expected entities list.
-         /// </summary>
-         /// <returns></returns>
-         [Test]
-         public async Task TestContainerExpectedEntityDeleted()
-         {
-             var server = StartServer();
-             var client = StartClient();
-
-             await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
-
-             var cEntManager = client.ResolveDependency<IEntityManager>();
-             var clientTime = client.ResolveDependency<IClientGameTiming>();
-             var clientNetManager = client.ResolveDependency<IClientNetManager>();
-
-             var sEntManager = server.ResolveDependency<IEntityManager>();
-             var sPlayerManager = server.ResolveDependency<IPlayerManager>();
-             var serverTime = server.ResolveDependency<IGameTiming>();
-
-             Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-             await client.WaitPost(() =>
-             {
-                 clientNetManager.ClientConnect(null!, 0, null!);
-             });
-
-             for (int i = 0; i < 10; i++)
-             {
-                 await server.WaitRunTicks(1);
-                 await client.WaitRunTicks(1);
-             }
-
-             // Setup
-             MapId mapId;
-             var mapPos = MapCoordinates.Nullspace;
-
-             EntityUid sEntityUid = default!;
-             EntityUid sItemUid = default!;
-             NetEntity netEnt = default;
-
-             var cContainerSys = cEntManager.System<ContainerSystem>();
-             var sContainerSys = sEntManager.System<SharedContainerSystem>();
-             var sMetadataSys = sEntManager.System<MetaDataSystem>();
-
-             await server.WaitAssertion(() =>
-             {
-                 sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
-                 mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
-
-                 sEntityUid = sEntManager.SpawnEntity(null, mapPos);
-                 sMetadataSys.SetEntityName(sEntityUid, "Container");
-                 sContainerSys.EnsureContainer<Container>(sEntityUid, "dummy");
-
-                 // Setup PVS
-                 sEntManager.AddComponent<EyeComponent>(sEntityUid);
-                 var player = sPlayerManager.Sessions.First();
-                 server.PlayerMan.SetAttachedEntity(player, sEntityUid);
-                 sPlayerManager.JoinGame(player);
-             });
-
-             for (int i = 0; i < 10; i++)
-             {
-                 await server.WaitRunTicks(1);
-                 await client.WaitRunTicks(1);
-             }
-
-             await server.WaitAssertion(() =>
-             {
-                 sItemUid = sEntManager.SpawnEntity(null, mapPos);
-                 netEnt = sEntManager.GetNetEntity(sItemUid);
-                 sMetadataSys.SetEntityName(sItemUid, "Item");
-                 var container = sContainerSys.GetContainer(sEntityUid, "dummy");
-                 sContainerSys.Insert(sItemUid, container);
-
-                 // Modify visibility layer so that the item does not get sent ot the player
-                 sEntManager.System<SharedVisibilitySystem>().AddLayer(sItemUid, 10 );
-             });
-
-            await server.WaitRunTicks(1);
-
-            while (clientTime.LastRealTick < serverTime.CurTick - 1)
+            EntityUid item = default;
+            NetEntity itemNet = default;
+            await server.WaitAssertion(() =>
             {
-                await client.WaitRunTicks(1);
-            }
+                item = sEntManager.SpawnEntity(null, mapPos);
+                itemNet = sEntManager.GetNetEntity(item);
+                sMetadataSys.SetEntityName(item, "Item");
+                Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
+                sVisibilitySys.AddLayer(item, HiddenVisibilityLayer);
+            });
 
-            var cUid = cEntManager.GetEntity(sEntManager.GetNetEntity(sEntityUid));
+            await RunTicksSync(server, client, 10);
 
-             await client.WaitAssertion(() =>
-             {
-                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cUid, out var containerManagerComp))
-                 {
-                     Assert.Fail();
-                     return;
-                 }
+            await client.WaitAssertion(() =>
+            {
+                Assert.That(cEntManager.TryGetEntity(itemNet, out _), Is.False);
 
-                 var container = cContainerSys.GetContainer(cUid, "dummy", containerManagerComp);
-                 Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
-                 Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
+                var container = GetClientContainer(cEntManager, cContainerSys, ownerNet);
+                Assert.That(container.ContainedEntities, Is.Empty);
+                Assert.That(container.PvsDetachedEntities, Is.Empty);
+                Assert.That(cContainerSys.PvsDetachedEntities, Is.Empty);
+                AssertPendingContainerState(cClientEntManager, itemNet, cOwner);
+            });
 
-                 Assert.That(cContainerSys.ExpectedEntities.ContainsKey(netEnt));
-                 Assert.That(cContainerSys.ExpectedEntities.Count, Is.EqualTo(1));
-             });
+            await server.WaitAssertion(() =>
+            {
+                sVisibilitySys.RemoveLayer(item, HiddenVisibilityLayer);
+            });
 
-             await server.WaitAssertion(() =>
-             {
-                 // If possible it'd be best to only have the DeleteEntity, but right now
-                 // the entity deleted event is not played on the client if the entity does not exist on the client.
-                 if (sEntManager.EntityExists(sItemUid)
-                     // && itemUid.TryGetContainer(out var container))
-                     && sContainerSys.TryGetContainingContainer(sItemUid, out var container))
-                 {
-                     sContainerSys.Remove(sItemUid, container, force: true);
-                 }
+            await RunTicksSync(server, client, 10);
 
-                 sEntManager.DeleteEntity(sItemUid);
-             });
+            await client.WaitAssertion(() =>
+            {
+                var cItem = GetClientEntity(cEntManager, itemNet);
+                var container = GetClientContainer(cEntManager, cContainerSys, ownerNet);
+                Assert.That(container.ContainedEntities, Has.Member(cItem));
+                Assert.That(container.PvsDetachedEntities, Is.Empty);
+                Assert.That(cContainerSys.PvsDetachedEntities, Is.Empty);
+                Assert.That(cClientEntManager.PendingNetEntityStates.ContainsKey(itemNet), Is.False);
+            });
+        }
 
-             await server.WaitRunTicks(1);
-             await client.WaitRunTicks(4);
+        /// <summary>
+        /// Tests container states with children that do not exist on the client
+        /// and that if those children move before being spawned, only the latest state is applied.
+        /// </summary>
+        [Test]
+        public async Task ContainerStateMissingEntityMovesBeforeSpawn()
+        {
+            await using var pair = await StartConnectedPair();
+            var server = pair.Server;
+            var client = pair.Client;
 
-             await client.WaitAssertion(() =>
-             {
-                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cUid, out var containerManagerComp))
-                 {
-                     Assert.Fail();
-                     return;
-                 }
+            await RunTicksSync(server, client, 10);
 
-                 var container = cContainerSys.GetContainer(cUid, "dummy", containerManagerComp);
-                 Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
-                 Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
+            var cEntManager = client.ResolveDependency<IEntityManager>();
+            var cClientEntManager = (ClientEntityManager) cEntManager;
+            var cContainerSys = cEntManager.System<ContainerSystem>();
 
-                 Assert.That(!cContainerSys.ExpectedEntities.ContainsKey(netEnt));
-                 Assert.That(cContainerSys.ExpectedEntities.Count, Is.EqualTo(0));
-             });
+            var sEntManager = server.ResolveDependency<IEntityManager>();
+            var sPlayerManager = server.ResolveDependency<IPlayerManager>();
+            var sContainerSys = sEntManager.System<SharedContainerSystem>();
+            var sMetadataSys = sEntManager.System<MetaDataSystem>();
+            var sVisibilitySys = sEntManager.System<SharedVisibilitySystem>();
 
-             await client.WaitPost(() => clientNetManager.ClientDisconnect(""));
-             await server.WaitRunTicks(5);
-             await client.WaitRunTicks(5);
+            var (owner, mapPos) = await SpawnContainerOwner(server, sEntManager, sPlayerManager, sContainerSys, sMetadataSys);
+            var ownerNet = sEntManager.GetNetEntity(owner);
+
+            await server.WaitAssertion(() =>
+            {
+                sContainerSys.EnsureContainer<Container>(owner, OtherContainerId);
+            });
+
+            await RunTicksSync(server, client, 10);
+            var cOwner = GetClientEntity(cEntManager, ownerNet);
+
+            EntityUid item = default;
+            NetEntity itemNet = default;
+            await server.WaitAssertion(() =>
+            {
+                item = sEntManager.SpawnEntity(null, mapPos);
+                itemNet = sEntManager.GetNetEntity(item);
+                sMetadataSys.SetEntityName(item, "Item");
+                Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
+                sVisibilitySys.AddLayer(item, HiddenVisibilityLayer);
+            });
+
+            await RunTicksSync(server, client, 10);
+
+            await client.WaitAssertion(() =>
+            {
+                Assert.That(cEntManager.TryGetEntity(itemNet, out _), Is.False);
+                Assert.That(GetClientContainer(cEntManager, cContainerSys, ownerNet).ContainedEntities, Is.Empty);
+                Assert.That(GetClientContainer(cEntManager, cContainerSys, ownerNet, OtherContainerId).ContainedEntities, Is.Empty);
+                Assert.That(cContainerSys.PvsDetachedEntities, Is.Empty);
+                AssertPendingContainerState(cClientEntManager, itemNet, cOwner);
+            });
+
+            await server.WaitAssertion(() =>
+            {
+                sContainerSys.Remove(item, sContainerSys.GetContainer(owner, ContainerId), force: true);
+                Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, OtherContainerId), force: true));
+            });
+
+            await RunTicksSync(server, client, 10);
+
+            await client.WaitAssertion(() =>
+            {
+                Assert.That(cEntManager.TryGetEntity(itemNet, out _), Is.False);
+                Assert.That(GetClientContainer(cEntManager, cContainerSys, ownerNet).ContainedEntities, Is.Empty);
+                Assert.That(GetClientContainer(cEntManager, cContainerSys, ownerNet, OtherContainerId).ContainedEntities, Is.Empty);
+                Assert.That(cContainerSys.PvsDetachedEntities, Is.Empty);
+                AssertPendingContainerState(cClientEntManager, itemNet, cOwner);
+            });
+
+            await server.WaitAssertion(() =>
+            {
+                sVisibilitySys.RemoveLayer(item, HiddenVisibilityLayer);
+            });
+
+            await RunTicksSync(server, client, 10);
+
+            await client.WaitAssertion(() =>
+            {
+                var cItem = GetClientEntity(cEntManager, itemNet);
+                var firstContainer = GetClientContainer(cEntManager, cContainerSys, ownerNet);
+                var secondContainer = GetClientContainer(cEntManager, cContainerSys, ownerNet, OtherContainerId);
+                Assert.That(firstContainer.ContainedEntities, Is.Empty);
+                Assert.That(secondContainer.ContainedEntities, Has.Member(cItem));
+                Assert.That(cContainerSys.PvsDetachedEntities, Is.Empty);
+                Assert.That(cClientEntManager.PendingNetEntityStates.ContainsKey(itemNet), Is.False);
+            });
+        }
+
+        /// <summary>
+        /// Tests that PVS-detached contained entities are restored when their transform re-enters PVS.
+        /// </summary>
+        [Test]
+        public async Task ContainerPvsDetachedEntityRestoresOnReEntry()
+        {
+            await using var pair = await StartConnectedPair();
+            var server = pair.Server;
+            var client = pair.Client;
+
+            await RunTicksSync(server, client, 10);
+
+            var cEntManager = client.ResolveDependency<IEntityManager>();
+            var cContainerSys = cEntManager.System<ContainerSystem>();
+
+            var sEntManager = server.ResolveDependency<IEntityManager>();
+            var sPlayerManager = server.ResolveDependency<IPlayerManager>();
+            var sContainerSys = sEntManager.System<SharedContainerSystem>();
+            var sMetadataSys = sEntManager.System<MetaDataSystem>();
+            var sVisibilitySys = sEntManager.System<SharedVisibilitySystem>();
+
+            var (owner, mapPos) = await SpawnContainerOwner(server, sEntManager, sPlayerManager, sContainerSys, sMetadataSys);
+            var ownerNet = sEntManager.GetNetEntity(owner);
+
+            await RunTicksSync(server, client, 10);
+
+            EntityUid item = default;
+            NetEntity itemNet = default;
+            await server.WaitAssertion(() =>
+            {
+                item = sEntManager.SpawnEntity(null, mapPos);
+                itemNet = sEntManager.GetNetEntity(item);
+                sMetadataSys.SetEntityName(item, "Item");
+                Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
+            });
+
+            await RunTicksSync(server, client, 10);
+
+            EntityUid cItem = default;
+            await client.WaitAssertion(() =>
+            {
+                cItem = GetClientEntity(cEntManager, itemNet);
+                var container = GetClientContainer(cEntManager, cContainerSys, ownerNet);
+                Assert.That(container.ContainedEntities, Has.Member(cItem));
+                Assert.That(cEntManager.GetComponent<MetaDataComponent>(cItem).Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.None));
+            });
+
+            await server.WaitAssertion(() =>
+            {
+                sVisibilitySys.AddLayer(item, HiddenVisibilityLayer);
+            });
+
+            await RunTicksSync(server, client, 10);
+
+            await client.WaitAssertion(() =>
+            {
+                var container = GetClientContainer(cEntManager, cContainerSys, ownerNet);
+                Assert.That(container.ContainedEntities, Is.Empty);
+                Assert.That(container.PvsDetachedEntities, Has.Member(itemNet));
+                Assert.That(cContainerSys.PvsDetachedEntities.TryGetValue(itemNet, out var detachedContainer), Is.True);
+                Assert.That(detachedContainer, Is.SameAs(container));
+                Assert.That(cEntManager.GetComponent<MetaDataComponent>(cItem).Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.Detached));
+            });
+
+            await server.WaitAssertion(() =>
+            {
+                sVisibilitySys.RemoveLayer(item, HiddenVisibilityLayer);
+            });
+
+            await RunTicksSync(server, client, 10);
+
+            await client.WaitAssertion(() =>
+            {
+                var container = GetClientContainer(cEntManager, cContainerSys, ownerNet);
+                Assert.That(container.ContainedEntities, Has.Member(cItem));
+                Assert.That(container.PvsDetachedEntities, Is.Empty);
+                Assert.That(cContainerSys.PvsDetachedEntities, Is.Empty);
+                Assert.That(cEntManager.GetComponent<MetaDataComponent>(cItem).Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.None));
+            });
+        }
+
+        /// <summary>
+        /// Tests that pending container-state reapplication safely ignores a deleted container owner.
+        /// </summary>
+        [Test]
+        public async Task ContainerStateMissingEntityOwnerDeletedBeforeSpawn()
+        {
+            await using var pair = await StartConnectedPair();
+            var server = pair.Server;
+            var client = pair.Client;
+
+            await RunTicksSync(server, client, 10);
+
+            var cEntManager = client.ResolveDependency<IEntityManager>();
+            var cClientEntManager = (ClientEntityManager) cEntManager;
+            var cContainerSys = cEntManager.System<ContainerSystem>();
+
+            var sEntManager = server.ResolveDependency<IEntityManager>();
+            var sPlayerManager = server.ResolveDependency<IPlayerManager>();
+            var sContainerSys = sEntManager.System<SharedContainerSystem>();
+            var sMetadataSys = sEntManager.System<MetaDataSystem>();
+            var sVisibilitySys = sEntManager.System<SharedVisibilitySystem>();
+
+            var (owner, mapPos) = await SpawnContainerOwner(server, sEntManager, sPlayerManager, sContainerSys, sMetadataSys);
+            var ownerNet = sEntManager.GetNetEntity(owner);
+
+            await RunTicksSync(server, client, 10);
+            var cOwner = GetClientEntity(cEntManager, ownerNet);
+
+            EntityUid item = default;
+            NetEntity itemNet = default;
+            await server.WaitAssertion(() =>
+            {
+                item = sEntManager.SpawnEntity(null, mapPos);
+                itemNet = sEntManager.GetNetEntity(item);
+                sMetadataSys.SetEntityName(item, "Item");
+                Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
+                sVisibilitySys.AddLayer(item, HiddenVisibilityLayer);
+            });
+
+            await RunTicksSync(server, client, 10);
+
+            await client.WaitAssertion(() =>
+            {
+                Assert.That(cEntManager.TryGetEntity(itemNet, out _), Is.False);
+                Assert.That(GetClientContainer(cEntManager, cContainerSys, ownerNet).ContainedEntities, Is.Empty);
+                Assert.That(cContainerSys.PvsDetachedEntities, Is.Empty);
+                AssertPendingContainerState(cClientEntManager, itemNet, cOwner);
+            });
+
+            await server.WaitAssertion(() =>
+            {
+                var viewer = sEntManager.SpawnEntity(null, mapPos);
+                sEntManager.AddComponent<EyeComponent>(viewer);
+                server.PlayerMan.SetAttachedEntity(sPlayerManager.Sessions.First(), viewer);
+            });
+
+            await RunTicksSync(server, client, 10);
+
+            await server.WaitAssertion(() =>
+            {
+                sContainerSys.Remove(item, sContainerSys.GetContainer(owner, ContainerId), force: true);
+                sEntManager.DeleteEntity(owner);
+            });
+
+            await RunTicksSync(server, client, 10);
+
+            await client.WaitAssertion(() =>
+            {
+                Assert.That(cEntManager.EntityExists(cOwner), Is.False);
+                Assert.That(cContainerSys.PvsDetachedEntities, Is.Empty);
+            });
+
+            await server.WaitAssertion(() =>
+            {
+                sVisibilitySys.RemoveLayer(item, HiddenVisibilityLayer);
+            });
+
+            await RunTicksSync(server, client, 10);
+
+            await client.WaitAssertion(() =>
+            {
+                var cItem = GetClientEntity(cEntManager, itemNet);
+                Assert.That(cEntManager.GetComponent<MetaDataComponent>(cItem).Flags & MetaDataFlags.InContainer, Is.EqualTo(MetaDataFlags.None));
+                Assert.That(cContainerSys.PvsDetachedEntities, Is.Empty);
+                Assert.That(cClientEntManager.PendingNetEntityStates.ContainsKey(itemNet), Is.False);
+            });
         }
 
         /// <summary>

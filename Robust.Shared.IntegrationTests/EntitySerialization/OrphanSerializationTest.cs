@@ -67,9 +67,9 @@ internal sealed partial class OrphanSerializationTest : RobustIntegrationTest
         Assert.That(child.Comp1!.ParentUid, Is.EqualTo(entB.Owner));
 
         // Save the entities without their map
-        Assert.That(loader.TrySaveEntity(entA, pathA));
-        Assert.That(loader.TrySaveEntity(entB, pathB));
-        Assert.That(loader.TrySaveGeneric([entA.Owner, entB.Owner], pathCombined, out var cat));
+        Assert.That(loader.TrySaveEntity(entA, pathA, immediate: true));
+        Assert.That(loader.TrySaveEntity(entB, pathB, immediate: true));
+        Assert.That(loader.TrySaveGeneric([entA.Owner, entB.Owner], pathCombined, out var cat, immediate: true));
         Assert.That(cat, Is.EqualTo(FileCategory.Unknown));
 
         // Delete all the entities.
@@ -176,10 +176,10 @@ internal sealed partial class OrphanSerializationTest : RobustIntegrationTest
         Assert.That(map.Comp1!.ParentUid, Is.EqualTo(EntityUid.Invalid));
 
         // Save the grids without their map
-        await server.WaitAssertion(() => Assert.That(loader.TrySaveGrid(gridA, pathA)));
-        await server.WaitAssertion(() => Assert.That(loader.TrySaveGrid(gridB, pathB)));
+        await server.WaitAssertion(() => Assert.That(loader.TrySaveGrid(gridA, pathA, immediate: true)));
+        await server.WaitAssertion(() => Assert.That(loader.TrySaveGrid(gridB, pathB, immediate: true)));
         FileCategory cat = default;
-        await server.WaitAssertion(() => Assert.That(loader.TrySaveGeneric([gridA.Owner, gridB.Owner], pathCombined, out cat)));
+        await server.WaitAssertion(() => Assert.That(loader.TrySaveGeneric([gridA.Owner, gridB.Owner], pathCombined, out cat, immediate: true)));
         Assert.That(cat, Is.EqualTo(FileCategory.Unknown));
 
         // Delete all the entities.

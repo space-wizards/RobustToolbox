@@ -71,6 +71,12 @@ namespace Robust.Shared.GameObjects
         internal readonly Dictionary<ushort, IComponent> NetComponents = new();
 
         /// <summary>
+        /// Components that are intentionally desynced using <see cref="IEntityManager.SetComponentNetSync">.
+        /// </summary>
+        [ViewVariables]
+        internal readonly HashSet<ushort> IgnoredNetComponents = new();
+
+        /// <summary>
         /// Network identifier for this entity.
         /// </summary>
         [ViewVariables]

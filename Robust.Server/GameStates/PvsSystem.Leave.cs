@@ -31,6 +31,7 @@ internal sealed partial class PvsSystem
         }
 
         using var _ = Histogram.WithLabels("Process Leave").NewTimer();
+        using var _pz = _prof.Group("Process Leave");
         _parallelMgr.ProcessNow(_leaveJob, _leaveJob.Count);
     }
 

@@ -149,6 +149,7 @@ namespace Robust.Shared.Timing
 
             while (Running)
             {
+                _prof.MarkFrameThread();
                 var profFrameStart = _prof.WriteValue(ProfTextStartFrame, ProfData.Int64(_timing.CurFrame));
                 var profFrameGroupStart = _prof.WriteGroupStart();
                 var profFrameSw = ProfSampler.StartNew();

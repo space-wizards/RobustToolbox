@@ -27,6 +27,12 @@ public sealed partial class ProfManager
     /// </summary>
     public bool IsEnabled { get; private set; }
 
+    // The profiling buffer is not thread-safe, so only the thread driving the frame writes to it.
+    // Stamped each frame by the game loop rather than at init, since ProfManager can be resolved from
+    // other dependency collections or used with no game loop at all. 0 means unset (no game loop), which
+    // allows writes from any thread so standalone usage keeps working.
+    private int _owningThreadId;
+
     // I don't care that this isn't a tree I will call upon the string tree just like in BYOND.
     private readonly Dictionary<string, int> _stringTreeIndices = new();
     private ValueList<string> _stringTree;
@@ -69,6 +75,16 @@ public sealed partial class ProfManager
     }
 
     partial void InitializeTracyCvars();
+
+    /// <summary>
+    /// Records the calling thread as the one driving the profiling buffer, so that <see cref="Group"/>
+    /// calls from any other thread (e.g. parallel job bodies) skip the buffer and only emit a Tracy zone.
+    /// Called once per frame by the game loop.
+    /// </summary>
+    internal void MarkFrameThread()
+    {
+        _owningThreadId = Environment.CurrentManagedThreadId;
+    }
 
     /// <summary>
     /// Write an index covering the region from <paramref name="start"/> to the current write position.
@@ -199,7 +215,9 @@ public sealed partial class ProfManager
     }
 
     /// <summary>
-    /// Make a guarded group for usage with using blocks.
+    /// Make a guarded group for usage with using blocks. Safe to call from any thread: groups made
+    /// off the owning thread (e.g. in parallel job bodies) skip the profiling buffer and only emit
+    /// a Tracy zone.
     /// </summary>
     /// <param name="name">The name of this group as it will show in the profiler.</param>
     /// <param name="color">
@@ -213,8 +231,10 @@ public sealed partial class ProfManager
         [CallerFilePath] string? filePath = null,
         [CallerMemberName] string? memberName = null)
     {
-        var start = WriteGroupStart();
-        return new GroupGuard(this, start, name, color ?? Color.Black, lineNumber, filePath, memberName);
+        // 0 == no game loop has stamped an owner, so allow the write (single-threaded / standalone use).
+        var writeBuffer = _owningThreadId == 0 || Environment.CurrentManagedThreadId == _owningThreadId;
+        var start = writeBuffer ? WriteGroupStart() : 0;
+        return new GroupGuard(this, start, name, color ?? Color.Black, lineNumber, filePath, memberName, writeBuffer);
     }
 
     /// <summary>
@@ -273,6 +293,8 @@ public sealed partial class ProfManager
         private readonly long _startIndex;
         private readonly string _groupName;
         private readonly ProfSampler _sampler;
+        // Decided once at creation so start/end writes always pair up.
+        private readonly bool _writeBuffer;
 
         private TracyProfilerZone? TracyZone { get; }
 
@@ -283,12 +305,14 @@ public sealed partial class ProfManager
             Color? color,
             int lineNumber,
             string? filePath,
-            string? memberName)
+            string? memberName,
+            bool writeBuffer)
         {
             _mgr = mgr;
             _startIndex = startIndex;
             _groupName = groupName;
-            _sampler = ProfSampler.StartNew();
+            _writeBuffer = writeBuffer;
+            _sampler = writeBuffer ? ProfSampler.StartNew() : default;
             if (_mgr.IsTracyEnabled)
                 TracyZone = BeginTracyZone(groupName, lineNumber, color, filePath, memberName);
         }
@@ -305,7 +329,8 @@ public sealed partial class ProfManager
 
         public void Dispose()
         {
-            _mgr.WriteGroupEnd(_startIndex, _groupName, _sampler);
+            if (_writeBuffer)
+                _mgr.WriteGroupEnd(_startIndex, _groupName, _sampler);
             if (_mgr.IsTracyEnabled)
                 TracyZone?.Dispose();
         }

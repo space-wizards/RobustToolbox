@@ -1451,7 +1451,7 @@ namespace Robust.Client.GameStates
                     metadata.PauseTime = TimeSpan.Zero;
 
                     if (container != null)
-                        containerSys.AddExpectedEntity(netEntity, container);
+                        containerSys.AddPvsDetachedEntity(netEntity, container);
                 }
 
                 _detached.Add(netEntity);
@@ -1718,7 +1718,7 @@ namespace Robust.Client.GameStates
                 _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachEntity(uid, xform);
 
                 if (container != null)
-                    containerSys.AddExpectedEntity(_entities.GetNetEntity(uid), container);
+                    containerSys.AddPvsDetachedEntity(_entities.GetNetEntity(uid), container);
             }
         }
 

@@ -204,7 +204,7 @@ internal sealed class Fixtures_Test
         var entManager = sim.Resolve<IEntityManager>();
         var fixturesSystem = entManager.System<FixtureSystem>();
         var physicsSystem = entManager.System<SharedPhysicsSystem>();
-        var ent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var ent = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
         var body = entManager.AddComponent<PhysicsComponent>(ent);
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);

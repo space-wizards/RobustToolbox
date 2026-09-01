@@ -36,7 +36,7 @@ public partial class GetComponentBenchmark
 
         for (var i = 0; i < N; i++)
         {
-            var uid = _entityManager.SpawnEntity(null, coords);
+            var uid = _entityManager.SpawnAttachedTo(null, coords);
             _entityManager.AddComponent<A>(uid);
         }
     }

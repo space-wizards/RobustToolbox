@@ -201,7 +201,7 @@ namespace Robust.Shared.Scripting
             => ent.HasComponent<T>(uid);
 
         public EntityUid Spawn(string? prototype, EntityCoordinates position)
-            => ent.SpawnEntity(prototype, position);
+            => ent.SpawnAttachedTo(prototype, position);
 
         public void Del(EntityUid uid)
             => ent.DeleteEntity(uid);

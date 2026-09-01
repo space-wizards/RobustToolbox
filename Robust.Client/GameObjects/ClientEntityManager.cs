@@ -87,26 +87,44 @@ namespace Robust.Client.GameObjects
             if (uid == null || uid == EntityUid.Invalid)
                 return;
 
-            if (IsClientSide(uid.Value))
+            // Some UIs get disposed after entity manager has shut down and already deleted all entities.
+            if (!Started || ShuttingDown)
+                return;
+
+            if (IsQueuedForDeletion(uid.Value))
+                return;
+
+            if (!MetaQuery.TryGetComponentInternal(uid.Value, out var meta))
+                return;
+
+            if (meta.NetEntity.IsClientSide())
             {
                 base.QueueDeleteEntity(uid);
                 return;
             }
 
-            if (ShuttingDown)
-                return;
-
-            // Client-side entity deletion is not supported and will cause errors.
-            if (_client.RunLevel == ClientRunLevel.Connected || _client.RunLevel == ClientRunLevel.InGame)
-                LogManager.RootSawmill.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid.Value)}. Trace: {Environment.StackTrace}");
+            // Networked entities can't be deleted client-side, so queue up a predicted deletion instead.
+            _queuedPredictedDeletionsSet.Add(uid.Value);
+            _queuedPredictedDeletions.Enqueue(uid.Value);
         }
 
-        public override void DeleteEntity(EntityUid? uid)
+        /// <inheritdoc />
+        public override void DeleteEntity(EntityUid uid, MetaDataComponent meta, TransformComponent xform)
         {
-            if (uid != null)
-                ClearPredictedDeletion(uid.Value);
+            // There's 3 scenarios:
+            // 1. We're applying server state, so the deletion is authoritative and actually happens.
+            // 2. Client-side entity, which we can just delete.
+            // 3. Networked entity, which we predict by detaching to nullspace and letting state handling restore it.
+            if (!_gameTiming.ApplyingState && !meta.NetEntity.IsClientSide())
+            {
+                if (meta.EntityLifeStage < EntityLifeStage.Terminating)
+                    PredictedDetachNetworkedEntity(uid, xform, meta);
 
-            base.DeleteEntity(uid);
+                return;
+            }
+
+            ClearPredictedDeletion(uid);
+            base.DeleteEntity(uid, meta, xform);
         }
 
         /// <inheritdoc />
@@ -258,16 +276,7 @@ namespace Robust.Client.GameObjects
                 if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
                     continue;
 
-                var xform = TransformQuery.GetComponentInternal(uid);
-                if (meta.NetEntity.IsClientSide())
-                {
-                    ClearPredictedDeletion(uid);
-                    DeleteEntity(uid, meta, xform);
-                }
-                else
-                {
-                    PredictedDetachNetworkedEntity(uid, xform, meta);
-                }
+                DeleteEntity(uid, meta, TransformQuery.GetComponentInternal(uid));
             }
         }
 
@@ -347,32 +356,6 @@ namespace Robust.Client.GameObjects
         }
         #endregion
 
-        /// <inheritdoc />
-        public override void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
-        {
-            if (!MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
-                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
-                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
-            {
-                return;
-            }
-
-            // So there's 3 scenarios:
-            // 1. Networked entity we just move to nullspace and rely on state handling.
-            // 2. Clientside predicted entity we delete and rely on state handling.
-            // 3. Clientside only entity that actually needs deleting here.
-
-            if (ent.Comp1.NetEntity.IsClientSide())
-            {
-                ClearPredictedDeletion(ent.Owner);
-                DeleteEntity(ent, ent.Comp1, ent.Comp2);
-            }
-            else
-            {
-                PredictedDetachNetworkedEntity(ent.Owner, ent.Comp2, ent.Comp1);
-            }
-        }
-
         internal bool IsPredictedDetached(EntityUid uid)
         {
             return _predictedDetachedEntities.Contains(uid);
@@ -400,34 +383,5 @@ namespace Robust.Client.GameObjects
             => QueuedDeletionsSet.Contains(uid)
                || _queuedPredictedDeletionsSet.Contains(uid)
                || _predictedDetachedEntities.Contains(uid);
-
-        /// <inheritdoc />
-        public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?> ent)
-        {
-            // Some UIs get disposed after entity-manager has shut down and already deleted all entities.
-            if (!Started)
-                return;
-
-            if (IsQueuedForDeletion(ent.Owner))
-                return;
-
-            if (!MetaQuery.Resolve(ent.Owner, ref ent.Comp, false))
-                return;
-
-            if (ent.Comp.NetEntity.IsClientSide())
-            {
-                // client-side QueueDeleteEntity re-fetches MetadataComp and checks IsClientSide().
-                // base call to skip that.
-                // TODO create override that takes in metadata comp
-                base.QueueDeleteEntity(ent);
-            }
-            else
-            {
-                if (!_queuedPredictedDeletionsSet.Add(ent.Owner))
-                    return;
-
-                _queuedPredictedDeletions.Enqueue(ent.Owner);
-            }
-        }
     }
 }

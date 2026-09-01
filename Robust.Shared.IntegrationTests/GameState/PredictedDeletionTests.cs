@@ -81,16 +81,14 @@ internal sealed partial class PredictedDeletionTests : RobustIntegrationTest
 
         await client.WaitPost(() =>
         {
-            var ent = new Entity<MetaDataComponent?, TransformComponent?>(clientTarget, null, null);
-
-            client.EntMan.PredictedDeleteEntity(ent);
+            client.EntMan.DeleteEntity(clientTarget);
             var xform = client.EntMan.GetComponent<TransformComponent>(clientTarget);
             var firstDetachTick = xform.LastModifiedTick;
 
             Assert.That(((ClientEntityManager) client.EntMan).IsPredictedDetached(clientTarget), Is.True);
             Assert.That(client.EntMan.IsQueuedForDeletion(clientTarget), Is.True);
 
-            client.EntMan.PredictedDeleteEntity(ent);
+            client.EntMan.DeleteEntity(clientTarget);
 
             Assert.That(((ClientEntityManager) client.EntMan).IsPredictedDetached(clientTarget), Is.True);
             Assert.That(client.EntMan.IsQueuedForDeletion(clientTarget), Is.True);
@@ -139,8 +137,7 @@ internal sealed partial class PredictedDeletionTests : RobustIntegrationTest
 
         await client.WaitPost(() =>
         {
-            var ent = new Entity<MetaDataComponent?, TransformComponent?>(clientTarget, null, null);
-            client.EntMan.PredictedDeleteEntity(ent);
+            client.EntMan.DeleteEntity(clientTarget);
 
             var meta = client.EntMan.GetComponent<MetaDataComponent>(clientTarget);
             var xform = client.EntMan.GetComponent<TransformComponent>(clientTarget);
@@ -276,9 +273,9 @@ internal sealed partial class PredictedDeletionTests : RobustIntegrationTest
                 return;
 
             if (_mode == PredictedDeleteMode.Direct)
-                PredictedDel(uid.Value);
+                Del(uid.Value);
             else
-                PredictedQueueDel(uid.Value);
+                QueueDel(uid.Value);
         }
     }
 

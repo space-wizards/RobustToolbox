@@ -302,10 +302,14 @@ namespace Robust.Shared.GameObjects
             _componentCullHistogram = histogram?.WithLabels("ComponentCull");
         }
 
-        internal virtual void ProcessQueueudDeletions()
+        internal void ProcessQueueudDeletions()
         {
             while (QueuedDeletions.TryDequeue(out var uid))
             {
+                // The deletion may have been canceled since it was queued.
+                if (!QueuedDeletionsSet.Remove(uid))
+                    continue;
+
                 DeleteEntity(uid);
             }
 

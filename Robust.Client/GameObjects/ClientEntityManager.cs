@@ -29,8 +29,6 @@ namespace Robust.Client.GameObjects
         internal event Action? AfterStartup;
         internal event Action? AfterShutdown;
 
-        private readonly Queue<EntityUid> _queuedPredictedDeletions = new();
-        private readonly HashSet<EntityUid> _queuedPredictedDeletionsSet = new();
         private readonly HashSet<EntityUid> _predictedDetachedEntities = new();
         private Histogram? _tickUpdateHistogram;
         private Histogram.Child? _entityNetHistogram;
@@ -62,8 +60,6 @@ namespace Robust.Client.GameObjects
             // Server doesn't network deletions on client shutdown so we need to
             // manually clear these out or risk stale data getting used.
             PendingNetEntityStates.Clear();
-            _queuedPredictedDeletions.Clear();
-            _queuedPredictedDeletionsSet.Clear();
             _predictedDetachedEntities.Clear();
             using var _ = _gameTiming.StartStateApplicationArea();
             base.FlushEntities();
@@ -91,21 +87,13 @@ namespace Robust.Client.GameObjects
             if (!Started || ShuttingDown)
                 return;
 
-            if (IsQueuedForDeletion(uid.Value))
+            // Already detached to nullspace by a predicted deletion, nothing left to queue.
+            if (_predictedDetachedEntities.Contains(uid.Value))
                 return;
 
-            if (!MetaQuery.TryGetComponentInternal(uid.Value, out var meta))
-                return;
-
-            if (meta.NetEntity.IsClientSide())
-            {
-                base.QueueDeleteEntity(uid);
-                return;
-            }
-
-            // Networked entities can't be deleted client-side, so queue up a predicted deletion instead.
-            _queuedPredictedDeletionsSet.Add(uid.Value);
-            _queuedPredictedDeletions.Enqueue(uid.Value);
+            // Networked entities are handled by DeleteEntity when the queue gets processed, which predicts the
+            // deletion by detaching them.
+            base.QueueDeleteEntity(uid);
         }
 
         /// <inheritdoc />
@@ -262,24 +250,6 @@ namespace Robust.Client.GameObjects
             _entityNetHistogram = histogram?.WithLabels("EntityNet");
         }
 
-        internal override void ProcessQueueudDeletions()
-        {
-            base.ProcessQueueudDeletions();
-            while (_queuedPredictedDeletions.TryDequeue(out var uid))
-            {
-                if (!_queuedPredictedDeletionsSet.Remove(uid))
-                    continue;
-
-                if (!MetaQuery.TryGetComponentInternal(uid, out var meta))
-                    continue;
-
-                if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
-                    continue;
-
-                DeleteEntity(uid, meta, TransformQuery.GetComponentInternal(uid));
-            }
-        }
-
         /// <inheritdoc />
         public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true)
         {
@@ -364,7 +334,7 @@ namespace Robust.Client.GameObjects
         internal void ClearPredictedDeletion(EntityUid uid)
         {
             _predictedDetachedEntities.Remove(uid);
-            _queuedPredictedDeletionsSet.Remove(uid);
+            QueuedDeletionsSet.Remove(uid);
         }
 
         private void PredictedDetachNetworkedEntity(EntityUid uid, TransformComponent xform, MetaDataComponent meta)
@@ -380,8 +350,6 @@ namespace Robust.Client.GameObjects
         }
 
         public override bool IsQueuedForDeletion(EntityUid uid)
-            => QueuedDeletionsSet.Contains(uid)
-               || _queuedPredictedDeletionsSet.Contains(uid)
-               || _predictedDetachedEntities.Contains(uid);
+            => QueuedDeletionsSet.Contains(uid) || _predictedDetachedEntities.Contains(uid);
     }
 }

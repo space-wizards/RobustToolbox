@@ -59,6 +59,7 @@ namespace Robust.Client.Physics
                 if (component.Joints.TryGetValue(id, out var joint))
                 {
                     joint.ApplyState(state);
+                    UpdateJointSleep(joint);
                     continue;
                 }
 

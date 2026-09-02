@@ -18,7 +18,9 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-*None yet*
+* Fixed a partial prototype exception message mentioning the wrong tag to use to combine data at a specific index on a sequence. The correct one is !CombineIndex:0 for example.
+* Fixed components with delta states causing a serializer error if they contain an automatically networked field of an abstract type. This fixes usages of SoundSpecifier, for example.
+* Fixed an exception caused by inheriting an entity that has had a component removed by a partial prototype without removing the component data.
 
 ### Other
 
@@ -39,7 +41,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Toolshed now supports parsing array and list arguments.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +54,42 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 289.0.2
+
+### Bugfixes
+
+* Fixed a partial prototype exception message mentioning the wrong tag to use to combine data at a specific index on a sequence. The correct one is !CombineIndex:0 for example.
+* Fixed components with delta states causing a serializer error if they contain an automatically networked field of an abstract type. This fixes usages of SoundSpecifier, for example.
+* Fixed an exception caused by inheriting an entity that has had a component removed by a partial prototype without removing the component data.
+
+## 289.0.1
+
+### Breaking changes
+
+* Using partial prototypes, use the tag !CombineIndex to combine a node in a sequence. This fixes a bug where modifying sequences (lists) in partial prototypes was buggy and inconsistent. If you are adding to a sequence or removing from it you don't need to change anything. If you were trying to modify existing sequence elements, you will need to replace - "a": 1 with - !CombineIndex:0 "a": 1 for example.
+
+### New features
+
+* Toolshed now supports parsing array and list arguments.
+* Toolshed commands can now use CommandDescriptionAttribute and CommandHelpAttribute to define default description and help strings. Localized strings will still take priority, and if neither is defined, the raw localization string is returned, same as before.
+
+### Bugfixes
+
+* Fixed partial component additions and removals being inconsistent and sometimes overwriting components.
+* Fixed partial prototypes not being able to modify existing sequence indexes. Use !CombineIndex:0 to modify the first element of a list, for example.
+* Fixed the game not loading if you partially load a non-partial prototype.
+* Fixed the YML linter not working with partial prototypes, and added a partialNoOriginalError parameter to ValidateDirectory that when set to true will error when a non !PartialOnly partial prototype is found without an original to reference. This is set to false by default. This can be useful if you are not mixing partials and non-partials in the same directory.
+* Fixed not copying the original YML that is kept in PartialOriginals, resulting in duplicated data after applying partials.
+* Fixed YML hot reload not working with prototype partials.
+* Fixed inconsistent partial ordering if the same prototype is modified more than once in the same directory. Now it is ordered by the file path's name.
+
+### Internal
+
+* TransformComponent now uses delta states, reducing bandwidth usage.
+* Debug asserts in EntityManager.Dirty calls now check Component.Networked instead of checking for NetworkedComponentAttribute, reducing heap allocations on Debug.
+* Added per-step verbose logging for prototype partials that logs every step of applying a partial prototype, if PrototypeManager's sawmill is set to show verbose logs.
 
 
 ## 289.0.0

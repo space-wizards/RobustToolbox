@@ -1,6 +1,6 @@
-using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -9,31 +9,27 @@ using Robust.Shared.Random;
 
 namespace Robust.Shared.ColorNaming;
 
-public sealed partial class PaletteManager : IPaletteManager
+public sealed partial class PaletteManager : IPaletteManagerInternal
 {
     [Dependency] private IPrototypeManager _protoMan = default!;
     [Dependency] private IRobustRandom _random = default!;
 
-    private FrozenDictionary<ProtoId<PalettePrototype>, List<Color>> _colorsByPalette;
-    private FrozenDictionary<string, Color> _colorsByQualifiedName;
+    // This should be a FrozenDictionary, but you'd need to freeze the dictionary after
+    private Dictionary<string, Color> _colorsByQualifiedName;
+    private Dictionary<ProtoId<PalettePrototype>, List<Color>> _colorsByPalette;
 
-    private bool _initialized;
+    private bool _dictsFrozen;
 
     public PaletteManager()
     {
-        _colorsByPalette = new Dictionary<ProtoId<PalettePrototype>, List<Color>>().ToFrozenDictionary();
-        _colorsByQualifiedName = new Dictionary<string, Color>().ToFrozenDictionary();
+        _colorsByPalette = new();
+        _colorsByQualifiedName = new();
     }
 
     [PublicAPI]
     public void Initialize()
     {
-        if (_initialized)
-            return;
-
-        ReloadPalettes();
-
-        _initialized = true;
+        _dictsFrozen = true;
 
         _protoMan.PrototypesReloaded += OnPrototypesReloaded;
     }
@@ -119,6 +115,9 @@ public sealed partial class PaletteManager : IPaletteManager
     private void ReloadPalettes()
     {
         var count = _protoMan.Count<PalettePrototype>();
+
+        _colorsByQualifiedName.Clear();
+        _colorsByPalette.Clear();
         Dictionary<ProtoId<PalettePrototype>, List<Color>> colorsByPalette = new(count);
         Dictionary<string, Color> colorsByQualifiedName = new(count);
 
@@ -132,8 +131,18 @@ public sealed partial class PaletteManager : IPaletteManager
             }
             colorsByPalette[palette.ID] = paletteColors;
         }
+    }
 
-        _colorsByPalette = colorsByPalette.ToFrozenDictionary();
-        _colorsByQualifiedName = colorsByQualifiedName.ToFrozenDictionary();
+    public void Add(PalettePrototype proto)
+    {
+        // Already initialized, we'll catch this on the prototype reload
+        if (_dictsFrozen)
+            return;
+
+        _colorsByPalette.Add(proto.ID, proto.Colors.Values.ToList());
+        foreach (var (name, color) in proto.Colors)
+        {
+            _colorsByQualifiedName.Add(proto.ID + "." + name, color);
+        }
     }
 }

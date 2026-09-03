@@ -350,7 +350,6 @@ namespace Robust.Server
 
             _loc.Initialize();
             _loc.AddLoadedToStringSerializer(_stringSerializer);
-            _palette.Initialize();
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
@@ -407,6 +406,7 @@ namespace Robust.Server
 
             _stateManager.TransformNetId = reg.NetID.Value;
 
+            _palette.Initialize();
             _scriptHost.Initialize();
             _protoLoadMan.Initialize();
             _netResMan.Initialize();

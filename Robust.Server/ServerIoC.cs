@@ -78,6 +78,7 @@ namespace Robust.Server
             deps.Register<ISystemConsoleManager, SystemConsoleManager>();
             deps.Register<ITileDefinitionManager, TileDefinitionManager>();
             deps.Register<IPaletteManager, PaletteManager>();
+            deps.Register<IPaletteManagerInternal, PaletteManager>();
             deps.Register<IViewVariablesManager, ServerViewVariablesManager>();
             deps.Register<IServerViewVariablesInternal, ServerViewVariablesManager>();
             deps.Register<IWatchdogApi, WatchdogApi>();

@@ -186,7 +186,6 @@ namespace Robust.Client
             _loadscr.LoadingStep(_reflectionManager.Initialize, _reflectionManager);
             _loadscr.LoadingStep(_serializationManager.Initialize, _serializationManager);
             _loadscr.LoadingStep(_loc.Initialize, _loc);
-            _loadscr.LoadingStep(_paletteMan.Initialize, _paletteMan);
 
             // Call Init in game assemblies.
             _loadscr.LoadingStep(() => _modLoader.BroadcastRunLevel(ModRunLevel.PreInit), "Content PreInit");
@@ -236,6 +235,7 @@ namespace Robust.Client
             _prototypeManager.LoadDefaultPrototypes();
             _resourceCache.AfterDeserialization();
             _loadscr.EndLoadingSection();
+            _loadscr.LoadingStep(_paletteMan.Initialize, _paletteMan);
             _loadscr.LoadingStep(_userInterfaceManager.Initialize, "UI init");
             _loadscr.LoadingStep(_eyeManager.Initialize, _eyeManager);
             _loadscr.LoadingStep(_entityManager.Initialize, _entityManager);

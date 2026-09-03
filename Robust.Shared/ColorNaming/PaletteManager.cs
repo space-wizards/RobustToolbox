@@ -9,17 +9,21 @@ using Robust.Shared.Random;
 
 namespace Robust.Shared.ColorNaming;
 
+/// <summary>
+/// A manager for palettes. Allows mapping named colors to known, fixed values.
+/// </summary>
 public sealed partial class PaletteManager : IPaletteManagerInternal
 {
     [Dependency] private IPrototypeManager _protoMan = default!;
     [Dependency] private IRobustRandom _random = default!;
 
-    // This should be a FrozenDictionary, but you'd need to freeze the dictionary after
+    // This should be a FrozenDictionary, but you'd need to freeze the dictionary after reading (only) the PalettePrototypes.
     private Dictionary<string, Color> _colorsByQualifiedName;
     private Dictionary<ProtoId<PalettePrototype>, List<Color>> _colorsByPalette;
 
     private bool _dictsFrozen;
 
+    /// <inheritdoc cref="PaletteManager"/>
     public PaletteManager()
     {
         _colorsByPalette = new();
@@ -104,35 +108,7 @@ public sealed partial class PaletteManager : IPaletteManagerInternal
         return true;
     }
 
-    private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
-    {
-        if (!args.WasModified<PalettePrototype>())
-            return;
-
-        ReloadPalettes();
-    }
-
-    private void ReloadPalettes()
-    {
-        var count = _protoMan.Count<PalettePrototype>();
-
-        _colorsByQualifiedName.Clear();
-        _colorsByPalette.Clear();
-        Dictionary<ProtoId<PalettePrototype>, List<Color>> colorsByPalette = new(count);
-        Dictionary<string, Color> colorsByQualifiedName = new(count);
-
-        foreach (var palette in _protoMan.EnumeratePrototypes<PalettePrototype>())
-        {
-            List<Color> paletteColors = new(palette.Colors.Count);
-            foreach (var color in palette.Colors)
-            {
-                paletteColors.Add(color.Value);
-                colorsByQualifiedName.Add(palette.ID + "." + color.Key, color.Value);
-            }
-            colorsByPalette[palette.ID] = paletteColors;
-        }
-    }
-
+    [PublicAPI]
     public void Add(PalettePrototype proto)
     {
         // Already initialized, we'll catch this on the prototype reload
@@ -143,6 +119,33 @@ public sealed partial class PaletteManager : IPaletteManagerInternal
         foreach (var (name, color) in proto.Colors)
         {
             _colorsByQualifiedName.Add(proto.ID + "." + name, color);
+        }
+    }
+
+    /// <summary>
+    /// Prototype reload handler, refreshes all references to palette colors.
+    /// </summary>
+    private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
+    {
+        if (!args.WasModified<PalettePrototype>())
+            return;
+
+        var count = _protoMan.Count<PalettePrototype>();
+
+        _colorsByQualifiedName.Clear();
+        _colorsByPalette.Clear();
+        _colorsByQualifiedName.EnsureCapacity(count);
+        _colorsByPalette.EnsureCapacity(count);
+
+        foreach (var palette in _protoMan.EnumeratePrototypes<PalettePrototype>())
+        {
+            List<Color> paletteColors = new(palette.Colors.Count);
+            foreach (var color in palette.Colors)
+            {
+                paletteColors.Add(color.Value);
+                _colorsByQualifiedName.Add(palette.ID + "." + color.Key, color.Value);
+            }
+            _colorsByPalette[palette.ID] = paletteColors;
         }
     }
 }

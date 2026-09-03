@@ -27,13 +27,6 @@ public sealed partial class ColorSerializer : ITypeSerializer<Color, ValueDataNo
         if (Color.TryFromName(node.Value, out var color))
             return color;
 
-        // FIXME: breakpoint target, should be removed
-        if (node.Value.Contains("."))
-        {
-            var i = 0;
-            i++;
-        }
-
         if (_paletteMan.TryGetQualifiedColor(node.Value, out var qualifiedColor))
             return qualifiedColor.Value;
 

@@ -9,7 +9,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.Shared.ColorNaming;
 
 /// <summary>
-/// A prototype for storing arbitrary, named references to colours.
+/// A prototype for storing arbitrary, named references to colors.
 /// </summary>
 [Prototype(loadPriority: 1000)]
 public sealed partial class PalettePrototype : IPrototype, ISerializationHooks
@@ -30,6 +30,9 @@ public sealed partial class PalettePrototype : IPrototype, ISerializationHooks
     [DataField(required: true)]
     public Dictionary<string, Color> Colors { get; private set; } = null!;
 
+    /// <summary>
+    /// Post-deserialize callback, adds the named colors into the palette manager.
+    /// </summary>
     void ISerializationHooks.AfterDeserialization()
     {
         var paletteMan = IoCManager.Resolve<IPaletteManagerInternal>();

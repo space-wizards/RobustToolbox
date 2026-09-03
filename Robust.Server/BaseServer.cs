@@ -20,6 +20,7 @@ using Robust.Server.Utility;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.ColorNaming;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Enums;
@@ -35,16 +36,15 @@ using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
-using Robust.Shared.Toolshed;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
-using Robust.Shared.ColorNaming;
 
 namespace Robust.Server
 {

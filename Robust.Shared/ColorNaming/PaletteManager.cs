@@ -21,6 +21,8 @@ public sealed partial class PaletteManager : IPaletteManagerInternal
     private Dictionary<string, Color> _colorsByQualifiedName;
     private Dictionary<ProtoId<PalettePrototype>, List<Color>> _colorsByPalette;
 
+    // If true, the _colors* dictionaries shouldn't be changed - they'll be changed on prototype reload.
+    // FIXME: references to new color names added/changed values in prototype changes will fail.
     private bool _dictsFrozen;
 
     /// <inheritdoc cref="PaletteManager"/>

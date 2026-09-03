@@ -149,7 +149,7 @@ namespace Robust.Client
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
-            _loadscr.Initialize(41);
+            _loadscr.Initialize(42);
 
             _loadscr.BeginLoadingSection("Init graphics", dontRender: true);
             _clyde.InitializePostWindowing();

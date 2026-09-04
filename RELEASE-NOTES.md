@@ -41,7 +41,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `Control.Restyle` has been made public for manually restyling controls on edge cases.
 
 ### Bugfixes
 

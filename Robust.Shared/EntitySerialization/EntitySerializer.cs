@@ -234,8 +234,12 @@ public sealed partial class EntitySerializer : ISerializationContext,
                 throw new Exception($"{EntMan.ToPrettyString(uid)} is not serializable");
         }
 
+        var stopwatch = new RStopwatch();
+        stopwatch.Start();
+
         ReserveYamlIds(entities);
         SerializeEntitiesInternal(entities);
+        _log.Debug($"Serialized {entities.Count} entities in {stopwatch.Elapsed}");
     }
 
     /// <summary>
@@ -1029,7 +1033,7 @@ public sealed partial class EntitySerializer : ISerializationContext,
         if (value == EntityUid.Invalid)
         {
             if (Options.MissingEntityBehaviour != MissingEntityBehaviour.Ignore)
-                _log.Error($"Encountered an invalid entityUid reference.");
+                _log.Error($"Encountered an invalid entityUid reference in entity {EntMan.ToPrettyString(CurrentEntity)}, component {CurrentComponent}.");
 
             return InvalidNode;
         }

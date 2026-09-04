@@ -16,7 +16,7 @@ namespace Robust.Shared.EntitySerialization.Systems;
 public sealed partial class MapLoaderSystem
 {
     /// <summary>
-    ///     Attempts to load a YAML file containing a single map.
+    ///     Attempts to load a save file containing a single map.
     ///     If the file does not contain exactly one map, this will return false and delete all loaded entities.
     /// </summary>
     /// <remarks>
@@ -30,15 +30,28 @@ public sealed partial class MapLoaderSystem
         Vector2 offset = default,
         Angle rot = default)
     {
+        var opts = new MapLoadOptions
+        {
+            Offset = offset,
+            Rotation = rot,
+            DeserializationOptions = options ?? DeserializationOptions.Default,
+            ExpectedCategory = FileCategory.Map
+        };
+
         map = null;
         grids = null;
-        if (!TryGetReader(file.ToRootedPath(), out var reader))
+        if (!TryLoadGeneric(file, out var result, opts))
             return false;
 
-        using (reader)
+        if (result.Maps.Count == 1)
         {
-            return TryLoadMap(reader, file.ToString(), out map, out grids, options, offset, rot);
+            map = result.Maps.First();
+            grids = result.Grids;
+            return true;
         }
+
+        Delete(result);
+        return false;
     }
 
     /// <summary>
@@ -82,7 +95,7 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
-    ///     Attempts to load a YAML file containing a single map, assign it the given map id.
+    ///     Attempts to load a save file containing a single map, assign it the given map id.
     /// </summary>
     /// <remarks>
     ///     If possible, it is better to use <see cref="TryLoadMap"/> which automatically assigns a <see cref="MapId"/>.
@@ -101,13 +114,28 @@ public sealed partial class MapLoaderSystem
     {
         map = null;
         grids = null;
-        if (!TryGetReader(file.ToRootedPath(), out var reader))
+
+        var opts = new MapLoadOptions
+        {
+            Offset = offset,
+            Rotation = rot,
+            DeserializationOptions = options ?? DeserializationOptions.Default,
+            ExpectedCategory = FileCategory.Map
+        };
+
+        if (_mapSystem.MapExists(mapId))
+            throw new Exception($"Target map already exists");
+
+        opts.ForceMapId = mapId;
+        if (!TryLoadGeneric(file, out var result, opts))
             return false;
 
-        using (reader)
-        {
-            return TryLoadMapWithId(mapId, reader, file.ToString(), out map, out grids, options, offset, rot);
-        }
+        if (!_mapSystem.TryGetMap(mapId, out var uid) || !TryComp(uid, out MapComponent? comp))
+            return false;
+
+        map = new(uid.Value, comp);
+        grids = result.Grids;
+        return true;
     }
 
     /// <summary>
@@ -156,7 +184,7 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
-    ///     Attempts to load a YAML text stream containing a single map, and merge its children onto another map. After which
+    ///     Attempts to load a save file containing a single map, and merge its children onto another map. After which
     ///     the loaded map gets deleted.
     /// </summary>
     public bool TryMergeMap(
@@ -168,13 +196,27 @@ public sealed partial class MapLoaderSystem
         Angle rot = default)
     {
         grids = null;
-        if (!TryGetReader(file.ToRootedPath(), out var reader))
+
+        var opts = new MapLoadOptions
+        {
+            Offset = offset,
+            Rotation = rot,
+            DeserializationOptions = options ?? DeserializationOptions.Default,
+            ExpectedCategory = FileCategory.Map
+        };
+
+        if (!_mapSystem.MapExists(mapId))
+            throw new Exception($"Target map {mapId} does not exist");
+
+        opts.MergeMap = mapId;
+        if (!TryLoadGeneric(file, out var result, opts))
             return false;
 
-        using (reader)
-        {
-            return TryMergeMap(mapId, reader, file.ToString(), out grids, options, offset, rot);
-        }
+        if (!_mapSystem.TryGetMap(mapId, out var uid) || !TryComp(uid, out MapComponent? comp))
+            return false;
+
+        grids = result.Grids;
+        return true;
     }
 
     /// <summary>

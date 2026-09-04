@@ -12,6 +12,7 @@ namespace Robust.Shared.Serialization.Manager.Definition;
 internal delegate void CopyDelegateSignature<T>(
     T source,
     ref T target,
+    ISerializationManager serialization,
     SerializationHookContext hookCtx,
     ISerializationContext? context);
 
@@ -31,7 +32,7 @@ internal delegate void SerializeDelegateSignature<T>(
     ISerializationManager serialization,
     ISerializationContext? context,
     bool alwaysWrite,
-    ImmutableDictionary<string, object?> defaultValues
+    ImmutableArray<DataFieldDefinition> defaultValues
 );
 
 [Obsolete("Used only in source generation")]

@@ -178,6 +178,10 @@ internal partial class Clyde
                 SDL.SDL_GL_SetAttribute(
                     GLAttr.SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
                     s.Profile == GLContextProfile.Es ? 0 : 1);
+
+                // Steam overlay causes memory leak with multiple double buffered windows.
+                SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_DOUBLEBUFFER, parameters.Main ? 1 : 0);
+
                 int ctxFlags = 0;
 #if DEBUG
                 ctxFlags |= SDL.SDL_GL_CONTEXT_DEBUG_FLAG;
@@ -258,6 +262,16 @@ internal partial class Clyde
             {
                 SDL.SDL_DestroyWindow(window);
                 return default;
+            }
+
+            if (spec is not null &&
+                SDL.SDL_GL_GetAttribute(GLAttr.SDL_GL_DOUBLEBUFFER, out var doubleBuffered) &&
+                doubleBuffered != (parameters.Main ? 1 : 0))
+            {
+                _sawmill.Warning(
+                    "Requested {requested} for window double buffering, got {actual}",
+                    parameters.Main ? 1 : 0,
+                    doubleBuffered);
             }
 
             if ((parameters.Styles & OSWindowStyles.NoTitleOptions) != 0)

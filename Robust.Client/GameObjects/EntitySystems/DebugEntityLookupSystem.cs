@@ -127,7 +127,5 @@ public sealed class EntityLookupOverlay : Overlay
                 worldHandle.DrawRect(aabb, Color.Blue.WithAlpha(0.2f));
             }
         });
-
-        worldHandle.SetTransform(Matrix3x2.Identity);
     }
 }

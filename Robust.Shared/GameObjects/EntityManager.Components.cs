@@ -399,10 +399,13 @@ namespace Robust.Shared.GameObjects
                 var curTick = _gameTiming.CurTick;
                 delta.LastUnclassifiedDirty = curTick;
                 delta.LastModifiedFields = new GameTick[reg.NetworkedFields.Length];
+                DebugTools.Assert(
+                    delta.LastModifiedFields.Length == reg.NetworkedFields.Length,
+                    $"Component {reg.Name} has {delta.LastModifiedFields.Length} modified field slots, expected {reg.NetworkedFields.Length}.");
                 Array.Fill(delta.LastModifiedFields, curTick);
             }
 
-            component.Networked = reg.NetID != null;
+            component.Networked = reg.Networked;
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
             ComponentAdded?.Invoke(eventArgs);
@@ -742,7 +745,7 @@ namespace Robust.Shared.GameObjects
             if (!terminating)
             {
                 var reg = _componentFactory.GetRegistration(component);
-                DebugTools.Assert(component.Networked == (reg.NetID != null));
+                DebugTools.Assert(component.Networked == reg.Networked);
                 if (reg.NetID != null)
                 {
                     if (!metadata.NetComponents.Remove(reg.NetID.Value))

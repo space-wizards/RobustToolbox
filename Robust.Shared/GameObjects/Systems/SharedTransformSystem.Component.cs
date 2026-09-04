@@ -1841,7 +1841,7 @@ public abstract partial class SharedTransformSystem
                 continue;
 
             if (!_container.Insert((entity, xform, null, null), container, force: forceInsertion, forceRemoval:forceRemoval))
-                PlaceNextTo((entity, xform), targetXform.ParentUid);
+                PlaceNextTo((entity, xform), targetXform.ParentUid, forceInsertion: forceInsertion, forceRemoval: forceRemoval);
         }
     }
 

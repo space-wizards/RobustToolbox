@@ -5,7 +5,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects;
 
-public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
+public sealed partial class UserInterfaceSystem : SharedUserInterfaceSystem
 {
     public override void Initialize()
     {

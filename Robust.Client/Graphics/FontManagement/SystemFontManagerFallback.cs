@@ -5,7 +5,7 @@ namespace Robust.Client.Graphics.FontManagement;
 /// <summary>
 /// A fallback implementation of <see cref="ISystemFontManager"/> that just loads no fonts.
 /// </summary>
-internal sealed class SystemFontManagerFallback : ISystemFontManagerInternal
+internal sealed partial class SystemFontManagerFallback : ISystemFontManagerInternal
 {
     public void Initialize()
     {

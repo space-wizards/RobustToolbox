@@ -96,11 +96,24 @@ public sealed partial class EntitySpawningUIController : UIController
         _window.EraseButton.Pressed = _placement.Eraser;
         _window.EraseButton.OnToggled += OnEntityEraseToggled;
         _window.OverrideMenu.OnItemSelected += OnEntityOverrideSelected;
+        ApplySavedOverrideMode();
         _window.SearchBar.OnTextChanged += OnEntitySearchChanged;
         _window.ClearButton.OnPressed += OnEntityClearPressed;
         _window.PrototypeScrollContainer.OnScrolled += UpdateVisiblePrototypes;
         _window.OnResized += UpdateVisiblePrototypes;
         BuildEntityList();
+    }
+
+    private void ApplySavedOverrideMode()
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        var mode = _cfg.GetCVar(CVars.EntitySpawnOverrideMode);
+        if (mode < 0 || mode >= _placement.AllModeNames.Length)
+            mode = 0;
+
+        _window.OverrideMenu.SelectId(mode);
     }
 
     public void CloseWindow()
@@ -146,6 +159,7 @@ public sealed partial class EntitySpawningUIController : UIController
             return;
 
         _window.OverrideMenu.SelectId(args.Id);
+        _cfg.SetCVar(CVars.EntitySpawnOverrideMode, args.Id);
 
         if (_placement.CurrentMode != null)
         {

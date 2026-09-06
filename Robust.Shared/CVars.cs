@@ -2134,6 +2134,13 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> UIObeyUpdateLimits =
             CVarDef.Create("ui.obey_update_limits", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The selected mode for the entity spawn window's placement mode dropdown.
+        /// </summary>
+        public static readonly CVarDef<int> EntitySpawnOverrideMode =
+            CVarDef.Create("ui.entity_spawn.override_mode", 0, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         /*
          * FONT
          */

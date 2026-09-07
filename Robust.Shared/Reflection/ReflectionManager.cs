@@ -298,7 +298,13 @@ namespace Robust.Shared.Reflection
                 {
                     foreach (var tryType in assembly.DefinedTypes)
                     {
-                        if (tryType.FullName!.EndsWith(name))
+                        if (tryType.FullName is not { } tryName)
+                            continue;
+
+                        if (tryName == name
+                            || tryName.EndsWith(name)
+                                && name.Length < tryName.Length
+                                && tryName[^(name.Length + 1)] is '.' or '+') // Matching B.C for A.B.C we expect dot before B.C
                         {
                             type = tryType;
                             _looseTypeCache[name] = type;

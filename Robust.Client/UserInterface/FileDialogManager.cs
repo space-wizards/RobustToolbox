@@ -84,6 +84,7 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
                 && filters != null
                 && filter >= 0 && filter < filters.Groups.Count
                 && filters.Groups[filter].Extensions.Count > 0
+                && !Path.HasExtension(name)
                 && !File.Exists(name))
             {
                 var firstExtension = filters.Groups[filter].Extensions[0];
@@ -92,6 +93,7 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
                     name += "." + firstExtension;
                 }
             }
+
             return (File.Open(name, truncate ? FileMode.Truncate : FileMode.Open, access, share), true);
         }
         catch (FileNotFoundException)

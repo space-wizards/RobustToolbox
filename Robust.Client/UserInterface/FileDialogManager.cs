@@ -22,12 +22,12 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
         return realShare;
     }
 
-    private async Task<string?> Prompt(bool isSave, FileDialogFilters? filters)
+    private async Task<(string?, int)> Prompt(bool isSave, FileDialogFilters? filters)
     {
         if (clyde.FileDialogImpl is { } impl)
             return isSave ? await impl.SaveFile(filters) : await impl.OpenFile(filters);
 
-        return null;
+        return (null, 0);
     }
 
     public async Task<(Stream?, string?)> GetFileAndName(
@@ -35,7 +35,7 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
         FileAccess access = FileAccess.ReadWrite,
         FileShare? share = null)
     {
-        var name = await Prompt(false, filters);
+        var (name, filter) = await Prompt(false, filters);
 
         if (name == null) return (null, null);
 
@@ -49,7 +49,7 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
         FileShare? share = null)
     {
         Validate(access, share);
-        var name = await Prompt(false, filters);
+        var (name, filter) = await Prompt(false, filters);
 
         return name == null ? null : Path.GetFileName(name);
     }
@@ -60,7 +60,7 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
         FileShare? share = null)
     {
         var realShare = Validate(access, share);
-        var name = await Prompt(false, filters);
+        var (name, filter) = await Prompt(false, filters);
 
         return name == null ? null : File.Open(name, FileMode.Open, access, realShare);
     }
@@ -69,15 +69,29 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
         FileDialogFilters? filters,
         bool truncate = true,
         FileAccess access = FileAccess.ReadWrite,
-        FileShare share = FileShare.None)
+        FileShare share = FileShare.None,
+        bool appendExtension = false)
     {
         Validate(access, share);
-        var name = await Prompt(true, filters);
+        var (name, filter) = await Prompt(true, filters);
 
         if (name == null) return null;
 
         try
         {
+            // Try to append our extension if the file doesn't exist and our extension is valid.
+            if (appendExtension
+                && filters != null
+                && filter >= 0 && filter < filters.Groups.Count
+                && filters.Groups[filter].Extensions.Count > 0
+                && !File.Exists(name))
+            {
+                var firstExtension = filters.Groups[filter].Extensions[0];
+                if (firstExtension != "*")
+                {
+                    name += "." + firstExtension;
+                }
+            }
             return (File.Open(name, truncate ? FileMode.Truncate : FileMode.Open, access, share), true);
         }
         catch (FileNotFoundException)

@@ -42,6 +42,7 @@ END TEMPLATE-->
 ### New features
 
 * `Control.Restyle` has been made public for manually restyling controls on edge cases.
+* `FileDialogManager.SaveFile` now has an optional `appendExtension` parameter.  When true, it adds the selected extension (if not a wildcard) if saving to a new file.
 
 ### Bugfixes
 

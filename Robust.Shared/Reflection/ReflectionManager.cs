@@ -298,13 +298,7 @@ namespace Robust.Shared.Reflection
                 {
                     foreach (var tryType in assembly.DefinedTypes)
                     {
-                        if (tryType.FullName is not { } tryName)
-                            continue;
-
-                        if (tryName == name
-                            || tryName.EndsWith(name)
-                                && name.Length < tryName.Length
-                                && tryName[^(name.Length + 1)] is '.' or '+') // Matching B.C for A.B.C we expect dot before B.C
+                        if (TypeNameMatchesLoose(tryType.FullName!, name))
                         {
                             type = tryType;
                             _looseTypeCache[name] = type;
@@ -397,7 +391,7 @@ namespace Robust.Shared.Reflection
 
                     foreach (var @enum in enums)
                     {
-                        if (!TypeNameMatchesEnumReference(@enum.FullName!, typeName))
+                        if (!TypeNameMatchesLoose(@enum.FullName!, typeName))
                             continue;
 
                         var e = (Enum)Enum.Parse(@enum, value);
@@ -420,7 +414,7 @@ namespace Robust.Shared.Reflection
             return @enum != null;
         }
 
-        private static bool TypeNameMatchesEnumReference(ReadOnlySpan<char> fullName, ReadOnlySpan<char> typeName)
+        private static bool TypeNameMatchesLoose(ReadOnlySpan<char> fullName, ReadOnlySpan<char> typeName)
         {
             if (fullName.SequenceEqual(typeName))
                 return true;

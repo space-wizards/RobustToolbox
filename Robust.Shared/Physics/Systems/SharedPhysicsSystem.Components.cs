@@ -559,6 +559,7 @@ public partial class SharedPhysicsSystem
         body.Force = Vector2.Zero;
         body.Torque = 0f;
 
+        // A body going non-static while it can't collide falls through both branches below.
         DirtyFields(uid, body, null,
             nameof(PhysicsComponent.BodyType),
             nameof(PhysicsComponent.Force),

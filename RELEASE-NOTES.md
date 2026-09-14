@@ -45,7 +45,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed a prototype losing its inherited data when a partial prototype changes its `parent:`.
 
 ### Other
 

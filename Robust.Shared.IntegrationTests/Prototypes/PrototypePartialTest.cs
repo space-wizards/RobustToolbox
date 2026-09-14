@@ -21,6 +21,9 @@ internal sealed partial class PrototypePartialTest
     private static readonly EntProtoId InheritanceIdBase = $"{nameof(PrototypePartialTest)}InheritanceBase";
     private static readonly EntProtoId InheritanceIdInheritor = $"{nameof(PrototypePartialTest)}InheritanceInheritor";
     private static readonly EntProtoId ReloadId = $"{nameof(PrototypePartialTest)}Reload";
+    private static readonly EntProtoId ReparentIdBase = $"{nameof(PrototypePartialTest)}ReparentBase";
+    private static readonly EntProtoId ReparentIdMiddle = $"{nameof(PrototypePartialTest)}ReparentMiddle";
+    private static readonly EntProtoId ReparentIdChild = $"{nameof(PrototypePartialTest)}ReparentChild";
 
     private static readonly string Sequence = $@"
 - type: entity
@@ -288,6 +291,32 @@ internal sealed partial class PrototypePartialTest
   - type: PrototypePartial
 ";
 
+    private static readonly string Reparent = $@"
+- type: entity
+  id: {ReparentIdBase}
+  abstract: true
+  components:
+  - type: PrototypePartialBase
+    int: 1
+
+- type: entity
+  parent: {ReparentIdBase}
+  id: {ReparentIdMiddle}
+  abstract: true
+  components:
+  - type: PrototypePartialInheritor
+
+- type: entity
+  parent: {ReparentIdBase}
+  id: {ReparentIdChild}
+";
+
+    private static readonly string ReparentToMiddle = $@"
+- type: !PartialOnly entity
+  id: {ReparentIdChild}
+  parent: !Clear {ReparentIdMiddle}
+";
+
     private static readonly string ReloadAddSequenceData = $@"
 - type: entity
   id: {ReloadId}
@@ -325,6 +354,7 @@ internal sealed partial class PrototypePartialTest
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(MappingSequenceId)}.yml"), MappingSequence);
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(InheritanceIdBase)}.yml"), Inheritance);
                     root.AddOrUpdateFile(new ResPath($"/Base/{nameof(ReloadId)}.yml"), Reload);
+                    root.AddOrUpdateFile(new ResPath($"/Base/{nameof(ReparentIdBase)}.yml"), Reparent);
                 }
 
                 for (var i = 0; i < ymlToLoad.Length; i++)
@@ -894,6 +924,21 @@ internal sealed partial class PrototypePartialTest
         Assert.That(comp.List, Is.Not.Empty);
         Assert.That(comp.List, Has.Count.EqualTo(1));
         Assert.That(comp.List, Is.EquivalentTo([1]));
+    }
+
+    [Test]
+    public void ReparentInheritsGrandparentTest()
+    {
+        var sim = StartSim(ymlToLoad: ReparentToMiddle);
+
+        var comps = sim.Resolve<IComponentFactory>();
+        var prototypes = sim.Resolve<IPrototypeManager>();
+        var ent = prototypes.Index(ReparentIdChild);
+        Assert.That(ent.Parents, Is.EquivalentTo([ReparentIdMiddle.Id]));
+        Assert.That(ent.HasComp<PrototypePartialInheritorComponent>(comps), Is.True);
+        Assert.That(ent.TryComp(out PrototypePartialBaseComponent? baseComp, comps), Is.True);
+        Assert.That(baseComp, Is.Not.Null);
+        Assert.That(baseComp.Int, Is.EqualTo(1));
     }
 
     internal sealed partial class PrototypePartialComponent : Component

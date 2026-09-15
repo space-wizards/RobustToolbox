@@ -42,10 +42,7 @@ public sealed class LightLevelSystemTests
             .RegisterEntitySystems(f =>
             {
                 IoCManager.Resolve<IConfigurationManager>().SetCVar(CVars.LookupEnableServerLightTree, lightTree);
-                var recursiveMove = typeof(SharedLightTreeSystem).Assembly.GetType("Robust.Shared.ComponentTrees.RecursiveMoveSystem")!;
-                typeof(IEntitySystemManager).GetMethod(nameof(IEntitySystemManager.LoadExtraSystemType))!
-                    .MakeGenericMethod(recursiveMove)
-                    .Invoke(f, null);
+                f.LoadExtraSystemType<RecursiveMoveSystem>();
                 f.LoadExtraSystemType<ServerOccluderSystem>();
                 f.LoadExtraSystemType<LightTreeSystem>();
                 f.LoadExtraSystemType<PointLightSystem>();

@@ -28,6 +28,9 @@ public sealed class RenderTransformSystemTest : RobustUnitTest
     private SpriteSystem _sprites = default!;
     private EyeSystem _eyes = default!;
     private IClientGameTiming _timing = default!;
+    private SharedTransformSystem.MoveEventHandler? _moveHandler;
+    private ushort _savedTickRate;
+    private float _savedTimingAdjustment;
 
     [OneTimeSetUp]
     public void OneTimeSetup()
@@ -51,6 +54,23 @@ public sealed class RenderTransformSystemTest : RobustUnitTest
         ((GameTiming)_timing).FreezeTickTimingAdjustment();
         _timing.CurTick = new GameTick(_timing.CurTick.Value + 1);
         _timing.LastRealTick = _timing.CurTick;
+        _savedTickRate = _timing.TickRate;
+        _savedTimingAdjustment = _timing.TickTimingAdjustment;
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        if (_moveHandler != null)
+        {
+            _transforms.OnGlobalMoveEvent -= _moveHandler;
+            _moveHandler = null;
+        }
+
+        _timing.SetTickRateAt(_savedTickRate, _timing.CurTick);
+        _timing.TickTimingAdjustment = _savedTimingAdjustment;
+        ((GameTiming) _timing).FreezeTickTimingAdjustment();
+        _timing.TickRemainder = TimeSpan.Zero;
     }
 
     [Test]
@@ -109,61 +129,55 @@ public sealed class RenderTransformSystemTest : RobustUnitTest
                 moveEvents++;
         }
 
-        _transforms.OnGlobalMoveEvent += CountMove;
-        try
+        _moveHandler = CountMove;
+        _transforms.OnGlobalMoveEvent += _moveHandler;
+        ApplyRemote(() => _transforms.SetLocalPositionRotation(uid, Vector2.One, Angle.FromDegrees(90), xform));
+        var countBeforeFrame = moveEvents;
+        var parent = xform.ParentUid;
+        var localPosition = xform.LocalPosition;
+        var localRotation = xform.LocalRotation;
+        var lastModified = xform.LastModifiedTick;
+        var broadphase = xform.Broadphase;
+
+        // Render interpolation should only affect render transforms.
+        SetTickAlpha(0f);
+        _transforms.FrameUpdate(0f);
+
+        Assert.Multiple(() =>
         {
-            ApplyRemote(() => _transforms.SetLocalPositionRotation(uid, Vector2.One, Angle.FromDegrees(90), xform));
-            var countBeforeFrame = moveEvents;
-            var parent = xform.ParentUid;
-            var localPosition = xform.LocalPosition;
-            var localRotation = xform.LocalRotation;
-            var lastModified = xform.LastModifiedTick;
-            var broadphase = xform.Broadphase;
+            AssertVector(xform.LocalPosition, Vector2.One);
+            AssertVector(_transforms.GetWorldPosition(uid), Vector2.One);
+            AssertVector(_transforms.GetRenderWorldPosition(uid), Vector2.Zero);
+            Assert.That(_transforms.GetRenderWorldRotation(uid).Degrees, Is.EqualTo(0).Within(0.001));
+        });
 
-            // Render interpolation should only affect render transforms.
-            SetTickAlpha(0f);
-            _transforms.FrameUpdate(0f);
+        SetTickAlpha(0.5f);
+        _transforms.FrameUpdate(0f);
 
-            Assert.Multiple(() =>
-            {
-                AssertVector(xform.LocalPosition, Vector2.One);
-                AssertVector(_transforms.GetWorldPosition(uid), Vector2.One);
-                AssertVector(_transforms.GetRenderWorldPosition(uid), Vector2.Zero);
-                Assert.That(_transforms.GetRenderWorldRotation(uid).Degrees, Is.EqualTo(0).Within(0.001));
-            });
-
-            SetTickAlpha(0.5f);
-            _transforms.FrameUpdate(0f);
-
-            Assert.Multiple(() =>
-            {
-                AssertVector(xform.LocalPosition, Vector2.One);
-                Assert.That(xform.ParentUid, Is.EqualTo(parent));
-                Assert.That(xform.LocalRotation, Is.EqualTo(localRotation));
-                Assert.That(xform.LastModifiedTick, Is.EqualTo(lastModified));
-                Assert.That(xform.Broadphase, Is.EqualTo(broadphase));
-                Assert.That(moveEvents, Is.EqualTo(countBeforeFrame));
-                AssertVector(_transforms.GetWorldPosition(uid), Vector2.One);
-                AssertVector(_transforms.GetRenderWorldPosition(uid), new Vector2(0.5f));
-                Assert.That(_transforms.GetRenderWorldRotation(uid).Degrees, Is.EqualTo(45).Within(0.001));
-            });
-
-            SetTickAlpha(1f);
-            _transforms.FrameUpdate(0f);
-
-            Assert.Multiple(() =>
-            {
-                AssertVector(xform.LocalPosition, Vector2.One);
-                AssertVector(_transforms.GetWorldPosition(uid), Vector2.One);
-                AssertVector(_transforms.GetRenderWorldPosition(uid), Vector2.One);
-                Assert.That(_transforms.GetRenderWorldRotation(uid).Degrees, Is.EqualTo(90).Within(0.001));
-                Assert.That(moveEvents, Is.EqualTo(countBeforeFrame));
-            });
-        }
-        finally
+        Assert.Multiple(() =>
         {
-            _transforms.OnGlobalMoveEvent -= CountMove;
-        }
+            AssertVector(xform.LocalPosition, Vector2.One);
+            Assert.That(xform.ParentUid, Is.EqualTo(parent));
+            Assert.That(xform.LocalRotation, Is.EqualTo(localRotation));
+            Assert.That(xform.LastModifiedTick, Is.EqualTo(lastModified));
+            Assert.That(xform.Broadphase, Is.EqualTo(broadphase));
+            Assert.That(moveEvents, Is.EqualTo(countBeforeFrame));
+            AssertVector(_transforms.GetWorldPosition(uid), Vector2.One);
+            AssertVector(_transforms.GetRenderWorldPosition(uid), new Vector2(0.5f));
+            Assert.That(_transforms.GetRenderWorldRotation(uid).Degrees, Is.EqualTo(45).Within(0.001));
+        });
+
+        SetTickAlpha(1f);
+        _transforms.FrameUpdate(0f);
+
+        Assert.Multiple(() =>
+        {
+            AssertVector(xform.LocalPosition, Vector2.One);
+            AssertVector(_transforms.GetWorldPosition(uid), Vector2.One);
+            AssertVector(_transforms.GetRenderWorldPosition(uid), Vector2.One);
+            Assert.That(_transforms.GetRenderWorldRotation(uid).Degrees, Is.EqualTo(90).Within(0.001));
+            Assert.That(moveEvents, Is.EqualTo(countBeforeFrame));
+        });
     }
 
     [TestCase(ParentTransition.GridToMap)]
@@ -309,112 +323,86 @@ public sealed class RenderTransformSystemTest : RobustUnitTest
     [TestCase(0.1f)]
     public void MovementAt5TpsUsesAdjustedTickPhase(float tickTimingAdjustment)
     {
-        var oldTickRate = _timing.TickRate;
-        var oldTimingAdjustment = _timing.TickTimingAdjustment;
+        _timing.SetTickRateAt(5, _timing.CurTick);
+        _timing.TickTimingAdjustment = tickTimingAdjustment;
+        ((GameTiming) _timing).FreezeTickTimingAdjustment();
+        var adjustedPeriod = (float) _timing.CalcAdjustedTickPeriod().TotalSeconds;
+        const float frameTime = 1f / 119f;
+        var (_, mapId) = CreateMap();
+        var uid = _entities.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var xform = _entities.GetComponent<TransformComponent>(uid);
+        MakeRemote(xform);
 
-        try
+        var accumulator = 0f;
+        var tick = 0;
+        float? previousPosition = null;
+        var velocities = new List<float>();
+
+        ApplyRemote(() => _transforms.SetLocalPosition(uid, Vector2.UnitX, xform));
+
+        // Advance with a render frame rate that does not divide the tick rate cleanly.
+        for (var frame = 0; tick < 10; frame++)
         {
-            _timing.SetTickRateAt(5, _timing.CurTick);
-            _timing.TickTimingAdjustment = tickTimingAdjustment;
-            ((GameTiming) _timing).FreezeTickTimingAdjustment();
-            var adjustedPeriod = (float) _timing.CalcAdjustedTickPeriod().TotalSeconds;
-            const float frameTime = 1f / 119f;
-            var (_, mapId) = CreateMap();
-            var uid = _entities.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
-            var xform = _entities.GetComponent<TransformComponent>(uid);
-            MakeRemote(xform);
-
-            var accumulator = 0f;
-            var tick = 0;
-            float? previousPosition = null;
-            var velocities = new List<float>();
-
-            ApplyRemote(() => _transforms.SetLocalPosition(uid, Vector2.UnitX, xform));
-
-            // Advance with a render frame rate that does not divide the tick rate cleanly.
-            for (var frame = 0; tick < 10; frame++)
+            accumulator += frameTime;
+            while (accumulator >= adjustedPeriod)
             {
-                accumulator += frameTime;
-                while (accumulator >= adjustedPeriod)
-                {
-                    accumulator -= adjustedPeriod;
-                    tick++;
-                    if (tick >= 10)
-                        break;
-
-                    _timing.LastRealTick = new GameTick(_timing.LastRealTick.Value + 1);
-                    _timing.CurTick = _timing.LastRealTick;
-                    ApplyRemote(() => _transforms.SetLocalPosition(uid, new Vector2(tick + 1, 0f), xform));
-                }
-
+                accumulator -= adjustedPeriod;
+                tick++;
                 if (tick >= 10)
                     break;
 
-                _timing.TickRemainder = TimeSpan.FromSeconds(accumulator);
-                _transforms.FrameUpdate(frameTime);
-
-                var position = _transforms.GetRenderWorldPosition(uid).X;
-                if (previousPosition is { } previous)
-                    velocities.Add((position - previous) / frameTime);
-
-                previousPosition = position;
+                _timing.LastRealTick = new GameTick(_timing.LastRealTick.Value + 1);
+                _timing.CurTick = _timing.LastRealTick;
+                ApplyRemote(() => _transforms.SetLocalPosition(uid, new Vector2(tick + 1, 0f), xform));
             }
 
-            var expectedVelocity = 1f / adjustedPeriod;
-            Assert.Multiple(() =>
-            {
-                Assert.That(velocities.Min(), Is.EqualTo(expectedVelocity).Within(0.08f));
-                Assert.That(velocities.Max(), Is.EqualTo(expectedVelocity).Within(0.08f));
-            });
+            if (tick >= 10)
+                break;
+
+            _timing.TickRemainder = TimeSpan.FromSeconds(accumulator);
+            _transforms.FrameUpdate(frameTime);
+
+            var position = _transforms.GetRenderWorldPosition(uid).X;
+            if (previousPosition is { } previous)
+                velocities.Add((position - previous) / frameTime);
+
+            previousPosition = position;
         }
-        finally
+
+        var expectedVelocity = 1f / adjustedPeriod;
+        Assert.Multiple(() =>
         {
-            _timing.SetTickRateAt(oldTickRate, _timing.CurTick);
-            _timing.TickTimingAdjustment = oldTimingAdjustment;
-            ((GameTiming) _timing).FreezeTickTimingAdjustment();
-            _timing.TickRemainder = TimeSpan.Zero;
-        }
+            Assert.That(velocities.Min(), Is.EqualTo(expectedVelocity).Within(0.08f));
+            Assert.That(velocities.Max(), Is.EqualTo(expectedVelocity).Within(0.08f));
+        });
     }
 
     [Test]
     public void TimingAdjustmentChangeMidTickDoesNotMoveRenderTransform()
     {
-        var oldTickRate = _timing.TickRate;
-        var oldTimingAdjustment = _timing.TickTimingAdjustment;
+        _timing.SetTickRateAt(30, _timing.CurTick);
+        _timing.TickTimingAdjustment = 0f;
+        ((GameTiming) _timing).FreezeTickTimingAdjustment();
+        var (_, mapId) = CreateMap();
+        var uid = _entities.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var xform = _entities.GetComponent<TransformComponent>(uid);
+        MakeRemote(xform);
 
-        try
+        ApplyRemote(() => _transforms.SetLocalPosition(uid, Vector2.UnitX, xform));
+        SetHalfTick();
+        _transforms.FrameUpdate(0f);
+
+        var before = _transforms.GetRenderWorldPosition(uid);
+        var phaseBefore = _timing.TickPhase;
+
+        _timing.TickTimingAdjustment = 0.1f;
+        _transforms.FrameUpdate(0f);
+
+        Assert.Multiple(() =>
         {
-            _timing.SetTickRateAt(30, _timing.CurTick);
-            _timing.TickTimingAdjustment = 0f;
-            ((GameTiming) _timing).FreezeTickTimingAdjustment();
-            var (_, mapId) = CreateMap();
-            var uid = _entities.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
-            var xform = _entities.GetComponent<TransformComponent>(uid);
-            MakeRemote(xform);
-
-            ApplyRemote(() => _transforms.SetLocalPosition(uid, Vector2.UnitX, xform));
-            SetHalfTick();
-            _transforms.FrameUpdate(0f);
-
-            var before = _transforms.GetRenderWorldPosition(uid);
-            var phaseBefore = _timing.TickPhase;
-
-            _timing.TickTimingAdjustment = 0.1f;
-            _transforms.FrameUpdate(0f);
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(_timing.TickPhase, Is.EqualTo(phaseBefore).Within(0.00001f));
-                AssertVector(_transforms.GetRenderWorldPosition(uid), before);
-            });
-        }
-        finally
-        {
-            _timing.SetTickRateAt(oldTickRate, _timing.CurTick);
-            _timing.TickTimingAdjustment = oldTimingAdjustment;
-            ((GameTiming) _timing).FreezeTickTimingAdjustment();
-            _timing.TickRemainder = TimeSpan.Zero;
-        }
+            Assert.That(_timing.TickPhase, Is.EqualTo(phaseBefore).Within(0.00001f));
+            AssertVector(_transforms.GetRenderWorldPosition(uid), before);
+        });
     }
 
     [Test]
@@ -637,90 +625,81 @@ public sealed class RenderTransformSystemTest : RobustUnitTest
     public void PredictionRollbackDoesNotDisturbConstantRenderVelocity(int tickRate)
     {
         // The real sanity check of "please god just make the entity move from point A to point B cleanly".
-        var oldTickRate = _timing.TickRate;
-        try
-        {
-            const float renderFps = 144f;
-            _timing.SetTickRateAt((ushort)tickRate, _timing.CurTick);
-            var tickPeriod = (float)_timing.TickPeriod.TotalSeconds;
-            var frameTime = 1f / renderFps;
-            const float speed = 4.5f;
-            var tickDistance = speed / tickRate;
-            var (_, mapId) = CreateMap();
-            var uid = _entities.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
-            var xform = _entities.GetComponent<TransformComponent>(uid);
-            var accumulator = 0f;
-            var simulationTick = 0;
-            float? previousRender = null;
-            var velocities = new List<float>();
-            var simulationDisplacements = new List<float>();
+        const float renderFps = 144f;
+        _timing.SetTickRateAt((ushort)tickRate, _timing.CurTick);
+        var tickPeriod = (float)_timing.TickPeriod.TotalSeconds;
+        var frameTime = 1f / renderFps;
+        const float speed = 4.5f;
+        var tickDistance = speed / tickRate;
+        var (_, mapId) = CreateMap();
+        var uid = _entities.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var xform = _entities.GetComponent<TransformComponent>(uid);
+        var accumulator = 0f;
+        var simulationTick = 0;
+        float? previousRender = null;
+        var velocities = new List<float>();
+        var simulationDisplacements = new List<float>();
 
-            _timing.CurTick = _timing.LastRealTick + 1;
-            _transforms.SetLocalPosition(uid, new Vector2(tickDistance, 0f), xform);
+        _timing.CurTick = _timing.LastRealTick + 1;
+        _transforms.SetLocalPosition(uid, new Vector2(tickDistance, 0f), xform);
+        AssertNoCorrection(uid);
+        var previousSimulationEndpoint = _transforms.GetWorldPosition(uid).X;
+
+        // Repeated rollback should update the destination without restarting visible motion.
+        for (var frame = 0; simulationTick < 24; frame++)
+        {
+            accumulator += frameTime;
+
+            while (accumulator >= tickPeriod)
+            {
+                accumulator -= tickPeriod;
+                simulationTick++;
+                RollbackPredictionTick(simulationTick);
+                AssertNoCorrection(uid);
+                var simulationEndpoint = _transforms.GetWorldPosition(uid).X;
+                simulationDisplacements.Add(simulationEndpoint - previousSimulationEndpoint);
+                previousSimulationEndpoint = simulationEndpoint;
+            }
+
+            _timing.TickRemainder = TimeSpan.FromSeconds(accumulator);
+            _transforms.FrameUpdate(frameTime);
             AssertNoCorrection(uid);
-            var previousSimulationEndpoint = _transforms.GetWorldPosition(uid).X;
 
-            // Repeated rollback should update the destination without restarting visible motion.
-            for (var frame = 0; simulationTick < 24; frame++)
-            {
-                accumulator += frameTime;
+            var render = _transforms.GetRenderWorldPosition(uid).X;
+            if (previousRender is { } previous && simulationTick >= 2)
+                velocities.Add((render - previous) / frameTime);
 
-                while (accumulator >= tickPeriod)
-                {
-                    accumulator -= tickPeriod;
-                    simulationTick++;
-                    RollbackPredictionTick(simulationTick);
-                    AssertNoCorrection(uid);
-                    var simulationEndpoint = _transforms.GetWorldPosition(uid).X;
-                    simulationDisplacements.Add(simulationEndpoint - previousSimulationEndpoint);
-                    previousSimulationEndpoint = simulationEndpoint;
-                }
-
-                _timing.TickRemainder = TimeSpan.FromSeconds(accumulator);
-                _transforms.FrameUpdate(frameTime);
-                AssertNoCorrection(uid);
-
-                var render = _transforms.GetRenderWorldPosition(uid).X;
-                if (previousRender is { } previous && simulationTick >= 2)
-                    velocities.Add((render - previous) / frameTime);
-
-                previousRender = render;
-            }
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(simulationDisplacements.Min(), Is.EqualTo(tickDistance).Within(0.0001f));
-                Assert.That(simulationDisplacements.Max(), Is.EqualTo(tickDistance).Within(0.0001f));
-                Assert.That(velocities.Min(), Is.EqualTo(speed).Within(0.0001f));
-                Assert.That(velocities.Max(), Is.EqualTo(speed).Within(0.0001f));
-            });
-
-            void RollbackPredictionTick(int realTickIndex)
-            {
-                var previousRealTick = _timing.LastRealTick;
-                var nextRealTick = previousRealTick + 1;
-
-                using (_timing.StartStateApplicationArea())
-                    _transforms.SetLocalPosition(uid, new Vector2((realTickIndex - 1) * tickDistance, 0f), xform);
-                AssertNoCorrection(uid);
-
-                xform.LastModifiedTick = previousRealTick;
-
-                _timing.CurTick = _timing.LastRealTick = nextRealTick;
-                using (_timing.StartStateApplicationArea())
-                    _transforms.SetLocalPosition(uid, new Vector2(realTickIndex * tickDistance, 0f), xform);
-                AssertNoCorrection(uid);
-
-                _timing.CurTick = nextRealTick + 1;
-                using (_timing.StartPastPredictionArea())
-                    _transforms.SetLocalPosition(uid, new Vector2((realTickIndex + 1) * tickDistance, 0f), xform);
-                AssertNoCorrection(uid);
-            }
+            previousRender = render;
         }
-        finally
+
+        Assert.Multiple(() =>
         {
-            _timing.SetTickRateAt(oldTickRate, _timing.CurTick);
-            _timing.TickRemainder = TimeSpan.Zero;
+            Assert.That(simulationDisplacements.Min(), Is.EqualTo(tickDistance).Within(0.0001f));
+            Assert.That(simulationDisplacements.Max(), Is.EqualTo(tickDistance).Within(0.0001f));
+            Assert.That(velocities.Min(), Is.EqualTo(speed).Within(0.0001f));
+            Assert.That(velocities.Max(), Is.EqualTo(speed).Within(0.0001f));
+        });
+
+        void RollbackPredictionTick(int realTickIndex)
+        {
+            var previousRealTick = _timing.LastRealTick;
+            var nextRealTick = previousRealTick + 1;
+
+            using (_timing.StartStateApplicationArea())
+                _transforms.SetLocalPosition(uid, new Vector2((realTickIndex - 1) * tickDistance, 0f), xform);
+            AssertNoCorrection(uid);
+
+            xform.LastModifiedTick = previousRealTick;
+
+            _timing.CurTick = _timing.LastRealTick = nextRealTick;
+            using (_timing.StartStateApplicationArea())
+                _transforms.SetLocalPosition(uid, new Vector2(realTickIndex * tickDistance, 0f), xform);
+            AssertNoCorrection(uid);
+
+            _timing.CurTick = nextRealTick + 1;
+            using (_timing.StartPastPredictionArea())
+                _transforms.SetLocalPosition(uid, new Vector2((realTickIndex + 1) * tickDistance, 0f), xform);
+            AssertNoCorrection(uid);
         }
     }
 

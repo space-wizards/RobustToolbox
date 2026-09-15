@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -29,7 +30,11 @@ namespace Robust.Client.Graphics.Clyde
                 RenderTarget = CreateRenderTarget(size,
                     new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                     sampleParameters: sampleParameters,
-                    name: $"{name}-MainRenderTarget")
+                    name: $"{name}-MainRenderTarget"),
+                ZLevelRenderTarget = CreateRenderTarget(size,
+                    new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                    sampleParameters: sampleParameters,
+                    name: $"{name}-ZLevelRenderTarget")
             };
 
             RegenLightRts(viewport);
@@ -109,6 +114,14 @@ namespace Robust.Client.Graphics.Clyde
 
             // Primary render target.
             public RenderTexture RenderTarget = default!;
+
+            // Temporary target for one z-level layer.
+            public RenderTexture ZLevelRenderTarget = default!;
+
+            // World layers present in the most recently rendered z-stack. Screen-space overlays use this to
+            // combine only entity samples that actually contributed to the viewport.
+            internal readonly HashSet<EntityUid> _visibleZMaps = [];
+            public IReadOnlySet<EntityUid> VisibleZMaps => _visibleZMaps;
 
             // Various render targets used in the light rendering process.
 
@@ -221,6 +234,7 @@ namespace Robust.Client.Graphics.Clyde
                 GC.SuppressFinalize(this);
 
                 RenderTarget.Dispose();
+                ZLevelRenderTarget.Dispose();
                 LightRenderTarget.Dispose();
                 WallMaskRenderTarget.Dispose();
                 WallBleedIntermediateRenderTarget1.Dispose();

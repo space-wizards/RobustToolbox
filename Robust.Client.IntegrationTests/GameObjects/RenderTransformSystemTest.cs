@@ -120,7 +120,7 @@ public sealed class RenderTransformSystemTest : RobustUnitTest
             var lastModified = xform.LastModifiedTick;
             var broadphase = xform.Broadphase;
 
-            // Render interpolation should only affect render poses, not the server transform state.
+            // Render interpolation should only affect render transforms.
             SetTickAlpha(0f);
             _transforms.FrameUpdate(0f);
 
@@ -166,10 +166,10 @@ public sealed class RenderTransformSystemTest : RobustUnitTest
         }
     }
 
-    [TestCase(ParentTransition.GridToMap, false)]
-    [TestCase(ParentTransition.MapToGrid, false)]
-    [TestCase(ParentTransition.GridToGrid, false)]
-    public void CrossParentTransitionsInterpolateInRenderSpace(ParentTransition transition, bool predicted)
+    [TestCase(ParentTransition.GridToMap)]
+    [TestCase(ParentTransition.MapToGrid)]
+    [TestCase(ParentTransition.GridToGrid)]
+    public void CrossParentTransitionsInterpolateInRenderSpace(ParentTransition transition)
     {
         var (map, mapId) = CreateMap();
         var gridA = _maps.CreateGridEntity(mapId).Owner;
@@ -192,15 +192,7 @@ public sealed class RenderTransformSystemTest : RobustUnitTest
             Angle.Zero,
             unanchor: false);
 
-        if (predicted)
-        {
-            _timing.CurTick = new GameTick(_timing.LastRealTick.Value + 1);
-            Move();
-        }
-        else
-        {
-            ApplyRemote(Move);
-        }
+        ApplyRemote(Move);
 
         SetTickAlpha(0f);
         _transforms.FrameUpdate(0f);
@@ -220,27 +212,6 @@ public sealed class RenderTransformSystemTest : RobustUnitTest
             AssertVector(_transforms.GetWorldPosition(uid), Vector2.UnitX);
             AssertVector(_transforms.GetRenderWorldPosition(uid), new Vector2(0.5f, 0f));
         });
-
-        if (predicted)
-        {
-            using (_timing.StartStateApplicationArea())
-            {
-                _transforms.SetCoordinates(uid, xform, new EntityCoordinates(source, Vector2.Zero), Angle.Zero, false);
-            }
-
-            using (_timing.StartPastPredictionArea())
-            {
-                _transforms.SetCoordinates(uid, xform, new EntityCoordinates(target, targetLocal), Angle.Zero, false);
-            }
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(xform.ParentUid, Is.EqualTo(target));
-                AssertVector(_transforms.GetWorldPosition(uid), Vector2.UnitX);
-                AssertVector(_transforms.GetRenderWorldPosition(uid), new Vector2(0.5f, 0f),
-                    "cross-parent prediction rollback must preserve the displayed midpoint");
-            });
-        }
 
         SetTickAlpha(1f);
         _transforms.FrameUpdate(0f);
@@ -635,54 +606,6 @@ public sealed class RenderTransformSystemTest : RobustUnitTest
                 "removal must discard the inherited render offset");
             Assert.That(itemXform.MapID, Is.EqualTo(mapId));
         });
-    }
-
-    [Test]
-    public void CompatibilityHookAllowsCrossMapInterpolation()
-    {
-        // z-level prep work fam.
-        var (mapA, mapAId) = CreateMap();
-        var (mapB, _) = CreateMap();
-        var uid = _entities.SpawnEntity(null, new EntityCoordinates(mapA, Vector2.Zero));
-        var child = _entities.SpawnEntity(null, new EntityCoordinates(uid, new Vector2(0.25f, 0f)));
-        var xform = _entities.GetComponent<TransformComponent>(uid);
-        xform.GridTraversal = false;
-        MakeRemote(xform);
-
-        void Compatible(ref RenderSpaceCompatibilityEvent args)
-        {
-            if ((args.First == mapA && args.Second == mapB) || (args.First == mapB && args.Second == mapA))
-                args.CommonSpace = mapA;
-        }
-
-        _transforms.RenderSpaceCompatibility += Compatible;
-        try
-        {
-            ApplyRemote(() => _transforms.SetCoordinates(uid, xform, new EntityCoordinates(mapB, Vector2.UnitX), Angle.Zero, false));
-            _timing.TickRemainder = TimeSpan.FromTicks(_timing.TickPeriod.Ticks / 4);
-            _transforms.FrameUpdate(0f);
-            AssertVector(_transforms.GetRenderWorldPosition(uid), new Vector2(0.25f, 0f));
-            AssertVector(_transforms.GetRenderWorldPosition(child), new Vector2(0.5f, 0f));
-            var pose = _transforms.GetRenderWorldTransform(child);
-            Assert.That(pose.CoordinateSpace, Is.EqualTo(mapA));
-            Assert.That(pose.SourceRenderSpace, Is.EqualTo(mapA));
-            Assert.That(pose.TargetRenderSpace, Is.EqualTo(mapB));
-            Assert.That(pose.RenderSpaceAlpha, Is.EqualTo(0.25f).Within(0.001f));
-            Assert.That(_transforms.GetRenderMapCoordinates(child).MapId, Is.EqualTo(mapAId));
-
-            SetTickAlpha(0.75f);
-            _transforms.FrameUpdate(0f);
-            pose = _transforms.GetRenderWorldTransform(child);
-            Assert.That(pose.CoordinateSpace, Is.EqualTo(mapA), "the coordinate space must not switch mid-lerp");
-            Assert.That(pose.SourceRenderSpace, Is.EqualTo(mapA));
-            Assert.That(pose.TargetRenderSpace, Is.EqualTo(mapB));
-            Assert.That(pose.RenderSpaceAlpha, Is.EqualTo(0.75f).Within(0.001f));
-            Assert.That(_transforms.GetRenderMapCoordinates(child).MapId, Is.EqualTo(mapAId));
-        }
-        finally
-        {
-            _transforms.RenderSpaceCompatibility -= Compatible;
-        }
     }
 
     [Test]

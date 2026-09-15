@@ -1094,6 +1094,29 @@ public abstract partial class SharedTransformSystem
         }
     }
 
+    public void SetMapCoordinates(Entity<TransformComponent> entity, MapCoordinates coordinates, Angle worldRotation)
+    {
+        var mapUid = _map.GetMap(coordinates.MapId);
+        if (!_gridQuery.HasComponent(entity) &&
+            _map.TryFindGridAt(mapUid, coordinates.Position, out var targetGrid, out _))
+        {
+            var targetGridXform = XformQuery.GetComponent(targetGrid);
+            var invWorldMatrix = GetInvWorldMatrix(targetGridXform);
+            var (_, targetGridRotation) = GetWorldPositionRotation(targetGridXform);
+            SetCoordinates(
+                (entity.Owner, entity.Comp, MetaData(entity.Owner)),
+                new EntityCoordinates(targetGrid, Vector2.Transform(coordinates.Position, invWorldMatrix)),
+                worldRotation - targetGridRotation);
+        }
+        else
+        {
+            SetCoordinates(
+                (entity.Owner, entity.Comp, MetaData(entity.Owner)),
+                new EntityCoordinates(mapUid, coordinates.Position),
+                worldRotation);
+        }
+    }
+
     [Pure]
     public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(EntityUid uid)
     {

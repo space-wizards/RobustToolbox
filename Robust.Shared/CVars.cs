@@ -15,7 +15,7 @@ namespace Robust.Shared
 {
     /// <seealso cref="CVarDefaultOverrides"/>
     [CVarDefs]
-    public abstract class CVars
+    public abstract partial class CVars
     {
         protected CVars()
         {

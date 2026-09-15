@@ -16,6 +16,7 @@ using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -43,6 +44,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private SharedMapSystem _maps = default!;
     [Dependency] private SharedTransformSystem _xformSys = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private ZLevelSystem _zLevels = default!;
+    [Dependency] private EntityQuery<AudioAuxiliaryComponent> _auxiliaryQuery;
+    [Dependency] private EntityQuery<EyeComponent> _eyeQuery;
+    [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery;
+    [Dependency] private EntityQuery<TransformComponent> _transformQuery;
+    [Dependency] private EntityQuery<ZLevelPositionComponent> _zPositionQuery;
 
     /// <summary>
     /// An optional method that, if provided, will override the behavior of <see cref="ProcessStream"/>.
@@ -73,10 +80,9 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private float _audioFrameTime;
     private float _audioFrameTimeRemaining;
 
-    private EntityQuery<PhysicsComponent> _physicsQuery;
-
     private float _maxRayLength;
     private float _zOffset;
+    private float _zLevelDistance;
     private float _audioEndBuffer;
 
     public override float ZOffset
@@ -116,14 +122,18 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // Need to run after Eye updates so we have an accurate listener position.
         UpdatesAfter.Add(typeof(EyeSystem));
 
-        _physicsQuery = GetEntityQuery<PhysicsComponent>();
-
         Subs.CVar(CfgManager, CVars.AudioEndBuffer, OnAudioBuffer, true);
         Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
         Subs.CVar(CfgManager, CVars.AudioDopplerFactor, OnDopplerFactor, true);
         Subs.CVar(CfgManager, CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
         Subs.CVar(CfgManager, CVars.AudioTickRate, OnAudioTickRate, true);
+        Subs.CVar(CfgManager, CVars.AudioZLevelDistance, OnZLevel, true);
         InitializeLimit();
+    }
+
+    private void OnZLevel(float value)
+    {
+        _zLevelDistance = MathF.Max(0f, value);
     }
 
     private void OnAudioBuffer(float value)
@@ -148,7 +158,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         ApplyAudioParams(component.Params, component);
         component.Source.Global = component.Global;
 
-        if (TryComp<AudioAuxiliaryComponent>(component.Auxiliary, out var auxComp))
+        if (_auxiliaryQuery.TryComp(component.Auxiliary, out var auxComp))
         {
             component.Source.SetAuxiliary(auxComp.Auxiliary);
         }
@@ -360,7 +370,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return _eyeManager.CurrentEye.Position;
     }
 
-    private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
+    internal void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
     {
         // If content wants to process the stream in their own special way, we simply let them handle that.
         if (ProcessStreamOverride is not null)
@@ -380,10 +390,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
             component.StartPlaying();
         }
 
-        // If it's global but on another map (that isn't nullspace) then stop playing it.
+        var sameAudioSpace = TryGetZLevelOffset(listener.MapId, xform.MapID, out var mapOffset);
+        var zLevelOffset = GetZLevelOffset(mapOffset, entity, listener.MapId);
+
+        // Global sounds remain audible between maps in the same z-level network.
         if (component.Global)
         {
-            if (xform.MapID != MapId.Nullspace && listener.MapId != xform.MapID)
+            if (xform.MapID != MapId.Nullspace && !sameAudioSpace)
             {
                 component.Gain = 0f;
                 return;
@@ -394,9 +407,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return;
         }
 
-        // Non-global sounds, stop playing if on another map.
-        // Not relevant to us.
-        if (listener.MapId != xform.MapID)
+        if (!sameAudioSpace)
         {
             component.Gain = 0f;
             return;
@@ -421,7 +432,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var distance = delta.Length();
 
         // Out of range so just clip it for us.
-        if (GetAudioDistance(distance) > component.MaxDistance)
+        if (GetAudioDistance(distance, zLevelOffset) > component.MaxDistance)
         {
             // Still keeps the source playing, just with no volume.
             component.Gain = 0f;
@@ -448,6 +459,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         // Update audio positions.
         component.Position = worldPos;
+        component.ZPosition = GetAudioSourceZ(zLevelOffset);
 
         // Make race cars go NYYEEOOOOOMMMMM
         if (_physicsQuery.TryGetComponent(parentUid, out var physicsComp))
@@ -482,6 +494,88 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         return occlusion;
+    }
+
+    internal bool TryGetZLevelOffset(MapId listenerMapId, MapId sourceMapId, out int offset)
+    {
+        offset = 0;
+
+        if (listenerMapId == sourceMapId)
+            return listenerMapId != MapId.Nullspace;
+
+        var listenerMap = _maps.GetMapOrInvalid(listenerMapId);
+        var sourceMap = _maps.GetMapOrInvalid(sourceMapId);
+        return listenerMap.IsValid()
+               && sourceMap.IsValid()
+               && _zLevels.TryGetMapDepthOffset(listenerMap, sourceMap, out offset);
+    }
+
+    internal float GetAudioDistance(float horizontalDistance, float zLevelOffset)
+    {
+        var horizontal = MathF.Max(0f, horizontalDistance);
+        var baseZ = MathF.Abs(ZOffset);
+        var levelZ = MathF.Abs(zLevelOffset) * _zLevelDistance;
+        return MathF.Sqrt(horizontal * horizontal + baseZ * baseZ + levelZ * levelZ);
+    }
+
+    internal float GetAudioSourceZ(float zLevelOffset)
+    {
+        if (zLevelOffset == 0f)
+            return 0f;
+
+        var baseZ = MathF.Abs(ZOffset);
+        var levelZ = MathF.Abs(zLevelOffset) * _zLevelDistance;
+        var separation = MathF.Sqrt(baseZ * baseZ + levelZ * levelZ);
+        return ZOffset + MathF.Sign(zLevelOffset) * separation;
+    }
+
+    internal float GetZLevelOffset(int mapOffset, EntityUid? source, MapId listenerMapId)
+    {
+        var sourceHeight = TryGetLocalHeight(source, out var sourceZ) ? sourceZ : 0f;
+        var listenerHeight = GetListenerLocalHeight(listenerMapId);
+        return mapOffset + sourceHeight - listenerHeight;
+    }
+
+    private float GetListenerLocalHeight(MapId listenerMapId)
+    {
+        var map = _maps.GetMapOrInvalid(listenerMapId);
+        if (map.IsValid()
+            && _zLevels.TryGetMapDepth(map, out var depth)
+            && _eyeManager.CurrentEye.RenderedAbsoluteZ is { } absoluteZ)
+        {
+            return absoluteZ - depth.Value;
+        }
+
+        var listener = _playerManager.LocalEntity;
+        if (listener is { } attached
+            && _eyeQuery.TryComp(attached, out var eye)
+            && eye.Target is { } target)
+        {
+            listener = target;
+        }
+
+        return TryGetLocalHeight(listener, out var height) ? height : 0f;
+    }
+
+    private bool TryGetLocalHeight(EntityUid? uid, out float height)
+    {
+        height = 0f;
+        var current = uid;
+        while (current is { } entity && entity.IsValid())
+        {
+            if (_zPositionQuery.TryComp(entity, out var zPosition))
+            {
+                height = zPosition.LocalHeight;
+                return true;
+            }
+
+            if (!_transformQuery.TryComp(entity, out var xform) || xform.ParentUid == entity)
+                return false;
+
+            current = xform.ParentUid;
+        }
+
+        return false;
     }
 
     private bool TryGetAudio(ResolvedSoundSpecifier specifier, [NotNullWhen(true)] out AudioResource? audio)
@@ -765,7 +859,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <summary>
     /// Applies the audioparams to the underlying audio source.
     /// </summary>
-    private void ApplyAudioParams(AudioParams audioParams, IAudioSource source)
+    internal void ApplyAudioParams(AudioParams audioParams, IAudioSource source)
     {
         source.Pitch = audioParams.Pitch;
         source.Volume = audioParams.Volume;

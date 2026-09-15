@@ -60,5 +60,10 @@ namespace Robust.Shared.Enums
         /// Called after GLClear but before FOV applied to the lighting buffer.
         /// </summary>
         BeforeLighting = 1 << 9,
+
+        /// <summary>
+        ///     Called after the visible z-level layers are composited.
+        /// </summary>
+        PostZLevel = 1 << 10,
     }
 }

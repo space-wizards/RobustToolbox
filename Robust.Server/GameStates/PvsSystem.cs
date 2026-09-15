@@ -16,6 +16,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
@@ -40,6 +41,7 @@ internal sealed partial class PvsSystem : EntitySystem
     [Dependency] private PvsOverrideSystem _pvsOverride = default!;
     [Dependency] private IServerReplayRecordingManager _replay = default!;
     [Dependency] private SharedMapSystem _maps = default!;
+    [Dependency] private ZLevelSystem _zLevels = default!;
 
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
     // Main issue is that I CBF figuring out the logic for handling it changing mid-game.
@@ -66,6 +68,8 @@ internal sealed partial class PvsSystem : EntitySystem
     /// Size of the side of the priority view bounds square. Related to <see cref="CVars.NetPvsPriorityRange"/>
     /// </summary>
     private float _priorityViewSize;
+    private int _pvsZLevelsBelow;
+    private int _pvsZLevelsAbove;
 
     /// <summary>
     /// Per-tick ack data to avoid re-allocating.
@@ -78,9 +82,10 @@ internal sealed partial class PvsSystem : EntitySystem
     private PvsLeaveJob _leaveJob;
     private PvsDeletionsJob _deletionJob;
 
-    private EntityQuery<EyeComponent> _eyeQuery;
-    private EntityQuery<MetaDataComponent> _metaQuery;
-    private EntityQuery<TransformComponent> _xformQuery;
+    [Dependency] private EntityQuery<EyeComponent> _eyeQuery = default!;
+    [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
+    [Dependency] private EntityQuery<MetaDataComponent> _metaQuery = default!;
+    [Dependency] private EntityQuery<TransformComponent> _xformQuery = default!;
 
     private uint _oldestAck;
     private GameTick _lastOldestAck = GameTick.Zero;
@@ -127,10 +132,6 @@ internal sealed partial class PvsSystem : EntitySystem
         _chunkJob = new PvsChunkJob(this);
         _ackJob = new PvsAckJob(this);
 
-        _eyeQuery = GetEntityQuery<EyeComponent>();
-        _metaQuery = GetEntityQuery<MetaDataComponent>();
-        _xformQuery = GetEntityQuery<TransformComponent>();
-
         SubscribeLocalEvent<MapRemovedEvent>(OnMapChanged);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
         SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
@@ -149,6 +150,8 @@ internal sealed partial class PvsSystem : EntitySystem
         Subs.CVar(_configManager, CVars.NetForceAckThreshold, OnForceAckChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsAsync, OnAsyncChanged, true);
         Subs.CVar(_configManager, CVars.NetPvsCompressLevel, ResetParallelism, true);
+        Subs.CVar(_configManager, CVars.NetPvsZLevelsBelow, value => _pvsZLevelsBelow = Math.Max(0, value), true);
+        Subs.CVar(_configManager, CVars.NetPvsZLevelsAbove, value => _pvsZLevelsAbove = Math.Max(0, value), true);
 
         _serverGameStateManager.ClientAck += OnClientAck;
         _serverGameStateManager.ClientRequestFull += OnClientRequestFull;
@@ -290,6 +293,14 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         _seenAllEnts.Clear();
         CullingEnabled = value;
+    }
+
+    private (int Below, int Above) GetZLevelPvsRange(EntityUid? map)
+    {
+        if (map is not { } mapUid || !_zLevels.TryGetMapData(mapUid, out _, out _))
+            return (0, 0);
+
+        return (_pvsZLevelsBelow, _pvsZLevelsAbove);
     }
 
     private void CullDeletionHistory(GameTick oldestAck)

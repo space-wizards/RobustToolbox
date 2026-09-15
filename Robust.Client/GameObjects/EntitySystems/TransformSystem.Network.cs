@@ -10,7 +10,7 @@ namespace Robust.Client.GameObjects;
 
 public sealed partial class TransformSystem
 {
-    // Network interpolation presents authoritative movement for entities that are not locally predicted.
+    // Network interpolation presents movement for entities that are not locally predicted.
     private void HandleAppliedTransformMove(
         EntityUid uid,
         TransformComponent xform,
@@ -27,14 +27,16 @@ public sealed partial class TransformSystem
             || hasExisting && existing.Type == RenderInterpolationType.PredictionInterpolation)
         {
             if (hasExisting)
+            {
                 RebasePredictionInterpolation(ref existing, source, target, rendered, coordinateSpace);
+            }
             else
                 _renderTransforms.Remove(uid);
 
             return;
         }
 
-        // Consecutive state application uses the previous authoritative tick as its source.
+        // Consecutive state application uses the previous network tick as its source.
         var targetTick = _timing.LastProcessedTick;
         var sourceTick = targetTick > GameTick.Zero
             ? targetTick - 1
@@ -103,7 +105,7 @@ public sealed partial class TransformSystem
         state.LastFramePhase = phase;
         state.LastFrameProcessedTick = processedTick;
 
-        // Advance by authoritative tick span instead of compressing every segment into one tick.
+        // Advance by network tick span instead of compressing every segment into one tick.
         var span = state.NetworkTargetTick.Value - state.ChangeTick.Value;
         var wholeTicks = processedTick > state.ChangeTick
             ? processedTick.Value - state.ChangeTick.Value - 1
@@ -123,8 +125,8 @@ public sealed partial class TransformSystem
         if (targetTick <= sourceTick
             || !XformQuery.TryGetComponent(uid, out var xform)
             || xform.Deleted
-            || !TryCreateEndpoint(xform.Coordinates, xform.LocalRotation, out var source)
-            || !TryCreateEndpoint(targetCoordinates, targetRotation, out var target))
+            || !TryCreateEndpoint(uid, xform.Coordinates, xform.LocalRotation, out var source)
+            || !TryCreateEndpoint(uid, targetCoordinates, targetRotation, out var target))
         {
             _renderTransforms.Remove(uid);
             return;

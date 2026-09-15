@@ -25,6 +25,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -86,6 +87,7 @@ namespace Robust.Client.GameStates
 
         private uint _metaCompNetId;
         private uint _xformCompNetId;
+        private uint _zPositionCompNetId;
 
         [Dependency] private IReplayRecordingManager _replayRecording = default!;
         [Dependency] private IComponentFactory _compFactory = default!;
@@ -104,6 +106,8 @@ namespace Robust.Client.GameStates
 
         private ISawmill _sawmill = default!;
         private ClientChunkEntitySystem? _chunkEntities;
+        private TransformSystem? _transformSystem;
+        private ClientZLevelSystem? _clientZLevelSystem;
 
         /// <summary>
         /// If we are waiting for a full game state from the server, we will automatically re-send full state requests
@@ -211,6 +215,12 @@ namespace Robust.Client.GameStates
                 throw new InvalidOperationException("TransformComponent does not have a NetId.");
 
             _xformCompNetId = xformId.Value;
+
+            var zPositionId = _compFactory.GetRegistration(typeof(ZLevelPositionComponent)).NetID;
+            if (!zPositionId.HasValue)
+                throw new InvalidOperationException("ZLevelPositionComponent does not have a NetId.");
+
+            _zPositionCompNetId = zPositionId.Value;
         }
 
         private void OnComponentAdded(AddedComponentEventArgs args)
@@ -236,6 +246,10 @@ namespace Robust.Client.GameStates
         public void Reset()
         {
             _processor.Reset();
+            _pendingInputs.Clear();
+            _pendingSystemMessages.Clear();
+            _transformSystem = null;
+            _clientZLevelSystem = null;
             _timing.CurTick = GameTick.Zero;
             _timing.LastRealTick = GameTick.Zero;
             _lastProcessedInput = 0;
@@ -253,6 +267,11 @@ namespace Robust.Client.GameStates
 
         private void OnEntitySystemUnloaded(object? sender, SystemChangedArgs args)
         {
+            if (ReferenceEquals(args.System, _transformSystem))
+                _transformSystem = null;
+            if (ReferenceEquals(args.System, _clientZLevelSystem))
+                _clientZLevelSystem = null;
+
             if (!ReferenceEquals(args.System, _chunkEntities))
                 return;
 
@@ -894,53 +913,132 @@ namespace Robust.Client.GameStates
 
         private void ApplyTransformInterpolationLookahead(GameTick missingTick)
         {
+            var transforms = _transformSystem ??= _entitySystemManager.GetEntitySystem<TransformSystem>();
             if (!_processor.TryGetInterpolationLookahead(missingTick, out var lookahead))
                 return;
 
-            // Missing ticks remain missing to game-state processing; only transform presentation looks ahead
+            // Missing ticks remain missing to game-state processing; only transform render looks ahead
             // so we can interpolate to the state after.
-            var transforms = _entitySystemManager.GetEntitySystem<TransformSystem>();
             foreach (var entityState in lookahead.EntityStates.Span)
             {
-                if (!TryGetComponentChange(entityState, _xformCompNetId, out var change)
-                    || !TryResolveFutureTransformState(entityState.NetEntity,
-                        change.State,
-                        out var parentNet,
-                        out var localPosition,
-                        out var rotation)
-                    || !_entities.TryGetEntityData(entityState.NetEntity, out var uid, out var meta)
+                if (!_entities.TryGetEntityData(entityState.NetEntity, out var uid, out var meta)
                     || (meta.Flags & MetaDataFlags.Detached) != 0)
                 {
                     continue;
                 }
 
-                EntityUid parent;
-                if (parentNet.Valid)
+                var hasTransformChange = TryGetComponentChange(entityState, _xformCompNetId, out var transformChange);
+                NetEntity parentNet = default;
+                Vector2 localPosition = default;
+                Angle rotation = default;
+                if (hasTransformChange
+                    && !TryResolveFutureTransformState(
+                        entityState.NetEntity,
+                        transformChange.State,
+                        out parentNet,
+                        out localPosition,
+                        out rotation))
                 {
-                    if (!_entities.TryGetEntityData(parentNet, out var parentUid, out _))
+                    continue;
+                }
+
+                var hasHeightChange = TryGetComponentChange(entityState, _zPositionCompNetId, out var heightChange);
+                float? targetLocalHeight = null;
+                if (hasHeightChange)
+                {
+                    if (!TryResolveFutureZPositionState(
+                            entityState.NetEntity,
+                            heightChange.State,
+                            out var localHeight))
                     {
                         continue;
                     }
 
-                    parent = parentUid.Value;
-                }
-                else
-                {
-                    parent = EntityUid.Invalid;
+                    targetLocalHeight = localHeight;
                 }
 
+                if (!hasTransformChange && !hasHeightChange)
+                    continue;
+
                 var sourceTick = meta.LastStateApplied;
-                var targetTick = change.LastModifiedTick;
+                var targetTick = hasTransformChange
+                    ? transformChange.LastModifiedTick
+                    : heightChange.LastModifiedTick;
+                if (hasTransformChange && hasHeightChange && heightChange.LastModifiedTick > targetTick)
+                    targetTick = heightChange.LastModifiedTick;
+
                 if (targetTick <= sourceTick)
                     continue;
 
+                EntityCoordinates targetCoordinates;
+                if (hasTransformChange)
+                {
+                    EntityUid parent;
+                    if (parentNet.Valid)
+                    {
+                        if (!_entities.TryGetEntityData(parentNet, out var parentUid, out _))
+                            continue;
+
+                        parent = parentUid.Value;
+                    }
+                    else
+                    {
+                        parent = EntityUid.Invalid;
+                    }
+
+                    targetCoordinates = new EntityCoordinates(parent, localPosition);
+                }
+                else
+                {
+                    if (!_entities.TryGetComponent(uid.Value, out TransformComponent? xform))
+                        continue;
+
+                    targetCoordinates = xform.Coordinates;
+                    rotation = xform.LocalRotation;
+                }
+
                 transforms.StartNetworkInterpolationLookahead(
                     uid.Value,
-                    new EntityCoordinates(parent, localPosition),
+                    targetCoordinates,
                     rotation,
                     sourceTick,
                     targetTick);
+
+                if (targetLocalHeight is { } height)
+                {
+                    var zLevels = _clientZLevelSystem ??= _entitySystemManager.GetEntitySystem<ClientZLevelSystem>();
+                    zLevels.StartNetworkInterpolationLookahead(uid.Value, targetCoordinates, height, sourceTick, targetTick);
+                }
             }
+        }
+
+        private bool TryResolveFutureZPositionState(
+            NetEntity netEntity,
+            IComponentState? state,
+            out float localHeight)
+        {
+            switch (state)
+            {
+                case ZLevelPositionComponent.ZLevelPositionComponent_AutoState full:
+                    localHeight = full.LocalHeight;
+                    return true;
+
+                case ZLevelPositionComponent.ZLevelPositionComponent_AutoDeltaState delta:
+                {
+                    if (!_processor.TryGetLastServerStates(netEntity, out var lastStates)
+                        || !lastStates.TryGetValue((ushort) _zPositionCompNetId, out var lastState)
+                        || lastState is not ZLevelPositionComponent.ZLevelPositionComponent_AutoState lastFull)
+                    {
+                        break;
+                    }
+
+                    localHeight = delta.CreateNewFullState(lastFull).LocalHeight;
+                    return true;
+                }
+            }
+
+            localHeight = default;
+            return false;
         }
 
         private bool TryResolveFutureTransformState(

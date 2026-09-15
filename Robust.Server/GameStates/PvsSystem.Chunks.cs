@@ -34,6 +34,7 @@ internal sealed partial class PvsSystem
     private readonly Dictionary<EntityUid, HashSet<PvsChunkLocation>> _chunkSets = new();
 
     private List<Entity<MapGridComponent>> _grids = new();
+    private readonly List<EntityUid> _zLevelMaps = new();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2i GetChunkIndices(Vector2 coordinates) => (coordinates / ChunkSize).Floored();
@@ -111,13 +112,27 @@ internal sealed partial class PvsSystem
     /// <summary>
     /// Get the chunks visible to a single entity and add them to a player's set of visible chunks.
     /// </summary>
-    private void GetVisibleChunks(Entity<TransformComponent, EyeComponent?> eye,
-        HashSet<PvsChunk> chunks)
+    private void GetVisibleChunks(Entity<TransformComponent, EyeComponent?> eye, HashSet<PvsChunk> chunks)
     {
         var (viewPos, range, mapUid) = CalcViewBounds(eye);
         if (mapUid is not {} map)
             return;
 
+        GetVisibleChunks(map, viewPos, range, chunks);
+
+        var (zBelow, zAbove) = GetZLevelPvsRange(map);
+        if (zBelow == 0 && zAbove == 0)
+            return;
+
+        _zLevels.CollectMapOffsets(map, zBelow, zAbove, _zLevelMaps);
+        foreach (var otherMap in _zLevelMaps)
+        {
+            GetVisibleChunks(otherMap, viewPos, range, chunks);
+        }
+    }
+
+    private void GetVisibleChunks(EntityUid map, Vector2 viewPos, float range, HashSet<PvsChunk> chunks)
+    {
         var mapChunkEnumerator = new ChunkIndicesEnumerator(viewPos, range, ChunkSize);
         while (mapChunkEnumerator.MoveNext(out var chunkIndices))
         {
@@ -444,7 +459,7 @@ internal sealed partial class PvsSystem
         }
 
         DebugTools.Assert(_chunks.Values.All(x => locations.Contains(x.Location) || x.Root.Owner != grid.Owner));
-        if (grid.Comp1.MapUid is not { } map || !TryComp(map, out MetaDataComponent? meta))
+        if (grid.Comp1.MapUid is not { } map || !_metaQuery.TryComp(map, out var meta))
         {
             if (grid.Comp1.MapUid != null && grid.Comp2.EntityLifeStage < EntityLifeStage.Terminating)
                 Log.Error($"Grid {ToPrettyString(grid)} has no map?");

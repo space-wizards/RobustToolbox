@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement;
+using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
@@ -31,6 +32,9 @@ namespace Robust.Client.Graphics.Clyde
         private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
         private List<Entity<MapGridComponent>> _grids = new();
+        private readonly List<MapId> _zLevelRenderMapsBelow = new();
+        private readonly List<MapId> _zLevelRenderMapsAbove = new();
+        private bool _zLevelRenderMapsValid;
         private bool _drawTileEdges;
 
         private void RenderTileEdgesChanges(bool value)
@@ -49,14 +53,16 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
+        private void DrawGridsOnMap(
+            Viewport viewport,
+            MapId mapId,
+            Box2 worldAABB,
+            Box2Rotated worldBounds,
+            IEye eye,
+            int zLevelOffset)
         {
-            var mapId = eye.Position.MapId;
             if (!_mapSystem.MapExists(mapId))
-            {
-                // fall back to nullspace map
-                mapId = MapId.Nullspace;
-            }
+                return;
 
             _grids.Clear();
             var renderQueryBounds = _transformSystem.GetRenderCullingBounds(mapId, worldBounds);
@@ -184,7 +190,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     iGrid.Grid = mapGrid;
                     iGrid.RequiresFlush = false;
-                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceGrids, worldAABB, worldBounds);
+                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceGrids, worldAABB, worldBounds, mapId, zLevelOffset);
                     requiresFlush |= iGrid.RequiresFlush;
                 }
 
@@ -193,8 +199,27 @@ namespace Robust.Client.Graphics.Clyde
                     FlushRenderQueue();
                 }
             }
+        }
 
-            CullEmptyChunks();
+        private void EnsureZLevelRenderMaps(MapId mapId)
+        {
+            if (_zLevelRenderMapsValid)
+                return;
+
+            _zLevelRenderMapsValid = true;
+            _zLevelRenderMapsBelow.Clear();
+            _zLevelRenderMapsAbove.Clear();
+
+            var mapUid = _mapSystem.GetMapOrInvalid(mapId);
+            if (!mapUid.IsValid() || !_zLevelSystem.TryGetMapData(mapUid, out _, out _))
+                return;
+
+            _zLevelSystem.CollectRenderableMaps(
+                mapUid,
+                Math.Max(0, _cfg.GetCVar(CVars.NetPvsZLevelsBelow)),
+                Math.Max(0, _cfg.GetCVar(CVars.NetPvsZLevelsAbove)),
+                _zLevelRenderMapsBelow,
+                _zLevelRenderMapsAbove);
         }
 
         private MapChunkData EnsureChunkInitialized(Dictionary<Vector2i, MapChunkData> data, MapChunk chunk, Entity<MapGridComponent> mapGrid)
@@ -289,22 +314,31 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateChunkEdges(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
         {
-            // Need a buffer that can potentially store all neighbor tiles
-            Span<ushort> indexBuffer = EnsureSize(ref _chunkMeshBuilderIndexBuffer, _indicesPerChunk(chunk) * 8);
-            Span<Vertex2D> vertexBuffer = EnsureSize(ref _chunkMeshBuilderVertexBuffer, _verticesPerChunk(chunk) * 8);
+            // Need a buffer that can potentially store all neighbor tiles plus the
+            // one-tile phantom border used when the neighboring chunk does not exist.
+            var edgeTileCount = (chunk.ChunkSize + 2) * (chunk.ChunkSize + 2) * 8;
+            Span<ushort> indexBuffer = EnsureSize(ref _chunkMeshBuilderIndexBuffer, edgeTileCount * GetQuadBatchIndexCount());
+            Span<Vertex2D> vertexBuffer = EnsureSize(ref _chunkMeshBuilderVertexBuffer, edgeTileCount * 4);
 
             var i = 0;
             var chunkSize = grid.Comp.ChunkSize;
             var chunkOriginScaled = chunk.Indices * chunkSize;
             var maps = _entityManager.System<SharedMapSystem>();
 
-            for (ushort x = 0; x < chunkSize; x++)
+            for (var x = -1; x <= chunkSize; x++)
             {
-                for (ushort y = 0; y < chunkSize; y++)
+                for (var y = -1; y <= chunkSize; y++)
                 {
                     var gridX = x + chunkOriginScaled.X;
                     var gridY = y + chunkOriginScaled.Y;
-                    var tile = chunk.GetTile(x, y);
+                    var gridIndices = new Vector2i(gridX, gridY);
+                    var cellChunk = SharedMapSystem.GetChunkIndices(gridIndices, chunkSize);
+                    if (cellChunk != chunk.Indices && grid.Comp.Chunks.ContainsKey(cellChunk))
+                        continue;
+
+                    if (!maps.TryGetTile(grid.Comp, gridIndices, out var tile))
+                        tile = Tile.Empty;
+
                     if (!_tileDefinitionManager.TryGetDefinition(tile.TypeId, out var tileDef))
                         continue;
 
@@ -318,7 +352,7 @@ namespace Robust.Client.Graphics.Clyde
 
                             var neighborIndices = new Vector2i(gridX + nx, gridY + ny);
                             if (!maps.TryGetTile(grid.Comp, neighborIndices, out var neighborTile))
-                                continue;
+                                neighborTile = Tile.Empty;
 
                             if (!_tileDefinitionManager.TryGetDefinition(neighborTile.TypeId, out var neighborDef))
                                 continue;
@@ -428,8 +462,19 @@ namespace Robust.Client.Graphics.Clyde
             var gridData = _mapChunkData.GetOrNew(args.Entity);
             foreach (var change in args.Changes)
             {
-                if (gridData.TryGetValue(change.ChunkIndex, out var data))
+                var chunkIndex = SharedMapSystem.GetChunkIndices(change.GridIndices, args.Entity.Comp.ChunkSize);
+                if (gridData.TryGetValue(chunkIndex, out var data))
                     data.Dirty = true;
+
+                for (var x = -1; x <= 1; x++)
+                {
+                    for (var y = -1; y <= 1; y++)
+                    {
+                        var neighbor = chunkIndex + new Vector2i(x, y);
+                        if (gridData.TryGetValue(neighbor, out var neighborData))
+                            neighborData.EdgeDirty = true;
+                    }
+                }
             }
         }
 

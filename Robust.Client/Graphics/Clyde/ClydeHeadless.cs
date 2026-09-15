@@ -513,6 +513,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class Viewport : IClydeViewport
         {
+            private static readonly IReadOnlySet<EntityUid> EmptyVisibleZMaps = new HashSet<EntityUid>();
+
             public Viewport(long id, Vector2i size)
             {
                 Size = size;
@@ -537,6 +539,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
+            public IReadOnlySet<EntityUid> VisibleZMaps => EmptyVisibleZMaps;
             public event Action<ClearCachedViewportResourcesEvent>? ClearCachedResources;
             public Color? ClearColor { get; set; } = Color.Black;
             public bool ClearWhenMissingEye { get; set; }

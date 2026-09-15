@@ -129,6 +129,18 @@ namespace Robust.Shared.GameObjects
         /// </exception>
         void LoadExtraSystemType<T>() where T : IEntitySystem, new();
 
+        /// <summary>
+        ///     Adds an extra entity system type that otherwise would not be loaded automatically, useful for testing.
+        /// </summary>
+        /// <param name="type">The type of the entity system to load.</param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the manager has been initialized already.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown if the provided type is not an entity system.
+        /// </exception>
+        void LoadExtraSystemType(Type type);
+
         IEnumerable<Type> GetEntitySystemTypes();
         bool TryGetEntitySystem(Type sysType, [NotNullWhen(true)] out object? system);
         object GetEntitySystem(Type sysType);

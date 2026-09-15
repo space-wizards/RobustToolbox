@@ -335,6 +335,34 @@ cmd-querymappaused-help = Usage: querymappaused <map ID>
 cmd-savegrid-desc = Serializes a grid to disk.
 cmd-savegrid-help = Usage: {$command} <gridID> <Path>
 
+cmd-zlevels_stack-desc = Creates a z-level stack from map IDs, ordered from bottom to top.
+cmd-zlevels_stack-help = Usage: {$command} <bottomMap> <map> [topMap ...]
+cmd-zlevels_stack-hint = map IDs ordered from bottom to top
+cmd-zlevels_stack-error-map = '{$map}' is not a unique existing map ID.
+cmd-zlevels_stack-error-member = Map {$map} already belongs to a z-level stack.
+cmd-zlevels_stack-error-create = Unable to create the z-level stack.
+cmd-zlevels_stack-success = Created z-level stack {$network}: {$maps} (bottom to top).
+
+cmd-zlevels_unstack-desc = Removes a map from its z-level stack.
+cmd-zlevels_unstack-help = Usage: {$command} <map>
+cmd-zlevels_unstack-hint = map ID
+cmd-zlevels_unstack-success = Removed map {$map} from its z-level stack.
+
+cmd-zlevels_link_grids-desc = Links corresponding grids on adjacent z-level maps.
+cmd-zlevels_link_grids-help = Usage: {$command} <lowerGrid> <upperGrid>
+cmd-zlevels_link_grids-hint = grid entity
+cmd-zlevels_link_grids-success = Linked lower grid {$lower} to upper grid {$upper}.
+
+cmd-zlevels_unlink_grid-desc = Removes all z-level links from a grid.
+cmd-zlevels_unlink_grid-help = Usage: {$command} <grid>
+cmd-zlevels_unlink_grid-hint = grid entity
+cmd-zlevels_unlink_grid-success = Unlinked grid {$grid}.
+
+cmd-zlevels_list-desc = Lists z-level stacks and their maps from bottom to top.
+cmd-zlevels_list-help = Usage: {$command}
+cmd-zlevels_list-empty = No z-level stacks.
+cmd-zlevels_list-entry = {$network}: {$maps} (bottom to top)
+
 cmd-testbed-desc = Loads a physics testbed on the specified map.
 cmd-testbed-help = Usage: {$command} <mapid> <test>
 
@@ -544,6 +572,11 @@ cmd-renderlerp-help = Usage: {$command} [0|all|self|EntityUid]
 cmd-net_mispredict-desc = Applies an unsent local transform offset to test prediction correction smoothing.
 cmd-net_mispredict-help = Usage: {$command} [active] [<x> <y> [rotation degrees]]
 
+cmd-net_drop_state-desc = Drops the next received game state without acknowledging it.
+cmd-net_drop_state-help = Usage: {$command}
+
+cmd-net_render_info-desc = Prints transform interpolation state.
+cmd-net_render_info-help = Usage: {$command} [self|EntityUid]
 
 cmd-vram-desc = Displays video memory usage statics by the game.
 cmd-vram-help = Usage: {$command}

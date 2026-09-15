@@ -9,6 +9,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
@@ -51,10 +52,10 @@ public sealed partial class TransformSystem : SharedTransformSystem
     private readonly Dictionary<EntityUid, SnappedRenderRotation> _snapRenderRotations = new();
     private readonly HashSet<EntityUid> _snapRenderRotationEntities = new();
     private readonly HashSet<EntityUid> _snapRenderTransformAfterParentChange = new();
+    // Stores the map before an explicit map snap request.
+    private readonly Dictionary<EntityUid, EntityUid> _snapRenderTransformAfterMapChange = new();
     private readonly Dictionary<EntityUid, Angle> _renderRotationOverrides = new();
     private readonly HashSet<EntityUid> _remove = new();
-
-    private float _maxInterpolationDistance;
     private float _maxInterpolationDistanceSquared;
     private float _minInterpolationDistanceSquared;
     private float _correctionHalfLife;
@@ -62,14 +63,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
     private float _minCorrectionRotation;
 
     private PredictionReconciliationTracker _predictionReconciliation;
-
-    /// <summary>
-    /// Invoked when interpolation crosses render spaces. The default policy only permits the same map.
-    /// A client feature such as z-level rendering can mark other map pairs as compatible.
-    /// </summary>
-    public event RenderSpaceCompatibilityHandler? RenderSpaceCompatibility;
-
-    public delegate void RenderSpaceCompatibilityHandler(ref RenderSpaceCompatibilityEvent args);
+    private PredictionReconciliationDebugData _lastPredictionReconciliation;
 
     public override void Initialize()
     {
@@ -90,8 +84,10 @@ public sealed partial class TransformSystem : SharedTransformSystem
         _snapRenderRotations.Clear();
         _snapRenderRotationEntities.Clear();
         _snapRenderTransformAfterParentChange.Clear();
+        _snapRenderTransformAfterMapChange.Clear();
         _renderRotationOverrides.Clear();
         _predictionReconciliation.Clear();
+        _lastPredictionReconciliation = default;
         base.Shutdown();
     }
 
@@ -104,9 +100,13 @@ public sealed partial class TransformSystem : SharedTransformSystem
         _snapRenderRotations.Clear();
         _snapRenderRotationEntities.Clear();
         _snapRenderTransformAfterParentChange.Clear();
+        _snapRenderTransformAfterMapChange.Clear();
         _renderRotationOverrides.Clear();
         _remove.Clear();
         _predictionReconciliation.Clear();
+        _lastPredictionReconciliation = default;
+        var ev = new RenderTransformsResetEvent();
+        RaiseLocalEvent(ref ev);
     }
 
     [SubscribeLocalEvent]
@@ -116,15 +116,19 @@ public sealed partial class TransformSystem : SharedTransformSystem
         _snapRenderRotations.Remove(uid);
         _snapRenderRotationEntities.Remove(uid);
         _snapRenderTransformAfterParentChange.Remove(uid);
+        _snapRenderTransformAfterMapChange.Remove(uid);
         _renderRotationOverrides.Remove(uid);
 
         _predictionReconciliation.RemoveEntity(uid);
+        if (_lastPredictionReconciliation.Entity == uid)
+            _lastPredictionReconciliation = default;
     }
+
 
     private void SetMaxInterpolationDistance(float value)
     {
-        _maxInterpolationDistance = Math.Max(0f, value);
-        _maxInterpolationDistanceSquared = _maxInterpolationDistance * _maxInterpolationDistance;
+        value = Math.Max(0f, value);
+        _maxInterpolationDistanceSquared = value * value;
     }
 
     private void SetMinInterpolationDistance(float value)
@@ -150,13 +154,22 @@ public sealed partial class TransformSystem : SharedTransformSystem
         var uid = args.Sender;
         var xform = args.Component;
 
+        if (_snapRenderTransformAfterMapChange.Count != 0 &&
+            _snapRenderTransformAfterMapChange.TryGetValue(uid, out var sourceMap) &&
+            sourceMap != (xform.MapUid ?? EntityUid.Invalid))
+        {
+            _snapRenderTransformAfterMapChange.Remove(uid);
+            SnapRenderTransform(uid);
+            return;
+        }
+
         if (_snapRenderTransformAfterParentChange.Remove(uid))
         {
             SnapRenderTransform(uid);
             return;
         }
 
-        if (xform.Deleted || !TryCreateEndpoint(args.NewPosition, args.NewRotation, out var target))
+        if (xform.Deleted || !TryCreateEndpoint(uid, args.NewPosition, args.NewRotation, out var target))
         {
             _renderTransforms.Remove(uid);
             return;
@@ -164,12 +177,24 @@ public sealed partial class TransformSystem : SharedTransformSystem
 
         UpdateSnappedRenderRotation(uid, target);
 
-        if (!TryCreateEndpoint(args.OldPosition, args.OldRotation, out var oldEndpoint))
+        if (!TryCreateEndpoint(uid, args.OldPosition, args.OldRotation, out var oldEndpoint))
         {
             _renderTransforms.Remove(uid);
             return;
         }
 
+        HandleTransformChange(uid, xform, oldEndpoint, target);
+    }
+
+    /// <summary>
+    /// Selects the render path for a transform change.
+    /// </summary>
+    private void HandleTransformChange(
+        EntityUid uid,
+        TransformComponent xform,
+        in RenderTransformEndpoint oldEndpoint,
+        in RenderTransformEndpoint target)
+    {
         ref var existing = ref CollectionsMarshal.GetValueRefOrNullRef(_renderTransforms, uid);
         var hasExisting = !Unsafe.IsNullRef(ref existing);
         var snapRotation = _snapRenderRotationEntities.Contains(uid);
@@ -183,7 +208,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
         if (hasExisting)
         {
             // Use the last pose that reached the screen.
-            // Essentially if we cross parents, like with grid-traversal or z-levels, we need to change the relative
+            // If we cross parents or render spaces, change the relative
             // coordinates to be in the old parent's space.
             rendered = existing.LastRendered;
 
@@ -192,16 +217,19 @@ public sealed partial class TransformSystem : SharedTransformSystem
             var sameTickPredictionRollback = existing.Type == RenderInterpolationType.PredictionInterpolation
                                              && existing.ChangeTick == _timing.CurTick
                                              && (existing.PendingPredictionRollback || _timing.ApplyingState);
+            var sameNetworkState = existing.Type == RenderInterpolationType.NetworkInterpolation
+                                         && existing.NetworkTargetTick == _timing.LastProcessedTick
+                                         && _timing.ApplyingState;
             // Multiple changes in one simulation tick retain the original source: A -> B -> C is A -> C.
             // Most notable with substepping or content systems touching it.
-            if (existing.ChangeTick == _timing.CurTick
+            if ((existing.ChangeTick == _timing.CurTick || sameNetworkState)
                 && existing.Alpha <= existing.InterpolationStartAlpha
                 && !existing.PendingPredictionRollback)
             {
                 source = existing.Source;
             }
             else if ((parentOrRenderSpaceChanged || sameTickPredictionRollback)
-                     && !TryBindRenderTransformToParent(rendered, args.OldPosition.EntityId, out source))
+                     && !TryBindRenderTransformToParent(rendered, oldEndpoint.Parent, out source))
             {
                 source = oldEndpoint;
             }
@@ -217,7 +245,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
             return;
         }
 
-        // Corrections never make a rejected transform segment... interpolatable, interpolable?
+        // Corrections never make a rejected transform segment eligible for interpolation.
         var decision = ClassifyInterpolation(source, target);
         if (decision == InterpolationDecision.Snap)
         {
@@ -266,6 +294,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
             hasExisting,
             ref existing,
             snapRotation);
+
     }
 
     private void HandleIgnoredTransformMove(
@@ -326,10 +355,16 @@ public sealed partial class TransformSystem : SharedTransformSystem
                && a.LocalRotation.EqualsApprox(b.LocalRotation);
     }
 
-    private void StartCorrection(ref RenderTransformState state, in RenderTransform anchor, in RenderTransform basePose)
+    private void StartCorrection(
+        ref RenderTransformState state,
+        in RenderTransform anchor,
+        in RenderTransform basePose,
+        bool correctTranslation = true)
     {
         // The base interpolation keeps advancing while this render-space error decays.
-        state.CorrectionTranslation = anchor.Position - basePose.Position;
+        state.CorrectionTranslation = correctTranslation
+            ? anchor.Position - basePose.Position
+            : Vector2.Zero;
         state.CorrectionRotation = state.SnapRotation
             ? Angle.Zero
             : Angle.ShortestDistance(basePose.Rotation, anchor.Rotation);
@@ -380,7 +415,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
                 }
 
                 StartCorrection(ref state, state.LastRendered, basePose);
-                state.PredictionHandoff = PredictionHandoffStatus.WaitingForAuthoritativeState;
+                state.PredictionHandoff = PredictionHandoffStatus.WaitingForServerState;
                 correctionStarted = true;
             }
 
@@ -403,6 +438,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
 
             if (!correctionStarted)
                 state.Alpha = GetInterpolationAlpha(ref state);
+
         }
 
         // Resolve poses after interpolation has advanced so moving parents are cached for children.
@@ -426,11 +462,10 @@ public sealed partial class TransformSystem : SharedTransformSystem
 
             var keepPrediction = state.Type == RenderInterpolationType.PredictionInterpolation
                                  && xform.LastModifiedTick > _timing.LastRealTick;
-
             if (!hasCorrection
                 && state.Alpha >= 1f
                 && keepPrediction
-                && TryCreateEndpoint(xform.Coordinates, xform.LocalRotation, out var endpoint))
+                && TryCreateEndpoint(uid, xform.Coordinates, xform.LocalRotation, out var endpoint))
             {
                 state.Source = endpoint;
                 state.Target = endpoint;
@@ -492,6 +527,21 @@ public sealed partial class TransformSystem : SharedTransformSystem
     [Pure]
     public RenderTransform GetRenderWorldTransform(Entity<TransformComponent?> ent)
     {
+        var pose = GetCanonicalRenderWorldTransform(ent);
+        if (!pose.CoordinateSpace.IsValid())
+            return pose;
+
+        var ev = new RenderTransformResolvedEvent(ent.Owner, ent.Comp, pose);
+        RaiseLocalEvent(ref ev);
+        return ev.Pose;
+    }
+
+    /// <summary>
+    /// Gets the transform interpolation pose before render presentation systems adjust it.
+    /// </summary>
+    [Pure]
+    public RenderTransform GetCanonicalRenderWorldTransform(Entity<TransformComponent?> ent)
+    {
         var uid = ent.Owner;
         var xform = ent.Comp;
         if (!XformQuery.Resolve(uid, ref xform, false))
@@ -499,6 +549,20 @@ public sealed partial class TransformSystem : SharedTransformSystem
 
         return GetRenderTransformInternal((uid, xform), 0);
     }
+
+    /// <summary>
+    /// Gets the transform interpolation pose before render presentation systems adjust it.
+    /// </summary>
+    [Pure]
+    public RenderTransform GetCanonicalRenderWorldTransform(EntityUid uid, TransformComponent? xform = null)
+        => GetCanonicalRenderWorldTransform((uid, xform));
+
+    /// <summary>
+    /// Gets the transform used for drawing.
+    /// </summary>
+    [Pure]
+    public RenderTransform GetRenderWorldTransform(EntityUid uid, TransformComponent? xform = null)
+        => GetRenderWorldTransform((uid, xform));
 
     /// <summary>
     /// Gets an entity's rendered world position and rotation.
@@ -512,6 +576,15 @@ public sealed partial class TransformSystem : SharedTransformSystem
     }
 
     /// <summary>
+    /// Gets an entity's rendered world position and rotation.
+    /// </summary>
+    [Pure]
+    public (Vector2 WorldPosition, Angle WorldRotation) GetRenderWorldPositionRotation(
+        EntityUid uid,
+        TransformComponent? xform = null)
+        => GetRenderWorldPositionRotation((uid, xform));
+
+    /// <summary>
     /// Gets an entity's rendered world position.
     /// </summary>
     [Pure]
@@ -519,11 +592,25 @@ public sealed partial class TransformSystem : SharedTransformSystem
         => GetRenderWorldTransform(ent).Position;
 
     /// <summary>
+    /// Gets an entity's rendered world position.
+    /// </summary>
+    [Pure]
+    public Vector2 GetRenderWorldPosition(EntityUid uid, TransformComponent? xform = null)
+        => GetRenderWorldPosition((uid, xform));
+
+    /// <summary>
     /// Gets an entity's rendered world rotation.
     /// </summary>
     [Pure]
     public Angle GetRenderWorldRotation(Entity<TransformComponent?> ent)
         => GetRenderWorldTransform(ent).Rotation;
+
+    /// <summary>
+    /// Gets an entity's rendered world rotation.
+    /// </summary>
+    [Pure]
+    public Angle GetRenderWorldRotation(EntityUid uid, TransformComponent? xform = null)
+        => GetRenderWorldRotation((uid, xform));
 
     /// <summary>
     /// Gets an entity's rendered world matrix.
@@ -536,6 +623,39 @@ public sealed partial class TransformSystem : SharedTransformSystem
     }
 
     /// <summary>
+    /// Gets an entity's rendered world matrix.
+    /// </summary>
+    [Pure]
+    public Matrix3x2 GetRenderWorldMatrix(EntityUid uid, TransformComponent? xform = null)
+        => GetRenderWorldMatrix((uid, xform));
+
+    /// <summary>
+    /// Gets a rendered world matrix and inverse from one render transform sample.
+    /// </summary>
+    [Pure]
+    public static (Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetRenderWorldMatrixWithInv(in RenderTransform pose)
+        => (
+            Matrix3Helpers.CreateTransform(pose.Position, pose.Rotation),
+            Matrix3Helpers.CreateInverseTransform(pose.Position, pose.Rotation));
+
+    /// <summary>
+    /// Gets an entity's rendered world matrix and inverse from one render transform sample.
+    /// </summary>
+    [Pure]
+    public (Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetRenderWorldMatrixWithInv(Entity<TransformComponent?> ent)
+    {
+        var pose = GetRenderWorldTransform(ent);
+        return GetRenderWorldMatrixWithInv(in pose);
+    }
+
+    /// <summary>
+    /// Gets an entity's rendered world matrix and inverse from one render transform sample.
+    /// </summary>
+    [Pure]
+    public (Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetRenderWorldMatrixWithInv(EntityUid uid, TransformComponent? xform = null)
+        => GetRenderWorldMatrixWithInv((uid, xform));
+
+    /// <summary>
     /// Gets the inverse of an entity's rendered world matrix.
     /// </summary>
     [Pure]
@@ -544,6 +664,13 @@ public sealed partial class TransformSystem : SharedTransformSystem
         var pose = GetRenderWorldTransform(ent);
         return Matrix3Helpers.CreateInverseTransform(pose.Position, pose.Rotation);
     }
+
+    /// <summary>
+    /// Gets the inverse of an entity's rendered world matrix.
+    /// </summary>
+    [Pure]
+    public Matrix3x2 GetInvRenderWorldMatrix(EntityUid uid, TransformComponent? xform = null)
+        => GetInvRenderWorldMatrix((uid, xform));
 
     /// <summary>
     /// Gets an entity's rendered coordinates.
@@ -557,10 +684,149 @@ public sealed partial class TransformSystem : SharedTransformSystem
             return MapCoordinates.Nullspace;
 
         var pose = GetRenderWorldTransform((uid, xform));
-        return TryGetRenderSpaceMapId(pose.CoordinateSpace, out var mapId)
+        return GetRenderMapCoordinates(pose);
+    }
+
+    /// <summary>
+    /// Converts an existing render transform sample to map coordinates.
+    /// </summary>
+    [Pure]
+    public MapCoordinates GetRenderMapCoordinates(in RenderTransform pose)
+        => TryGetRenderSpaceMapId(pose.CoordinateSpace, out var mapId)
             ? new MapCoordinates(pose.Position, mapId)
             : MapCoordinates.Nullspace;
+
+    /// <summary>
+    /// Gets an entity's rendered coordinates.
+    /// </summary>
+    [Pure]
+    public MapCoordinates GetRenderMapCoordinates(EntityUid uid, TransformComponent? xform = null)
+        => GetRenderMapCoordinates((uid, xform));
+
+    /// <summary>
+    /// Gets the render layer samples used to draw an entity.
+    /// </summary>
+    [Pure]
+    public int GetRenderLayerSamples(
+        Entity<TransformComponent?> ent,
+        Span<RenderLayerSample> samples,
+        IReadOnlySet<EntityUid>? visibleMaps = null)
+    {
+        if (samples.Length == 0)
+            return 0;
+
+        var uid = ent.Owner;
+        var xform = ent.Comp;
+        if (!XformQuery.Resolve(uid, ref xform, false))
+            return 0;
+
+        var ev = new RenderLayerSamplesEvent(uid, xform, samples.Length, visibleMaps);
+        RaiseLocalEvent(ref ev);
+        if (ev.Handled)
+        {
+            if (ev.Count > 0)
+                samples[0] = ev.First;
+            if (ev.Count > 1)
+                samples[1] = ev.Second;
+            return ev.Count;
+        }
+
+        var pose = GetRenderWorldTransform((uid, xform));
+        if (!pose.CoordinateSpace.IsValid() ||
+            visibleMaps != null && !visibleMaps.Contains(pose.CoordinateSpace))
+        {
+            return 0;
+        }
+
+        samples[0] = new RenderLayerSample(pose.CoordinateSpace, pose.Position, pose.Rotation, 1f, 0);
+        return 1;
     }
+
+    /// <summary>
+    /// Gets the render layer samples used to draw an entity.
+    /// </summary>
+    [Pure]
+    public int GetRenderLayerSamples(
+        EntityUid uid,
+        Span<RenderLayerSample> samples,
+        TransformComponent? xform = null,
+        IReadOnlySet<EntityUid>? visibleMaps = null)
+        => GetRenderLayerSamples((uid, xform), samples, visibleMaps);
+
+    /// <summary>
+    /// Gets an entity's render sample for a specific layer map.
+    /// </summary>
+    [Pure]
+    public bool TryGetRenderLayerSample(
+        Entity<TransformComponent?> ent,
+        EntityUid layerMap,
+        out RenderLayerSample sample,
+        IReadOnlySet<EntityUid>? visibleMaps = null)
+    {
+        Span<RenderLayerSample> samples = stackalloc RenderLayerSample[2];
+        var count = GetRenderLayerSamples(ent, samples, visibleMaps);
+        for (var i = 0; i < count; i++)
+        {
+            if (samples[i].Map != layerMap)
+                continue;
+
+            sample = samples[i];
+            return true;
+        }
+
+        sample = default;
+        return false;
+    }
+
+    /// <summary>
+    /// Gets an entity's render sample for a specific layer map.
+    /// </summary>
+    [Pure]
+    public bool TryGetRenderLayerSample(
+        EntityUid uid,
+        EntityUid layerMap,
+        out RenderLayerSample sample,
+        TransformComponent? xform = null,
+        IReadOnlySet<EntityUid>? visibleMaps = null)
+        => TryGetRenderLayerSample((uid, xform), layerMap, out sample, visibleMaps);
+
+    /// <summary>
+    /// Gets the rendered world transform for a specific layer map.
+    /// </summary>
+    [Pure]
+    public bool TryGetRenderWorldTransformForLayer(
+        Entity<TransformComponent?> ent,
+        EntityUid layerMap,
+        out RenderTransform pose,
+        IReadOnlySet<EntityUid>? visibleMaps = null)
+    {
+        if (TryGetRenderLayerSample(ent, layerMap, out var sample, visibleMaps))
+        {
+            pose = GetRenderWorldTransform(ent) with
+            {
+                Position = sample.Position,
+                Rotation = sample.Rotation,
+                CoordinateSpace = sample.Map,
+                ReferenceDepth = sample.Depth,
+            };
+            return true;
+        }
+
+        pose = default;
+        return false;
+    }
+
+    /// <summary>
+    /// Gets the rendered world transform for a specific layer map.
+    /// </summary>
+    [Pure]
+    public bool TryGetRenderWorldTransformForLayer(
+        EntityUid uid,
+        EntityUid layerMap,
+        out RenderTransform pose,
+        TransformComponent? xform = null,
+        IReadOnlySet<EntityUid>? visibleMaps = null)
+        => TryGetRenderWorldTransformForLayer((uid, xform), layerMap, out pose, visibleMaps);
 
     private RenderTransform GetRenderTransformInternal(Entity<TransformComponent?> ent, int depth)
     {
@@ -577,7 +843,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
             if (!HasCorrection(in state))
                 return ApplyRenderRotationOverride(uid, pose);
 
-            pose = new RenderTransform(
+            pose = CreateRenderTransform(
                 pose.Position + state.CorrectionTranslation,
                 snapRotation
                     ? pose.Rotation
@@ -593,16 +859,18 @@ public sealed partial class TransformSystem : SharedTransformSystem
         var renderSpace = xform.MapUid ?? EntityUid.Invalid;
         if (!xform.ParentUid.IsValid())
         {
-            var pose = new RenderTransform(xform.LocalPosition, xform.LocalRotation, renderSpace);
+            var pose = CreateRenderTransform(xform.LocalPosition, xform.LocalRotation, renderSpace, renderSpace, renderSpace, 1f);
             return ApplyRenderRotationOverride(uid, pose);
         }
 
         var parent = GetRenderTransformInternal(xform.ParentUid, depth + 1);
-        var childPose = parent with
-        {
-            Position = parent.Position + parent.Rotation.RotateVec(xform.LocalPosition),
-            Rotation = parent.Rotation + xform.LocalRotation
-        };
+        var childPose = CreateRenderTransform(
+            parent.Position + parent.Rotation.RotateVec(xform.LocalPosition),
+            parent.Rotation + xform.LocalRotation,
+            parent.CoordinateSpace,
+            parent.SourceRenderSpace,
+            parent.TargetRenderSpace,
+            parent.RenderSpaceAlpha);
         return ApplyRenderRotationOverride(uid, childPose);
     }
 
@@ -611,7 +879,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
         var source = ResolveEndpoint(state.Source, depth);
         var targetPose = ResolveEndpoint(state.Target, depth);
         var alpha = GetSegmentAlpha(state);
-        return new RenderTransform(
+        var pose = CreateRenderTransform(
             Vector2.Lerp(source.Position, targetPose.Position, alpha),
             state.SnapRotation
                 ? targetPose.Rotation
@@ -620,6 +888,8 @@ public sealed partial class TransformSystem : SharedTransformSystem
             state.Source.RenderSpace,
             state.Target.RenderSpace,
             alpha);
+
+        return pose;
     }
 
     private RenderTransform ResolveEndpoint(in RenderTransformEndpoint endpoint, int depth)
@@ -627,10 +897,18 @@ public sealed partial class TransformSystem : SharedTransformSystem
         // Endpoints store local coordinates. Resolve through rendered parents so child interpolation follows
         // the same visual parent pose that will be drawn this frame.
         if (!endpoint.Parent.IsValid() || depth >= MaxTransformDepth)
-            return new RenderTransform(endpoint.LocalPosition, endpoint.LocalRotation, endpoint.RenderSpace);
+        {
+            return CreateRenderTransform(
+                endpoint.LocalPosition,
+                endpoint.LocalRotation,
+                endpoint.RenderSpace,
+                endpoint.RenderSpace,
+                endpoint.RenderSpace,
+                1f);
+        }
 
         var parent = GetRenderTransformInternal(endpoint.Parent, depth + 1);
-        return new RenderTransform(
+        return CreateRenderTransform(
             parent.Position + parent.Rotation.RotateVec(endpoint.LocalPosition),
             parent.Rotation + endpoint.LocalRotation,
             parent.CoordinateSpace,
@@ -651,13 +929,21 @@ public sealed partial class TransformSystem : SharedTransformSystem
     private RenderTransform ResolveLastRenderedEndpoint(in RenderTransformEndpoint endpoint, int depth)
     {
         // Used when re-parenting across parents or render spaces. Sampling last-rendered parents avoids a
-        // one-frame snap back to simulation coordinates during grid traversal or z-level transitions.
+        // one-frame snap back to simulation coordinates during parent or render-space transitions.
         // Yes this tilted me for years.
         if (!endpoint.Parent.IsValid() || depth >= MaxTransformDepth)
-            return new RenderTransform(endpoint.LocalPosition, endpoint.LocalRotation, endpoint.RenderSpace);
+        {
+            return CreateRenderTransform(
+                endpoint.LocalPosition,
+                endpoint.LocalRotation,
+                endpoint.RenderSpace,
+                endpoint.RenderSpace,
+                endpoint.RenderSpace,
+                1f);
+        }
 
         var parent = GetLastRenderedTransformInternal(endpoint.Parent, depth + 1);
-        return new RenderTransform(
+        return CreateRenderTransform(
             parent.Position + parent.Rotation.RotateVec(endpoint.LocalPosition),
             parent.Rotation + endpoint.LocalRotation,
             parent.CoordinateSpace,
@@ -676,17 +962,22 @@ public sealed partial class TransformSystem : SharedTransformSystem
 
         var renderSpace = xform.MapUid ?? EntityUid.Invalid;
         if (!xform.ParentUid.IsValid())
-            return new RenderTransform(xform.LocalPosition, xform.LocalRotation, renderSpace);
+        {
+            return CreateRenderTransform(xform.LocalPosition, xform.LocalRotation, renderSpace, renderSpace, renderSpace, 1f);
+        }
 
         var parent = GetLastRenderedTransformInternal(xform.ParentUid, depth + 1);
-        return parent with
-        {
-            Position = parent.Position + parent.Rotation.RotateVec(xform.LocalPosition),
-            Rotation = parent.Rotation + xform.LocalRotation
-        };
+        return CreateRenderTransform(
+            parent.Position + parent.Rotation.RotateVec(xform.LocalPosition),
+            parent.Rotation + xform.LocalRotation,
+            parent.CoordinateSpace,
+            parent.SourceRenderSpace,
+            parent.TargetRenderSpace,
+            parent.RenderSpaceAlpha);
     }
 
     private bool TryCreateEndpoint(
+        EntityUid uid,
         in EntityCoordinates coordinates,
         Angle rotation,
         out RenderTransformEndpoint endpoint)
@@ -722,6 +1013,23 @@ public sealed partial class TransformSystem : SharedTransformSystem
         return true;
     }
 
+    private RenderTransform CreateRenderTransform(
+        Vector2 canonicalPosition,
+        Angle rotation,
+        EntityUid coordinateSpace,
+        EntityUid sourceRenderSpace,
+        EntityUid targetRenderSpace,
+        float renderSpaceAlpha)
+    {
+        return new RenderTransform(
+            canonicalPosition,
+            rotation,
+            coordinateSpace,
+            sourceRenderSpace,
+            targetRenderSpace,
+            renderSpaceAlpha);
+    }
+
     /// <summary>
     /// Gets the stable coordinate space used to render between two render spaces.
     /// </summary>
@@ -739,9 +1047,8 @@ public sealed partial class TransformSystem : SharedTransformSystem
             return true;
         }
 
-        // This is really just here so we can lerp z-level movement cleanly.
         var args = new RenderSpaceCompatibilityEvent(first, second);
-        RenderSpaceCompatibility?.Invoke(ref args);
+        RaiseLocalEvent(ref args);
         commonSpace = args.CommonSpace;
         return commonSpace.IsValid();
     }
@@ -773,10 +1080,12 @@ public sealed partial class TransformSystem : SharedTransformSystem
         _renderTransforms.Remove(uid);
         _snapRenderRotations.Remove(uid);
         _snapRenderTransformAfterParentChange.Remove(uid);
+        _snapRenderTransformAfterMapChange.Remove(uid);
         _renderRotationOverrides.Remove(uid);
         _predictionReconciliation.MarkRollbackHardReset(uid);
         RefreshPredictionSample(uid);
-
+        var ev = new RenderTransformSnappedEvent();
+        RaiseLocalEvent(uid, ref ev);
         if (!recursive || !XformQuery.TryGetComponent(uid, out var xform))
             return;
 
@@ -800,6 +1109,25 @@ public sealed partial class TransformSystem : SharedTransformSystem
     }
 
     /// <summary>
+    /// Snaps the entity when it next changes maps.
+    /// </summary>
+    public void SnapRenderTransformAfterMapChange(EntityUid uid, bool recursive = false)
+    {
+        if (!XformQuery.TryGetComponent(uid, out var xform))
+            return;
+
+        _snapRenderTransformAfterMapChange[uid] = xform.MapUid ?? EntityUid.Invalid;
+        if (!recursive)
+            return;
+
+        var children = xform.ChildEnumerator;
+        while (children.MoveNext(out var child))
+        {
+            SnapRenderTransformAfterMapChange(child, true);
+        }
+    }
+
+    /// <summary>
     /// Enlarges a render query enough to include sparse poses whose simulation target lies outside the viewport.
     /// </summary>
     [Pure]
@@ -811,14 +1139,14 @@ public sealed partial class TransformSystem : SharedTransformSystem
     /// </summary>
     [Pure]
     public Box2 GetRenderCullingBounds(MapId mapId, in Box2 bounds)
-        => _maxInterpolationDistance > 0f
-            ? bounds.Enlarged(_maxInterpolationDistance)
-            : bounds;
+    {
+        return bounds.Enlarged(MathF.Sqrt(_maxInterpolationDistanceSquared));
+    }
 
     /// <summary>
     /// Enumerates active render interpolation state for debugging.
     /// </summary>
-    public IEnumerable<RenderTransformDebugData> GetRenderTransformDebugData()
+    internal IEnumerable<RenderTransformDebugData> GetRenderTransformDebugData()
     {
         foreach (var uid in _renderTransforms.Keys)
         {
@@ -844,9 +1172,16 @@ public sealed partial class TransformSystem : SharedTransformSystem
         var source = ResolveEndpoint(state.Source, 0);
         var target = ResolveEndpoint(state.Target, 0);
         var rendered = GetRenderTransformInternal((uid, xform), 0);
+        var renderSpace = xform.MapUid ?? EntityUid.Invalid;
         data = new RenderTransformDebugData(
             uid,
-            new RenderTransform(simulation.WorldPosition, simulation.WorldRotation, xform.MapUid ?? EntityUid.Invalid),
+            CreateRenderTransform(
+                simulation.WorldPosition,
+                simulation.WorldRotation,
+                renderSpace,
+                renderSpace,
+                renderSpace,
+                1f),
             rendered,
             source,
             target,
@@ -857,7 +1192,14 @@ public sealed partial class TransformSystem : SharedTransformSystem
             state.Type,
             state.Alpha,
             state.CorrectionTranslation,
-            state.CorrectionRotation);
+            state.CorrectionRotation,
+            state.ChangeTick,
+            state.NetworkTargetTick,
+            state.InterpolationStartAlpha,
+            state.LastFramePhase,
+            state.PendingPredictionRollback,
+            state.PredictionHandoff.ToString(),
+            state.PredictionHandoffTick);
         return true;
     }
 
@@ -865,11 +1207,14 @@ public sealed partial class TransformSystem : SharedTransformSystem
     {
         public RenderTransformEndpoint Source;
         public RenderTransformEndpoint Target;
+        // The pose that actually reached the screen last frame.
         public RenderTransform LastRendered;
+        // The stable space used while interpolating across parents or maps.
         public EntityUid CoordinateSpace;
         public GameTick ChangeTick;
         public RenderInterpolationType Type;
         public float Alpha;
+        // Allows A -> B -> C in one tick to keep its already-rendered progress.
         public float InterpolationStartAlpha;
         public float LastFramePhase;
         public GameTick LastFrameProcessedTick;
@@ -891,22 +1236,134 @@ public sealed partial class TransformSystem : SharedTransformSystem
 }
 
 /// <summary>
-/// A rendered transform and its coordinate.
+/// A rendered transform and its coordinate-space ownership.
 /// </summary>
+/// <param name="Position">Rendered world position.</param>
+/// <param name="Rotation">Rendered world rotation.</param>
+/// <param name="CoordinateSpace">Map space used to resolve the canonical position.</param>
+/// <param name="SourceRenderSpace">Map where the current render segment started.</param>
+/// <param name="TargetRenderSpace">Map where the current render segment ends.</param>
+/// <param name="RenderSpaceAlpha">Blend progress between source and target render spaces.</param>
+/// <param name="CanonicalPosition">Rendered world position before presentation projection.</param>
+/// <param name="AbsoluteZ">Rendered absolute z position.</param>
+/// <param name="ReferenceDepth">Map depth used to project <see cref="Position"/>.</param>
 public readonly record struct RenderTransform(
     Vector2 Position,
     Angle Rotation,
     EntityUid CoordinateSpace,
     EntityUid SourceRenderSpace,
     EntityUid TargetRenderSpace,
-    float RenderSpaceAlpha)
+    float RenderSpaceAlpha,
+    Vector2 CanonicalPosition,
+    float AbsoluteZ,
+    int ReferenceDepth)
 {
     public RenderTransform(Vector2 position, Angle rotation, EntityUid renderSpace)
         : this(position, rotation, renderSpace, renderSpace, renderSpace, 1f)
     {
     }
+
+    public RenderTransform(
+        Vector2 position,
+        Angle rotation,
+        EntityUid coordinateSpace,
+        EntityUid sourceRenderSpace,
+        EntityUid targetRenderSpace,
+        float renderSpaceAlpha)
+        : this(
+            position,
+            rotation,
+            coordinateSpace,
+            sourceRenderSpace,
+            targetRenderSpace,
+            renderSpaceAlpha,
+            position,
+            0f,
+            0)
+    {
+    }
 }
 
+/// <summary>
+/// Raised after transform interpolation resolves a pose and before that pose reaches render callers.
+/// </summary>
+[ByRefEvent]
+public struct RenderTransformResolvedEvent
+{
+    public readonly EntityUid Entity;
+    public readonly TransformComponent? Transform;
+    public RenderTransform Pose;
+
+    public RenderTransformResolvedEvent(EntityUid entity, TransformComponent? transform, RenderTransform pose)
+    {
+        Entity = entity;
+        Transform = transform;
+        Pose = pose;
+    }
+}
+
+/// <summary>
+/// Raised when transform callers need the render samples for an entity.
+/// </summary>
+[ByRefEvent]
+public struct RenderLayerSamplesEvent
+{
+    public readonly EntityUid Entity;
+    public readonly TransformComponent? Transform;
+    public readonly int Capacity;
+    public readonly IReadOnlySet<EntityUid>? VisibleMaps;
+    public bool Handled;
+    public int Count;
+    public RenderLayerSample First;
+    public RenderLayerSample Second;
+
+    public RenderLayerSamplesEvent(
+        EntityUid entity,
+        TransformComponent? transform,
+        int capacity,
+        IReadOnlySet<EntityUid>? visibleMaps)
+    {
+        Entity = entity;
+        Transform = transform;
+        Capacity = capacity;
+        VisibleMaps = visibleMaps;
+        Handled = false;
+        Count = 0;
+        First = default;
+        Second = default;
+    }
+
+    public bool AddSample(in RenderLayerSample sample)
+    {
+        Handled = true;
+        if (Count >= Capacity || Count >= 2)
+            return false;
+
+        if (Count == 0)
+            First = sample;
+        else
+            Second = sample;
+
+        Count++;
+        return true;
+    }
+}
+
+public readonly record struct RenderLayerSample(EntityUid Map, Vector2 Position, Angle Rotation, float Opacity, int Depth);
+
+/// <summary>
+/// Raised on an entity after its cached render interpolation is snapped.
+/// </summary>
+[ByRefEvent]
+public readonly record struct RenderTransformSnappedEvent;
+
+/// <summary>
+/// Local transform endpoint used as an interpolation anchor.
+/// </summary>
+/// <param name="Parent">Parent entity the local position is relative to.</param>
+/// <param name="LocalPosition">Position in parent space.</param>
+/// <param name="LocalRotation">Rotation in parent space.</param>
+/// <param name="RenderSpace">Map used for render-space compatibility.</param>
 internal readonly record struct RenderTransformEndpoint(
     EntityUid Parent,
     Vector2 LocalPosition,
@@ -920,12 +1377,12 @@ public enum RenderInterpolationType : byte
 {
     NetworkInterpolation,
     PredictionInterpolation,
-    PredictionCorrection,
 }
 
 /// <summary>
-/// Allows a renderer to supply a common coordinate space for two render spaces.
+/// Raised when transform interpolation needs a common coordinate space for two render spaces.
 /// </summary>
+[ByRefEvent]
 public struct RenderSpaceCompatibilityEvent
 {
     /// <summary>
@@ -952,8 +1409,20 @@ public struct RenderSpaceCompatibilityEvent
 }
 
 /// <summary>
+/// Raised after all cached render interpolation is discarded.
+/// </summary>
+[ByRefEvent]
+public readonly record struct RenderTransformsResetEvent;
+
+/// <summary>
 /// Diagnostic data for an active render interpolation.
 /// </summary>
+/// <param name="Simulation">Current simulation transform.</param>
+/// <param name="Rendered">Transform currently reaching the renderer.</param>
+/// <param name="Source">Interpolation source endpoint in world form.</param>
+/// <param name="Target">Interpolation target endpoint in world form.</param>
+/// <param name="CoordinateSpace">Stable space used by the active interpolation.</param>
+/// <param name="CorrectionTranslation">Visible position error decaying over the base interpolation.</param>
 public readonly record struct RenderTransformDebugData(
     EntityUid Entity,
     RenderTransform Simulation,
@@ -967,4 +1436,11 @@ public readonly record struct RenderTransformDebugData(
     RenderInterpolationType Type,
     float Alpha,
     Vector2 CorrectionTranslation,
-    Angle CorrectionRotation);
+    Angle CorrectionRotation,
+    GameTick ChangeTick,
+    GameTick NetworkTargetTick,
+    float InterpolationStartAlpha,
+    float LastFramePhase,
+    bool PendingPredictionRollback,
+    string PredictionHandoff,
+    GameTick PredictionHandoffTick);

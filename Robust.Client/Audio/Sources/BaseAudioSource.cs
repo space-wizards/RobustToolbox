@@ -34,6 +34,7 @@ public abstract class BaseAudioSource : IAudioSource
     private float _gain;
 
     private float _occlusion;
+    private float _zPosition;
 
     private bool IsEfxSupported => Master.IsEfxSupported;
 
@@ -160,7 +161,27 @@ public abstract class BaseAudioSource : IAudioSource
                 return;
             }
 
-            AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
+            AL.Source(SourceHandle, ALSource3f.Position, x, y, _zPosition);
+            Master._checkAlError();
+        }
+    }
+
+    /// <inheritdoc />
+    public float ZPosition
+    {
+        get => _zPosition;
+        set
+        {
+            _checkDisposed();
+
+            if (!float.IsFinite(value))
+                return;
+
+            AL.GetSource(SourceHandle, ALSource3f.Position, out var x, out var y, out _);
+            Master._checkAlError();
+
+            _zPosition = value;
+            AL.Source(SourceHandle, ALSource3f.Position, x, y, value);
             Master._checkAlError();
         }
     }

@@ -382,13 +382,25 @@ namespace Robust.Shared.GameObjects
 
         public void LoadExtraSystemType<T>() where T : IEntitySystem, new()
         {
+            LoadExtraSystemType(typeof(T));
+        }
+
+        public void LoadExtraSystemType(Type type)
+        {
             if (_initialized)
             {
                 throw new InvalidOperationException(
                     "Cannot use LoadExtraSystemType when the entity system manager is initialized.");
             }
 
-            _extraLoadedTypes.Add(typeof(T));
+            if (!typeof(IEntitySystem).IsAssignableFrom(type))
+                throw new ArgumentException($"{type} is not an entity system.", nameof(type));
+
+            if (type.IsAbstract || type.IsInterface)
+                throw new ArgumentException($"{type} is not a concrete entity system.", nameof(type));
+
+            if (!_extraLoadedTypes.Contains(type))
+                _extraLoadedTypes.Add(type);
         }
 
         public IEnumerable<Type> GetEntitySystemTypes()

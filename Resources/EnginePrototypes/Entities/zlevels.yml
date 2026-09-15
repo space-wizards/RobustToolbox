@@ -1,0 +1,9 @@
+- type: entity
+  id: ZLevelMapNetwork
+  name: Z-Level Map Network
+  description: Nullspace entity used to store runtime z-level map network data.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+    gridTraversal: false
+  - type: ZLevelMapNetwork

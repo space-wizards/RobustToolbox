@@ -207,7 +207,7 @@ namespace Robust.Client.Debugging
         private readonly DebugPhysicsSystem _debugPhysicsSystem;
         private readonly EntityLookupSystem _lookup;
         private readonly SharedPhysicsSystem _physicsSystem;
-        private readonly SharedTransformSystem _transformSystem;
+        private readonly TransformSystem _transformSystem;
         private readonly SharedMapSystem _mapSystem;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
@@ -219,7 +219,7 @@ namespace Robust.Client.Debugging
         private HashSet<Joint> _drawnJoints = new();
         private List<Entity<MapGridComponent>> _grids = new();
 
-        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem, SharedTransformSystem transformSystem, SharedMapSystem mapSystem)
+        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem, TransformSystem transformSystem, SharedMapSystem mapSystem)
         {
             _entityManager = entityManager;
             _eyeManager = eyeManager;
@@ -245,7 +245,8 @@ namespace Robust.Client.Debugging
                 {
                     if (_entityManager.HasComponent<MapGridComponent>(physBody)) continue;
 
-                    var xform = _physicsSystem.GetPhysicsTransform(physBody);
+                    var renderPose = _transformSystem.GetRenderWorldTransform(physBody.Owner);
+                    var xform = new Transform(renderPose.Position, renderPose.Rotation);
                     var comp = physBody.Comp;
 
                     const float AlphaModifier = 0.2f;
@@ -288,7 +289,8 @@ namespace Robust.Client.Debugging
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
                     var color = Color.Purple.WithAlpha(Alpha);
-                    var transform = _physicsSystem.GetPhysicsTransform(physBody);
+                    var renderPose = _transformSystem.GetRenderWorldTransform(physBody.Owner);
+                    var transform = new Transform(renderPose.Position, renderPose.Rotation);
                     worldHandle.DrawCircle(Transform.Mul(transform, physBody.Comp.LocalCenter), 0.2f, color);
                 }
 
@@ -299,7 +301,8 @@ namespace Robust.Client.Debugging
                 {
                     var physBody = _entityManager.GetComponent<PhysicsComponent>(grid);
                     var color = Color.Orange.WithAlpha(Alpha);
-                    var transform = _physicsSystem.GetPhysicsTransform(grid);
+                    var renderPose = _transformSystem.GetRenderWorldTransform(grid.Owner);
+                    var transform = new Transform(renderPose.Position, renderPose.Rotation);
                     worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 1f, color);
                 }
             }
@@ -310,7 +313,8 @@ namespace Robust.Client.Debugging
                 {
                     if (_entityManager.HasComponent<MapGridComponent>(physBody)) continue;
 
-                    var xform = _physicsSystem.GetPhysicsTransform(physBody);
+                    var renderPose = _transformSystem.GetRenderWorldTransform(physBody.Owner);
+                    var xform = new Transform(renderPose.Position, renderPose.Rotation);
 
                     const float AlphaModifier = 0.2f;
                     Box2? aabb = null;
@@ -339,7 +343,7 @@ namespace Robust.Client.Debugging
                 {
                     if (jointComponent.JointCount == 0 ||
                         !_entityManager.TryGetComponent(uid, out TransformComponent? xf1) ||
-                        !viewAABB.Contains(_transformSystem.GetWorldPosition(xf1))) continue;
+                        !viewAABB.Contains(_transformSystem.GetRenderWorldPosition(uid, xf1))) continue;
 
                     foreach (var (_, joint) in jointComponent.Joints)
                     {
@@ -524,8 +528,8 @@ namespace Robust.Client.Debugging
             if (!_entityManager.TryGetComponent(joint.BodyAUid, out TransformComponent? xform1) ||
                 !_entityManager.TryGetComponent(joint.BodyBUid, out TransformComponent? xform2)) return;
 
-            var matrix1 = _transformSystem.GetWorldMatrix(xform1);
-            var matrix2 = _transformSystem.GetWorldMatrix(xform2);
+            var matrix1 = _transformSystem.GetRenderWorldMatrix(joint.BodyAUid, xform1);
+            var matrix2 = _transformSystem.GetRenderWorldMatrix(joint.BodyBUid, xform2);
 
             var xf1 = new Vector2(matrix1.M31, matrix1.M32);
             var xf2 = new Vector2(matrix2.M31, matrix2.M32);
@@ -533,8 +537,8 @@ namespace Robust.Client.Debugging
             var p1 = Vector2.Transform(joint.LocalAnchorA, matrix1);
             var p2 = Vector2.Transform(joint.LocalAnchorB, matrix2);
 
-            var xfa = new Transform(xf1, _transformSystem.GetWorldRotation(xform1));
-            var xfb = new Transform(xf2, _transformSystem.GetWorldRotation(xform2));
+            var xfa = new Transform(xf1, _transformSystem.GetRenderWorldRotation(joint.BodyAUid, xform1));
+            var xfb = new Transform(xf2, _transformSystem.GetRenderWorldRotation(joint.BodyBUid, xform2));
 
             switch (joint)
             {

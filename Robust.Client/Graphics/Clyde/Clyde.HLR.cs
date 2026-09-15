@@ -5,14 +5,11 @@ using System.Numerics;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
-using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Utility;
@@ -134,7 +131,14 @@ namespace Robust.Client.Graphics.Clyde
                 null);
         }
 
-        private void RenderSingleWorldOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
+        private void RenderSingleWorldOverlay(
+            Overlay overlay,
+            Viewport vp,
+            OverlaySpace space,
+            in Box2 worldBox,
+            in Box2Rotated worldBounds,
+            MapId mapId,
+            int zLevelOffset)
         {
             // Check that entity manager has started.
             // This is required for us to be able to use MapSystem.
@@ -142,8 +146,17 @@ namespace Robust.Client.Graphics.Clyde
 
             DebugTools.Assert(space != OverlaySpace.ScreenSpaceBelowWorld && space != OverlaySpace.ScreenSpace);
 
-            var mapId = vp.Eye?.Position.MapId ?? MapId.Nullspace;
-            var args = new OverlayDrawArgs(space, null, vp, _renderHandle, new UIBox2i((0, 0), vp.Size), _mapSystem.GetMapOrInvalid(mapId), mapId, worldBox, worldBounds);
+            var args = new OverlayDrawArgs(
+                space,
+                null,
+                vp,
+                _renderHandle,
+                new UIBox2i((0, 0), vp.Size),
+                _mapSystem.GetMapOrInvalid(mapId),
+                mapId,
+                zLevelOffset,
+                worldBox,
+                worldBounds);
 
             ResetOverlayDrawState();
 
@@ -188,14 +201,20 @@ namespace Robust.Client.Graphics.Clyde
             handle.UseShader(null);
         }
 
-        private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
+        private void RenderOverlays(
+            Viewport vp,
+            OverlaySpace space,
+            in Box2 worldBox,
+            in Box2Rotated worldBounds,
+            MapId mapId,
+            int zLevelOffset)
         {
             DebugTools.Assert(space != OverlaySpace.ScreenSpaceBelowWorld && space != OverlaySpace.ScreenSpace);
             using (DebugGroup($"Overlays: {space}"))
             {
                 foreach (var overlay in GetOverlaysForSpace(space))
                 {
-                    RenderSingleWorldOverlay(overlay, vp, space, worldBox, worldBounds);
+                    RenderSingleWorldOverlay(overlay, vp, space, worldBox, worldBounds, mapId, zLevelOffset);
                 }
 
                 FlushRenderQueue();
@@ -226,7 +245,17 @@ namespace Robust.Client.Graphics.Clyde
 
             DebugTools.Assert(_mapSystem != null || !_entityManager.Started);
 
-            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, mapUid, mapId, worldAABB, worldBounds);
+            var args = new OverlayDrawArgs(
+                space,
+                vpControl,
+                vp,
+                handle,
+                bounds,
+                mapUid,
+                mapId,
+                0,
+                worldAABB,
+                worldBounds);
 
             foreach (var overlay in list)
             {
@@ -236,7 +265,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (!overlay.BeforeDraw(args))
                         continue;
-                    
+
                     if (overlay.RequestScreenTexture)
                     {
                         FlushRenderQueue();
@@ -282,6 +311,9 @@ namespace Robust.Client.Graphics.Clyde
         private GLHandle screenBufferHandle;
         private Vector2 lastFrameSize;
         private readonly List<SpriteComponent.PostShaderEntry> _postShaderEventEntries = new();
+        private readonly List<ZLevelRenderLayer> _zLevelRenderLayers = new();
+
+        internal readonly record struct ZLevelRenderLayer(MapId MapId, int Offset);
 
         /// <summary>
         ///    Sends SCREEN_TEXTURE to all overlays in the given OverlaySpace that request it.
@@ -308,16 +340,22 @@ namespace Robust.Client.Graphics.Clyde
             return ScreenBufferTexture;
         }
 
-        private void DrawEntities(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
+        private void DrawEntitiesOnMap(
+            Viewport viewport,
+            MapId mapId,
+            int zLevelOffset,
+            Box2Rotated worldBounds,
+            Box2 worldAABB,
+            IEye eye)
         {
-            var mapId = eye.Position.MapId;
             if (mapId == MapId.Nullspace)
                 return;
 
-            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB, worldBounds);
+            var spriteSystem = _entityManager.System<SpriteSystem>();
+
+            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB, worldBounds, mapId, zLevelOffset);
             var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
 
-            var spriteSystem = _entityManager.System<SpriteSystem>();
             int[] indexList;
             using (_prof.Group("Gather Sprites"))
             {
@@ -326,7 +364,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var overlayIndex = 0;
 
-            bool flushed = false;
+            var flushed = false;
             using var _drawZone = _prof.Group("Draw");
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
@@ -349,17 +387,42 @@ namespace Robust.Client.Graphics.Clyde
                         flushed = true;
                     }
 
-                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
+                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds, mapId, zLevelOffset);
                 }
 
-                spriteSystem.RenderSprite(
-                    new(entry.Uid, entry.Sprite),
-                    _renderHandle.DrawingHandleWorld,
+                if (entry.Opacity <= 0f)
+                    continue;
+
+                var sprite = new Entity<SpriteComponent>(entry.Uid, entry.Sprite);
+                Direction? overrideDirection = entry.Sprite.EnableDirectionOverride
+                    ? entry.Sprite.DirectionOverride
+                    : null;
+
+                if (entry.Opacity >= 1f)
+                {
+                    spriteSystem.RenderSprite(
+                        sprite,
+                        _renderHandle.DrawingHandleWorld,
+                        eye.Rotation,
+                        entry.WorldRot,
+                        entry.WorldPos,
+                        overrideDirection,
+                        postShaders);
+                    continue;
+                }
+
+                var screenBounds = viewport.GetWorldToLocalMatrix().TransformBox(
+                    spriteSystem.CalculateBounds(sprite, entry.WorldPos, entry.WorldRot, eye.Rotation));
+                RenderSpritePostShaders(
+                    sprite,
+                    postShaders,
                     eye.Rotation,
                     entry.WorldRot,
                     entry.WorldPos,
-                    entry.Sprite.EnableDirectionOverride ? entry.Sprite.DirectionOverride : null,
-                    postShaders);
+                    overrideDirection,
+                    screenBounds,
+                    spriteSystem,
+                    entry.Opacity);
             }
 
             // draw remainder of overlays
@@ -371,7 +434,7 @@ namespace Robust.Client.Graphics.Clyde
                     flushed = true;
                 }
 
-                RenderSingleWorldOverlay(worldOverlays[overlayIndex], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds);
+                RenderSingleWorldOverlay(worldOverlays[overlayIndex], viewport, OverlaySpace.WorldSpaceEntities, worldAABB, worldBounds, mapId, zLevelOffset);
             }
 
             ArrayPool<int>.Shared.Return(indexList);
@@ -389,7 +452,8 @@ namespace Robust.Client.Graphics.Clyde
             Vector2 worldPosition,
             Direction? overrideDirection,
             Box2 spriteScreenBounds,
-            SpriteSystem spriteSystem)
+            SpriteSystem spriteSystem,
+            float opacity = 1f)
         {
             if (_currentViewport is not { } viewport)
                 throw new InvalidOperationException("Post-shader sprites must be rendered through their active viewport.");
@@ -405,7 +469,14 @@ namespace Robust.Client.Graphics.Clyde
                 var tex = CopyScreenTexture(viewport.RenderTarget);
                 if (tex == null)
                 {
-                    spriteSystem.RenderSprite(sprite, _renderHandle.DrawingHandleWorld, eyeRotation, worldRotation, worldPosition, overrideDirection);
+                    RenderSpriteOpacityFallback(
+                        sprite,
+                        spriteSystem,
+                        eyeRotation,
+                        worldRotation,
+                        worldPosition,
+                        overrideDirection,
+                        opacity);
                     return;
                 }
 
@@ -417,11 +488,19 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             var entityPostRenderTargetSize = GetPostShaderTargetSize(spriteScreenBounds);
+            // Fade the finished sprite so its layers keep their colors.
             entityPostRenderTarget = RentPostShaderRenderTarget(entityPostRenderTargetSize);
 
             if (entityPostRenderTarget == null)
             {
-                spriteSystem.RenderSprite(sprite, _renderHandle.DrawingHandleWorld, eyeRotation, worldRotation, worldPosition, overrideDirection);
+                RenderSpriteOpacityFallback(
+                    sprite,
+                    spriteSystem,
+                    eyeRotation,
+                    worldRotation,
+                    worldPosition,
+                    overrideDirection,
+                    opacity);
                 return;
             }
 
@@ -471,14 +550,28 @@ namespace Robust.Client.Graphics.Clyde
                 var oldProj = _currentMatrixProj;
                 var oldView = _currentMatrixView;
 
-                DrawEntityPostShaders(
-                    viewport.RenderTarget,
-                    screenSize,
-                    roundedPos,
-                    entityPostRenderTargetSize,
-                    entityPostRenderTarget,
-                    entityPostRenderTarget2,
-                    postShaders);
+                if (postShaders.Count == 0)
+                {
+                    DrawEntityComposite(
+                        viewport.RenderTarget,
+                        screenSize,
+                        roundedPos,
+                        entityPostRenderTargetSize,
+                        entityPostRenderTarget,
+                        opacity);
+                }
+                else
+                {
+                    DrawEntityPostShaders(
+                        viewport.RenderTarget,
+                        screenSize,
+                        roundedPos,
+                        entityPostRenderTargetSize,
+                        entityPostRenderTarget,
+                        entityPostRenderTarget2,
+                        postShaders,
+                        opacity);
+                }
 
                 _renderHandle.SetProjView(oldProj, oldView);
                 _renderHandle.UseShader(null);
@@ -526,7 +619,8 @@ namespace Robust.Client.Graphics.Clyde
             Vector2i spriteRenderTargetSize,
             RenderTexture entityPostRenderTarget,
             RenderTexture? entityPostRenderTarget2,
-            IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders)
+            IReadOnlyList<SpriteComponent.PostShaderEntry> postShaders,
+            float opacity = 1f)
         {
             var source = entityPostRenderTarget;
             var screenUvRect = GetEntityPostShaderScreenUvRect(screenSize, roundedPos, spriteRenderTargetSize);
@@ -544,9 +638,7 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         DrawRenderTarget(renderTarget.Handle);
                         _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
-                        // The sprite has already been drawn into a transparent RT, so its color is already multiplied
-                        // by alpha. Use premultiplied blending for the final viewport composite to avoid applying
-                        // translucent sprite alpha twice. Stuff like an interaction outline would make the entire sprite double transparent.
+                        // The target already contains premultiplied color.
                         _renderHandle.UseShader(GetPremultipliedBlendShaderInstance(shader));
                         CalcScreenMatrices(screenSize, out var finalProj, out var finalView);
                         _renderHandle.SetProjView(finalProj, finalView);
@@ -557,7 +649,8 @@ namespace Robust.Client.Graphics.Clyde
 
                         _renderHandle.DrawTextureScreen(source.Texture,
                             finalBox.TopLeft, finalBox.TopRight, finalBox.BottomLeft, finalBox.BottomRight,
-                            Color.White, GetEntityPostRenderTargetSubRegion(source, spriteRenderTargetSize));
+                            GetSpriteCompositeOpacityModulate(opacity),
+                            GetEntityPostRenderTargetSubRegion(source, spriteRenderTargetSize));
                         continue;
                     }
 
@@ -567,9 +660,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.UseRenderTarget(destination);
                     _renderHandle.Clear(default, 0, ClearBufferMask.ColorBufferBit);
                     _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, destination.Size));
-                    // Intermediate post-shader passes are texture transforms. Write the
-                    // shader output directly so stuff like alpha-cut passes do not get alpha-applied before the final viewport draw.
-                    // The easiest way to know if this happens is your sprite getting darker / changing from the multiple passes when it shouldn't be.
+                    // Do not blend between shader passes.
                     _renderHandle.UseShader(GetNoBlendShaderInstance(shader));
                     CalcScreenMatrices(destination.Size, out var intermediateProj, out var intermediateView);
                     _renderHandle.SetProjView(intermediateProj, intermediateView);
@@ -588,6 +679,55 @@ namespace Robust.Client.Graphics.Clyde
                 DrawSetScreenUvRect(oldScreenUvRect);
             }
         }
+
+        private void DrawEntityComposite(
+            RenderTargetBase renderTarget,
+            Vector2i screenSize,
+            Vector2i roundedPos,
+            Vector2i spriteRenderTargetSize,
+            RenderTexture source,
+            float opacity)
+        {
+            DrawRenderTarget(renderTarget.Handle);
+            _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
+            _renderHandle.UseShader(_zLevelCompositeShader);
+            CalcScreenMatrices(screenSize, out var proj, out var view);
+            _renderHandle.SetProjView(proj, view);
+            _renderHandle.SetModelTransform(Matrix3x2.Identity);
+
+            var rounded = roundedPos - spriteRenderTargetSize / 2;
+            var finalBox = Box2i.FromDimensions(rounded, spriteRenderTargetSize);
+            _renderHandle.DrawTextureScreen(source.Texture,
+                finalBox.TopLeft, finalBox.TopRight, finalBox.BottomLeft, finalBox.BottomRight,
+                GetSpriteCompositeOpacityModulate(opacity),
+                GetEntityPostRenderTargetSubRegion(source, spriteRenderTargetSize));
+        }
+
+        private void RenderSpriteOpacityFallback(
+            Entity<SpriteComponent> sprite,
+            SpriteSystem spriteSystem,
+            Angle eyeRotation,
+            Angle worldRotation,
+            Vector2 worldPosition,
+            Direction? overrideDirection,
+            float opacity)
+        {
+            var worldHandle = _renderHandle.DrawingHandleWorld;
+            var oldModulate = worldHandle.Modulate;
+            worldHandle.Modulate = oldModulate * new Color(1f, 1f, 1f, opacity);
+
+            spriteSystem.RenderSprite(
+                    sprite,
+                    worldHandle,
+                    eyeRotation,
+                    worldRotation,
+                    worldPosition,
+                    overrideDirection);
+
+            // Restore the sprite's original modulation.
+            worldHandle.Modulate = oldModulate;
+        }
+
         private static UIBox2? GetEntityPostRenderTargetSubRegion(RenderTexture renderTarget, Vector2i size)
         {
             if (renderTarget.Size == size)
@@ -676,6 +816,203 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.Assert(oldShader.Equals(_queuedShaderInstance));
         }
 
+        private Eye CreateZLevelRenderEye(IEye source, ZLevelRenderLayer layer)
+        {
+            var projectionOffset = Vector2.Zero;
+            var sourceMap = _mapSystem.GetMapOrInvalid(source.Position.MapId);
+            if (_zLevelSystem.TryGetMapData(sourceMap, out var zMap, out _))
+                projectionOffset = _clientZLevelSystem.GetVisuals(zMap.Network).ProjectionOffset;
+
+            return new Eye
+            {
+                Position = new MapCoordinates(source.Position.Position, layer.MapId),
+                Offset = source.Offset + ZLevelProjection.GetLayerEyeOffset(layer.Offset, projectionOffset),
+                Rotation = source.Rotation,
+                Scale = source.Scale,
+                DrawLight = source.DrawLight,
+                DrawFov = source.DrawFov && layer.Offset >= 0,
+                RenderedAbsoluteZ = source.RenderedAbsoluteZ,
+            };
+        }
+
+        private int GetVisibleZLevelsBelow(Viewport viewport, IEye eye)
+        {
+            var mapUid = _mapSystem.GetMapOrInvalid(eye.Position.MapId);
+            if (!_zLevelSystem.TryGetMapData(mapUid, out var zMap, out _) ||
+                !_clientZLevelSystem.GetVisuals(zMap.Network).StopAtOpaque)
+                return _zLevelRenderMapsBelow.Count;
+
+            for (var i = 0; i < _zLevelRenderMapsBelow.Count; i++)
+            {
+                // Before adding the next lower map, check whether the map currently in front of it has any holes.
+                var checkingLayer = i == 0
+                    ? new ZLevelRenderLayer(eye.Position.MapId, 0)
+                    : new ZLevelRenderLayer(_zLevelRenderMapsBelow[i - 1], -i);
+                var checkingEye = CreateZLevelRenderEye(eye, checkingLayer);
+                var checkingBounds = CalcWorldBounds(checkingEye, viewport);
+
+                if (!_zLevelSystem.NeedsLowerLevelRendered(
+                        checkingLayer.MapId,
+                        checkingBounds.CalcBoundingBox(),
+                        checkingBounds))
+                {
+                    return i;
+                }
+            }
+
+            return _zLevelRenderMapsBelow.Count;
+        }
+
+        private void BuildZLevelRenderLayers(Viewport viewport, IEye eye)
+        {
+            _zLevelRenderLayers.Clear();
+            viewport._visibleZMaps.Clear();
+            EnsureZLevelRenderMaps(eye.Position.MapId);
+
+            var visibleBelow = GetVisibleZLevelsBelow(viewport, eye);
+            for (var i = visibleBelow - 1; i >= 0; i--)
+            {
+                _zLevelRenderLayers.Add(new ZLevelRenderLayer(_zLevelRenderMapsBelow[i], -(i + 1)));
+            }
+
+            _zLevelRenderLayers.Add(new ZLevelRenderLayer(eye.Position.MapId, 0));
+
+            for (var i = 0; i < _zLevelRenderMapsAbove.Count; i++)
+            {
+                _zLevelRenderLayers.Add(new ZLevelRenderLayer(_zLevelRenderMapsAbove[i], i + 1));
+            }
+
+            foreach (var layer in _zLevelRenderLayers)
+            {
+                var map = _mapSystem.GetMapOrInvalid(layer.MapId);
+                if (map != EntityUid.Invalid)
+                    viewport._visibleZMaps.Add(map);
+            }
+        }
+
+        private void RenderZLevelLayer(
+            Viewport viewport,
+            IEye eye,
+            ZLevelRenderLayer layer)
+        {
+            var finalTarget = viewport.RenderTarget;
+            var layerTarget = viewport.ZLevelRenderTarget;
+            var originalEye = viewport.Eye;
+            var layerEye = CreateZLevelRenderEye(eye, layer);
+            var layerBounds = CalcWorldBounds(layerEye, viewport);
+            var layerAABB = layerBounds.CalcBoundingBox();
+
+            viewport.RenderTarget = layerTarget;
+            viewport.Eye = layerEye;
+            // Clear premultiplied layers with transparent black.
+            var transparentBlack = new Color(0f, 0f, 0f, 0f);
+            RenderInRenderTarget(layerTarget, () =>
+                RenderZLevelLayerContents(
+                    viewport,
+                    layerEye,
+                    layerBounds,
+                    layerAABB,
+                    layer), transparentBlack);
+            viewport.RenderTarget = finalTarget;
+            viewport.Eye = originalEye;
+
+            PostShaderZLevelLayer(viewport, layerTarget, finalTarget);
+        }
+
+        private void RenderZLevelLayerContents(
+            Viewport viewport,
+            IEye eye,
+            Box2Rotated worldBounds,
+            Box2 worldAABB,
+            ZLevelRenderLayer layer)
+        {
+            CalcWorldMatrices(viewport.RenderTarget.Size, viewport.RenderScale, eye, out var proj, out var view);
+            SetProjViewFull(proj, view);
+
+            _lightingReady = false;
+
+            using (DebugGroup("Lights"))
+            using (_prof.Group("Lights"))
+            {
+                DrawLightsAndFov(viewport, layer.MapId, worldBounds, worldAABB, eye, layer.Offset);
+            }
+
+            using (_prof.Group("Overlays WSBW"))
+            {
+                RenderOverlays(
+                    viewport,
+                    OverlaySpace.WorldSpaceBelowWorld,
+                    worldAABB,
+                    worldBounds,
+                    layer.MapId,
+                    layer.Offset);
+            }
+
+            using (DebugGroup("Grids"))
+            using (_prof.Group("Grids"))
+            {
+                DrawGridsOnMap(viewport, layer.MapId, worldAABB, worldBounds, eye, layer.Offset);
+            }
+
+            // We will also render worldspace overlays here so we can do them under / above entities as necessary.
+            using (DebugGroup("Entities"))
+            using (_prof.Group("Entities"))
+            {
+                DrawEntitiesOnMap(viewport, layer.MapId, layer.Offset, worldBounds, worldAABB, eye);
+            }
+
+            using (_prof.Group("Overlays WSBFOV"))
+            {
+                RenderOverlays(
+                    viewport,
+                    OverlaySpace.WorldSpaceBelowFOV,
+                    worldAABB,
+                    worldBounds,
+                    layer.MapId,
+                    layer.Offset);
+            }
+
+            if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawLight && eye.DrawFov &&
+                IsMapLightingEnabled(layer.MapId))
+            {
+                ApplyFovToBuffer(viewport, eye);
+            }
+
+            using (_prof.Group("Overlays WS"))
+            {
+                RenderOverlays(
+                    viewport,
+                    OverlaySpace.WorldSpace,
+                    worldAABB,
+                    worldBounds,
+                    layer.MapId,
+                    layer.Offset);
+            }
+
+            _lightingReady = false;
+        }
+
+        private void PostShaderZLevelLayer(
+            Viewport viewport,
+            RenderTexture layerTarget,
+            RenderTexture finalTarget)
+        {
+            _renderHandle.UseRenderTarget(finalTarget);
+            _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, finalTarget.Size));
+            _renderHandle.UseShader(_zLevelCompositeShader);
+            CalcScreenMatrices(finalTarget.Size, out var proj, out var view);
+            _renderHandle.SetProjView(proj, view);
+            _renderHandle.SetModelTransform(Matrix3x2.Identity);
+            _renderHandle.DrawingHandleScreen.SetTransform(Matrix3x2.Identity);
+            _renderHandle.DrawingHandleScreen.DrawTextureRect(
+                layerTarget.Texture,
+                UIBox2.FromDimensions(Vector2.Zero, viewport.Size));
+            _renderHandle.UseShader(null);
+
+            // Flush before reusing the layer target.
+            FlushRenderQueue();
+        }
+
         private void RenderViewport(Viewport viewport)
         {
             if (viewport.Eye == null || viewport.Eye.Position.MapId == MapId.Nullspace)
@@ -693,7 +1030,6 @@ namespace Robust.Client.Graphics.Clyde
                 using var _ = DebugGroup($"Viewport: {viewport.Name}");
 
                 var oldVp = _currentViewport;
-
                 _currentViewport = viewport;
                 var eye = viewport.Eye;
 
@@ -705,44 +1041,46 @@ namespace Robust.Client.Graphics.Clyde
                 // Calculate world-space AABB for camera, to cull off-screen things.
                 var worldBounds = CalcWorldBounds(viewport);
                 var worldAABB = worldBounds.CalcBoundingBox();
+                _zLevelRenderMapsValid = false;
 
                 if (eye.Position.MapId != MapId.Nullspace)
                 {
-                    using (DebugGroup("Lights"))
-                    using (_prof.Group("Lights"))
+                    BuildZLevelRenderLayers(viewport, eye);
+
+                    if (_zLevelRenderLayers.Count == 1)
                     {
-                        DrawLightsAndFov(viewport, worldBounds, worldAABB, eye);
+                        RenderZLevelLayerContents(
+                            viewport,
+                            eye,
+                            worldBounds,
+                            worldAABB,
+                            _zLevelRenderLayers[0]);
+                    }
+                    else
+                    {
+                        foreach (var layer in _zLevelRenderLayers)
+                        {
+                            RenderZLevelLayer(viewport, eye, layer);
+                        }
                     }
 
-                    using (_prof.Group("Overlays WSBW"))
+                    // Restore the viewport matrices after drawing the z stack.
+                    CalcWorldMatrices(viewport.RenderTarget.Size, viewport.RenderScale, eye, out proj, out view);
+                    SetProjViewFull(proj, view);
+
+                    // Apply fullscreen effects to the completed z stack.
+                    using (_prof.Group("Overlays PostZLevel"))
                     {
-                        RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldAABB, worldBounds);
+                        RenderOverlays(
+                            viewport,
+                            OverlaySpace.PostZLevel,
+                            worldAABB,
+                            worldBounds,
+                            eye.Position.MapId,
+                            0);
                     }
 
-                    using (DebugGroup("Grids"))
-                    using (_prof.Group("Grids"))
-                    {
-                        _drawGrids(viewport, worldAABB, worldBounds, eye);
-                    }
-
-                    // We will also render worldspace overlays here so we can do them under / above entities as necessary
-                    using (DebugGroup("Entities"))
-                    using (_prof.Group("Entities"))
-                    {
-                        DrawEntities(viewport, worldBounds, worldAABB, eye);
-                    }
-
-                    using (_prof.Group("Overlays WSBFOV"))
-                    {
-                        RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB, worldBounds);
-                    }
-
-                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawLight && eye.DrawFov)
-                    {
-                        var mapUid = _mapSystem.GetMap(eye.Position.MapId);
-                        if (_entityManager.GetComponent<MapComponent>(mapUid).LightingEnabled)
-                            ApplyFovToBuffer(viewport, eye);
-                    }
+                    CullEmptyChunks();
                 }
 
                 _lightingReady = false;
@@ -770,14 +1108,6 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));
                 }
 
-                if (eye.Position.MapId != MapId.Nullspace)
-                {
-                    using (_prof.Group("Overlays WS"))
-                    {
-                        RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
-                    }
-                }
-
                 _currentViewport = oldVp;
             }, viewport.ClearColor);
         }
@@ -788,16 +1118,19 @@ namespace Robust.Client.Graphics.Clyde
                 viewport.Size / viewport.RenderScale / EyeManager.PixelsPerMeter * eye.Zoom);
         }
 
-        private static Box2Rotated CalcWorldBounds(Viewport viewport)
+        private static Box2Rotated CalcWorldBounds(IEye eye, Viewport viewport)
         {
-            var eye = viewport.Eye;
-            if (eye == null)
-                return default;
-
             var rotation = -eye.Rotation;
             var aabb = GetAABB(eye, viewport);
 
             return new Box2Rotated(aabb, rotation, aabb.Center);
+        }
+
+        private static Box2Rotated CalcWorldBounds(Viewport viewport)
+        {
+            return viewport.Eye is { } eye
+                ? CalcWorldBounds(eye, viewport)
+                : default;
         }
     }
 }

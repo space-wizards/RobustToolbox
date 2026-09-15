@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Numerics;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -13,7 +14,8 @@ namespace Robust.Client.Physics
     public sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private IOverlayManager _overlay = default!;
-        [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private TransformSystem _transform = default!;
+        [Dependency] private ClientZLevelSystem _zLevels = default!;
         [Dependency] private SharedMapSystem _map = default!;
 
         public bool EnableDebug
@@ -28,7 +30,7 @@ namespace Robust.Client.Physics
 
                 if (_enableDebug)
                 {
-                    var overlay = new GridSplitNodeOverlay(this, _transform, _map);
+                    var overlay = new GridSplitNodeOverlay(this, _zLevels, _map);
                     _overlay.AddOverlay(overlay);
                     RaiseNetworkEvent(new RequestGridNodesMessage());
                 }
@@ -72,13 +74,13 @@ namespace Robust.Client.Physics
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
             private readonly GridFixtureSystem _system;
-            private readonly SharedTransformSystem _transform;
+            private readonly ClientZLevelSystem _zLevels;
             private readonly SharedMapSystem _map;
 
-            public GridSplitNodeOverlay(GridFixtureSystem system, SharedTransformSystem transform, SharedMapSystem map)
+            public GridSplitNodeOverlay(GridFixtureSystem system, ClientZLevelSystem zLevels, SharedMapSystem map)
             {
                 _system = system;
-                _transform = transform;
+                _zLevels = zLevels;
                 _map = map;
             }
 
@@ -86,17 +88,23 @@ namespace Robust.Client.Physics
             {
                 var worldHandle = args.WorldHandle;
 
-                var state = (_system, _transform, args.WorldBounds, worldHandle);
+                var state = (_system, _zLevels, args.WorldBounds, worldHandle, args.MapUid);
 
                 _map.FindGridsIntersecting(args.MapId, args.WorldBounds, ref state,
                     (EntityUid uid, MapGridComponent grid,
-                        ref (GridFixtureSystem system, SharedTransformSystem transform, Box2Rotated worldBounds, DrawingHandleWorld worldHandle) tuple) =>
+                        ref (GridFixtureSystem system, ClientZLevelSystem zLevels, Box2Rotated worldBounds, DrawingHandleWorld worldHandle, EntityUid layerMap) tuple) =>
                     {
                         // May not have received nodes yet.
                         if (!tuple.system._nodes.TryGetValue(uid, out var nodes))
                             return true;
 
-                        tuple.worldHandle.SetTransform(tuple.transform.GetWorldMatrix(uid));
+                        if (!tuple.zLevels.TryGetRenderLayerSample(uid, tuple.layerMap, out var renderLayer))
+                            return true;
+
+                        tuple.worldHandle.SetTransform(
+                            Matrix3Helpers.CreateTransform(renderLayer.Position, renderLayer.Rotation));
+                        var oldModulate = tuple.worldHandle.Modulate;
+                        tuple.worldHandle.Modulate = oldModulate * Color.White.WithAlpha(renderLayer.Opacity);
                         var chunkEnumerator = _map.GetMapChunks(uid, grid, tuple.worldBounds);
 
                         while (chunkEnumerator.MoveNext(out var chunk))
@@ -122,6 +130,8 @@ namespace Robust.Client.Physics
                         {
                             tuple.worldHandle.DrawLine(start, end, Color.Aquamarine);
                         }
+
+                        tuple.worldHandle.Modulate = oldModulate;
 
                         static Color GetColor(MapChunk chunk, int index)
                         {

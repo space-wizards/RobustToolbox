@@ -40,7 +40,7 @@ public sealed class DebugEntityLookupSystem : EntitySystem
                     new EntityLookupOverlay(
                         EntityManager,
                         EntityManager.System<EntityLookupSystem>(),
-                        EntityManager.System<SharedTransformSystem>()));
+                        EntityManager.System<TransformSystem>()));
             }
             else
             {
@@ -56,13 +56,13 @@ public sealed class EntityLookupOverlay : Overlay
 {
     private readonly IEntityManager _entityManager;
     private readonly EntityLookupSystem _lookup;
-    private readonly SharedTransformSystem _transform;
+    private readonly TransformSystem _transform;
 
     private EntityQuery<TransformComponent> _xformQuery;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-    public EntityLookupOverlay(IEntityManager entManager, EntityLookupSystem lookup, SharedTransformSystem transform)
+    public EntityLookupOverlay(IEntityManager entManager, EntityLookupSystem lookup, TransformSystem transform)
     {
         _entityManager = entManager;
         _lookup = lookup;
@@ -78,7 +78,9 @@ public sealed class EntityLookupOverlay : Overlay
         // TODO: Static version
         _lookup.FindLookupsIntersecting(args.MapId, worldBounds, (uid, lookup) =>
         {
-            var (_, rotation, matrix, invMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(uid);
+            var pose = _transform.GetRenderWorldTransform(uid);
+            var rotation = pose.Rotation;
+            var (matrix, invMatrix) = TransformSystem.GetRenderWorldMatrixWithInv(in pose);
 
             worldHandle.SetTransform(matrix);
 
@@ -117,7 +119,7 @@ public sealed class EntityLookupOverlay : Overlay
                 var xform = _xformQuery.GetComponent(ent);
 
                 //DebugTools.Assert(!ent.IsInContainer(_entityManager));
-                var (entPos, entRot) = _transform.GetWorldPositionRotation(ent);
+                var (entPos, entRot) = _transform.GetRenderWorldPositionRotation(ent);
 
                 var lookupPos = Vector2.Transform(entPos, invMatrix);
                 var lookupRot = entRot - rotation;

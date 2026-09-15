@@ -1,4 +1,5 @@
 using Robust.Client.Graphics;
+using Robust.Client.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -15,7 +16,7 @@ public sealed partial class DebugDrawingSystem : EntitySystem
 {
     [Dependency] private IOverlayManager _overlayManager = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
-    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private TransformSystem _transform = default!;
 
     private bool _debugPositions;
     private bool _debugRotations;
@@ -125,7 +126,7 @@ public sealed partial class DebugDrawingSystem : EntitySystem
             }
         }
     }
-    private sealed class EntityPositionOverlay(EntityLookupSystem _lookup, SharedTransformSystem _transform) : Overlay
+    private sealed class EntityPositionOverlay(EntityLookupSystem _lookup, TransformSystem _transform) : Overlay
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
@@ -137,7 +138,7 @@ public sealed partial class DebugDrawingSystem : EntitySystem
 
             foreach (var uid in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
             {
-                var (center, worldRotation) = _transform.GetWorldPositionRotation(uid);
+                var (center, worldRotation) = _transform.GetRenderWorldPositionRotation(uid);
 
                 var xLine = worldRotation.RotateVec(Vector2.UnitX);
                 var yLine = worldRotation.RotateVec(Vector2.UnitY);
@@ -148,7 +149,7 @@ public sealed partial class DebugDrawingSystem : EntitySystem
         }
     }
 
-    private sealed class EntityRotationOverlay(EntityLookupSystem _lookup, SharedTransformSystem _transform) : Overlay
+    private sealed class EntityRotationOverlay(EntityLookupSystem _lookup, TransformSystem _transform) : Overlay
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
@@ -159,7 +160,7 @@ public sealed partial class DebugDrawingSystem : EntitySystem
 
             foreach (var uid in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
             {
-                var (center, worldRotation) = _transform.GetWorldPositionRotation(uid);
+                var (center, worldRotation) = _transform.GetRenderWorldPositionRotation(uid);
 
                 var drawLine = worldRotation.RotateVec(-Vector2.UnitY);
 
@@ -168,7 +169,7 @@ public sealed partial class DebugDrawingSystem : EntitySystem
         }
     }
 
-    private sealed class EntityVelocityOverlay(IEntityManager _entityManager, EntityLookupSystem _lookup, SharedTransformSystem _transform) : Overlay
+    private sealed class EntityVelocityOverlay(IEntityManager _entityManager, EntityLookupSystem _lookup, TransformSystem _transform) : Overlay
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
@@ -184,7 +185,7 @@ public sealed partial class DebugDrawingSystem : EntitySystem
                 if (!physicsQuery.TryGetComponent(uid, out var physicsComp))
                     continue;
 
-                var center = _transform.GetWorldPosition(uid);
+                var center = _transform.GetRenderWorldPosition(uid);
                 var localVelocity = physicsComp.LinearVelocity;
 
                 if (localVelocity != Vector2.Zero)
@@ -193,7 +194,7 @@ public sealed partial class DebugDrawingSystem : EntitySystem
         }
     }
 
-    private sealed class EntityAngularVelocityOverlay(IEntityManager _entityManager, EntityLookupSystem _lookup, SharedTransformSystem _transform) : Overlay
+    private sealed class EntityAngularVelocityOverlay(IEntityManager _entityManager, EntityLookupSystem _lookup, TransformSystem _transform) : Overlay
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
@@ -209,7 +210,7 @@ public sealed partial class DebugDrawingSystem : EntitySystem
                 if (!physicsQuery.TryGetComponent(uid, out var physicsComp))
                     continue;
 
-                var center = _transform.GetWorldPosition(uid);
+                var center = _transform.GetRenderWorldPosition(uid);
                 var angularVelocity = physicsComp.AngularVelocity;
 
                 if (angularVelocity != 0.0f)

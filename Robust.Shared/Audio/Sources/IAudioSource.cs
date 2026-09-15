@@ -49,6 +49,11 @@ public interface IAudioSource : IDisposable
     /// </summary>
     Vector2 Position { get; set; }
 
+    /// <summary>
+    /// Position of the audio source on OpenAL's Z axis.
+    /// </summary>
+    float ZPosition { get; set; }
+
     float Pitch { get; set; }
 
     /// <summary>

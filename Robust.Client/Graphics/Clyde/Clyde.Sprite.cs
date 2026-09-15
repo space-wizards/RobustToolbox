@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
@@ -59,72 +60,128 @@ internal partial class Clyde
     {
         var query = _entityManager.GetEntityQuery<TransformComponent>();
         var gridQuery = _entityManager.GetEntityQuery<MapGridComponent>();
-        var renderQueryBounds = _transformSystem.GetRenderCullingBounds(map, worldBounds);
+        var mapQuery = _entityManager.GetEntityQuery<MapComponent>();
+        var renderMapUid = _mapSystem.GetMapOrInvalid(map);
         var viewScale = eye.Scale * view.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
         var treeData = new BatchData()
         {
-            Sys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>(),
             ViewRotation = eye.Rotation,
             ViewScale = viewScale,
             PreScaleViewOffset = view.Size / 2f / viewScale,
             ViewPosition = eye.Position.Position + eye.Offset
         };
+        var queryState = new SpriteQueryState
+        {
+            List = list,
+            ZLevels = _clientZLevelSystem,
+            LayerMap = renderMapUid,
+            VisibleMaps = view.VisibleZMaps,
+        };
 
         // We need to batch the actual tree query, or alternatively we need just get the list of sprites and then
         // parallelize the rotation & bounding box calculations.
         var index = 0;
-        var added = 0;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
 
-        foreach (var (treeOwner, comp) in _spriteTreeSystem.GetIntersectingTrees(map, renderQueryBounds))
+        if (_zLevelSystem.TryGetMapData(renderMapUid, out _, out var network))
         {
-            var treeXform = query.GetComponent(treeOwner);
-            var treePose = _transformSystem.GetRenderWorldTransform((treeOwner, treeXform));
-            var bounds = _transformSystem.GetInvRenderWorldMatrix((treeOwner, treeXform)).TransformBox(renderQueryBounds);
-            var pixelSnapOffset = Vector2.Zero;
-            DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
-
-            if (gridQuery.HasComponent(treeOwner))
+            // A z pass can contain sprites from every visible map.
+            foreach (var actualMapUid in network.SortedZLevels)
             {
-                pixelSnapOffset = GetPixelSnapOffset(
-                    treePose.Position,
-                    treeData.ViewPosition,
-                    treeData.ViewRotation,
-                    treeData.ViewScale,
-                    view.Size);
+                if (mapQuery.TryComp(actualMapUid, out var actualMap))
+                    ProcessMap(actualMap.MapId);
             }
-
-            treeData = treeData with
-            {
-                TreePixelSnapOffset = pixelSnapOffset,
-            };
-
-            comp.Tree.QueryAabb(ref list,
-                static (ref RefList<SpriteData> state, in ComponentTreeEntry<SpriteComponent> value) =>
-                {
-                    ref var entry = ref state.AllocAdd();
-                    entry.Uid = value.Uid;
-                    entry.Sprite = value.Component;
-                    entry.Xform = value.Transform;
-                    return true;
-                }, bounds, true);
-
-            // Get bounding boxes & world positions
-            added = list.Count - index;
-            var batches = added/_spriteProcessingBatchSize;
-
-            // TODO also do sorting here & use a merge sort later on for y-sorting?
-            if (batches > 1)
-                Parallel.For(0, batches, opts, (i) => ProcessSprites(list, index + i * _spriteProcessingBatchSize, _spriteProcessingBatchSize, treeData));
-            else
-                batches = 0;
-
-            var remainder = added - _spriteProcessingBatchSize * batches;
-            if (remainder > 0)
-                ProcessSprites(list, index + batches * _spriteProcessingBatchSize, remainder, treeData);
-
-            index += batches * _spriteProcessingBatchSize + remainder;
         }
+        else
+        {
+            ProcessMap(map);
+        }
+
+        return;
+
+        void ProcessMap(MapId actualMap)
+        {
+            if (!_clientZLevelSystem.TryGetMapRenderBoundsForLayer(
+                    _mapSystem.GetMapOrInvalid(actualMap), renderMapUid, worldBounds, out _, out var sourceBounds))
+                return;
+
+            var renderQueryBounds = _transformSystem.GetRenderCullingBounds(actualMap, sourceBounds);
+            foreach (var (treeOwner, comp) in _spriteTreeSystem.GetIntersectingTrees(actualMap, renderQueryBounds))
+            {
+                var treeXform = query.GetComponent(treeOwner);
+                // A tree can contain sprites crossing into another layer even when its grid/map does not.
+                var treePose = _transformSystem.GetCanonicalRenderWorldTransform((treeOwner, treeXform));
+                if (!_clientZLevelSystem.TryProjectMapCoordinatesForLayer(
+                        new MapCoordinates(treePose.Position, actualMap), renderMapUid, out var treePosition))
+                    continue;
+
+                var invTreeMatrix = Matrix3Helpers.CreateInverseTransform(treePose.Position, treePose.Rotation);
+                var bounds = invTreeMatrix.TransformBox(renderQueryBounds);
+                var pixelSnapOffset = Vector2.Zero;
+                DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
+
+                if (gridQuery.HasComponent(treeOwner))
+                {
+                    pixelSnapOffset = GetPixelSnapOffset(
+                        treePosition,
+                        treeData.ViewPosition,
+                        treeData.ViewRotation,
+                        treeData.ViewScale,
+                        view.Size);
+                }
+
+                treeData = treeData with
+                {
+                    TreePixelSnapOffset = pixelSnapOffset,
+                };
+
+                comp.Tree.QueryAabb(ref queryState, AddSpriteToRenderList, bounds, true);
+
+                // Get bounding boxes & world positions
+                var added = list.Count - index;
+                var batches = added / _spriteProcessingBatchSize;
+
+                // TODO also do sorting here & use a merge sort later on for y-sorting?
+                if (batches > 1)
+                    Parallel.For(0, batches, opts, i => ProcessSprites(list, index + i * _spriteProcessingBatchSize, _spriteProcessingBatchSize, treeData));
+                else
+                    batches = 0;
+
+                var remainder = added - _spriteProcessingBatchSize * batches;
+                if (remainder > 0)
+                    ProcessSprites(list, index + batches * _spriteProcessingBatchSize, remainder, treeData);
+
+                index += batches * _spriteProcessingBatchSize + remainder;
+            }
+        }
+    }
+
+    private static bool AddSpriteToRenderList(
+        ref SpriteQueryState state,
+        in ComponentTreeEntry<SpriteComponent> value)
+    {
+        if (!state.ZLevels.TryGetRenderLayerSample(
+                value.Uid,
+                state.LayerMap,
+                out var sample,
+                value.Transform,
+                state.VisibleMaps))
+            return true;
+
+        ref var entry = ref state.List.AllocAdd();
+        entry.Uid = value.Uid;
+        entry.Sprite = value.Component;
+        entry.Xform = value.Transform;
+        entry.WorldPos = sample.Position;
+        entry.WorldRot = sample.Rotation;
+        entry.Opacity = sample.Opacity;
+        return true;
+    }
+
+    internal static Color GetSpriteCompositeOpacityModulate(float opacity)
+    {
+        // Encode the fade before the vertex shader converts it to linear color.
+        return Color.ToSrgb(new Color(opacity, opacity, opacity, opacity));
     }
 
     internal static Vector2 GetPixelSnapOffset(
@@ -160,11 +217,12 @@ internal partial class Clyde
             // To help explain the remainder of this function, it should be functionally equivalent to the following
             // three lines of code, but has been expanded & simplified to speed up the calculation:
             //
-            // (data.WorldPos, data.WorldRot) = batch.Sys.GetRenderWorldPositionRotation((data.Uid, data.Xform));
+            // (data.WorldPos, data.WorldRot) = batch.Sys.GetRenderWorldPositionRotation(data.Uid, data.Xform);
             // var spriteWorldBB = data.Sprite.CalculateRotatedBoundingBox(data.WorldPos, data.WorldRot, batch.ViewRotation);
             // data.SpriteScreenBB = Viewport.GetWorldToLocalMatrix().TransformBox(spriteWorldBB);
 
-            var (pos, rot) = batch.Sys.GetRenderWorldPositionRotation((data.Uid, data.Xform));
+            var pos = data.WorldPos;
+            var rot = data.WorldRot;
             pos += batch.TreePixelSnapOffset;
             data.WorldRot = rot;
             data.WorldPos = pos;
@@ -231,11 +289,19 @@ internal partial class Clyde
         public Vector2 WorldPos;
         public Angle WorldRot;
         public Box2 SpriteScreenBB;
+        public float Opacity;
+    }
+
+    private struct SpriteQueryState
+    {
+        public RefList<SpriteData> List;
+        public ClientZLevelSystem ZLevels;
+        public EntityUid LayerMap;
+        public IReadOnlySet<EntityUid> VisibleMaps;
     }
 
     private readonly struct BatchData
     {
-        public TransformSystem Sys { get; init; }
         public Angle ViewRotation { get; init; }
         public Vector2 ViewScale { get; init; }
         public Vector2 PreScaleViewOffset { get; init; }
@@ -243,7 +309,7 @@ internal partial class Clyde
         public Vector2 TreePixelSnapOffset { get; init; }
     }
 
-    private readonly struct SpriteSortItem : IComparable<SpriteSortItem>
+    internal readonly struct SpriteSortItem : IComparable<SpriteSortItem>
     {
         public readonly int Index;
         private readonly int _drawDepth;

@@ -29,6 +29,11 @@ namespace Robust.Shared.Graphics
         MapCoordinates Position { get; }
 
         /// <summary>
+        /// Rendered absolute z, or null outside a z-level network.
+        /// </summary>
+        float? RenderedAbsoluteZ { get; set; }
+
+        /// <summary>
         /// Translation offset from <see cref="Position"/>. Does not influence the center of FOV.
         /// </summary>
         Vector2 Offset { get; set; }

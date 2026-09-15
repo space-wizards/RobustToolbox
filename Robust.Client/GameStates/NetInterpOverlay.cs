@@ -15,7 +15,7 @@ using Robust.Shared.Random;
 namespace Robust.Client.GameStates;
 
 /// <summary>
-/// Debug view for the client-only render-pose cache.
+/// Debug view for the client-only render transform cache.
 /// </summary>
 internal sealed partial class NetInterpOverlay : Overlay
 {

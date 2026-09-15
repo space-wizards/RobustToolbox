@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Unsafe = System.Runtime.CompilerServices.Unsafe;
 
@@ -47,7 +48,7 @@ public sealed partial class TransformSystem
 
         if (!XformQuery.TryGetComponent(uid, out var xform)
             || xform.Deleted
-            || !TryCreateEndpoint(xform.Coordinates, xform.LocalRotation, out var predictedEndpoint)
+            || !TryCreateEndpoint(uid, xform.Coordinates, xform.LocalRotation, out var predictedEndpoint)
             || !TryGetCommonRenderSpace(
                 rollback.Endpoint.RenderSpace,
                 predictedEndpoint.RenderSpace,
@@ -57,7 +58,23 @@ public sealed partial class TransformSystem
             return;
         }
 
-        switch (ClassifyInterpolation(rollback.Endpoint, predictedEndpoint))
+        var sourcePose = ResolveEndpoint(rollback.Endpoint, 0);
+        var targetPose = ResolveEndpoint(predictedEndpoint, 0);
+        var translationError = Vector2.Distance(sourcePose.Position, targetPose.Position);
+        var interpDecision = ClassifyInterpolation(
+            rollback.Endpoint,
+            predictedEndpoint);
+        _lastPredictionReconciliation = new PredictionReconciliationDebugData(
+            uid,
+            _timing.CurTick,
+            sourcePose.Position,
+            targetPose.Position,
+            translationError,
+            rollback.Endpoint.RenderSpace,
+            predictedEndpoint.RenderSpace,
+            interpDecision == InterpolationDecision.Interpolate);
+
+        switch (interpDecision)
         {
             case InterpolationDecision.Snap:
                 rollback.Status = PredictionRollbackStatus.HardReset;
@@ -104,7 +121,7 @@ public sealed partial class TransformSystem
         {
             if (!XformQuery.TryGetComponent(rollback.Entity, out var xform)
                 || xform.Deleted
-                || !TryCreateEndpoint(xform.Coordinates, xform.LocalRotation, out var endpoint))
+                || !TryCreateEndpoint(rollback.Entity, xform.Coordinates, xform.LocalRotation, out var endpoint))
             {
                 return;
             }
@@ -134,7 +151,21 @@ public sealed partial class TransformSystem
             return;
         }
 
-        StartCorrection(ref state, rollback.Anchor, basePose);
+        StartCorrection(
+            ref state,
+            rollback.Anchor,
+            basePose);
+    }
+
+    /// <summary>
+    /// Gets the latest prediction endpoint comparison.
+    /// </summary>
+    public bool TryGetPredictionReconciliationDebugData(
+        EntityUid uid,
+        out PredictionReconciliationDebugData data)
+    {
+        data = _lastPredictionReconciliation;
+        return data.Entity == uid;
     }
 
     private void CompleteSnappedRotationRollback(EntityUid uid, GameTick predictionTick)
@@ -162,7 +193,7 @@ public sealed partial class TransformSystem
     {
         if (!XformQuery.TryGetComponent(uid, out var xform)
             || xform.Deleted
-            || !TryCreateEndpoint(xform.Coordinates, xform.LocalRotation, out var endpoint))
+            || !TryCreateEndpoint(uid, xform.Coordinates, xform.LocalRotation, out var endpoint))
         {
             _predictionReconciliation.ClearSamples();
             return;
@@ -288,7 +319,7 @@ public sealed partial class TransformSystem
         in RenderTransform rendered,
         EntityUid coordinateSpace)
     {
-        // Buffered states can still be stale while prediction hands back to network presentation.
+        // Buffered states can still be stale while prediction hands back to network render.
         RebasePredictionState(ref state, source, target, rendered, coordinateSpace);
         state.Type = RenderInterpolationType.PredictionInterpolation;
         state.PredictionHandoff = PredictionHandoffStatus.RebasePending;
@@ -333,7 +364,7 @@ public sealed partial class TransformSystem
         EntityUid coordinateSpace,
         InterpolationDecision decision)
     {
-        // Authoritative updates own the segment while a predicted entity returns to server state.
+        // Network updates own the segment while a predicted entity returns to network interpolation.
         if (state.PredictionHandoff == PredictionHandoffStatus.Inactive)
             return false;
 
@@ -357,7 +388,7 @@ public sealed partial class TransformSystem
             || state.Type != RenderInterpolationType.PredictionInterpolation
             || !XformQuery.TryGetComponent(uid, out var xform)
             || xform.Deleted
-            || !TryCreateEndpoint(xform.Coordinates, xform.LocalRotation, out var target)
+            || !TryCreateEndpoint(uid, xform.Coordinates, xform.LocalRotation, out var target)
             || !TryBindRenderTransformToParent(state.LastRendered, target.Parent, out var source)
             || !TryGetCommonRenderSpace(source.RenderSpace, target.RenderSpace, out var coordinateSpace))
         {
@@ -371,7 +402,7 @@ public sealed partial class TransformSystem
             return;
         }
 
-        // Continue from the displayed pose until an authoritative segment replaces this handoff.
+        // Continue from the displayed pose until an server segment replaces this handoff.
         var sourceTick = _timing.LastProcessedTick;
         StartPredictionHandoff(
             ref state,
@@ -388,10 +419,10 @@ public sealed partial class TransformSystem
         EntityUid coordinateSpace,
         GameTick sourceTick)
     {
-        // Keep the handoff alive until authoritative states reach the first unpredicted tick.
+        // Keep the handoff alive until network states reach the first unpredicted tick.
         var startingHandoff = state.PredictionHandoff == PredictionHandoffStatus.Inactive;
         var handoff = startingHandoff
-            ? PredictionHandoffStatus.WaitingForAuthoritativeState
+            ? PredictionHandoffStatus.WaitingForServerState
             : state.PredictionHandoff;
         var handoffTick = startingHandoff
             ? _timing.CurTick
@@ -555,7 +586,7 @@ public sealed partial class TransformSystem
     private enum PredictionHandoffStatus : byte
     {
         Inactive,
-        WaitingForAuthoritativeState,
+        WaitingForServerState,
         RebasePending,
     }
 }
@@ -580,3 +611,16 @@ public record struct GetPredictionReconciliationTargetEvent
         Target = target;
     }
 }
+
+/// <summary>
+/// The last pair of prediction endpoints compared for a controlled entity.
+/// </summary>
+public readonly record struct PredictionReconciliationDebugData(
+    EntityUid Entity,
+    GameTick Tick,
+    Vector2 SourcePosition,
+    Vector2 TargetPosition,
+    float TranslationError,
+    EntityUid SourceRenderSpace,
+    EntityUid TargetRenderSpace,
+    bool TranslationCorrectionApplied);

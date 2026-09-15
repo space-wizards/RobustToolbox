@@ -308,6 +308,7 @@ public abstract partial class SharedPhysicsSystem
 
     private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
     {
+        _islands.Clear();
         using (_prof.Group("Build Islands"))
         {
             BuildIslands(prediction);
@@ -614,9 +615,8 @@ public abstract partial class SharedPhysicsSystem
             // So Box2D would update broadphase here buutttt we'll just wait until MoveEvent queue is used.
         }
 
-        _islands.Clear();
         _islandSet.Clear();
-        _bodyStack.Clear();
+        _islandSet.Clear();
         _awakeBodyList.Clear();
     }
 

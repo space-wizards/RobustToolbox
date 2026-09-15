@@ -616,7 +616,7 @@ public abstract partial class SharedPhysicsSystem
         }
 
         _islandSet.Clear();
-        _islandSet.Clear();
+        _bodyStack.Clear();
         _awakeBodyList.Clear();
     }
 

@@ -578,6 +578,8 @@ namespace Robust.Client.Graphics.Clyde
                 MergeWallLayer(viewport);
             }
 
+            RenderOverlays(viewport, OverlaySpace.AfterLighting, worldAABB, worldBounds);
+
             BindRenderTargetFull(viewport.RenderTarget);
             GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
             CheckGlError();

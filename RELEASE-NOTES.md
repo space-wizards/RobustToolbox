@@ -14,7 +14,7 @@ Don't change the format without looking at the script!
 
 ### New features
 
-*None yet*
+* Add AfterLighting overlay draw space for overlays that need to draw to lighting after all lighting shaders are applied.
 
 ### Bugfixes
 

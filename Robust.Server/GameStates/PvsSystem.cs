@@ -44,6 +44,8 @@ internal sealed partial class PvsSystem : EntitySystem
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
     // Main issue is that I CBF figuring out the logic for handling it changing mid-game.
     public const int DirtyBufferSize = 20;
+
+    private static readonly TimeSpan FullStateRequestCooldown = TimeSpan.FromSeconds(1);
     // Note: If a client has ping higher than TickBuffer / TickRate, then the server will treat every entity as if it
     // had entered PVS for the first time. Note that due to the PVS budget, this buffer is easily overwhelmed.
 
@@ -231,11 +233,18 @@ internal sealed partial class PvsSystem : EntitySystem
         _async = value;
     }
 
-    // TODO PVS rate limit this?
     private void OnClientRequestFull(ICommonSession session, GameTick tick, NetEntity? missingEntity)
     {
         if (!PlayerData.TryGetValue(session, out var pvsSession))
             return;
+
+        // A full state rebuild is expensive and the request is sent reliably.
+        // Coalesce requests while one is pending and rate limit subsequent ones.
+        var realTime = _gameTiming.RealTime;
+        if (pvsSession.RequestedFull || pvsSession.FullStateRequestCooldownEnd > realTime)
+            return;
+
+        pvsSession.FullStateRequestCooldownEnd = realTime + FullStateRequestCooldown;
 
         var lastAcked = pvsSession.LastReceivedAck;
 

@@ -2,7 +2,7 @@ using System;
 
 namespace Robust.Shared.GameObjects;
 
-public sealed class DebugExceptionSystem : EntitySystem
+public sealed partial class DebugExceptionSystem : EntitySystem
 {
     public override void Initialize()
     {

@@ -2,7 +2,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Server.GameObjects
 {
-    internal sealed class DebugPhysicsSystem : SharedDebugPhysicsSystem
+    internal sealed partial class DebugPhysicsSystem : SharedDebugPhysicsSystem
     {
 
     }

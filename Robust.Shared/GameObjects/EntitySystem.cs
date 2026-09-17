@@ -110,6 +110,18 @@ namespace Robust.Shared.GameObjects
         [MustCallBase(true)]
         public virtual void FrameUpdate(float frameTime) { }
 
+        [Obsolete("Used only in source generation internally")]
+        bool? IEntitySystem.NeedsUpdate()
+        {
+            return null;
+        }
+
+        [Obsolete("Used only in source generation internally")]
+        bool? IEntitySystem.NeedsFrameUpdate()
+        {
+            return null;
+        }
+
         /// <inheritdoc />
         [MustCallBase(true)]
         public virtual void Shutdown()

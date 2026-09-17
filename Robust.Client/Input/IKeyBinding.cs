@@ -18,6 +18,7 @@ namespace Robust.Client.Input
         bool CanFocus { get; }
         bool CanRepeat { get; }
         bool AllowSubCombs { get; }
+        bool StrictModifiers { get; }
 
         /// <summary>
         ///     For a <see cref="KeyBindingType.Command"/>-type binding,

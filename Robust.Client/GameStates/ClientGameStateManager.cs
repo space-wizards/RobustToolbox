@@ -1190,8 +1190,13 @@ namespace Robust.Client.GameStates
             // store MetaData & Transform information separately.
             if (data.CurState != null && TryGetComponentChange(data.CurState, _xformCompNetId, out var found))
             {
-                var state = (TransformComponentState)found.State!;
-                return _entities.GetEntity(state.ParentID);
+                switch (found.State)
+                {
+                    case TransformComponentState state:
+                        return _entities.GetEntity(state.ParentID);
+                    case TransformComponentDeltaState delta when delta.IsChanged(SharedTransformSystem.TransformParentIndex):
+                        return _entities.GetEntity(delta.ParentID);
+                }
             }
 
             return _entities.TransformQuery.GetComponent(uid).ParentUid;

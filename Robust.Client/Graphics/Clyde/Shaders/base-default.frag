@@ -1,10 +1,14 @@
-// UV coordinates in texture-space. I.e., (0,0) is the corner of the texture currently being used to draw.
+﻿// UV coordinates in texture-space. I.e., (0,0) is the corner of the texture currently being used to draw.
 // When drawing a sprite from a texture atlas, (0,0) is the corner of the atlas, not the specific sprite being drawn.
 varying highp vec2 UV;
 
 // UV coordinates in quad-space. I.e., when drawing a sprite from a texture atlas (0,0) is the corner of the sprite
 // currently being drawn.
 varying highp vec2 UV2;
+
+// UV coordinates in viewport screen-space. For sprite post-shaders, this stays relative to the original viewport
+// even when the shader is rendered through an intermediate render target.
+varying highp vec2 SCREEN_UV;
 
 // TBH I'm not sure what this is for. I think it is scree  UV coordiantes, i.e., FRAGCOORD.xy * SCREEN_PIXEL_SIZE ?
 // TODO CLYDE Is this still needed?

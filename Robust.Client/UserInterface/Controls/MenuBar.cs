@@ -45,13 +45,25 @@ namespace Robust.Client.UserInterface.Controls
                 StyleClasses = { StyleClassMenuBarPopup }
             };
             _popup.OnPopupHide += PopupHidden;
-            UserInterfaceManager.ModalRoot.AddChild(_popup);
             Menus = new MenuCollection(this);
             AddChild(_hBox = new BoxContainer
             {
                 Orientation = LayoutOrientation.Horizontal,
                 SeparationOverride = 8
             });
+        }
+
+        protected override void EnteredTree()
+        {
+            base.EnteredTree();
+            Root!.ModalRoot.AddChild(_popup);
+        }
+
+        protected override void ExitedTree()
+        {
+            _popup.Close();
+            _popup.Orphan();
+            base.ExitedTree();
         }
 
         private void AddMenu(Menu menu)

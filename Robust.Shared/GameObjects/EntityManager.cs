@@ -434,7 +434,7 @@ namespace Robust.Shared.GameObjects
             MetaDataComponent? meta = null,
             bool isUnclassifiedChange = true)
         {
-            DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(component.Networked,
                 $"Attempted to dirty a non-networked component: {component.GetType()}");
             DebugTools.AssertOwner(uid, component);
 
@@ -454,7 +454,7 @@ namespace Robust.Shared.GameObjects
         internal void DirtyInternal<T>(Entity<T> ent, MetaDataComponent? meta = null, bool isUnclassifiedChange = true)
             where T : IComponent
         {
-            DebugTools.Assert(ent.Comp.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp.GetType()}");
 
             if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
@@ -469,9 +469,9 @@ namespace Robust.Shared.GameObjects
             where T1 : IComponent
             where T2 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
@@ -487,11 +487,11 @@ namespace Robust.Shared.GameObjects
             where T2 : IComponent
             where T3 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
-            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp3.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
@@ -509,13 +509,13 @@ namespace Robust.Shared.GameObjects
             where T3 : IComponent
             where T4 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
-            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp3.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
-            DebugTools.Assert(ent.Comp4.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp4.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp4.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled

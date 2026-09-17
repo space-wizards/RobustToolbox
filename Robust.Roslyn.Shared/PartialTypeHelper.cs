@@ -16,7 +16,6 @@ public sealed record PartialTypeInfo(
     string? Namespace,
     EquatableArray<PartialTypeInfo.NestedPart> Parts,
     bool IsValid,
-    Location SyntaxLocation,
     bool IsSealed)
 {
     public string Name => Parts[^1].Name;
@@ -49,7 +48,6 @@ public sealed record PartialTypeInfo(
             symbol.ContainingNamespace.IsGlobalNamespace ? null : symbol.ContainingNamespace.ToDisplayString(),
             parts.ToImmutable().AsEquatableArray(),
             isValid,
-            syntax.Keyword.GetLocation(),
             symbol.IsSealed);
     }
 
@@ -59,18 +57,6 @@ public sealed record PartialTypeInfo(
         {
             if (modifier.IsKind(SyntaxKind.PartialKeyword))
                 return true;
-        }
-
-        return false;
-    }
-
-    [Obsolete("Diagnostics from source generators are recommended against, apparently: https://github.com/dotnet/roslyn/issues/71709")]
-    public bool CheckPartialDiagnostic(SourceProductionContext context, DiagnosticDescriptor diagnostic)
-    {
-        if (!IsValid)
-        {
-            context.ReportDiagnostic(Diagnostic.Create(diagnostic, SyntaxLocation, Parts[^1].DisplayName));
-            return true;
         }
 
         return false;

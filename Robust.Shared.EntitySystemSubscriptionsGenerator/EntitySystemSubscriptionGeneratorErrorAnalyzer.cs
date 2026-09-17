@@ -1,5 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Robust.Roslyn.Shared;
 
@@ -7,7 +9,7 @@ namespace Robust.Shared.EntitySystemSubscriptionsGenerator;
 
 /// <summary>
 /// This analyzer ensures that all methods annotated with the relevant subscription attributes are:<ul>
-///   <li>In an EntitySystem</li>
+///   <li>In a partial EntitySystem</li>
 ///   <li>Have the correct signature for their subscription type</li>
 /// </ul></summary>
 /// <seealso cref="EntitySystemSubscriptionGenerator"/>
@@ -32,8 +34,17 @@ public class EntitySystemSubscriptionGeneratorErrorAnalyzer : DiagnosticAnalyzer
         true
     );
 
+    private static readonly DiagnosticDescriptor NotPartial = new(
+        Diagnostics.IdNonPartialContainingTypeForGeneratedSubscription,
+        "Containing class must be declared as Partial",
+        "Method is declared in type \"{0}\" which is not Partial",
+        "Usage",
+        DiagnosticSeverity.Error,
+        true
+    );
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        [BadMethodSignature, NotEntitySystem];
+        [BadMethodSignature, NotEntitySystem, NotPartial];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -42,11 +53,11 @@ public class EntitySystemSubscriptionGeneratorErrorAnalyzer : DiagnosticAnalyzer
             GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics
         );
 
-        EnsureAnnotatedSubscriptionMethodsAreInAnEntitySystem(context);
+        EnsureAnnotatedSubscriptionMethodsAreInAPartialEntitySystem(context);
         EnsureAnnotatedSubscriptionMethodsHaveCorrectSignatures(context);
     }
 
-    private static void EnsureAnnotatedSubscriptionMethodsAreInAnEntitySystem(AnalysisContext context)
+    private static void EnsureAnnotatedSubscriptionMethodsAreInAPartialEntitySystem(AnalysisContext context)
     {
         List<string> attributeNames =
         [
@@ -71,8 +82,24 @@ public class EntitySystemSubscriptionGeneratorErrorAnalyzer : DiagnosticAnalyzer
                     if (!c.Symbol.GetAttributes()
                             .Select(it => it.AttributeClass)
                             .Intersect(attributeSymbols, SymbolEqualityComparer.IncludeNullability)
-                            .Any() ||
-                        IsSubtypeOf(c.Symbol.ContainingType, entitySystemType))
+                            .Any())
+                        return;
+
+                    var references = c.Symbol.ContainingType.DeclaringSyntaxReferences;
+                    if (references.Length != 0)
+                    {
+                        var containingTypeDeclaration = (TypeDeclarationSyntax)references[0].GetSyntax();
+                        if (!containingTypeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
+                        {
+                            c.RegisterSymbolEndAction(c => c.ReportDiagnostic(Diagnostic.Create(
+                                NotPartial,
+                                c.Symbol.Locations[0],
+                                c.Symbol.ContainingType?.Name ?? "<unknown>"
+                            )));
+                        }
+                    }
+
+                    if (IsSubtypeOf(c.Symbol.ContainingType, entitySystemType))
                         return;
 
                     c.RegisterSymbolEndAction(c => c.ReportDiagnostic(Diagnostic.Create(

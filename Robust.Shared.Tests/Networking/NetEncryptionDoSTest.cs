@@ -14,8 +14,26 @@ public sealed class NetEncryptionDoSTest
     [TearDown]
     public void TearDown()
     {
+        // Yummy threading
+        // Ensure all this gets flushed before we shutdown.
         foreach (var peer in _peers)
+        {
+            foreach (var connection in peer.Connections)
+            {
+                connection.Disconnect("bye bye", sendBye: false);
+            }
+        }
+
+        foreach (var peer in _peers)
+        {
+            Assert.That(() => peer.Connections.Count, Is.Zero.After(10_000).PollEvery(100),
+                $"{peer.GetType().Name} did not disconnect before shutdown.");
+        }
+
+        foreach (var peer in _peers)
+        {
             peer.Shutdown(null);
+        }
 
         _peers.Clear();
     }

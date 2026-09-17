@@ -145,7 +145,6 @@ public abstract partial class SharedContainerSystem
 
         _transform.DropNextTo(toInsert, (container.Owner, container.Comp2));
         return false;
-
     }
 
     /// <summary>

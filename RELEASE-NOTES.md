@@ -42,7 +42,7 @@ END TEMPLATE-->
 ### New features
 
 * `Control.Restyle` has been made public for manually restyling controls on edge cases.
-* `EntityManager.PredictedSpawn(string?,ComponentRegistry?,bool)` and `EntityManager.PredictedSpawn(string?,MapCoordinates,ComponentRegistry?,Angle)` now have proxies for EntitySystems.
+* `EntityManager.PredictedSpawn(string?,ComponentRegistry?,bool)`, `EntityManager.PredictedSpawn(string?,MapCoordinates,ComponentRegistry?,Angle)`, `EntityManager.PredictedSpawnAtPosition(string?,EntityCoordinates,Angle,ComponentRegistry?)`, and `EntityManager.PredictedSpawnInContainerOrDrop(string?,EntityUid,string,out bool,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)` now all have proxies for EntitySystems.
 
 ### Bugfixes
 

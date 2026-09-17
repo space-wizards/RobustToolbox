@@ -13,6 +13,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -27,6 +28,7 @@ public abstract partial class SharedContainerSystem
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private SharedJointSystem _joint = default!;
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IReflectionManager _reflection = default!;
 
     [Dependency] private EntityQuery<ContainerManagerComponent> _managerQuery = default!;
     [Dependency] private EntityQuery<MapGridComponent> _gridQuery = default!;
@@ -71,7 +73,7 @@ public abstract partial class SharedContainerSystem
             }
 
             var sContainer =
-                new ContainerManagerComponent.ContainerManagerComponentState.ContainerData(container.GetType().Name,
+                new ContainerManagerComponent.ContainerManagerComponentState.ContainerData($"{container.GetType().Name}",
                     container.ShowContents,
                     container.OccludesLight,
                     uidArr);

@@ -6,16 +6,18 @@ using Robust.Client.GameObjects;
 using Robust.Client.Timing;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
+using Robust.Shared.ContentPack;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
-    internal sealed class ContainerTests : RobustIntegrationTest
+    internal sealed partial class ContainerTests : RobustIntegrationTest
     {
         /// <summary>
         /// Tests container states with children that do not exist on the client
@@ -364,6 +366,160 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 var containeeEnt = baseContainer.ContainedEntities[0];
                 Assert.That(sEntManager.GetComponent<MetaDataComponent>(containeeEnt).EntityName, Is.EqualTo("ContaineeEnt"));
             });
+        }
+
+        [Test]
+        public async Task Container_NewSubType_SerializesCorrectly()
+        {
+            var server = StartServer();
+            var client = StartClient();
+
+            await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+
+            var clientNetManager = client.ResolveDependency<IClientNetManager>();
+             Assert.DoesNotThrow(() => client.SetConnectTarget(server));
+             client.Post(() =>
+             {
+                 clientNetManager.ClientConnect(null!, 0, null!);
+             });
+
+             for (var i = 0; i < 10; i++)
+             {
+                 await server.WaitRunTicks(1);
+                 await client.WaitRunTicks(1);
+             }
+
+             var cEntManager = client.ResolveDependency<IEntityManager>();
+             var cContainerSys = cEntManager.System<ContainerSystem>();
+
+             var sEntManager = server.ResolveDependency<IEntityManager>();
+             var sContainerSys = sEntManager.System<SharedContainerSystem>();
+             var sMetadataSys = sEntManager.System<MetaDataSystem>();
+             var sPlayerManager = server.ResolveDependency<ISharedPlayerManager>();
+
+             EntityUid sParentId = default;
+             await server.WaitAssertion(() =>
+             {
+                 // Setup
+                 var mapId = MapId.Nullspace;
+                 var mapPos = MapCoordinates.Nullspace;
+
+                 sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
+                 mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
+
+                 sParentId = sEntManager.Spawn(null, mapPos);
+                 sMetadataSys.SetEntityName(sParentId, "Container");
+                 sContainerSys.EnsureContainer<Container>(sParentId, "dummy");
+
+                 // Setup PVS
+                 sEntManager.AddComponent<EyeComponent>(sParentId);
+                 var player = sPlayerManager.Sessions.First();
+                 server.PlayerMan.SetAttachedEntity(player, sParentId);
+                 sPlayerManager.JoinGame(player);
+             });
+
+             for (var i = 0; i < 10; i++)
+             {
+                 await server.WaitRunTicks(1);
+                 await client.WaitRunTicks(1);
+             }
+
+             const string containerId = $"{nameof(ContainerTests)}_{nameof(Container_NewSubType_SerializesCorrectly)}";
+             EntityUid sContainedId = default!;
+             await server.WaitAssertion(() =>
+             {
+                 var container = sContainerSys.EnsureContainer<CustomContainerType>(sParentId, containerId);
+
+                 Assert.That(container.ContainedEnt, Is.Default);
+                 Assert.That(container.Count, Is.Zero);
+
+                 Assert.That(sEntManager.TrySpawnInContainer(null, sParentId, containerId, out var contained), Is.True);
+                 Assert.That(contained, Is.Not.Null);
+                 Assert.That(container.ContainedEnt, Is.EqualTo(contained.Value));
+                 Assert.That(container.Count, Is.EqualTo(1));
+                 Assert.That(container.Contains(contained.Value), Is.True);
+
+                 sContainedId = contained.Value;
+             });
+
+             // Needs minimum 4 to sync to client because buffer size is 3
+             await server.WaitRunTicks(4);
+             await client.WaitRunTicks(10);
+
+             var cParentId = cEntManager.GetEntity(sEntManager.GetNetEntity(sParentId));
+             var cContainedId = cEntManager.GetEntity(sEntManager.GetNetEntity(sContainedId));
+             await client.WaitAssertion(() =>
+             {
+                 Assert.That(cEntManager.EntityExists(cParentId));
+
+                 var container = (CustomContainerType) cContainerSys.GetContainer(cParentId, containerId);
+                 Assert.That(container.ContainedEnt, Is.EqualTo(cEntManager.GetEntity(sEntManager.GetNetEntity(cContainedId))));
+                 Assert.That(container.Count, Is.EqualTo(1));
+             });
+
+             for (var i = 0; i < 10; i++)
+             {
+                 await server.WaitRunTicks(1);
+                 await client.WaitRunTicks(1);
+             }
+
+             await server.WaitAssertion(() =>
+             {
+                 var container = (CustomContainerType) sContainerSys.GetContainer(sParentId, containerId);
+                 Assert.That(container.ContainedEnt, Is.EqualTo(sContainedId));
+                 Assert.That(container.Count, Is.EqualTo(1));
+                 Assert.That(container.Contains(sContainedId), Is.True);
+
+                Assert.That(sContainerSys.Remove(sContainedId, container), Is.True);
+
+                 Assert.That(container.ContainedEnt, Is.Default);
+                 Assert.That(container.Count, Is.Zero);
+                 Assert.That(container.Contains(sContainedId), Is.False);
+             });
+
+             // Needs minimum 4 to sync to client because buffer size is 3
+             await server.WaitRunTicks(4);
+             await client.WaitRunTicks(10);
+
+             await client.WaitAssertion(() =>
+             {
+                 Assert.That(cEntManager.EntityExists(cParentId));
+
+                 var container = (CustomContainerType) cContainerSys.GetContainer(cParentId, containerId);
+                 Assert.That(container.ContainedEnt, Is.Default);
+                 Assert.That(container.Count, Is.Zero);
+                 Assert.That(container.Contains(cContainedId), Is.False);
+             });
+        }
+
+        [ContentAccessAllowed]
+        private sealed partial class CustomContainerType : BaseContainer
+        {
+            public override IReadOnlyList<EntityUid> ContainedEntities => ContainedEnt == null ? [] : [ContainedEnt.Value];
+            public override int Count => ContainedEntities.Count;
+
+            public EntityUid? ContainedEnt;
+
+            public override bool Contains(EntityUid contained)
+            {
+                return ContainedEnt != null && ContainedEnt == contained;
+            }
+
+            protected internal override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
+            {
+                ContainedEnt = toInsert;
+            }
+
+            protected internal override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
+            {
+                if (ContainedEnt == toRemove)
+                    ContainedEnt = null;
+            }
+
+            protected internal override void InternalShutdown(IEntityManager entMan, SharedContainerSystem system, bool isClient)
+            {
+                ContainedEnt = null;
+            }
         }
     }
 }

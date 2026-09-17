@@ -38,6 +38,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * SpawnNextToOrDrop methods have been changed to take `EntProtoId?, Entity<TransformComponent?>, Vector2 = default` instead of `string?, EntityUid, TransformComponent? null`. Because of this, some `Entity<T>`s will need to first be explicity converted into `EntityUid`s.
+* DropNextTo and anything using it will now inherit the rotation of the target instead of the target's parent.
 
 ### New features
 

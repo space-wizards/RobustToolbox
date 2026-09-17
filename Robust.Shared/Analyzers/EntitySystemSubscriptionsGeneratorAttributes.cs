@@ -24,7 +24,18 @@ namespace Robust.Shared.Analyzers;
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method)]
 [MeansImplicitUse]
-public sealed class SubscribeLocalEventAttribute : Attribute;
+public sealed class SubscribeLocalEventAttribute(Type[]? before = null, Type[]? after = null) : Attribute
+{
+    /// <summary>
+    /// Systems that this event subscription should run before.
+    /// </summary>
+    public readonly Type[]? Before = before;
+
+    /// <summary>
+    /// Systems that this event subscription should run after.
+    /// </summary>
+    public readonly Type[]? After = after;
+}
 
 /// <summary>
 /// This attribute indicates that the annotated method is a handler for an event subscription. Methods annotated with
@@ -41,7 +52,18 @@ public sealed class SubscribeLocalEventAttribute : Attribute;
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method)]
 [MeansImplicitUse]
-public sealed class SubscribeNetworkEventAttribute : Attribute;
+public sealed class SubscribeNetworkEventAttribute(Type[]? before = null, Type[]? after = null) : Attribute
+{
+    /// <summary>
+    /// Systems that this event subscription should run before.
+    /// </summary>
+    public readonly Type[]? Before = before;
+
+    /// <summary>
+    /// Systems that this event subscription should run after.
+    /// </summary>
+    public readonly Type[]? After = after;
+}
 
 /// <summary>
 /// This attribute indicates that the annotated method is a handler for an event subscription. Methods annotated with
@@ -58,4 +80,15 @@ public sealed class SubscribeNetworkEventAttribute : Attribute;
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method)]
 [MeansImplicitUse]
-public sealed class EventSubscriptionAttribute : Attribute;
+public sealed class EventSubscriptionAttribute(Type[]? before = null, Type[]? after = null) : Attribute
+{
+    /// <summary>
+    /// Systems that this event subscription should run before.
+    /// </summary>
+    public readonly Type[]? Before = before;
+
+    /// <summary>
+    /// Systems that this event subscription should run after.
+    /// </summary>
+    public readonly Type[]? After = after;
+}

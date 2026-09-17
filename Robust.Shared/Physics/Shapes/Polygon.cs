@@ -95,11 +95,12 @@ internal partial record struct Polygon : IPhysShape
         Unsafe.SkipInit(out this);
         Radius = 0f;
         VertexCount = 4;
+        bounds.GetCorners(out var bottomLeft, out var bottomRight, out var topRight, out var topLeft);
 
-        _vertices._00 = bounds.BottomLeft;
-        _vertices._01 = bounds.BottomRight;
-        _vertices._02 = bounds.TopRight;
-        _vertices._03 = bounds.TopLeft;
+        _vertices._00 = bottomLeft;
+        _vertices._01 = bottomRight;
+        _vertices._02 = topRight;
+        _vertices._03 = topLeft;
 
         CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
 
@@ -112,10 +113,10 @@ internal partial record struct Polygon : IPhysShape
     internal Polygon(ReadOnlySpan<Vector2> vertices, ReadOnlySpan<Vector2> normals, Vector2 centroid, byte count)
     {
         Unsafe.SkipInit(out this);
-        vertices[..VertexCount].CopyTo(_vertices.AsSpan);
-        normals[..VertexCount].CopyTo(_normals.AsSpan);
         Centroid = centroid;
         VertexCount = count;
+        vertices[..VertexCount].CopyTo(_vertices.AsSpan);
+        normals[..VertexCount].CopyTo(_normals.AsSpan);
         Radius = 0f;
     }
 
@@ -130,12 +131,11 @@ internal partial record struct Polygon : IPhysShape
             return;
         }
 
-        VertexCount = (byte) vertices.Length;
+        VertexCount = (byte) hull.Count;
         var vertSpan = _vertices.AsSpan;
 
-        vertices.AsSpan().CopyTo(vertSpan);
         Set(hull);
-        Centroid = ComputeCentroid(vertSpan);
+        Centroid = ComputeCentroid(vertSpan[..VertexCount]);
     }
 
     public static explicit operator Polygon(PolygonShape polyShape)

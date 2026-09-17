@@ -4,6 +4,7 @@ using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.Controls
@@ -60,6 +61,20 @@ namespace Robust.Client.UserInterface.Controls
                 _filterable = value;
                 _filterBox.Visible = value;
                 UpdateFilters();
+            }
+        }
+
+        // Compatibility shim for old XAML behaviour that assumed setting
+        // classes would concatenate with the StyleClassButton instead of overwriting
+        // all of them
+        [ViewVariables]
+        new public StyleClassCollection StyleClasses
+        {
+            get => base.StyleClasses;
+            set
+            {
+                base.StyleClasses = value;
+                base.StyleClasses.Add(StyleClassButton);
             }
         }
 

@@ -27,6 +27,9 @@ internal sealed class ToolshedCommandImplementor
     /// </summary>
     public readonly string LocName;
 
+    private readonly string? AttributeDescription;
+    private readonly string? AttributeHelp;
+
     private readonly ToolshedManager _toolshed;
     private readonly ILocalizationManager _loc;
     public readonly Dictionary<CommandDiscriminator, Func<CommandInvocationArguments, object?>> Implementations = new();
@@ -43,7 +46,13 @@ internal sealed class ToolshedCommandImplementor
 
     public CommandSpec Spec => new(Owner, SubCommand);
 
-    public ToolshedCommandImplementor(string? subCommand, ToolshedCommand owner, ToolshedManager toolshed, ILocalizationManager loc)
+    public ToolshedCommandImplementor(
+        string? subCommand,
+        string? attributeDescription,
+        string? attributeHelp,
+        ToolshedCommand owner,
+        ToolshedManager toolshed,
+        ILocalizationManager loc)
     {
         Owner = owner;
         _loc = loc;
@@ -61,6 +70,9 @@ internal sealed class ToolshedCommandImplementor
 
         if (SubCommand != null)
             LocName =  $"{LocName}-{SubCommand}";
+
+        AttributeDescription = attributeDescription;
+        AttributeHelp = attributeHelp;
     }
 
     /// <summary>
@@ -109,6 +121,7 @@ internal sealed class ToolshedCommandImplementor
 
         foreach (var arg in method.Args)
         {
+            ctx.CurrentArgument = arg;
             object? parsed;
             if (arg.IsParamsCollection)
             {
@@ -123,6 +136,7 @@ internal sealed class ToolshedCommandImplementor
             ctx.Bundle.Arguments[arg.Name] = parsed;
         }
 
+        ctx.CurrentArgument = null;
         DebugTools.AssertNull(ctx.Error);
         DebugTools.AssertNull(ctx.Completions);
         return true;
@@ -376,13 +390,18 @@ internal sealed class ToolshedCommandImplementor
             argType = argType.GetElementType()!;
         }
 
+        // TODO TOOLSHED
+        // Find a good way to give parsers access to argument attributes.
+        // I don't want to give just content access to all (possibly internal) attributes/
+        // Currently ListLengthAttribute is just hardcoded.
         return new CommandArgument(
             arg.Name!,
             argType,
             GetArgumentParser(arg, argType),
             arg.IsOptional,
             arg.DefaultValue,
-            isParamsCollection);
+            isParamsCollection,
+            arg.GetCustomAttribute<ListLengthAttribute>());
     }
 
     private ITypeParser? GetArgumentParser(ParameterInfo param, Type type)
@@ -610,6 +629,9 @@ internal sealed class ToolshedCommandImplementor
         if (_loc.TryGetString($"command-help-{LocName}", out var str))
             return str;
 
+        if (AttributeHelp != null)
+            return AttributeHelp;
+
         var builder = new StringBuilder();
 
         // If any of the commands are invertible via the "not" prefix, we point that out in the help string
@@ -704,7 +726,11 @@ internal sealed class ToolshedCommandImplementor
     /// <inheritdoc cref="ToolshedCommand.Description"/>
     public string Description()
     {
-        return _loc.GetString(DescriptionLocKey());
+        var key = DescriptionLocKey();
+        if (_loc.TryGetString(key, out var desc))
+            return desc;
+
+        return AttributeDescription ?? key;
     }
 }
 
@@ -763,7 +789,8 @@ public readonly record struct CommandArgument(
     ITypeParser? Parser,
     bool IsOptional,
     object? DefaultValue,
-    bool IsParamsCollection);
+    bool IsParamsCollection,
+    ListLengthAttribute? ListLengthAttribute);
 
 public sealed class ArgumentParseError(Type type, Type parser) : ConError
 {

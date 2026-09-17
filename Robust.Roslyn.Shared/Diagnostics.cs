@@ -61,6 +61,7 @@ public static class Diagnostics
     public const string IdInvalidContainingTypeForGeneratedSubscription = "RA0055";
     public const string IdNonPartialContainingTypeForGeneratedSubscription = "RA0056";
     public const string IdDataFieldOutsideDefinition = "RA0057";
+    public const string IdEntitySystemSubscriptionConversionPossible = "RA0058";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

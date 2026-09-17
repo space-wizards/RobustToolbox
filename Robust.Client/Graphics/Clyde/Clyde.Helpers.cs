@@ -84,6 +84,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             ProjViewUBO.Apply(program);
             UniformConstantsUBO.Apply(program);
+            program.SetUniformMaybe(UniIScreenUvRect, _queuedScreenUvRect);
             if (!_hasGLSrgb)
             {
                 program.SetUniformMaybe("SRGB_EMU_CONFIG",

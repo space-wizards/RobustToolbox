@@ -31,14 +31,27 @@ namespace Robust.Analyzers
         {
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
             context.EnableConcurrentExecution();
-            context.RegisterOperationAction(CheckFriendship,
-                OperationKind.FieldReference,
-                OperationKind.PropertyReference,
-                OperationKind.MethodReference,
-                OperationKind.Invocation);
+            context.RegisterCompilationStartAction(compilationContext =>
+            {
+                var friendAttribute = compilationContext.Compilation.GetTypeByMetadataName(AccessAttributeType);
+                if (friendAttribute is null)
+                    return;
+
+                var pureAttribute = compilationContext.Compilation.GetTypeByMetadataName(PureAttributeType);
+
+                compilationContext.RegisterOperationAction(
+                    operationContext => CheckFriendship(operationContext, friendAttribute, pureAttribute),
+                    OperationKind.FieldReference,
+                    OperationKind.PropertyReference,
+                    OperationKind.MethodReference,
+                    OperationKind.Invocation);
+            });
         }
 
-        private void CheckFriendship(OperationAnalysisContext context)
+        private void CheckFriendship(
+            OperationAnalysisContext context,
+            INamedTypeSymbol friendAttribute,
+            INamedTypeSymbol pureAttribute)
         {
             var operation = context.Operation;
 
@@ -71,15 +84,12 @@ namespace Robust.Analyzers
             // Get the info of the type defining the member, so we can check the attributes later...
             var accessedType = member.ContainingType;
 
-            // Get the attributes
-            var friendAttribute = context.Compilation.GetTypeByMetadataName(AccessAttributeType);
-
             // Get the type that is containing this expression, or, the type where this is happening.
             if (context.ContainingSymbol?.ContainingType is not {} accessingType)
                 return;
 
             // Determine which type of access is happening here... Read, write or execute?
-            var accessAttempt = DetermineAccess(context, targetAccess, operation);
+            var accessAttempt = DetermineAccess(pureAttribute, targetAccess, operation);
 
             // Check whether this is a "self" access, including inheritors.
             var selfAccess = InheritsFromOrEquals(accessingType, accessedType);
@@ -194,7 +204,7 @@ namespace Robust.Analyzers
             }
         }
 
-        private static AccessPermissions DetermineAccess(OperationAnalysisContext context, IOperation operation, IOperation original)
+        private static AccessPermissions DetermineAccess(INamedTypeSymbol pureAttribute, IOperation operation, IOperation original)
         {
             switch (operation)
             {
@@ -205,8 +215,6 @@ namespace Robust.Analyzers
 
                 case IInvocationOperation invoke:
                 {
-                    var pureAttribute = context.Compilation.GetTypeByMetadataName(PureAttributeType);
-
                     foreach (var attribute in invoke.TargetMethod.GetAttributes())
                     {
                         // Pure methods are treated as read accesses.
@@ -219,7 +227,7 @@ namespace Robust.Analyzers
 
                 case IMemberReferenceOperation member:
                 {
-                    return DetermineAccess(context, member.Parent, operation);
+                    return DetermineAccess(pureAttribute, member.Parent, operation);
                 }
 
                 default:

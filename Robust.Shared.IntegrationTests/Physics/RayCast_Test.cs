@@ -203,7 +203,7 @@ internal sealed class RayCast_Test
         var entManager = sim.Resolve<IEntityManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
 
-        sim.System<SharedMapSystem>().CreateMap(out mapId);
+        mapSystem.CreateMap(out mapId);
 
         var grid = mapSystem.CreateGridEntity(mapId);
 

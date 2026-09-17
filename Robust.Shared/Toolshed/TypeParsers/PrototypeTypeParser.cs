@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
+﻿using System.Text;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
@@ -53,7 +50,7 @@ public sealed partial class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
     {
         var hint = ToolshedCommand.GetArgHint(arg, typeof(ProtoId<T>));
         var maxCount = _config.GetCVar(CVars.ToolshedPrototypesAutocompleteLimit);
-        var options = CompletionHelper.PrototypeIdsLimited<T>(ctx.Input[ctx.Index..], proto: _proto, maxCount: maxCount);
+        var options = CompletionHelper.PrototypeIdsLimited<T>(ctx.Input[ctx.Index..], _proto, true, maxCount);
         return CompletionResult.FromHintOptions(options, hint);
     }
 }

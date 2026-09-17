@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Definition;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 
@@ -11,6 +11,7 @@ using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization;
 
+[NotContentImplementable]
 public interface ISerializationGenerated<T> : ISerializationGenerated
 {
     /// <seealso cref="ISerializationManager.CreateCopy"/>
@@ -51,6 +52,18 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         throw new NotImplementedException();
     }
 
+    /// <seealso cref="ISerializationManager.Read"/>
+    [Obsolete("Use ISerializationManager.Read instead")]
+    void ReadComp(
+        ref Component target,
+        MappingDataNode mappingDataNode,
+        ISerializationManager serialization,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <seealso cref="ISerializationManager.Write"/>
     [Obsolete("Use ISerializationManager.Write instead")]
     static virtual void Write(
@@ -60,6 +73,16 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         ISerializationContext? context,
         bool alwaysWrite,
         ImmutableDictionary<string, object?> defaultValues)
+    {
+        throw new NotImplementedException();
+    }
+
+    [Obsolete("Used only in serialization source generation internally")]
+    static virtual bool AreEqual(
+        T left,
+        T right,
+        ISerializationManager serialization,
+        ISerializationContext? context = null)
     {
         throw new NotImplementedException();
     }
@@ -82,6 +105,7 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
     }
 }
 
+[NotContentImplementable]
 public interface ISerializationGenerated
 {
     /// <seealso cref="ISerializationManager.CopyTo"/>

@@ -78,7 +78,7 @@ namespace Robust.Shared.GameObjects
         private Histogram.Child? _queuedDeletionHistogram;
         private Histogram.Child? _componentCullHistogram;
 
-        private EntityDiffContext _context = new();
+        private EntityDiffContext _context;
 
         /// <summary>
         ///     All entities currently stored in the manager.
@@ -139,6 +139,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public EntityManager()
         {
+            _context = new(_serManager);
         }
 
         public virtual void Initialize()
@@ -179,12 +180,11 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            var protoData = PrototypeManager.GetPrototypeData(prototype);
             var comps = _entCompIndex[uid];
+            var hasIgnoredComps = ignoredComps is { Count: > 0 };
 
             // Fast check if the component counts match.
-            // Note that transform and metadata are not included in the prototype data.
-            if (protoData.Count + 2 != comps.Count)
+            if (prototype.Components.Count + 2 != comps.Count)
                 return false;
 
             foreach (var component in comps)
@@ -194,34 +194,19 @@ namespace Robust.Shared.GameObjects
 
                 var compType = component.GetType();
 
-                if (compType == typeof(TransformComponent) || compType == typeof(MetaDataComponent))
+                if (compType == _xformReg.Type || compType == _metaReg.Type)
                     continue;
 
-                var compName = _componentFactory.GetComponentName(compType);
+                var compReg = _componentFactory.GetRegistration(compType);
 
-                if (ignoredComps?.Contains(compName) == true)
+                if (hasIgnoredComps && ignoredComps!.Contains(compReg.Name))
                     continue;
 
                 // If the component isn't on the prototype then it's custom.
-                if (!protoData.TryGetValue(compName, out var protoMapping))
+                if (!prototype.Components.TryGetValue(compReg.Name, out var protoEntry))
                     return false;
 
-                MappingDataNode compMapping;
-                try
-                {
-                    compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: true, context: _context);
-                }
-                catch (Exception e)
-                {
-                    _sawmill.Error($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
-#if !EXCEPTION_TOLERANCE
-                    throw;
-#else
-                    return false;
-#endif
-                }
-
-                if (compMapping.AnyExcept(protoMapping))
+                if (!_serManager.DataFieldEquals(compReg.Type, component, protoEntry.Component, _context))
                     return false;
             }
 
@@ -449,7 +434,7 @@ namespace Robust.Shared.GameObjects
             MetaDataComponent? meta = null,
             bool isUnclassifiedChange = true)
         {
-            DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(component.Networked,
                 $"Attempted to dirty a non-networked component: {component.GetType()}");
             DebugTools.AssertOwner(uid, component);
 
@@ -469,7 +454,7 @@ namespace Robust.Shared.GameObjects
         internal void DirtyInternal<T>(Entity<T> ent, MetaDataComponent? meta = null, bool isUnclassifiedChange = true)
             where T : IComponent
         {
-            DebugTools.Assert(ent.Comp.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp.GetType()}");
 
             if (ent.Comp.LifeStage >= ComponentLifeStage.Removing || !ent.Comp.NetSyncEnabled)
@@ -484,9 +469,9 @@ namespace Robust.Shared.GameObjects
             where T1 : IComponent
             where T2 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
@@ -502,11 +487,11 @@ namespace Robust.Shared.GameObjects
             where T2 : IComponent
             where T3 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
-            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp3.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
@@ -524,13 +509,13 @@ namespace Robust.Shared.GameObjects
             where T3 : IComponent
             where T4 : IComponent
         {
-            DebugTools.Assert(ent.Comp1.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp1.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp1.GetType()}");
-            DebugTools.Assert(ent.Comp2.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp2.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp2.GetType()}");
-            DebugTools.Assert(ent.Comp3.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp3.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp3.GetType()}");
-            DebugTools.Assert(ent.Comp4.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+            DebugTools.Assert(ent.Comp4.Networked,
                 $"Attempted to dirty a non-networked component: {ent.Comp4.GetType()}");
 
             // We're not gonna bother checking ent.Comp.NetSyncEnabled
@@ -576,6 +561,14 @@ namespace Robust.Shared.GameObjects
             // TODO: Why does networking need to send deletes for child entities?
             if (MetaQuery.TryGetComponent(uid.Value, out var meta))
                 DeleteEntity(uid.Value, meta, TransformQuery.GetComponent(uid.Value));
+        }
+
+        /// <summary>
+        /// Shuts-down and removes given Entity. This is also broadcast to all clients.
+        /// </summary>
+        public void DeleteEntity(EntityUid e, MetaDataComponent meta)
+        {
+            DeleteEntity(e, meta, TransformQuery.GetComponent(e));
         }
 
         /// <summary>

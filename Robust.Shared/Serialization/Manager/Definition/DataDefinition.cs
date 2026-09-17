@@ -31,6 +31,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
         internal readonly PopulateDelegateSignature<T> Populate;
         internal readonly SerializeDelegateSignature<T> Serialize;
         internal readonly CopyDelegateSignature<T> CopyTo;
+        internal readonly EqualDelegateSignature<T> AreEqual;
 
         internal override PopulateDelegateSignature<object> PopulateObj { get; init; }
 #pragma warning restore CS0618
@@ -95,6 +96,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             Populate = T.Read;
             Serialize = T.Write;
             CopyTo = (source, ref target, ctx, context) => source.Copy(ref target, manager, ctx, context); // TODO source gen this one too!
+            AreEqual = T.AreEqual;
             FieldValidators = T.Validate;
             InstantiateObj = T.StaticInstantiateObject;
 #pragma warning restore CS0618

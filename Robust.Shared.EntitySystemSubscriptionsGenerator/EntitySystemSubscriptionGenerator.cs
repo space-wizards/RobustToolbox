@@ -19,15 +19,6 @@ namespace Robust.Shared.EntitySystemSubscriptionsGenerator;
 [Generator(LanguageNames.CSharp)]
 public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
 {
-    private static readonly DiagnosticDescriptor NotPartial = new(
-        Diagnostics.IdNonPartialContainingTypeForGeneratedSubscription,
-        "Containing class must be declared as Partial",
-        "Method is declared in type \"{0}\" which is not Partial",
-        "Usage",
-        DiagnosticSeverity.Error,
-        true
-    );
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var annotatedEntitySystems = Aggregate(
@@ -68,7 +59,7 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
             (productionContext, info) =>
             {
                 var (partialTypeInfo, subscriptions) = info;
-                if (partialTypeInfo.CheckPartialDiagnostic(productionContext, NotPartial))
+                if (!partialTypeInfo.IsValid)
                     return;
 
                 var subscriptionsSyntax = new StringBuilder();
@@ -77,7 +68,11 @@ public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
                     productionContext.CancellationToken.ThrowIfCancellationRequested();
                     var subscriptionMethod = method.Type.ToSubscriptionMethod();
                     var typeArgs = string.Join(", ", method.TypeArgs);
-                    subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{typeArgs}>({method.MethodName});");
+
+                    var before = method.Before.HasValue ? ("[" + string.Join(", ", method.Before.Value.Select(t => $"typeof({t})")) + "]") : "null";
+                    var after = method.After.HasValue ? ("[" + string.Join(", ", method.After.Value.Select(t => $"typeof({t})")) + "]") : "null";
+
+                    subscriptionsSyntax.AppendLine($"        {subscriptionMethod}<{typeArgs}>({method.MethodName}, {before}, {after});");
                 }
 
                 var builder = new StringBuilder(@"
@@ -192,6 +187,7 @@ using JetBrains.Annotations;
 
         if (entityType.OriginalDefinition.ToDisplayString() != EntityTypeName ||
             entityType.TypeArguments is not [INamedTypeSymbol componentType] ||
+            componentType.NullableAnnotation == NullableAnnotation.Annotated ||
             !TypeSymbolHelper.ImplementsInterface(componentType, IComponentTypeName))
             return null;
 
@@ -207,6 +203,7 @@ using JetBrains.Annotations;
             method.Parameters[1].Type is not INamedTypeSymbol componentType ||
             method.Parameters[2].Type is not INamedTypeSymbol eventType ||
             !TypeSymbolHelper.ShittyTypeMatch(entityUidType, EntityUidTypeName) ||
+            componentType.NullableAnnotation == NullableAnnotation.Annotated ||
             !TypeSymbolHelper.ImplementsInterface(componentType, IComponentTypeName))
             return null;
 
@@ -220,11 +217,23 @@ using JetBrains.Annotations;
     )
     {
         if (annotationName.ToSubscriptionType() is not { } subType ||
-            !AttributeHelper.HasAttribute(method, annotationName, out _) ||
+            !AttributeHelper.HasAttribute(method, annotationName, out var attribute) ||
             parseFunc(method) is not { } parameters)
             return null;
 
-        return new SubscriptionInfo(method.Name, subType, parameters);
+        var args = attribute.ConstructorArguments;
+        return new SubscriptionInfo(method.Name, subType, parameters, GetTypes(args[0]), GetTypes(args[1]));
+    }
+
+    /// <summary>
+    /// Gets an array of type names from the typed constant.
+    /// </summary>
+    private static ImmutableArray<string>? GetTypes(TypedConstant constant)
+    {
+        if (constant.IsNull || constant.Kind != TypedConstantKind.Array)
+            return null;
+
+        return [.. constant.Values.Select(v => (v.Value as ITypeSymbol)!.ToDisplayString())];
     }
 
     /// Aggregates all of the <typeparamref name="T"/>s across all the given providers into a single array value
@@ -244,5 +253,5 @@ using JetBrains.Annotations;
 
     private record struct EntitySystemInfo(PartialTypeInfo Type, EquatableArray<SubscriptionInfo> Subscriptions);
 
-    private record struct SubscriptionInfo(string MethodName, SubscriptionType Type, EquatableArray<string> TypeArgs);
+    private record struct SubscriptionInfo(string MethodName, SubscriptionType Type, EquatableArray<string> TypeArgs, EquatableArray<string>? Before, EquatableArray<string>? After);
 }

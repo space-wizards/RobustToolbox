@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
@@ -424,16 +425,9 @@ public abstract partial class SharedMapSystem
     /// <summary>
     /// Enumerates all of the grids located on a given map.
     /// </summary>
-    public IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId)
+    public AllGridsEnumerator GetAllGrids(MapId mapId)
     {
-        var query = AllEntityQuery<MapGridComponent, TransformComponent>();
-        while (query.MoveNext(out var uid, out var grid, out var xform))
-        {
-            if (xform.MapID != mapId)
-                continue;
-
-            yield return (uid, grid);
-        }
+        return new AllGridsEnumerator(mapId, AllEntityQuery<MapGridComponent, TransformComponent>());
     }
 
     /// <remarks>
@@ -441,13 +435,110 @@ public abstract partial class SharedMapSystem
     /// </remarks>
     /// <inheritdoc cref="GetAllGrids(MapId)"/>
     [Obsolete("use GetAllGrids instead")]
-    public IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
+    public AllMapGridsEnumerator GetAllMapGrids(MapId mapId)
     {
-        var query = AllEntityQuery<MapGridComponent, TransformComponent>();
-        while (query.MoveNext(out var grid, out var xform))
+        return new AllMapGridsEnumerator(GetAllGrids(mapId));
+    }
+
+    public struct AllGridsEnumerator : IEnumerable<Entity<MapGridComponent>>, IEnumerator<Entity<MapGridComponent>>
+    {
+        private readonly MapId _mapId;
+        private AllEntityQueryEnumerator<MapGridComponent, TransformComponent> _query;
+        private Entity<MapGridComponent> _current;
+
+        internal AllGridsEnumerator(MapId mapId, AllEntityQueryEnumerator<MapGridComponent, TransformComponent> query)
         {
-            if (xform.MapID == mapId)
-                yield return grid;
+            _mapId = mapId;
+            _query = query;
+            _current = default;
+        }
+
+        public readonly AllGridsEnumerator GetEnumerator() => this;
+
+        public readonly Entity<MapGridComponent> Current => _current;
+
+        readonly object IEnumerator.Current => Current;
+
+        public bool MoveNext()
+        {
+            while (_query.MoveNext(out var uid, out var grid, out var xform))
+            {
+                if (xform.MapID != _mapId)
+                    continue;
+
+                _current = (uid, grid);
+                return true;
+            }
+
+            return false;
+        }
+
+        readonly IEnumerator<Entity<MapGridComponent>> IEnumerable<Entity<MapGridComponent>>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        readonly IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Dispose()
+        {
+            _query.Dispose();
+        }
+
+        public void Reset()
+        {
+            throw new NotSupportedException();
+        }
+    }
+
+    [Obsolete("Use AllGridsEnumerator instead.")]
+    public struct AllMapGridsEnumerator : IEnumerable<MapGridComponent>, IEnumerator<MapGridComponent>
+    {
+        private AllGridsEnumerator _grids;
+        private MapGridComponent _current;
+
+        internal AllMapGridsEnumerator(AllGridsEnumerator grids)
+        {
+            _grids = grids;
+            _current = default!;
+        }
+
+        public readonly AllMapGridsEnumerator GetEnumerator() => this;
+
+        public readonly MapGridComponent Current => _current;
+
+        readonly object IEnumerator.Current => Current;
+
+        public bool MoveNext()
+        {
+            if (!_grids.MoveNext())
+                return false;
+
+            _current = _grids.Current.Comp;
+            return true;
+        }
+
+        readonly IEnumerator<MapGridComponent> IEnumerable<MapGridComponent>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        readonly IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Dispose()
+        {
+            _grids.Dispose();
+        }
+
+        public void Reset()
+        {
+            throw new NotSupportedException();
         }
     }
 

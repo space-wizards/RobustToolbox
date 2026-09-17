@@ -33,6 +33,8 @@ namespace Robust.Shared.Map.Components;
 [RegisterComponent, NetworkedComponent]
 public sealed partial class MapGridComponent : Component
 {
+    public const ushort DefaultChunkSize = 16;
+
     // This field is used for deserialization internally in the map loader.
     // If you want to remove this, you would have to restructure the map save file.
     [DataField("index")]
@@ -41,7 +43,7 @@ public sealed partial class MapGridComponent : Component
     // this can be removed
 
     [DataField]
-    internal ushort ChunkSize = 16;
+    internal ushort ChunkSize = DefaultChunkSize;
 
     [ViewVariables]
     public int ChunkCount => Chunks.Count;

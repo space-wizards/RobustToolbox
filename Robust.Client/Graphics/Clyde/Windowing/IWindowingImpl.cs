@@ -39,8 +39,10 @@ namespace Robust.Client.Graphics.Clyde
             void WindowDestroy(WindowReg reg);
             void WindowSetTitle(WindowReg window, string title);
             void WindowSetMonitor(WindowReg window, IClydeMonitor monitor);
+            IClydeMonitor? WindowGetMonitor(WindowReg window);
             void WindowSetSize(WindowReg window, Vector2i size);
             void WindowSetVisible(WindowReg window, bool visible);
+            void WindowSetRelativeMouseMode(WindowReg window, bool enabled);
             void WindowRequestAttention(WindowReg window);
             void WindowSetProgress(WindowReg reg, WindowProgressState state, float value);
             void WindowSwapBuffers(WindowReg window);

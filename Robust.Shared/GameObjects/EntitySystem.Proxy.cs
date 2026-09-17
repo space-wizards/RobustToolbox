@@ -1111,6 +1111,18 @@ public partial class EntitySystem
     protected EntityUid PredictedSpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
         => EntityManager.PredictedSpawnAttachedTo(prototype, coordinates, overrides, rotation);
 
+    /// <inheritdoc cref="EntityManager.PredictedSpawn(string?,ComponentRegistry?,bool)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected EntityUid PredictedSpawn(string? prototype = null, ComponentRegistry? overrides = null, bool doMapInit = true)
+        => EntityManager.PredictedSpawn(prototype, overrides, doMapInit);
+
+    /// <inheritdoc cref="EntityManager.PredictedSpawn(string?,MapCoordinates,ComponentRegistry?,Angle)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager))]
+    protected EntityUid PredictedSpawn(string? prototype, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!)
+        => EntityManager.PredictedSpawn(prototype, coordinates, overrides, rotation);
+
     /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]

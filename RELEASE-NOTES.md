@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added text selection and clipboard copying to `Label`, `RichTextLabel`, and `OutputPanel` when `Copyable` is enabled.
 
 ### Bugfixes
 

@@ -172,7 +172,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var pos = mapSys.TileIndicesFor(grid, coordinates);
             mapSys.SetTile(grid, pos, new Tile(1));
 
-            var ent1 = entMan.SpawnEntity(null, coordinates);
+            var ent1 = entMan.Spawn(null, coordinates);
             Assert.That(sim.Transform(ent1, entMan).Anchored, Is.False);
             Assert.That(!mapSys.GetAnchoredEntities(grid, pos).Any());
             entMan.DeleteEntity(ent1);

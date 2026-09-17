@@ -45,7 +45,7 @@ public sealed class ChunkEntityPvsTest : RobustIntegrationTest
             origin = new EntityCoordinates(map, default);
             mapNet = sEntMan.GetNetEntity(map);
 
-            playerUid = sEntMan.SpawnEntity(null, origin);
+            playerUid = sEntMan.SpawnAttachedTo(null, origin);
             var session = sPlayerMan.Sessions.First();
             server.PlayerMan.SetAttachedEntity(session, playerUid);
             sPlayerMan.JoinGame(session);
@@ -129,7 +129,7 @@ public sealed class ChunkEntityPvsTest : RobustIntegrationTest
             origin = new EntityCoordinates(map, default);
             mapNet = sEntMan.GetNetEntity(map);
 
-            var playerUid = sEntMan.SpawnEntity(null, origin);
+            var playerUid = sEntMan.SpawnAttachedTo(null, origin);
             player = sEntMan.GetNetEntity(playerUid);
 
             var chunk = sEntMan.System<ChunkEntitySystem>().GetOrCreateChunk(map, Vector2i.Zero);

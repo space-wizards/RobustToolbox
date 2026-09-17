@@ -30,7 +30,7 @@ internal sealed class MapPauseTests
         // arrange
         var mapId = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(mapId, true);
-        entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
+        entMan.SpawnAttachedTo(null, new EntityCoordinates(mapId, default));
 
         var query = entMan.EntityQuery<TransformComponent>(false).ToList();
 
@@ -50,7 +50,7 @@ internal sealed class MapPauseTests
         // arrange
         var mapId = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(mapId, false);
-        entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
+        entMan.SpawnAttachedTo(null, new EntityCoordinates(mapId, default));
 
         var query = entMan.EntityQuery<TransformComponent>(false).ToList();
 
@@ -70,7 +70,7 @@ internal sealed class MapPauseTests
         // arrange
         var mapId = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(mapId, true);
-        entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
+        entMan.SpawnAttachedTo(null, new EntityCoordinates(mapId, default));
 
         var query = entMan.EntityQuery<TransformComponent>(true).ToList();
 
@@ -90,7 +90,7 @@ internal sealed class MapPauseTests
         // arrange
         var mapId = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(mapId, true);
-        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
+        var newEnt = entMan.SpawnAttachedTo(null, new EntityCoordinates(mapId, default));
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.True);
@@ -108,7 +108,7 @@ internal sealed class MapPauseTests
         // arrange
         var mapId = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(mapId, false);
-        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
+        var newEnt = entMan.SpawnAttachedTo(null, new EntityCoordinates(mapId, default));
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.False);
@@ -149,7 +149,7 @@ internal sealed class MapPauseTests
         // arrange
         var map1 = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(map1, true);
-        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(map1, default));
+        var newEnt = entMan.SpawnAttachedTo(null, new EntityCoordinates(map1, default));
 
         var map2 = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(map2, false);
@@ -174,7 +174,7 @@ internal sealed class MapPauseTests
         // arrange
         var map1 = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(map1, false);
-        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(map1, default));
+        var newEnt = entMan.SpawnAttachedTo(null, new EntityCoordinates(map1, default));
 
         var map2 = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(map2, true);
@@ -197,7 +197,7 @@ internal sealed class MapPauseTests
 
         var mapId = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(mapId, true);
-        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
+        var newEnt = entMan.SpawnAttachedTo(null, new EntityCoordinates(mapId, default));
 
         entMan.System<SharedMapSystem>().SetPaused(mapId, false);
 
@@ -216,7 +216,7 @@ internal sealed class MapPauseTests
 
         var mapId = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(mapId, false);
-        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
+        var newEnt = entMan.SpawnAttachedTo(null, new EntityCoordinates(mapId, default));
 
         entMan.System<SharedMapSystem>().SetPaused(mapId, true);
 

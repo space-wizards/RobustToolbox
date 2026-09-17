@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `BoundUserInterfaceMessageAttempt` is now a by-ref struct. It can no longer be assigned to `CancellableEntityEventArgs`.
 
 ### New features
 

@@ -41,6 +41,8 @@ END TEMPLATE-->
 
 ### New features
 
+* `Control.Restyle` has been made public for manually restyling controls on edge cases.
+* `EntityManager.PredictedSpawn(string?,ComponentRegistry?,bool)`, `EntityManager.PredictedSpawn(string?,MapCoordinates,ComponentRegistry?,Angle)`, `EntityManager.PredictedSpawnAtPosition(string?,EntityCoordinates,Angle,ComponentRegistry?)`, and `EntityManager.PredictedSpawnInContainerOrDrop(string?,EntityUid,string,out bool,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)` now all have proxies for EntitySystems.
 * SpawnNextToOrDrop methods can now offset their spawns by passing in a Vector2. This offset is always relative to the target.
 
 ### Bugfixes

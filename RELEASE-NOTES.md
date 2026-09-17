@@ -18,9 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-* Fixed a partial prototype exception message mentioning the wrong tag to use to combine data at a specific index on a sequence. The correct one is !CombineIndex:0 for example.
-* Fixed components with delta states causing a serializer error if they contain an automatically networked field of an abstract type. This fixes usages of SoundSpecifier, for example.
-* Fixed an exception caused by inheriting an entity that has had a component removed by a partial prototype without removing the component data.
+*None yet*
 
 ### Other
 
@@ -41,8 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `Control.Restyle` has been made public for manually restyling controls on edge cases.
-* `EntityManager.PredictedSpawn(string?,ComponentRegistry?,bool)`, `EntityManager.PredictedSpawn(string?,MapCoordinates,ComponentRegistry?,Angle)`, `EntityManager.PredictedSpawnAtPosition(string?,EntityCoordinates,Angle,ComponentRegistry?)`, and `EntityManager.PredictedSpawnInContainerOrDrop(string?,EntityUid,string,out bool,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)` now all have proxies for EntitySystems.
+*None yet*
 
 ### Bugfixes
 
@@ -55,6 +52,31 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 290.0.0
+
+### Breaking changes
+
+* Add missing proxies for predicted spawn methods.
+* Rename SetFallbackCluture to SetFallbackCulture
+
+### New features
+
+* `Control.Restyle` has been made public for manually restyling controls on edge cases.
+* `EntityManager.PredictedSpawn(string?,ComponentRegistry?,bool)`, `EntityManager.PredictedSpawn(string?,MapCoordinates,ComponentRegistry?,Angle)`, `EntityManager.PredictedSpawnAtPosition(string?,EntityCoordinates,Angle,ComponentRegistry?)`, and `EntityManager.PredictedSpawnInContainerOrDrop(string?,EntityUid,string,out bool,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)` now all have proxies for EntitySystems.
+
+### Bugfixes
+
+* Make OutputPanel orphan controls when modifying messages.
+* Don't invoke OnTextChanged when scrolling through commands.
+* Dirty BodyType on SetBodyType for physics.
+* Fix some PVS scenarios with physics dying.
+
+### Other
+
+* Rate-limited full game state requests.
+* Allow prototype uploads to pass unknown fields to server.
 
 
 ## 289.0.2

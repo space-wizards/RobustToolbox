@@ -516,6 +516,7 @@ namespace Robust.Shared.Prototypes
 
             var errors = _serializationManager.ValidateNode(kind, validationMapping, context)
                 .GetErrors()
+                .Where(x => x.AlwaysRelevant)
                 .ToArray();
 
             if (errors.Length == 0)

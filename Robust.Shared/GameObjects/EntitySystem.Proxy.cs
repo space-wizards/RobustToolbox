@@ -1221,7 +1221,7 @@ public partial class EntitySystem
         return EntityManager.PredictedSpawnNextToOrDrop(protoName, target, xform, overrides);
     }
 
-    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop(string?,EntityUid,string,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager))]
     protected EntityUid PredictedSpawnInContainerOrDrop(
@@ -1250,7 +1250,7 @@ public partial class EntitySystem
         return EntityManager.PredictedSpawnInContainerOrDrop(protoName, containerUid, containerId, out inserted, xform, container, overrides);
     }
 
-    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop(string?,BaseContainer,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid PredictedSpawnInContainerOrDrop(
         string? protoName,

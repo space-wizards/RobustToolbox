@@ -37,12 +37,13 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* As `EntProtoId` can now be converted into both `ProtoId<EntityPrototype>` and `string`, things expecting one or the other will need an explicit cast first to avoid ambiguous invocation.
 
 ### New features
 
 * `Control.Restyle` has been made public for manually restyling controls on edge cases.
 * `EntityManager.PredictedSpawn(string?,ComponentRegistry?,bool)`, `EntityManager.PredictedSpawn(string?,MapCoordinates,ComponentRegistry?,Angle)`, `EntityManager.PredictedSpawnAtPosition(string?,EntityCoordinates,Angle,ComponentRegistry?)`, and `EntityManager.PredictedSpawnInContainerOrDrop(string?,EntityUid,string,out bool,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)` now all have proxies for EntitySystems.
+* `EntProtoId` and `ProtoId<EntityPrototype>` can now be implicitly converted between eachother.
 
 ### Bugfixes
 

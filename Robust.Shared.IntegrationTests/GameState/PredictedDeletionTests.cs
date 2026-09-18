@@ -1,6 +1,7 @@
 using System.Numerics;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
+using Robust.Client.GameStates;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -14,6 +15,35 @@ namespace Robust.UnitTesting.Shared.GameState;
 internal sealed partial class PredictedDeletionTests : RobustIntegrationTest
 {
     private static readonly Vector2 TargetPosition = new(3, 4);
+
+    [Test]
+    public async Task PredictedQueueDeletionRollsBackBeforeQueueIsProcessed()
+    {
+        // Easiest way to reproduce this is pickup and drop a 2handed item in ss14.
+        // Due to the fact the offhand predicted del isn't being rolled back properly it fails pickup for a single tick.
+
+        await using var pair = await StartConnectedPair();
+        var (_, client, targetNet, clientTarget, clientParent) = await SetupTarget(pair.Server, pair.Client);
+
+        await client.WaitAssertion(() =>
+        {
+            var entities = (ClientEntityManager) client.EntMan;
+            var states = (ClientGameStateManager) pair.Client.Resolve<IClientGameStateManager>();
+            Assert.That(states.PredictionNeedsResetting, Is.True);
+
+            client.EntMan.RaisePredictiveEvent(new PredictDeleteMessage(targetNet, PredictedDeleteMode.Queue, 0));
+            Assert.That(entities.IsQueuedForDeletion(clientTarget), Is.True);
+            Assert.That(entities.IsPredictedDetached(clientTarget), Is.False);
+
+            states.ResetPredictedEntities();
+            Assert.That(entities.IsQueuedForDeletion(clientTarget), Is.False);
+
+            // The stale queue entry shouldn't detach the entity during the next replayed tick.
+            entities.ProcessQueueudDeletions();
+        });
+
+        await AssertRolledBack(client, clientTarget, clientParent);
+    }
 
     [Test]
     public async Task PredictedQueueDeletionRollsBack()

@@ -427,6 +427,8 @@ namespace Robust.Client.GameObjects
                     return;
 
                 _queuedPredictedDeletions.Enqueue(ent.Owner);
+                // Need to make sure rollback handles this properly still when it gets deleten't.
+                DirtyEntity(ent.Owner, ent.Comp);
             }
         }
     }

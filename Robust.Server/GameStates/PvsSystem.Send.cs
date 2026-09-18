@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
@@ -17,16 +19,16 @@ internal sealed partial class PvsSystem
     private void SendStates()
     {
         DebugTools.AssertNull(_sendTask);
-        _sendTick = _gameTiming.CurTick;
+        // CVar changes may replace the pool while workers are still running so copy it every time.
+        var job = new PvsSendJob(this, _sessions, _threadResourcesPool, _gameTiming.CurTick);
 
         if (_async)
         {
-            _sendTask = _parallelManager.Process(_sendJob, _sendJob.Count);
+            _sendTask = _parallelManager.Process(job, job.Count);
             return;
         }
 
-        using var _ = Histogram.WithLabels("Send States").NewTimer();
-        _parallelManager.ProcessNow(_sendJob, _sendJob.Count);
+        _parallelManager.ProcessNow(job, job.Count);
     }
 
     private void SendSessionState(PvsSession data, ZStdCompressionContext ctx, GameTick sendTick)
@@ -69,31 +71,55 @@ internal sealed partial class PvsSystem
         data.StateStream = null;
     }
 
-    private record struct PvsSendJob(PvsSystem _pvs) : IParallelRobustJob
+    private sealed class PvsSendJob : IParallelRobustJob
     {
+        private readonly PvsSystem _pvs;
+        private readonly PvsSession[] _sessions;
+        private readonly DefaultObjectPool<PvsThreadResources> _pool;
+        private readonly GameTick _sendTick;
+        private readonly IDisposable _timer;
+        private int _remaining;
+
+        public PvsSendJob(PvsSystem pvs, PvsSession[] sessions,
+            DefaultObjectPool<PvsThreadResources> pool, GameTick sendTick)
+        {
+            _pvs = pvs;
+            _sessions = sessions;
+            _pool = pool;
+            _sendTick = sendTick;
+            _remaining = sessions.Length;
+            _timer = Histogram.WithLabels("Send States").NewTimer();
+            if (_remaining == 0)
+                _timer.Dispose();
+        }
+
         public int BatchSize => 1;
-        private PvsSystem _pvs = _pvs;
-        public int Count => _pvs._sessions.Length;
+        public int Count => _sessions.Length;
 
         public void Execute(int index)
         {
-            var data = _pvs._sessions[index];
-            var resource = _pvs._threadResourcesPool.Get();
-
             try
             {
-                _pvs.SendSessionState(data, resource.CompressionContext, _pvs._sendTick);
-            }
-            catch (Exception e)
-            {
-                _pvs.Log.Log(LogLevel.Error, e, $"Caught exception while sending mail for {data.Session}.");
-#if !EXCEPTION_TOLERANCE
-                throw;
-#endif
+                var data = _sessions[index];
+                var resource = _pool.Get();
+                try
+                {
+                    _pvs.SendSessionState(data, resource.CompressionContext, _sendTick);
+                }
+                catch (Exception e)
+                {
+                    _pvs.Log.Log(LogLevel.Error, e, $"Caught exception while sending mail for {data.Session}.");
+                }
+                finally
+                {
+                    _pool.Return(resource);
+                }
             }
             finally
             {
-                _pvs._threadResourcesPool.Return(resource);
+                // Measure for grafana when they're all done.
+                if (Interlocked.Decrement(ref _remaining) == 0)
+                    _timer.Dispose();
             }
         }
     }

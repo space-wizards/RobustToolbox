@@ -26,6 +26,9 @@ internal sealed partial class PvsSystem
         if (!PlayerData.TryGetValue(session, out var sessionData))
             return;
 
+        // Sends update LastReceivedAck and PendingAcks too. Join before reading either.
+        WaitSendTask();
+
         if (ackedTick <= sessionData.LastReceivedAck)
             return;
 

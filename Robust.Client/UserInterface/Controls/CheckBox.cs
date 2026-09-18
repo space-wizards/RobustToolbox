@@ -1,4 +1,5 @@
-﻿using Robust.Shared.ViewVariables;
+﻿using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
@@ -9,6 +10,7 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class CheckBox : ContainerButton
     {
+        public const string StylePropertyLabelFontColor = "checkBoxLabelFontColor";
         public const string StyleClassCheckBox = "checkBox";
         public const string StyleClassCheckBoxChecked = "checkBoxChecked";
 
@@ -44,7 +46,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private bool _leftAlign = true;
-        
+
         public CheckBox()
         {
             ToggleMode = true;
@@ -89,6 +91,14 @@ namespace Robust.Client.UserInterface.Controls
                 else
                     TextureRect.RemoveStyleClass(StyleClassCheckBoxChecked);
             }
+
+            if (Label is null)
+                return;
+
+            if (HasStylePseudoClass(StylePseudoClassDisabled))
+                Label.FontColorOverride = StylePropertyDefault(StylePropertyLabelFontColor, Color.FromHex("#a5a5a5"));
+            else
+                Label.FontColorOverride = StylePropertyDefault(StylePropertyLabelFontColor, Color.White);
         }
 
         /// <summary>

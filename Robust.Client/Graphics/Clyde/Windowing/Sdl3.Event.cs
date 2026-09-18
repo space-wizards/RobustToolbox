@@ -236,13 +236,15 @@ internal partial class Clyde
             var alt = (mods & SDL_Keymod.SDL_KMOD_ALT) != 0;
             var control = (mods & SDL_Keymod.SDL_KMOD_CTRL) != 0;
             var system = (mods & SDL_Keymod.SDL_KMOD_GUI) != 0;
+            var altGr = IsAltGr(mods);
 
             var ev = new KeyEventArgs(
                 key,
                 repeat,
                 alt, control, shift, system,
                 (int)scancode,
-                rawCode);
+                rawCode,
+                altGr);
 
             switch (type)
             {
@@ -255,6 +257,17 @@ internal partial class Clyde
                     _clyde.SendKeyDown(ev);
                     break;
             }
+        }
+
+        // Whether the given modifier state means AltGr is held
+        private static bool IsAltGr(SDL.SDL_Keymod mods)
+        {
+            if ((mods & SDL_Keymod.SDL_KMOD_MODE) != 0)
+                return true;
+
+            return OperatingSystem.IsWindows()
+                   && (mods & SDL_Keymod.SDL_KMOD_ALT) != 0
+                   && (mods & SDL_Keymod.SDL_KMOD_CTRL) != 0;
         }
 
         private void ProcessKeyMapChanged()

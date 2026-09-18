@@ -481,6 +481,15 @@ namespace Robust.Client.GameStates
                 }
             }
 
+            // PVS leaves are sent separately from game states. If the leave was the last network update, it used to
+            // remain queued until an unrelated future state arrived. Drain messages after the matching game-state
+            // tick has been applied, while preserving against dropped or delayed states.
+            if (_processor.HasPvsDetachMessages)
+            {
+                using var _ = _timing.StartStateApplicationArea();
+                ProcessPvsDeparture(_timing.LastRealTick);
+            }
+
             // Slightly speed up or slow down the client tickrate based on the contents of the buffer.
             // TryGetTickStates should have cleaned out any old states, so the buffer contains [t+0(cur), t+1(next), t+2, t+3, ..., t+n]
             // we can use this info to properly time our tickrate so it does not run fast or slow compared to the server.
@@ -930,9 +939,8 @@ namespace Robust.Client.GameStates
             }
 
             // Detach entities to null space
-            var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
             var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
-            ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys, lookupSys);
+            ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys);
 
             // Check next state (AFTER having created new entities introduced in curstate)
             if (nextState != null)
@@ -1357,10 +1365,11 @@ namespace Robust.Client.GameStates
             GameTick toTick,
             EntityQuery<MetaDataComponent> metas,
             EntityQuery<TransformComponent> xforms,
-            SharedTransformSystem xformSys,
-            ContainerSystem containerSys,
-            EntityLookupSystem lookupSys)
+            SharedTransformSystem xformSys)
         {
+            if (!_processor.HasPvsDetachMessages)
+                return;
+
             var toDetach = _processor.GetEntitiesToDetach(toTick, _pvsDetachBudget);
 
             if (toDetach.Count == 0)
@@ -1371,6 +1380,8 @@ namespace Robust.Client.GameStates
             // things like container insertion and ejection.
 
             using var _ = _prof.Group("Leave PVS");
+            var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
+            var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
 
             _detached.Clear();
             foreach (var (tick, ents) in toDetach)
@@ -1379,6 +1390,14 @@ namespace Robust.Client.GameStates
             }
 
             _prof.WriteValue("Count", ProfData.Int32(_detached.Count));
+        }
+
+        private void ProcessPvsDeparture(GameTick toTick)
+        {
+            var metas = _entities.GetEntityQuery<MetaDataComponent>();
+            var xforms = _entities.GetEntityQuery<TransformComponent>();
+            var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
+            ProcessPvsDeparture(toTick, metas, xforms, xformSys);
         }
 
         private void Detach(GameTick maxTick,
@@ -1408,6 +1427,10 @@ namespace Robust.Client.GameStates
             {
                 var uid = ent.Owner;
                 var metadata = ent.Comp;
+
+                // An authoritative PVS departure wins over a locally predicted deletion. Otherwise the queued
+                // predicted deletion immediately restores this entity from its last known state.
+                _entities.ClearPredictedDeletion(uid);
 
                 if (lastStateApplied.HasValue)
                     metadata.LastStateApplied = lastStateApplied.Value;
@@ -1480,7 +1503,11 @@ namespace Robust.Client.GameStates
                 return false;
             }
 
-            if ((meta.Flags & (MetaDataFlags.Detached | MetaDataFlags.Undetachable)) != 0)
+            if ((meta.Flags & MetaDataFlags.Undetachable) != 0)
+                return false;
+
+            // A locally predicted deletion also detaches a networked entity so let detach cancel the prediction instead of dropping the leave.
+            if ((meta.Flags & MetaDataFlags.Detached) != 0 && !_entities.IsPredictedDetached(uid.Value))
                 return false;
 
             ent = (uid.Value, meta);

@@ -258,6 +258,12 @@ namespace Robust.Client.GameObjects
                 if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
                     continue;
 
+                // A reliable PVS leave may have detached the entity after this predicted deletion was queued.
+                // The server state must not be turned into a predicted detachment, or prediction
+                // reset will immediately restore it to the map.
+                if ((meta.Flags & MetaDataFlags.Detached) != 0)
+                    continue;
+
                 var xform = TransformQuery.GetComponentInternal(uid);
                 if (meta.NetEntity.IsClientSide())
                 {

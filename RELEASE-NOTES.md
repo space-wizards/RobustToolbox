@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* ClientGameStateManager will now drop predicted deletions if they occur while an entity is detached to nullspace due to PVS.
 
 ### Other
 

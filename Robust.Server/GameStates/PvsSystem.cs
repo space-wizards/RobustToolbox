@@ -80,6 +80,8 @@ internal sealed partial class PvsSystem : EntitySystem
     private PvsChunkJob _chunkJob;
     private PvsLeaveJob _leaveJob;
     private PvsDeletionsJob _deletionJob;
+    private PvsSendJob _sendJob;
+    private GameTick _sendTick;
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
@@ -126,6 +128,7 @@ internal sealed partial class PvsSystem : EntitySystem
             throw new Exception($"Pvs struct sizes must match");
 
         _deletionJob = new PvsDeletionsJob(this);
+        _sendJob = new PvsSendJob(this);
         _leaveJob = new PvsLeaveJob(this);
         _chunkJob = new PvsChunkJob(this);
         _ackJob = new PvsAckJob(this);
@@ -238,9 +241,6 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         if (!PlayerData.TryGetValue(session, out var pvsSession))
             return;
-
-        // A reliable send can clear RequestedFull.
-        WaitSendTask();
 
         // A full state rebuild is expensive and the request is sent reliably.
         // Coalesce requests while one is pending and rate limit subsequent ones.

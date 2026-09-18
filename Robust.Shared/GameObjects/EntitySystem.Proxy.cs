@@ -1119,6 +1119,23 @@ public partial class EntitySystem
         return EntityManager.SpawnInContainerOrDrop(protoName, baseContainer, xform, container, overrides);
     }
 
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop(string?,BaseContainer,out bool,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)" />
+    public EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.SpawnInContainerOrDrop(protoName,
+            container,
+            out inserted,
+            xform,
+            containerComp,
+            overrides);
+    }
+
     #endregion
 
     #region PredictedSpawning
@@ -1260,6 +1277,23 @@ public partial class EntitySystem
         ComponentRegistry? overrides = null)
     {
         return EntityManager.PredictedSpawnInContainerOrDrop(protoName, baseContainer, xform, container, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop(string?,BaseContainer,out bool,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)" />
+    public EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedSpawnInContainerOrDrop(protoName,
+            container,
+            out inserted,
+            xform,
+            containerComp,
+            overrides);
     }
 
     #endregion

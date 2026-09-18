@@ -72,8 +72,8 @@ namespace Robust.Shared.Timing
 
                 if (!InSimulation) // rendering can draw frames between ticks
                 {
-                    DebugTools.Assert(0 <= (time + TickRemainder).TotalSeconds);
-                    return time + TickRemainder;
+                    DebugTools.Assert(0 <= (time + AdjustedTickRemainder).TotalSeconds);
+                    return time + AdjustedTickRemainder;
                 }
 
                 DebugTools.Assert(0 <= time.TotalSeconds);
@@ -126,7 +126,15 @@ namespace Robust.Shared.Timing
         public TimeSpan LastTick { get; set; }
 
         private ushort _tickRate;
-        private TimeSpan _tickRemainder;
+
+        // I am not crazy
+        // So lerping was getting very subtly different movement when ticktimingadjustment procced
+        // so hopefully just pinning what it is during prediction (even if we're struggling to catchup) then letting it change after
+        // fixes the instability. This probably is more noticeable where the ticktimingadjustment varies wildly.
+        // Also lerping needs to be aware of any speed changes just so it can account for it.
+        private float _requestedTickTimingAdjustment;
+        private float _frozenTickTimingAdjustment;
+        private bool _tickTimingAdjustmentFrozen;
 
         /// <summary>
         ///     The target ticks/second of the simulation.
@@ -149,25 +157,64 @@ namespace Robust.Shared.Timing
         /// </summary>
         public TimeSpan TickRemainder
         {
-            get => _tickRemainder;
+            get;
             set
             {
                 // Generally the upper limit is Tickrate*2, but changing the tickrate mid-round can make this really large until timing can stabilize
                 DebugTools.Assert(TimeSpan.Zero <= TickRemainder);
-                _tickRemainder = value;
+                field = value;
             }
         }
 
         public TimeSpan TickRemainderRealtime => TickRemainder * TimeScale;
 
-        public TimeSpan CalcAdjustedTickPeriod()
+        public float TickPhase
         {
-            // ranges from -1 to 1, with 0 being 'default'
-            var ratio = MathHelper.Clamp(TickTimingAdjustment, -0.99f, 0.99f);
+            get
+            {
+                if (InSimulation)
+                    return 1f;
 
-            // Final period ranges from near 0 (runs very fast to catch up) or 2 * tick period (runs at half speed).
-            return TickPeriod * (1-ratio) * TimeScale;
+                if (TickPeriod <= TimeSpan.Zero)
+                    return 1f;
+
+                return Math.Clamp((float) (AdjustedTickRemainder.TotalSeconds / TickPeriod.TotalSeconds), 0f, 1f);
+            }
         }
+
+        private TimeSpan AdjustedTickRemainder => TickRemainder / TickTimingScale;
+
+        private float TickTimingScale
+        {
+            get
+            {
+                EnsureTickTimingAdjustmentFrozen();
+                return CalculateTickTimingScale(_frozenTickTimingAdjustment);
+            }
+        }
+
+        private static float CalculateTickTimingScale(float adjustment)
+        {
+            var ratio = MathHelper.Clamp(adjustment, -0.99f, 0.99f);
+            return 1 - ratio;
+        }
+
+        private void EnsureTickTimingAdjustmentFrozen()
+        {
+            if (_tickTimingAdjustmentFrozen)
+                return;
+
+            FreezeTickTimingAdjustment();
+        }
+
+        internal void FreezeTickTimingAdjustment()
+        {
+            _frozenTickTimingAdjustment = _requestedTickTimingAdjustment;
+            _tickTimingAdjustmentFrozen = true;
+        }
+
+        public TimeSpan CalcAdjustedTickPeriod()
+            => TickPeriod * TickTimingScale * TimeScale;
 
         /// <summary>
         ///     Current graphics frame since init OpenGL which is taken as frame 1, from swapbuffer to swapbuffer. Useful to set a
@@ -178,7 +225,11 @@ namespace Robust.Shared.Timing
         public uint CurFrame { get; set; } = 1;
 
         /// <inheritdoc />
-        public float TickTimingAdjustment { get; set; } = 0;
+        public float TickTimingAdjustment
+        {
+            get => _requestedTickTimingAdjustment;
+            set => _requestedTickTimingAdjustment = value;
+        }
 
         /// <summary>
         ///     Ends the 'lap' of the timer, updating frame time info.
@@ -233,6 +284,7 @@ namespace Robust.Shared.Timing
             TimeBase = timeBase;
             CurTick = GameTick.First;
             TickRemainder = TimeSpan.Zero;
+            FreezeTickTimingAdjustment();
             Paused = true;
         }
 

@@ -59,7 +59,7 @@ namespace Robust.Client.GameObjects
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        private readonly SharedTransformSystem _xformSystem = entMan.System<SharedTransformSystem>();
+        private readonly TransformSystem _xformSystem = entMan.System<TransformSystem>();
         private readonly SpriteSystem _spriteSystem = entMan.System<SpriteSystem>();
         private readonly SpriteTreeSystem _renderTree = entMan.System<SpriteTreeSystem>();
 
@@ -72,7 +72,7 @@ namespace Robust.Client.GameObjects
             foreach (var entry in _renderTree.QueryAabb(currentMap, viewport))
             {
                 var (sprite, xform) = entry;
-                var (worldPos, worldRot) = _xformSystem.GetWorldPositionRotation(xform);
+                var (worldPos, worldRot) = _xformSystem.GetRenderWorldPositionRotation((entry.Uid, xform));
                 var bounds = _spriteSystem.CalculateBounds((entry.Uid, sprite), worldPos, worldRot, args.Viewport.Eye?.Rotation ?? default);
 
                 // Get scaled down bounds used to indicate the "south" of a sprite.

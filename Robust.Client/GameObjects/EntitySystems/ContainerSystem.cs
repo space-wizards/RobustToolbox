@@ -18,12 +18,15 @@ public sealed partial class ContainerSystem : SharedContainerSystem
     [Dependency] private IRobustSerializer _serializer = default!;
     [Dependency] private IDynamicTypeFactoryInternal _dynFactory = default!;
     [Dependency] private PointLightSystem _lightSys = default!;
+    [Dependency] private TransformSystem _renderTransforms = default!;
     [Dependency] private SpriteSystem _sprite = default!;
 
     [Dependency] private EntityQuery<PointLightComponent> _pointLightQuery = default!;
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 
     private readonly HashSet<EntityUid> _updateQueue = new();
+    // Container state may be applied before its entity's transform state.
+    private readonly HashSet<EntityUid> _renderSnapQueue = new();
 
     public readonly Dictionary<NetEntity, BaseContainer> ExpectedEntities = new();
 
@@ -32,14 +35,30 @@ public sealed partial class ContainerSystem : SharedContainerSystem
         base.Initialize();
 
         EntityManager.EntityInitialized += HandleEntityInitialized;
-        SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
 
         UpdatesBefore.Add(typeof(SpriteSystem));
+    }
+
+    [SubscribeLocalEvent]
+    private void OnRenderContainerInserted(
+        Entity<TransformComponent> entity,
+        ref EntGotInsertedIntoContainerMessage args)
+    {
+        _renderTransforms.SnapRenderTransform(entity, true);
+        _renderSnapQueue.Add(entity);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnRenderContainerRemoved(Entity<TransformComponent> entity, ref EntGotRemovedFromContainerMessage args)
+    {
+        _renderTransforms.SnapRenderTransform(entity, true);
+        _renderSnapQueue.Add(entity);
     }
 
     public override void Shutdown()
     {
         EntityManager.EntityInitialized -= HandleEntityInitialized;
+        _renderSnapQueue.Clear();
         base.Shutdown();
     }
 
@@ -69,6 +88,7 @@ public sealed partial class ContainerSystem : SharedContainerSystem
         base.ShutdownContainer(container);
     }
 
+    [SubscribeLocalEvent]
     private void HandleComponentState(EntityUid uid, ContainerManagerComponent component, ref ComponentHandleState args)
     {
         if (args.Current is not ContainerManagerComponentState cast)
@@ -279,6 +299,14 @@ public sealed partial class ContainerSystem : SharedContainerSystem
     public override void FrameUpdate(float frameTime)
     {
         base.FrameUpdate(frameTime);
+
+        foreach (var entity in _renderSnapQueue)
+        {
+            if (!Deleted(entity))
+                _renderTransforms.SnapRenderTransform(entity, true);
+        }
+
+        _renderSnapQueue.Clear();
 
         foreach (var toUpdate in _updateQueue)
         {

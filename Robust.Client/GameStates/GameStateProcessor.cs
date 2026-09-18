@@ -460,6 +460,27 @@ Had full state: {LastFullState != null}"
             return curState != null || (futureStateLowestFromSeq != null && futureStateLowestFromSeq <= _timing.LastRealTick);
         }
 
+        internal bool TryGetInterpolationLookahead(GameTick missingTick, [NotNullWhen(true)] out GameState? lookahead)
+        {
+            lookahead = null;
+
+            if (!Interpolation)
+                return false;
+
+            // Select the nearest usable future state without changing current/next state selection.
+            for (var i = 0; i < _stateBuffer.Count; i++)
+            {
+                var state = _stateBuffer[i];
+                if (state.ToSequence <= missingTick || state.FromSequence > _timing.LastRealTick)
+                    continue;
+
+                if (lookahead == null || state.ToSequence < lookahead.ToSequence)
+                    lookahead = state;
+            }
+
+            return lookahead != null;
+        }
+
         /// <inheritdoc />
         public void Reset()
         {

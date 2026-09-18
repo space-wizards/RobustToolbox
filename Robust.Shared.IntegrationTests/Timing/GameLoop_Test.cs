@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using Moq;
 using NUnit.Framework;
@@ -50,7 +50,58 @@ namespace Robust.UnitTesting.Shared.Timing
             Assert.That(loop.SingleStep, Is.True); // still true
         }
 
-        private static IGameTiming GameTimingFactory(IStopwatch stopwatch)
+
+        [Test]
+        public void TimingAdjustmentChangeMidTickDoesNotShortenActiveTick()
+        {
+            BaseSetup();
+
+            var elapsedVal = TimeSpan.FromSeconds(0.05);
+            var newStopwatch = new Mock<IStopwatch>();
+            newStopwatch.SetupGet(p => p.Elapsed).Returns(() => elapsedVal);
+            var gameTiming = GameTimingFactory(newStopwatch.Object);
+            gameTiming.Paused = false;
+            gameTiming.TickRate = 10;
+            gameTiming.TickTimingAdjustment = 0f;
+
+            var loop = new GameLoop(
+                gameTiming,
+                new RuntimeLog(),
+                new ProfManager(),
+                new LogManager().RootSawmill,
+                new GameLoopOptions(false));
+
+            var ticks = 0;
+            var renders = 0;
+            loop.Tick += (_, _) => ticks++;
+            loop.Render += (_, _) =>
+            {
+                renders++;
+                if (renders == 1)
+                {
+                    Assert.That(gameTiming.TickPhase, Is.EqualTo(0.5f).Within(0.0001f));
+                    gameTiming.TickTimingAdjustment = 0.1f;
+                    Assert.That(gameTiming.TickPhase, Is.EqualTo(0.5f).Within(0.0001f));
+                    elapsedVal = TimeSpan.FromSeconds(0.18);
+                    return;
+                }
+
+                loop.Running = false;
+            };
+
+            loop.Run();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(ticks, Is.EqualTo(1));
+                Assert.That(gameTiming.CurTick, Is.EqualTo(new GameTick(2)));
+                Assert.That(gameTiming.LastTick, Is.EqualTo(TimeSpan.FromSeconds(0.1)).Within(TimeSpan.FromTicks(1)));
+                Assert.That(gameTiming.TickRemainderRealtime, Is.EqualTo(TimeSpan.FromSeconds(0.08)).Within(TimeSpan.FromTicks(1)));
+                Assert.That(gameTiming.TickPhase, Is.EqualTo(0.08f / 0.09f).Within(0.0001f));
+            });
+        }
+
+        private static GameTiming GameTimingFactory(IStopwatch stopwatch)
         {
             var timing = new GameTiming();
 

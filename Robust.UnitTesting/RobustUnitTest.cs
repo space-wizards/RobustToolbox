@@ -128,6 +128,8 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<ClientMetaDataSystem>();
                 systems.LoadExtraSystemType<ContainerSystem>();
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.TransformSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.ViewSubscriberSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.EyeSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.BroadPhaseSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.JointSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.PhysicsSystem>();

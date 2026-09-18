@@ -59,7 +59,8 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             _grids.Clear();
-            _mapSystem.FindGridsIntersecting(mapId, worldBounds, ref _grids);
+            var renderQueryBounds = _transformSystem.GetRenderCullingBounds(mapId, worldBounds);
+            _mapSystem.FindGridsIntersecting(mapId, renderQueryBounds, ref _grids);
 
             var requiresFlush = true;
             GLShaderProgram gridProgram = default!;
@@ -84,7 +85,7 @@ namespace Robust.Client.Graphics.Clyde
                     gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
                 }
 
-                var matrix = _transformSystem.GetWorldMatrix(mapGrid);
+                var matrix = _transformSystem.GetRenderWorldMatrix(mapGrid.Owner);
                 matrix.Translation += GetPixelSnapOffset(
                     matrix.Translation,
                     eye.Position.Position + eye.Offset,
@@ -93,7 +94,7 @@ namespace Robust.Client.Graphics.Clyde
                         new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter),
                     viewport.Size);
                 gridProgram.SetUniform(UniIModelMatrix, matrix);
-                var enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                var enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, renderQueryBounds);
 
                 // Handle base texture updates.
                 while (enumerator.MoveNext(out var chunk))
@@ -130,7 +131,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Handle edge sprites.
                 if (_drawTileEdges)
                 {
-                    enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                    enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, renderQueryBounds);
                     while (enumerator.MoveNext(out var chunk))
                     {
                         var datum = data[chunk.Indices];
@@ -139,7 +140,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, renderQueryBounds);
 
                 // Draw chunks
                 while (enumerator.MoveNext(out var chunk))

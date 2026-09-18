@@ -1,5 +1,7 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects;
@@ -13,6 +15,12 @@ public sealed partial class PointLightComponent : SharedPointLightComponent
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite)]
     internal Texture? Mask;
+
+    internal MapId EmbeddedOccluderCacheMap;
+    internal Vector2 EmbeddedOccluderCachePosition;
+    internal bool EmbeddedOccluderCacheValue;
+    internal bool EmbeddedOccluderCacheValid;
+
     // TODO POINT LIGHT
     // Just make this an object? on the shared comp. The server-client component split is such a pain.
 }

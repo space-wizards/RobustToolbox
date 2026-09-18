@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using System;
 using System.Collections.Generic;
@@ -17,10 +18,13 @@ public sealed partial class ClientOccluderSystem : OccluderSystem
 
     private readonly HashSet<EntityUid> _dirtyEntities = new();
     private readonly HashSet<(EntityUid TreeUid, Box2 Bounds)> _dirtyBounds = new();
+    private readonly HashSet<EntityUid> _embeddedLightCache = new();
+    private readonly List<EntityUid> _embeddedLightCacheRemovals = new();
     private readonly Vector4[] _edgeBuffer = new Vector4[PhysicsConstants.MaxPolygonVertices];
     private readonly Vector4[] _otherEdgeBuffer = new Vector4[PhysicsConstants.MaxPolygonVertices];
 
     [Dependency] private EntityQuery<OccluderComponent> _occluderQuery;
+    [Dependency] private EntityQuery<PointLightComponent> _pointLightQuery;
     [Dependency] private EntityQuery<OccluderTreeComponent> _treeQuery;
     [Dependency] private EntityQuery<TransformComponent> _xformQuery;
 
@@ -29,6 +33,7 @@ public sealed partial class ClientOccluderSystem : OccluderSystem
         base.Initialize();
 
         SubscribeLocalEvent<OccluderComponent, ComponentShutdown>(OnShutdown);
+        SubscribeLocalEvent<PointLightComponent, ComponentShutdown>(OnLightShutdown);
     }
 
     public override void SetPolygon(EntityUid uid, Vector2[]? polygon, OccluderComponent? comp = null)
@@ -96,6 +101,14 @@ public sealed partial class ClientOccluderSystem : OccluderSystem
 
     protected override void OnComponentMove(EntityUid uid, OccluderComponent comp, ref MoveEvent args)
     {
+        InvalidateEmbeddedLightCaches(
+            args.OldPosition.EntityId,
+            new Box2Rotated(
+                comp.LocalBounds.Translated(args.OldPosition.Position),
+                args.OldRotation,
+                args.OldPosition.Position)
+            .CalcBoundingBox());
+
         QueueSharedEdgeUpdate(uid, comp, args.Component);
     }
 
@@ -105,9 +118,67 @@ public sealed partial class ClientOccluderSystem : OccluderSystem
             QueueSharedEdgeUpdate(uid, comp);
     }
 
+    private void OnLightShutdown(EntityUid uid, PointLightComponent comp, ComponentShutdown args)
+    {
+        _embeddedLightCache.Remove(uid);
+    }
+
     protected override void OnOccluderAfterAutoHandleState(EntityUid uid, OccluderComponent comp, ref AfterAutoHandleStateEvent args)
     {
         QueueSharedEdgeUpdate(uid, comp);
+    }
+
+    public bool IsPointLightEmbeddedInOccluder(MapId map, EntityUid lightUid, PointLightComponent light, Vector2 lightPosition)
+    {
+        if (light.EmbeddedOccluderCacheValid &&
+            light.EmbeddedOccluderCacheMap == map &&
+            light.EmbeddedOccluderCachePosition == lightPosition)
+        {
+            return light.EmbeddedOccluderCacheValue;
+        }
+
+        // Shadow-casting lights inside an occluder produce unstable/inside-out shadows.
+        // Do a narrow tree query around the light and only run the expensive polygon TestPoint
+        // for occluders whose cached AABB can contain the light.
+        var pointBounds = new Box2(lightPosition, lightPosition).Enlarged(SharedOccluderEdgeTolerance);
+        var embedded = false;
+
+        foreach (var (treeUid, comp) in GetIntersectingTrees(map, pointBounds))
+        {
+            var treeBounds = XformSystem.GetInvWorldMatrix(treeUid, _xformQuery).TransformBox(pointBounds);
+            var state = new LightEmbeddedOccluderQueryState(this, lightPosition);
+
+            comp.Tree.QueryAabb(ref state, CheckLightEmbeddedInOccluder, treeBounds, approx: true);
+
+            if (state.Embedded)
+            {
+                embedded = true;
+                break;
+            }
+        }
+
+        light.EmbeddedOccluderCacheValid = true;
+        light.EmbeddedOccluderCacheMap = map;
+        light.EmbeddedOccluderCachePosition = lightPosition;
+        light.EmbeddedOccluderCacheValue = embedded;
+        _embeddedLightCache.Add(lightUid);
+
+        return embedded;
+    }
+
+    private static bool CheckLightEmbeddedInOccluder(
+        ref LightEmbeddedOccluderQueryState state,
+        in ComponentTreeEntry<OccluderComponent> entry)
+    {
+        var occluder = entry.Component;
+        if (!occluder.Enabled)
+            return true;
+
+        if (!state.System.ContainsPoint(occluder, entry.Transform, state.LightPosition))
+            return true;
+
+        state.Embedded = true;
+        return false;
     }
 
     private void QueueSharedEdgeUpdate(EntityUid uid, OccluderComponent occluder, TransformComponent? xform = null)
@@ -116,13 +187,59 @@ public sealed partial class ClientOccluderSystem : OccluderSystem
         _dirtyEntities.Add(uid);
 
         if (occluder.LastTreeBounds is { } lastBounds)
+        {
             _dirtyBounds.Add((lastBounds.TreeUid, lastBounds.Bounds.Enlarged(SharedOccluderNeighbourQueryPadding)));
+            InvalidateEmbeddedLightCaches(lastBounds.TreeUid, lastBounds.Bounds);
+        }
 
         if (!Resolve(uid, ref xform, false)
             || !TryGetTreeTransform(occluder, xform, out var treeUid, out _, out var treeBounds))
             return;
 
         _dirtyBounds.Add((treeUid, treeBounds.Enlarged(SharedOccluderNeighbourQueryPadding)));
+        InvalidateEmbeddedLightCaches(treeUid, treeBounds);
+    }
+
+    private void InvalidateEmbeddedLightCaches(EntityUid treeUid, Box2 treeBounds)
+    {
+        if (!_xformQuery.TryGetComponent(treeUid, out var treeXform) ||
+            treeXform.MapID == MapId.Nullspace)
+        {
+            return;
+        }
+
+        var worldBounds = XformSystem.GetWorldMatrix(treeXform, _xformQuery)
+            .TransformBox(treeBounds.Enlarged(SharedOccluderEdgeTolerance));
+
+        try
+        {
+            foreach (var lightUid in _embeddedLightCache)
+            {
+                if (!_pointLightQuery.TryGetComponent(lightUid, out var light) ||
+                    !light.EmbeddedOccluderCacheValid)
+                {
+                    _embeddedLightCacheRemovals.Add(lightUid);
+                    continue;
+                }
+
+                if (light.EmbeddedOccluderCacheMap != treeXform.MapID ||
+                    !worldBounds.Contains(light.EmbeddedOccluderCachePosition))
+                {
+                    continue;
+                }
+
+                light.EmbeddedOccluderCacheValid = false;
+            }
+        }
+        finally
+        {
+            foreach (var lightUid in _embeddedLightCacheRemovals)
+            {
+                _embeddedLightCache.Remove(lightUid);
+            }
+
+            _embeddedLightCacheRemovals.Clear();
+        }
     }
 
     private void DirtyOccludersInTree(
@@ -304,6 +421,13 @@ public sealed partial class ClientOccluderSystem : OccluderSystem
     private static Vector4 EdgeToVector4(Vector2 a, Vector2 b)
     {
         return new Vector4(a.X, a.Y, b.X, b.Y);
+    }
+
+    private struct LightEmbeddedOccluderQueryState(ClientOccluderSystem system, Vector2 lightPosition)
+    {
+        public readonly ClientOccluderSystem System = system;
+        public readonly Vector2 LightPosition = lightPosition;
+        public bool Embedded;
     }
 
     private static bool EdgeKeysMatch(OccluderEdgeKey a, OccluderEdgeKey b)

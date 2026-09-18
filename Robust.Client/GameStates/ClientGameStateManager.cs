@@ -271,18 +271,18 @@ namespace Robust.Client.GameStates
 
         public void InputCommandDispatched(ClientFullInputCmdMessage clientMessage, FullInputCmdMessage message)
         {
+            message.InputSequence = _nextInputCmdSeq++;
+
             if (!IsPredictionEnabled)
             {
                 return;
             }
 
-            message.InputSequence = _nextInputCmdSeq;
             _pendingInputs.Enqueue(message);
 
             _inputManager.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
             _sawmill.Debug(
-                $"CL> SENT tick={_timing.CurTick}, sub={_timing.TickFraction}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
-            _nextInputCmdSeq++;
+                $"CL> SENT tick={_timing.CurTick}, sub={_timing.TickFraction}, seq={message.InputSequence}, func={boundFunc.FunctionName}, state={message.State}");
         }
 
         public uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs

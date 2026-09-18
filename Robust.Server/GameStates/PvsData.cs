@@ -85,6 +85,11 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     public bool RequestedFull = false;
 
     /// <summary>
+    /// The earliest time the client may request another full state.
+    /// </summary>
+    public TimeSpan FullStateRequestCooldownEnd;
+
+    /// <summary>
     /// List of entity states to send to the client.
     /// </summary>
     public readonly List<EntityState> States = new();

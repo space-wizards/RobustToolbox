@@ -73,20 +73,12 @@ namespace Robust.Shared.Physics.Systems
         protected EntityQuery<TransformComponent> XformQuery;
 
         private ComponentRegistration _physicsReg = default!;
-        private byte _angularVelocityIndex;
 
         public override void Initialize()
         {
             base.Initialize();
 
             _physicsReg = EntityManager.ComponentFactory.GetRegistration(CompIdx.Index<PhysicsComponent>());
-
-            // TODO PHYSICS STATE
-            // Consider condensing the possible fields into just Linear velocity, angular velocity, and "Other"
-            // Or maybe even just "velocity" & "other"
-            // Then get-state doesn't have to iterate over a 10-element array.
-            // And it simplifies the DirtyField calls.
-            // Though I guess combining fixtures & physics will complicate it a bit more again.
 
             // If you update this then update the delta state + GetState + HandleState!
             EntityManager.ComponentFactory.RegisterNetworkedFields(_physicsReg,
@@ -102,8 +94,6 @@ namespace Robust.Shared.Physics.Systems
                 nameof(PhysicsComponent.AngularDamping),
                 nameof(PhysicsComponent.AngularVelocity),
                 nameof(PhysicsComponent.LinearVelocity));
-
-            _angularVelocityIndex = 10;
 
             _anchorQuery = GetEntityQuery<CollideOnAnchorComponent>();
             _fixturesQuery = GetEntityQuery<FixturesComponent>();

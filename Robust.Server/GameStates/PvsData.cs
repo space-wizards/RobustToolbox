@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
@@ -77,6 +78,16 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     /// </summary>
     public Entity<TransformComponent, EyeComponent?>[] Viewers
         = Array.Empty<Entity<TransformComponent, EyeComponent?>>();
+
+    /// <summary>
+    /// Viewer positions used while building this session's PVS state.
+    /// </summary>
+    public readonly List<(MapCoordinates Pos, float Scale)> ViewPositions = new();
+
+    /// <summary>
+    /// z-level map list used while building this session's PVS state.
+    /// </summary>
+    public readonly List<EntityUid> ZLevelMaps = new();
 
     /// <summary>
     /// If true, the client has explicitly requested a full state. Unlike the first state, we will send them all data,

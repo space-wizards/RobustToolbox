@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;

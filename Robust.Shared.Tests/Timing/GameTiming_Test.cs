@@ -117,7 +117,146 @@ namespace Robust.Shared.Tests.Timing
             Assert.That(result, Is.EqualTo(expected));
         }
 
-        /// <summary>
+        [TestCase(-0.1f)]
+        [TestCase(0.1f)]
+        public void OutSimCurTimeUsesAdjustedTickPhase(float tickTimingAdjustment)
+        {
+            var newStopwatch = new Mock<IStopwatch>();
+            var gameTiming = GameTimingFactory(newStopwatch.Object);
+            gameTiming.InSimulation = false;
+            gameTiming.TickRate = 5;
+            gameTiming.CurTick = new GameTick(2);
+            gameTiming.TickTimingAdjustment = tickTimingAdjustment;
+            ((GameTiming) gameTiming).FreezeTickTimingAdjustment();
+
+            var adjustedHalfTick = gameTiming.CalcAdjustedTickPeriod() / 2;
+            gameTiming.TickRemainder = adjustedHalfTick / gameTiming.TimeScale;
+
+            var result = gameTiming.CurTime;
+            var phase = gameTiming.TickFraction / (float) ushort.MaxValue;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result, Is.EqualTo(TimeSpan.FromSeconds(0.3)).Within(TimeSpan.FromTicks(1)));
+                Assert.That(phase, Is.EqualTo(0.5f).Within(0.001f));
+            });
+        }
+
+
+        [TestCase(0f, 0.1f, 30, 1f)]
+        [TestCase(0f, -0.1f, 30, 1f)]
+        [TestCase(0.1f, -0.1f, 30, 1f)]
+        [TestCase(-0.1f, 0.1f, 30, 1f)]
+        [TestCase(0f, 0.1f, 5, 1f)]
+        [TestCase(0f, -0.1f, 60, 1f)]
+        [TestCase(0f, 0.1f, 30, 0.5f)]
+        [TestCase(0f, 0.1f, 30, 2f)]
+        public void TickTimingAdjustmentChangeDoesNotAlterActiveTickPhase(
+            float initialAdjustment,
+            float updatedAdjustment,
+            int tickRate,
+            float timeScale)
+        {
+            var newStopwatch = new Mock<IStopwatch>();
+            var gameTiming = GameTimingFactory(newStopwatch.Object);
+            gameTiming.InSimulation = false;
+            gameTiming.Paused = false;
+            gameTiming.TickRate = (ushort) tickRate;
+            gameTiming.TimeScale = timeScale;
+            gameTiming.CurTick = new GameTick(10);
+            gameTiming.TickTimingAdjustment = initialAdjustment;
+            ((GameTiming) gameTiming).FreezeTickTimingAdjustment();
+            SetRealTickProgress(gameTiming, 0.5f);
+
+            var phaseBefore = gameTiming.TickPhase;
+            var fractionBefore = gameTiming.TickFraction;
+            var curTimeBefore = gameTiming.CurTime;
+
+            gameTiming.TickTimingAdjustment = updatedAdjustment;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(gameTiming.TickPhase, Is.EqualTo(phaseBefore).Within(0.00001f));
+                Assert.That(gameTiming.TickFraction, Is.EqualTo(fractionBefore));
+                Assert.That(gameTiming.CurTime, Is.EqualTo(curTimeBefore).Within(TimeSpan.FromTicks(1)));
+            });
+        }
+
+        [TestCase(0f, 0.1f)]
+        [TestCase(0f, -0.1f)]
+        [TestCase(0.1f, -0.1f)]
+        [TestCase(-0.1f, 0.1f)]
+        public void TickTimingAdjustmentChangeAppliesOnNextTick(float initialAdjustment, float updatedAdjustment)
+        {
+            var newStopwatch = new Mock<IStopwatch>();
+            var gameTiming = GameTimingFactory(newStopwatch.Object);
+            gameTiming.InSimulation = false;
+            gameTiming.Paused = false;
+            gameTiming.TickRate = 30;
+            gameTiming.CurTick = new GameTick(10);
+            gameTiming.TickTimingAdjustment = initialAdjustment;
+            ((GameTiming) gameTiming).FreezeTickTimingAdjustment();
+            SetRealTickProgress(gameTiming, 0.25f);
+
+            var activeTickPeriod = gameTiming.CalcAdjustedTickPeriod();
+            Assert.That(activeTickPeriod, Is.EqualTo(ExpectedAdjustedTickPeriod(gameTiming, initialAdjustment))
+                .Within(TimeSpan.FromTicks(1)));
+
+            gameTiming.TickTimingAdjustment = updatedAdjustment;
+
+            Assert.That(gameTiming.CalcAdjustedTickPeriod(), Is.EqualTo(activeTickPeriod).Within(TimeSpan.FromTicks(1)));
+
+            ((GameTiming) gameTiming).FreezeTickTimingAdjustment();
+            gameTiming.TickRemainder = TimeSpan.Zero;
+
+            Assert.That(gameTiming.CalcAdjustedTickPeriod(),
+                Is.EqualTo(ExpectedAdjustedTickPeriod(gameTiming, updatedAdjustment)).Within(TimeSpan.FromTicks(1)));
+        }
+
+        [TestCase(0.5f)]
+        [TestCase(1f)]
+        [TestCase(2f)]
+        public void TimeScaleChangeStillUpdatesAdjustedTickPeriod(float updatedTimeScale)
+        {
+            var newStopwatch = new Mock<IStopwatch>();
+            var gameTiming = GameTimingFactory(newStopwatch.Object);
+            gameTiming.InSimulation = false;
+            gameTiming.Paused = false;
+            gameTiming.TickRate = 30;
+            gameTiming.TickTimingAdjustment = 0.1f;
+            ((GameTiming) gameTiming).FreezeTickTimingAdjustment();
+
+            gameTiming.TimeScale = updatedTimeScale;
+
+            Assert.That(gameTiming.CalcAdjustedTickPeriod(),
+                Is.EqualTo(ExpectedAdjustedTickPeriod(gameTiming, 0.1f)).Within(TimeSpan.FromTicks(1)));
+        }
+
+        [Test]
+        public void TickPhaseDoesNotMoveBackAfterTimingAdjustmentChange()
+        {
+            var newStopwatch = new Mock<IStopwatch>();
+            var gameTiming = GameTimingFactory(newStopwatch.Object);
+            gameTiming.InSimulation = false;
+            gameTiming.Paused = false;
+            gameTiming.TickRate = 30;
+            gameTiming.CurTick = new GameTick(10);
+            gameTiming.TickTimingAdjustment = -0.1f;
+            ((GameTiming) gameTiming).FreezeTickTimingAdjustment();
+            SetRealTickProgress(gameTiming, 0.4f);
+
+            var previousPhase = gameTiming.TickPhase;
+            gameTiming.TickTimingAdjustment = 0.1f;
+
+            foreach (var progress in new[] { 0.4f, 0.6f, 0.8f, 1f })
+            {
+                SetRealTickProgress(gameTiming, progress);
+                var phase = gameTiming.TickPhase;
+
+                Assert.That(phase, Is.GreaterThanOrEqualTo(previousPhase).Within(0.00001f));
+                previousPhase = phase;
+            }
+        }        /// <summary>
         ///     Checks that IGameTiming.FrameTime returns the simulated delta time between the two most recent calls to IGameTiming.StartFrame().
         /// </summary>
         /// <remarks>
@@ -200,7 +339,18 @@ namespace Robust.Shared.Tests.Timing
             Assert.That(result, Is.EqualTo(TimeSpan.Zero)); // But simulation time never increases.
         }
 
-        private static IGameTiming GameTimingFactory(IStopwatch stopwatch)
+
+        private static void SetRealTickProgress(IGameTiming timing, float progress)
+        {
+            var realProgress = timing.CalcAdjustedTickPeriod() * progress;
+            timing.TickRemainder = realProgress / timing.TimeScale;
+        }
+
+        private static TimeSpan ExpectedAdjustedTickPeriod(IGameTiming timing, float adjustment)
+        {
+            var ratio = Math.Clamp(adjustment, -0.99f, 0.99f);
+            return timing.TickPeriod * (1 - ratio) * timing.TimeScale;
+        }        private static IGameTiming GameTimingFactory(IStopwatch stopwatch)
         {
             var timing = new GameTiming();
 

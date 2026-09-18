@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -43,9 +43,15 @@ namespace Robust.Client.Graphics
         public readonly EntityUid MapUid;
 
         /// <summary>
-        /// <see cref="MapId"/> of the viewport's eye.
+        /// <see cref="MapId"/> currently being rendered.
         /// </summary>
         public readonly MapId MapId;
+
+        /// <summary>
+        ///     Z-level offset of <see cref="MapId"/> relative to the viewport eye's map.
+        ///     Zero is the eye map, negative values are below, positive values are above.
+        /// </summary>
+        public readonly int ZLevelOffset;
 
         /// <summary>
         ///     AABB enclosing the area visible in the viewport.
@@ -70,6 +76,7 @@ namespace Robust.Client.Graphics
             in UIBox2i viewportBounds,
             in EntityUid mapUid,
             in MapId mapId,
+            int zLevelOffset,
             in Box2 worldAabb,
             in Box2Rotated worldBounds)
         {
@@ -84,6 +91,7 @@ namespace Robust.Client.Graphics
             ViewportBounds = viewportBounds;
             MapUid = mapUid;
             MapId = mapId;
+            ZLevelOffset = zLevelOffset;
             WorldAABB = worldAabb;
             WorldBounds = worldBounds;
         }

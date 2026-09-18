@@ -1,115 +1,254 @@
 using System;
-using Robust.Shared.Enums;
+using System.Globalization;
+using System.Numerics;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Client.Player;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.Console;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Containers;
-using Robust.Shared.Timing;
+using Robust.Shared.Random;
 
-namespace Robust.Client.GameStates
+namespace Robust.Client.GameStates;
+
+/// <summary>
+/// Debug view for the client-only render transform cache.
+/// </summary>
+internal sealed partial class NetInterpOverlay : Overlay
 {
-    internal sealed partial class NetInterpOverlay : Overlay
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+
+    private readonly TransformSystem _transforms;
+    private readonly Font _font;
+
+    private EntityUid? _filter;
+
+    public override OverlaySpace Space => OverlaySpace.ScreenSpace;
+
+    public NetInterpOverlay()
     {
-        private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
+        IoCManager.InjectDependencies(this);
+        _transforms = _entityManager.System<TransformSystem>();
+        _font = new VectorFont(
+            _resourceCache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"),
+            10);
+    }
 
-        [Dependency] private IGameTiming _timing = default!;
-        [Dependency] private IEntityManager _entityManager = default!;
-        [Dependency] private IPrototypeManager _prototypeManager = default!;
-        private readonly EntityLookupSystem _lookup;
+    protected internal override void Draw(in OverlayDrawArgs args)
+    {
+        if (args.ViewportControl == null)
+            return;
 
-        public override OverlaySpace Space => OverlaySpace.WorldSpace;
-        private readonly ShaderInstance _shader;
-        private readonly SharedContainerSystem _container;
-        private readonly SharedTransformSystem _xform;
-
-        /// <summary>
-        /// When an entity stops lerping the overlay will continue to draw a box around the entity for this amount of time.
-        /// </summary>
-        public static readonly TimeSpan Delay = TimeSpan.FromSeconds(2f);
-
-        public NetInterpOverlay(EntityLookupSystem lookup)
+        var handle = args.ScreenHandle;
+        foreach (var data in _transforms.GetRenderTransformDebugData())
         {
-            IoCManager.InjectDependencies(this);
-            _lookup = lookup;
-            _shader = _prototypeManager.Index(UnshadedShader).Instance();
-            _container = _entityManager.System<SharedContainerSystem>();
-            _xform = _entityManager.System<SharedTransformSystem>();
-        }
+            if ((_filter != null && data.Entity != _filter)
+                || data.CoordinateSpace != args.MapUid)
+                continue;
 
-        protected internal override void Draw(in OverlayDrawArgs args)
-        {
-            var handle = args.DrawingHandle;
-            handle.UseShader(_shader);
-            var worldHandle = (DrawingHandleWorld)handle;
-            var viewport = args.WorldAABB;
+            var simulation = args.ViewportControl.WorldToScreen(data.Simulation.Position);
+            var rendered = args.ViewportControl.WorldToScreen(data.Rendered.Position);
+            var source = args.ViewportControl.WorldToScreen(data.Source.Position);
+            var target = args.ViewportControl.WorldToScreen(data.Target.Position);
 
-            var query = _entityManager.AllEntityQueryEnumerator<TransformComponent>();
-            while (query.MoveNext(out var uid, out var transform))
-            {
-                // if not on the same map, continue
-                if (transform.MapID != args.MapId || _container.IsEntityInContainer(uid))
-                    continue;
+            handle.DrawLine(source, target, Color.Yellow);
+            handle.DrawLine(simulation, rendered, Color.Cyan);
+            DrawMarker(handle, source, Color.Yellow);
+            DrawMarker(handle, target, Color.Green);
+            DrawMarker(handle, simulation, Color.Red);
+            DrawMarker(handle, rendered, Color.Cyan);
 
-                if (transform.GridUid == uid)
-                    continue;
-
-                var delta = (_timing.CurTick.Value - transform.LastLerp.Value) * _timing.TickPeriod;
-                if (!transform.ActivelyLerping && delta > Delay)
-                    continue;
-
-                var aabb = _lookup.GetWorldAABB(uid);
-
-                // if not on screen, or too small, continue
-                if (!aabb.Intersects(viewport) || aabb.IsEmpty())
-                    continue;
-
-                var (pos, rot) = _xform.GetWorldPositionRotation(transform, _entityManager.GetEntityQuery<TransformComponent>());
-                var boxOffset = transform.NextPosition != null
-                    ? transform.NextPosition.Value - transform.LocalPosition
-                    : default;
-                var worldOffset = (rot - transform.LocalRotation).RotateVec(boxOffset);
-
-                var nextPos = pos + worldOffset;
-                worldHandle.DrawLine(pos, nextPos, Color.Yellow);
-
-                var nextAabb = aabb.Translated(worldOffset);
-
-                Angle nextRot = rot;
-                if (transform.NextRotation.HasValue)
-                    nextRot += transform.NextRotation.Value - transform.LocalRotation;
-                var nextBox = new Box2Rotated(nextAabb, nextRot, nextAabb.Center);
-                worldHandle.DrawRect(nextBox, Color.Green.WithAlpha(0.1f), true);
-                worldHandle.DrawRect(nextBox, Color.Green, false);
-
-                var box = new Box2Rotated(aabb, rot, aabb.Center);
-                worldHandle.DrawRect(box, Color.Yellow.WithAlpha(0.1f), true);
-                worldHandle.DrawRect(box, Color.Yellow, false);
-            }
-        }
-
-        private sealed partial class NetShowInterpCommand : LocalizedCommands
-        {
-            [Dependency] private IEntityManager _entManager = default!;
-            [Dependency] private IOverlayManager _overlay = default!;
-
-            public override string Command => "net_draw_interp";
-
-            public override void Execute(IConsoleShell shell, string argStr, string[] args)
-            {
-                if (!_overlay.HasOverlay<NetInterpOverlay>())
-                {
-                    _overlay.AddOverlay(new NetInterpOverlay(_entManager.System<EntityLookupSystem>()));
-                    shell.WriteLine("Enabled network interp overlay.");
-                }
-                else
-                {
-                    _overlay.RemoveOverlay<NetInterpOverlay>();
-                    shell.WriteLine("Disabled network interp overlay.");
-                }
-            }
+            var correctionActive = data.CorrectionTranslation != Vector2.Zero || data.CorrectionRotation != Angle.Zero;
+            var correction =
+                $"{data.CorrectionTranslation.X:0.000},{data.CorrectionTranslation.Y:0.000}, {data.CorrectionRotation.Degrees:0.00}deg";
+            var text = $"{data.Entity} {data.Type} a={data.Alpha:0.000}\n" +
+                       $"correction: {(correctionActive ? "active" : "inactive")} error {correction}\n" +
+                       $"sim {Format(data.Simulation)} render {Format(data.Rendered)}\n" +
+                       $"source {Format(data.Source)} target {Format(data.Target)}\n" +
+                       $"parent {data.Parent} coords {data.CoordinateSpace}\n" +
+                       $"spaces {data.SourceRenderSpace}->{data.TargetRenderSpace} " +
+                       $"a={data.Rendered.RenderSpaceAlpha:0.000}";
+            var dimensions = handle.GetDimensions(_font, text, 1f);
+            var labelPos = rendered + new Vector2(8f, 8f);
+            handle.DrawRect(UIBox2.FromDimensions(labelPos - new Vector2(2f), dimensions + new Vector2(4f)),
+                new Color(20, 20, 24, 220));
+            handle.DrawString(_font, labelPos, text);
         }
     }
+
+    private static string Format(in RenderTransform pose)
+        => $"({pose.Position.X:0.00},{pose.Position.Y:0.00},{pose.Rotation.Degrees:0.0}deg)";
+
+    private static void DrawMarker(DrawingHandleScreen handle, Vector2 position, Color color)
+    {
+        handle.DrawRect(UIBox2.FromDimensions(position - new Vector2(2f), new Vector2(4f)), color);
+    }
+
+    private sealed partial class NetShowInterpCommand : LocalizedCommands
+    {
+        [Dependency] private IOverlayManager _overlay = default!;
+        [Dependency] private IPlayerManager _players = default!;
+
+        public override string Command => "net_draw_interp";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+            => SetOverlay(shell, args, _overlay, _players, Help);
+    }
+
+    private sealed partial class RenderLerpCommand : LocalizedCommands
+    {
+        [Dependency] private IOverlayManager _overlay = default!;
+        [Dependency] private IPlayerManager _players = default!;
+
+        public override string Command => "renderlerp";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+            => SetOverlay(shell, args, _overlay, _players, Help);
+    }
+
+    private static void SetOverlay(
+        IConsoleShell shell,
+        string[] args,
+        IOverlayManager overlayManager,
+        IPlayerManager players,
+        string help)
+    {
+        if (args.Length > 1)
+        {
+            shell.WriteError(help);
+            return;
+        }
+
+        if (args.Length == 0)
+        {
+            if (overlayManager.HasOverlay<NetInterpOverlay>())
+            {
+                overlayManager.RemoveOverlay<NetInterpOverlay>();
+                shell.WriteLine("Disabled render interpolation overlay.");
+            }
+            else
+            {
+                overlayManager.AddOverlay(new NetInterpOverlay());
+                shell.WriteLine("Enabled render interpolation overlay.");
+            }
+
+            return;
+        }
+
+        if (args[0] == "0")
+        {
+            overlayManager.RemoveOverlay<NetInterpOverlay>();
+            shell.WriteLine("Disabled render interpolation overlay.");
+            return;
+        }
+
+        EntityUid? filter;
+        if (args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            filter = null;
+        }
+        else if (args[0].Equals("self", StringComparison.OrdinalIgnoreCase))
+        {
+            if (players.LocalEntity is not { } player)
+            {
+                shell.WriteError("No controlled entity.");
+                return;
+            }
+
+            filter = player;
+        }
+        else if (EntityUid.TryParse(args[0], out var uid))
+        {
+            filter = uid;
+        }
+        else
+        {
+            shell.WriteError(help);
+            return;
+        }
+
+        if (!overlayManager.TryGetOverlay<NetInterpOverlay>(out var overlay))
+        {
+            overlay = new NetInterpOverlay();
+            overlayManager.AddOverlay(overlay);
+        }
+
+        overlay._filter = filter;
+        shell.WriteLine(filter == null
+            ? "Enabled render interpolation overlay for all entities."
+            : $"Enabled render interpolation overlay for entity {filter}.");
+    }
+
+    private sealed partial class NetMispredictCommand : LocalizedCommands
+    {
+        [Dependency] private IEntityManager _entities = default!;
+        [Dependency] private IPlayerManager _players = default!;
+        [Dependency] private IRobustRandom _random = default!;
+
+        public override string Command => "net_mispredict";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            var active = false;
+            var offset = 0;
+            if (args.Length > 0 && args[0].Equals("active", StringComparison.OrdinalIgnoreCase))
+            {
+                active = true;
+                offset = 1;
+            }
+
+            float x;
+            float y;
+            var rotationDegrees = 0f;
+            var remaining = args.Length - offset;
+            if (remaining == 0)
+            {
+                var randomOffset = _random.NextVector2(0.5f, 1f);
+                x = randomOffset.X;
+                y = randomOffset.Y;
+            }
+            else if (remaining is < 2 or > 3
+                     || !float.TryParse(args[offset], NumberStyles.Float, CultureInfo.InvariantCulture, out x)
+                     || !float.TryParse(args[offset + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out y)
+                     || remaining == 3
+                     && !float.TryParse(args[offset + 2], NumberStyles.Float, CultureInfo.InvariantCulture, out rotationDegrees))
+            {
+                shell.WriteError(Help);
+                return;
+            }
+
+            if (_players.LocalEntity is not { } player
+                || !_entities.TryGetComponent(player, out TransformComponent? xform))
+            {
+                shell.WriteError("No controlled entity with a transform.");
+                return;
+            }
+
+            var transforms = _entities.System<TransformSystem>();
+            var (position, rotation) = transforms.GetWorldPositionRotation(xform);
+            var rotationOffset = Angle.FromDegrees(rotationDegrees);
+
+            if (active)
+            {
+                transforms.SetWorldPositionRotationPreservingRenderTransform(
+                    player,
+                    position + new Vector2(x, y),
+                    rotation + rotationOffset,
+                    xform);
+            }
+            else
+            {
+                transforms.SetWorldPositionRotation(player, position + new Vector2(x, y), rotation + rotationOffset, xform);
+                transforms.SnapRenderTransform(player, true);
+            }
+
+            shell.WriteLine(
+                $"Moved local entity {player} by ({x:0.###}, {y:0.###}), {rotationOffset.Degrees:0.###} degrees without notifying the server.");
+        }
+    }
+
 }

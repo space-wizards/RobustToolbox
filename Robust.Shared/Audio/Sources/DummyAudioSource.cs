@@ -52,6 +52,9 @@ internal partial class DummyAudioSource : IAudioSource
     public Vector2 Position { get; set; }
 
     /// <inheritdoc />
+    public float ZPosition { get; set; }
+
+    /// <inheritdoc />
     [DataField]
     public float Pitch { get; set; }
 

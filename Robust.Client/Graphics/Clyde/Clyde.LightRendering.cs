@@ -348,14 +348,19 @@ namespace Robust.Client.Graphics.Clyde
             IsBlending = true;
         }
 
-        private void DrawLightsAndFov(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
+        private void DrawLightsAndFov(
+            Viewport viewport,
+            MapId mapId,
+            Box2Rotated worldBounds,
+            Box2 worldAABB,
+            IEye eye,
+            int zLevelOffset)
         {
             if (!_lightManager.Enabled || !eye.DrawLight)
             {
                 return;
             }
 
-            var mapId = eye.Position.MapId;
             if (mapId == MapId.Nullspace)
                 return;
 
@@ -422,10 +427,7 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.Assert(_currentBoundRenderTarget.TextureHandle.Equals(viewport.LightRenderTarget.Texture.TextureId));
             CheckGlError();
 
-            var clearEv = new GetClearColorEvent();
-            _entityManager.EventBus.RaiseEvent(EventSource.Local, ref clearEv);
-
-            var clearColor = clearEv.Color ?? GetClearColor(mapUid);
+            var clearColor = GetClearColor(mapUid);
             GLClearColor(clearColor);
             GL.ClearStencil(0xFF);
             GL.StencilMask(0xFF);
@@ -439,7 +441,7 @@ namespace Robust.Client.Graphics.Clyde
             var oldScissor = _currentScissorState;
             var state = PushRenderStateFull();
 
-            RenderOverlays(viewport, OverlaySpace.BeforeLighting, worldAABB, worldBounds);
+            RenderOverlays(viewport, OverlaySpace.BeforeLighting, worldAABB, worldBounds, mapId, zLevelOffset);
             PopRenderStateFull(state);
 
             DebugTools.Assert(oldScissor.Equals(_currentScissorState));
@@ -586,6 +588,12 @@ namespace Robust.Client.Graphics.Clyde
             Array.Clear(_lightsToRenderList, 0, count);
         }
 
+        private bool IsMapLightingEnabled(MapId mapId)
+        {
+            var mapUid = _mapSystem.GetMapOrInvalid(mapId);
+            return _entityManager.TryGetComponent<MapComponent>(mapUid, out var map) && map.LightingEnabled;
+        }
+
         private static bool LightQuery(ref (
             Clyde clyde,
             MapId map,
@@ -606,7 +614,7 @@ namespace Robust.Client.Graphics.Clyde
             if (light is not PointLightComponent pointLight)
                 return true;
 
-            var (lightPos, rot) = state.clyde._transformSystem.GetWorldPositionRotation(transform, state.xforms);
+            var (lightPos, rot) = state.clyde._transformSystem.GetRenderWorldPositionRotation(value.Uid, transform);
             lightPos += rot.RotateVec(light.Offset);
             var circle = new Circle(lightPos, light.Radius);
 
@@ -686,12 +694,27 @@ namespace Robust.Client.Graphics.Clyde
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
             var state = (this, map, count: 0, shadowCastingCount: 0, xforms, worldAABB);
-            var lightAabb = worldAABB.Enlarged(_maxLightRadius);
+            var lightAabb = _transformSystem.GetRenderCullingBounds(map, worldAABB.Enlarged(_maxLightRadius));
+            var renderBounds = _transformSystem.GetRenderCullingBounds(map, worldBounds);
+            var renderBoundsRotated = new Box2Rotated(renderBounds, default, default);
 
-            foreach (var (uid, comp) in _lightTreeSystem.GetIntersectingTrees(map, lightAabb))
+            QueryLightsOnMap(map);
+
+            void QueryLightsOnMap(MapId renderMap)
             {
-                var bounds = _transformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(worldBounds);
-                comp.Tree.QueryAabb(ref state, LightQuery, bounds);
+                if (state.count >= _maxLights)
+                    return;
+
+                if (!IsMapLightingEnabled(renderMap))
+                    return;
+
+                state.map = renderMap;
+
+                foreach (var (uid, comp) in _lightTreeSystem.GetIntersectingTrees(renderMap, lightAabb))
+                {
+                    var bounds = _transformSystem.GetInvRenderWorldMatrix(uid).TransformBox(renderBoundsRotated);
+                    comp.Tree.QueryAabb(ref state, LightQuery, bounds);
+                }
             }
 
             if (state.shadowCastingCount > _maxShadowcastingLights)
@@ -759,10 +782,11 @@ namespace Robust.Client.Graphics.Clyde
             // Do a narrow tree query around the light and only run the expensive polygon TestPoint
             // for occluders whose cached AABB can contain the light.
             var pointBounds = new Box2(lightPosition, lightPosition).Enlarged(SharedOccluderEdgeTolerance);
+            var queryBounds = _transformSystem.GetRenderCullingBounds(map, pointBounds);
 
-            foreach (var (treeUid, comp) in _occluderSystem.GetIntersectingTrees(map, pointBounds))
+            foreach (var (treeUid, comp) in _occluderSystem.GetIntersectingTrees(map, queryBounds))
             {
-                var treeBounds = _transformSystem.GetInvWorldMatrix(treeUid, xforms).TransformBox(pointBounds);
+                var treeBounds = _transformSystem.GetInvRenderWorldMatrix(treeUid).TransformBox(queryBounds);
                 var state = new LightEmbeddedOccluderQueryState(
                     _fixtureSystem,
                     _transformSystem,
@@ -786,9 +810,9 @@ namespace Robust.Client.Graphics.Clyde
             if (!occluder.Enabled)
                 return true;
 
-            var (worldPosition, worldRotation) = state.TransformSystem.GetWorldPositionRotation(
-                entry.Transform,
-                state.Xforms);
+            var (worldPosition, worldRotation) = state.TransformSystem.GetRenderWorldPositionRotation(
+                entry.Uid,
+                entry.Transform);
 
             if (!OccluderOverlapsPoint(
                     state.FixtureSystem,
@@ -820,6 +844,12 @@ namespace Robust.Client.Graphics.Clyde
         [Pure]
         public Color GetClearColor(EntityUid mapUid)
         {
+            var clearEv = new GetClearColorEvent();
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, ref clearEv);
+
+            if (clearEv.Color != null)
+                return clearEv.Color.Value;
+
             return _entityManager.GetComponentOrNull<MapLightComponent>(mapUid)?.AmbientLightColor ??
                 MapLightComponent.DefaultColor;
         }
@@ -1688,69 +1718,78 @@ namespace Robust.Client.Graphics.Clyde
                 // Include one tile around the rendered area so shared corners on the edge of the viewport have
                 // complete topology. Visible geometry is filtered back to expandedBounds below.
                 var boundaryBounds = expandedBounds.Enlarged(SharedOccluderNeighbourQueryPadding);
-                foreach (var (uid, comp) in _occluderSystem.GetIntersectingTrees(map, boundaryBounds))
+                var boundaryQueryBounds = _transformSystem.GetRenderCullingBounds(map, boundaryBounds);
+                QueryOccludersOnMap(map);
+
+                void QueryOccludersOnMap(MapId renderMap)
                 {
-                    var treeBounds = _transformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(boundaryBounds);
+                    if (!IsMapLightingEnabled(renderMap))
+                        return;
 
-                    comp.Tree.QueryAabb((in ComponentTreeEntry<OccluderComponent> entry) =>
+                    foreach (var (uid, comp) in _occluderSystem.GetIntersectingTrees(renderMap, boundaryQueryBounds))
                     {
-                        var (occluder, transform) = entry;
-                        if (!occluder.Enabled)
-                            return true;
+                        var treeBounds = _transformSystem.GetInvRenderWorldMatrix(uid).TransformBox(boundaryQueryBounds);
 
-                        var polygon = occluder.Polygon;
-                        if (polygon.Length < 3)
-                            return true;
-
-                        var worldTransform = _transformSystem.GetWorldMatrix(transform, xforms);
-
-                        // Build source-dependent corner topology from the cached client-side shared edge mask.
-                        AddOccluderBoundaryEdges(
-                            polygon,
-                            worldTransform,
-                            occluder.OccludingEdges,
-                            _occluderSharedBoundaryEdges,
-                            _occluderBoundarySegments);
-
-                        if (geometryFull
-                            || !worldTransform.TransformBox(occluder.LocalBounds).Intersects(expandedBounds))
+                        comp.Tree.QueryAabb((in ComponentTreeEntry<OccluderComponent> entry) =>
                         {
+                            var (occluder, transform) = entry;
+                            if (!occluder.Enabled)
+                                return true;
+
+                            var polygon = occluder.Polygon;
+                            if (polygon.Length < 3)
+                                return true;
+
+                            var worldTransform = _transformSystem.GetRenderWorldMatrix(entry.Uid, transform);
+
+                            // Build source-dependent corner topology from the cached client-side shared edge mask.
+                            AddOccluderBoundaryEdges(
+                                polygon,
+                                worldTransform,
+                                occluder.OccludingEdges,
+                                _occluderSharedBoundaryEdges,
+                                _occluderBoundarySegments);
+
+                            if (geometryFull
+                                || !worldTransform.TransformBox(occluder.LocalBounds).Intersects(expandedBounds))
+                            {
+                                return true;
+                            }
+
+                            if (_occluderRenderEntries.Count >= _maxOccluders
+                                || _occluderRenderVertices.Count + polygon.Length > maxMaskVertices
+                                || imi + (polygon.Length - 2) * 3 > indexMaskBuffer.Length)
+                            {
+                                geometryFull = true;
+                                return true;
+                            }
+
+                            var vertexOffset = _occluderRenderVertices.Count;
+                            var clockwise = SignedArea(polygon) < 0f;
+                            for (var i = 0; i < polygon.Length; i++)
+                            {
+                                var sourceIndex = clockwise ? i : polygon.Length - 1 - i;
+                                var worldVertex = Vector2.Transform(polygon[sourceIndex], worldTransform);
+                                _occluderRenderVertices.Add(worldVertex);
+                            }
+
+                            if (!TryWriteMaskPolygon(vertexOffset, polygon.Length))
+                            {
+                                geometryFull = true;
+                                return true;
+                            }
+
+                            occluderCount += 1;
+
+                            if (!TryCacheDepthEdges(vertexOffset, polygon.Length, occluder.OccludingEdges))
+                            {
+                                geometryFull = true;
+                                return true;
+                            }
+
                             return true;
-                        }
-
-                        if (_occluderRenderEntries.Count >= _maxOccluders
-                            || _occluderRenderVertices.Count + polygon.Length > maxMaskVertices
-                            || imi + (polygon.Length - 2) * 3 > indexMaskBuffer.Length)
-                        {
-                            geometryFull = true;
-                            return true;
-                        }
-
-                        var vertexOffset = _occluderRenderVertices.Count;
-                        var clockwise = SignedArea(polygon) < 0f;
-                        for (var i = 0; i < polygon.Length; i++)
-                        {
-                            var sourceIndex = clockwise ? i : polygon.Length - 1 - i;
-                            var worldVertex = Vector2.Transform(polygon[sourceIndex], worldTransform);
-                            _occluderRenderVertices.Add(worldVertex);
-                        }
-
-                        if (!TryWriteMaskPolygon(vertexOffset, polygon.Length))
-                        {
-                            geometryFull = true;
-                            return true;
-                        }
-
-                        occluderCount += 1;
-
-                        if (!TryCacheDepthEdges(vertexOffset, polygon.Length, occluder.OccludingEdges))
-                        {
-                            geometryFull = true;
-                            return true;
-                        }
-
-                        return true;
-                    }, treeBounds);
+                        }, treeBounds);
+                    }
                 }
 
                 _occlusionMaskDataLength = imi;

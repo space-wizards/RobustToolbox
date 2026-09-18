@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement;
+using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
@@ -31,6 +32,9 @@ namespace Robust.Client.Graphics.Clyde
         private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
         private List<Entity<MapGridComponent>> _grids = new();
+        private readonly List<MapId> _zLevelRenderMapsBelow = new();
+        private readonly List<MapId> _zLevelRenderMapsAbove = new();
+        private bool _zLevelRenderMapsValid;
         private bool _drawTileEdges;
 
         private void RenderTileEdgesChanges(bool value)
@@ -49,17 +53,20 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
+        private void DrawGridsOnMap(
+            Viewport viewport,
+            MapId mapId,
+            Box2 worldAABB,
+            Box2Rotated worldBounds,
+            IEye eye,
+            int zLevelOffset)
         {
-            var mapId = eye.Position.MapId;
             if (!_mapSystem.MapExists(mapId))
-            {
-                // fall back to nullspace map
-                mapId = MapId.Nullspace;
-            }
+                return;
 
             _grids.Clear();
-            _mapSystem.FindGridsIntersecting(mapId, worldBounds, ref _grids);
+            var renderQueryBounds = _transformSystem.GetRenderCullingBounds(mapId, worldBounds);
+            _mapSystem.FindGridsIntersecting(mapId, renderQueryBounds, ref _grids);
 
             var requiresFlush = true;
             GLShaderProgram gridProgram = default!;
@@ -84,7 +91,7 @@ namespace Robust.Client.Graphics.Clyde
                     gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
                 }
 
-                var matrix = _transformSystem.GetWorldMatrix(mapGrid);
+                var matrix = _transformSystem.GetRenderWorldMatrix(mapGrid.Owner);
                 matrix.Translation += GetPixelSnapOffset(
                     matrix.Translation,
                     eye.Position.Position + eye.Offset,
@@ -93,7 +100,7 @@ namespace Robust.Client.Graphics.Clyde
                         new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter),
                     viewport.Size);
                 gridProgram.SetUniform(UniIModelMatrix, matrix);
-                var enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                var enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, renderQueryBounds);
 
                 // Handle base texture updates.
                 while (enumerator.MoveNext(out var chunk))
@@ -130,7 +137,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Handle edge sprites.
                 if (_drawTileEdges)
                 {
-                    enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                    enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, renderQueryBounds);
                     while (enumerator.MoveNext(out var chunk))
                     {
                         var datum = data[chunk.Indices];
@@ -139,7 +146,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, renderQueryBounds);
 
                 // Draw chunks
                 while (enumerator.MoveNext(out var chunk))
@@ -183,7 +190,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     iGrid.Grid = mapGrid;
                     iGrid.RequiresFlush = false;
-                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceGrids, worldAABB, worldBounds);
+                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceGrids, worldAABB, worldBounds, mapId, zLevelOffset);
                     requiresFlush |= iGrid.RequiresFlush;
                 }
 
@@ -192,8 +199,27 @@ namespace Robust.Client.Graphics.Clyde
                     FlushRenderQueue();
                 }
             }
+        }
 
-            CullEmptyChunks();
+        private void EnsureZLevelRenderMaps(MapId mapId)
+        {
+            if (_zLevelRenderMapsValid)
+                return;
+
+            _zLevelRenderMapsValid = true;
+            _zLevelRenderMapsBelow.Clear();
+            _zLevelRenderMapsAbove.Clear();
+
+            var mapUid = _mapSystem.GetMapOrInvalid(mapId);
+            if (!mapUid.IsValid() || !_zLevelSystem.TryGetMapData(mapUid, out _, out _))
+                return;
+
+            _zLevelSystem.CollectRenderableMaps(
+                mapUid,
+                Math.Max(0, _cfg.GetCVar(CVars.NetPvsZLevelsBelow)),
+                Math.Max(0, _cfg.GetCVar(CVars.NetPvsZLevelsAbove)),
+                _zLevelRenderMapsBelow,
+                _zLevelRenderMapsAbove);
         }
 
         private MapChunkData EnsureChunkInitialized(Dictionary<Vector2i, MapChunkData> data, MapChunk chunk, Entity<MapGridComponent> mapGrid)

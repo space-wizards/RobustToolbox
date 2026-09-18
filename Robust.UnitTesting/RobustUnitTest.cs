@@ -42,7 +42,7 @@ namespace Robust.UnitTesting
     public abstract partial class RobustUnitTest
     {
         protected virtual Type[]? ExtraComponents => null;
-        private static Type[] _components = new []
+        private static readonly Type[] Components =
             {
                 typeof(EyeComponent),
                 typeof(MapComponent),
@@ -55,6 +55,12 @@ namespace Robust.UnitTesting
                 typeof(FixturesComponent),
                 typeof(JointComponent),
                 typeof(GridTreeComponent),
+                typeof(ZLevelMapComponent),
+                typeof(ZLevelMapNetworkComponent),
+                typeof(ZLevelGridComponent),
+                typeof(ZLevelPositionComponent),
+                typeof(ZLevelPhysicsComponent),
+                typeof(ZLevelHighGroundComponent),
                 typeof(JointRelayTargetComponent),
                 typeof(OccluderComponent),
                 typeof(OccluderTreeComponent),
@@ -122,12 +128,16 @@ namespace Robust.UnitTesting
             systems.LoadExtraSystemType<FixtureSystem>();
             systems.LoadExtraSystemType<CollisionWakeSystem>();
             systems.LoadExtraSystemType<RecursiveMoveSystem>();
+            systems.LoadExtraSystemType<ZLevelSystem>();
 
             if (Project == UnitTestProject.Client)
             {
                 systems.LoadExtraSystemType<ClientMetaDataSystem>();
                 systems.LoadExtraSystemType<ContainerSystem>();
+                systems.LoadExtraSystemType<ClientZLevelSystem>();
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.TransformSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.ViewSubscriberSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.EyeSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.BroadPhaseSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.JointSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.PhysicsSystem>();
@@ -141,6 +151,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<SpriteTreeSystem>();
                 systems.LoadExtraSystemType<AppearanceSystem>();
                 systems.LoadExtraSystemType<GridChunkBoundsDebugSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameStates.PvsOverrideSystem>();
             }
             else
             {
@@ -158,8 +169,10 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<PvsOverrideSystem>();
                 systems.LoadExtraSystemType<MapSystem>();
                 systems.LoadExtraSystemType<Robust.Server.ComponentTrees.LightTreeSystem>();
-                systems.LoadExtraSystemType<Robust.Server.GameObjects.PointLightSystem>();
+                systems.LoadExtraSystemType<Server.GameObjects.PointLightSystem>();
             }
+
+            LoadExtraSystems(systems);
 
             var entMan = deps.Resolve<IEntityManager>();
 
@@ -172,7 +185,7 @@ namespace Robust.UnitTesting
             // TODO End Suffering.
             // suffering has been alleviated, but still present
             var compFactory = deps.Resolve<IComponentFactory>();
-            compFactory.RegisterTypes(_components);
+            compFactory.RegisterTypes(Components);
             if (ExtraComponents != null)
                 compFactory.RegisterTypes(ExtraComponents);
 
@@ -188,6 +201,8 @@ namespace Robust.UnitTesting
             {
                 compFactory.RegisterClass<Robust.Server.GameObjects.PointLightComponent>();
             }
+
+            LoadGeneratedComponentNetworkSystems(systems, compFactory, assemblies);
 
             deps.Resolve<IParallelManagerInternal>().Initialize();
 
@@ -214,11 +229,37 @@ namespace Robust.UnitTesting
             IoCManager.Clear();
         }
 
+        private static void LoadGeneratedComponentNetworkSystems(
+            IEntitySystemManager systems,
+            IComponentFactory compFactory,
+            IEnumerable<Assembly> assemblies)
+        {
+            foreach (var assembly in assemblies)
+            {
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (!typeof(IEntitySystem).IsAssignableFrom(type) ||
+                        !type.Name.EndsWith("_AutoNetworkSystem", StringComparison.Ordinal) ||
+                        type.DeclaringType is not { } componentType ||
+                        !compFactory.TryGetRegistration(componentType, out _))
+                    {
+                        continue;
+                    }
+
+                    systems.LoadExtraSystemType(type);
+                }
+            }
+        }
+
         /// <summary>
         /// Called after all IoC registration has been done, but before the graph has been built.
         /// This allows one to add new IoC types or overwrite existing ones if needed.
         /// </summary>
         protected virtual void OverrideIoC()
+        {
+        }
+
+        protected virtual void LoadExtraSystems(IEntitySystemManager systems)
         {
         }
 

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -34,6 +36,13 @@ namespace Robust.Client.Graphics
 
         IEye? Eye { get; set; }
         Vector2i Size { get; }
+
+        /// <summary>
+        /// Map entities whose layers contributed to the most recently rendered z-level stack.
+        /// Screen-space visuals attached to entities can use this with the render API to avoid
+        /// selecting an invisible render-layer sample.
+        /// </summary>
+        IReadOnlySet<EntityUid> VisibleZMaps { get; }
 
         /// <summary>
         /// Raised when the viewport indicates that any cached rendering resources (e.g. render targets)

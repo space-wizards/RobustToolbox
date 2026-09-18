@@ -18,6 +18,7 @@ namespace Robust.Client.Physics;
 public sealed partial class PhysicsSystem
 {
     private HashSet<EntityUid> _toUpdate = new();
+    private readonly HashSet<EntityUid> _pendingPredictionEnds = new();
 
     public override void Initialize()
     {
@@ -28,7 +29,7 @@ public sealed partial class PhysicsSystem
         SubscribeLocalEvent<PhysicsComponent, JointRemovedEvent>(OnJointRemoved);
     }
 
-    private void UpdateIsPredicted()
+    private void UpdatePredictionStatus()
     {
         foreach (var uid in _toUpdate)
         {
@@ -40,8 +41,14 @@ public sealed partial class PhysicsSystem
             RaiseLocalEvent(uid, ref ev, true);
             ev.IsPredicted &= !ev.BlockPrediction;
 
+            if (ev.IsPredicted)
+                _pendingPredictionEnds.Remove(uid);
+
             if (physics.Predict == ev.IsPredicted)
                 continue;
+
+            if (!ev.IsPredicted)
+                _pendingPredictionEnds.Add(uid);
 
             physics.Predict = ev.IsPredicted;
             if (ev.IsPredicted)
@@ -51,6 +58,18 @@ public sealed partial class PhysicsSystem
         }
 
         _toUpdate.Clear();
+
+        // Rollback may disable prediction temporarily; only first-time simulation starts a render
+        if (!_gameTiming.IsFirstTimePredicted)
+            return;
+
+        foreach (var uid in _pendingPredictionEnds)
+        {
+            if (PhysicsQuery.TryGetComponent(uid, out var physics) && !physics.Predict)
+                _transform.EndPrediction(uid);
+        }
+
+        _pendingPredictionEnds.Clear();
     }
 
     private void OnJointAdded(EntityUid uid, PhysicsComponent component, JointAddedEvent args)

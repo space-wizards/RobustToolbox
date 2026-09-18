@@ -29,7 +29,7 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
     [Dependency] protected IUserInterfaceManager Ui = default!;
     [Dependency] protected IResourceCache Cache = default!;
 
-    protected SharedTransformSystem Transform = default!;
+    protected TransformSystem Transform = default!;
     protected MapSystem Map = default!;
     protected EntityLookupSystem Lookup = default!;
 
@@ -40,7 +40,7 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
 
     void IPostInjectInit.PostInject()
     {
-        Transform = Entity.System<SharedTransformSystem>();
+        Transform = Entity.System<TransformSystem>();
         Map = Entity.System<MapSystem>();
         Lookup = Entity.System<EntityLookupSystem>();
         var font = Cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf");
@@ -79,7 +79,7 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
     protected virtual void DrawScreen(in OverlayDrawArgs args, Entity<MapGridComponent> grid)
     {
         var handle = args.ScreenHandle;
-        var (_, _, matrix, invMatrix) = Transform.GetWorldPositionRotationMatrixWithInv(grid.Owner);
+        var (matrix, invMatrix) = Transform.GetRenderWorldMatrixWithInv(grid.Owner);
         var gridBounds = invMatrix.TransformBox(args.WorldBounds).Enlarged(grid.Comp.TileSize * 2);
         foreach (var tile in Map.GetLocalTilesIntersecting(grid, grid, gridBounds))
         {
@@ -143,7 +143,7 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
     protected virtual void DrawWorld(in OverlayDrawArgs args, Entity<MapGridComponent> grid)
     {
         var handle = args.WorldHandle;
-        var (_, _, matrix, invMatrix) = Transform.GetWorldPositionRotationMatrixWithInv(grid.Owner);
+        var (matrix, invMatrix) = Transform.GetRenderWorldMatrixWithInv(grid.Owner);
         var gridBounds = invMatrix.TransformBox(args.WorldBounds).Enlarged(grid.Comp.TileSize * 2);
         foreach (var tile in Map.GetLocalTilesIntersecting(grid, grid, gridBounds))
         {

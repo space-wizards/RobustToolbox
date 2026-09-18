@@ -81,8 +81,9 @@ internal sealed partial class PvsSystem
         // Update visibility masks & viewer positions
         // TODO PVS do this before sending state.
         // I,e, we already enumerate over all eyes when computing visible chunks.
-        Span<(MapCoordinates pos, float scale)> positions = stackalloc (MapCoordinates, float)[session.Viewers.Length];
-        int i = 0;
+        var positions = session.ViewPositions;
+        var zLevelMaps = session.ZLevelMaps;
+        positions.Clear();
         foreach (var viewer in session.Viewers)
         {
             if (viewer.Comp2 != null)
@@ -91,7 +92,24 @@ internal sealed partial class PvsSystem
             var mapCoordinates = _transform.GetMapCoordinates(viewer.Owner, viewer.Comp1);
             mapCoordinates = mapCoordinates.Offset(viewer.Comp2?.Offset ?? Vector2.Zero);
             var scale = MathF.Max((viewer.Comp2?.PvsScale ?? 1), 0.1f);
-            positions[i++] = (mapCoordinates, scale);
+            positions.Add((mapCoordinates, scale));
+
+            var (zBelow, zAbove) = GetZLevelPvsRange(viewer.Comp1.MapUid);
+            if (zBelow == 0 && zAbove == 0)
+                continue;
+
+            var mapUid = viewer.Comp1.MapUid;
+            if (mapUid == null)
+                continue;
+
+            _zLevels.CollectMapOffsets(mapUid.Value, zBelow, zAbove, zLevelMaps);
+            foreach (var otherMap in zLevelMaps)
+            {
+                if (!_mapQuery.TryComp(otherMap, out var map))
+                    continue;
+
+                positions.Add((new MapCoordinates(mapCoordinates.Position, map.MapId), scale));
+            }
         }
 
         if (!CullingEnabled || session.DisableCulling)

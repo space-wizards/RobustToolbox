@@ -352,7 +352,8 @@ internal sealed partial class MidiManager : IMidiManager
         MapCoordinates mapCoords = _xformSystem.GetMapCoordinates(renderer.TrackingEntity.Value);
         renderer.TrackingCoordinates = mapCoords;
 
-        if (mapCoords.MapId == MapId.Nullspace || mapCoords.MapId != listener.MapId)
+        if (mapCoords.MapId == MapId.Nullspace
+            || !_audioSys.TryGetZLevelOffset(listener.MapId, mapCoords.MapId, out var mapOffset))
         {
             renderer.Source.Gain = 0f;
 
@@ -362,8 +363,9 @@ internal sealed partial class MidiManager : IMidiManager
         Vector2 mapPosition = mapCoords.Position;
         Vector2 listenerDelta = mapPosition - listener.Position;
         var listenerDeltaLength = listenerDelta.Length();
+        var zLevelOffset = _audioSys.GetZLevelOffset(mapOffset, renderer.TrackingEntity, listener.MapId);
 
-        if (listenerDeltaLength > renderer.Source.MaxDistance)
+        if (_audioSys.GetAudioDistance(listenerDeltaLength, zLevelOffset) > renderer.Source.MaxDistance)
         {
             renderer.Source.Gain = 0f;
 
@@ -381,6 +383,7 @@ internal sealed partial class MidiManager : IMidiManager
             renderer.Source.Gain = Gain;
 
         renderer.Source.Position = mapPosition;
+        renderer.Source.ZPosition = _audioSys.GetAudioSourceZ(zLevelOffset);
         renderer.Source.Velocity = _physics.GetMapLinearVelocity(renderer.TrackingEntity.Value);
         renderer.Source.Occlusion =
             _audioSys.GetOcclusion(listener, listenerDelta, listenerDeltaLength, renderer.TrackingEntity);

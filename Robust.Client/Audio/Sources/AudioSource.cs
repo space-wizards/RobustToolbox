@@ -56,7 +56,7 @@ internal sealed class AudioSource : BaseAudioSource
             }
 #endif
 
-            AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
+            AL.Source(SourceHandle, ALSource3f.Position, x, y, ZPosition);
             Master._checkAlError();
         }
     }

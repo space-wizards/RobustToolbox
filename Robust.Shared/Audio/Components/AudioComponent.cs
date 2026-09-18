@@ -192,6 +192,20 @@ public sealed partial class AudioComponent : Component, IAudioSource
     }
 
     /// <summary>
+    /// <see cref="IAudioSource.ZPosition"/>
+    /// </summary>
+    /// <remarks>
+    /// Derived locally from the source and listener z-levels.
+    /// </remarks>
+    [ViewVariables]
+    [Access(Other = AccessPermissions.ReadWriteExecute)]
+    public float ZPosition
+    {
+        get => Source.ZPosition;
+        set => Source.ZPosition = value;
+    }
+
+    /// <summary>
     /// <see cref="IAudioSource.Volume"/>
     /// </summary>
     [ViewVariables]

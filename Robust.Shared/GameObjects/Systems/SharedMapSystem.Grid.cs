@@ -222,11 +222,16 @@ public abstract partial class SharedMapSystem
         if (args.ParentChanged)
         {
             OnParentChange(uid, component, ref args);
+            RaiseGridMoved(uid);
             return;
         }
 
         // Just maploader / test things
-        if (component.MapProxy == DynamicTree.Proxy.Free) return;
+        if (component.MapProxy == DynamicTree.Proxy.Free)
+        {
+            RaiseGridMoved(uid);
+            return;
+        }
 
         var xform = args.Component;
         var aabb = GetWorldAABB(uid, component, xform);
@@ -237,6 +242,13 @@ public abstract partial class SharedMapSystem
         }
 
         _physics.MovedGrids.Add(uid);
+        RaiseGridMoved(uid);
+    }
+
+    private void RaiseGridMoved(EntityUid uid)
+    {
+        var moved = new MapGridMovedEvent();
+        RaiseLocalEvent(uid, ref moved);
     }
 
     private void OnParentChange(EntityUid uid, MapGridComponent component, ref MoveEvent args)

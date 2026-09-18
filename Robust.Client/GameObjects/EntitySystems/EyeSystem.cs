@@ -2,6 +2,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Player;
 
 namespace Robust.Client.GameObjects;
@@ -9,41 +10,45 @@ namespace Robust.Client.GameObjects;
 public sealed partial class EyeSystem : SharedEyeSystem
 {
     [Dependency] private IEyeManager _eyeManager = default!;
+    [Dependency] private TransformSystem _renderTransforms = default!;
+    [Dependency] private ClientZLevelSystem _clientZLevels = default!;
+    [Dependency] private ZLevelSystem _zLevels = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<EyeComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<EyeComponent, LocalPlayerDetachedEvent>(OnEyeDetached);
-        SubscribeLocalEvent<EyeComponent, LocalPlayerAttachedEvent>(OnEyeAttached);
-        SubscribeLocalEvent<EyeComponent, AfterAutoHandleStateEvent>(OnEyeAutoState);
 
-        // Make sure this runs *after* entities have been moved by interpolation and movement.
+        // Run after the render transform cache is updated.
         UpdatesAfter.Add(typeof(TransformSystem));
         UpdatesAfter.Add(typeof(PhysicsSystem));
+        UpdatesAfter.Add(typeof(ClientZLevelSystem));
     }
 
-    private void OnEyeAutoState(EntityUid uid, EyeComponent component, ref AfterAutoHandleStateEvent args)
+    [SubscribeLocalEvent]
+    private void OnEyeAutoState(Entity<EyeComponent> entity, ref AfterAutoHandleStateEvent args)
     {
-        UpdateEye((uid, component));
+        UpdateEye((entity.Owner, entity.Comp));
     }
 
-    private void OnEyeAttached(EntityUid uid, EyeComponent component, LocalPlayerAttachedEvent args)
+    [SubscribeLocalEvent]
+    private void OnEyeAttached(Entity<EyeComponent> entity, ref LocalPlayerAttachedEvent args)
     {
-        UpdateEye((uid, component));
-        _eyeManager.CurrentEye = component.Eye;
-        var ev = new EyeAttachedEvent(uid, component);
-        RaiseLocalEvent(uid, ref ev, true);
+        UpdateEye((entity.Owner, entity.Comp));
+        _eyeManager.CurrentEye = entity.Comp.Eye;
+        var ev = new EyeAttachedEvent(entity.Owner, entity.Comp);
+        RaiseLocalEvent(entity.Owner, ref ev, true);
     }
 
-    private void OnEyeDetached(EntityUid uid, EyeComponent component, LocalPlayerDetachedEvent args)
+    [SubscribeLocalEvent]
+    private void OnEyeDetached(Entity<EyeComponent> entity, ref LocalPlayerDetachedEvent args)
     {
         _eyeManager.ClearCurrentEye();
     }
 
-    private void OnInit(EntityUid uid, EyeComponent component, ComponentInit args)
+    [SubscribeLocalEvent]
+    private void OnInit(Entity<EyeComponent> entity, ref ComponentInit args)
     {
-        UpdateEye((uid, component));
+        UpdateEye((entity.Owner, entity.Comp));
     }
 
     /// <inheritdoc />
@@ -53,16 +58,20 @@ public sealed partial class EyeSystem : SharedEyeSystem
 
         while (query.MoveNext(out var uid, out var eyeComponent))
         {
-            if (eyeComponent.Eye == null)
-                continue;
-
-            if (!TryComp<TransformComponent>(eyeComponent.Target, out var xform))
+            var target = eyeComponent.Target ?? uid;
+            if (!TryComp(target, out TransformComponent? xform))
             {
                 xform = Transform(uid);
                 eyeComponent.Target = null;
+                target = uid;
             }
 
-            eyeComponent.Eye.Position = TransformSystem.GetMapCoordinates(xform);
+            var pose = _renderTransforms.GetRenderWorldTransform(target, xform);
+            var mapId = _renderTransforms.GetMapId((pose.CoordinateSpace, null));
+            eyeComponent.Eye.Position = new MapCoordinates(pose.Position, mapId);
+            eyeComponent.Eye.RenderedAbsoluteZ = _zLevels.TryGetMapDepth(pose.CoordinateSpace, out _)
+                ? _clientZLevels.GetRenderAbsoluteZ(target, xform)
+                : null;
         }
     }
 }

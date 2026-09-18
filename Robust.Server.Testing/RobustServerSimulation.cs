@@ -213,12 +213,14 @@ namespace Robust.UnitTesting.Server
             container.Register<IStatusHost, StatusHost>();
             container.Register<ITransferManager, ServerTransferManager>();
 
-            var realReflection = new ServerReflectionManager();
-            realReflection.LoadAssemblies(new List<Assembly>(2)
+            var engineAssemblies = new List<Assembly>(2)
             {
                 AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"),
                 AppDomain.CurrentDomain.GetAssemblyByName("Robust.Server"),
-            });
+            };
+
+            var realReflection = new ServerReflectionManager();
+            realReflection.LoadAssemblies(engineAssemblies);
             realReflection.EnsureGetAllTypesCache();
 
             var reflectionManager = new Mock<IReflectionManager>();
@@ -327,6 +329,12 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<JointComponent>();
             compFactory.RegisterClass<EyeComponent>();
             compFactory.RegisterClass<GridTreeComponent>();
+            compFactory.RegisterClass<ZLevelMapComponent>();
+            compFactory.RegisterClass<ZLevelMapNetworkComponent>();
+            compFactory.RegisterClass<ZLevelGridComponent>();
+            compFactory.RegisterClass<ZLevelPositionComponent>();
+            compFactory.RegisterClass<ZLevelPhysicsComponent>();
+            compFactory.RegisterClass<ZLevelHighGroundComponent>();
             compFactory.RegisterClass<JointRelayTargetComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
@@ -363,12 +371,14 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
+            entitySystemMan.LoadExtraSystemType<ZLevelSystem>();
             entitySystemMan.LoadExtraSystemType<PvsSystem>();
             entitySystemMan.LoadExtraSystemType<ServerChunkEntitySystem>();
             entitySystemMan.LoadExtraSystemType<InputSystem>();
             entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
+            LoadGeneratedComponentNetworkSystems(entitySystemMan, compFactory, engineAssemblies);
 
             entityMan.Startup();
 
@@ -391,6 +401,28 @@ namespace Robust.UnitTesting.Server
             protoMan.ResolveResults();
 
             return this;
+        }
+
+        private static void LoadGeneratedComponentNetworkSystems(
+            IEntitySystemManager entitySystemMan,
+            IComponentFactory compFactory,
+            IEnumerable<Assembly> assemblies)
+        {
+            foreach (var assembly in assemblies)
+            {
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (!typeof(IEntitySystem).IsAssignableFrom(type) ||
+                        !type.Name.EndsWith("_AutoNetworkSystem", StringComparison.Ordinal) ||
+                        type.DeclaringType is not { } componentType ||
+                        !compFactory.TryGetRegistration(componentType, out _))
+                    {
+                        continue;
+                    }
+
+                    entitySystemMan.LoadExtraSystemType(type);
+                }
+            }
         }
 
         public static ISimulationFactory NewSimulation()

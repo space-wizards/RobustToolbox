@@ -1,5 +1,6 @@
 ﻿using Robust.Client.ComponentTrees;
 using Robust.Client.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Physics.Systems;
 
 namespace Robust.Client.Graphics.Clyde;
@@ -11,6 +12,8 @@ internal sealed partial class Clyde
     private MapSystem _mapSystem = default!;
     private LightTreeSystem _lightTreeSystem = default!;
     private TransformSystem _transformSystem = default!;
+    private ClientZLevelSystem _clientZLevelSystem = default!;
+    private ZLevelSystem _zLevelSystem = default!;
     private SpriteSystem _spriteSystem = default!;
     private SpriteTreeSystem _spriteTreeSystem = default!;
     private ClientOccluderSystem _occluderSystem = default!;
@@ -27,6 +30,8 @@ internal sealed partial class Clyde
         _mapSystem = _entitySystemManager.GetEntitySystem<MapSystem>();
         _lightTreeSystem = _entitySystemManager.GetEntitySystem<LightTreeSystem>();
         _transformSystem = _entitySystemManager.GetEntitySystem<TransformSystem>();
+        _clientZLevelSystem = _entitySystemManager.GetEntitySystem<ClientZLevelSystem>();
+        _zLevelSystem = _entitySystemManager.GetEntitySystem<ZLevelSystem>();
         _spriteSystem = _entitySystemManager.GetEntitySystem<SpriteSystem>();
         _spriteTreeSystem = _entitySystemManager.GetEntitySystem<SpriteTreeSystem>();
         _occluderSystem = _entitySystemManager.GetEntitySystem<ClientOccluderSystem>();
@@ -38,6 +43,8 @@ internal sealed partial class Clyde
         _mapSystem = null!;
         _lightTreeSystem = null!;
         _transformSystem = null!;
+        _clientZLevelSystem = null!;
+        _zLevelSystem = null!;
         _spriteSystem = null!;
         _spriteTreeSystem = null!;
         _occluderSystem = null!;

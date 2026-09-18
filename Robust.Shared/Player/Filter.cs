@@ -6,6 +6,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Player
 {
@@ -66,7 +67,7 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddPlayersByPvs(MapCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entManager = null, ISharedPlayerManager? playerMan = null, IConfigurationManager? cfgMan = null)
         {
-            IoCManager.Resolve(ref playerMan, ref cfgMan);
+            IoCManager.Resolve(ref entManager, ref playerMan, ref cfgMan);
 
             // If PVS is disabled, we simply return all players.
             if (!cfgMan.GetCVar(CVars.NetPVS))
@@ -159,15 +160,52 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddInRange(MapCoordinates position, float range, ISharedPlayerManager? playerMan = null, IEntityManager? entMan = null)
         {
-            IoCManager.Resolve(ref playerMan, ref entMan);
+            IConfigurationManager? cfgMan = null;
+            IoCManager.Resolve(ref playerMan, ref entMan, ref cfgMan);
+            // Yummy I hate this
+            // Make it a filtersystem.
             var xformQuery = entMan.GetEntityQuery<TransformComponent>();
+            var mapSystem = entMan.System<SharedMapSystem>();
             var xformSystem = entMan.System<SharedTransformSystem>();
+            var zLevels = entMan.System<ZLevelSystem>();
+            var mapId = position.MapId;
+            var originMap = mapSystem.TryGetMap(position.MapId, out var mapUid)
+                ? mapUid.Value
+                : EntityUid.Invalid;
+            var hasZLevels = zLevels.TryGetMapData(originMap, out _, out _);
+            var visibleBelow = hasZLevels ? Math.Max(0, cfgMan.GetCVar(CVars.NetPvsZLevelsBelow)) : 0;
+            var visibleAbove = hasZLevels ? Math.Max(0, cfgMan.GetCVar(CVars.NetPvsZLevelsAbove)) : 0;
 
             return AddWhere(session =>
                 session.AttachedEntity != null &&
                 xformQuery.TryGetComponent(session.AttachedEntity.Value, out var xform) &&
-                xform.MapID == position.MapId &&
+                IsPvsMap(xform.MapID, xform.MapUid, mapId, originMap, zLevels, visibleBelow, visibleAbove) &&
                 (xformSystem.GetWorldPosition(xform) - position.Position).Length() < range, playerMan);
+        }
+
+        private static bool IsPvsMap(
+            MapId mapId,
+            EntityUid? mapUid,
+            MapId originMapId,
+            EntityUid originMap,
+            ZLevelSystem zLevels,
+            int visibleBelow,
+            int visibleAbove)
+        {
+            if (mapId == originMapId)
+                return true;
+
+            if (mapUid == null ||
+                !originMap.IsValid() ||
+                !zLevels.TryGetMapDepthOffset(originMap, mapUid.Value, out var viewerOffset))
+            {
+                return false;
+            }
+
+            // Positive means the viewer is above the origin.
+            return viewerOffset > 0
+                ? viewerOffset <= visibleBelow
+                : -viewerOffset <= visibleAbove;
         }
 
         /// <summary>

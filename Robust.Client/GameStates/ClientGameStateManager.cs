@@ -1,8 +1,9 @@
-// ReSharper disable once RedundantUsingDirective
+﻿// ReSharper disable once RedundantUsingDirective
 // Used in EXCEPTION_TOLERANCE preprocessor
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Microsoft.Extensions.ObjectPool;
@@ -23,6 +24,9 @@ using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Profiling;
@@ -48,7 +52,11 @@ namespace Robust.Client.GameStates
         // Game state dictionaries that get used every tick.
         private readonly Dictionary<EntityUid, StateData> _toApply = new();
         private StateData[] _toApplySorted = default!;
-        private readonly Dictionary<ushort, (IComponent Component, IComponentState? curState, IComponentState? nextState)> _compStateWork = new();
+
+        private readonly
+            Dictionary<ushort, (IComponent Component, IComponentState? curState, IComponentState? nextState)>
+            _compStateWork = new();
+
         private readonly Dictionary<EntityUid, HashSet<ushort>> _pendingReapplyNetStates = new();
         private readonly HashSet<NetEntity> _stateEnts = new();
         private readonly List<EntityUid> _toDelete = new();
@@ -79,6 +87,7 @@ namespace Robust.Client.GameStates
 
         private uint _metaCompNetId;
         private uint _xformCompNetId;
+        private uint _zPositionCompNetId;
 
         [Dependency] private IReplayRecordingManager _replayRecording = default!;
         [Dependency] private IComponentFactory _compFactory = default!;
@@ -97,6 +106,8 @@ namespace Robust.Client.GameStates
 
         private ISawmill _sawmill = default!;
         private ClientChunkEntitySystem? _chunkEntities;
+        private TransformSystem? _transformSystem;
+        private ClientZLevelSystem? _clientZLevelSystem;
 
         /// <summary>
         /// If we are waiting for a full game state from the server, we will automatically re-send full state requests
@@ -140,6 +151,8 @@ namespace Robust.Client.GameStates
         /// If true, this will cause received game states to be ignored. Used by integration tests.
         /// </summary>
         public bool DropStates;
+
+        private int _dropStateCount;
 #endif
 
         private bool _resettingPredictedEntities;
@@ -181,6 +194,9 @@ namespace Robust.Client.GameStates
             _conHost.RegisterCommand("detachent", Loc.GetString("cmd-detach-ent-desc"), Loc.GetString("cmd-detach-ent-help"), DetachEntCommand);
             _conHost.RegisterCommand("localdelete", Loc.GetString("cmd-local-delete-desc"), Loc.GetString("cmd-local-delete-help"), LocalDeleteEntCommand);
             _conHost.RegisterCommand("fullstatereset", Loc.GetString("cmd-full-state-reset-desc"), Loc.GetString("cmd-full-state-reset-help"), (_, _, _) => RequestFullState());
+#if DEBUG
+            _conHost.RegisterCommand("dropstate", "Drops the next received game state.", "dropstate [count]", DropStateCommand);
+#endif
 
             _entities.ComponentAdded += OnComponentAdded;
             _entitySystemManager.SystemLoaded += OnEntitySystemLoaded;
@@ -200,6 +216,11 @@ namespace Robust.Client.GameStates
 
             _xformCompNetId = xformId.Value;
 
+            var zPositionId = _compFactory.GetRegistration(typeof(ZLevelPositionComponent)).NetID;
+            if (!zPositionId.HasValue)
+                throw new InvalidOperationException("ZLevelPositionComponent does not have a NetId.");
+
+            _zPositionCompNetId = zPositionId.Value;
         }
 
         private void OnComponentAdded(AddedComponentEventArgs args)
@@ -225,11 +246,16 @@ namespace Robust.Client.GameStates
         public void Reset()
         {
             _processor.Reset();
+            _pendingInputs.Clear();
+            _pendingSystemMessages.Clear();
+            _transformSystem = null;
+            _clientZLevelSystem = null;
             _timing.CurTick = GameTick.Zero;
             _timing.LastRealTick = GameTick.Zero;
             _lastProcessedInput = 0;
             _detachedChunkEntities.Clear();
         }
+
 
         private void OnEntitySystemLoaded(object? sender, SystemChangedArgs args)
         {
@@ -241,6 +267,11 @@ namespace Robust.Client.GameStates
 
         private void OnEntitySystemUnloaded(object? sender, SystemChangedArgs args)
         {
+            if (ReferenceEquals(args.System, _transformSystem))
+                _transformSystem = null;
+            if (ReferenceEquals(args.System, _clientZLevelSystem))
+                _clientZLevelSystem = null;
+
             if (!ReferenceEquals(args.System, _chunkEntities))
                 return;
 
@@ -306,6 +337,12 @@ namespace Robust.Client.GameStates
 #if DEBUG
             if (DropStates)
                 return;
+
+            if (_dropStateCount > 0)
+            {
+                _dropStateCount--;
+                return;
+            }
 #endif
             // We ONLY ack states that are definitely going to get applied. Otherwise the sever might assume that we
             // applied a state containing entity-creation information, which it would then no longer send to us when
@@ -399,8 +436,20 @@ namespace Robust.Client.GameStates
                 if (curState == null)
                 {
                     // Might just be missing a state, but we may be able to make use of a future state if it has a low enough from sequence.
-                    _timing.LastProcessedTick += 1;
+                    var missingTick = _timing.LastProcessedTick + 1;
+                    ApplyTransformInterpolationLookahead(missingTick);
+                    _timing.LastProcessedTick = missingTick;
                     continue;
+                }
+
+                if (PredictionNeedsResetting && TryGetPredictionReconciliationTarget(out var reconciliationTarget))
+                {
+                    var transforms = _entitySystemManager.GetEntitySystem<TransformSystem>();
+                    if (TryGetPredictionComparisonTick(transforms, reconciliationTarget, false, out var predictionTick)
+                        || TryGetPredictionComparisonTick(transforms, reconciliationTarget, true, out predictionTick))
+                    {
+                        transforms.BeginPredictionRollback(reconciliationTarget, predictionTick);
+                    }
                 }
 
                 try
@@ -527,10 +576,60 @@ namespace Robust.Client.GameStates
                 PredictTicks(predictionTarget);
             }
 
+            var predictionInputSequence = _nextInputCmdSeq;
             using (_prof.Group("Tick"))
             {
-                _entities.TickUpdate((float)_timing.TickPeriod.TotalSeconds, noPredictions: !IsPredictionEnabled, histogram: null);
+                _entities.TickUpdate((float)_timing.TickPeriod.TotalSeconds,
+                    noPredictions: !IsPredictionEnabled,
+                    histogram: null);
             }
+
+            var transformSystem = _entitySystemManager.GetEntitySystem<TransformSystem>();
+            transformSystem.CompletePredictionRollback(_timing.CurTick);
+            transformSystem.FinishPredictionRollback();
+
+            if (IsPredictionEnabled && TryGetPredictionReconciliationTarget(out var sampleTarget))
+                transformSystem.RecordPredictionSample(sampleTarget, _timing.CurTick, predictionInputSequence);
+        }
+
+        private bool TryGetPredictionReconciliationTarget(out EntityUid target)
+        {
+            if (_players.LocalEntity is not { Valid: true } localEntity)
+            {
+                target = default;
+                return false;
+            }
+
+            // Movement relays can make another entity the locally controlled transform.
+            var ev = new GetPredictionReconciliationTargetEvent(localEntity);
+            _entities.EventBus.RaiseLocalEvent(localEntity, ref ev);
+            target = ev.Target;
+            return target.IsValid() && _entities.EntityExists(target);
+        }
+
+        private bool TryGetPredictionComparisonTick(
+            TransformSystem transforms,
+            EntityUid entity,
+            bool previous,
+            out GameTick predictionTick)
+        {
+            if (!transforms.TryGetPredictionSample(entity, previous, out predictionTick, out var inputSequence))
+                return false;
+
+            // Samples taken before queued input for this tick would report a false rollback mismatch.
+            foreach (var input in _pendingInputs)
+            {
+                if (input.InputSequence >= inputSequence && input.Tick <= predictionTick)
+                    return false;
+            }
+
+            foreach (var message in _pendingSystemMessages)
+            {
+                if (message.sequence >= inputSequence && message.sourceTick <= predictionTick)
+                    return false;
+            }
+
+            return true;
         }
 
         public void RequestFullState(NetEntity? missingEntity = null, GameTick? tick = null)
@@ -551,6 +650,7 @@ namespace Robust.Client.GameStates
             }
 
             var input = _entitySystemManager.GetEntitySystem<InputSystem>();
+            var transforms = _entitySystemManager.GetEntitySystem<TransformSystem>();
             using var pendingInputEnumerator = _pendingInputs.GetEnumerator();
             using var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
             var hasPendingInput = pendingInputEnumerator.MoveNext();
@@ -601,6 +701,8 @@ namespace Robust.Client.GameStates
                     {
                         _entities.ProcessQueueudDeletions();
                     }
+
+                    transforms.CompletePredictionRollback(_timing.CurTick);
                 }
 
                 _prof.WriteGroupEnd(groupStart, "Prediction tick", ProfData.Int64(_timing.CurTick.Value));
@@ -611,9 +713,6 @@ namespace Robust.Client.GameStates
         {
             using var _ = _prof.Group("ResetPredictedEntities");
             using var __ = _timing.StartStateApplicationArea();
-
-            // This is terrible, and I hate it. This also needs to run even when prediction is disabled.
-            _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
 
             if (!PredictionNeedsResetting)
                 return;
@@ -717,6 +816,7 @@ namespace Robust.Client.GameStates
                 {
                     _entities.RemoveComponent(entity, comp);
                 }
+
                 toRemove.Clear();
 
                 // Re-add predicted removals
@@ -809,6 +909,182 @@ namespace Robust.Client.GameStates
             }
 
             _outputData.Clear();
+        }
+
+        private void ApplyTransformInterpolationLookahead(GameTick missingTick)
+        {
+            var transforms = _transformSystem ??= _entitySystemManager.GetEntitySystem<TransformSystem>();
+            if (!_processor.TryGetInterpolationLookahead(missingTick, out var lookahead))
+                return;
+
+            // Missing ticks remain missing to game-state processing; only transform render looks ahead
+            // so we can interpolate to the state after.
+            foreach (var entityState in lookahead.EntityStates.Span)
+            {
+                if (!_entities.TryGetEntityData(entityState.NetEntity, out var uid, out var meta)
+                    || (meta.Flags & MetaDataFlags.Detached) != 0)
+                {
+                    continue;
+                }
+
+                var hasTransformChange = TryGetComponentChange(entityState, _xformCompNetId, out var transformChange);
+                NetEntity parentNet = default;
+                Vector2 localPosition = default;
+                Angle rotation = default;
+                if (hasTransformChange
+                    && !TryResolveFutureTransformState(
+                        entityState.NetEntity,
+                        transformChange.State,
+                        out parentNet,
+                        out localPosition,
+                        out rotation))
+                {
+                    continue;
+                }
+
+                var hasHeightChange = TryGetComponentChange(entityState, _zPositionCompNetId, out var heightChange);
+                float? targetLocalHeight = null;
+                if (hasHeightChange)
+                {
+                    if (!TryResolveFutureZPositionState(
+                            entityState.NetEntity,
+                            heightChange.State,
+                            out var localHeight))
+                    {
+                        continue;
+                    }
+
+                    targetLocalHeight = localHeight;
+                }
+
+                if (!hasTransformChange && !hasHeightChange)
+                    continue;
+
+                var sourceTick = meta.LastStateApplied;
+                var targetTick = hasTransformChange
+                    ? transformChange.LastModifiedTick
+                    : heightChange.LastModifiedTick;
+                if (hasTransformChange && hasHeightChange && heightChange.LastModifiedTick > targetTick)
+                    targetTick = heightChange.LastModifiedTick;
+
+                if (targetTick <= sourceTick)
+                    continue;
+
+                EntityCoordinates targetCoordinates;
+                if (hasTransformChange)
+                {
+                    EntityUid parent;
+                    if (parentNet.Valid)
+                    {
+                        if (!_entities.TryGetEntityData(parentNet, out var parentUid, out _))
+                            continue;
+
+                        parent = parentUid.Value;
+                    }
+                    else
+                    {
+                        parent = EntityUid.Invalid;
+                    }
+
+                    targetCoordinates = new EntityCoordinates(parent, localPosition);
+                }
+                else
+                {
+                    if (!_entities.TryGetComponent(uid.Value, out TransformComponent? xform))
+                        continue;
+
+                    targetCoordinates = xform.Coordinates;
+                    rotation = xform.LocalRotation;
+                }
+
+                transforms.StartNetworkInterpolationLookahead(
+                    uid.Value,
+                    targetCoordinates,
+                    rotation,
+                    sourceTick,
+                    targetTick);
+
+                if (targetLocalHeight is { } height)
+                {
+                    var zLevels = _clientZLevelSystem ??= _entitySystemManager.GetEntitySystem<ClientZLevelSystem>();
+                    zLevels.StartNetworkInterpolationLookahead(uid.Value, targetCoordinates, height, sourceTick, targetTick);
+                }
+            }
+        }
+
+        private bool TryResolveFutureZPositionState(
+            NetEntity netEntity,
+            IComponentState? state,
+            out float localHeight)
+        {
+            switch (state)
+            {
+                case ZLevelPositionComponent.ZLevelPositionComponent_AutoState full:
+                    localHeight = full.LocalHeight;
+                    return true;
+
+                case ZLevelPositionComponent.ZLevelPositionComponent_AutoDeltaState delta:
+                {
+                    if (!_processor.TryGetLastServerStates(netEntity, out var lastStates)
+                        || !lastStates.TryGetValue((ushort) _zPositionCompNetId, out var lastState)
+                        || lastState is not ZLevelPositionComponent.ZLevelPositionComponent_AutoState lastFull)
+                    {
+                        break;
+                    }
+
+                    localHeight = delta.CreateNewFullState(lastFull).LocalHeight;
+                    return true;
+                }
+            }
+
+            localHeight = default;
+            return false;
+        }
+
+        private bool TryResolveFutureTransformState(
+            NetEntity netEntity,
+            IComponentState? state,
+            out NetEntity parent,
+            out Vector2 localPosition,
+            out Angle rotation)
+        {
+            parent = default;
+            localPosition = default;
+            rotation = default;
+
+            switch (state)
+            {
+                case TransformComponentState transform:
+                    parent = transform.ParentID;
+                    localPosition = transform.LocalPosition;
+                    rotation = transform.Rotation;
+                    return true;
+
+                case TransformComponentDeltaState delta:
+                {
+                    // TransformSystem receives complete endpoints and never has to interpret component deltas.
+                    if (!_processor.TryGetLastServerStates(netEntity, out var lastStates)
+                        || !lastStates.TryGetValue((ushort)_xformCompNetId, out var lastState)
+                        || lastState is not TransformComponentState full)
+                    {
+                        return false;
+                    }
+
+                    parent = delta.IsChanged(SharedTransformSystem.TransformParentIndex)
+                        ? delta.ParentID
+                        : full.ParentID;
+                    localPosition = delta.IsChanged(SharedTransformSystem.TransformLocalPositionIndex)
+                        ? delta.LocalPosition
+                        : full.LocalPosition;
+                    rotation = delta.IsChanged(SharedTransformSystem.TransformLocalRotationIndex)
+                        ? delta.Rotation
+                        : full.Rotation;
+                    return true;
+                }
+
+                default:
+                    return false;
+            }
         }
 
         private void AckGameState(GameTick sequence)
@@ -1339,6 +1615,7 @@ namespace Robust.Client.GameStates
                 // Finally, delete the entity.
                 _entities.DeleteEntity(id.Value);
             }
+
             _prof.WriteValue("Count", ProfData.Int32(delSpan.Length));
         }
 
@@ -1815,6 +2092,28 @@ namespace Robust.Client.GameStates
                 _entities.RemoveComponent(uid, comp);
             }
         }
+
+#if DEBUG
+        private void DropStateCommand(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (args.Length > 1)
+            {
+                shell.WriteError("Usage: dropstate [count]");
+                return;
+            }
+
+            var count = 1;
+            if (args.Length == 1 && (!int.TryParse(args[0], out count) || count < 1))
+            {
+                shell.WriteError("Count must be a positive integer.");
+                return;
+            }
+
+            _dropStateCount += count;
+            shell.WriteLine($"Dropping the next {_dropStateCount} game state(s).");
+        }
+#endif
+
         #endregion
 
         public bool IsQueuedForDetach(NetEntity entity)

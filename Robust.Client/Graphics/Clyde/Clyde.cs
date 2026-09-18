@@ -79,7 +79,6 @@ namespace Robust.Client.Graphics.Clyde
         private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
-
         private Thread? _gameThread;
 
         private ISawmill _clydeSawmill = default!;

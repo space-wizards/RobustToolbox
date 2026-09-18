@@ -23,11 +23,11 @@ public sealed class AudioOverlay : Overlay
     private IEntityManager _entManager;
     private IPlayerManager _playerManager;
     private AudioSystem _audio;
-    private SharedTransformSystem _transform;
+    private TransformSystem _transform;
 
     private Font _font;
 
-    public AudioOverlay(IEntityManager entManager, IPlayerManager playerManager, IResourceCache cache, AudioSystem audio, SharedTransformSystem transform)
+    public AudioOverlay(IEntityManager entManager, IPlayerManager playerManager, IResourceCache cache, AudioSystem audio, TransformSystem transform)
     {
         _entManager = entManager;
         _playerManager = playerManager;
@@ -46,7 +46,7 @@ public sealed class AudioOverlay : Overlay
 
         var screenHandle = args.ScreenHandle;
         var output = new StringBuilder();
-        var listenerPos = _transform.GetMapCoordinates(_entManager.GetComponent<TransformComponent>(localPlayer.Value));
+        var listenerPos = _transform.GetRenderMapCoordinates(localPlayer.Value);
 
         if (listenerPos.MapId != args.MapId)
             return;
@@ -61,20 +61,22 @@ public sealed class AudioOverlay : Overlay
             if (_entManager.TryGetComponent<TransformComponent>(uid, out var xform))
             {
                 mapId = xform.MapID;
-                audioPos = _transform.GetWorldPosition(uid);
+                audioPos = _transform.GetRenderWorldPosition((uid, xform));
             }
 
-            if (mapId != args.MapId)
+            if (!_audio.TryGetZLevelOffset(listenerPos.MapId, mapId, out var mapOffset))
                 continue;
 
             var screenPos = args.ViewportControl.WorldToScreen(audioPos);
             var distance = audioPos - listenerPos.Position;
             var posOcclusion = _audio.GetOcclusion(listenerPos, distance, distance.Length(), uid);
+            var zLevelOffset = _audio.GetZLevelOffset(mapOffset, uid, listenerPos.MapId);
 
             output.Clear();
             output.AppendLine("Audio Source");
             output.AppendLine("Runtime:");
-            output.AppendLine($"- Distance: {_audio.GetAudioDistance(distance.Length()):0.00}");
+            output.AppendLine($"- Distance: {_audio.GetAudioDistance(distance.Length(), zLevelOffset):0.00}");
+            output.AppendLine($"- Z-level offset: {zLevelOffset:0.00}");
             output.AppendLine($"- Occlusion: {posOcclusion:0.0000}");
             output.AppendLine("Params:");
             output.AppendLine($"- RolloffFactor: {comp.RolloffFactor:0.0000}");

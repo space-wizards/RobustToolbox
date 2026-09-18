@@ -52,7 +52,7 @@ namespace Robust.Client.Placement
         private ISawmill _sawmill = default!;
 
         private SharedMapSystem Maps => EntityManager.System<SharedMapSystem>();
-        private SharedTransformSystem XformSystem => EntityManager.System<SharedTransformSystem>();
+        private TransformSystem XformSystem => EntityManager.System<TransformSystem>();
         private SpriteSystem Sprite => EntityManager.System<SpriteSystem>();
 
         /// <summary>
@@ -672,6 +672,9 @@ namespace Robust.Client.Placement
 
         private void Render(in OverlayDrawArgs args)
         {
+            if (args.MapId != _eyeManager.CurrentEye.Position.MapId)
+                return;
+
             if (CurrentMode == null || !IsActive)
             {
                 if (EraserRect.HasValue)
@@ -689,7 +692,7 @@ namespace Robust.Client.Placement
                 PlayerManager.LocalEntity is not {Valid: true} controlled)
                 return;
 
-            var worldPos = XformSystem.GetWorldPosition(controlled);
+            var worldPos = XformSystem.GetRenderWorldPosition(controlled);
 
             args.WorldHandle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
         }

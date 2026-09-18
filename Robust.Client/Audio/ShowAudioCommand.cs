@@ -29,6 +29,6 @@ public sealed partial class ShowAudioCommand : LocalizedCommands
                 _playerMgr,
                 _client,
                 _entManager.System<AudioSystem>(),
-                _entManager.System<SharedTransformSystem>()));
+                _entManager.System<TransformSystem>()));
     }
 }

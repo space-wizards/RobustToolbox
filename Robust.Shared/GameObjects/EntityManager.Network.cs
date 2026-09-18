@@ -814,5 +814,29 @@ public partial class EntityManager
         return netEntities;
     }
 
+    /// <inheritdoc/>
+    public void SetComponentNetSync(Entity<MetaDataComponent?> ent, Component comp, bool synced)
+    {
+        if (_netMan.IsServer || comp.NetSyncEnabled == synced || !MetaQuery.Resolve(ent, ref ent.Comp, false))
+            return;
+
+        var registration = _componentFactory.GetRegistration(comp);
+        if (registration.NetID is not {} id)
+            return; // incase you decided to pass something that isnt a NetworkedComponent :)
+
+        comp.NetSyncEnabled = synced;
+        if (synced)
+        {
+            ent.Comp.IgnoredNetComponents.Remove(id);
+            ent.Comp.NetComponents.Add(id, comp);
+        }
+        else
+        {
+            ent.Comp.IgnoredNetComponents.Add(id);
+            // prevent debug asserts etc from trying to handle states for a non-netsync component
+            ent.Comp.NetComponents.Remove(id);
+        }
+    }
+
     #endregion
 }

@@ -1585,6 +1585,8 @@ namespace Robust.Client.GameStates
                     else if (compChange.LastModifiedTick <= data.LastApplied && data.LastApplied != GameTick.Zero)
                         continue;
 
+                    // Reset it to server state in case something dirtied it in the meantime.
+                    comp.LastModifiedTick = compChange.LastModifiedTick;
                     _compStateWork[compChange.NetID] = (comp, compChange.State, null);
                 }
             }

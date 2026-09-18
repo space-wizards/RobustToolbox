@@ -169,7 +169,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
     {
         // Clears in bulk without touching the tree.
         var state = (Buffer: _physics.MoveBuffer, Tree: tree);
-        tree.Tree.Clear(ref state, static (ref (HashSet<FixtureProxy> Buffer, T Tree) state, in FixtureProxy proxy) =>
+        tree.Tree.Clear(ref state, static (ref state, in proxy) =>
         {
             state.Buffer.Remove(proxy);
             var fixture = proxy.Fixture;

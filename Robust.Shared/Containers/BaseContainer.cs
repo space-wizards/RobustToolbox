@@ -44,7 +44,7 @@ namespace Robust.Shared.Containers
         public abstract int Count { get; }
 
         [ViewVariables, NonSerialized]
-        public List<NetEntity> ExpectedEntities = new();
+        public List<NetEntity> PvsDetachedEntities = new();
 
         /// <summary>
         /// The ID of this container.

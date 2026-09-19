@@ -3,6 +3,7 @@
 namespace Robust.Shared.Utility;
 
 internal sealed record GameBuildInformation(
+    string Engine,
     string EngineVersion,
     string? ZipHash,
     string? ZipDownload,
@@ -40,6 +41,7 @@ internal sealed record GameBuildInformation(
             manifestUrl = null;
 
         return new GameBuildInformation(
+            cfg.GetCVar(CVars.BuildEngineType),
             cfg.GetCVar(CVars.BuildEngineVersion),
             zipHash,
             zipDownload,

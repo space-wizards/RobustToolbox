@@ -60,53 +60,21 @@ public sealed partial class PaletteManager : IPaletteManagerInternal
     }
 
     [PublicAPI]
-    public void GetPaletteColors(ProtoId<PalettePrototype> palette, List<Color> colors)
+    public IReadOnlyList<Color> GetPaletteColors(ProtoId<PalettePrototype> palette)
     {
-        colors.Clear();
-
-        foreach (var color in _colorsByPalette[palette])
-        {
-            colors.Add(color);
-        }
+        return _colorsByPalette[palette];
     }
 
     [PublicAPI]
-    public bool TryGetPaletteColors(ProtoId<PalettePrototype> palette, List<Color> colors)
-    {
-        colors.Clear();
-
-        if (!_colorsByPalette.TryGetValue(palette, out var paletteColors))
-            return false;
-
-        foreach (var color in paletteColors)
-        {
-            colors.Add(color);
-        }
-        return true;
-    }
-
-    [PublicAPI]
-    public Color PickRandomColor(ProtoId<PalettePrototype> palette)
-    {
-        return _random.Pick(_colorsByPalette[palette]);
-    }
-
-    [PublicAPI]
-    public bool TryPickRandomColor(ProtoId<PalettePrototype> palette, [NotNullWhen(true)] out Color? color)
+    public bool TryGetPaletteColors(ProtoId<PalettePrototype> palette, out IReadOnlyList<Color> colors)
     {
         if (!_colorsByPalette.TryGetValue(palette, out var paletteColors))
         {
-            color = null;
+            colors = default!;
             return false;
         }
 
-        if (paletteColors.Count < 0)
-        {
-            color = null;
-            return false;
-        }
-
-        color = _random.Pick(paletteColors);
+        colors = paletteColors;
         return true;
     }
 
@@ -125,7 +93,7 @@ public sealed partial class PaletteManager : IPaletteManagerInternal
     }
 
     /// <summary>
-    /// Prototype reload handler, refreshes all references to palette colors.
+    /// Prototype reload handler, refreshes the palette manager's references to palette colours.
     /// </summary>
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {

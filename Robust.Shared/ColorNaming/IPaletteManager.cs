@@ -6,16 +6,13 @@ using Robust.Shared.Prototypes;
 namespace Robust.Shared.ColorNaming;
 
 /// <summary>
-/// Handles references to named palettes, resolving strings into Colors as stored in <see cref="PalettePrototype"/>
+/// Handles references to named palettes, resolving strings into Colors as stored in <see cref="PalettePrototype"/>.
 /// </summary>
 /// <remarks>
-/// Terminology:<br/>
-/// "Kinds" are the types of prototypes there are, like <see cref="EntityPrototype"/>.<br/>
-/// "Prototypes" are simply filled-in prototypes from YAML.<br/>
+/// Colors are stored and referenced in the form <c>PaletteName.ColorName</c>, where <c>PaletteName</c> is the ID of the <see cref="PalettePrototype"/>,
+/// and <c>ColorName</c> is the name of the color given in <see cref="PalettePrototype.Colors"/>.
+/// Both values are case sensitive.
 /// </remarks>
-/// <seealso cref="IPrototype"/>
-/// <seealso cref="IInheritingPrototype"/>
-/// <seealso cref="PrototypeAttribute"/>
 [NotContentImplementable]
 public interface IPaletteManager
 {
@@ -25,54 +22,37 @@ public interface IPaletteManager
     void Initialize();
 
     /// <summary>
-    /// Returns the color from strings of the form "PaletteName.ColorName".
+    /// Looks up a named color from a string of the form "PaletteName.ColorName".
     /// </summary>
     /// <exception cref="KeyNotFoundException">
-    /// Thrown if the palette or color name cannot be found.
+    /// Thrown if <paramref name="name"/> does not exist.
     /// </exception>
     Color GetQualifiedColor(string name);
 
     /// <summary>
-    /// Looks up a color from strings of the form "PaletteName.ColorName".
-    /// Returns whether or not the color could be found, writes the value out into <paramref name="color"/> if it can.
+    /// Looks up a named color from a string of the form "PaletteName.ColorName".
     /// </summary>
-    /// <exception cref="KeyNotFoundException">
-    /// Thrown if the palette or color name cannot be found.
-    /// </exception>
+    /// <returns>True if <paramref name="color"/> contains the named color, false otherwise.</returns>
     bool TryGetQualifiedColor(string name, [NotNullWhen(true)] out Color? color);
 
     /// <summary>
     /// Clears and fills <paramref name="colors"/> of all colors within a given palette.
-    /// Order of colors is not guaranteed.
     /// </summary>
+    /// <remarks>
+    /// Order of colors is not guaranteed.
+    /// </remarks>
     /// <exception cref="KeyNotFoundException">
-    /// Thrown if the kind of prototype is not registered.
+    /// Thrown if <paramref name="palette"/> does not exist.
     /// </exception>
-    void GetPaletteColors(ProtoId<PalettePrototype> palette, List<Color> colors);
+    /// <returns>The list of colors in <paramref name="palette"/>.</returns>
+    IReadOnlyList<Color> GetPaletteColors(ProtoId<PalettePrototype> palette);
 
     /// <summary>
-    /// Return a <see cref="List{Color}"/> of all prototypes of a certain kind.
+    /// Writes the colors given in <paramref name="palette"/> out into <paramref name="colors"/>, if possible.
     /// </summary>
-    /// <exception cref="KeyNotFoundException">
-    /// Thrown if the kind of prototype is not registered.
-    /// </exception>
-    bool TryGetPaletteColors(ProtoId<PalettePrototype> palette, List<Color> colors);
-
-    /// <summary>
-    /// Return a <see cref="List{Color}"/> of all colors within a given prototype.
+    /// <remarks>
     /// Order of colors is not guaranteed.
-    /// </summary>
-    /// <exception cref="KeyNotFoundException">
-    /// Thrown if the kind of prototype is not registered.
-    /// </exception>
-    Color PickRandomColor(ProtoId<PalettePrototype> palette);
-
-    /// <summary>
-    /// Return a <see cref="List{Color}"/> of all colors within a given prototype.
-    /// Order of colors is not guaranteed.
-    /// </summary>
-    /// <exception cref="KeyNotFoundException">
-    /// Thrown if the kind of prototype is not registered.
-    /// </exception>
-    bool TryPickRandomColor(ProtoId<PalettePrototype> palette, [NotNullWhen(true)] out Color? color);
+    /// </remarks>
+    /// <returns>True if the palette was found and written into <paramref name="colors"/>, false otherwise.</returns>
+    bool TryGetPaletteColors(ProtoId<PalettePrototype> palette, out IReadOnlyList<Color> colors);
 }

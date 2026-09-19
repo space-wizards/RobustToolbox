@@ -11,6 +11,10 @@ namespace Robust.Shared.ColorNaming;
 /// <summary>
 /// A prototype for storing arbitrary, named references to colors.
 /// </summary>
+/// <remarks>
+/// Live updating an existing palette will NOT update existing references to paletted colors!
+/// This means that entities (etc.) will still use the old values from the palette before the update.
+/// </remarks>
 [Prototype(loadPriority: 1000)]
 public sealed partial class PalettePrototype : IPrototype, ISerializationHooks
 {
@@ -25,8 +29,11 @@ public sealed partial class PalettePrototype : IPrototype, ISerializationHooks
 
     /// <summary>
     /// A dictionary of names to colors.
-    /// When being defined in YAML, colors should not be stored as references to other palettes.
     /// </summary>
+    /// <remarks>
+    /// When being defined in YAML, colors should not be stored as references to other palettes.
+    /// System colors (e.g. <see cref="Color.DarkRed"/>) can be used.
+    /// </remarks>
     [DataField(required: true)]
     public Dictionary<string, Color> Colors { get; private set; } = null!;
 

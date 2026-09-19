@@ -39,9 +39,14 @@ public sealed partial class ColorSerializer : ITypeSerializer<Color, ValueDataNo
         IDependencyCollection dependencies,
         ISerializationContext? context = null)
     {
-        return Color.TryFromName(node.Value, out _) || _paletteMan.TryGetQualifiedColor(node.Value, out _) || Color.TryFromHex(node.Value, out _)
-            ? new ValidatedValueNode(node)
-            : new ErrorNode(node, "Failed parsing Color.");
+        if (Color.TryFromName(node.Value, out _)
+            || _paletteMan.TryGetQualifiedColor(node.Value, out _)
+            || Color.TryFromHex(node.Value, out _))
+        {
+            return new ValidatedValueNode(node);
+        }
+
+        return new ErrorNode(node, "Failed parsing Color.");
     }
 
     public DataNode Write(

@@ -10,14 +10,14 @@ namespace Robust.Shared.GameObjects;
 
 public partial interface IEntityManager
 {
-    [Obsolete("Call SpawnEntitiesAttachedTo directly.")]
+    [Obsolete($"Call {nameof(SpawnEntitiesAttachedTo)} directly.")]
     EntityUid[] SpawnEntities(EntityCoordinates coordinates, List<string?> protoNames)
         => SpawnEntitiesAttachedTo(coordinates, protoNames);
 
-    [Obsolete("Call SpawnAttachedTo directly or switch to SpawnAtPostion.")]
+    [Obsolete($"Call {nameof(SpawnAttachedTo)} directly or switch to {nameof(SpawnAtPosition)}.")]
     EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
 
-    [Obsolete("Call Spawn directly.")]
+    [Obsolete($"Call {nameof(Spawn)} directly.")]
     EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
 
     EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames);

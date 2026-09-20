@@ -10,7 +10,7 @@ namespace Robust.Shared.GameObjects;
 
 public partial interface IEntityManager
 {
-    [Obsolete("Call SpawnEnttachedTo directly.")]
+    [Obsolete("Call SpawnEntitiesAttachedTo directly.")]
     EntityUid[] SpawnEntities(EntityCoordinates coordinates, List<string?> protoNames)
         => SpawnEntitiesAttachedTo(coordinates, protoNames);
 

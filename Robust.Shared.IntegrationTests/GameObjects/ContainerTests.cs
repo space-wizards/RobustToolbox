@@ -35,7 +35,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 entManager.System<SharedMapSystem>().CreateMap(out var mapId);
                 mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
-                owner = entManager.SpawnEntity(null, mapPos);
+                owner = entManager.Spawn(null, mapPos);
                 metadataSystem.SetEntityName(owner, "Container");
                 containerSystem.EnsureContainer<Container>(owner, containerId);
 
@@ -106,7 +106,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             NetEntity itemNet = default;
             await server.WaitAssertion(() =>
             {
-                item = sEntManager.SpawnEntity(null, mapPos);
+                item = sEntManager.Spawn(null, mapPos);
                 itemNet = sEntManager.GetNetEntity(item);
                 sMetadataSys.SetEntityName(item, "Item");
                 Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
@@ -182,7 +182,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             NetEntity itemNet = default;
             await server.WaitAssertion(() =>
             {
-                item = sEntManager.SpawnEntity(null, mapPos);
+                item = sEntManager.Spawn(null, mapPos);
                 itemNet = sEntManager.GetNetEntity(item);
                 sMetadataSys.SetEntityName(item, "Item");
                 Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
@@ -266,7 +266,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             NetEntity itemNet = default;
             await server.WaitAssertion(() =>
             {
-                item = sEntManager.SpawnEntity(null, mapPos);
+                item = sEntManager.Spawn(null, mapPos);
                 itemNet = sEntManager.GetNetEntity(item);
                 sMetadataSys.SetEntityName(item, "Item");
                 Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
@@ -349,7 +349,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             NetEntity itemNet = default;
             await server.WaitAssertion(() =>
             {
-                item = sEntManager.SpawnEntity(null, mapPos);
+                item = sEntManager.Spawn(null, mapPos);
                 itemNet = sEntManager.GetNetEntity(item);
                 sMetadataSys.SetEntityName(item, "Item");
                 Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
@@ -368,7 +368,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             await server.WaitAssertion(() =>
             {
-                var viewer = sEntManager.SpawnEntity(null, mapPos);
+                var viewer = sEntManager.Spawn(null, mapPos);
                 sEntManager.AddComponent<EyeComponent>(viewer);
                 server.PlayerMan.SetAttachedEntity(sPlayerManager.Sessions.First(), viewer);
             });

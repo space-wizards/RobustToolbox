@@ -226,7 +226,7 @@ internal sealed class GridMapTransition_Test
         var otherGrid = state.Maps.CreateGridEntity(state.MapBId);
         state.Maps.SetTile(otherGrid, Vector2i.Zero, new Tile(1));
 
-        var otherParent = state.EntManager.SpawnEntity(null, new EntityCoordinates(otherGrid, Vector2.Zero));
+        var otherParent = state.EntManager.SpawnAttachedTo(null, new EntityCoordinates(otherGrid, Vector2.Zero));
         var otherXform = state.EntManager.GetComponent<TransformComponent>(otherGrid);
         state.Xforms.DetachEntity(state.Grid, state.GridXform);
         state.Xforms.DetachEntity(otherGrid, otherXform);

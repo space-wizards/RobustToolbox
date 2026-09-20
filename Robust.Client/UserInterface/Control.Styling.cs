@@ -123,7 +123,13 @@ namespace Robust.Client.UserInterface
             _styleClasses.Add(className);
         }
 
-        internal void Restyle()
+        /// <summary>
+        /// Ensures the control will be restyled, handled automatically through most API calls.
+        /// </summary>
+        /// <remarks>
+        /// You likely don't need to call this yourself.
+        /// </remarks>
+        public void Restyle()
         {
             if (_stylingDirty)
             {

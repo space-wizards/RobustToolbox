@@ -516,6 +516,7 @@ namespace Robust.Shared.Prototypes
 
             var errors = _serializationManager.ValidateNode(kind, validationMapping, context)
                 .GetErrors()
+                .Where(x => x.AlwaysRelevant)
                 .ToArray();
 
             if (errors.Length == 0)
@@ -1189,6 +1190,13 @@ namespace Robust.Shared.Prototypes
             /// affecting that ID.
             /// </summary>
             public readonly Dictionary<string, MappingDataNode> PartialOriginals = new();
+
+            /// <summary>
+            /// The original mapping before it was modified by a partial prototype.
+            /// This will not have an element for a given ID if there are no partial prototypes
+            /// affecting that ID.
+            /// </summary>
+            public readonly Dictionary<string, List<(ExtractedMappingData Data, ResPath? File)>> Partials = new();
 
             /// <summary>
             /// The unfrozen instance of <see cref="Variants"/>.

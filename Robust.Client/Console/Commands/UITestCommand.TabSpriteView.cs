@@ -249,7 +249,7 @@ internal sealed partial class UITestControl
                 VerticalAlignment = VAlignment.Center
             };
 
-            var ent = _entMan.SpawnEntity(EntityId, MapCoordinates.Nullspace);
+            var ent = _entMan.Spawn(EntityId);
             var view = new SpriteView();
             view.SetEntity(ent);
 

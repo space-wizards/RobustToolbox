@@ -37,10 +37,10 @@ internal sealed partial class LifestageSerializationTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             var mapUid = mapSys.CreateMap(out var mapId, runMapInit: false);
-            var entAUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-            var entBUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-            var childAUid = entMan.SpawnEntity(null, new EntityCoordinates(entAUid, 0, 0));
-            var childBUid = entMan.SpawnEntity(null, new EntityCoordinates(entBUid, 0, 0));
+            var entAUid = entMan.Spawn(null, new MapCoordinates(0, 0, mapId));
+            var entBUid = entMan.Spawn(null, new MapCoordinates(0, 0, mapId));
+            var childAUid = entMan.SpawnAttachedTo(null, new EntityCoordinates(entAUid, 0, 0));
+            var childBUid = entMan.SpawnAttachedTo(null, new EntityCoordinates(entBUid, 0, 0));
             map = Get(mapUid, entMan);
             entA = Get(entAUid, entMan);
             entB = Get(entBUid, entMan);
@@ -191,22 +191,22 @@ internal sealed partial class LifestageSerializationTest : RobustIntegrationTest
             var mapAUid = mapSys.CreateMap(out var mapIdA, runMapInit: false);
             var mapBUid = mapSys.CreateMap(out var mapIdB, runMapInit: true);
 
-            var entAUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapIdA));
+            var entAUid = entMan.Spawn(null, new MapCoordinates(0, 0, mapIdA));
             entMan.RunMapInit(entAUid, entMan.GetComponent<MetaDataComponent>(entAUid));
             meta.SetEntityPaused(entAUid, false);
 
-            var entBUid = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapIdB));
+            var entBUid = entMan.Spawn(null, new MapCoordinates(0, 0, mapIdB));
             meta.SetEntityPaused(entBUid, true);
 
             var entCUid = entMan.CreateEntityUninitialized(null, new MapCoordinates(0, 0, mapIdB));
             entMan.InitializeAndStartEntity(entCUid, doMapInit: false);
 
-            var nullAUid = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
+            var nullAUid = entMan.Spawn();
 
             var nullBUid = entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
             entMan.InitializeAndStartEntity(nullBUid, doMapInit: false);
 
-            var nullCUid = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
+            var nullCUid = entMan.Spawn();
             meta.SetEntityPaused(nullCUid, true);
 
             mapA = Get(mapAUid, entMan);

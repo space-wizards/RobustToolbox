@@ -346,9 +346,9 @@ internal sealed class GridSplit_Tests
 
         Assert.That(mapSystem.GetAllGrids(mapId).Count(), Is.EqualTo(1));
 
-        var dummy = entManager.SpawnEntity(null, new EntityCoordinates(gridEnt, new Vector2(3.5f, 0.5f)));
+        var dummy = entManager.SpawnAttachedTo(null, new EntityCoordinates(gridEnt, new Vector2(3.5f, 0.5f)));
         var dummyXform = entManager.GetComponent<TransformComponent>(dummy);
-        var anchored = entManager.SpawnEntity(null, new EntityCoordinates(gridEnt, new Vector2(3.5f, 0.5f)));
+        var anchored = entManager.SpawnAttachedTo(null, new EntityCoordinates(gridEnt, new Vector2(3.5f, 0.5f)));
         var anchoredXform = entManager.GetComponent<TransformComponent>(anchored);
 
         transformSystem.AnchorEntity((anchored, anchoredXform), gridEnt);

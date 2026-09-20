@@ -266,8 +266,8 @@ internal partial class Clyde
                 return true;
 
             return OperatingSystem.IsWindows()
-                   && (mods & SDL_Keymod.SDL_KMOD_ALT) != 0
-                   && (mods & SDL_Keymod.SDL_KMOD_CTRL) != 0;
+                   && (mods & SDL_Keymod.SDL_KMOD_RALT) != 0
+                   && (mods & SDL_Keymod.SDL_KMOD_LCTRL) != 0;
         }
 
         private void ProcessKeyMapChanged()

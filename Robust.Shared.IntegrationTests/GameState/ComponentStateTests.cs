@@ -10,7 +10,9 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.GameState;
 
@@ -286,6 +288,116 @@ internal sealed partial class ComponentStateTests : RobustIntegrationTest
         await server.WaitRunTicks(5);
         await client.WaitRunTicks(5);
     }
+
+    [Test]
+    public async Task DetachedPredictedDirtyReplaysOnlyDirtyComponentOnPvsReentry()
+    {
+        await using var pair = await StartConnectedPair();
+        var server = pair.Server;
+        var client = pair.Client;
+
+        var xforms = server.System<SharedTransformSystem>();
+
+        await server.WaitPost(() =>
+        {
+            server.CfgMan.SetCVar(CVars.NetPVS, true);
+        });
+        await client.WaitPost(() => client.CfgMan.SetCVar(CVars.NetPredict, true));
+
+        EntityUid map = default;
+        server.Post(() =>
+        {
+            map = server.System<SharedMapSystem>().CreateMap();
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        var inRange = new EntityCoordinates(map, default);
+        var outOfRange = new EntityCoordinates(map, new Vector2(100, 100));
+        EntityUid player = default;
+        EntityUid serverEnt = default;
+        NetEntity serverNet = default;
+
+        await server.WaitPost(() =>
+        {
+            player = server.EntMan.SpawnAttachedTo(null, inRange);
+            var session = server.PlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, player);
+            server.PlayerMan.JoinGame(session);
+
+            serverEnt = server.EntMan.SpawnAttachedTo(null, inRange);
+            serverNet = server.EntMan.GetNetEntity(serverEnt);
+
+            var dirty = server.EntMan.EnsureComponent<DetachedPredictionDirtyReplayComponent>(serverEnt);
+            dirty.Value = 1;
+            server.EntMan.Dirty(serverEnt, dirty);
+
+            var clean = server.EntMan.EnsureComponent<DetachedPredictionCleanReplayComponent>(serverEnt);
+            clean.Value = 2;
+            server.EntMan.Dirty(serverEnt, clean);
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        EntityUid clientEnt = default;
+        await client.WaitPost(() =>
+        {
+            clientEnt = client.EntMan.GetEntity(serverNet);
+            Assert.That(client.EntMan.EntityExists(clientEnt), Is.True);
+            Assert.That(client.EntMan.GetComponent<DetachedPredictionDirtyReplayComponent>(clientEnt).Value, Is.EqualTo(1));
+            Assert.That(client.EntMan.GetComponent<DetachedPredictionCleanReplayComponent>(clientEnt).Value, Is.EqualTo(2));
+        });
+
+        await server.WaitPost(() => xforms.SetCoordinates(player, outOfRange));
+        await RunTicksSync(server, client, 10);
+
+        await client.WaitPost(() =>
+        {
+            var meta = client.EntMan.GetComponent<MetaDataComponent>(clientEnt);
+            Assert.That((meta.Flags & MetaDataFlags.Detached), Is.EqualTo(MetaDataFlags.Detached));
+
+            var dirty = client.EntMan.GetComponent<DetachedPredictionDirtyReplayComponent>(clientEnt);
+            var clean = client.EntMan.GetComponent<DetachedPredictionCleanReplayComponent>(clientEnt);
+            dirty.HandleStates = 0;
+            clean.HandleStates = 0;
+
+            var sys = client.System<DetachedPredictionDirtyReplaySystem>();
+            sys.Target = clientEnt;
+            sys.PredictedValue = 99;
+        });
+
+        await RunTicksSync(server, client, 10);
+
+        await client.WaitPost(() =>
+        {
+            var dirty = client.EntMan.GetComponent<DetachedPredictionDirtyReplayComponent>(clientEnt);
+            Assert.That(dirty.Value, Is.EqualTo(99));
+            Assert.That(dirty.HandleStates, Is.EqualTo(0));
+
+            var sys = client.System<DetachedPredictionDirtyReplaySystem>();
+            sys.Target = null;
+        });
+
+        await server.WaitPost(() => xforms.SetCoordinates(player, inRange));
+        await RunTicksSync(server, client, 10);
+
+        await client.WaitPost(() =>
+        {
+            var meta = client.EntMan.GetComponent<MetaDataComponent>(clientEnt);
+            Assert.That((meta.Flags & MetaDataFlags.Detached), Is.EqualTo(default(MetaDataFlags)));
+
+            var dirty = client.EntMan.GetComponent<DetachedPredictionDirtyReplayComponent>(clientEnt);
+            var clean = client.EntMan.GetComponent<DetachedPredictionCleanReplayComponent>(clientEnt);
+
+            Assert.That(dirty.Value, Is.EqualTo(1));
+            Assert.That(dirty.HandleStates, Is.EqualTo(1));
+            Assert.That(clean.Value, Is.EqualTo(2));
+            Assert.That(clean.HandleStates, Is.EqualTo(0));
+        });
+
+        await server.WaitPost(() => server.CfgMan.SetCVar(CVars.NetPVS, false));
+        await RunTicksSync(server, client, 10);
+    }
 }
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
@@ -293,4 +405,80 @@ public sealed partial class UnknownEntityTestComponent : Component
 {
     [DataField, AutoNetworkedField]
     public EntityUid? Other;
+}
+
+[RegisterComponent, NetworkedComponent]
+public sealed partial class DetachedPredictionDirtyReplayComponent : Component
+{
+    public int Value;
+    public int HandleStates;
+}
+
+[RegisterComponent, NetworkedComponent]
+public sealed partial class DetachedPredictionCleanReplayComponent : Component
+{
+    public int Value;
+    public int HandleStates;
+}
+
+[Serializable, NetSerializable]
+public sealed class DetachedPredictionReplayState(int value) : ComponentState
+{
+    public readonly int Value = value;
+}
+
+public sealed partial class DetachedPredictionDirtyReplaySystem : EntitySystem
+{
+    [Dependency] private IGameTiming _timing = default!;
+
+    public EntityUid? Target;
+    public int PredictedValue;
+
+    public override void Initialize()
+    {
+        SubscribeLocalEvent<DetachedPredictionDirtyReplayComponent, ComponentGetState>(OnDirtyGetState);
+        SubscribeLocalEvent<DetachedPredictionDirtyReplayComponent, ComponentHandleState>(OnDirtyHandleState);
+        SubscribeLocalEvent<DetachedPredictionCleanReplayComponent, ComponentGetState>(OnCleanGetState);
+        SubscribeLocalEvent<DetachedPredictionCleanReplayComponent, ComponentHandleState>(OnCleanHandleState);
+    }
+
+    public override void Update(float frameTime)
+    {
+        if (!_timing.InPrediction || !_timing.IsFirstTimePredicted || Target is not { } target)
+            return;
+
+        if (!TryComp(target, out DetachedPredictionDirtyReplayComponent? comp))
+            return;
+
+        comp.Value = PredictedValue;
+        Dirty(target, comp);
+    }
+
+    private void OnDirtyGetState(Entity<DetachedPredictionDirtyReplayComponent> ent, ref ComponentGetState args)
+    {
+        args.State = new DetachedPredictionReplayState(ent.Comp.Value);
+    }
+
+    private void OnDirtyHandleState(Entity<DetachedPredictionDirtyReplayComponent> ent, ref ComponentHandleState args)
+    {
+        if (args.Current is not DetachedPredictionReplayState state)
+            return;
+
+        ent.Comp.Value = state.Value;
+        ent.Comp.HandleStates++;
+    }
+
+    private void OnCleanGetState(Entity<DetachedPredictionCleanReplayComponent> ent, ref ComponentGetState args)
+    {
+        args.State = new DetachedPredictionReplayState(ent.Comp.Value);
+    }
+
+    private void OnCleanHandleState(Entity<DetachedPredictionCleanReplayComponent> ent, ref ComponentHandleState args)
+    {
+        if (args.Current is not DetachedPredictionReplayState state)
+            return;
+
+        ent.Comp.Value = state.Value;
+        ent.Comp.HandleStates++;
+    }
 }

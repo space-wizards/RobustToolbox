@@ -82,6 +82,11 @@ public sealed partial class PhysicsComponent : Component, IComponentDelta
          Other = AccessPermissions.Read)]
     public bool SleepingAllowed = true;
 
+    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    internal int SleepBlockers;
+
+    internal bool CanSleep = true;
+
     [DataField, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
     public float SleepTime = 0f;

@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects;
 
-public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
+public sealed partial class UserInterfaceSystem : SharedUserInterfaceSystem
 {
     private Dictionary<EntityUid, Dictionary<Enum, Vector2>> _savedPositions = new();
     private Dictionary<BoundUserInterface, Control> _registeredControls = new();

@@ -3,7 +3,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Server.Containers;
 
-public sealed class ContainerSystem : SharedContainerSystem
+public sealed partial class ContainerSystem : SharedContainerSystem
 {
     protected override void ValidateMissingEntity(EntityUid uid, BaseContainer cont, EntityUid missing)
     {

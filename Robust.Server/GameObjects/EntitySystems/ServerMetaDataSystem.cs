@@ -3,7 +3,7 @@ using Robust.Shared.Player;
 
 namespace Robust.Server.GameObjects;
 
-public sealed class ServerMetaDataSystem : MetaDataSystem
+public sealed partial class ServerMetaDataSystem : MetaDataSystem
 {
     public override void Initialize()
     {

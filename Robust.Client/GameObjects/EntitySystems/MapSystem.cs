@@ -8,7 +8,7 @@ using Robust.Shared.Map;
 
 namespace Robust.Client.GameObjects;
 
-public sealed class MapSystem : SharedMapSystem
+public sealed partial class MapSystem : SharedMapSystem
 {
     [Pure]
     internal override MapId GetNextMapId()

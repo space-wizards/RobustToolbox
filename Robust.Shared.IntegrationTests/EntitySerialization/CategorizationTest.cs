@@ -71,7 +71,7 @@ internal sealed partial class CategorizationTest : RobustIntegrationTest
         FileCategory Save(params EntityUid[] ents)
         {
             FileCategory cat = FileCategory.Unknown;
-            Assert.That(loader.TrySaveGeneric(ents.ToHashSet(), path, out cat));
+            Assert.That(loader.TrySaveGeneric(ents.ToHashSet(), path, out cat, immediate: true));
             return cat;
         }
 

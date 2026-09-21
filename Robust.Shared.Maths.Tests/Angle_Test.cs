@@ -45,8 +45,8 @@ namespace Robust.Shared.Maths.Tests
         {
             var control = new Angle(new Vector2(test.Item1, test.Item2));
             var target = new Angle(test.Item4);
-            Angle targetPlusRev = target + MathHelper.TwoPi;
-            Angle targetMinusRev = target - MathHelper.TwoPi;
+            Angle targetPlusRev = target + Math.Tau;
+            Angle targetMinusRev = target - Math.Tau;
 
             Assert.That(target.EqualsApprox(control));
             Assert.That(targetPlusRev.EqualsApprox(control));
@@ -58,8 +58,8 @@ namespace Robust.Shared.Maths.Tests
         {
             var control = new Angle(new Vector2(test.Item1, test.Item2));
             var target = new Angle(test.Item4);
-            Angle targetPlusRev = target + MathHelper.TwoPi;
-            Angle targetMinusRev = target - MathHelper.TwoPi;
+            Angle targetPlusRev = target + Math.Tau;
+            Angle targetMinusRev = target - Math.Tau;
 
             Assert.That(target.EqualsApprox(control, 0.00001));
             Assert.That(targetPlusRev.EqualsApprox(control, 0.00001));
@@ -132,9 +132,9 @@ namespace Robust.Shared.Maths.Tests
         }
 
         [Test]
-        [TestCase(MathHelper.PiOver2, ExpectedResult = Direction.East)]
+        [TestCase(Math.PI / 2, ExpectedResult = Direction.East)]
         [TestCase(0, ExpectedResult = Direction.South)]
-        [TestCase(-MathHelper.PiOver2, ExpectedResult = Direction.West)]
+        [TestCase(-Math.PI / 2, ExpectedResult = Direction.West)]
         [TestCase(Math.PI, ExpectedResult = Direction.North)]
         public Direction TestAngleToCardinal(double angle)
         {
@@ -144,7 +144,7 @@ namespace Robust.Shared.Maths.Tests
         [Test]
         public void TestAngleRotateVec()
         {
-            var angle = new Angle(MathHelper.Pi / 6);
+            var angle = new Angle(Math.PI / 6);
             var vec = new Vector2(0.5f, 0.5f);
 
             var result = angle.RotateVec(vec);

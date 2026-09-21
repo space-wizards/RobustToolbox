@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.IoC;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
@@ -137,8 +138,8 @@ internal sealed partial class OverlayManager : IOverlayManagerInternal, IPostInj
 
         public int Compare(Overlay? x, Overlay? y)
         {
-            var zX = x?.ZIndex ?? 0;
-            var zY = y?.ZIndex ?? 0;
+            var zX = x?.ZIndex ?? DrawDepth.Default;
+            var zY = y?.ZIndex ?? DrawDepth.Default;
             return zX.CompareTo(zY);
         }
     }

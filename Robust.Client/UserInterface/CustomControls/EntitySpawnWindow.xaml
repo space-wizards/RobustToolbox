@@ -9,7 +9,7 @@
             <Button Name="ClearButton" Access="Public" Disabled="True" Text="{Loc window-clear-button}" />
         </BoxContainer>
         <ScrollContainer Name="PrototypeScrollContainer" Access="Public" MinSize="200 0" VerticalExpand="True">
-            <PrototypeListContainer Name="PrototypeList" Access="Public"/>
+            <VirtualListContainer Name="PrototypeList" Access="Public"/>
         </ScrollContainer>
         <BoxContainer Orientation="Horizontal">
             <Button Name="ReplaceButton" Access="Public" ToggleMode="True" Text="{Loc entity-spawn-window-replace-button-text}"/>

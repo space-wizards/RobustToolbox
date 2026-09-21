@@ -14,8 +14,6 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Shapes;
-using Robust.Shared.Physics.Systems;
 using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
 using Robust.Shared.Utility;
@@ -619,7 +617,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Shadow-casting lights embedded inside an occluder cannot work consistently.
                 // As such we just disable them! If you want light inside an occluder use non-shadow casting lights!
-                if (state.clyde.IsLightEmbeddedInOccluder(state.map, lightPos, state.xforms))
+                if (state.clyde._occluderSystem.IsPointLightEmbeddedInOccluder(state.map, value.Uid, pointLight, lightPos))
                     return true;
 
                 // If the light is a shadow casting light, keep a separate track of that.
@@ -748,72 +746,6 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             return shadowMapIndex;
-        }
-
-        private bool IsLightEmbeddedInOccluder(
-            MapId map,
-            Vector2 lightPosition,
-            EntityQuery<TransformComponent> xforms)
-        {
-            // Shadow-casting lights inside an occluder produce unstable/inside-out shadows.
-            // Do a narrow tree query around the light and only run the expensive polygon TestPoint
-            // for occluders whose cached AABB can contain the light.
-            var pointBounds = new Box2(lightPosition, lightPosition).Enlarged(SharedOccluderEdgeTolerance);
-
-            foreach (var (treeUid, comp) in _occluderSystem.GetIntersectingTrees(map, pointBounds))
-            {
-                var treeBounds = _transformSystem.GetInvWorldMatrix(treeUid, xforms).TransformBox(pointBounds);
-                var state = new LightEmbeddedOccluderQueryState(
-                    _fixtureSystem,
-                    _transformSystem,
-                    xforms,
-                    lightPosition);
-
-                comp.Tree.QueryAabb(ref state, CheckLightEmbeddedInOccluder, treeBounds, approx: true);
-
-                if (state.Embedded)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static bool CheckLightEmbeddedInOccluder(
-            ref LightEmbeddedOccluderQueryState state,
-            in ComponentTreeEntry<OccluderComponent> entry)
-        {
-            var occluder = entry.Component;
-            if (!occluder.Enabled)
-                return true;
-
-            var (worldPosition, worldRotation) = state.TransformSystem.GetWorldPositionRotation(
-                entry.Transform,
-                state.Xforms);
-
-            if (!OccluderOverlapsPoint(
-                    state.FixtureSystem,
-                    occluder.PolygonArray,
-                    new Transform(worldPosition, worldRotation),
-                    state.LightPosition))
-            {
-                return true;
-            }
-
-            state.Embedded = true;
-            return false;
-        }
-
-        private struct LightEmbeddedOccluderQueryState(
-            FixtureSystem fixtureSystem,
-            TransformSystem transformSystem,
-            EntityQuery<TransformComponent> xforms,
-            Vector2 lightPosition)
-        {
-            public readonly FixtureSystem FixtureSystem = fixtureSystem;
-            public readonly TransformSystem TransformSystem = transformSystem;
-            public readonly EntityQuery<TransformComponent> Xforms = xforms;
-            public readonly Vector2 LightPosition = lightPosition;
-            public bool Embedded;
         }
 
         /// <inheritdoc/>
@@ -1253,19 +1185,6 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             edges.Add(edge);
-        }
-
-        private static bool OccluderOverlapsPoint(
-            FixtureSystem fixtures,
-            Vector2[] polygon,
-            in Transform occluderTransform,
-            Vector2 worldPoint)
-        {
-            if (polygon.Length < 3)
-                return false;
-
-            var occluderShape = new Polygon(polygon);
-            return occluderShape.VertexCount >= 3 && fixtures.TestPoint(occluderShape, occluderTransform, worldPoint);
         }
 
         private static bool PointsMatch(Vector2 a, Vector2 b)

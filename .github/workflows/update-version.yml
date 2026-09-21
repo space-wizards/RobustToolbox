@@ -1,0 +1,87 @@
+name: Update Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version Number (example: 0.1.0)'
+        required: true
+
+env:
+  VERSION: ${{ inputs.version }}
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout RobustToolbox
+        uses: actions/checkout@v7.0.1
+
+      - name: Configure Git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Create new version
+        run: |
+          python ./Tools/version.py $VERSION
+          git push
+          git push ${{ github.server_url }}/${{ github.repository }}.git v$VERSION
+
+  update-repos:
+    name: Update ${{ matrix.repo }}
+    runs-on: ubuntu-latest
+    needs: version
+
+    strategy:
+      fail-fast: false
+      matrix:
+        repo:
+          - space-wizards/space-station-14
+          - space-wizards/RobustToolboxTemplateSingleplayer
+          - space-wizards/RobustToolboxTemplate
+
+    env:
+      GH_TOKEN: ${{ secrets.UPDATE_ENGINE_TOKEN }} # Use token that allows to manage PRs and contents in target repositories
+
+    steps:
+      - name: Checkout target
+        uses: actions/checkout@v7.0.1
+        with:
+          repository: ${{ matrix.repo }}
+          submodules: recursive
+          token: ${{ env.GH_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Update RobustToolbox submodule
+        run: |
+          git checkout -B update/robust-$VERSION
+          cd RobustToolbox
+          git fetch origin tag v$VERSION --no-tags
+          git checkout v$VERSION
+          cd ..
+          git add RobustToolbox
+          git commit -m "Update RobustToolbox to $VERSION"
+          git push --set-upstream origin update/robust-$VERSION
+
+      - name: Open PR
+        id: pr
+        run: |
+          echo "url=$(gh pr create \
+            --repo ${{ matrix.repo }} \
+            --base master \
+            --head update/robust-$VERSION \
+            --title "Update RobustToolbox to $VERSION" \
+            --body "Created by GitHub Action." \
+          )" >> $GITHUB_OUTPUT
+
+      - name: Merge PR
+        run: |
+          gh pr merge ${{ steps.pr.url }} --auto --squash --delete-branch

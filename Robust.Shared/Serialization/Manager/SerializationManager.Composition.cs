@@ -152,9 +152,10 @@ public partial class SerializationManager
         // I have NFI what this comment means.
 
         var result = child.Copy();
+        var i = 0;
         foreach (var entry in parent)
         {
-            result.Add(entry.Copy());
+            result.Insert(i++, entry.Copy());
         }
 
         return result;

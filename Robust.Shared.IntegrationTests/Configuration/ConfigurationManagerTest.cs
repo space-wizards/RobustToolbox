@@ -1,12 +1,14 @@
 using Moq;
 using NUnit.Framework;
-using Robust.Server.Configuration;
+using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.IntegrationTests.Configuration
 {
@@ -137,18 +139,122 @@ namespace Robust.Shared.IntegrationTests.Configuration
             Assert.That(mgr.GetCVar<int>("foo.bar"), Is.EqualTo(7));
         }
 
+        [Test]
+        public void TestClientSaveDoesNotSerializeServerCVars()
+        {
+            var mgr = MakeCfgInternal(isServer: false);
+            var userData = new VirtualWritableDirProvider();
+            var path = new ResPath("/Config/client_config.toml");
+
+            mgr.RegisterCVar("test.client", 0, CVar.ARCHIVE);
+            mgr.RegisterCVar("test.server", 0, CVar.ARCHIVE | CVar.SERVER);
+            mgr.RegisterCVar("test.server_only", 0, CVar.ARCHIVE | CVar.SERVERONLY);
+            mgr.SetCVar("test.client", 1);
+            mgr.SetCVar("test.server", 2, force: true);
+            mgr.SetSaveFile(userData, path);
+            mgr.SaveToFile();
+
+            var text = userData.ReadAllText(path);
+            Assert.That(text, Does.Contain("client = 1"));
+            Assert.That(text, Does.Not.Contain("server = 2"));
+            Assert.That(text, Does.Not.Contain("server_only"));
+        }
+
+        [Test]
+        public void TestForkCVarsSaveToForkConfig()
+        {
+            var mgr = MakeCfgInternal(isServer: false);
+            var userData = new VirtualWritableDirProvider();
+            var configPath = new ResPath("/Config/client_config.toml");
+            var forkConfigPath = new ResPath("/Config/test-fork_config.toml");
+
+            mgr.RegisterCVar(CVars.BuildForkId.Name, "", CVar.NONE);
+            mgr.LoadCVarsFromType(typeof(TestSharedCVars));
+            mgr.LoadCVarsFromType(typeof(TestForkCVars));
+            mgr.SetCVar(CVars.BuildForkId.Name, "test-fork");
+            mgr.SetCVar(TestSharedCVars.Shared.Name, 5);
+            mgr.SetCVar(TestForkCVars.ForkSpecific.Name, 7);
+            mgr.SetSaveFile(userData, configPath);
+            mgr.SetForkSaveFile(userData, forkConfigPath);
+            mgr.SaveToFile();
+
+            var sharedText = userData.ReadAllText(configPath);
+            var forkText = userData.ReadAllText(forkConfigPath);
+            Assert.That(mgr.GetCVarFlags(TestForkCVars.ForkSpecific.Name) & CVar.FORK, Is.EqualTo(CVar.FORK));
+            Assert.That(sharedText, Does.Contain("shared = 5"));
+            Assert.That(sharedText, Does.Not.Contain("fork_specific"));
+            Assert.That(forkText, Does.Contain("fork_specific = 7"));
+            Assert.That(forkText, Does.Not.Contain("shared"));
+        }
+
+        [Test]
+        public void TestForkCVarsSaveToUnspecifiedForkConfig()
+        {
+            var mgr = MakeCfgInternal(isServer: false);
+            var userData = new VirtualWritableDirProvider();
+            var configPath = new ResPath("/Config/client_config.toml");
+            var forkConfigPath = new ResPath("/Config/unspecified_config.toml");
+
+            mgr.LoadCVarsFromType(typeof(TestForkCVars));
+            mgr.SetCVar(TestForkCVars.ForkSpecific.Name, 7);
+            mgr.SetSaveFile(userData, configPath);
+            mgr.SetForkSaveFile(userData, forkConfigPath);
+            mgr.SaveToFile();
+
+            var sharedText = userData.ReadAllText(configPath);
+            var forkText = userData.ReadAllText(forkConfigPath);
+            Assert.That(sharedText, Does.Not.Contain("fork_specific"));
+            Assert.That(forkText, Does.Contain("fork_specific = 7"));
+        }
+
+        [Test]
+        public void TestUserDataConfigSaveRejectsTraversal()
+        {
+            var mgr = MakeCfgInternal(isServer: false);
+            var userData = new VirtualWritableDirProvider();
+
+            Assert.That(
+                () => mgr.SetSaveFile(userData, new ResPath("/Config/../client_config.toml")),
+                Throws.ArgumentException);
+
+            Assert.That(
+                () => mgr.SetForkSaveFile(userData, new ResPath("/Config/../fork_config.toml")),
+                Throws.ArgumentException);
+        }
+
         private IConfigurationManager MakeCfg()
+        {
+            return MakeCfgInternal(isServer: true);
+        }
+
+        private ConfigurationManager MakeCfgInternal(bool isServer)
         {
             var collection = new DependencyCollection();
             collection.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
             collection.RegisterInstance<INetManager>(new Mock<INetManager>().Object);
-            collection.Register<ConfigurationManager, ServerNetConfigurationManager>();
-            collection.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
+            collection.Register<ConfigurationManager, ConfigurationManager>();
+            collection.Register<IConfigurationManager, ConfigurationManager>();
             collection.Register<IGameTiming, GameTiming>();
             collection.Register<ILogManager, LogManager>();
             collection.BuildGraph();
 
-            return collection.Resolve<ConfigurationManager>();
+            var cfg = collection.Resolve<ConfigurationManager>();
+            cfg.Initialize(isServer);
+            return cfg;
+        }
+
+        [CVarDefs]
+        private static class TestSharedCVars
+        {
+            public static readonly CVarDef<int> Shared =
+                CVarDef.Create("test.shared", 0, CVar.ARCHIVE);
+        }
+
+        [CVarDefs(Fork = true)]
+        private static class TestForkCVars
+        {
+            public static readonly CVarDef<int> ForkSpecific =
+                CVarDef.Create("test.fork_specific", 0, CVar.ARCHIVE);
         }
     }
 }

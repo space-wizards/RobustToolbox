@@ -5,7 +5,7 @@ using System.Diagnostics.Contracts;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Collections;
-using Robust.Shared.Graphics;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Timer = Robust.Shared.Timing.Timer;
@@ -21,6 +21,10 @@ namespace Robust.Client.UserInterface.Controls
         private bool _isAtBottom = true;
         /// The size of all the child widgets, in pixels
         private int _totalContentHeight;
+        /// The moused-over item containing a tooltip
+        private int _tooltipItemIndex = -1;
+        /// Currently displayed tooltip, if any
+        private Tooltip? _visibleTooltip = null;
 
         private VScrollBar _scrollBar;
         private readonly List<Item> _itemList = new();
@@ -59,6 +63,8 @@ namespace Robust.Client.UserInterface.Controls
             };
             AddChild(_scrollBar);
             _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
+            TooltipSupplier = GenerateTooltip;
+            OnHideTooltip += HideTooltip;
         }
 
         private void RecalculateContentHeight()
@@ -594,34 +600,7 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)
         {
             base.MouseMove(args);
-
-            DefaultCursorShape = CursorShape.Arrow;
-
-            for (var idx = 0; idx < _itemList.Count; idx++)
-            {
-                var item = _itemList[idx];
-                if (item.Region == null) continue;
-                if (!item.Region.Value.Contains(args.RelativePosition)) continue;
-
-                if (SelectMode != ItemListSelectMode.None)
-                {
-                    if (item.Disabled)
-                    {
-                        DefaultCursorShape = CursorShape.NotAllowed;
-                    }
-                    else if (item.Selectable)
-                    {
-                        DefaultCursorShape = CursorShape.Pointer;
-                    }
-                    else
-                    {
-                        DefaultCursorShape = CursorShape.Arrow;
-                    }
-                }
-
-                OnItemHover?.Invoke(new ItemListHoverEventArgs(idx, this));
-                break;
-            }
+            UpdateHoveredItem(args);
         }
 
         protected internal override void MouseExited()
@@ -643,6 +622,7 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar.ValueTarget -= _getScrollSpeed() * args.Delta.Y;
             _isAtBottom = _scrollBar.IsAtEnd;
 
+            UpdateHoveredItem(args);
             args.Handle();
         }
 
@@ -667,6 +647,80 @@ namespace Robust.Client.UserInterface.Controls
              RecalculateContentHeight();
 
              base.UIScaleChanged();
+        }
+
+        private void UpdateHoveredItem(GUIMouseEventArgs args)
+        {
+            DefaultCursorShape = CursorShape.Arrow;
+            _tooltipItemIndex = -1;
+
+            for (var idx = 0; idx < _itemList.Count; idx++)
+            {
+                var item = _itemList[idx];
+                if (item.Region == null) continue;
+                if (!item.Region.Value.Contains(args.RelativePosition)) continue;
+
+                if (SelectMode != ItemListSelectMode.None)
+                {
+                    if (item.Disabled)
+                    {
+                        DefaultCursorShape = CursorShape.NotAllowed;
+                    }
+                    else if (item.Selectable)
+                    {
+                        DefaultCursorShape = CursorShape.Pointer;
+                    }
+                    else
+                    {
+                        DefaultCursorShape = CursorShape.Arrow;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(item.TooltipText) && item.TooltipEnabled)
+                {
+                    _tooltipItemIndex = idx;
+                }
+
+                OnItemHover?.Invoke(new ItemListHoverEventArgs(idx, this));
+                break;
+            }
+
+            if (_visibleTooltip != null)
+            {
+                if (_tooltipItemIndex != -1)
+                {
+                    _visibleTooltip.Text = _itemList[_tooltipItemIndex].TooltipText;
+                    _visibleTooltip.Visible = true;
+                }
+                else
+                {
+                    _visibleTooltip.Visible = false;
+                }
+            }
+        }
+
+        private Control? GenerateTooltip(Control sender)
+        {
+            /// Tooltips are created by the UserInterfaceManager, one per-control.
+            /// Each of our items has an optional tooltip text, but we don't have
+            /// a Control for each, so we need to manage the tooltip ourselves.
+            if (_tooltipItemIndex != -1)
+            {
+                _visibleTooltip = new Tooltip
+                {
+                    Text = _itemList[_tooltipItemIndex].TooltipText,
+                    // Track mouse so the tooltip shows up in a reasonable
+                    // position after we change the text
+                    Tracking = true
+                };
+                return _visibleTooltip;
+            }
+            return null;
+        }
+
+        private void HideTooltip(object? self, EventArgs args)
+        {
+            _visibleTooltip = null;
         }
 
         private void _updateScrollbarVisibility()

@@ -66,11 +66,11 @@ public sealed partial class PaletteManager : IPaletteManagerInternal
     }
 
     [PublicAPI]
-    public bool TryGetPaletteColors(ProtoId<PalettePrototype> palette, out IReadOnlyList<Color> colors)
+    public bool TryGetPaletteColors(ProtoId<PalettePrototype> palette, [NotNullWhen(true)] out IReadOnlyList<Color>? colors)
     {
         if (!_colorsByPalette.TryGetValue(palette, out var paletteColors))
         {
-            colors = default!;
+            colors = null;
             return false;
         }
 

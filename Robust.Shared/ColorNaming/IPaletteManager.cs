@@ -39,7 +39,7 @@ public interface IPaletteManager
     /// Clears and fills <paramref name="colors"/> of all colors within a given palette.
     /// </summary>
     /// <remarks>
-    /// Order of colors is not guaranteed.
+    /// Order of colors in returned list is unspecified.
     /// </remarks>
     /// <exception cref="KeyNotFoundException">
     /// Thrown if <paramref name="palette"/> does not exist.
@@ -51,8 +51,8 @@ public interface IPaletteManager
     /// Writes the colors given in <paramref name="palette"/> out into <paramref name="colors"/>, if possible.
     /// </summary>
     /// <remarks>
-    /// Order of colors is not guaranteed.
+    /// Order of colors in <paramref name="colors"/> is unspecified.
     /// </remarks>
     /// <returns>True if the palette was found and written into <paramref name="colors"/>, false otherwise.</returns>
-    bool TryGetPaletteColors(ProtoId<PalettePrototype> palette, out IReadOnlyList<Color> colors);
+    bool TryGetPaletteColors(ProtoId<PalettePrototype> palette, [NotNullWhen(true)] out IReadOnlyList<Color>? colors);
 }

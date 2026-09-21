@@ -155,43 +155,51 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public bool TryQueueDeleteEntity(EntityUid? uid);
 
+        /// <summary>
+        /// Deletes the entity at the end of the tick.
+        /// On the client this predicts the deletion: a networked entity is detached to nullspace and then either
+        /// restored or actually deleted by state handling.
+        /// </summary>
         public void QueueDeleteEntity(EntityUid? uid);
 
         public bool IsQueuedForDeletion(EntityUid uid);
 
-        /// <summary>
-        /// Tries to predict entity deletion. On the server it runs the normal code path and on the client the entity is detached.
-        /// </summary>
+        /// <inheritdoc cref="DeleteEntity(EntityUid?)"/>
+        [Obsolete("Use DeleteEntity")]
         void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent);
 
-        /// <inheritdoc cref="PredictedDeleteEntity(Entity{MetaDataComponent?,TransformComponent?})"/>
+        /// <inheritdoc cref="DeleteEntity(EntityUid?)"/>
+        [Obsolete("Use DeleteEntity")]
         void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent);
 
-        /// <summary>
-        /// Variant of <see cref="PredictedDeleteEntity(Entity{MetaDataComponent?,TransformComponent?})"/> that defers deletion until the end of the tick.
-        /// </summary>
+        /// <inheritdoc cref="QueueDeleteEntity(EntityUid?)"/>
+        [Obsolete("Use QueueDeleteEntity")]
         void PredictedQueueDeleteEntity(Entity<MetaDataComponent?> ent);
 
-        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        /// <inheritdoc cref="QueueDeleteEntity(EntityUid?)"/>
+        [Obsolete("Use QueueDeleteEntity")]
         void PredictedQueueDeleteEntity(Entity<MetaDataComponent?>? ent);
 
-        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
-        [Obsolete("use variant without TransformComponent")]
+        /// <inheritdoc cref="QueueDeleteEntity(EntityUid?)"/>
+        [Obsolete("Use QueueDeleteEntity")]
         void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent);
 
-        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
-        [Obsolete("use variant without TransformComponent")]
+        /// <inheritdoc cref="QueueDeleteEntity(EntityUid?)"/>
+        [Obsolete("Use QueueDeleteEntity")]
         void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent);
 
         // The following 2 methods exist to handle ambiguous implicit casts.
-        // They should probably be removed whenever the transform variants are removed
-        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        /// <inheritdoc cref="QueueDeleteEntity(EntityUid?)"/>
+        [Obsolete("Use QueueDeleteEntity")]
         void PredictedQueueDeleteEntity(EntityUid ent);
-        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        /// <inheritdoc cref="QueueDeleteEntity(EntityUid?)"/>
+        [Obsolete("Use QueueDeleteEntity")]
         void PredictedQueueDeleteEntity(EntityUid? ent);
 
         /// <summary>
         /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.
+        /// On the client this predicts the deletion: a networked entity is detached to nullspace and then either
+        /// restored or actually deleted by state handling.
         /// </summary>
         /// <param name="uid">Uid of entity to remove.</param>
         void DeleteEntity(EntityUid? uid);

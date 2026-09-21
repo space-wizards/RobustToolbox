@@ -43,7 +43,9 @@ namespace Robust.Client.Animations
             var nextKeyFrame = keyFrameIndex + 1;
             if (nextKeyFrame == 0)
             {
-                // Still before the first keyframe, do nothing.
+                // At the start snap the anim to the first keyframe
+                value = KeyFrames[0].Value;
+                ApplyProperty(context, value);
                 return (keyFrameIndex, playingTime);
             }
 

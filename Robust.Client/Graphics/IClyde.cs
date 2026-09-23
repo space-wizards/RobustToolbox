@@ -58,7 +58,7 @@ namespace Robust.Client.Graphics
         event Action<WindowFocusedEventArgs> OnWindowFocused;
 
         /// <summary>Raised on mouse motion.</summary>
-        event Action<MouseMoveEventArgs> MouseMove;
+        event Action<MouseMoveEventArgs>? MouseMove;
 
         event Action<WindowContentScaleEventArgs> OnWindowScaleChanged;
 

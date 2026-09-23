@@ -143,7 +143,7 @@ public sealed partial class SpriteSystem
     /// <param name="sprite">Sprite to be modified</param>
     /// <param name="path">Rooted resource path to the new RSI</param>
     /// <param name="layers">Dictionary of layers and their new states</param>
-    public void SetBaseRsiWithLayers(Entity<SpriteComponent?> sprite, RSI? path, ref Dictionary<Enum, string> layers)
+    public void SetBaseRsiWithLayers(Entity<SpriteComponent?> sprite, RSI? path, Dictionary<Enum, string> layers)
     {
         SetBaseRsi(sprite, path, false);
 

@@ -394,9 +394,9 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void ExitedTree()
         {
-            base.Dispose(disposing);
+            base.ExitedTree();
 
             Group = null;
         }

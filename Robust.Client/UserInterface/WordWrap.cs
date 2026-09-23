@@ -25,9 +25,6 @@ internal struct WordWrap
     // The horizontal position of the text cursor.
     public int PosX;
     public Rune LastRune;
-    // If a word is larger than maxSizeX, we split it.
-    // We need to keep track of some data to split it into two words.
-    public (int breakIndex, int wordSizePixels)? ForceSplitData = null;
 
     public WordWrap(float maxSizeX)
     {
@@ -75,7 +72,6 @@ internal struct WordWrap
             //wordSize = 0;
             WordSizePixels = 0;
             WordStartBreakIndex = (BreakIndexCounter, PosX);
-            ForceSplitData = null;
 
             // Just manually handle newlines.
             if (rune == new Rune('\n'))
@@ -110,21 +106,15 @@ internal struct WordWrap
         // Break the "word" at the last word index
         if (WordStartBreakIndex.HasValue && oldWordSizePixels != 0)
         {
-            breakLine = WordStartBreakIndex!.Value.index;
+            breakLine = WordStartBreakIndex.Value.index;
             MaxUsedWidth = Math.Max(MaxUsedWidth, WordStartBreakIndex.Value.lineSize);
             PosX = WordSizePixels;
-        }
-
-        if (!ForceSplitData.HasValue)
-        {
-            ForceSplitData = (BreakIndexCounter, oldWordSizePixels);
         }
 
         // Oh hey we get to break a word that doesn't fit on a single line.
         if (WordSizePixels > _maxSizeX)
         {
-            var (breakIndex, splitWordSize) = ForceSplitData.Value;
-            if (splitWordSize == 0)
+            if (oldWordSizePixels == 0)
             {
                 // Happens if there's literally not enough space for a single character so uh...
                 // Yeah just don't.
@@ -132,10 +122,8 @@ internal struct WordWrap
                 return;
             }
 
-            // Reset forceSplitData so that we can split again if necessary.
-            ForceSplitData = null;
-            breakLine = breakIndex;
-            WordSizePixels -= splitWordSize;
+            breakLine = BreakIndexCounter;
+            WordSizePixels -= oldWordSizePixels;
             WordStartBreakIndex = null;
             MaxUsedWidth = Math.Max(MaxUsedWidth, _maxSizeX);
             PosX = WordSizePixels;
@@ -161,7 +149,6 @@ internal struct WordWrap
                 Logger.Error($"wordSizePixels: {WordSizePixels}");
                 Logger.Error($"posX: {PosX}");
                 Logger.Error($"lastChar: {LastRune}");
-                Logger.Error($"forceSplitData: {ForceSplitData}");
                 // Logger.Error($"LineBreaks: {string.Join(", ", LineBreaks)}");
 
                 throw new Exception(

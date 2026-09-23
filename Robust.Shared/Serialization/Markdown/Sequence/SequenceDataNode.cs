@@ -147,6 +147,19 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             return code.ToHashCode();
         }
 
+        internal override int GetCanonicalHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(typeof(SequenceDataNode));
+            hash.Add(Tag);
+            foreach (var child in _nodes)
+            {
+                hash.Add(child.GetCanonicalHashCode());
+            }
+
+            return hash.ToHashCode();
+        }
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();

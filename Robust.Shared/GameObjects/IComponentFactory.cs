@@ -194,6 +194,19 @@ namespace Robust.Shared.GameObjects
         string GetComponentName(ushort netID);
 
         /// <summary>
+        /// Get a wrapped <see cref="CompName"/> for a given component type.
+        /// </summary>
+        [Pure]
+        CompName CompName<T>() where T : IComponent, new();
+
+        /// <summary>
+        /// Get a wrapped <see cref="CompName"/> for a component's <see cref="Type"/>.
+        /// Throws for non-component types.
+        /// </summary>
+        [Pure]
+        CompName CompName(Type type);
+
+        /// <summary>
         ///     Gets the registration belonging to a component, throwing an exception if it does not exist.
         /// </summary>
         /// <param name="componentName">The name of the component.</param>
@@ -249,6 +262,12 @@ namespace Robust.Shared.GameObjects
         ///     Returns true if the given component name has been registered as ignored.
         /// </summary>
         bool IsIgnored(string componentName);
+
+        /// <summary>
+        /// Returns true if a given name has a component registration associated with it.
+        /// This check is always case sensitive.
+        /// </summary>
+        bool HasRegistration(string componentName);
 
         /// <summary>
         ///     Tries to get the registration belonging to a component.

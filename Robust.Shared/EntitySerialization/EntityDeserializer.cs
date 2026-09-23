@@ -42,7 +42,7 @@ public sealed partial class EntityDeserializer :
 
     public const int NewestSupportedVersion = EntitySerializer.MapFormatVersion;
 
-    public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
+    public SerializationManager.SerializerProvider SerializerProvider { get; }
 
     [Dependency] public EntityManager EntMan = default!;
     [Dependency] public IGameTiming Timing = default!;
@@ -126,6 +126,7 @@ public sealed partial class EntityDeserializer :
         deps.InjectDependencies(this);
         _log = _logMan.GetSawmill("entity_deserializer");
         _log.Level = LogLevel.Info;
+        SerializerProvider = new(_seriMan);
         SerializerProvider.RegisterSerializer(this);
         Data = data;
         Options = options;
@@ -617,8 +618,9 @@ public sealed partial class EntityDeserializer :
                 }
 
                 var datanode = compData;
-                if (proto != null && proto.Components.TryGetValue(name, out var protoData))
-                    datanode = _seriMan.CombineMappings(compData, protoData.Mapping);
+
+                if (proto != null && _proto.GetPrototypeData(proto).TryGetValue(name, out var protoData))
+                    datanode = _seriMan.CombineMappings(compData, protoData);
 
                 _components.Add(name, datanode);
             }
@@ -689,14 +691,16 @@ public sealed partial class EntityDeserializer :
             // I'm scared turning over this rock will reveal a lot of bugs. So leaving that to a future PR.
             // I.e., creating "temp" here just unnecessarily slows everything down.
             var temp = (IComponent) _seriMan.Read(compReg.Type, data, this)!;
-
             _seriMan.CopyTo(temp, ref existing, this, notNullableOverride: true);
         }
 
         _components.Clear();
         CurrentComponent = null;
         if (missingComps is {Count: > 0})
+        {
+            EntMan.DirtyEntity(uid, meta);
             meta.LastComponentRemoved = Timing.CurTick;
+        }
     }
 
     private void GetRootEntities()

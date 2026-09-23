@@ -492,5 +492,20 @@ namespace Robust.Client.UserInterface
         {
             ClearWindows();
         }
+
+        public UIRoot GetRootForMouse()
+        {
+            var pos = _inputManager.MouseScreenPosition;
+
+            foreach (var root in _roots)
+            {
+                if (root.Window.Id == pos.Window)
+                {
+                    return root;
+                }
+            }
+
+            return RootControl;
+        }
     }
 }

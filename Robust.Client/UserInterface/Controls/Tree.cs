@@ -106,6 +106,22 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        protected internal override void MouseMove(GUIMouseMoveEventArgs args)
+        {
+            base.MouseMove(args);
+
+            DefaultCursorShape = _tryFindItemAtPosition(args.RelativePixelPosition)?.Selectable == true
+                ? CursorShape.Pointer
+                : CursorShape.Arrow;
+        }
+
+        protected internal override void MouseExited()
+        {
+            base.MouseExited();
+
+            DefaultCursorShape = CursorShape.Arrow;
+        }
+
         private Item? _tryFindItemAtPosition(Vector2 position)
         {
             var font = _getFont();

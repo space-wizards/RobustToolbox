@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Profiling;
@@ -13,6 +14,8 @@ namespace Robust.Shared.Profiling;
 // No interfaces here, don't want the interface dispatch overhead.
 
 // See ProfData.cs for description of profiling data layout.
+
+// Tracy integration lives in ProfManager.Tracy.cs.
 
 public sealed partial class ProfManager
 {
@@ -62,7 +65,10 @@ public sealed partial class ProfManager
         }, true);
 
         _cfg.OnValueChanged(CVars.ProfEnabled, b => IsEnabled = b, true);
+        InitializeTracyCvars();
     }
+
+    partial void InitializeTracyCvars();
 
     /// <summary>
     /// Write an index covering the region from <paramref name="start"/> to the current write position.
@@ -135,9 +141,13 @@ public sealed partial class ProfManager
     /// <summary>
     /// Make a guarded value for usage with using blocks.
     /// </summary>
-    public ValueGuard Value(string text)
+    public ValueGuard Value(
+        string text,
+        [CallerLineNumber] int lineNumber = 0,
+        [CallerFilePath] string? filePath = null,
+        [CallerMemberName] string? memberName = null)
     {
-        return new ValueGuard(this, text);
+        return new ValueGuard(this, text, lineNumber, filePath, memberName);
     }
 
     /// <summary>
@@ -191,10 +201,29 @@ public sealed partial class ProfManager
     /// <summary>
     /// Make a guarded group for usage with using blocks.
     /// </summary>
-    public GroupGuard Group(string name)
+    /// <param name="name">The name of this group as it will show in the profiler.</param>
+    /// <param name="color">
+    /// The color of this zone and all of its children, as it will show in Tracy. This does
+    /// not affect the in game profiler.
+    /// </param>
+    public GroupGuard Group(
+        string name,
+        Color? color = null,
+        [CallerLineNumber] int lineNumber = 0,
+        [CallerFilePath] string? filePath = null,
+        [CallerMemberName] string? memberName = null)
     {
         var start = WriteGroupStart();
-        return new GroupGuard(this, start, name);
+        return new GroupGuard(this, start, name, color ?? Color.Black, lineNumber, filePath, memberName);
+    }
+
+    /// <summary>
+    /// Make a guarded group that emits Tracy frame markers instead of a zone, for usage with using blocks.
+    /// </summary>
+    internal FrameGuard Frame(string name)
+    {
+        var start = WriteGroupStart();
+        return new FrameGuard(this, start, name);
     }
 
     /// <summary>
@@ -245,7 +274,51 @@ public sealed partial class ProfManager
         private readonly string _groupName;
         private readonly ProfSampler _sampler;
 
-        public GroupGuard(ProfManager mgr, long startIndex, string groupName)
+        private TracyProfilerZone? TracyZone { get; }
+
+        internal GroupGuard(
+            ProfManager mgr,
+            long startIndex,
+            string groupName,
+            Color? color,
+            int lineNumber,
+            string? filePath,
+            string? memberName)
+        {
+            _mgr = mgr;
+            _startIndex = startIndex;
+            _groupName = groupName;
+            _sampler = ProfSampler.StartNew();
+            if (_mgr.IsTracyEnabled)
+                TracyZone = BeginTracyZone(groupName, lineNumber, color, filePath, memberName);
+        }
+
+        /// <summary>
+        /// Adds text to show up in Tracy for this zone. </summary>
+        /// <remarks>
+        /// If Tracy is not enabled, this does nothing.
+        /// </remarks>
+        public void EmitText(string str)
+        {
+            TracyZone?.EmitText(str);
+        }
+
+        public void Dispose()
+        {
+            _mgr.WriteGroupEnd(_startIndex, _groupName, _sampler);
+            if (_mgr.IsTracyEnabled)
+                TracyZone?.Dispose();
+        }
+    }
+
+    internal readonly struct FrameGuard : IDisposable
+    {
+        private readonly ProfManager _mgr;
+        private readonly long _startIndex;
+        private readonly string _groupName;
+        private readonly ProfSampler _sampler;
+
+        public FrameGuard(ProfManager mgr, long startIndex, string groupName)
         {
             _mgr = mgr;
             _startIndex = startIndex;
@@ -256,6 +329,8 @@ public sealed partial class ProfManager
         public void Dispose()
         {
             _mgr.WriteGroupEnd(_startIndex, _groupName, _sampler);
+            if (_mgr.IsTracyEnabled)
+                EmitFrameMark();
         }
     }
 
@@ -264,17 +339,27 @@ public sealed partial class ProfManager
         private readonly ProfManager _mgr;
         private readonly string _text;
         private readonly ProfSampler _sampler;
+        private readonly TracyProfilerZone? _tracyZone;
 
-        public ValueGuard(ProfManager mgr, string text)
+        public ValueGuard(
+            ProfManager mgr,
+            string text,
+            int lineNumber,
+            string? filePath,
+            string? memberName)
         {
             _mgr = mgr;
             _text = text;
             _sampler = ProfSampler.StartNew();
+            if (_mgr.IsTracyEnabled)
+                _tracyZone = BeginTracyZone(_text, lineNumber, Color.Black, filePath, memberName);
         }
 
         public void Dispose()
         {
             _mgr.WriteValue(_text, _sampler);
+            if (_mgr.IsTracyEnabled)
+                _tracyZone?.Dispose();
         }
     }
 }

@@ -21,6 +21,7 @@ namespace Robust.Shared.Network.Messages
         // TODO PVS make this a cvar
         // TODO PVS figure out optimal value
         public const int CompressionThreshold = 256;
+        private const int CompressedSizeEstimateDivisor = 4;
 
         public override MsgGroups MsgGroup => MsgGroups.Entity;
 
@@ -32,6 +33,38 @@ namespace Robust.Shared.Network.Messages
         internal bool HasWritten;
 
         internal bool ForceSendReliably;
+
+        public override int EstimateBufferSize()
+        {
+            var uncompressedLength = (int) StateStream.Length;
+            // We have no idea what the compressed size will be but we'll try and guess slightly over
+            // mostly want to avoid a small initial size and then immediately copying.
+            var payloadLength = uncompressedLength > CompressionThreshold
+                ? Math.Max(CompressionThreshold, uncompressedLength / CompressedSizeEstimateDivisor)
+                : uncompressedLength;
+            var compressedLength = uncompressedLength > CompressionThreshold ? payloadLength : 0;
+
+            // Message ID + two variable-length size prefixes + payload.
+            return 1
+                + VariableInt32Size(uncompressedLength)
+                + VariableInt32Size(compressedLength)
+                + payloadLength;
+        }
+
+        private static int VariableInt32Size(int value)
+        {
+            // Look at NetSerializer if you want to understand the zigzag.
+            var zigzag = (uint) ((value << 1) ^ (value >> 31));
+            var size = 1;
+
+            while (zigzag >= 0x80)
+            {
+                zigzag >>= 7;
+                size++;
+            }
+
+            return size;
+        }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {

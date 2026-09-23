@@ -10,7 +10,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -24,7 +23,6 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private IParallelManager _parallel = default!;
-    [Dependency] protected IPrototypeManager ProtoManager = default!;
     [Dependency] private IReflectionManager _reflection = default!;
     [Dependency] protected ISharedPlayerManager Player = default!;
     [Dependency] private SharedTransformSystem _transforms = default!;
@@ -106,6 +104,9 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
             Log.Debug($"Got BoundInterfaceMessageWrapMessage for unknown UI key: {msg.UiKey}");
             return;
         }
+
+        var received = new BoundUserInterfaceMessageReceivedEvent(sender, uid, msg.UiKey);
+        RaiseLocalEvent(ref received);
 
         // If it's not an open message check we're even a subscriber.
         if (msg.Message is not OpenBoundInterfaceMessage &&
@@ -305,32 +306,31 @@ public abstract partial class SharedUserInterfaceSystem : EntitySystem
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
     {
-        if (args.FromTick > ent.Comp.CreationTick && ent.Comp.LastFieldUpdate >= args.FromTick)
+        var aspects = EntityManager.GetModifiedAspects(ent.Comp, args.FromTick);
+
+        switch (aspects)
         {
-            var fields = EntityManager.GetModifiedFields(ent.Comp, args.FromTick);
-
-            switch (fields)
+            case >= DeltaAspect.Unclassified:
+                break;
+            case 1 << 0:
             {
-                case 1 << 0:
-                {
-                    var state = new UserInterfaceActorsDeltaState();
-                    AddActors(ent, state.Actors, ref args);
+                var state = new UserInterfaceActorsDeltaState();
+                AddActors(ent, state.Actors, ref args);
 
-                    args.State = state;
-                    return;
-                }
-                case 1 << 2:
-                {
-                    var states = ent.Comp.States;
+                args.State = state;
+                return;
+            }
+            case 1 << 2:
+            {
+                var states = ent.Comp.States;
 
-                    // TODO Game State
-                    // Force the client to serialize & de-serialize implicitly generated component states.
-                    if (_netManager.IsClient)
-                        states = new(states);
+                // TODO Game State
+                // Force the client to serialize & de-serialize implicitly generated component states.
+                if (_netManager.IsClient)
+                    states = new(states);
 
-                    args.State = new UserInterfaceStatesDeltaState {States = states};
-                    return;
-                }
+                args.State = new UserInterfaceStatesDeltaState {States = states};
+                return;
             }
         }
 

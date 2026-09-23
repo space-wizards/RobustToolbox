@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using Robust.Shared.Configuration;
 using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.EntitySerialization.Systems;
@@ -48,7 +47,7 @@ public sealed partial class EntitySerializer : ISerializationContext,
     // v3->v4: PR #3913 - Grouped entities by prototype
     // v2->v3: PR #3468
 
-    public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
+    public SerializationManager.SerializerProvider SerializerProvider { get; }
 
     [Dependency] public EntityManager EntMan = default!;
     [Dependency] public IGameTiming Timing = default!;
@@ -149,6 +148,8 @@ public sealed partial class EntitySerializer : ISerializationContext,
     private int _nextYamlTileId;
 
     private readonly List<EntityUid> _autoInclude = new();
+    private readonly List<int> _sortedTileIds = new();
+    private readonly List<string> _sortedProtoIds = new();
     private readonly EntityQuery<YamlUidComponent> _yamlQuery;
     private readonly EntityQuery<MapGridComponent> _gridQuery;
     private readonly EntityQuery<MapComponent> _mapQuery;
@@ -167,6 +168,7 @@ public sealed partial class EntitySerializer : ISerializationContext,
         dependency.InjectDependencies(this);
 
         _log = _logMan.GetSawmill("entity_serializer");
+        SerializerProvider = new(_serialization);
         SerializerProvider.RegisterSerializer(this);
 
         _metaName = _factory.GetComponentName<MetaDataComponent>();
@@ -264,7 +266,11 @@ public sealed partial class EntitySerializer : ISerializationContext,
         if (roots.Count == 0)
             return;
 
-        InitializeTileMap(roots.First());
+        using (var enumerator = roots.GetEnumerator())
+        {
+            enumerator.MoveNext();
+            InitializeTileMap(enumerator.Current);
+        }
 
         HashSet<EntityUid> allEntities = new();
         List<(EntityUid Root, HashSet<EntityUid> Children)> entities = new();
@@ -353,7 +359,7 @@ public sealed partial class EntitySerializer : ISerializationContext,
 
     private void ProcessAutoInclude()
     {
-        DebugTools.AssertEqual(_autoInclude.ToHashSet().Count, _autoInclude.Count);
+        DebugTools.Assert(!CollectionHelpers.ContainsDuplicates(_autoInclude));
 
         var ents = new HashSet<EntityUid>();
 
@@ -580,7 +586,8 @@ public sealed partial class EntitySerializer : ISerializationContext,
         {
             // try comp instead of has-comp as it checks whether the component is supposed to have been
             // deleted.
-            if (EntMan.TryGetComponent(uid, comp.Component.GetType(), out _))
+            if (EntMan.TryGetComponent(uid, comp.Component.GetType(), out var component)
+                && !EntMan.IsComponentPendingRemoval(component))
                 continue;
 
             missingComponents ??= new();
@@ -628,6 +635,9 @@ public sealed partial class EntitySerializer : ISerializationContext,
     {
         foreach (var component in EntMan.GetComponentsInternal(uid))
         {
+            if (EntMan.IsComponentPendingRemoval(component))
+                continue;
+
             var compType = component.GetType();
 
             var reg = _factory.GetRegistration(compType);
@@ -696,10 +706,10 @@ public sealed partial class EntitySerializer : ISerializationContext,
 
     public MappingDataNode Write()
     {
-        DebugTools.AssertEqual(Maps.ToHashSet().Count, Maps.Count, "Duplicate maps?");
-        DebugTools.AssertEqual(Grids.ToHashSet().Count, Grids.Count, "Duplicate grids?");
-        DebugTools.AssertEqual(Orphans.ToHashSet().Count, Orphans.Count, "Duplicate orphans?");
-        DebugTools.AssertEqual(Nullspace.ToHashSet().Count, Nullspace.Count, "Duplicate nullspace?");
+        DebugTools.Assert(!CollectionHelpers.ContainsDuplicates(Maps), "Duplicate maps?");
+        DebugTools.Assert(!CollectionHelpers.ContainsDuplicates(Grids), "Duplicate grids?");
+        DebugTools.Assert(!CollectionHelpers.ContainsDuplicates(Orphans), "Duplicate orphans?");
+        DebugTools.Assert(!CollectionHelpers.ContainsDuplicates(Nullspace), "Duplicate nullspace?");
 
         return new MappingDataNode
         {
@@ -743,12 +753,21 @@ public sealed partial class EntitySerializer : ISerializationContext,
     public MappingDataNode WriteTileMap()
     {
         var map = new MappingDataNode();
-        foreach (var (tileId, yamlTileId) in _tileMap.OrderBy(x => x.Key))
+        _sortedTileIds.Clear();
+        foreach (var tileId in _tileMap.Keys)
+        {
+            _sortedTileIds.Add(tileId);
+        }
+
+        _sortedTileIds.Sort();
+
+        foreach (var tileId in _sortedTileIds)
         {
             // This can come up if tests try to serialize test maps with custom / placeholder tile ids without registering them with the tile def manager..
             if (!_tileDef.TryGetDefinition(tileId, out var def))
                 throw new Exception($"Attempting to serialize a tile {tileId} with no valid tile definition.");
 
+            var yamlTileId = _tileMap[tileId];
             var yamlId = yamlTileId.ToString(CultureInfo.InvariantCulture);
             map.Add(yamlId, def.ID);
         }
@@ -768,10 +787,15 @@ public sealed partial class EntitySerializer : ISerializationContext,
         }
 
         var prototypes = new SequenceDataNode();
-        var protos = Prototypes.Keys.ToList();
-        protos.Sort(StringComparer.InvariantCulture);
+        _sortedProtoIds.Clear();
+        foreach (var protoId in Prototypes.Keys)
+        {
+            _sortedProtoIds.Add(protoId);
+        }
 
-        foreach (var protoId in protos)
+        _sortedProtoIds.Sort(StringComparer.InvariantCulture);
+
+        foreach (var protoId in _sortedProtoIds)
         {
             var entities = new SequenceDataNode();
             var node = new MappingDataNode

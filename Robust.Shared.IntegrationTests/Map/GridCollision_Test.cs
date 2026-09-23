@@ -19,7 +19,6 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitIdleAsync();
 
-            var mapManager = server.ResolveDependency<IMapManager>();
             var entManager = server.ResolveDependency<IEntityManager>();
             var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
             var mapSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedMapSystem>();
@@ -35,8 +34,8 @@ namespace Robust.UnitTesting.Shared.Map
             await server.WaitPost(() =>
             {
                 entManager.System<SharedMapSystem>().CreateMap(out mapId);
-                gridId1 = mapManager.CreateGridEntity(mapId);
-                gridId2 = mapManager.CreateGridEntity(mapId);
+                gridId1 = mapSystem.CreateGridEntity(mapId);
+                gridId2 = mapSystem.CreateGridEntity(mapId);
                 gridEnt1 = gridId1.Value.Owner;
                 gridEnt2 = gridId2.Value.Owner;
                 physics1 = entManager.GetComponent<PhysicsComponent>(gridEnt1.Value);

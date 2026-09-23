@@ -80,7 +80,6 @@ namespace Robust.Server
         [Dependency] private IRobustSerializer _serializer = default!;
         [Dependency] private IGameTiming _time = default!;
         [Dependency] private IResourceManagerInternal _resources = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private ITimerManager _timerManager = default!;
         [Dependency] private IServerGameStateManager _stateManager = default!;
         [Dependency] private IServerNetManager _network = default!;
@@ -341,6 +340,8 @@ namespace Robust.Server
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
 
+            _refMan.Initialize();
+
             // HAS to happen after content gets loaded.
             // Else the content types won't be included.
             // TODO: solve this properly.
@@ -379,7 +380,6 @@ namespace Robust.Server
                 _log.GetSawmill("res"));
 
             _entityManager.Initialize();
-            _mapManager.Initialize();
 
             _serialization.Initialize();
 
@@ -392,12 +392,10 @@ namespace Robust.Server
             // otherwise the prototypes will be cleared
             _prototype.Initialize();
             _prototype.LoadDefaultPrototypes();
-            _refMan.Initialize();
 
             IoCManager.Resolve<ToolshedManager>().Initialize();
             _consoleHost.Initialize();
             _entityManager.Startup();
-            _mapManager.Startup();
             _stateManager.Initialize();
             _replay.Initialize();
 

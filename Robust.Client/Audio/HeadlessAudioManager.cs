@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using Robust.Shared.Audio;
@@ -13,6 +14,8 @@ namespace Robust.Client.Audio;
 /// </summary>
 internal sealed class HeadlessAudioManager : IAudioInternal
 {
+
+    private readonly IReadOnlyList<string> _emptyDevices = Array.Empty<string>();
     private int _audioBuffer;
 
     /// <inheritdoc />
@@ -31,9 +34,24 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     }
 
     /// <inheritdoc />
+    public void FrameUpdate(float frameTime)
+    {
+    }
+
+    /// <inheritdoc />
     public IAudioSource CreateAudioSource(AudioStream stream)
     {
         return DummyAudioSource.Instance;
+    }
+
+    public IReadOnlyList<string> GetAudioDevices()
+    {
+        return _emptyDevices;
+    }
+
+    public string? GetDefaultAudioDevice()
+    {
+        return null;
     }
 
     /// <inheritdoc />
@@ -60,10 +78,20 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     /// <inheritdoc />
     public void SetMasterGain(float newGain)
     {
+        BaseGain = Math.Max(newGain, 0f);
     }
+
+    public float BaseGain { get; private set; }
+
+    public float FadeGain { get; private set; } = 1f;
 
     /// <inheritdoc />
     public void SetAttenuation(Attenuation attenuation)
+    {
+    }
+
+    /// <inheritdoc />
+    public void SetDopplerFactor(float factor)
     {
     }
 

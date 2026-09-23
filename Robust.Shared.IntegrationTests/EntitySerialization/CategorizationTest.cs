@@ -35,7 +35,6 @@ internal sealed partial class CategorizationTest : RobustIntegrationTest
         var meta = server.System<MetaDataSystem>();
         var mapSys = server.System<SharedMapSystem>();
         var loader = server.System<MapLoaderSystem>();
-        var mapMan = server.ResolveDependency<IMapManager>();
         var tileMan = server.ResolveDependency<ITileDefinitionManager>();
         var path = new ResPath($"{nameof(TestCategorization)}.yml");
 
@@ -56,8 +55,8 @@ internal sealed partial class CategorizationTest : RobustIntegrationTest
         {
             mapA = mapSys.CreateMap(out var mapIdA);
             mapB = mapSys.CreateMap(out var mapIdB);
-            var gridEntA = mapMan.CreateGridEntity(mapIdA);
-            var gridEntB = mapMan.CreateGridEntity(mapIdB);
+            var gridEntA = mapSys.CreateGridEntity(mapIdA);
+            var gridEntB = mapSys.CreateGridEntity(mapIdB);
             mapSys.SetTile(gridEntA, Vector2i.Zero, new Tile(tDef.TileId));
             mapSys.SetTile(gridEntB, Vector2i.Zero, new Tile(tDef.TileId));
             gridA = gridEntA.Owner;

@@ -251,7 +251,8 @@ namespace Robust.Shared.Physics
             capacity = Math.Max(MinimumCapacity, capacity);
 
             _root = Proxy.Free;
-            _nodes = new Node[capacity];
+            // Maximum node count for a full binary tree is 2 * leafCount - 1.
+            _nodes = new Node[2 * capacity - 1];
 
             // Build a linked list for the free list.
             ref var node = ref _nodes[0];
@@ -294,6 +295,10 @@ namespace Robust.Shared.Physics
             _freeList = allocNode.Next;
             Assert(_freeList == -1 || _nodes[_freeList].IsFree);
             allocNode = default;
+            allocNode.Parent = Proxy.Free;
+            allocNode.Next = Proxy.Free;
+            allocNode.Child1 = Proxy.Free;
+            allocNode.Child2 = Proxy.Free;
             ++NodeCount;
             proxy = alloc;
             return ref allocNode;
@@ -382,7 +387,7 @@ namespace Robust.Shared.Physics
             float areaBase = Box2.Perimeter(rootBox);
 
             // Area of inflated node
-            float directCost = Box2.Perimeter(rootBox.Union(boxD));
+            float directCost = Box2.UnionPerimeter(rootBox, boxD);
             float inheritedCost = 0.0f;
 
             Proxy bestSibling = rootIndex;
@@ -415,7 +420,7 @@ namespace Robust.Shared.Physics
                 // Cost of descending into child 1
                 float lowerCost1 = float.MaxValue;
                 var box1 = nodes[child1].Aabb;
-                float directCost1 = Box2.Perimeter(box1.Union(boxD));
+                float directCost1 = Box2.UnionPerimeter(box1, boxD);
                 float area1 = 0.0f;
                 if (leaf1)
                 {
@@ -442,7 +447,7 @@ namespace Robust.Shared.Physics
                 // Cost of descending into child 2
                 float lowerCost2 = float.MaxValue;
                 var box2 = nodes[child2].Aabb;
-                float directCost2 = Box2.Perimeter(box2.Union(boxD));
+                float directCost2 = Box2.UnionPerimeter(box2, boxD);
                 float area2 = 0.0f;
                 if (leaf2)
                 {
@@ -1059,9 +1064,7 @@ namespace Robust.Shared.Physics
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float EstimateCost(in Box2 baseAabb, in Node node)
         {
-            var cost = Box2.Perimeter(
-                baseAabb.Union(node.Aabb)
-            );
+            var cost = Box2.UnionPerimeter(baseAabb, node.Aabb);
 
             if (!node.IsLeaf)
             {
@@ -1557,8 +1560,8 @@ namespace Robust.Shared.Physics
 	        for (var i = 1; i < count; ++i)
 	        {
 		        center = boxes[i].Center;
-		        centroidAABB.BottomLeft = Vector2.Min(centroidAABB.BottomLeft, center);
-		        centroidAABB.TopRight = Vector2.Max(centroidAABB.TopRight, center);
+		        centroidAABB._bottomLeft = Vector2.Min(centroidAABB.BottomLeft, center);
+		        centroidAABB._topRight = Vector2.Max(centroidAABB.TopRight, center);
 	        }
 
 	        var d = Vector2.Subtract(centroidAABB.TopRight, centroidAABB.BottomLeft);
@@ -1582,8 +1585,8 @@ namespace Robust.Shared.Physics
 	        // Initialize bin bounds and count
 	        for (int i = 0; i < B2_Bin_Count; ++i)
 	        {
-		        bins[i].aabb.BottomLeft = new Vector2(float.MaxValue, float.MaxValue);
-		        bins[i].aabb.TopRight = new Vector2(float.MinValue, float.MinValue);
+		        bins[i].aabb._bottomLeft = new Vector2(float.MaxValue, float.MaxValue);
+		        bins[i].aabb._topRight = new Vector2(float.MinValue, float.MinValue);
 		        bins[i].count = 0;
 	        }
 
@@ -1897,7 +1900,7 @@ namespace Robust.Shared.Physics
 
 	        var nodeIndex = _root;
             ref var baseRef = ref _nodes[0];
-	        var node = baseRef;
+	        ref var node = ref Unsafe.Add(ref baseRef, nodeIndex);
 
 	        // These are the nodes that get sorted to rebuild the tree.
 	        // I'm using indices because the node pool may grow during the build.
@@ -1942,7 +1945,7 @@ namespace Robust.Shared.Physics
                         stack.Push(node.Child2);
 			        }
 
-                    node = Unsafe.Add(ref baseRef, nodeIndex);
+                    node = ref Unsafe.Add(ref baseRef, nodeIndex);
 
 			        // Remove doomed node
 			        FreeNode(doomedNodeIndex);
@@ -1956,7 +1959,7 @@ namespace Robust.Shared.Physics
 		        }
 
                 nodeIndex = stack.Pop();
-		        node = Unsafe.Add(ref baseRef, nodeIndex);
+		        node = ref Unsafe.Add(ref baseRef, nodeIndex);
 	        }
 
         #if B2_VALIDATE
@@ -2024,6 +2027,36 @@ namespace Robust.Shared.Physics
             }
         }
 
+        public void Query<TState>(ref TState state, QueryCallback<TState> callback, Vector2 point)
+        {
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            stack.Push(_root);
+
+            ref var baseRef = ref _nodes[0];
+            while (stack.GetCount() != 0)
+            {
+                var nodeId = stack.Pop();
+                if (nodeId == Proxy.Free)
+                    continue;
+
+                // Skip bounds check with Unsafe.Add().
+                ref var node = ref Unsafe.Add(ref baseRef, nodeId);
+                if (!node.Aabb.Contains(point))
+                    continue;
+
+                if (node.IsLeaf)
+                {
+                    if (!callback(ref state, nodeId))
+                        return;
+                }
+                else
+                {
+                    stack.Push(node.Child1);
+                    stack.Push(node.Child2);
+                }
+            }
+        }
+
         public delegate void FastQueryCallback(ref T userData);
 
         public void FastQuery(ref Box2 aabb, FastQueryCallback callback)
@@ -2068,6 +2101,9 @@ namespace Robust.Shared.Physics
             var p1 = input.Origin;
             var d = input.Translation;
 
+            if (d.LengthSquared() < float.Epsilon)
+                return;
+
             var r = d.Normalized();
 
 	        // v is perpendicular to the segment.
@@ -2084,7 +2120,7 @@ namespace Robust.Shared.Physics
 	        // Build a bounding box for the segment.
 	        var segmentAABB = new Box2(Vector2.Min(p1, p2), Vector2.Max(p1, p2));
 
-	        var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+	        var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
             ref var baseRef = ref _nodes[0];
 	        stack.Push(_root);
 
@@ -2135,21 +2171,16 @@ namespace Robust.Shared.Physics
 				        // Update segment bounding box.
 				        maxFraction = value;
 				        p2 = Vector2.Add(p1, maxFraction * d);
-				        segmentAABB.BottomLeft = Vector2.Min( p1, p2 );
-				        segmentAABB.TopRight = Vector2.Max( p1, p2 );
+				        segmentAABB._bottomLeft = Vector2.Min( p1, p2 );
+				        segmentAABB._topRight = Vector2.Max( p1, p2 );
 			        }
 		        }
 		        else
                 {
-                    var stackCount = stack.GetCount();
-			        Assert( stackCount < 256 - 1 );
-			        if (stackCount < 256 - 1 )
-			        {
-				        // TODO_ERIN just put one node on the stack, continue on a child node
-				        // TODO_ERIN test ordering children by nearest to ray origin
-				        stack.Push(node.Child1);
-				        stack.Push(node.Child2);
-			        }
+			        // TODO_ERIN just put one node on the stack, continue on a child node
+			        // TODO_ERIN test ordering children by nearest to ray origin
+			        stack.Push(node.Child1);
+			        stack.Push(node.Child2);
 		        }
 	        }
         }
@@ -2172,14 +2203,14 @@ namespace Robust.Shared.Physics
 
 	        for (var i = 1; i < input.Count; ++i)
 	        {
-		        originAABB.BottomLeft = Vector2.Min(originAABB.BottomLeft, input.Points[i]);
-		        originAABB.TopRight = Vector2.Max(originAABB.TopRight, input.Points[i]);
+		        originAABB._bottomLeft = Vector2.Min(originAABB.BottomLeft, input.Points[i]);
+		        originAABB._topRight = Vector2.Max(originAABB.TopRight, input.Points[i]);
 	        }
 
 	        var radius = new Vector2(input.Radius, input.Radius);
 
-	        originAABB.BottomLeft = Vector2.Subtract(originAABB.BottomLeft, radius);
-	        originAABB.TopRight = Vector2.Add(originAABB.TopRight, radius );
+	        originAABB._bottomLeft = Vector2.Subtract(originAABB.BottomLeft, radius);
+	        originAABB._topRight = Vector2.Add(originAABB.TopRight, radius );
 
 	        var p1 = originAABB.Center;
 	        var extension = originAABB.Extents;
@@ -2205,7 +2236,7 @@ namespace Robust.Shared.Physics
 	        var subInput = input;
 
             ref var baseRef = ref _nodes[0];
-            var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
 	        stack.Push(_root);
 
 	        while (stack.GetCount() > 0)
@@ -2252,22 +2283,16 @@ namespace Robust.Shared.Physics
 				        // Update segment bounding box.
 				        maxFraction = value;
 				        t = Vector2.Multiply(maxFraction, input.Translation);
-				        totalAABB.BottomLeft = Vector2.Min( originAABB.BottomLeft, Vector2.Add(originAABB.BottomLeft, t));
-				        totalAABB.TopRight = Vector2.Max( originAABB.TopRight, Vector2.Add( originAABB.TopRight, t));
+				        totalAABB._bottomLeft = Vector2.Min( originAABB.BottomLeft, Vector2.Add(originAABB.BottomLeft, t));
+				        totalAABB._topRight = Vector2.Max( originAABB.TopRight, Vector2.Add( originAABB.TopRight, t));
 			        }
 		        }
 		        else
 		        {
-                    var stackCount = stack.GetCount();
-			        Assert(stackCount < 256 - 1);
-
-			        if (stackCount < 255)
-			        {
-				        // TODO_ERIN just put one node on the stack, continue on a child node
-				        // TODO_ERIN test ordering children by nearest to ray origin
-				        stack.Push(node.Child1);
-				        stack.Push(node.Child2);
-			        }
+			        // TODO_ERIN just put one node on the stack, continue on a child node
+			        // TODO_ERIN test ordering children by nearest to ray origin
+			        stack.Push(node.Child1);
+			        stack.Push(node.Child2);
 		        }
 	        }
         }

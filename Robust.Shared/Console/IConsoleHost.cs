@@ -66,6 +66,12 @@ namespace Robust.Shared.Console
         /// </summary>
         void LoadConsoleCommands();
 
+        /// <summary>
+        /// Check whether a console command is hidden.
+        /// </summary>
+        /// <seealso cref="IConsoleCommand.Command"/>
+        bool IsCommandHidden(IConsoleCommand command);
+
         #region RegisterCommand
         /// <summary>
         /// Registers a console command into the console system. This is an alternative to

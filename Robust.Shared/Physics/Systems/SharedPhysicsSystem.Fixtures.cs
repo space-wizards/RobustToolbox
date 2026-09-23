@@ -168,7 +168,7 @@ public abstract partial class SharedPhysicsSystem
     public bool IsHardCollidable(FixturesComponent fixturesA, FixturesComponent fixturesB)
     {
         var (aLayer, aMask) = GetHardCollision(fixturesA);
-        var (bLayer, bMask) = GetHardCollision(fixturesA);
+        var (bLayer, bMask) = GetHardCollision(fixturesB);
         return ((aLayer & bMask) | (bLayer & aMask)) != 0;
     }
 

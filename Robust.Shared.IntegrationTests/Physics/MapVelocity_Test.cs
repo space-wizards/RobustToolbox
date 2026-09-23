@@ -34,8 +34,8 @@ namespace Robust.UnitTesting.Shared.Physics
 
             await server.WaitIdleAsync();
             var entityManager = server.ResolveDependency<IEntityManager>();
-            var mapManager = server.ResolveDependency<IMapManager>();
             var system = entityManager.EntitySysManager;
+            var mapSystem = entityManager.System<SharedMapSystem>();
             var physicsSys = system.GetEntitySystem<SharedPhysicsSystem>();
             var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
             var traversal = entityManager.System<SharedGridTraversalSystem>();
@@ -44,8 +44,8 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
-                var grid = mapManager.CreateGridEntity(mapId);
-                var grid2 = mapManager.CreateGridEntity(mapId);
+                var grid = mapSystem.CreateGridEntity(mapId);
+                var grid2 = mapSystem.CreateGridEntity(mapId);
                 var gridUidA = grid.Owner;
 
                 Assert.That(entityManager.TryGetComponent<PhysicsComponent>(gridUidA, out var gridPhysics));
@@ -106,8 +106,8 @@ namespace Robust.UnitTesting.Shared.Physics
 
             await server.WaitIdleAsync();
             var entityManager = server.ResolveDependency<IEntityManager>();
-            var mapManager = server.ResolveDependency<IMapManager>();
             var system = entityManager.EntitySysManager;
+            var mapSystem = entityManager.System<SharedMapSystem>();
             var physicsSys = system.GetEntitySystem<SharedPhysicsSystem>();
             var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
             var traversal = entityManager.System<SharedGridTraversalSystem>();
@@ -116,7 +116,7 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
-                var grid = mapManager.CreateGridEntity(mapId);
+                var grid = mapSystem.CreateGridEntity(mapId);
                 var gridUid = grid.Owner;
 
                 Assert.That(entityManager.TryGetComponent<PhysicsComponent>(gridUid, out var gridPhysics));

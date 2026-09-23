@@ -1,14 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.Audio.Sources;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio;
@@ -19,6 +23,7 @@ internal sealed partial class AudioManager : IAudioInternal
     [Shared.IoC.Dependency] private ILogManager _logMan = default!;
     [Shared.IoC.Dependency] private IReloadManager _reload = default!;
     [Shared.IoC.Dependency] private IResourceCache _cache = default!;
+    [Shared.IoC.Dependency] private IClydeInternal _clyde = default!;
 
     private Thread? _gameThread;
 
@@ -36,6 +41,13 @@ internal sealed partial class AudioManager : IAudioInternal
     private readonly HashSet<string> _alcDeviceExtensions = new();
     private readonly HashSet<string> _alContextExtensions = new();
     private Attenuation _attenuation;
+    private bool _audioInitialized;
+    private bool _focused = true;
+    private bool _muteUnfocused;
+    private const float MasterFadeDuration = 0.25f;
+    private float _masterFadeElapsed = MasterFadeDuration;
+    private float _masterFadeStartGain = 1f;
+    private float _masterFadeTargetGain = 1f;
 
     public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
     public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -92,6 +104,28 @@ internal sealed partial class AudioManager : IAudioInternal
         OpenALSawmill.Debug("HRTF status: {0}", hrtfEnabled == 1 ? "Enabled" : "Disabled");
     }
 
+    public IReadOnlyList<string> GetAudioDevices()
+    {
+        if (ALC.EnumerateAll.IsExtensionPresent())
+            return ALC.EnumerateAll.GetStringList(GetEnumerateAllContextStringList.AllDevicesSpecifier).ToList();
+
+        if (ALC.IsExtensionPresent(ALDevice.Null, "ALC_ENUMERATION_EXT"))
+            return ALC.GetStringList(GetEnumerationStringList.DeviceSpecifier).ToList();
+
+        return Array.Empty<string>();
+    }
+
+    public string? GetDefaultAudioDevice()
+    {
+        if (ALC.EnumerateAll.IsExtensionPresent())
+            return ALC.EnumerateAll.GetString(ALDevice.Null, GetEnumerateAllContextString.DefaultAllDevicesSpecifier);
+
+        if (ALC.IsExtensionPresent(ALDevice.Null, "ALC_ENUMERATION_EXT"))
+            return ALC.GetString(ALDevice.Null, AlcGetString.DefaultDeviceSpecifier);
+
+        return null;
+    }
+
     private bool _audioOpenDevice()
     {
         var preferredDevice = _cfg.GetCVar(CVars.AudioDevice);
@@ -143,11 +177,114 @@ internal sealed partial class AudioManager : IAudioInternal
         IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
         _cfg.OnValueChanged(CVars.AudioMasterVolume, SetMasterGain, true);
+        _cfg.OnValueChanged(CVars.AudioMuteUnfocused, OnMuteUnfocusedChanged, true);
+        _cfg.OnValueChanged(CVars.AudioDevice, OnAudioDeviceChanged);
+        _clyde.OnWindowFocused += OnWindowFocused;
 
         _reload.Register("/Audio", "*.ogg");
         _reload.Register("/Audio", "*.wav");
 
         _reload.OnChanged += OnReload;
+        _audioInitialized = true;
+    }
+
+    private void OnMuteUnfocusedChanged(bool muteUnfocused)
+    {
+        _muteUnfocused = muteUnfocused;
+        SetMasterFadeTarget(GetMasterFadeTarget());
+    }
+
+    private void OnWindowFocused(WindowFocusedEventArgs args)
+    {
+        if (args.Window != _clyde.MainWindow)
+            return;
+
+        _focused = args.Focused;
+        SetMasterFadeTarget(GetMasterFadeTarget());
+    }
+
+    private float GetMasterFadeTarget()
+    {
+        return _muteUnfocused && !_focused ? 0f : 1f;
+    }
+
+    private void SetMasterFadeTarget(float fadeGain)
+    {
+        if (MathF.Abs(_masterFadeTargetGain - fadeGain) < 0.001f)
+            return;
+
+        _masterFadeStartGain = FadeGain;
+        _masterFadeTargetGain = fadeGain;
+        _masterFadeElapsed = 0f;
+        ApplyMasterGain();
+    }
+
+    private void OnAudioDeviceChanged(string deviceSpecifier)
+    {
+        if (!_audioInitialized)
+            return;
+
+        SwitchAudioDevice(deviceSpecifier);
+    }
+
+    private void SwitchAudioDevice(string requestedDevice)
+    {
+        OpenALSawmill.Info("Switching OpenAL output device to {0}.",
+            string.IsNullOrEmpty(requestedDevice) ? "<default>" : requestedDevice);
+
+        if (TryReopenAudioDevice(requestedDevice))
+        {
+            ReloadDeviceExtensions();
+            IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
+            SetMasterGain(_cfg.GetCVar(CVars.AudioMasterVolume));
+            return;
+        }
+
+        // The skrunkly path that's hopefully never needed.
+        OpenALSawmill.Warning(
+            "ALC_SOFT_reopen_device is unavailable or failed. Falling back to full audio device rebuild.");
+
+        DisposeAllAudio();
+        FlushALDisposeQueues();
+
+        if (!_audioOpenDevice())
+        {
+            OpenALSawmill.Error("Failed to reopen OpenAL device after device switch.");
+            return;
+        }
+
+        _audioCreateContext();
+        IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
+        SetMasterGain(_cfg.GetCVar(CVars.AudioMasterVolume));
+    }
+
+    private bool TryReopenAudioDevice(string requestedDevice)
+    {
+        if (_openALDevice == ALDevice.Null ||
+            !ALC.IsExtensionPresent(_openALDevice, "ALC_SOFT_reopen_device"))
+        {
+            return false;
+        }
+
+        var reopen = LoadAlcDelegate<AlcReopenDeviceSoftDelegate>("alcReopenDeviceSOFT");
+        if (reopen == null)
+            return false;
+
+        var reopenTarget = string.IsNullOrEmpty(requestedDevice) ? null : requestedDevice;
+        var reopened = reopen(_openALDevice, reopenTarget, IntPtr.Zero);
+        _checkAlcError(_openALDevice);
+        return reopened;
+    }
+
+    private void ReloadDeviceExtensions()
+    {
+        _alcDeviceExtensions.Clear();
+
+        var s = ALC.GetString(_openALDevice, AlcGetString.Extensions) ?? "";
+        foreach (var extension in s.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            _alcDeviceExtensions.Add(extension);
+        }
     }
 
     private void OnReload(ResPath args)
@@ -186,6 +323,31 @@ internal sealed partial class AudioManager : IAudioInternal
     internal void LogError(string message)
     {
         OpenALSawmill.Error(message);
+    }
+
+    /*
+     * Evil hack because OpenTK doesn't expose the device switch call.
+     */
+
+    private delegate bool AlcReopenDeviceSoftDelegate(ALDevice device, string? deviceName, IntPtr attribs);
+
+    private static TDelegate? LoadAlcDelegate<TDelegate>(string name)
+        where TDelegate : Delegate
+    {
+        var type = typeof(ALC);
+        while (type != null)
+        {
+            var method = type.GetMethod(
+                "LoadDelegate",
+                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+
+            if (method != null)
+                return (TDelegate?) method.MakeGenericMethod(typeof(TDelegate)).Invoke(null, [name]);
+
+            type = type.BaseType;
+        }
+
+        return null;
     }
 
     /// <summary>

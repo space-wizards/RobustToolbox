@@ -21,6 +21,9 @@ namespace Robust.Shared.Console
         /// <value>
         /// A string as identifier for this command.
         /// </value>
+        /// <remarks>
+        /// Commands starting with '_' are treated as "hidden". They will not be shown in listings or completions.
+        /// </remarks>
         string Command { get; }
 
         /// <summary>

@@ -16,7 +16,6 @@ public sealed record PartialTypeInfo(
     string? Namespace,
     EquatableArray<PartialTypeInfo.NestedPart> Parts,
     bool IsValid,
-    Location SyntaxLocation,
     bool IsSealed)
 {
     public string Name => Parts[^1].Name;
@@ -34,13 +33,12 @@ public sealed record PartialTypeInfo(
 
         do
         {
+            parts.Insert(0, NestedPart.FromNode(curSymbol, curSyntax));
             if (!IsPartial(curSyntax))
             {
                 isValid = false;
                 break;
             }
-
-            parts.Insert(0, NestedPart.FromNode(curSymbol, curSyntax));
 
             curSymbol = curSymbol.ContainingType;
             curSyntax = curSyntax.Parent as TypeDeclarationSyntax;
@@ -50,7 +48,6 @@ public sealed record PartialTypeInfo(
             symbol.ContainingNamespace.IsGlobalNamespace ? null : symbol.ContainingNamespace.ToDisplayString(),
             parts.ToImmutable().AsEquatableArray(),
             isValid,
-            syntax.Keyword.GetLocation(),
             symbol.IsSealed);
     }
 
@@ -65,16 +62,9 @@ public sealed record PartialTypeInfo(
         return false;
     }
 
-    [Obsolete("Diagnostics from source generators are recommended against, apparently: https://github.com/dotnet/roslyn/issues/71709")]
-    public bool CheckPartialDiagnostic(SourceProductionContext context, DiagnosticDescriptor diagnostic)
+    public string GetQualifiedName()
     {
-        if (!IsValid)
-        {
-            context.ReportDiagnostic(Diagnostic.Create(diagnostic, SyntaxLocation, Parts[^1].DisplayName));
-            return true;
-        }
-
-        return false;
+        return Namespace == null ? Name : $"{Namespace}.{Name}";
     }
 
     public string GetGeneratedFileName()
@@ -251,6 +241,35 @@ public sealed record PartialTypeInfo(
                 hashCode = (hashCode * 397) ^ obj.IsValid.GetHashCode();
                 return hashCode;
             }
+        }
+    }
+
+    /// <summary>
+    /// An <see cref="IEqualityComparer{T}"/> for <see cref="PartialTypeInfo"/>s which considers all fields EXCEPT
+    /// <see cref="Location"/>. This comparer, therefore, considers <see cref="PartialTypeInfo"/>s constructed from
+    /// different syntactic parts of one <c>partial</c> to be equal.
+    /// </summary>
+    public static readonly IEqualityComparer<PartialTypeInfo> WithoutLocationEqualityComparer =
+        new WithoutLocationEqualityComparerImpl();
+
+    private class WithoutLocationEqualityComparerImpl : IEqualityComparer<PartialTypeInfo>
+    {
+        public bool Equals(PartialTypeInfo t, PartialTypeInfo other)
+        {
+            return t.Namespace == other.Namespace &&
+                   t.Parts.Equals(other.Parts) &&
+                   t.IsValid == other.IsValid &&
+                   t.IsSealed == other.IsSealed;
+        }
+
+        public int GetHashCode(PartialTypeInfo t)
+        {
+            var hash = new HashCode();
+            hash.Add(t.Namespace);
+            hash.Add(t.Parts);
+            hash.Add(t.IsValid);
+            hash.Add(t.IsSealed);
+            return hash.ToHashCode();
         }
     }
 }

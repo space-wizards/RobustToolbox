@@ -71,6 +71,6 @@ internal sealed partial class PvsSystem
             _serializer.SerializeDirect(data.StateStream, data.State);
         }
 
-        data.ClearState();
+        ClearSessionState(data);
     }
 }

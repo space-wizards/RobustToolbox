@@ -8,6 +8,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -494,6 +495,14 @@ public partial class EntitySystem
         return EntityManager.TryGetComponent(uid, out comp);
     }
 
+    /// <inheritdoc cref="IEntityManager.TryGetComponent(EntityUid?, Type, out IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
+    protected bool TryComp(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? comp)
+    {
+        return EntityManager.TryGetComponent(uid, type, out comp);
+    }
+
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryComp(EntityUid uid, [NotNullWhen(true)] out TransformComponent? comp)
@@ -522,6 +531,20 @@ public partial class EntitySystem
         return EntityManager.TryGetComponent(uid.Value, out comp);
     }
 
+    /// <inheritdoc cref="IEntityManager.TryGetComponent(EntityUid?, Type, out IComponent)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.TryGetComponent))]
+    protected bool TryComp([NotNullWhen(true)] EntityUid? uid, Type type, [NotNullWhen(true)] out IComponent? comp)
+    {
+        if (!uid.HasValue)
+        {
+            comp = null;
+            return false;
+        }
+
+        return EntityManager.TryGetComponent(uid.Value, type, out comp);
+    }
+
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
     protected bool TryComp([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TransformComponent? comp)
     {
@@ -544,6 +567,36 @@ public partial class EntitySystem
         }
 
         return EntityManager.MetaQuery.TryGetComponent(uid.Value, out comp);
+    }
+
+    /// <summary>
+    /// Retrieves the given entity's component of the specified type, assembled into an <see cref="Entity{T}"/>. If no
+    /// such component exists, returns null.
+    /// </summary>
+    /// <typeparam name="T">The type of component to retrieve.</typeparam>
+    /// <param name="uid">The UID of the entity whose component will be retrieved.</param>
+    /// <returns>The assembled entity UID and component, if the component exists; otherwise <c>null</c>.</returns>
+    protected Entity<T>? WithCompOrNull<T>(EntityUid uid) where T : IComponent
+    {
+        return EntityManager.TryGetComponent<T>(uid, out var comp) ? new Entity<T>(uid, comp) : null;
+    }
+
+    /// <summary>
+    /// Retrieves the given entity's component of the specified type, assembled into an <see cref="Entity{T}"/>. If the
+    /// given entity already contains a component value, that is returned in the assembled return value. If the given
+    /// entity has no such component, returns null.
+    /// </summary>
+    /// <typeparam name="T">The type of component to retrieve.</typeparam>
+    /// <param name="entity">
+    /// An <see cref="Entity{T}"/> containing the UID of the entity whose component will be retrieved. Note that this
+    /// MAY already contain a component value.
+    /// </param>
+    /// <returns>The assembled entity UID and component, if the component exists; otherwise <c>null</c>.</returns>
+    protected Entity<T>? WithCompOrNull<T>(Entity<T?> entity) where T : IComponent
+    {
+        return entity.Comp is { } comp || EntityManager.TryGetComponent(entity, out comp)
+            ? new Entity<T>(entity, comp)
+            : null;
     }
 
     /// <inheritdoc cref="IEntityManager.GetComponents"/>
@@ -692,6 +745,49 @@ public partial class EntitySystem
         return EntityManager.HasComponent(uid, type);
     }
 
+    /// <summary>
+    /// Returns true if an entity prototype has a <typeparamref name="T"/>.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp<T>([ForbidLiteral] EntProtoId id) where T : IComponent, new()
+        => HasComp(id, Factory.CompName<T>());
+
+    /// <summary>
+    /// Returns true if an entity prototype has a component with a given type.
+    /// Will throw if the type does not belong to a component.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp([ForbidLiteral] EntProtoId id, Type type)
+        => HasComp(id, Factory.CompName(type));
+
+    /// <summary>
+    /// Returns true if a entity prototype contains a component with a given name.
+    /// Logs errors in case of the prototype not existing.
+    /// If you call this a lot on the same prototype, resolve it first and call the <see cref="EntityPrototype"/>-using <c>HasComp</c> variants.
+    /// </summary>
+    [Pure]
+    protected bool HasComp([ForbidLiteral] EntProtoId id, CompName name)
+        => ProtoMan.Resolve(id, out var proto) && proto.HasComp(name);
+
+    /// <summary>
+    /// Returns true if an already-resolved entity prototype has a component of type <typeparamref name="T"/>.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp<T>(EntityPrototype proto) where T : IComponent, new()
+        => proto.HasComp(Factory.CompName<T>());
+
+    /// <summary>
+    /// Returns true if an already-resolved entity prototype has a component with a given type.
+    /// Will throw if the type does not belong to a component.
+    /// </summary>
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp(EntityPrototype proto, Type type)
+        => proto.HasComp(Factory.CompName(type));
+
     #endregion
 
     #region Component Add
@@ -820,6 +916,14 @@ public partial class EntitySystem
     protected void Del(EntityUid? uid)
     {
         EntityManager.DeleteEntity(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid, MetaDataComponent, TransformComponent)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ProxyFor(typeof(EntityManager), nameof(EntityManager.DeleteEntity))]
+    protected void Del(EntityUid uid, MetaDataComponent meta)
+    {
+        EntityManager.DeleteEntity(uid, meta);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />

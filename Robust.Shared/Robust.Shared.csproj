@@ -28,6 +28,7 @@
     <PackageReference Include="libsodium" />
     <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
+    <PackageReference Include="Tracy-CSharp" />
 
     <!-- Needed to pin transitive dependency versions. -->
     <PackageReference Include="System.Reflection.Metadata" />
@@ -62,4 +63,5 @@
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />
   <Import Project="..\MSBuild\Robust.CompNetworkGenerator.targets" />
+  <Import Project="..\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />
 </Project>

@@ -349,6 +349,26 @@ namespace Robust.Client.Input
                 RaiseRawKeyInput(args, rawInput, RawKeyAction.Up);
         }
 
+        /// <inheritdoc />
+        public void ReleaseAllKeys()
+        {
+            var hadCanFocus = false;
+
+            foreach (var binding in _bindings.ToArray())
+            {
+                if (binding.State == BoundKeyState.Up || binding.BindingType == KeyBindingType.Toggle)
+                    continue;
+
+                hadCanFocus |= binding.CanFocus;
+                UpBind(binding);
+            }
+
+            Array.Clear(_keysPressed);
+
+            if (hadCanFocus)
+                _uiMgr.HandleCanFocusUp();
+        }
+
         private bool DownBind(KeyBinding binding, bool uiOnly, bool isRepeat)
         {
             if (binding.State == BoundKeyState.Down)

@@ -127,12 +127,12 @@ public sealed class WrapContainer : Container
     {
         get
         {
-            if (TryGetStyleProperty(StylePropertySeparation, out int separation))
+            if (SeparationOverride is not null)
             {
-                return separation;
+                return SeparationOverride.Value;
             }
 
-            return SeparationOverride ?? 0;
+            return StylePropertyDefault(StylePropertySeparation, 0);
         }
     }
 
@@ -140,12 +140,12 @@ public sealed class WrapContainer : Container
     {
         get
         {
-            if (TryGetStyleProperty(StylePropertyCrossSeparation, out int separation))
+            if (CrossSeparationOverride is not null)
             {
-                return separation;
+                return CrossSeparationOverride.Value;
             }
 
-            return CrossSeparationOverride ?? 0;
+            return StylePropertyDefault(StylePropertyCrossSeparation, 0);
         }
     }
 

@@ -177,13 +177,6 @@ public partial class PrototypeManager
     private bool TryGetFieldPrototype(FieldInfo field, [NotNullWhen(true)] out Type? proto)
     {
         // Validate anything with the attribute
-        var attrib = field.GetCustomAttribute(typeof(ValidatePrototypeIdAttribute<>), false);
-        if (attrib != null)
-        {
-            proto = attrib.GetType().GetGenericArguments().First();
-            return true;
-        }
-
         if (TryGetPrototypeFromType(field.FieldType, out proto))
             return true;
 

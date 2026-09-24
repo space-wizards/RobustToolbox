@@ -85,6 +85,11 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     public bool RequestedFull = false;
 
     /// <summary>
+    /// The earliest time the client may request another full state.
+    /// </summary>
+    public TimeSpan FullStateRequestCooldownEnd;
+
+    /// <summary>
     /// List of entity states to send to the client.
     /// </summary>
     public readonly List<EntityState> States = new();
@@ -112,6 +117,11 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     /// List of entities that have left the player's view this tick.
     /// </summary>
     public readonly List<NetEntity> LeftView = new();
+
+    /// <summary>
+    /// List of chunk entities that have left the player's view this tick.
+    /// </summary>
+    public readonly List<NetEntity> LeftViewChunkEntities = new();
 
     public readonly List<SessionState> PlayerStates = new();
     public uint LastMessage;
@@ -188,7 +198,23 @@ internal struct PvsMetadata
     // TODO PVS maybe store as int?
     // Theres extra space anyways, and the mask checks always need to convert to an int first, so it'd probably be faster too.
     public ushort VisMask;
-    public EntityLifeStage LifeStage;
+    private byte _flags;
+
+    /// <summary>
+    /// Flag for whether this entity is a chunk entity and should we special-case its detachment.
+    /// </summary>
+    public bool IsChunkEntity
+    {
+        get => (_flags & 0x80) != 0;
+        set => _flags = value ? (byte) (_flags | 0x80) : (byte) (_flags & ~0x80);
+    }
+
+    public EntityLifeStage LifeStage
+    {
+        get => (EntityLifeStage) (_flags & 0x7F);
+        set => _flags = (byte) (((byte) value & 0x7F) | (_flags & 0x80));
+    }
+
 #if DEBUG
     // This struct is padded to a size of 16 so it's aligned to cache boundaries nicely.
     // We have this extra space that isn't being used,

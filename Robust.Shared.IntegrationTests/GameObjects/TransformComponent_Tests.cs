@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
@@ -32,7 +31,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             xform.SetParent(ent2, ent1);
 
-            xform1.LocalRotation = MathF.PI;
+            xform.SetLocalRotationNoLerp(ent1, MathF.PI, xform1);
 
             var (worldPos, worldRot, worldMatrix) = xform.GetWorldPositionRotationMatrix(xform2);
 
@@ -54,12 +53,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var server = RobustServerSimulation.NewSimulation().InitializeInstance();
 
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
             var xformSystem = entManager.System<TransformSystem>();
 
             mapSystem.CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
             mapSystem.SetTile(grid, new Vector2i(0, 0), new Tile(1));
             xformSystem.SetLocalPosition(grid, new Vector2(0f, 100f));
 

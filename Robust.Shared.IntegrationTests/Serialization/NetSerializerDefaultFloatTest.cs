@@ -11,10 +11,12 @@ namespace Robust.Shared.IntegrationTests.Serialization;
 [UsedImplicitly(Reason = "Needed so RobustSerializer is guaranteed to pick up on the unsafe types.")]
 internal sealed class MakeTheseSerializable
 {
+#pragma warning disable CS0649
     public UnsafeFloat Single;
     public UnsafeDouble Double;
     public UnsafeHalf Half;
     public Half SafeHalf;
+#pragma warning restore CS0649
 }
 
 /// <summary>

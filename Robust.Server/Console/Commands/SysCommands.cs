@@ -11,7 +11,7 @@ namespace Robust.Server.Console.Commands
     // Disabled for now since it doesn't actually work.
     sealed class RestartCommand : LocalizedCommands
     {
-        [Dependency] private readonly IBaseServer _server = default!;
+        [Dependency] private IBaseServer _server = default!;
 
         public override string Command => "restart";
 
@@ -22,21 +22,43 @@ namespace Robust.Server.Console.Commands
     }
     */
 
-    sealed class ShutdownCommand : LocalizedCommands
+    sealed partial class ShutdownCommand : LocalizedCommands
     {
-        [Dependency] private readonly IBaseServer _server = default!;
+        [Dependency] private IBaseServer _server = default!;
 
         public override string Command => "shutdown";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            _server.Shutdown(null);
+            switch (args.Length)
+            {
+                case > 1:
+                    shell.WriteError(Loc.GetString("shell-need-between-arguments", ("lower", 0), ("upper", 1), ("currentAmount", args.Length)));
+                    break;
+                case 1:
+                    _server.Shutdown(args[0]);
+                    break;
+                default:
+                    _server.Shutdown();
+                    break;
+            }
+        }
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            switch (args.Length)
+            {
+                case 1:
+                    return CompletionResult.FromHint(Loc.GetString("cmd-shutdown-hint-1"));
+                default:
+                    return CompletionResult.Empty;
+            }
         }
     }
 
-    sealed class NetworkAuditCommand : LocalizedCommands
+    sealed partial class NetworkAuditCommand : LocalizedCommands
     {
-        [Dependency] private readonly INetManager _netManager = default!;
+        [Dependency] private INetManager _netManager = default!;
 
         public override string Command => "netaudit";
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -57,9 +79,9 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    sealed class ShowTimeCommand : LocalizedCommands
+    sealed partial class ShowTimeCommand : LocalizedCommands
     {
-        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private IGameTiming _timing = default!;
 
         public override string Command => "showtime";
 

@@ -7,12 +7,12 @@ namespace Robust.Server.Upload;
 /// <summary>
 /// Responsible for sending uploaded content to clients when they connect.
 /// </summary>
-internal sealed class UploadedContentManager
+internal sealed partial class UploadedContentManager
 {
-    [Dependency] private readonly IServerNetManager _netManager = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly GamePrototypeLoadManager _prototypeLoadManager = default!;
-    [Dependency] private readonly NetworkResourceManager _networkResourceManager = default!;
+    [Dependency] private IServerNetManager _netManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private GamePrototypeLoadManager _prototypeLoadManager = default!;
+    [Dependency] private NetworkResourceManager _networkResourceManager = default!;
 
     public void Initialize()
     {

@@ -8,9 +8,9 @@ using Robust.Shared.Network;
 
 namespace Robust.Client.HWId;
 
-internal sealed class BasicHWId : IHWId
+internal sealed partial class BasicHWId : IHWId
 {
-    [Dependency] private readonly IGameControllerInternal _gameController = default!;
+    [Dependency] private IGameControllerInternal _gameController = default!;
 
     public const int LengthHwid = 32;
 
@@ -31,7 +31,7 @@ internal sealed class BasicHWId : IHWId
         else
             raw = GetFileHWid();
 
-        return [0, ..raw];
+        return [0, .. raw];
     }
 
     private static byte[] GetWindowsHWid(string keyName)

@@ -1,16 +1,14 @@
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
-using Robust.Client.ComponentTrees;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Threading;
@@ -21,7 +19,7 @@ namespace Robust.Client.Graphics.Clyde;
 // this partial class contains code specific to querying, processing & sorting sprites.
 internal partial class Clyde
 {
-    [Shared.IoC.Dependency] private readonly IParallelManager _parMan = default!;
+    [Shared.IoC.Dependency] private IParallelManager _parMan = default!;
     private readonly RefList<SpriteData> _drawingSpriteList = new();
     private const int _spriteProcessingBatchSize = 25;
 
@@ -29,22 +27,38 @@ internal partial class Clyde
     {
         ProcessSpriteEntities(map, view, eye, worldBounds, _drawingSpriteList);
 
-        // We use a separate list for indexing sprites so that the sort is faster.
-        indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
+        var count = _drawingSpriteList.Count;
 
-        // populate index list
-        for (var i = 0; i < _drawingSpriteList.Count; i++)
-            indexList[i] = i;
+        indexList = ArrayPool<int>.Shared.Rent(count);
+        var sortItems = ArrayPool<SpriteSortItem>.Shared.Rent(count);
 
-        // sort index list
+        for (var i = 0; i < count; i++)
+        {
+            ref var data = ref _drawingSpriteList[i];
+            sortItems[i] = new SpriteSortItem(
+                i,
+                data.Sprite.DrawDepth,
+                data.Sprite.RenderOrder,
+                data.SpriteScreenBB.Top,
+                data.Uid);
+        }
+
         // TODO better sorting? parallel merge sort?
-        Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
+        Array.Sort(sortItems, 0, count);
+
+        for (var i = 0; i < count; i++)
+        {
+            indexList[i] = sortItems[i].Index;
+        }
+
+        ArrayPool<SpriteSortItem>.Shared.Return(sortItems);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void ProcessSpriteEntities(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, RefList<SpriteData> list)
     {
         var query = _entityManager.GetEntityQuery<TransformComponent>();
+        var gridQuery = _entityManager.GetEntityQuery<MapGridComponent>();
         var viewScale = eye.Scale * view.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
         var treeData = new BatchData()
         {
@@ -65,13 +79,24 @@ internal partial class Clyde
         foreach (var (treeOwner, comp) in _spriteTreeSystem.GetIntersectingTrees(map, worldBounds))
         {
             var treeXform = query.GetComponent(treeOwner);
+            var treePos = treeXform.LocalPosition;
             var bounds = _transformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
             DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
+
+            if (gridQuery.HasComponent(treeOwner))
+            {
+                treePos += GetPixelSnapOffset(
+                    treePos,
+                    treeData.ViewPosition,
+                    treeData.ViewRotation,
+                    treeData.ViewScale,
+                    view.Size);
+            }
 
             treeData = treeData with
             {
                 TreeOwner = treeOwner,
-                TreePos = treeXform.LocalPosition,
+                TreePos = treePos,
                 TreeRot = treeXform.LocalRotation,
                 Sin = MathF.Sin((float)treeXform.LocalRotation),
                 Cos = MathF.Cos((float)treeXform.LocalRotation),
@@ -105,6 +130,20 @@ internal partial class Clyde
         }
     }
 
+    internal static Vector2 GetPixelSnapOffset(
+        Vector2 worldPosition,
+        Vector2 viewPosition,
+        Angle viewRotation,
+        Vector2 viewScale,
+        Vector2 viewportSize)
+    {
+        var viewPositionRelative = viewRotation.RotateVec(worldPosition - viewPosition);
+        var screenPosition = viewPositionRelative * viewScale + viewportSize / 2f;
+        var screenOffset = screenPosition.Rounded() - screenPosition;
+        var viewOffset = screenOffset / viewScale;
+        return (-viewRotation).RotateVec(viewOffset);
+    }
+
     /// <summary>
     ///     This function computes a sprites world position, rotation, and screen-space bounding box. The position &
     ///     rotation are required in general, but the bounding box is only really needed for y-sorting & if the
@@ -124,11 +163,11 @@ internal partial class Clyde
             // To help explain the remainder of this function, it should be functionally equivalent to the following
             // three lines of code, but has been expanded & simplified to speed up the calculation:
             //
-            // (data.WorldPos, data.WorldRot) = batch.Sys.GetWorldPositionRotation(data.Xform, batch.Query);
+            // (data.WorldPos, data.WorldRot) = batch.Sys.GetWorldPositionRotation(data.Xform);
             // var spriteWorldBB = data.Sprite.CalculateRotatedBoundingBox(data.WorldPos, data.WorldRot, batch.ViewRotation);
             // data.SpriteScreenBB = Viewport.GetWorldToLocalMatrix().TransformBox(spriteWorldBB);
 
-            var (pos, rot) = batch.Sys.GetRelativePositionRotation(data.Xform, batch.TreeOwner, batch.Query);
+            var (pos, rot) = batch.Sys.GetRelativePositionRotation(data.Xform, batch.TreeOwner);
             pos = new Vector2(
                 batch.TreePos.X + batch.Cos * pos.X - batch.Sin * pos.Y,
                 batch.TreePos.Y + batch.Sin * pos.X + batch.Cos * pos.Y);
@@ -216,36 +255,41 @@ internal partial class Clyde
         public float Cos { get;  init; }
     }
 
-    private sealed class SpriteDrawingOrderComparer : IComparer<int>
+    private readonly struct SpriteSortItem : IComparable<SpriteSortItem>
     {
-        private readonly RefList<SpriteData> _drawList;
+        public readonly int Index;
+        private readonly int _drawDepth;
+        private readonly uint _renderOrder;
+        private readonly float _ySort;
+        private readonly EntityUid _uid;
 
-        public SpriteDrawingOrderComparer(RefList<SpriteData> drawList)
+        public SpriteSortItem(int index, int drawDepth, uint renderOrder, float ySort, EntityUid uid)
         {
-            _drawList = drawList;
+            Index = index;
+            _drawDepth = drawDepth;
+            _renderOrder = renderOrder;
+            _ySort = ySort;
+            _uid = uid;
         }
 
-        public int Compare(int x, int y)
+        public int CompareTo(SpriteSortItem other)
         {
-            var a = _drawList[x];
-            var b = _drawList[y];
-
-            var cmp = a.Sprite.DrawDepth.CompareTo(b.Sprite.DrawDepth);
+            var cmp = _drawDepth.CompareTo(other._drawDepth);
             if (cmp != 0)
                 return cmp;
 
-            cmp = a.Sprite.RenderOrder.CompareTo(b.Sprite.RenderOrder);
+            cmp = _renderOrder.CompareTo(other._renderOrder);
 
             if (cmp != 0)
                 return cmp;
 
             // compare the top of the sprite's BB for y-sorting. Because screen coordinates are flipped, the "top" of the BB is actually the "bottom".
-            cmp = a.SpriteScreenBB.Top.CompareTo(b.SpriteScreenBB.Top);
+            cmp = _ySort.CompareTo(other._ySort);
 
             if (cmp != 0)
                 return cmp;
 
-            return a.Uid.CompareTo(b.Uid);
+            return _uid.CompareTo(other._uid);
         }
     }
 }

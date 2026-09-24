@@ -5,9 +5,9 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Spawners;
 
-public abstract class SharedTimedDespawnSystem : EntitySystem
+public abstract partial class SharedTimedDespawnSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     private readonly HashSet<EntityUid> _queuedDespawnEntities = new();
 

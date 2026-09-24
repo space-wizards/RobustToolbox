@@ -34,7 +34,7 @@ internal partial class ClientConsoleHost
             // Typing out command name, handle this ourselves.
             var cmdOptions = CompletionResult.FromOptions(
                 AvailableCommands.Values
-                    .Where(c => CanExecute(c.Command))
+                    .Where(c => CanExecute(c.Command) && !IsCommandHidden(c))
                     .OrderBy(c => c.Command)
                     .Select(c => new CompletionOption(c.Command, c.Description)));
 

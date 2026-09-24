@@ -115,6 +115,8 @@ internal sealed partial class PvsSystem
 
         if (!entState.Empty)
             session.States.Add(entState);
+        else
+            ReturnEntityState(entState);
     }
 
     /// <summary>
@@ -195,6 +197,8 @@ internal sealed partial class PvsSystem
 
         if (!entState.Empty)
             session.States.Add(entState);
+        else
+            ReturnEntityState(entState);
 
         return true;
     }

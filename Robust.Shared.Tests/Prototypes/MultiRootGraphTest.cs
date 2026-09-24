@@ -33,7 +33,7 @@ internal sealed class MultiRootGraphTest
 
         var parents = graph.GetParents(Id3);
         Assert.That(parents, Is.Not.Null);
-        Assert.That(parents!.Count, Is.EqualTo(1));
+        Assert.That(parents!, Has.Length.EqualTo(1));
         Assert.That(parents.Contains(Id1));
     }
 
@@ -45,7 +45,7 @@ internal sealed class MultiRootGraphTest
 
         var parents = graph.GetParents(Id3);
         Assert.That(parents, Is.Not.Null);
-        Assert.That(parents!.Count, Is.EqualTo(2));
+        Assert.That(parents!, Has.Length.EqualTo(2));
         Assert.That(parents.Contains(Id1));
         Assert.That(parents.Contains(Id2));
 
@@ -73,12 +73,12 @@ internal sealed class MultiRootGraphTest
 
         var parents = graph.GetParents(Id3);
         Assert.That(parents, Is.Not.Null);
-        Assert.That(parents!.Count, Is.EqualTo(1));
+        Assert.That(parents!, Has.Length.EqualTo(1));
         Assert.That(parents.Contains(Id1));
 
         parents = graph.GetParents(Id4);
         Assert.That(parents, Is.Not.Null);
-        Assert.That(parents!.Count, Is.EqualTo(1));
+        Assert.That(parents!, Has.Length.EqualTo(1));
         Assert.That(parents.Contains(Id1));
 
         var children = graph.GetChildren(Id1);

@@ -13,9 +13,9 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         [Test]
         public void SerializationTest()
         {
-            var left = 1;
+            var left = -3;
             var bottom = -2;
-            var right = -3;
+            var right = 1;
             var top = 4;
             var str = $"{left},{bottom},{right},{top}";
             var box = new Box2(left, bottom, right, top);
@@ -27,9 +27,9 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         [Test]
         public void DeserializationTest()
         {
-            var left = 1;
+            var left = -3;
             var bottom = -2;
-            var right = -3;
+            var right = 1;
             var top = 4;
             var str = $"{left},{bottom},{right},{top}";
             var node = new ValueDataNode(str);
@@ -47,6 +47,50 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             Assert.That(deserializedBox.BottomRight, Is.EqualTo(box.BottomRight));
             Assert.That(deserializedBox.TopLeft, Is.EqualTo(box.TopLeft));
             Assert.That(deserializedBox.TopRight, Is.EqualTo(box.TopRight));
+        }
+
+        [Test]
+        public void ValidationRejectsInvalidBox2Bounds()
+        {
+            var node = new ValueDataNode("1,0,0,1");
+            var validation = Serialization.ValidateNode<Box2, ValueDataNode, Box2Serializer>(node);
+
+            Assert.That(validation.GetErrors(), Is.Not.Empty);
+        }
+
+        [Test]
+        public void ValidationAcceptsValidBox2Bounds()
+        {
+            var node = new ValueDataNode("0,1,2,3");
+            var validation = Serialization.ValidateNode<Box2, ValueDataNode, Box2Serializer>(node);
+
+            Assert.That(validation.GetErrors(), Is.Empty);
+        }
+
+        [Test]
+        public void ValidationRejectsInvalidBox2iBounds()
+        {
+            var node = new ValueDataNode("0,1,1,0");
+            var validation = Serialization.ValidateNode<Box2i, ValueDataNode, Box2Serializer>(node);
+
+            Assert.That(validation.GetErrors(), Is.Not.Empty);
+        }
+    }
+
+    [TestFixture]
+    [TestOf(typeof(UIBox2Serializer))]
+    internal sealed class UIBox2SerializerTest : OurSerializationTest
+    {
+        [TestCase("1,0,3,2")]
+        [TestCase("1,2,3,0")]
+        [TestCase("3,0,1,2")]
+        public void ValidationChecksBounds(string value)
+        {
+            var node = new ValueDataNode(value);
+            var validation = Serialization.ValidateNode<UIBox2, ValueDataNode, UIBox2Serializer>(node);
+
+            Assert.That(validation.GetErrors(),
+                value == "1,0,3,2" ? Is.Empty : Is.Not.Empty);
         }
     }
 }

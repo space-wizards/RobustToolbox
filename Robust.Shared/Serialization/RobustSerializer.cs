@@ -15,9 +15,9 @@ namespace Robust.Shared.Serialization
 {
     internal abstract partial class RobustSerializer : IRobustSerializerInternal
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] protected readonly IRobustMappedStringSerializer MappedStringSerializer = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] protected IRobustMappedStringSerializer MappedStringSerializer = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private readonly Dictionary<Type, Dictionary<string, Type?>> _cachedSerialized = new();
 
@@ -110,6 +110,7 @@ namespace Robust.Shared.Serialization
                     MappedStringSerializer.TypeSerializer,
                     new NetMathSerializer(),
                     new NetBitArraySerializer(),
+                    new NetComponentDeltaStateSerializer(),
                     new NetFormattedStringSerializer(),
                     new NetUnsafeFloatSerializer(),
                 }
@@ -192,21 +193,6 @@ namespace Robust.Shared.Serialization
 
             if (assigned.TryGetValue(serializedTypeName, out var resolved))
                 return resolved;
-
-            var types = _reflectionManager.GetAllChildren(assignableType);
-            foreach (var type in types)
-            {
-                var serializedAttribute = type.GetCustomAttribute<SerializedTypeAttribute>();
-
-                if(serializedAttribute is null)
-                    continue;
-
-                if (serializedAttribute.SerializeName == serializedTypeName)
-                {
-                    assigned[serializedTypeName] = type;
-                    return type;
-                }
-            }
 
             assigned[serializedTypeName] = null;
             return null;

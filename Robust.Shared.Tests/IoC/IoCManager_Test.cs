@@ -10,7 +10,7 @@ namespace Robust.Shared.Tests.IoC
     /// This fixture CAN NOT be parallelized, because <see cref="IoCManager"/> is a static singleton.
     /// </remarks>
     [TestFixture, TestOf(typeof(IoCManager))]
-    internal sealed class IoCManager_Test
+    internal sealed partial class IoCManager_Test
     {
         [OneTimeSetUp]
         public void OneTimeSetup()
@@ -139,13 +139,13 @@ namespace Robust.Shared.Tests.IoC
             Assert.That(IoCManager.Resolve<IIoCTestPriorities>(), Is.EqualTo(obj));
         }
 
-        private sealed class DependencyA
+        private sealed partial class DependencyA
         {
-            [Dependency] public readonly DependencyB _depB = default!;
+            [Dependency] public DependencyB _depB = default!;
         }
-        private sealed class DependencyB
+        private sealed partial class DependencyB
         {
-            [Dependency] public readonly DependencyA _depA = default!;
+            [Dependency] public DependencyA _depA = default!;
         }
 
         [Test]
@@ -238,12 +238,12 @@ namespace Robust.Shared.Tests.IoC
     }
 
     [Virtual]
-    public class TestFieldInjectionParent
+    public partial class TestFieldInjectionParent
     {
         [Dependency]
 #pragma warning disable 649
 #pragma warning disable RA0032
-        private readonly TestFieldInjection myself = default!;
+        private TestFieldInjection myself = default!;
 
         [Dependency]
         public TestFieldInjection myotherself = default!;
@@ -257,12 +257,12 @@ namespace Robust.Shared.Tests.IoC
         }
     }
 
-    public sealed class TestFieldInjection : TestFieldInjectionParent
+    public sealed partial class TestFieldInjection : TestFieldInjectionParent
     {
 #pragma warning disable RA0032 // Duplicate [Dependency] field. I wrote this test 7 years idk if this makes sense.
         [Dependency]
 #pragma warning disable 649
-        private readonly TestFieldInjection myuniqueself = default!;
+        private TestFieldInjection myuniqueself = default!;
 
         [Dependency]
         public TestFieldInjection mydifferentself = default!;
@@ -287,11 +287,11 @@ namespace Robust.Shared.Tests.IoC
         }
     }
 
-    public sealed class TestUnregisteredInjection
+    public sealed partial class TestUnregisteredInjection
     {
         [Dependency]
 #pragma warning disable 414
-        private readonly IIoCFailInterface FailInterface = default!;
+        private IIoCFailInterface FailInterface = default!;
 #pragma warning restore 414
     }
 
@@ -307,8 +307,8 @@ namespace Robust.Shared.Tests.IoC
         }
     }
 
-    public sealed class ExplicitInjectionTest
+    public sealed partial class ExplicitInjectionTest
     {
-        [Dependency] public readonly IDependencyCollection DependencyCollection = default!;
+        [Dependency] public IDependencyCollection DependencyCollection = default!;
     }
 }

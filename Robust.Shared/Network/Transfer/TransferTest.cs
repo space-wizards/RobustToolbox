@@ -6,11 +6,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Transfer;
 
-internal sealed class TransferTestCommand : IConsoleCommand
+internal sealed partial class TransferTestCommand : IConsoleCommand
 {
     internal const string CommandKey = "transfer_test";
 
-    [Dependency] private readonly ITransferManager _transferManager = null!;
+    [Dependency] private ITransferManager _transferManager = null!;
 
     public string Command => CommandKey;
     public string Description => "";

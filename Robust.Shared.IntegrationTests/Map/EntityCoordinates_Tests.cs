@@ -46,7 +46,6 @@ namespace Robust.UnitTesting.Shared.Map
         public void IsValid_EntityDeleted_False()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapManager = IoCManager.Resolve<IMapManager>();
 
             var mapEntity = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
             var newEnt = entityManager.CreateEntityUninitialized(null, new MapCoordinates(Vector2.Zero, mapId));
@@ -122,11 +121,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void GetGridId_Grid()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapManager = IoCManager.Resolve<IMapManager>();
+            var mapSystem = entityManager.System<SharedMapSystem>();
             var xformSys = entityManager.System<SharedTransformSystem>();
 
             entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(gridEnt, Vector2.Zero));
 
@@ -152,11 +151,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void GetMapId_Grid()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapManager = IoCManager.Resolve<IMapManager>();
+            var mapSystem = entityManager.System<SharedMapSystem>();
             var xformSys = entityManager.System<SharedTransformSystem>();
 
             entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(gridEnt, Vector2.Zero));
 
@@ -168,11 +167,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void GetParent()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapManager = IoCManager.Resolve<IMapManager>();
+            var mapSystem = entityManager.System<SharedMapSystem>();
             var xformSys = entityManager.System<SharedTransformSystem>();
 
             var mapEnt = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid, Vector2.Zero));
 
@@ -190,11 +189,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void TryGetParent()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapManager = IoCManager.Resolve<IMapManager>();
+            var mapSystem = entityManager.System<SharedMapSystem>();
             var xformSys = entityManager.System<SharedTransformSystem>();
 
             var mapEnt = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid, Vector2.Zero));
 
@@ -241,11 +240,11 @@ namespace Robust.UnitTesting.Shared.Map
             var entPos = new Vector2(x2, y2);
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapManager = IoCManager.Resolve<IMapManager>();
+            var mapSystem = entityManager.System<SharedMapSystem>();
             var xformSys = entityManager.System<SharedTransformSystem>();
 
             entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid, entPos));
             var newXform = entityManager.GetComponent<TransformComponent>(newEnt);
@@ -263,11 +262,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void WithEntityId()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapManager = IoCManager.Resolve<IMapManager>();
+            var mapSystem = entityManager.System<SharedMapSystem>();
             var xformSys = entityManager.System<SharedTransformSystem>();
 
             var mapEnt = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid, Vector2.Zero));
             var newEntXform = entityManager.GetComponent<TransformComponent>(newEnt);

@@ -14,11 +14,11 @@ using System.Threading.Tasks;
 
 namespace Robust.Server.ServerHub;
 
-internal sealed class HubManager
+internal sealed partial class HubManager
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly ILogManager _log = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private ILogManager _log = default!;
 
     private ISawmill _sawmill = default!;
 
@@ -52,6 +52,7 @@ internal sealed class HubManager
             try
             {
                 url = await GuessAddress();
+                _cfg.SetCVar(CVars.HubServerUrl, url);
             }
             catch (Exception e)
             {
@@ -139,7 +140,7 @@ internal sealed class HubManager
         }
     }
 
-    private async Task<string?> GuessAddress()
+    private async Task<string> GuessAddress()
     {
         DebugTools.AssertNotNull(_httpClient);
 

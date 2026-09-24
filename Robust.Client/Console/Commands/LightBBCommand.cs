@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
-    internal sealed class LightDebugCommand : LocalizedEntityCommands
+    internal sealed partial class LightDebugCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly DebugLightTreeSystem _system = default!;
+        [Dependency] private DebugLightTreeSystem _system = default!;
 
         public override string Command => "lightbb";
 

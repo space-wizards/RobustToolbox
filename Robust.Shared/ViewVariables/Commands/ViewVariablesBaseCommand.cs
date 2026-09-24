@@ -7,10 +7,10 @@ using Robust.Shared.Network;
 
 namespace Robust.Shared.ViewVariables.Commands;
 
-public abstract class ViewVariablesBaseCommand : LocalizedCommands
+public abstract partial class ViewVariablesBaseCommand : LocalizedCommands
 {
-    [Dependency] protected readonly INetManager _netMan = default!;
-    [Dependency] protected readonly IViewVariablesManager _vvm = default!;
+    [Dependency] protected INetManager _netMan = default!;
+    [Dependency] protected IViewVariablesManager _vvm = default!;
 
     public override async ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, string argStr, CancellationToken cancel)
     {

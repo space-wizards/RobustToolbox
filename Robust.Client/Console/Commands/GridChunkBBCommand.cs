@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
-    public sealed class GridChunkBBCommand : LocalizedEntityCommands
+    public sealed partial class GridChunkBBCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly GridChunkBoundsDebugSystem _system = default!;
+        [Dependency] private GridChunkBoundsDebugSystem _system = default!;
 
         public override string Command => "showchunkbb";
 

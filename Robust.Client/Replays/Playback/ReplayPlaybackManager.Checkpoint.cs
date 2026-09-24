@@ -59,7 +59,7 @@ internal sealed partial class ReplayPlaybackManager
         DebugTools.Assert(replay.ClientSideRecording || checkpoint.Detached.Count == 0);
 
         var nextIndex = checkpoint.Index + 1;
-        var next =  nextIndex < replay.States.Count ? replay.States[nextIndex] : null;
+        var next =  nextIndex < replay.Count ? replay.GetState(nextIndex) : null;
         _gameState.PartialStateReset(checkpoint.FullState, false, false);
         _entMan.EntitySysManager.GetEntitySystem<ClientDirtySystem>().Reset();
         _entMan.EntitySysManager.GetEntitySystem<TransformSystem>().Reset();

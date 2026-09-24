@@ -24,14 +24,14 @@ namespace Robust.Client.WebView.Cef
 
         private CefApp _app = default!;
 
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IGameControllerInternal _gameController = default!;
-        [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly ILocalizationManager _localization = default!;
+        [Dependency] private IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IGameControllerInternal _gameController = default!;
+        [Dependency] private IResourceManagerInternal _resourceManager = default!;
+        [Dependency] private IClientConsoleHost _consoleHost = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private ILocalizationManager _localization = default!;
 
         private ISawmill _sawmill = default!;
 
@@ -106,7 +106,7 @@ namespace Robust.Client.WebView.Cef
                 settings.UserAgent = userAgentOverride;
             }
 
-            _sawmill.Info($"CEF Version: {CefRuntime.ChromeVersion}");
+            _sawmill.Info($"CEF Build Version: {CefRuntime.ChromeBuildVersion}");
 
             _app = new RobustCefApp(_sawmill);
 
@@ -118,6 +118,8 @@ namespace Robust.Client.WebView.Cef
             // The first argument is literally nonsense, but it needs to be there as otherwise the second argument doesn't apply
             // The second argument turns off CEF's bullshit error handling, which breaks dotnet's error handling.
             CefRuntime.Initialize(new CefMainArgs(new string[]{"binary","--disable-in-process-stack-traces"}), settings, _app, IntPtr.Zero);
+
+            _sawmill.Info($"CEF Runtime Version: {CefRuntime.ChromeRuntimeVersion}");
 
             if (_cfg.GetCVar(WCVars.WebResProtocol))
             {

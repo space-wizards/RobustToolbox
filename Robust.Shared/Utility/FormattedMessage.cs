@@ -134,6 +134,14 @@ public sealed partial class FormattedMessage : IEquatable<FormattedMessage>, IRe
     }
 
     /// <summary>
+    ///     Escape a string parameter value to be able to be formatted into markup.
+    /// </summary>
+    public static string EscapeStringParameter(string parameter)
+    {
+        return EscapeText(parameter).Replace("\"", "\\\"");
+    }
+
+    /// <summary>
     ///     Remove all markup, leaving only the basic text content behind. Throws if it fails to parse the markup tags.
     /// </summary>
     /// <exception cref="ParseException">Thrown when an error occurs while trying to parse the markup.</exception>

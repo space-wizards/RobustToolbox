@@ -16,10 +16,10 @@ namespace Robust.Client.UserInterface.Controllers;
 /// </summary>
 public abstract partial class UIController : IPostInjectInit
 {
-    [Dependency] protected readonly IUserInterfaceManager UIManager = default!;
-    [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-    [Dependency] protected readonly IEntityManager EntityManager = default!;
-    [Dependency] protected readonly ILogManager LogManager = default!;
+    [Dependency] protected IUserInterfaceManager UIManager = default!;
+    [Dependency] protected IEntitySystemManager EntitySystemManager = default!;
+    [Dependency] protected IEntityManager EntityManager = default!;
+    [Dependency] protected ILogManager LogManager = default!;
 
     public ISawmill Log { get; protected set; } = default!;
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -177,6 +178,10 @@ internal partial class Clyde
                 SDL.SDL_GL_SetAttribute(
                     GLAttr.SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
                     s.Profile == GLContextProfile.Es ? 0 : 1);
+
+                // Steam overlay causes memory leak with multiple double buffered windows.
+                SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_DOUBLEBUFFER, parameters.Main ? 1 : 0);
+
                 int ctxFlags = 0;
 #if DEBUG
                 ctxFlags |= SDL.SDL_GL_CONTEXT_DEBUG_FLAG;
@@ -257,6 +262,16 @@ internal partial class Clyde
             {
                 SDL.SDL_DestroyWindow(window);
                 return default;
+            }
+
+            if (spec is not null &&
+                SDL.SDL_GL_GetAttribute(GLAttr.SDL_GL_DOUBLEBUFFER, out var doubleBuffered) &&
+                doubleBuffered != (parameters.Main ? 1 : 0))
+            {
+                _sawmill.Warning(
+                    "Requested {requested} for window double buffering, got {actual}",
+                    parameters.Main ? 1 : 0,
+                    doubleBuffered);
             }
 
             if ((parameters.Styles & OSWindowStyles.NoTitleOptions) != 0)
@@ -426,6 +441,13 @@ internal partial class Clyde
             _sawmill.Warning("WindowSetMonitor not implemented on SDL3");
         }
 
+        public IClydeMonitor? WindowGetMonitor(WindowReg window)
+        {
+            var displayId = SDL.SDL_GetDisplayForWindow(WinPtr(window));
+            var monitorId = GetMonitorIdFromDisplayId(displayId);
+            return _clyde._monitorHandles.GetValueOrDefault(monitorId);
+        }
+
         public void WindowSetSize(WindowReg window, Vector2i size)
         {
             SendCmd(new CmdWinSetSize { Window = WinPtr(window), W = size.X, H = size.Y });
@@ -435,6 +457,11 @@ internal partial class Clyde
         {
             window.IsVisible = visible;
             SendCmd(new CmdWinSetVisible { Window = WinPtr(window), Visible = visible });
+        }
+
+        public void WindowSetRelativeMouseMode(WindowReg window, bool enabled)
+        {
+            SendCmd(new CmdWinSetRelativeMouseMode { Window = WinPtr(window), Enabled = enabled });
         }
 
         private static void WinThreadWinSetSize(CmdWinSetSize cmd)
@@ -449,6 +476,12 @@ internal partial class Clyde
                 SDL.SDL_ShowWindow(cmd.Window);
             else
                 SDL.SDL_HideWindow(cmd.Window);
+        }
+
+        private void WinThreadWinSetRelativeMouseMode(CmdWinSetRelativeMouseMode cmd)
+        {
+            if (!SDL.SDL_SetWindowRelativeMouseMode(cmd.Window, cmd.Enabled))
+                _sawmill.Error("Failed to set relative mouse mode: {error}", SDL.SDL_GetError());
         }
 
         public void WindowRequestAttention(WindowReg window)

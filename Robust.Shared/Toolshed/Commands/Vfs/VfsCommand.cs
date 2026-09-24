@@ -11,9 +11,9 @@ namespace Robust.Shared.Toolshed.Commands.Vfs;
 /// </summary>
 /// <seealso cref="UserVfsLocVariableName"/>
 [PublicAPI]
-public abstract class VfsCommand : ToolshedCommand
+public abstract partial class VfsCommand : ToolshedCommand
 {
-    [Dependency] protected readonly IResourceManager Resources = default!;
+    [Dependency] protected IResourceManager Resources = default!;
 
     /// <summary>
     ///     The name of the variable storing a <see cref="ResPath">ResPath?</see> representing the user's current VFS location.

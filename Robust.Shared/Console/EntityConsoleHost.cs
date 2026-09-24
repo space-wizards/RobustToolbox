@@ -13,11 +13,11 @@ namespace Robust.Shared.Console;
 /// <remarks>
 /// See <see cref="LocalizedEntityCommands"/> for details on what "entity" console commands are.
 /// </remarks>
-internal sealed class EntityConsoleHost
+internal sealed partial class EntityConsoleHost
 {
-    [Dependency] private readonly IConsoleHost _consoleHost = default!;
-    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-    [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+    [Dependency] private IConsoleHost _consoleHost = default!;
+    [Dependency] private IReflectionManager _reflectionManager = default!;
+    [Dependency] private IEntitySystemManager _entitySystemManager = default!;
 
     private readonly HashSet<string> _entityCommands = [];
 

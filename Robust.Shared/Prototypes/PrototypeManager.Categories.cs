@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Frozen;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Frozen;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Reflection;
 
 namespace Robust.Shared.Prototypes;
 
 // This partial class handles entity prototype categories
-public abstract partial class PrototypeManager : IPrototypeManagerInternal
+public abstract partial class PrototypeManager
 {
     /// <summary>
     /// Cached array of components with the <see cref="EntityCategoryAttribute"/>
@@ -20,6 +20,18 @@ public abstract partial class PrototypeManager : IPrototypeManagerInternal
 
     public FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; private set; }
         = FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>>.Empty;
+
+    /// <inheritdoc/>
+    public bool TryGetEntityPrototypesByCategory(ProtoId<EntityCategoryPrototype> category, [NotNullWhen(true)] out IReadOnlyList<EntityPrototype>? prototypes)
+    {
+        var found = Categories.TryGetValue(category, out prototypes);
+        if (!found)
+        {
+            Sawmill.Error("Attempted to find entity prototypes with category '{Category}', but found no such category pre-cached.", category);
+        }
+
+        return found;
+    }
 
     private void UpdateCategories()
     {
@@ -40,7 +52,8 @@ public abstract partial class PrototypeManager : IPrototypeManagerInternal
         // Ensure all categories have an entry in the dictionary, even if it is empty.
         foreach (var category in EnumeratePrototypes<EntityCategoryPrototype>())
         {
-            categories.GetOrNew(category.ID);
+            var list = categories.GetOrNew(category.ID);
+            list.Sort((x, y) => string.Compare(x.ID, y.ID, StringComparison.Ordinal));
         }
 
         DebugTools.Assert(categories.Values.All(x => x.ToHashSet().Count == x.Count));

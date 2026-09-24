@@ -17,10 +17,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.Console.Commands
 {
-    public sealed class SaveGridCommand : LocalizedCommands
+    public sealed partial class SaveGridCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _ent = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntityManager _ent = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "savegrid";
 
@@ -48,7 +48,7 @@ namespace Robust.Server.Console.Commands
             }
 
             bool saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]));
-            if(saveSuccess)
+            if (saveSuccess)
             {
                 shell.WriteLine("Save successful. Look in the user data directory.");
             }
@@ -72,10 +72,10 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class LoadGridCommand : LocalizedCommands
+    public sealed partial class LoadGridCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntitySystemManager _system = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "loadgrid";
 
@@ -161,11 +161,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class SaveMap : LocalizedCommands
+    public sealed partial class SaveMap : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
-        [Dependency] private readonly IEntitySystemManager _system = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntityManager _entManager = default!;
+        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "savemap";
 
@@ -212,7 +212,7 @@ namespace Robust.Server.Console.Commands
             }
 
             if (sys.IsInitialized(mapId) &&
-                ( args.Length < 3  || !bool.TryParse(args[2], out var force) || !force))
+                (args.Length < 3 || !bool.TryParse(args[2], out var force) || !force))
             {
                 shell.WriteError(Loc.GetString("cmd-savemap-init-warning"));
                 return;
@@ -220,21 +220,21 @@ namespace Robust.Server.Console.Commands
 
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
             bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[1]));
-            if(saveSuccess)
+            if (saveSuccess)
             {
-                    shell.WriteLine(Loc.GetString("cmd-savemap-success"));
+                shell.WriteLine(Loc.GetString("cmd-savemap-success"));
             }
             else
             {
-                    shell.WriteError(Loc.GetString("cmd-savemap-error"));
+                shell.WriteError(Loc.GetString("cmd-savemap-error"));
             }
         }
     }
 
-    public sealed class LoadMap : LocalizedCommands
+    public sealed partial class LoadMap : LocalizedCommands
     {
-        [Dependency] private readonly IEntitySystemManager _system = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "loadmap";
 
@@ -326,7 +326,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var opts = new DeserializationOptions {StoreYamlUids = storeUids};
+            var opts = new DeserializationOptions { StoreYamlUids = storeUids };
 
             var path = new ResPath(args[1]);
             _system.GetEntitySystem<MapLoaderSystem>().TryLoadMapWithId(mapId, path, out _, out _, opts, offset, rot);

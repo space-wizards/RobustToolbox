@@ -25,9 +25,9 @@ namespace Robust.Client.Console.Commands
     }
 #endif
 
-    internal sealed class ServerScriptCommand : LocalizedCommands
+    internal sealed partial class ServerScriptCommand : LocalizedCommands
     {
-        [Dependency] private readonly IScriptClient _scriptClient = default!;
+        [Dependency] private IScriptClient _scriptClient = default!;
 
         public override string Command => "scsi";
 

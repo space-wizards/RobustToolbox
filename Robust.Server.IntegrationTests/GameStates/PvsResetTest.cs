@@ -5,7 +5,6 @@ using NUnit.Framework;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
 
 namespace Robust.UnitTesting.Server.GameStates;
 
@@ -17,10 +16,8 @@ public sealed class PvsResetTest : RobustIntegrationTest
     [Test]
     public async Task ResetTest()
     {
-        var server = StartServer();
-        var client = StartClient();
-
-        await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
+        await using var pair = await StartConnectedPair();
+        var (client, server) = pair;
 
         var sEntMan = server.EntMan;
         var confMan = server.CfgMan;
@@ -29,22 +26,10 @@ public sealed class PvsResetTest : RobustIntegrationTest
 
         var cEntMan = client.EntMan;
         var cPlayerMan = client.PlayerMan;
-        var netMan = client.ResolveDependency<IClientNetManager>();
 
-        Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-        client.Post(() => netMan.ClientConnect(null!, 0, null!));
         server.Post(() => confMan.SetCVar(CVars.NetPVS, true));
 
-        async Task RunTicks()
-        {
-            for (int i = 0; i < 10; i++)
-            {
-                await server.WaitRunTicks(1);
-                await client.WaitRunTicks(1);
-            }
-        }
-
-        await RunTicks();
+        await RunTicksSync(server, client, 10);
 
         // Set up map and spawn player
         EntityUid sMap = default;
@@ -64,7 +49,7 @@ public sealed class PvsResetTest : RobustIntegrationTest
             sPlayerMan.JoinGame(session);
         });
 
-        await RunTicks();
+        await RunTicksSync(server, client, 10);
         var farAway = new EntityCoordinates(sMap, new Vector2(100, 100));
         var netEnt = sEntMan.GetNetEntity(sEnt);
         var player = sEntMan.GetNetEntity(playerUid);
@@ -106,29 +91,26 @@ public sealed class PvsResetTest : RobustIntegrationTest
 
         // Move the player out of the entity's PVS range
         await server.WaitPost(() => xforms.SetCoordinates(playerUid, farAway));
-        await RunTicks();
+        await RunTicksSync(server, client, 10);
 
         // Client should now have detached the entity, moving it into nullspace
         AssertDetached(true);
 
         // Marking the entity as dirty due to client-side prediction should have effect
         await client.WaitPost(() => client.EntMan.Dirty(cEnt, client.Transform(cEnt)));
-        await RunTicks();
+        await RunTicksSync(server, client, 10);
         AssertDetached(true);
 
         // Move the player back into range
         await server.WaitPost( () => xforms.SetCoordinates(playerUid, coords));
-        await RunTicks();
+        await RunTicksSync(server, client, 10);
         AssertDetached(false);
 
         // Marking the entity as dirty due to client-side prediction should have no real effect
         await client.WaitPost(() => client.EntMan.Dirty(cEnt, client.Transform(cEnt)));
-        await RunTicks();
+        await RunTicksSync(server, client, 10);
         AssertDetached(false);
 
-        await client.WaitPost(() => netMan.ClientDisconnect(""));
-        await server.WaitRunTicks(5);
-        await client.WaitRunTicks(5);
     }
 }
 

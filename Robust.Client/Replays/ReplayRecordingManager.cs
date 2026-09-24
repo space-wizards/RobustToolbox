@@ -18,13 +18,13 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Replays;
 
-internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
+internal sealed partial class ReplayRecordingManager : SharedReplayRecordingManager
 {
-    [Dependency] private readonly IBaseClient _client = default!;
-    [Dependency] private readonly IEntityManager _entMan = default!;
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IClientGameStateManager _state = default!;
-    [Dependency] private readonly IClientGameTiming _timing = default!;
+    [Dependency] private IBaseClient _client = default!;
+    [Dependency] private IEntityManager _entMan = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IClientGameStateManager _state = default!;
+    [Dependency] private IClientGameTiming _timing = default!;
 
     public override void Initialize()
     {
@@ -122,6 +122,7 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
             deletions);
 
         var detached = new List<NetEntity>();
+        var detachedChunks = new List<NetEntity>();
         var query = _entMan.AllEntityQueryEnumerator<MetaDataComponent>();
         while (query.MoveNext(out var uid, out var comp))
         {
@@ -131,10 +132,17 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
             var nent = comp.NetEntity;
             DebugTools.Assert(fullRep.ContainsKey(nent));
             if ((comp.Flags & MetaDataFlags.Detached) != 0)
-                detached.Add(nent);
+            {
+                if ((comp.Flags & MetaDataFlags.ChunkEntity) != 0)
+                    detachedChunks.Add(nent);
+                else
+                    detached.Add(nent);
+            }
         }
 
-        var detachMsg = detached.Count > 0 ? new ReplayMessage.LeavePvs(detached, tick) : null;
+        var detachMsg = detached.Count > 0 || detachedChunks.Count > 0
+            ? new ReplayMessage.LeavePvs(detached, tick, detachedChunks)
+            : null;
         return (state, detachMsg);
     }
 

@@ -8,9 +8,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class CommandLinkTag : IMarkupTagHandler
+public sealed partial class CommandLinkTag : IMarkupTagHandler
 {
-    [Dependency] private readonly IClientConsoleHost _clientConsoleHost = default!;
+    [Dependency] private IClientConsoleHost _clientConsoleHost = default!;
 
     public string Name => "cmdlink";
 
@@ -35,6 +35,9 @@ public sealed class CommandLinkTag : IMarkupTagHandler
         label.OnMouseEntered += _ => label.FontColorOverride = Color.Blue;
         label.OnMouseExited += _ => label.FontColorOverride = Color.LightBlue;
         label.OnKeyBindDown += args => OnKeybindDown(args, command);
+
+        if (node.Attributes.TryGetValue("title", out var titleArg))
+            label.ToolTip = titleArg.StringValue;
 
         control = label;
         return true;

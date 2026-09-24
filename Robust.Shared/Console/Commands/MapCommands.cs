@@ -8,9 +8,9 @@ using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Console.Commands;
 
-sealed class AddMapCommand : LocalizedEntityCommands
+sealed partial class AddMapCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
 
     public override string Command => "addmap";
     public override bool RequireServerOrSingleplayer => true;
@@ -49,9 +49,9 @@ sealed class AddMapCommand : LocalizedEntityCommands
     }
 }
 
-sealed class RemoveMapCommand : LocalizedEntityCommands
+sealed partial class RemoveMapCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IEntitySystemManager _systems = default!;
+    [Dependency] private IEntitySystemManager _systems = default!;
 
     public override string Command => "rmmap";
     public override bool RequireServerOrSingleplayer => true;
@@ -120,9 +120,9 @@ sealed class RemoveGridCommand : LocalizedEntityCommands
     }
 }
 
-internal sealed class RunMapInitCommand : LocalizedEntityCommands
+internal sealed partial class RunMapInitCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
 
     public override string Command => "mapinit";
     public override bool RequireServerOrSingleplayer => true;
@@ -154,11 +154,10 @@ internal sealed class RunMapInitCommand : LocalizedEntityCommands
     }
 }
 
-internal sealed class ListMapsCommand : LocalizedEntityCommands
+internal sealed partial class ListMapsCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly IMapManager _map = default!;
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
+    [Dependency] private IEntityManager _entManager = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
 
     public override string Command => "lsmap";
 
@@ -180,7 +179,7 @@ internal sealed class ListMapsCommand : LocalizedEntityCommands
                 _mapSystem.IsInitialized(mapUid),
                 _mapSystem.IsPaused(mapId),
                 _entManager.GetNetEntity(mapUid),
-                string.Join(",", _map.GetAllGrids(mapId).Select(grid => grid.Owner)));
+                string.Join(",", _mapSystem.GetAllGrids(mapId).Select(grid => grid.Owner)));
         }
 
         // Trim the newline
@@ -188,10 +187,10 @@ internal sealed class ListMapsCommand : LocalizedEntityCommands
     }
 }
 
-internal sealed class ListGridsCommand : LocalizedEntityCommands
+internal sealed partial class ListGridsCommand : LocalizedEntityCommands
 {
     [Dependency]
-    private readonly SharedTransformSystem _transformSystem = default!;
+    private SharedTransformSystem _transformSystem = default!;
 
     public override string Command => "lsgrid";
 

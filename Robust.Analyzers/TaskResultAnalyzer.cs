@@ -10,6 +10,8 @@ namespace Robust.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class TaskResultAnalyzer : DiagnosticAnalyzer
 {
+    public const string TaskTypeSymbol = "System.Threading.Tasks.Task`1";
+
     [SuppressMessage("ReSharper", "RS2008")]
     private static readonly DiagnosticDescriptor ResultRule = new DiagnosticDescriptor(
         Diagnostics.IdTaskResult,
@@ -26,13 +28,20 @@ public sealed class TaskResultAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(Check, OperationKind.PropertyReference);
+        context.RegisterCompilationStartAction(compilationContext =>
+        {
+            var taskType = compilationContext.Compilation.GetTypeByMetadataName(TaskTypeSymbol);
+            if (taskType is null)
+                return;
+
+            compilationContext.RegisterOperationAction(
+                operationContext => Check(operationContext, taskType),
+                OperationKind.PropertyReference);
+        });
     }
 
-    private static void Check(OperationAnalysisContext context)
+    private static void Check(OperationAnalysisContext context, INamedTypeSymbol taskType)
     {
-        var taskType = context.Compilation.GetTypeByMetadataName("System.Threading.Tasks.Task`1");
-
         var operation = (IPropertyReferenceOperation) context.Operation;
         var member = operation.Member;
 

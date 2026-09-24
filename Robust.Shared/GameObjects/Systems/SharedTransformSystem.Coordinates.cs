@@ -239,4 +239,15 @@ public abstract partial class SharedTransformSystem
 
         return mapA.InRange(mapB, range);
     }
+
+    /// <summary>
+    /// Returns a readable string with the entity's local and world position and rotation. Useful for debugging.
+    /// </summary>
+    public string GetDebugString(Entity<TransformComponent?> ent)
+    {
+        if (!Resolve(ent, ref ent.Comp, logMissing: false))
+            return "invalid";
+
+        return $"pos/rot/wpos/wrot: {ent.Comp.Coordinates}/{ent.Comp.LocalRotation}/{GetWorldPosition(ent.Comp)}/{GetWorldRotation(ent.Comp)}";
+    }
 }

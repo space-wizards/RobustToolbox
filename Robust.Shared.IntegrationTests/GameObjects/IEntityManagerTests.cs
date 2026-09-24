@@ -1,8 +1,6 @@
-using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -23,13 +21,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
         /// The entity prototype can define field on the TransformComponent, just like any other component.
         /// </summary>
         [Test]
-        public void SpawnEntity_PrototypeTransform_Works()
+        public void Spawn_PrototypeTransform_Works()
         {
             var sim = SimulationFactory();
-            var map = sim.CreateMap().MapId;
 
             var entMan = sim.Resolve<IEntityManager>();
-            var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, map));
+            entMan.System<SharedMapSystem>().CreateMap(out var map);
+
+            var newEnt = entMan.Spawn(null, new MapCoordinates(0, 0, map));
             Assert.That(newEnt, Is.Not.EqualTo(EntityUid.Invalid));
         }
 
@@ -43,7 +42,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(0));
 
-            var mapId = sim.CreateMap().MapId;
+            mapSystem.CreateMap(out var mapId);
             Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(1));
             mapSystem.DeleteMap(mapId);
             Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(0));

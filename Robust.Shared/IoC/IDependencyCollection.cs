@@ -159,6 +159,9 @@ namespace Robust.Shared.IoC
         [System.Diagnostics.Contracts.Pure]
         T Resolve<T>();
 
+        [Pure]
+        T ResolveInject<T>(Type owningType);
+
         /// <inheritdoc cref="Resolve{T}()"/>
         void Resolve<T>([NotNull] ref T? instance);
 
@@ -221,5 +224,21 @@ namespace Robust.Shared.IoC
         /// </exception>
         /// <seealso cref="DependencyCollection.BuildGraph"/>
         void InjectDependencies(object obj, bool oneOff=false);
+
+        /// <summary>
+        ///     Creates a new, empty dependency collection.
+        /// </summary>
+        public static IDependencyCollection Create()
+        {
+            return new DependencyCollection();
+        }
+
+        /// <summary>
+        ///     Creates a new dependency collection, copying the contents of its parent.
+        /// </summary>
+        public static IDependencyCollection CreateFrom(IDependencyCollection parent)
+        {
+            return new DependencyCollection(parent);
+        }
     }
 }

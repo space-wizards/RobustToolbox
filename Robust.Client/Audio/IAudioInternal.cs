@@ -22,6 +22,11 @@ internal interface IAudioInternal : IAudioManager
     void FlushALDisposeQueues();
 
     /// <summary>
+    /// Updates audio-manager frame state.
+    /// </summary>
+    void FrameUpdate(float frameTime);
+
+    /// <summary>
     /// Returns a buffered audio source.
     /// </summary>
     /// <returns>null if unable to create the source.</returns>
@@ -43,6 +48,11 @@ internal interface IAudioInternal : IAudioManager
     void SetRotation(Angle angle);
 
     void SetAttenuation(Attenuation attenuation);
+
+    /// <summary>
+    /// Sets doppler factor, which scales listener and source velocities with regards to the doppler effect.
+    /// </summary>
+    void SetDopplerFactor(float factor);
 
     void Remove(AudioStream stream);
 

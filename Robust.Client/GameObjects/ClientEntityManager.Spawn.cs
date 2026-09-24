@@ -40,6 +40,13 @@ public sealed partial class ClientEntityManager
         return ent;
     }
 
+    public override EntityUid PredictedSpawnAtPosition(string? protoName, EntityCoordinates coordinates, Angle rotation, ComponentRegistry? overrides = null)
+    {
+        var ent = SpawnAtPosition(protoName, coordinates, rotation, overrides);
+        FlagPredicted(ent);
+        return ent;
+    }
+
     public override bool PredictedTrySpawnNextTo(
         string? protoName,
         EntityUid target,

@@ -8,10 +8,10 @@ namespace Robust.Client.GameObjects;
 /// <summary>
 ///     A generic visualizer system that modifies sprite layer data.
 /// </summary>
-public sealed class GenericVisualizerSystem : VisualizerSystem<GenericVisualizerComponent>
+public sealed partial class GenericVisualizerSystem : VisualizerSystem<GenericVisualizerComponent>
 {
-    [Dependency] private readonly IReflectionManager _refMan = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSys = default!;
+    [Dependency] private IReflectionManager _refMan = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSys = default!;
 
     protected override void OnAppearanceChange(EntityUid uid, GenericVisualizerComponent component, ref AppearanceChangeEvent args)
     {

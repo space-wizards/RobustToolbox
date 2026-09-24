@@ -154,11 +154,29 @@ namespace Robust.Client.Graphics
         public Vector2 DrawString(Font font, Vector2 pos, string str)
             => DrawString(font, pos, str, Color.White);
 
-        public Vector2 DrawString(Font font, Vector2 pos, ReadOnlySpan<char> str, float scale, Color color)
+        public Vector2 DrawString(Font font, Vector2 pos, ReadOnlySpan<char> str, float scale, Color color, TextOutline? outline = null)
         {
             var advanceTotal = Vector2.Zero;
             var baseLine = new Vector2(pos.X, font.GetAscent(scale) + pos.Y);
             var lineHeight = font.GetLineHeight(scale);
+
+            if (outline is { } outlineSettings)
+            {
+                foreach (var rune in str.EnumerateRunes())
+                {
+                    if (rune == new Rune('\n'))
+                    {
+                        baseLine.X = pos.X;
+                        baseLine.Y += lineHeight;
+                        continue;
+                    }
+
+                    var advance = font.DrawCharOutline(this, rune, baseLine, scale, outlineSettings);
+                    baseLine.X += advance;
+                }
+
+                baseLine = new Vector2(pos.X, font.GetAscent(scale) + pos.Y);
+            }
 
             foreach (var rune in str.EnumerateRunes())
             {
@@ -172,7 +190,7 @@ namespace Robust.Client.Graphics
 
                 var advance = font.DrawChar(this, rune, baseLine, scale, color);
                 advanceTotal.X += advance;
-                baseLine += new Vector2(advance, 0);
+                baseLine.X += advance;
             }
 
             return advanceTotal;

@@ -16,13 +16,13 @@ namespace Robust.Server.GameStates
 {
     /// <inheritdoc cref="IServerGameStateManager"/>
     [UsedImplicitly]
-    public sealed class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
+    public sealed partial class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
     {
         private PvsSystem _pvs = default!;
 
-        [Dependency] private readonly EntityManager _entityManager = default!;
-        [Dependency] private readonly IServerNetManager _networkManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private EntityManager _entityManager = default!;
+        [Dependency] private IServerNetManager _networkManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
 
         private ISawmill _logger = default!;
 

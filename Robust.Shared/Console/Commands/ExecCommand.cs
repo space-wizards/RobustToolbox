@@ -8,11 +8,11 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class ExecCommand : LocalizedCommands
+    internal sealed partial class ExecCommand : LocalizedCommands
     {
         private static readonly Regex CommentRegex = new Regex(@"^\s*#");
 
-        [Dependency] private readonly IResourceManager _resources = default!;
+        [Dependency] private IResourceManager _resources = default!;
 
         public override string Command => "exec";
 

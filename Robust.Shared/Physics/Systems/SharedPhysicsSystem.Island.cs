@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
@@ -177,8 +178,8 @@ public abstract partial class SharedPhysicsSystem
     private readonly HashSet<Entity<PhysicsComponent, TransformComponent>> _islandSet = new(64);
     private readonly Stack<Entity<PhysicsComponent, TransformComponent>> _bodyStack = new(64);
     private readonly List<Entity<PhysicsComponent, TransformComponent>> _awakeBodyList = new(256);
-    private readonly List<IslandData> _islandsBuffer = new();
-    private readonly List<(Joint Original, Joint Joint)> _islandJointsBuffer = new();
+    private readonly List<IslandData> _islands = new(MaxIslands);
+    private readonly List<(Joint Original, Joint Joint)> _islandJoints = new(MaxIslands);
 
     // Config
     private bool _warmStarting;
@@ -307,6 +308,27 @@ public abstract partial class SharedPhysicsSystem
 
     private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
     {
+        _islands.Clear();
+        using (_prof.Group("Build Islands"))
+        {
+            BuildIslands(prediction);
+        }
+
+        using (_prof.Group("Solve Islands"))
+        {
+            SolveIslands(frameTime, dtRatio, invDt, prediction);
+        }
+
+        foreach (var island in _islands)
+        {
+            ReturnIsland(island);
+        }
+
+        Cleanup(frameTime);
+    }
+
+    private void BuildIslands(bool prediction)
+    {
         // Build and simulated islands from awake bodies.
         _bodyStack.EnsureCapacity(AwakeBodies.Count);
         _islandSet.EnsureCapacity(AwakeBodies.Count);
@@ -319,10 +341,8 @@ public abstract partial class SharedPhysicsSystem
             _islandBodyPool.Get(),
             _islandContactPool.Get(),
             _islandJointPool.Get(),
+            // TODO: pool these lists??
             new List<(Joint Joint, float Error)>());
-
-        _islandsBuffer.Clear();
-        _islandJointsBuffer.Clear();
 
         // Build the relevant islands / graphs for all bodies.
         foreach (var ent in _awakeBodyList)
@@ -334,7 +354,7 @@ public abstract partial class SharedPhysicsSystem
             // when contact broke so if you want to try that then GOOD LUCK.
             if (seed.Island) continue;
 
-            var seedUid = seed.Owner;
+            var seedUid = ent.Owner;
             var mapUid = xform.MapUid;
 
             // TODO: Handle this on client.
@@ -379,7 +399,7 @@ public abstract partial class SharedPhysicsSystem
                 if (body.BodyType == BodyType.Static) continue;
 
                 // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                SetAwake(bodyUid, body, true, updateSleepTime: false);
+                SetAwake(bodyEnt, true, updateSleepTime: false);
 
                 var node = body.Contacts.First;
 
@@ -412,6 +432,7 @@ public abstract partial class SharedPhysicsSystem
                 }
 
                 // Handle joints
+                _islandJoints.Clear();
                 if (RelayTargetQuery.TryGetComponent(bodyUid, out var relayComp))
                 {
                     foreach (var relay in relayComp.Relayed)
@@ -443,7 +464,7 @@ public abstract partial class SharedPhysicsSystem
                             }
 
                             var copy = joint.Clone(uidA, uidB);
-                            _islandJointsBuffer.Add((joint, copy));
+                            _islandJoints.Add((joint, copy));
                             joint.IslandFlag = true;
                         }
                     }
@@ -473,18 +494,18 @@ public abstract partial class SharedPhysicsSystem
                         }
 
                         var copy = joint.Clone(uidA, uidB);
-                        _islandJointsBuffer.Add((joint, copy));
+                        _islandJoints.Add((joint, copy));
                         joint.IslandFlag = true;
                     }
                 }
 
-                foreach (var (original, joint) in _islandJointsBuffer)
+                foreach (var (original, joint) in _islandJoints)
                 {
                     // TODO: Same here store physicscomp + transform on the joint, the savings are worth it.
-                    var bodyA = PhysicsQuery.GetComponent(joint.BodyAUid);
-                    var bodyB = PhysicsQuery.GetComponent(joint.BodyBUid);
-
-                    if (!bodyA.CanCollide || !bodyB.CanCollide)
+                    if (!PhysicsQuery.TryComp(joint.BodyAUid, out var bodyA) ||
+                        !PhysicsQuery.TryComp(joint.BodyBUid, out var bodyB) ||
+                        !bodyA.CanCollide ||
+                        !bodyB.CanCollide)
                         continue;
 
                     joints.Add((original, joint));
@@ -501,8 +522,6 @@ public abstract partial class SharedPhysicsSystem
                         bodyB.Island = true;
                     }
                 }
-
-                _islandJointsBuffer.Clear();
             }
 
             int idx;
@@ -517,11 +536,12 @@ public abstract partial class SharedPhysicsSystem
             }
             else
             {
+                // TODO: pool the joint/error lists?
                 var data = new IslandData(islandIndex++, false, bodies, contacts, joints, new List<(Joint Joint, float Error)>())
                 {
                     MapUid = mapUid.Value
                 };
-                _islandsBuffer.Add(data);
+                _islands.Add(data);
                 idx = data.Index;
             }
 
@@ -543,22 +563,12 @@ public abstract partial class SharedPhysicsSystem
         // If we didn't use lone island just return it.
         if (loneIsland.Bodies.Count > 0)
         {
-            _islandsBuffer.Add(loneIsland);
+            _islands.Add(loneIsland);
         }
         else
         {
             ReturnIsland(loneIsland);
         }
-
-        SolveIslands(_islandsBuffer, frameTime, dtRatio, invDt, prediction);
-
-        foreach (var island in _islandsBuffer)
-        {
-            ReturnIsland(island);
-        }
-
-        _islandsBuffer.Clear();
-        Cleanup(frameTime);
     }
 
     private void ReturnIsland(in IslandData island)
@@ -606,10 +616,11 @@ public abstract partial class SharedPhysicsSystem
         }
 
         _islandSet.Clear();
+        _bodyStack.Clear();
         _awakeBodyList.Clear();
     }
 
-    private void SolveIslands(List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction)
     {
         var iBegin = 0;
         var data = new SolverData(
@@ -634,14 +645,13 @@ public abstract partial class SharedPhysicsSystem
         );
 
         // We'll sort islands from internally parallel (due to lots of contacts) to running all the islands in parallel
-        islands.Sort(static (x, y) => InternalParallel(y).CompareTo(InternalParallel(x)));
+        _islands.Sort(static (x, y) => InternalParallel(y).CompareTo(InternalParallel(x)));
 
         var totalBodies = 0;
-        var actualIslands = islands.ToArray();
-
-        for (var i = 0; i < islands.Count; i++)
+        var islands = CollectionsMarshal.AsSpan(_islands);
+        for (var i = 0; i < _islands.Count; i++)
         {
-            ref var island = ref actualIslands[i];
+            ref var island = ref islands[i];
             island.Offset = totalBodies;
             UpdateLerpData(island.Bodies);
 
@@ -669,9 +679,9 @@ public abstract partial class SharedPhysicsSystem
             MaxDegreeOfParallelism = _parallel.ParallelProcessCount,
         };
 
-        while (iBegin < actualIslands.Length)
+        while (iBegin < islands.Length)
         {
-            ref var island = ref actualIslands[iBegin];
+            ref var island = ref islands[iBegin];
 
             if (!InternalParallel(island))
                 break;
@@ -680,16 +690,17 @@ public abstract partial class SharedPhysicsSystem
             iBegin++;
         }
 
-        Parallel.For(iBegin, actualIslands.Length, options, i =>
+        Parallel.For(iBegin, islands.Length, options, i =>
         {
-            ref var island = ref actualIslands[i];
+            var islands = CollectionsMarshal.AsSpan(_islands); // slop language makes me do this because its not rust and doesnt have lifetimes, cant use islands from above
+            ref var island = ref islands[i];
             SolveIsland(ref island, in data, null, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
         });
 
         // Update data sequentially
-        for (var i = 0; i < actualIslands.Length; i++)
+        for (var i = 0; i < islands.Length; i++)
         {
-            ref readonly var island = ref actualIslands[i];
+            ref readonly var island = ref islands[i];
 
             UpdateBodies(in island, solvedPositions, solvedAngles, linearVelocities, angularVelocities);
             SleepBodies(in island, sleepStatus);
@@ -918,7 +929,7 @@ public abstract partial class SharedPhysicsSystem
                 float[] solvedAngles)
             {
                 const int FinaliseBodies = 32;
-                var batches = (int)MathF.Ceiling((float)bodyCount / FinaliseBodies);
+                var batches = (int)MathF.Ceiling((float) bodyCount / FinaliseBodies);
 
                 Parallel.For(0, batches, options, i =>
                 {
@@ -1047,7 +1058,7 @@ public abstract partial class SharedPhysicsSystem
                 continue;
 
             var (_, parentRot, parentInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(transform);
-            var worldRot = (float)(parentRot + xform._localRotation);
+            var worldRot = (float) (parentRot + xform._localRotation);
 
             var angle = angles[i];
 
@@ -1141,7 +1152,7 @@ public abstract partial class SharedPhysicsSystem
 
             var body = island.Bodies[i];
 
-            SetAwake(body.Owner, body, false);
+            SetAwake(body, false);
         }
     }
 }

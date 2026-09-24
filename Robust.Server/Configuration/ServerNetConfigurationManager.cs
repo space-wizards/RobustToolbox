@@ -9,10 +9,10 @@ using Robust.Shared.Replays;
 
 namespace Robust.Server.Configuration;
 
-internal sealed class ServerNetConfigurationManager : NetConfigurationManager, IServerNetConfigurationManager
+internal sealed partial class ServerNetConfigurationManager : NetConfigurationManager, IServerNetConfigurationManager
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IReplayRecordingManager _replayRecording = default!;
 
     private readonly Dictionary<INetChannel, Dictionary<string, object>> _replicatedCVars = new();
 

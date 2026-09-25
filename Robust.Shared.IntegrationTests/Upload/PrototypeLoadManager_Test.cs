@@ -103,17 +103,17 @@ internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
     [Test]
     public void TestUploadWithCrossReferencingPrototypes()
     {
-        const string upload = @"
+        const string upload = @$"
 - type: entity
-  id: UploadTestA
+  id: {UploadTestIdA}
   components:
   - type: UploadTestTarget
-    target: UploadTestB
+    target: {UploadTestIdB}
 - type: entity
-  id: UploadTestB
+  id: {UploadTestIdB}
   components:
   - type: UploadTestTarget
-    target: UploadTestA
+    target: {UploadTestIdA}
 ";
 
         Assert.That(_prototypeLoad.TryLoad(upload), Is.True);

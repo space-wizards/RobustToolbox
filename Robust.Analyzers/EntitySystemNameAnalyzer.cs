@@ -31,7 +31,7 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
         "EntitySystem naming rule violation",
         "Naming rule violation: {0} should be named {1}",
         "Usage",
-        DiagnosticSeverity.Warning,
+        DiagnosticSeverity.Info,
         true
     );
 

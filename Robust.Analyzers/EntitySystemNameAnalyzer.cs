@@ -21,6 +21,11 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
         public readonly INamedTypeSymbol EntitySystem { get; init; }
     }
 
+    /// <summary>
+    /// The key used to access the correct replacement name in the diagnostic's Properties dictionary.
+    /// </summary>
+    public const string FixedNameKey = "fixedName";
+
     public static readonly DiagnosticDescriptor EntitySystemNamingRule = new(
         Diagnostics.IdEntitySystemNameCompliance,
         "EntitySystem naming rule violation",
@@ -86,10 +91,19 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
         {
             var baseName = GetBaseName(symbol);
             var fixedName = $"{expectedPrefix}{baseName}";
+
+            var props = new Dictionary<string, string?>
+            {
+                // Include the correct replacement name in the diagnostic,
+                // so the CodeFix can use it.
+                { FixedNameKey, fixedName }
+            };
+
             context.ReportDiagnostic(
                 Diagnostic.Create(
                     EntitySystemNamingRule,
                     symbol.Locations[0],
+                    props.ToImmutableDictionary(),
                     symbol.Name,
                     fixedName
                 )

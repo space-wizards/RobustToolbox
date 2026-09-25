@@ -134,8 +134,8 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
                     if (diagnostic.Properties[EntitySystemNameAnalyzer.FixedNameKey] is not string fixedName)
                         continue;
 
-                    var document = solution.GetDocument(documentDiagnostics.Key.Id);
-                    var root = await document!.GetSyntaxRootAsync(context.CancellationToken);
+                    var document = documentDiagnostics.Key;
+                    var root = await document.GetSyntaxRootAsync(context.CancellationToken);
                     var model = await document.GetSemanticModelAsync(context.CancellationToken);
 
                     var span = diagnostic.Location.SourceSpan;

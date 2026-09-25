@@ -99,11 +99,53 @@ public sealed class EntitySystemNameCodeFixProviderTest
 
         await Verifier((name, code), (fixedName, fixedCode),
             // /0/Test0.cs(5,21): warning RA0059: Naming rule violation: SharedFooSystem should be named FooSystem
-            VerifyCS.Diagnostic().WithSpan("/0/SharedFooSystem.cs", 5, 21, 5, 36).WithArguments("SharedFooSystem", "FooSystem"),
+            VerifyCS.Diagnostic().WithSpan(name, 5, 21, 5, 36).WithArguments("SharedFooSystem", "FooSystem"),
             // /0/Test0.cs(6,21): warning RA0059: Naming rule violation: ServerBarSystem should be named BarSystem
-            VerifyCS.Diagnostic().WithSpan("/0/SharedFooSystem.cs", 6, 21, 6, 36).WithArguments("ServerBarSystem", "BarSystem"),
+            VerifyCS.Diagnostic().WithSpan(name, 6, 21, 6, 36).WithArguments("ServerBarSystem", "BarSystem"),
             // /0/Test0.cs(7,21): warning RA0059: Naming rule violation: ClientBazSystem should be named BazSystem
-            VerifyCS.Diagnostic().WithSpan("/0/SharedFooSystem.cs", 7, 21, 7, 36).WithArguments("ClientBazSystem", "BazSystem")
+            VerifyCS.Diagnostic().WithSpan(name, 7, 21, 7, 36).WithArguments("ClientBazSystem", "BazSystem")
+        );
+    }
+
+    [Test]
+    [Description("")]
+    public async Task ClientAssembly()
+    {
+        const string name = "/0/ClientBazSystem.cs";
+        const string code = /* lang=c#-test */ """
+            using Robust.Shared.Analyzers;
+            using Robust.Shared.GameObjects;
+
+            [assembly: AssemblySide(AssemblySide.Client)]
+            public sealed class SharedFooSystem : EntitySystem;
+            public sealed class ServerBarSystem : EntitySystem;
+            public sealed class ClientBazSystem : EntitySystem;
+
+            public sealed class ThingSystem : SharedThingSystem;
+            """;
+
+        const string fixedName = "/0/BazSystem.cs";
+        const string fixedCode = /* lang=c#-test */ """
+            using Robust.Shared.Analyzers;
+            using Robust.Shared.GameObjects;
+
+            [assembly: AssemblySide(AssemblySide.Client)]
+            public sealed class FooSystem : EntitySystem;
+            public sealed class BarSystem : EntitySystem;
+            public sealed class BazSystem : EntitySystem;
+
+            public sealed class ClientThingSystem : SharedThingSystem;
+            """;
+
+        await Verifier((name, code), (fixedName, fixedCode),
+            // /0/Test0.cs(5,21): warning RA0059: Naming rule violation: SharedFooSystem should be named FooSystem
+            VerifyCS.Diagnostic().WithSpan(name, 5, 21, 5, 36).WithArguments("SharedFooSystem", "FooSystem"),
+            // /0/Test0.cs(6,21): warning RA0059: Naming rule violation: ServerBarSystem should be named BarSystem
+            VerifyCS.Diagnostic().WithSpan(name, 6, 21, 6, 36).WithArguments("ServerBarSystem", "BarSystem"),
+            // /0/Test0.cs(7,21): warning RA0059: Naming rule violation: ClientBazSystem should be named BazSystem
+            VerifyCS.Diagnostic().WithSpan(name, 7, 21, 7, 36).WithArguments("ClientBazSystem", "BazSystem"),
+            // /0/Test0.cs(9,21): warning RA0059: Naming rule violation: ThingSystem should be named ClientThingSystem
+            VerifyCS.Diagnostic().WithSpan(name, 9, 21, 9, 32).WithArguments("ThingSystem", "ClientThingSystem")
         );
     }
 }

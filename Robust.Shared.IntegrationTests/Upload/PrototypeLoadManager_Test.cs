@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
@@ -12,8 +13,12 @@ namespace Robust.UnitTesting.Shared.Upload;
 [TestFixture]
 internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
 {
+    protected override Type[] ExtraComponents => [typeof(UploadTestTargetComponent)];
+
     private const string FirstId = "first";
     private const string SecondId = "second";
+    private const string UploadTestIdA = "UploadTestA";
+    private const string UploadTestIdB = "UploadTestB";
 
     private IPrototypeManager _prototype = default!;
     private TestPrototypeLoadManager _prototypeLoad = default!;
@@ -95,6 +100,35 @@ internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
         Assert.That(_prototype.HasIndex<PrototypeUploadTestPrototype>(SecondId), Is.True);
     }
 
+    [Test]
+    public void TestUploadWithCrossReferencingPrototypes()
+    {
+        const string upload = @$"
+- type: entity
+  id: {UploadTestIdA}
+  components:
+  - type: UploadTestTarget
+    target: {UploadTestIdB}
+- type: entity
+  id: {UploadTestIdB}
+  components:
+  - type: UploadTestTarget
+    target: {UploadTestIdA}
+";
+
+        Assert.That(_prototypeLoad.TryLoad(upload), Is.True);
+        Assert.That(_prototype.HasIndex<EntityPrototype>(UploadTestIdA), Is.True);
+        Assert.That(_prototype.HasIndex<EntityPrototype>(UploadTestIdB), Is.True);
+
+        var comps = IoCManager.Resolve<IComponentFactory>();
+        var a = _prototype.Index<EntityPrototype>(UploadTestIdA);
+        var b = _prototype.Index<EntityPrototype>(UploadTestIdB);
+        Assert.That(a.Components.TryGetComponent(comps, out UploadTestTargetComponent? compA), Is.True);
+        Assert.That(b.Components.TryGetComponent(comps, out UploadTestTargetComponent? compB), Is.True);
+        Assert.That(compA!.Target, Is.EqualTo(new EntProtoId(UploadTestIdB)));
+        Assert.That(compB!.Target, Is.EqualTo(new EntProtoId(UploadTestIdA)));
+    }
+
     private sealed class TestPrototypeLoadManager : SharedPrototypeLoadManager
     {
         public bool TryLoad(string prototype) => TryLoadPrototypeData(prototype);
@@ -117,4 +151,10 @@ internal sealed partial class PrototypeUploadTestPrototype : IPrototype
 
     [DataField]
     public ResPath? Path { get; private set; }
+}
+
+internal sealed partial class UploadTestTargetComponent : Component
+{
+    [DataField]
+    public EntProtoId Target;
 }

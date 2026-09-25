@@ -18,7 +18,7 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
 
     public override FixAllProvider? GetFixAllProvider()
     {
-        return null;
+        return new EntitySystemNameFixAllProvider();
     }
 
     public override Task RegisterCodeFixesAsync(CodeFixContext context)
@@ -71,6 +71,102 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
         var fixedSolution = await Renamer.RenameSymbolAsync(solution, symbol, options, fixedName);
 
         return fixedSolution;
+    }
+
+    private sealed class EntitySystemNameFixAllProvider : FixAllProvider
+    {
+        public override async Task<CodeAction?> GetFixAsync(FixAllContext fixAllContext)
+        {
+            var diagnosticsToFix = new Dictionary<Document, ImmutableArray<Diagnostic>>();
+            switch (fixAllContext.Scope)
+            {
+                case FixAllScope.Document:
+                {
+                    var document = fixAllContext.Document!;
+                    var diagnostics = await fixAllContext.GetDocumentDiagnosticsAsync(document).ConfigureAwait(false);
+                    diagnosticsToFix.Add(document, diagnostics);
+                    break;
+                }
+                case FixAllScope.Project:
+                {
+                    var project = fixAllContext.Project;
+                    foreach (var document in project.Documents)
+                    {
+                        var diagnostics = await fixAllContext.GetDocumentDiagnosticsAsync(document).ConfigureAwait(false);
+                        diagnosticsToFix.Add(document, diagnostics);
+                    }
+                    break;
+                }
+                case FixAllScope.Solution:
+                {
+                    var solution = fixAllContext.Solution;
+                    foreach (var project in solution.Projects)
+                    {
+                        foreach (var document in project.Documents)
+                        {
+                            var diagnostics = await fixAllContext.GetDocumentDiagnosticsAsync(document).ConfigureAwait(false);
+                            diagnosticsToFix.Add(document, diagnostics);
+                        }
+                    }
+                    break;
+                }
+            }
+
+            return CodeAction.Create(
+                "Rename all EntitySystems",
+                cancellationToken => FixAllDocuments(fixAllContext, diagnosticsToFix, cancellationToken)
+            );
+        }
+
+        private async Task<Solution> FixAllDocuments(
+            FixAllContext context,
+            Dictionary<Document, ImmutableArray<Diagnostic>> diagnosticsToFix,
+            CancellationToken cancellationToken)
+        {
+            var solution = context.Solution;
+            // For batch fixes, we'll wait and do the file renames at the end.
+            var documentsToRename = new List<KeyValuePair<DocumentId, string>>();
+
+            foreach (var documentDiagnostics in diagnosticsToFix)
+            {
+                foreach (var diagnostic in documentDiagnostics.Value)
+                {
+                    if (diagnostic.Properties[EntitySystemNameAnalyzer.FixedNameKey] is not string fixedName)
+                        continue;
+
+                    var document = solution.GetDocument(documentDiagnostics.Key.Id);
+                    var root = await document!.GetSyntaxRootAsync(context.CancellationToken);
+                    var model = await document.GetSemanticModelAsync(context.CancellationToken);
+
+                    var span = diagnostic.Location.SourceSpan;
+                    var token = root!.FindToken(span.Start);
+                    var symbol = model!.GetDeclaredSymbol(token.Parent!);
+
+                    solution = await Renamer.RenameSymbolAsync(
+                        solution,
+                        symbol!,
+                        new SymbolRenameOptions(), // No automatic file renaming this time; we're doing it ourselves
+                        fixedName,
+                        cancellationToken);
+
+                    // Check if the symbol we renamed matched the name of the file it's in.
+                    if (symbol?.Name == Path.GetFileNameWithoutExtension(document.FilePath))
+                    {
+                        // If it did, make a note to rename the file to match later.
+                        var newDocName = $"{fixedName}.cs";
+                        documentsToRename.Add(new(document.Id, newDocName));
+                    }
+                }
+            }
+
+            // Apply all the file renames
+            foreach (var pair in documentsToRename)
+            {
+                solution = solution.WithDocumentName(pair.Key, pair.Value);
+            }
+
+            return solution;
+        }
     }
 }
 

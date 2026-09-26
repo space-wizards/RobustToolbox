@@ -72,7 +72,7 @@ public sealed class EntitySystemNameCodeFixProviderTest
     """;
 
     [Test]
-    [Description("")]
+    [Description("Checks that EntitySystem definitions in a Shared assembly are fixed correctly.")]
     public async Task SharedAssembly()
     {
         const string name = "/0/SharedFooSystem.cs";
@@ -108,7 +108,7 @@ public sealed class EntitySystemNameCodeFixProviderTest
     }
 
     [Test]
-    [Description("")]
+    [Description("Checks that EntitySystem definitions in a Client assembly are fixed correctly.")]
     public async Task ClientAssembly()
     {
         const string name = "/0/ClientBazSystem.cs";

@@ -61,6 +61,7 @@ public sealed class EntitySystemNameAnalyzerTest
     """;
 
     [Test]
+    [Description("Checks that an assembly without AssemblyNameAttribute is ignored by the analyzer.")]
     public async Task UnmarkedAssembly()
     {
         const string code = /* lang=c#-test */ """
@@ -76,6 +77,7 @@ public sealed class EntitySystemNameAnalyzerTest
     }
 
     [Test]
+    [Description("Checks that the analyzer correctly flags diagnostics in a Shared assembly.")]
     public async Task SharedAssembly()
     {
         const string code = /* lang=c#-test */ """
@@ -109,6 +111,7 @@ public sealed class EntitySystemNameAnalyzerTest
     }
 
     [Test]
+    [Description("Checks that the analyzer correctly flags diagnostics in a Server assembly.")]
     public async Task ServerAssembly()
     {
         const string code = /* lang=c#-test */ """
@@ -144,6 +147,7 @@ public sealed class EntitySystemNameAnalyzerTest
     }
 
     [Test]
+    [Description("Checks that the analyzer correctly flags diagnostics in a Client assembly.")]
     public async Task ClientAssembly()
     {
         const string code = /* lang=c#-test */ """

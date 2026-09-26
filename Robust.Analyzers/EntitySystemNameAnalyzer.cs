@@ -7,6 +7,9 @@ using Robust.Shared.Analyzers;
 
 namespace Robust.Analyzers;
 
+/// <summary>
+/// A <see cref="DiagnosticAnalyzer"/> that checks EntitySystem names for compliance with established rules.
+/// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
 {
@@ -14,6 +17,9 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
     private const string EntitySystemInterfaceType = "Robust.Shared.GameObjects.IEntitySystem";
     private const string EntitySystemType = "Robust.Shared.GameObjects.EntitySystem";
 
+    /// <summary>
+    /// Simple struct to pass multiple type symbols between methods without making the parameter list huge.
+    /// </summary>
     private readonly struct TypeSymbols
     {
         public readonly INamedTypeSymbol AssemblySideAttribute { get; init; }
@@ -27,7 +33,7 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
     public const string FixedNameKey = "fixedName";
 
     public static readonly DiagnosticDescriptor EntitySystemNamingRule = new(
-        Diagnostics.IdEntitySystemNameCompliance,
+        Diagnostics.IdEntitySystemNamingViolation,
         "EntitySystem naming rule violation",
         "Naming rule violation: {0} should be named {1}",
         "Usage",
@@ -50,8 +56,10 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
             if (ctx.Compilation.GetTypeByMetadataName(AssemblySideAttributeType) is not { } assemblySideAttributeType)
                 return;
 
+            // If this assembly isn't marked with our attribute, we can ignore it.
             if (!AttributeHelper.HasAttribute(ctx.Compilation.Assembly, assemblySideAttributeType, out var sideAttributeData))
                 return;
+            // Get the Side of this assembly.
             var side = (AssemblySide)sideAttributeData.ConstructorArguments[0].Value!;
 
             if (ctx.Compilation.GetTypeByMetadataName(EntitySystemInterfaceType) is not { } entitySystemInterfaceType)
@@ -59,6 +67,7 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
             if (ctx.Compilation.GetTypeByMetadataName(EntitySystemType) is not { } entitySystemType)
                 return;
 
+            // Pack our type symbols into a struct to make them easier to pass to other methods.
             var typeSymbols = new TypeSymbols
             {
                 AssemblySideAttribute = assemblySideAttributeType,
@@ -66,14 +75,18 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
                 EntitySystem = entitySystemType,
             };
 
-            ctx.RegisterSymbolAction(symbolContext => AnalyzeNamedType(symbolContext, side, typeSymbols), SymbolKind.NamedType);
+            // Inspect each named type defined in the assembly.
+            ctx.RegisterSymbolAction(symbolContext => AnalyzeNamedType(symbolContext, side, ref typeSymbols), SymbolKind.NamedType);
         });
     }
 
+    /// <summary>
+    /// Examines an <see cref="INamedTypeSymbol"/> representing a class for compliance.
+    /// </summary>
     private static void AnalyzeNamedType(
         SymbolAnalysisContext context,
         AssemblySide side,
-        TypeSymbols symbols
+        ref TypeSymbols symbols
         )
     {
         // Filter out anything that isn't a class.
@@ -84,9 +97,9 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
         if (!symbol.AllInterfaces.Contains(symbols.EntitySystemInterface))
             return;
 
+        // Compare the prefix of the name written in the code with the correct name.
         var expectedPrefix = GetExpectedPrefix(symbol, side);
         var actualPrefix = GetPrefix(symbol);
-
         if (actualPrefix != expectedPrefix)
         {
             var baseName = GetBaseName(symbol);
@@ -111,6 +124,13 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
         }
     }
 
+    /// <summary>
+    /// Returns the side prefix of the given symbol, extracted from its name.
+    /// </summary>
+    /// <returns>
+    /// "Shared", "Server", or "Client", if the symbol's name starts with one of those.
+    /// Otherwise, an empty string.
+    /// </returns>
     private static string GetPrefix(INamedTypeSymbol symbol)
     {
         if (symbol.Name.StartsWith("Shared"))
@@ -122,9 +142,16 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
         return string.Empty;
     }
 
+    /// <summary>
+    /// Returns the correct side prefix for the given symbol, based on its name, the
+    /// <see cref="AssemblySide"/> of the defining assembly, and the name of its immediate parent class.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="side"/> is not <see cref="AssemblySide.Client"/> or <see cref="AssemblySide.Server"/>.
+    /// </exception>
     private static string GetExpectedPrefix(INamedTypeSymbol symbol, AssemblySide side)
     {
-        // No prefixes used in Shared.
+        // No prefixes should be used in Shared.
         if (side == AssemblySide.Shared)
             return string.Empty;
 
@@ -144,11 +171,18 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
         };
     }
 
+    /// <summary>
+    /// Returns the name of the given symbol without any prefix.
+    /// </summary>
     private static string GetBaseName(INamedTypeSymbol symbol)
     {
         return symbol.Name.Substring(GetPrefix(symbol).Length);
     }
 
+    /// <summary>
+    /// Checks if a symbol has the same base name as its immediate parent class.
+    /// </summary>
+    /// <seealso cref="GetBaseName"/>
     private static bool InheritsFromSameBaseName(INamedTypeSymbol symbol)
     {
         if (symbol.BaseType == null)

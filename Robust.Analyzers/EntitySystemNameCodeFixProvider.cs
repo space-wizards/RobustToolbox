@@ -8,12 +8,15 @@ using static Robust.Roslyn.Shared.Diagnostics;
 
 namespace Robust.Analyzers;
 
+/// <summary>
+/// A <see cref="CodeFixProvider"/> which enables automatic correction of <see cref="IdEntitySystemNamingViolation"/> diagnostics.
+/// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp)]
 public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
 {
     public override ImmutableArray<string> FixableDiagnosticIds =>
     [
-        IdEntitySystemNameCompliance
+        IdEntitySystemNamingViolation
     ];
 
     public override FixAllProvider? GetFixAllProvider()
@@ -27,7 +30,7 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
         {
             switch (diagnostic.Id)
             {
-                case IdEntitySystemNameCompliance:
+                case IdEntitySystemNamingViolation:
                     return RegisterRename(context, diagnostic);
             }
         }
@@ -40,12 +43,13 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
         var model = await context.Document.GetSemanticModelAsync(context.CancellationToken);
 
+        // Find the symbol for the type that triggered this diagnostic.
         var span = diagnostic.Location.SourceSpan;
         var token = root!.FindToken(span.Start);
         if (model?.GetDeclaredSymbol(token.Parent!, context.CancellationToken) is not INamedTypeSymbol classSymbol)
             return;
 
-        // Get the name of the Attribute we need to add to the event handler method.
+        // Extract the correct replacement name for the system from the diagnostic's properties.
         if (diagnostic.Properties[EntitySystemNameAnalyzer.FixedNameKey] is not string fixedName)
             return;
 
@@ -65,18 +69,28 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
         {
             // If the file name matches the class name, we should also rename the file.
             RenameFile = Path.GetFileNameWithoutExtension(document.Name) == symbol.Name,
+            // Keep our docs up to date.
             RenameInComments = true,
         };
 
+        // Here's where we express our gratitude to the dotnet developers for providing this API.
         var fixedSolution = await Renamer.RenameSymbolAsync(solution, symbol, options, fixedName);
 
         return fixedSolution;
     }
 
+    /// <summary>
+    /// Enables bulk application of <see cref="EntitySystemNameCodeFixProvider"/>.
+    /// </summary>
+    /// <remarks>
+    /// Annoyingly, this does not work with <c>dotnet format</c>, because it cannot rename files.
+    /// It does work in IDEs that support FixAll code actions.
+    /// </remarks>
     private sealed class EntitySystemNameFixAllProvider : FixAllProvider
     {
         public override async Task<CodeAction?> GetFixAsync(FixAllContext fixAllContext)
         {
+            // Group all of our diagnostics by the document containing them.
             var diagnosticsToFix = new Dictionary<Document, ImmutableArray<Diagnostic>>();
             switch (fixAllContext.Scope)
             {
@@ -134,6 +148,7 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
                     if (diagnostic.Properties[EntitySystemNameAnalyzer.FixedNameKey] is not string fixedName)
                         continue;
 
+                    // Find the symbol for the type that triggered the diagnostic.
                     var document = documentDiagnostics.Key;
                     var root = await document.GetSyntaxRootAsync(context.CancellationToken);
                     var model = await document.GetSemanticModelAsync(context.CancellationToken);
@@ -145,7 +160,7 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
                     solution = await Renamer.RenameSymbolAsync(
                         solution,
                         symbol!,
-                        new SymbolRenameOptions(), // No automatic file renaming this time; we're doing it ourselves
+                        new SymbolRenameOptions(), // No automatic file renaming this time; we're doing it ourselves!
                         fixedName,
                         cancellationToken);
 

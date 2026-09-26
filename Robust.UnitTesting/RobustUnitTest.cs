@@ -62,7 +62,8 @@ namespace Robust.UnitTesting
                 typeof(LightTreeComponent),
                 typeof(CollisionWakeComponent),
                 typeof(CollideOnAnchorComponent),
-                typeof(ActorComponent)
+                typeof(ActorComponent),
+                typeof(EntityRelationsComponent)
             };
 
         public virtual UnitTestProject Project => UnitTestProject.Server;

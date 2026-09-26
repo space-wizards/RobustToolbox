@@ -148,4 +148,46 @@ public sealed class EntitySystemNameCodeFixProviderTest
             VerifyCS.Diagnostic().WithSpan(name, 9, 21, 9, 32).WithArguments("ThingSystem", "ClientThingSystem")
         );
     }
+
+    [Test]
+    [Description("Checks that EntitySystem definitions in a Server assembly are fixed correctly.")]
+    public async Task ServerAssembly()
+    {
+        const string name = "/0/ServerBarSystem.cs";
+        const string code = /* lang=c#-test */ """
+            using Robust.Shared.Analyzers;
+            using Robust.Shared.GameObjects;
+
+            [assembly: AssemblySide(AssemblySide.Server)]
+            public sealed class SharedFooSystem : EntitySystem;
+            public sealed class ServerBarSystem : EntitySystem;
+            public sealed class ClientBazSystem : EntitySystem;
+
+            public sealed class ThingSystem : SharedThingSystem;
+            """;
+
+        const string fixedName = "/0/BarSystem.cs";
+        const string fixedCode = /* lang=c#-test */ """
+            using Robust.Shared.Analyzers;
+            using Robust.Shared.GameObjects;
+
+            [assembly: AssemblySide(AssemblySide.Server)]
+            public sealed class FooSystem : EntitySystem;
+            public sealed class BarSystem : EntitySystem;
+            public sealed class BazSystem : EntitySystem;
+
+            public sealed class ServerThingSystem : SharedThingSystem;
+            """;
+
+        await Verifier((name, code), (fixedName, fixedCode),
+            // /0/Test0.cs(5,21): warning RA0059: Naming rule violation: SharedFooSystem should be named FooSystem
+            VerifyCS.Diagnostic().WithSpan(name, 5, 21, 5, 36).WithArguments("SharedFooSystem", "FooSystem"),
+            // /0/Test0.cs(6,21): warning RA0059: Naming rule violation: ServerBarSystem should be named BarSystem
+            VerifyCS.Diagnostic().WithSpan(name, 6, 21, 6, 36).WithArguments("ServerBarSystem", "BarSystem"),
+            // /0/Test0.cs(7,21): warning RA0059: Naming rule violation: ClientBazSystem should be named BazSystem
+            VerifyCS.Diagnostic().WithSpan(name, 7, 21, 7, 36).WithArguments("ClientBazSystem", "BazSystem"),
+            // /0/Test0.cs(9,21): warning RA0059: Naming rule violation: ThingSystem should be named ClientThingSystem
+            VerifyCS.Diagnostic().WithSpan(name, 9, 21, 9, 32).WithArguments("ThingSystem", "ServerThingSystem")
+        );
+    }
 }

@@ -6,7 +6,6 @@ using NUnit.Framework;
 using VerifyCS =
     Microsoft.CodeAnalysis.CSharp.Testing.CSharpAnalyzerVerifier<Robust.Analyzers.EntitySystemNameAnalyzer, Microsoft.CodeAnalysis.Testing.DefaultVerifier>;
 
-
 namespace Robust.Analyzers.Tests;
 
 [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]

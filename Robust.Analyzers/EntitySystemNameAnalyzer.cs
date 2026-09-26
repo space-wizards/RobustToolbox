@@ -10,6 +10,15 @@ namespace Robust.Analyzers;
 /// <summary>
 /// A <see cref="DiagnosticAnalyzer"/> that checks EntitySystem names for compliance with established rules.
 /// </summary>
+/// <remarks>
+/// The rules are:
+/// <list type="bullet">
+/// <item>An EntitySystem in Shared should not have a side prefix.</item>
+/// <item>An EntitySystem in Client or Server that inherits from an EntitySystem with the same name should be prefixed with the appropriate side name.</item>
+/// <item>An EntitySystem in Client or Server that does not meet the previous criterion should not have a side prefix.</item>
+/// <item>An EntitySystem not in Client, Server, or Shared can do whatever it wants.</item>
+/// </list>
+/// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
 {

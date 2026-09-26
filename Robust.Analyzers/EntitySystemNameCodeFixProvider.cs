@@ -65,6 +65,26 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
     {
         var solution = document.Project.Solution;
 
+        // Alright, so.
+        //
+        // To rename an EntitySystem, we'll need to need to find all of the Locations
+        // it's defined (in case of partials) and change all of those.
+        //
+        // We'll also need to find every place in the code that references the changed system, like
+        // every dependency injection and so forth. Change all of those to use the new name.
+        //
+        // And we'll have to do that not just for every reference in this project, but also for every
+        // reference in every other project in the solution that references this project.
+        //
+        // Oh, and we should change the filenames to match the new class names of course. But only
+        // if the old filename matched the old name.
+        //
+        // Also xmldocs and comments! We'll have to scan through all of those for any references
+        // to the system we're renaming and update them.
+        //
+        // ...
+        //
+        // Nah, I'm kidding. We can just do this:
         var options = new SymbolRenameOptions
         {
             // If the file name matches the class name, we should also rename the file.
@@ -74,9 +94,7 @@ public sealed class EntitySystemNameCodeFixProvider : CodeFixProvider
         };
 
         // Here's where we express our gratitude to the dotnet developers for providing this API.
-        var fixedSolution = await Renamer.RenameSymbolAsync(solution, symbol, options, fixedName);
-
-        return fixedSolution;
+        return await Renamer.RenameSymbolAsync(solution, symbol, options, fixedName);
     }
 
     /// <summary>

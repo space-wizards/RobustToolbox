@@ -124,7 +124,7 @@ public sealed class EntitySystemNameAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(
                 Diagnostic.Create(
                     EntitySystemNamingRule,
-                    symbol.Locations[0],
+                    TypeSymbolHelper.GetPrimaryLocation(symbol),
                     props.ToImmutableDictionary(),
                     symbol.Name,
                     fixedName

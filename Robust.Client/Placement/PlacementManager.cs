@@ -678,7 +678,6 @@ namespace Robust.Client.Placement
                 {
                     args.WorldHandle.UseShader(_drawingShader);
                     args.WorldHandle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 50));
-                    args.WorldHandle.UseShader(null);
                 }
                 return;
             }

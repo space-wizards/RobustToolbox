@@ -61,6 +61,7 @@ namespace Robust.Shared.CompNetworkGenerator
             var partialInfo = PartialTypeInfo.FromSymbol(classSymbol, classSyntax);
             var componentName = classSymbol.Name;
             var stateName = $"{componentName}_AutoState";
+            var componentDeltaStateName = $"{componentName}_AutoDeltaState";
 
             var members = TypeSymbolHelper.GetAllMembersIncludingInherited(classSymbol);
             var fields = new List<(ITypeSymbol Type, string FieldName)>();
@@ -159,11 +160,12 @@ namespace Robust.Shared.CompNetworkGenerator
             // without modifying the original.
             var shallowClone = new StringBuilder();
 
-            // Delta field states
+            // Delta field state generation.
             var deltaGetFields = new StringBuilder();
             var clientDeltaGetFields = new StringBuilder();
 
             var deltaHandleFields = new StringBuilder();
+            var deltaStateFields = new StringBuilder();
 
             // Apply the delta field to the full state.
             var deltaApply = new List<string>();
@@ -229,8 +231,6 @@ namespace Robust.Shared.CompNetworkGenerator
                 var nullable = type.NullableAnnotation == NullableAnnotation.Annotated;
                 var nullableAnnotation = nullable ? "?" : string.Empty;
 
-                string deltaStateName = $"{name}_FieldComponentState";
-
                 // The type used for networking, e.g. EntityUid -> NetEntity
                 string networkedType;
 
@@ -239,24 +239,13 @@ namespace Robust.Shared.CompNetworkGenerator
                 string? cast;
                 // TODO: Uhh I just need casts or something.
                 var castString = typeDisplayStr.Substring(8);
+                var fieldMask = $"(1UL << {index})";
 
-                deltaGetFields.Append(@$"
-                    case {Math.Pow(2, index)}:
-                        args.State = new {deltaStateName}()
-                        {{
-                        ");
+                deltaHandleFields.Append($@"
+                    if ((deltaState.ChangedFields & {fieldMask}) != 0)
+                    {{");
 
-                clientDeltaGetFields.Append(@$"
-                    case {Math.Pow(2, index)}:
-                        args.State = new {deltaStateName}()
-                        {{
-                        ");
-
-                deltaHandleFields.Append(@$"
-                case {deltaStateName} {deltaStateName}_State:
-                {{");
-
-                var fieldHandleValue = $"{deltaStateName}_State.{name}!";
+                var fieldHandleValue = $"deltaState.{name}!";
 
                 switch (typeDisplayStr)
                 {
@@ -609,24 +598,27 @@ namespace Robust.Shared.CompNetworkGenerator
                 networkedTypes.Add(networkedType);
                 clientGetField ??= getField;
 
+                deltaStateFields.Append($@"
+        [NetworkedDeltaField({index})]
+        public {networkedType} {name} = default!;");
+
                 getStateInit.Append($@"
                 {name} = {getField},");
 
                 clientGetStateInit.Append($@"
                 {name} = {clientGetField},");
 
-                deltaGetFields.Append(@$"    {name} = {getField}
-                        }};
-                        return;");
-
-                clientDeltaGetFields.Append(@$"    {name} = {clientGetField}
-                        }};
-                        return;");
+                deltaGetFields.Append($@"
+                    if ((aspects & {fieldMask}) != 0)
+                        state.{name} = {getField};");
 
                 deltaHandleFields.Append(@"
-                    break;
-                }
+                    }
 ");
+
+                clientDeltaGetFields.Append($@"
+                    if ((aspects & {fieldMask}) != 0)
+                        state.{name} = {clientGetField};");
             }
 
             var deltaGetState = "";
@@ -647,23 +639,32 @@ namespace Robust.Shared.CompNetworkGenerator
         }}
 ";
 
+                var deltaStateApply = new StringBuilder();
                 for (var i = 0; i < fields.Count; i++)
                 {
-                    var name = fields[i].FieldName;
-                    string deltaStateName = $"{name}_FieldComponentState";
-                    var networkedType = networkedTypes[i];
+                    var fieldMask = $"(1UL << {i})";
                     var apply = deltaApply[i];
 
-                    // Creates a state per field
-                    fieldStates.Append($@"
+                    deltaStateApply.Append($@"
+            if ((ChangedFields & {fieldMask}) != 0)
+            {{
+                {apply}
+            }}
+");
+                }
+
+                // Creates a single state that stores an arbitrary combination of dirty fields.
+                fieldStates.Append($@"
     [Serializable, NetSerializable]
-    public sealed class {deltaStateName} : IComponentDeltaState<{stateName}>
+    public sealed class {componentDeltaStateName} : IAutoGeneratedComponentDeltaState, IComponentDeltaState<{stateName}>
     {{
-        public {networkedType} {name} = default!;
+        public ulong ChangedFields {{ get; set; }}
+
+{TrimNewLines(deltaStateFields)}
 
         public void ApplyToFullState({stateName} fullState)
         {{
-            {apply}
+{TrimNewLines(deltaStateApply)}
         }}
 
         public {stateName} CreateNewFullState({stateName} fullState)
@@ -674,7 +675,6 @@ namespace Robust.Shared.CompNetworkGenerator
         }}
     }}
 ");
-                }
 
                 deltaNetRegister = $@"EntityManager.ComponentFactory.RegisterNetworkedFields<{classSymbol}>({fieldsStr});";
 
@@ -683,13 +683,15 @@ namespace Robust.Shared.CompNetworkGenerator
             {{
                 var aspects = EntityManager.GetModifiedAspects(component, args.FromTick);
 
-                // Try and get a matching delta state for the relevant dirty fields, otherwise fall back to full state.
-                switch (aspects)
+                if (aspects > 0 && aspects < DeltaAspect.Unclassified)
                 {{
-                    case >= DeltaAspect.Unclassified:
-                        break;{deltaGetFields}
-                    default:
-                        break;
+                    var state = new {componentDeltaStateName}
+                    {{
+                        ChangedFields = aspects,
+                    }};
+{deltaGetFields}
+                    args.State = state;
+                    return;
                 }}
             }}";
 
@@ -698,13 +700,15 @@ namespace Robust.Shared.CompNetworkGenerator
             {{
                 var aspects = EntityManager.GetModifiedAspects(component, args.FromTick);
 
-                // Try and get a matching delta state for the relevant dirty fields, otherwise fall back to full state.
-                switch (aspects)
+                if (aspects > 0 && aspects < DeltaAspect.Unclassified)
                 {{
-                    case >= DeltaAspect.Unclassified:
-                        break;{clientDeltaGetFields}
-                    default:
-                        break;
+                    var state = new {componentDeltaStateName}
+                    {{
+                        ChangedFields = aspects,
+                    }};
+{clientDeltaGetFields}
+                    args.State = state;
+                    return;
                 }}
             }}";
 
@@ -713,7 +717,7 @@ namespace Robust.Shared.CompNetworkGenerator
                 deltaCompFields = @$"/// <inheritdoc />
     public GameTick LastUnclassifiedDirty {{ get; set; }}
     /// <inheritdoc />
-    public GameTick[] LastModifiedFields {{ get; set; }}";
+    public GameTick[] LastModifiedFields {{ get; set; }} = default!;";
             }
 
             string handleState;
@@ -756,7 +760,13 @@ namespace Robust.Shared.CompNetworkGenerator
 
                 handleState = $@"
             switch(args.Current)
-            {{{deltaHandleFields}
+            {{
+                case {componentDeltaStateName} deltaState:
+                {{
+{deltaHandleFields}
+                    break;
+                }}
+
                 case {stateName} state:
                 {{{stateSetters}
                     break;

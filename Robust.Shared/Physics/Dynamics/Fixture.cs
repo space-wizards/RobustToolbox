@@ -49,6 +49,13 @@ namespace Robust.Shared.Physics.Dynamics
         [NonSerialized]
         public int ProxyCount = 0;
 
+        /// <summary>
+        /// Tree that allocated all of this fixture's proxies.
+        /// Unlike Transform.Broadphase, this remains available while a grid is in nullspace.
+        /// </summary>
+        [NonSerialized]
+        internal IBroadPhase? ProxyTree;
+
         [DataField("shape")]
         public IPhysShape Shape { get; private set; } = new PhysShapeAabb();
 

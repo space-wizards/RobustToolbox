@@ -78,7 +78,8 @@ namespace Robust.Client.Tests.Graphics
             };
 
             Assert.DoesNotThrow(() => styleBox.Draw(handle, new UIBox2(0, 0, 5, 5), 1));
-            Assert.That(handle.Rects, Is.Not.Empty);
+            // If we have negatively sized boxes then 0 draw calls emitted.
+            Assert.That(handle.Rects, Is.Empty);
         }
 
         private sealed class TestTexture(Vector2i size) : Texture(size)

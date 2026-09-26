@@ -152,8 +152,6 @@ public abstract partial class TileDebugOverlay : Overlay, IPostInjectInit
             if (gridBounds.Intersects(tileBounds))
                 DrawTile(handle, tileBounds, tile.GridIndices, grid);
         }
-
-        handle.SetTransform(Matrix3x2.Identity);
     }
 
     protected virtual void DrawTile(DrawingHandleWorld handle, Box2 tile, Vector2i indices, Entity<MapGridComponent> grid)

@@ -116,6 +116,16 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public IClydeMonitor? GetWindowMonitor(IClydeWindow window)
+        {
+            return null;
+        }
+
+        public IClydeMonitor? GetMainWindowMonitor()
+        {
+            return null;
+        }
+
         public void RequestWindowAttention()
         {
             // Nada.

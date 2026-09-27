@@ -151,6 +151,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private void OnBroadphaseTerminating(EntityUid uid, BroadphaseComponent component, ref EntityTerminatingEvent args)
     {
         var xform = _xformQuery.GetComponent(uid);
+        ClearBroadphaseProxies(component.StaticTree);
+        ClearBroadphaseProxies(component.DynamicTree);
         RemoveChildrenFromTerminatingBroadphase(xform, component);
         RemComp(uid, component);
     }
@@ -158,7 +160,27 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private void OnBroadphaseShutdown(EntityUid uid, BroadphaseComponent component, ComponentShutdown args)
     {
         var xform = _xformQuery.GetComponent(uid);
+        ClearBroadphaseProxies(component.StaticTree);
+        ClearBroadphaseProxies(component.DynamicTree);
         RemoveChildrenFromTerminatingBroadphase(xform, component);
+    }
+
+    private void ClearBroadphaseProxies<T>(T tree) where T : IBroadPhase
+    {
+        // Clears in bulk without touching the tree.
+        var state = (Buffer: _physics.MoveBuffer, Tree: tree);
+        tree.Tree.Clear(ref state, static (ref (HashSet<FixtureProxy> Buffer, T Tree) state, in FixtureProxy proxy) =>
+        {
+            state.Buffer.Remove(proxy);
+            var fixture = proxy.Fixture;
+            if (fixture.ProxyCount == 0)
+                return; // Another child proxy of this fixture was already visited.
+
+            DebugTools.Assert(ReferenceEquals(fixture.ProxyTree, state.Tree));
+            fixture.Proxies = Array.Empty<FixtureProxy>();
+            fixture.ProxyCount = 0;
+            fixture.ProxyTree = null;
+        });
     }
 
     private void RemoveChildrenFromTerminatingBroadphase(TransformComponent xform,
@@ -177,15 +199,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
             DebugTools.Assert(childXform.Broadphase.Value.Uid == component.Owner);
             DebugTools.Assert(!_gridQuery.HasComp(child));
-
-            if (childXform.Broadphase.Value.CanCollide && _fixturesQuery.TryGetComponent(child, out var fixtures))
-            {
-                var tree = childXform.Broadphase.Value.Static ? component.StaticTree : component.DynamicTree;
-                foreach (var fixture in fixtures.Fixtures.Values)
-                {
-                    DestroyProxies(fixture, tree);
-                }
-            }
 
             childXform.Broadphase = null;
             RemoveChildrenFromTerminatingBroadphase(childXform, component);
@@ -305,48 +318,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
         AddOrMoveProxies((uid, body, xform), fixtureId, fixture, tree, broadphaseTransform);
     }
 
-    internal void DestroyProxies(EntityUid uid, string fixtureId, Fixture fixture, TransformComponent xform, BroadphaseComponent broadphase)
-    {
-        DebugTools.AssertNotNull(xform.Broadphase);
-        DebugTools.Assert(xform.Broadphase!.Value.Uid == broadphase.Owner);
-
-        if (!xform.Broadphase.Value.CanCollide || xform.GridUid == uid)
-            return;
-
-        if (fixture.ProxyCount == 0)
-        {
-            Log.Warning($"Tried to destroy fixture {fixtureId} on {ToPrettyString(uid)} that already has no proxies?");
-            return;
-        }
-
-        var tree = xform.Broadphase.Value.Static ? broadphase.StaticTree : broadphase.DynamicTree;
-        DestroyProxies(fixture, tree);
-    }
-
-    internal IBroadPhase? GetProxyBroadphaseTree(EntityUid uid, TransformComponent? xform = null)
-    {
-        if (!_xformQuery.Resolve(uid, ref xform, false))
-            return null;
-
-        if (xform.Broadphase is not { Valid: true } old)
-            return null;
-
-        if (!old.CanCollide || xform.GridUid == uid)
-            return null;
-
-        if (!_broadQuery.TryGetComponent(old.Uid, out var broadphase))
-        {
-            return null;
-        }
-
-        return old.Static ? broadphase.StaticTree : broadphase.DynamicTree;
-    }
-
-    internal void ReleaseProxies(EntityUid uid, Fixture fixture, TransformComponent? xform = null)
-    {
-        ReleaseProxies(fixture, GetProxyBroadphaseTree(uid, xform));
-    }
-
     #endregion
 
     #region Entity events
@@ -384,7 +355,18 @@ public sealed partial class EntityLookupSystem : EntitySystem
         DebugTools.Assert(!HasComp<MapGridComponent>(uid));
 
         if (xform.Broadphase is not { Valid: true } old)
-            return; // entity is not on any broadphase
+        {
+            // Release any remaining proxies even when cached broadphase data is unavailable.
+            if (_fixturesQuery.TryGetComponent(uid, out var detachedFixtures))
+            {
+                foreach (var fixture in detachedFixtures.Fixtures.Values)
+                {
+                    ReleaseProxies(fixture);
+                }
+            }
+
+            return;
+        }
 
         if (!_broadQuery.TryGetComponent(old.Uid, out var broadphase))
         {
@@ -398,7 +380,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (old.CanCollide)
         {
             if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
-                RemoveBroadTree(broadphase, fixtures, old.Static);
+                RemoveBroadTree(fixtures);
         }
         else
             (old.Static ? broadphase.StaticSundriesTree : broadphase.SundriesTree).Remove(uid);
@@ -413,32 +395,31 @@ public sealed partial class EntityLookupSystem : EntitySystem
             AddOrUpdateSundriesTree(old.Uid, broadphase, uid, xform, body.BodyType == BodyType.Static);
     }
 
-    private void RemoveBroadTree(BroadphaseComponent lookup, FixturesComponent manager, bool staticBody)
+    private void RemoveBroadTree(FixturesComponent manager)
     {
-        var tree = staticBody ? lookup.StaticTree : lookup.DynamicTree;
         foreach (var fixture in manager.Fixtures.Values)
         {
-            DestroyProxies(fixture, tree);
+            ReleaseProxies(fixture);
         }
     }
 
-    internal void DestroyProxies(Fixture fixture, IBroadPhase tree)
+    internal void ReleaseProxies(Fixture fixture)
     {
-        ReleaseProxies(fixture, tree);
-    }
-
-    internal void ReleaseProxies(Fixture fixture, IBroadPhase? tree)
-    {
+        DebugTools.Assert(fixture.ProxyCount == 0 || fixture.ProxyTree != null);
+        var tree = fixture.ProxyTree;
         var buffer = _physics.MoveBuffer;
         for (var i = 0; i < fixture.ProxyCount; i++)
         {
             var proxy = fixture.Proxies[i];
-            tree?.RemoveProxy(proxy.ProxyId);
+            DebugTools.Assert(ReferenceEquals(tree!.GetProxy(proxy.ProxyId), proxy),
+                "Removing a fixture proxy from a tree that does not own it.");
+            tree!.RemoveProxy(proxy.ProxyId);
             buffer.Remove(proxy);
         }
 
         fixture.ProxyCount = 0;
         fixture.Proxies = Array.Empty<FixtureProxy>();
+        fixture.ProxyTree = null;
     }
 
     private void AddPhysicsTree(EntityUid uid, EntityUid broadUid, BroadphaseComponent broadphase, TransformComponent xform, PhysicsComponent body, FixturesComponent fixtures)
@@ -503,6 +484,14 @@ public sealed partial class EntityLookupSystem : EntitySystem
     {
         var moveBuffer = _physics.MoveBuffer;
 
+        // Proxy IDs are local to the allocating tree. Ensure it's even the right one so release doesn't explode.
+        // TODO: Remove this someday? This is mostly a stop-gap for any short-term invalid removals.
+        if (fixture.ProxyCount > 0 &&
+            (!ReferenceEquals(fixture.ProxyTree, tree) || fixture.ProxyCount != fixture.Shape.ChildCount))
+        {
+            ReleaseProxies(fixture);
+        }
+
         // Moving
         if (fixture.ProxyCount > 0)
         {
@@ -510,8 +499,15 @@ public sealed partial class EntityLookupSystem : EntitySystem
             {
                 var bounds = fixture.Shape.ComputeAABB(broadphaseTransform, i);
                 var proxy = fixture.Proxies[i];
-                tree.MoveProxy(proxy.ProxyId, bounds);
-                proxy.AABB = bounds;
+                DebugTools.Assert(ReferenceEquals(tree.GetProxy(proxy.ProxyId), proxy),
+                    "Moving a fixture proxy in a tree that does not own it.");
+                // Only move if the fat AABB changes. Saves array lookup + change.
+                if (!proxy.AABB.Equals(bounds))
+                {
+                    tree.MoveProxy(proxy.ProxyId, bounds);
+                    proxy.AABB = bounds;
+                }
+
                 moveBuffer.Add(proxy);
             }
 
@@ -533,6 +529,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         fixture.Proxies = proxies;
         fixture.ProxyCount = count;
+        fixture.ProxyTree = tree;
     }
 
     private void AddOrUpdateSundriesTree(EntityUid broadUid, BroadphaseComponent broadphase, EntityUid uid, TransformComponent xform, bool staticBody, Box2? aabb = null)
@@ -596,9 +593,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
         DebugTools.Assert(newMap == null || HasComp<MapComponent>(newMap));
         DebugTools.Assert(!oldMap.IsValid() || HasComp<MapComponent>(oldMap));
 
-        // Grid-local fixture proxies are stored in the grid broadphase and remain valid across map
-        // transitions, but queued global move-buffer entries depend on a valid map context. Clear those before
-        // invalidating contacts or cached lookup data so contact generation never uses a cooked map state.
+        // Preserve grid-local proxies for direct map transfers, but release them on entry to nullspace.
+        // Detached entities can change shape, body type, or parent before returning to a map.
         if (newMap == null)
         {
             CleanupGridMapTransitionRecursive(grid, xform, invalidateLookup: true);
@@ -612,9 +608,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return;
         }
 
-        // Rebuild cached lookup state against the grid broadphase and touch preserved proxies after the grid has a
-        // valid destination map. This updates any local moves that happened while the grid was outside a map without
-        // forcing proxy recreation.
+        // Rebuild cached lookup state against the grid broadphase once the destination map is valid.
+        // This creates fresh proxies after nullspace and touches existing proxies for direct map transfers.
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
         CleanupGridMapTransitionRecursive(grid, xform, grid, gridBroadphase, xform, worldPos, worldRot);
     }
@@ -690,6 +685,12 @@ public sealed partial class EntityLookupSystem : EntitySystem
             var buffer = _physics.MoveBuffer;
             foreach (var fixture in fixtures.Fixtures.Values)
             {
+                if (invalidateLookup)
+                {
+                    ReleaseProxies(fixture);
+                    continue;
+                }
+
                 for (var i = 0; i < fixture.ProxyCount; i++)
                 {
                     buffer.Remove(fixture.Proxies[i]);
@@ -945,7 +946,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         if (old.CanCollide)
         {
-            RemoveBroadTree(broadphase, _fixturesQuery.GetComponent(uid), old.Static);
+            RemoveBroadTree(_fixturesQuery.GetComponent(uid));
         }
         else if (old.Static)
             broadphase.StaticSundriesTree.Remove(uid);
@@ -994,8 +995,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
     }
 
     /// <summary>
-    /// Clears fixture proxies after their broadphase tree has already been deleted.
-    /// The tree proxy is gone, but queued global move-buffer references must still be released.
+    /// Releases fixture proxies after their broadphase component has been deleted.
+    /// Fixtures retain their allocating tree until its leaves and global move-buffer references are released.
     /// </summary>
     private void ClearFixtureProxiesAfterBroadphaseDeleted(EntityUid uid)
     {
@@ -1004,7 +1005,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         foreach (var fixture in fixtures.Fixtures.Values)
         {
-            ReleaseProxies(fixture, null);
+            ReleaseProxies(fixture);
         }
     }
 

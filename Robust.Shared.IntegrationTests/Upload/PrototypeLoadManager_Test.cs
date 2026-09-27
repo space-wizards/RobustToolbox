@@ -20,6 +20,7 @@ internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
     private const string UploadTestIdA = "UploadTestA";
     private const string UploadTestIdB = "UploadTestB";
 
+    private IComponentFactory _facts = default!;
     private IPrototypeManager _prototype = default!;
     private TestPrototypeLoadManager _prototypeLoad = default!;
 
@@ -30,6 +31,8 @@ internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
         IoCManager.Resolve<ILocalizationManager>().Initialize();
         _prototype = IoCManager.Resolve<IPrototypeManager>();
         _prototype.RegisterKind(typeof(PrototypeUploadTestPrototype));
+
+        _facts = IoCManager.Resolve<IComponentFactory>();
 
         _prototypeLoad = new TestPrototypeLoadManager();
         IoCManager.InjectDependencies(_prototypeLoad);
@@ -120,11 +123,10 @@ internal sealed class PrototypeLoadManager_Test : OurRobustUnitTest
         Assert.That(_prototype.HasIndex<EntityPrototype>(UploadTestIdA), Is.True);
         Assert.That(_prototype.HasIndex<EntityPrototype>(UploadTestIdB), Is.True);
 
-        var comps = IoCManager.Resolve<IComponentFactory>();
         var a = _prototype.Index<EntityPrototype>(UploadTestIdA);
         var b = _prototype.Index<EntityPrototype>(UploadTestIdB);
-        Assert.That(a.Components.TryGetComponent(comps, out UploadTestTargetComponent? compA), Is.True);
-        Assert.That(b.Components.TryGetComponent(comps, out UploadTestTargetComponent? compB), Is.True);
+        Assert.That(a.Components.TryGetComponent(_facts, out UploadTestTargetComponent? compA), Is.True);
+        Assert.That(b.Components.TryGetComponent(_facts, out UploadTestTargetComponent? compB), Is.True);
         Assert.That(compA!.Target, Is.EqualTo(new EntProtoId(UploadTestIdB)));
         Assert.That(compB!.Target, Is.EqualTo(new EntProtoId(UploadTestIdA)));
     }

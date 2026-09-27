@@ -1684,6 +1684,15 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ResCheckBadFileExtensions =
             CVarDef.Create("res.check_bad_file_extensions", true);
 
+        /// <summary>
+        /// If true, prototypes will be validated upon uploading and throw an error if one fails, cancelling the upload.
+        /// </summary>
+        /// <remarks>
+        /// Setting to false is more permissive, but may result in uploading faulty prototypes.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResValidatePrototypeUpload =
+            CVarDef.Create("res.validate_prototype_upload", true, CVar.REPLICATED | CVar.SERVER);
+
         /*
          * DEBUG
          */

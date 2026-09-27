@@ -308,6 +308,7 @@ public abstract partial class SharedPhysicsSystem
 
     private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
     {
+        _islands.Clear();
         using (_prof.Group("Build Islands"))
         {
             BuildIslands(prediction);
@@ -431,6 +432,7 @@ public abstract partial class SharedPhysicsSystem
                 }
 
                 // Handle joints
+                _islandJoints.Clear();
                 if (RelayTargetQuery.TryGetComponent(bodyUid, out var relayComp))
                 {
                     foreach (var relay in relayComp.Relayed)
@@ -500,10 +502,10 @@ public abstract partial class SharedPhysicsSystem
                 foreach (var (original, joint) in _islandJoints)
                 {
                     // TODO: Same here store physicscomp + transform on the joint, the savings are worth it.
-                    var bodyA = PhysicsQuery.GetComponent(joint.BodyAUid);
-                    var bodyB = PhysicsQuery.GetComponent(joint.BodyBUid);
-
-                    if (!bodyA.CanCollide || !bodyB.CanCollide)
+                    if (!PhysicsQuery.TryComp(joint.BodyAUid, out var bodyA) ||
+                        !PhysicsQuery.TryComp(joint.BodyBUid, out var bodyB) ||
+                        !bodyA.CanCollide ||
+                        !bodyB.CanCollide)
                         continue;
 
                     joints.Add((original, joint));
@@ -520,8 +522,6 @@ public abstract partial class SharedPhysicsSystem
                         bodyB.Island = true;
                     }
                 }
-
-                _islandJoints.Clear();
             }
 
             int idx;
@@ -615,7 +615,6 @@ public abstract partial class SharedPhysicsSystem
             // So Box2D would update broadphase here buutttt we'll just wait until MoveEvent queue is used.
         }
 
-        _islands.Clear();
         _islandSet.Clear();
         _bodyStack.Clear();
         _awakeBodyList.Clear();

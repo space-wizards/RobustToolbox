@@ -173,6 +173,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
             entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
+            _entries[index].RemoveControls();
             _entries[index] = entry;
 
             AddNewItemHeight(font, in entry);

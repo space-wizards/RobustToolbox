@@ -85,6 +85,11 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     public bool RequestedFull = false;
 
     /// <summary>
+    /// The earliest time the client may request another full state.
+    /// </summary>
+    public TimeSpan FullStateRequestCooldownEnd;
+
+    /// <summary>
     /// List of entity states to send to the client.
     /// </summary>
     public readonly List<EntityState> States = new();
@@ -123,12 +128,7 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
     public uint LastInput;
 
     /// <summary>
-    /// The game state for this tick,
-    /// </summary>
-    public GameState? State;
-
-    /// <summary>
-    /// The serialized <see cref="State"/> object.
+    /// The serialized game state object.
     /// </summary>
     public MemoryStream? StateStream;
 
@@ -146,7 +146,6 @@ internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<P
         Chunks.Clear();
         ChunkSet.Clear();
         States.Clear();
-        State = null;
     }
 }
 

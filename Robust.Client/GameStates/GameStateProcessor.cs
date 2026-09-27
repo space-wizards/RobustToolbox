@@ -21,6 +21,9 @@ namespace Robust.Client.GameStates
         private readonly List<GameState> _stateBuffer = new();
 
         private readonly List<(GameTick Tick, List<NetEntity> Entities)> _pvsDetachMessages = new();
+
+        public bool HasPvsDetachMessages => _pvsDetachMessages.Count != 0;
+
         public GameState? LastFullState { get; private set; }
         public bool WaitingForFull => LastFullStateRequested.HasValue;
         public (GameTick Tick, DateTime Time)? LastFullStateRequested { get; private set; } = (GameTick.Zero, DateTime.MaxValue);

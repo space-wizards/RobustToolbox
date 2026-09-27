@@ -556,7 +556,7 @@ public sealed partial class EntityLookupSystem
 
         var state = (uid, transform, intersecting, _fixturesQuery, this, _physics, flags);
 
-        // Unfortuantely I can't think of a way to de-dupe this with the other ones as it's slightly different.
+        // Unfortunately I can't think of a way to de-dupe this with the other ones as it's slightly different.
         _map.FindGridsIntersecting(mapId, worldAABB, ref state,
             static (EntityUid gridUid, MapGridComponent grid,
                 ref (EntityUid entity, Transform transform, HashSet<EntityUid> intersecting,

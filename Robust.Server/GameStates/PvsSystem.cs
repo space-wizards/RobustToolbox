@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Server.Configuration;
@@ -44,6 +45,8 @@ internal sealed partial class PvsSystem : EntitySystem
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
     // Main issue is that I CBF figuring out the logic for handling it changing mid-game.
     public const int DirtyBufferSize = 20;
+
+    private static readonly TimeSpan FullStateRequestCooldown = TimeSpan.FromSeconds(1);
     // Note: If a client has ping higher than TickBuffer / TickRate, then the server will treat every entity as if it
     // had entered PVS for the first time. Note that due to the PVS budget, this buffer is easily overwhelmed.
 
@@ -77,6 +80,8 @@ internal sealed partial class PvsSystem : EntitySystem
     private PvsChunkJob _chunkJob;
     private PvsLeaveJob _leaveJob;
     private PvsDeletionsJob _deletionJob;
+    private PvsSendJob _sendJob;
+    private GameTick _sendTick;
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
@@ -123,6 +128,7 @@ internal sealed partial class PvsSystem : EntitySystem
             throw new Exception($"Pvs struct sizes must match");
 
         _deletionJob = new PvsDeletionsJob(this);
+        _sendJob = new PvsSendJob(this);
         _leaveJob = new PvsLeaveJob(this);
         _chunkJob = new PvsChunkJob(this);
         _ackJob = new PvsAckJob(this);
@@ -200,7 +206,7 @@ internal sealed partial class PvsSystem : EntitySystem
         // Get visible chunks, and update any dirty chunks.
         BeforeSerializeStates();
 
-        // Construct & serialize the game state for each player (and for the replay).
+        // Construct & serialize the game state for each player (and update the replay).
         SerializeStates();
 
         foreach (var uid in _toDelete)
@@ -212,7 +218,7 @@ internal sealed partial class PvsSystem : EntitySystem
         // Compress & send the states.
         SendStates();
 
-        // Cull deletion history
+        // Cull deletion history.
         AfterSerializeStates();
 
         ProcessLeavePvs();
@@ -231,11 +237,18 @@ internal sealed partial class PvsSystem : EntitySystem
         _async = value;
     }
 
-    // TODO PVS rate limit this?
     private void OnClientRequestFull(ICommonSession session, GameTick tick, NetEntity? missingEntity)
     {
         if (!PlayerData.TryGetValue(session, out var pvsSession))
             return;
+
+        // A full state rebuild is expensive and the request is sent reliably.
+        // Coalesce requests while one is pending and rate limit subsequent ones.
+        var realTime = _gameTiming.RealTime;
+        if (pvsSession.RequestedFull || pvsSession.FullStateRequestCooldownEnd > realTime)
+            return;
+
+        pvsSession.FullStateRequestCooldownEnd = realTime + FullStateRequestCooldown;
 
         var lastAcked = pvsSession.LastReceivedAck;
 
@@ -262,8 +275,8 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private void ForceFullState(PvsSession session)
     {
-        _leaveTask?.WaitOne();
-        _leaveTask = null;
+        WaitSendTask();
+        WaitLeaveTask();
         session.LastReceivedAck = _gameTiming.CurTick;
         session.RequestedFull = true;
         ClearSendHistory(session);
@@ -442,8 +455,8 @@ internal sealed partial class PvsSystem : EntitySystem
 
     internal void ProcessDisconnections()
     {
-        _leaveTask?.WaitOne();
-        _leaveTask = null;
+        WaitSendTask();
+        WaitLeaveTask();
 
         foreach (var session in _disconnected)
         {
@@ -453,6 +466,26 @@ internal sealed partial class PvsSystem : EntitySystem
                 FreeSessionDataMemory(pvsSession);
             }
         }
+    }
+
+    private WaitHandle? _sendTask;
+
+    private void WaitSendTask()
+    {
+        _sendTask?.WaitOne();
+        _sendTask = null;
+    }
+
+    private void WaitLeaveTask()
+    {
+        _leaveTask?.WaitOne();
+        _leaveTask = null;
+    }
+
+    private void WaitDeletionTask()
+    {
+        _deletionTask?.WaitOne();
+        _deletionTask = null;
     }
 
     internal void CacheSessionData(ICommonSession[] players)

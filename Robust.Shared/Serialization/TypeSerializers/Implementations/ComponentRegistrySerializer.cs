@@ -260,7 +260,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             for (var i = 0; i < node.Count; i++)
             {
                 var mapping = (MappingDataNode)node[i];
-                var type = mapping.Get<ValueDataNode>("type").Value;
+                if (!mapping.TryGet("type", out ValueDataNode? typeNode))
+                {
+                    if (mapping.Tag == PrototypeManager.PartialModifiedTag)
+                        continue;
+
+                    throw new KeyNotFoundException("The given key 'type' was not present in the dictionary.");
+                }
+
+                var type = typeNode.Value;
                 var availability = _factory.GetComponentAvailability(type);
                 if (availability == ComponentAvailability.Ignore)
                     continue;

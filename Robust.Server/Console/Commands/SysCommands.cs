@@ -30,7 +30,29 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            _server.Shutdown(argStr[$"{Command} ".Length..].Trim());
+            switch (args.Length)
+            {
+                case > 1:
+                    shell.WriteError(Loc.GetString("shell-need-between-arguments", ("lower", 0), ("upper", 1), ("currentAmount", args.Length)));
+                    break;
+                case 1:
+                    _server.Shutdown(args[0]);
+                    break;
+                default:
+                    _server.Shutdown();
+                    break;
+            }
+        }
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            switch (args.Length)
+            {
+                case 1:
+                    return CompletionResult.FromHint(Loc.GetString("cmd-shutdown-hint-1"));
+                default:
+                    return CompletionResult.Empty;
+            }
         }
     }
 

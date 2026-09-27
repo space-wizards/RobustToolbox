@@ -559,6 +559,12 @@ public partial class SharedPhysicsSystem
         body.Force = Vector2.Zero;
         body.Torque = 0f;
 
+        // A body going non-static while it can't collide falls through both branches below.
+        DirtyFields(uid, body, null,
+            nameof(PhysicsComponent.BodyType),
+            nameof(PhysicsComponent.Force),
+            nameof(PhysicsComponent.Torque));
+
         if (body.BodyType == BodyType.Static)
         {
             SetAwake((uid, body), false);
@@ -568,15 +574,12 @@ public partial class SharedPhysicsSystem
 
             DirtyFields(uid, body, null,
                 nameof(PhysicsComponent.LinearVelocity),
-                nameof(PhysicsComponent.AngularVelocity),
-                nameof(PhysicsComponent.Force),
-                nameof(PhysicsComponent.Torque));
+                nameof(PhysicsComponent.AngularVelocity));
         }
         // Even if it's dynamic if it can't collide then don't force it awake.
         else if (body.CanCollide)
         {
             SetAwake((uid, body), true);
-            DirtyFields(uid, body, null, nameof(PhysicsComponent.Force), nameof(PhysicsComponent.Torque));
         }
 
         _broadphase.RegenerateContacts((uid, body, manager, xform));

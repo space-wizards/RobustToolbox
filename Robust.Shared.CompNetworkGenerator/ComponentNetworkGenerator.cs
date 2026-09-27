@@ -172,6 +172,7 @@ namespace Robust.Shared.CompNetworkGenerator
 
             var networkedTypes = new List<string>();
             var usesClientCollectionCopy = false;
+            var collectionCopyMethods = new StringBuilder();
 
             void AppendShallowClone(string fieldName)
             {
@@ -179,34 +180,187 @@ namespace Robust.Shared.CompNetworkGenerator
                 {fieldName} = this.{fieldName},");
             }
 
-            void AppendCollectionClone(string fieldName, bool nullable)
+            void AppendCollectionClone(string fieldName, bool nullable, string? copyMethodName = null)
             {
+                var copy = copyMethodName == null
+                    ? $"new(this.{fieldName})"
+                    : $"{copyMethodName}(this.{fieldName})";
                 var value = nullable
-                    ? $"this.{fieldName} == null ? null! : new(this.{fieldName})"
-                    : $"new(this.{fieldName})";
+                    ? $"this.{fieldName} == null ? null! : {copy}"
+                    : copy;
                 shallowClone.Append($@"
                 {fieldName} = {value},");
             }
 
-            string GetClientCollectionField(string fieldName, bool nullable)
+            void AppendTypedCollectionClone(ITypeSymbol type, string fieldName, bool nullable, string? copyMethodName)
+            {
+                var copy = GetCollectionCopyExpression(type, $"this.{fieldName}", copyMethodName);
+                var value = nullable
+                    ? $"this.{fieldName} == null ? null! : {copy}"
+                    : copy;
+                shallowClone.Append($@"
+                {fieldName} = {value},");
+            }
+
+            string GetClientCollectionField(ITypeSymbol type, string fieldName, bool nullable, string? copyMethodName)
             {
                 usesClientCollectionCopy = true;
+                var copy = GetCollectionCopyExpression(type, $"component.{fieldName}", copyMethodName);
                 return nullable
-                    ? $"component.{fieldName} == null ? null! : new(component.{fieldName})"
-                    : $"new(component.{fieldName})";
+                    ? $"component.{fieldName} == null ? null! : {copy}"
+                    : copy;
+            }
+
+            string GetCollectionCopyExpression(ITypeSymbol type, string source, string? copyMethodName)
+            {
+                if (copyMethodName != null)
+                    return $"{copyMethodName}({source})";
+
+                var named = (INamedTypeSymbol) type;
+                var typeName = type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString(FullNullableFormat);
+                return named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat) switch
+                {
+                    GlobalDictionaryName => $"new {typeName}({source}, {source}.Comparer)",
+                    GlobalHashSetName => $"new {typeName}({source}, {source}.Comparer)",
+                    GlobalListName => $"new {typeName}({source})",
+                    _ => throw new InvalidOperationException($"Unsupported collection type {type}")
+                };
             }
 
             string GetCollectionRefill(ITypeSymbol type, string target, string source, string indentation)
             {
                 var named = (INamedTypeSymbol) type;
-                return named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat) switch
+                var constructed = named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat);
+                switch (constructed)
                 {
-                    GlobalDictionaryName => $@"foreach (var (key, value) in {source})
-{indentation}    {target}.Add(key, value);",
-                    GlobalHashSetName => $"{target}.UnionWith({source});",
-                    GlobalListName => $"{target}.AddRange({source});",
-                    _ => throw new InvalidOperationException($"Unsupported collection type {type}")
-                };
+                    case GlobalDictionaryName:
+                    {
+                        var key = GetCopyValueExpression(named.TypeArguments[0], "key");
+                        var value = GetCopyValueExpression(named.TypeArguments[1], "value");
+                        return $@"{target}.EnsureCapacity({source}.Count);
+{indentation}foreach (var (key, value) in {source})
+{indentation}    {target}.Add({key}, {value});";
+                    }
+                    case GlobalHashSetName:
+                    {
+                        var valueType = named.TypeArguments[0];
+                        if (!NeedsCopyValue(valueType))
+                            return $"{target}.UnionWith({source});";
+
+                        var value = GetCopyValueExpression(valueType, "value");
+                        return $@"{target}.EnsureCapacity({source}.Count);
+{indentation}foreach (var value in {source})
+{indentation}    {target}.Add({value});";
+                    }
+                    case GlobalListName:
+                    {
+                        var valueType = named.TypeArguments[0];
+                        if (!NeedsCopyValue(valueType))
+                            return $"{target}.AddRange({source});";
+
+                        var value = GetCopyValueExpression(valueType, "value");
+                        return $@"{target}.EnsureCapacity({source}.Count);
+{indentation}foreach (var value in {source})
+{indentation}    {target}.Add({value});";
+                    }
+                    default:
+                        throw new InvalidOperationException($"Unsupported collection type {type}");
+                }
+            }
+
+            void AppendCollectionCopyMethod(ITypeSymbol type, string methodName)
+            {
+                var named = (INamedTypeSymbol) type;
+                var typeName = type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString(FullNullableFormat);
+                var constructed = named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat);
+                var refill = GetCollectionRefill(type, "copy", "source", "        ");
+
+                switch (constructed)
+                {
+                    case GlobalDictionaryName:
+                        collectionCopyMethods.Append($$"""
+    private static {{typeName}} {{methodName}}({{typeName}} source)
+    {
+        var copy = new {{typeName}}(source.Count, source.Comparer);
+        {{refill}}
+        return copy;
+    }
+
+""");
+                        break;
+                    case GlobalHashSetName:
+                        collectionCopyMethods.Append($$"""
+    private static {{typeName}} {{methodName}}({{typeName}} source)
+    {
+        var copy = new {{typeName}}(source.Count, source.Comparer);
+        {{refill}}
+        return copy;
+    }
+
+""");
+                        break;
+                    case GlobalListName:
+                        collectionCopyMethods.Append($$"""
+    private static {{typeName}} {{methodName}}({{typeName}} source)
+    {
+        var copy = new {{typeName}}(source.Count);
+        {{refill}}
+        return copy;
+    }
+
+""");
+                        break;
+                    default:
+                        throw new InvalidOperationException($"Unsupported collection type {type}");
+                }
+            }
+
+            bool NeedsDeepCollectionCopy(ITypeSymbol type)
+            {
+                var named = (INamedTypeSymbol) type;
+                switch (named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat))
+                {
+                    case GlobalDictionaryName:
+                        return NeedsCopyValue(named.TypeArguments[0]) || NeedsCopyValue(named.TypeArguments[1]);
+                    case GlobalHashSetName:
+                    case GlobalListName:
+                        return NeedsCopyValue(named.TypeArguments[0]);
+                    default:
+                        throw new InvalidOperationException($"Unsupported collection type {type}");
+                }
+            }
+
+            bool NeedsCopyValue(ITypeSymbol type)
+            {
+                return ImplementsInterface(GetCloneableType(type), GlobalIRobustCloneableName);
+            }
+
+            ITypeSymbol GetCloneableType(ITypeSymbol type)
+            {
+                if (type is INamedTypeSymbol named &&
+                    named.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
+                {
+                    return named.TypeArguments[0];
+                }
+
+                return type.WithNullableAnnotation(NullableAnnotation.None);
+            }
+
+            string GetCopyValueExpression(ITypeSymbol type, string value)
+            {
+                if (!NeedsCopyValue(type))
+                    return value;
+
+                if (type is INamedTypeSymbol named &&
+                    named.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
+                {
+                    return $"{value}.HasValue ? {value}.Value.Clone() : null";
+                }
+
+                if (type.NullableAnnotation == NullableAnnotation.Annotated && type.IsReferenceType)
+                    return $"{value} == null ? null! : {value}.Clone()";
+
+                return $"{value}.Clone()";
             }
 
             foreach (var (type, name) in fields)
@@ -445,12 +599,20 @@ namespace Robust.Shared.CompNetworkGenerator
                         else if (IsCloneType(type))
                         {
                             getField = $"component.{name}";
-                            clientGetField = GetClientCollectionField(name, nullable);
+                            var copyMethodName = NeedsDeepCollectionCopy(type)
+                                ? $"__AutoNetworkCopyCollection{index}"
+                                : null;
+                            if (copyMethodName != null)
+                                AppendCollectionCopyMethod(type, copyMethodName);
+
+                            clientGetField = GetClientCollectionField(type, name, nullable, copyMethodName);
                             cast = $"({castString})";
 
-                            var nullCast = nullable ? castString.Substring(0, castString.Length - 1) : castString;
                             var handleRefill = GetCollectionRefill(type, $"component.{name}", $"state.{name}", "                ");
                             var deltaRefill = GetCollectionRefill(type, $"component.{name}", $"{name}Value", "                        ");
+                            var stateCopy = GetCollectionCopyExpression(type, $"state.{name}", copyMethodName);
+                            var valueCopy = GetCollectionCopyExpression(type, $"{name}Value", copyMethodName);
+                            var deltaApplyCopy = GetCollectionCopyExpression(type, name, copyMethodName);
 
                             if (nullable)
                             {
@@ -458,8 +620,8 @@ namespace Robust.Shared.CompNetworkGenerator
             if (state.{name} == null)
                 component.{name} = null!;
             else if (component.{name} == null)
-                component.{name} = new(state.{name});
-            else if (!ReferenceEquals(component.{name}, state.{name}))
+                component.{name} = {stateCopy};
+            else
             {{
                 component.{name}.Clear();
                 {handleRefill}
@@ -470,36 +632,30 @@ namespace Robust.Shared.CompNetworkGenerator
                     if ({name}Value == null)
                         component.{name} = null!;
                     else if (component.{name} == null)
-                        component.{name} = new {nullCast}({name}Value);
-                    else if (!ReferenceEquals(component.{name}, {name}Value))
+                        component.{name} = {valueCopy};
+                    else
                     {{
                         component.{name}.Clear();
                         {deltaRefill}
                     }}");
 
-                                deltaApply.Add($"fullState.{name} = {name} == null ? null! : new({name});");
+                                deltaApply.Add($"fullState.{name} = {name} == null ? null! : {deltaApplyCopy};");
                             }
                             else
                             {
                                 handleStateSetters.Append($@"
-            if (!ReferenceEquals(component.{name}, state.{name}))
-            {{
-                component.{name}.Clear();
-                {handleRefill}
-            }}");
+            component.{name}.Clear();
+            {handleRefill}");
 
                                 deltaHandleFields.Append($@"
                     var {name}Value = {cast} {fieldHandleValue};
-                    if (!ReferenceEquals(component.{name}, {name}Value))
-                    {{
-                        component.{name}.Clear();
-                        {deltaRefill}
-                    }}");
+                    component.{name}.Clear();
+                    {deltaRefill}");
 
-                                deltaApply.Add($"fullState.{name} = new({name});");
+                                deltaApply.Add($"fullState.{name} = {deltaApplyCopy};");
                             }
 
-                            AppendCollectionClone(name, nullable);
+                            AppendTypedCollectionClone(type, name, nullable, copyMethodName);
                         }
                         else
                         {
@@ -728,6 +884,7 @@ namespace Robust.Shared.CompNetworkGenerator
             var clientDeltaGetStateText = TrimNewLines(clientDeltaGetState);
             var deltaCompFieldsText = TrimNewLines(deltaCompFields);
             var fieldStatesText = TrimNewLines(fieldStates);
+            var collectionCopyMethodsText = TrimNewLines(collectionCopyMethods);
 
             var netManagerDependency = usesClientCollectionCopy
                 ? "[global::Robust.Shared.IoC.Dependency] private global::Robust.Shared.Network.INetManager _net = default!;"
@@ -759,6 +916,12 @@ namespace Robust.Shared.CompNetworkGenerator
 
             outSb.AppendLine(deltaInterface);
             outSb.AppendLine("{");
+
+            if (collectionCopyMethodsText.Length != 0)
+            {
+                outSb.AppendLine(collectionCopyMethodsText);
+                outSb.AppendLine();
+            }
 
             if (deltaCompFieldsText.Length != 0)
             {

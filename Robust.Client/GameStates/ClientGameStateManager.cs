@@ -242,7 +242,6 @@ namespace Robust.Client.GameStates
             _detachedChunkEntities.Clear();
         }
 
-
         private void OnEntitySystemLoaded(object? sender, SystemChangedArgs args)
         {
             if (args.System is not ClientChunkEntitySystem chunkEntities)

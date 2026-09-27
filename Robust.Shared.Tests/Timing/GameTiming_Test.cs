@@ -256,7 +256,9 @@ namespace Robust.Shared.Tests.Timing
                 Assert.That(phase, Is.GreaterThanOrEqualTo(previousPhase).Within(0.00001f));
                 previousPhase = phase;
             }
-        }        /// <summary>
+        }
+
+        /// <summary>
         ///     Checks that IGameTiming.FrameTime returns the simulated delta time between the two most recent calls to IGameTiming.StartFrame().
         /// </summary>
         /// <remarks>

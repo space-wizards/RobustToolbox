@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 291.0.0
+
+### Breaking changes
+
+* Ignore ctrl + alt key bindings while AltGr is held.
+* Serialize PVS states asynchronously.
+
+### Bugfixes
+
+* Fix more instances of stale fixture proxies being erroneously cleared on the wrong tree.
+
+### Internal
+
+* Remove global container subscription to entity initialization.
+
+
 ## 290.0.0
 
 ### Breaking changes

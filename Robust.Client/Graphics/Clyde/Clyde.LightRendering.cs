@@ -63,14 +63,21 @@ namespace Robust.Client.Graphics.Clyde
 
         // Occlusion geometry used to render shadows and FOV.
 
-        // Amount of indices in _occlusionEbo, so how much we have to draw when drawing _occlusionVao.
+        // Amount of indices in _occlusionEbo (FOV depth). Lighting shadows use _occlusionLightingDataLength.
         private int _occlusionDataLength;
+        private int _occlusionLightingDataLength;
 
         // Actual GL objects used for rendering.
         private GLBuffer _occlusionVbo = default!;
         private GLBuffer _occlusionVIVbo = default!;
         private GLBuffer _occlusionEbo = default!;
         private GLHandle _occlusionVao;
+
+        // Separate depth VAO for light shadows so FOV (32×32) and lighting (tall) share one tree walk.
+        private GLBuffer _occlusionLightingVbo = default!;
+        private GLBuffer _occlusionLightingVIVbo = default!;
+        private GLBuffer _occlusionLightingEbo = default!;
+        private GLHandle _occlusionLightingVao;
 
 
         // Occlusion mask geometry that represents the area with occluders.
@@ -102,19 +109,17 @@ namespace Robust.Client.Graphics.Clyde
         private LightCapacityComparer _lightCap = new();
         private ShadowCapacityComparer _shadowCap = new ShadowCapacityComparer();
 
-        // Cached shared occluder edges from ClientOccluderSystem because we have very specific occluder rules.
-        private readonly HashSet<OccluderEdgeKey> _occluderSharedBoundaryEdges = new();
-        private readonly List<Vector4> _occluderBoundarySegments = new();
+        // Per-pass occluder geometry (FOV vs lighting). One tree walk fills both.
+        private readonly OccluderPassGeometry _occluderFovGeometry = new();
+        private readonly OccluderPassGeometry _occluderLightGeometry = new();
+        // Scratch used while finalizing a pass (not retained between frames).
         private readonly HashSet<OccluderVertexKey> _occluderVisibleBoundaryVertices = new();
         private readonly HashSet<OccluderVertexKey> _occluderConvexBoundaryVertices = new();
         private readonly Dictionary<OccluderVertexKey, BoundaryVertexDirections> _occluderBoundaryVertexDirections = new();
         private readonly Dictionary<OccluderVertexKey, List<Vector4>> _occluderSharedVertexEdges = new();
         private readonly HashSet<OccluderEdgeKey> _occluderUniqueSharedEdges = new();
         private readonly List<OccluderVertexKey> _occluderStaleSharedVertices = new();
-        private readonly List<OccluderRenderEntry> _occluderRenderEntries = new();
-        private readonly List<Vector2> _occluderRenderVertices = new();
-        private readonly List<Vector4> _occluderRenderEdges = new();
-        private readonly List<bool> _occluderRenderSharedEdges = new();
+        private readonly HashSet<OccluderEdgeKey> _occluderSeenBoundaryEdges = new();
 
         private float _maxLightRadius;
 
@@ -152,6 +157,30 @@ namespace Robust.Client.Graphics.Clyde
                 _occlusionEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
                     nameof(_occlusionEbo));
 
+                CheckGlError();
+            }
+
+            {
+                // Lighting-shadow occluder VAO (same layout as FOV; filled in the same geometry pass).
+                _occlusionLightingVao = new GLHandle(GenVertexArray());
+                BindVertexArray(_occlusionLightingVao.Handle);
+                CheckGlError();
+
+                ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, _occlusionLightingVao, nameof(_occlusionLightingVao));
+
+                _occlusionLightingVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+                    nameof(_occlusionLightingVbo));
+                GL.VertexAttribPointer(0, 4, VertexAttribPointerType.Float, false, sizeof(Vector4), IntPtr.Zero);
+                GL.EnableVertexAttribArray(0);
+                CheckGlError();
+
+                _occlusionLightingVIVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+                    nameof(_occlusionLightingVIVbo));
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.UnsignedByte, true, sizeof(byte) * 2, IntPtr.Zero);
+                GL.EnableVertexAttribArray(1);
+
+                _occlusionLightingEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
+                    nameof(_occlusionLightingEbo));
                 CheckGlError();
             }
 
@@ -239,7 +268,7 @@ namespace Robust.Client.Graphics.Clyde
             using var _ = DebugGroup(nameof(DrawFov));
             using var _p = _prof.Group("DrawFov");
 
-            PrepareDepthDraw(RtToLoaded(_fovRenderTarget));
+            PrepareDepthDraw(RtToLoaded(_fovRenderTarget), _occlusionVao);
 
             if (eye.DrawFov)
             {
@@ -253,12 +282,12 @@ namespace Robust.Client.Graphics.Clyde
                 GL.CullFace(CullFaceMode.Back);
                 CheckGlError();
 
-                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 0);
+                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 0, _occlusionDataLength);
 
                 GL.CullFace(CullFaceMode.Front);
                 CheckGlError();
 
-                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 1);
+                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 1, _occlusionDataLength);
             }
 
             FinalizeDepthDraw();
@@ -271,7 +300,7 @@ namespace Robust.Client.Graphics.Clyde
         /// <param name="width">The width of the current framebuffer.</param>
         /// <param name="maxDist">The maximum distance of this light.</param>
         /// <param name="viewportY">Y index of the row to render the depth at in the framebuffer.</param>
-        private void DrawOcclusionDepth(Vector2 lightPos, int width, float maxDist, int viewportY)
+        private void DrawOcclusionDepth(Vector2 lightPos, int width, float maxDist, int viewportY, int occlusionDataLength)
         {
             // The light is now the center of the universe.
             _fovCalculationProgram.SetUniform("shadowLightCentre", lightPos);
@@ -282,17 +311,17 @@ namespace Robust.Client.Graphics.Clyde
 
             // Make two draw calls. This allows a faked "generation" of additional polygons.
             _fovCalculationProgram.SetUniform("shadowOverlapSide", 0.0f);
-            GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
+            GL.DrawElements(GetQuadGLPrimitiveType(), occlusionDataLength, DrawElementsType.UnsignedShort, 0);
             CheckGlError();
             _debugStats.LastGLDrawCalls += 1;
             // Yup, it's the other draw call.
             _fovCalculationProgram.SetUniform("shadowOverlapSide", 1.0f);
-            GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
+            GL.DrawElements(GetQuadGLPrimitiveType(), occlusionDataLength, DrawElementsType.UnsignedShort, 0);
             CheckGlError();
             _debugStats.LastGLDrawCalls += 1;
         }
 
-        private void PrepareDepthDraw(LoadedRenderTarget target)
+        private void PrepareDepthDraw(LoadedRenderTarget target, GLHandle occlusionVao)
         {
             const float arbitraryDistanceMax = 1234;
 
@@ -327,7 +356,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
             CheckGlError();
 
-            BindVertexArray(_occlusionVao.Handle);
+            BindVertexArray(occlusionVao.Handle);
             CheckGlError();
 
             _fovCalculationProgram.Use();
@@ -373,8 +402,7 @@ namespace Robust.Client.Graphics.Clyde
                 (count, expandedBounds) = GetLightsToRender(mapId, worldBounds, worldAABB);
             }
 
-            UpdateOcclusionGeometry(mapId, expandedBounds, eye.Position.Position);
-
+            UpdateOcclusionGeometry(mapId, expandedBounds, eye.Position.Position, eye, buildLighting: _lightManager.DrawLighting);
             DrawFov(viewport, eye);
 
             if (!_lightManager.DrawLighting)
@@ -388,7 +416,7 @@ namespace Robust.Client.Graphics.Clyde
             using (DebugGroup("Draw shadow depth"))
             using (_prof.Group("Draw shadow depth"))
             {
-                PrepareDepthDraw(RtToLoaded(_shadowRenderTarget));
+                PrepareDepthDraw(RtToLoaded(_shadowRenderTarget), _occlusionLightingVao);
                 GL.CullFace(CullFaceMode.Back);
                 CheckGlError();
 
@@ -405,7 +433,8 @@ namespace Robust.Client.Graphics.Clyde
                             lightData.Position,
                             ShadowMapSize,
                             light.Radius,
-                            lightData.ShadowMapIndex);
+                            lightData.ShadowMapIndex,
+                            _occlusionLightingDataLength);
                     }
                 }
 
@@ -1557,6 +1586,29 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly record struct OccluderRenderEntry(int EdgeOffset, int EdgeCount);
 
+        /// <summary>
+        /// Geometry collected for one occluder consumer (hard FOV vs light shadows / wall bleed).
+        /// </summary>
+        private sealed class OccluderPassGeometry
+        {
+            public readonly HashSet<OccluderEdgeKey> SharedBoundaryEdges = new();
+            public readonly List<Vector4> BoundarySegments = new();
+            public readonly List<OccluderRenderEntry> RenderEntries = new();
+            public readonly List<Vector2> RenderVertices = new();
+            public readonly List<Vector4> RenderEdges = new();
+            public readonly List<bool> RenderSharedEdges = new();
+
+            public void Clear()
+            {
+                SharedBoundaryEdges.Clear();
+                BoundarySegments.Clear();
+                RenderEntries.Clear();
+                RenderVertices.Clear();
+                RenderEdges.Clear();
+                RenderSharedEdges.Clear();
+            }
+        }
+
         private static float SignedArea(ReadOnlySpan<Vector2> vertices)
         {
             var area = 0f;
@@ -1575,69 +1627,96 @@ namespace Robust.Client.Graphics.Clyde
             return new Vector4(a.X, a.Y, b.X, b.Y);
         }
 
-        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Vector2 eyePosition)
+        /// <summary>
+        /// Single tree walk builds FOV (gameplay poly) and lighting (tall strip) geometry, then uploads
+        /// each to its own depth VAO. Avoids calling this twice per frame.
+        /// </summary>
+        private void UpdateOcclusionGeometry(
+            MapId map,
+            Box2 expandedBounds,
+            Vector2 eyePosition,
+            IEye eye,
+            bool buildLighting)
         {
             using var _ = _prof.Group("UpdateOcclusionGeometry");
             using var _p = DebugGroup(nameof(UpdateOcclusionGeometry));
 
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
-            var sharedBoundaryEdges = _occluderSharedBoundaryEdges;
-            var boundarySegments = _occluderBoundarySegments;
-            var visibleBoundaryVertices = _occluderVisibleBoundaryVertices;
-            var convexBoundaryVertices = _occluderConvexBoundaryVertices;
-            var boundaryVertexDirections = _occluderBoundaryVertexDirections;
-            var sharedVertexEdges = _occluderSharedVertexEdges;
-            var uniqueSharedEdges = _occluderUniqueSharedEdges;
-            var staleSharedVertices = _occluderStaleSharedVertices;
+            var fov = _occluderFovGeometry;
+            var light = _occluderLightGeometry;
+            fov.Clear();
+            light.Clear();
 
-            sharedBoundaryEdges.Clear();
-            boundarySegments.Clear();
-            visibleBoundaryVertices.Clear();
-            _occluderRenderEntries.Clear();
-            _occluderRenderVertices.Clear();
-            _occluderRenderEdges.Clear();
-            _occluderRenderSharedEdges.Clear();
+            BuildFrameOccluderGeometry(map, expandedBounds, xforms, eye, buildLighting, fov, light);
 
-            BuildFrameOccluderGeometry(map, expandedBounds, xforms);
+            FinalizeOcclusionPass(fov, eyePosition, _occlusionVao, _occlusionVbo, _occlusionVIVbo, _occlusionEbo,
+                out _occlusionDataLength);
+
+            if (buildLighting)
+            {
+                FinalizeOcclusionPass(light, eyePosition, _occlusionLightingVao, _occlusionLightingVbo,
+                    _occlusionLightingVIVbo, _occlusionLightingEbo, out _occlusionLightingDataLength);
+            }
+            else
+            {
+                _occlusionLightingDataLength = 0;
+            }
+        }
+
+        private void FinalizeOcclusionPass(
+            OccluderPassGeometry geometry,
+            Vector2 eyePosition,
+            GLHandle vao,
+            GLBuffer vbo,
+            GLBuffer viVbo,
+            GLBuffer ebo,
+            out int dataLength)
+        {
+            MarkGeometricallySharedOccluderEdges(geometry);
 
             BuildSharedVertexEdges(
-                boundarySegments,
-                sharedBoundaryEdges,
-                sharedVertexEdges,
-                uniqueSharedEdges,
-                staleSharedVertices);
+                geometry.BoundarySegments,
+                geometry.SharedBoundaryEdges,
+                _occluderSharedVertexEdges,
+                _occluderUniqueSharedEdges,
+                _occluderStaleSharedVertices);
             BuildConvexBoundaryVertices(
-                boundarySegments,
-                sharedBoundaryEdges,
-                boundaryVertexDirections,
-                convexBoundaryVertices);
+                geometry.BoundarySegments,
+                geometry.SharedBoundaryEdges,
+                _occluderBoundaryVertexDirections,
+                _occluderConvexBoundaryVertices);
 
-            UploadSourceOcclusionDepthGeometry(eyePosition);
+            UploadSourceOcclusionDepthGeometry(geometry, eyePosition, vao, vbo, viVbo, ebo, out dataLength);
         }
 
         private void BuildFrameOccluderGeometry(
             MapId map,
             Box2 expandedBounds,
-            EntityQuery<TransformComponent> xforms)
+            EntityQuery<TransformComponent> xforms,
+            IEye eye,
+            bool buildLighting,
+            OccluderPassGeometry fov,
+            OccluderPassGeometry light)
         {
-            // This builds source-independent frame geometry:
-            // - exact occluder edges, later classified into source-specific depth geometry using master's rule;
-            // - flat 2D mask geometry used to apply wall bleed.
+            // FOV: gameplay Polygon 32x32. Lighting: footprint + tall strip (snapCardinals).
+            // One QueryAabb fills both buckets — no second UpdateOcclusionGeometry.
+            var eyeRotation = eye.Rotation;
+
             var maxDepthFaces = _maxOccluders * PhysicsConstants.MaxPolygonVertices;
-            var maxMaskVertices = _maxOccluders * PhysicsConstants.MaxPolygonVertices;
-            var maxMaskIndices = _maxOccluders * (PhysicsConstants.MaxPolygonVertices - 2) * 3;
+            // Lighting may emit footprint + strip per tall occluder.
+            var maxMaskVertices = _maxOccluders * PhysicsConstants.MaxPolygonVertices * 2;
+            var maxMaskIndices = _maxOccluders * (PhysicsConstants.MaxPolygonVertices - 2) * 3 * 2;
             var arrayMaskBuffer = ArrayPool<Vector2>.Shared.Rent(maxMaskVertices);
             var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(maxMaskIndices);
+            var renderLocalBuffer = ArrayPool<Vector2>.Shared.Rent(PhysicsConstants.MaxPolygonVertices);
 
             var ami = 0;
             var imi = 0;
             var occluderCount = 0;
             var geometryFull = false;
 
-            bool TryWriteMaskPolygon(int vertexOffset, int vertexCount)
+            bool TryWriteMaskPolygon(OccluderPassGeometry target, int vertexOffset, int vertexCount)
             {
-                // Wall bleed uses a flat 2D mask of occupied occluder area.
-                // Convex occluders are serialized through the physics hull, so a simple fan is sufficient.
                 if (vertexCount < 3)
                     return true;
 
@@ -1648,7 +1727,7 @@ namespace Robust.Client.Graphics.Clyde
                 var amiBase = ami;
                 for (var i = 0; i < vertexCount; i++)
                 {
-                    arrayMaskBuffer[ami++] = _occluderRenderVertices[vertexOffset + i];
+                    arrayMaskBuffer[ami++] = target.RenderVertices[vertexOffset + i];
                 }
 
                 for (var i = 1; i < vertexCount - 1; i++)
@@ -1661,32 +1740,86 @@ namespace Robust.Client.Graphics.Clyde
                 return true;
             }
 
-            bool TryCacheDepthEdges(int vertexOffset, int vertexCount, byte sharedEdgeMask)
+            bool TryCacheDepthEdges(OccluderPassGeometry target, int vertexOffset, int vertexCount, byte sharedEdgeMask)
             {
                 if (vertexCount < 3)
                     return true;
 
-                var remainingFaces = maxDepthFaces - _occluderRenderEdges.Count;
+                var remainingFaces = maxDepthFaces - target.RenderEdges.Count;
                 if (remainingFaces < vertexCount)
                     return false;
 
-                var renderVertices = CollectionsMarshal.AsSpan(_occluderRenderVertices).Slice(vertexOffset, vertexCount);
-                var edgeOffset = _occluderRenderEdges.Count;
+                var renderVertices = CollectionsMarshal.AsSpan(target.RenderVertices).Slice(vertexOffset, vertexCount);
+                var edgeOffset = target.RenderEdges.Count;
                 for (var i = 0; i < vertexCount; i++)
                 {
                     var edge = EdgeToVector4(renderVertices[i], renderVertices[(i + 1) % vertexCount]);
-                    _occluderRenderEdges.Add(edge);
-                    _occluderRenderSharedEdges.Add((sharedEdgeMask & 1 << i) != 0);
+                    target.RenderEdges.Add(edge);
+                    target.RenderSharedEdges.Add((sharedEdgeMask & 1 << i) != 0);
                 }
 
-                _occluderRenderEntries.Add(new OccluderRenderEntry(edgeOffset, vertexCount));
+                target.RenderEntries.Add(new OccluderRenderEntry(edgeOffset, vertexCount));
+                return true;
+            }
+
+            bool TryEmitOccluder(
+                OccluderPassGeometry target,
+                ReadOnlySpan<Vector2> renderPoly,
+                Matrix3x2 worldTransform,
+                Box2 localQueryBounds,
+                byte sharedMask,
+                bool writeMask)
+            {
+                AddOccluderBoundaryEdges(
+                    renderPoly,
+                    worldTransform,
+                    sharedMask,
+                    target.SharedBoundaryEdges,
+                    target.BoundarySegments);
+
+                if (geometryFull)
+                    return false;
+
+                var worldBounds = worldTransform.TransformBox(localQueryBounds);
+                if (!worldBounds.Intersects(expandedBounds))
+                    return true;
+
+                var renderCount = renderPoly.Length;
+                if (target.RenderEntries.Count >= _maxOccluders
+                    || target.RenderVertices.Count + renderCount > maxMaskVertices
+                    || (writeMask && imi + (renderCount - 2) * 3 > indexMaskBuffer.Length))
+                {
+                    geometryFull = true;
+                    return false;
+                }
+
+                var vertexOffset = target.RenderVertices.Count;
+                var clockwise = SignedArea(renderPoly) < 0f;
+                for (var i = 0; i < renderCount; i++)
+                {
+                    var sourceIndex = clockwise ? i : renderCount - 1 - i;
+                    target.RenderVertices.Add(Vector2.Transform(renderPoly[sourceIndex], worldTransform));
+                }
+
+                if (writeMask && !TryWriteMaskPolygon(target, vertexOffset, renderCount))
+                {
+                    geometryFull = true;
+                    return false;
+                }
+
+                occluderCount += 1;
+
+                if (!TryCacheDepthEdges(target, vertexOffset, renderCount, sharedMask))
+                {
+                    geometryFull = true;
+                    return false;
+                }
+
                 return true;
             }
 
             try
             {
-                // Include one tile around the rendered area so shared corners on the edge of the viewport have
-                // complete topology. Visible geometry is filtered back to expandedBounds below.
                 var boundaryBounds = expandedBounds.Enlarged(SharedOccluderNeighbourQueryPadding);
                 foreach (var (uid, comp) in _occluderSystem.GetIntersectingTrees(map, boundaryBounds))
                 {
@@ -1698,86 +1831,141 @@ namespace Robust.Client.Graphics.Clyde
                         if (!occluder.Enabled)
                             return true;
 
-                        var polygon = occluder.Polygon;
-                        if (polygon.Length < 3)
-                            return true;
-
                         var worldTransform = _transformSystem.GetWorldMatrix(transform, xforms);
+                        var poly = occluder.Polygon;
+                        if (poly.Length < 3 || renderLocalBuffer.Length < poly.Length)
+                            return true;
 
-                        // Build source-dependent corner topology from the cached client-side shared edge mask.
-                        AddOccluderBoundaryEdges(
-                            polygon,
+                        if (occluder.DrawFov)
+                        {
+                            poly.CopyTo(renderLocalBuffer);
+                            TryEmitOccluder(
+                                fov,
+                                renderLocalBuffer.AsSpan(0, poly.Length),
+                                worldTransform,
+                                occluder.LocalBounds,
+                                occluder.OccludingEdges,
+                                writeMask: false);
+                        }
+
+                        if (!buildLighting || !occluder.BlockLight)
+                            return true;
+
+                        var hasVisual = OccluderSystem.HasVisualSize(occluder);
+                        if (!hasVisual)
+                        {
+                            poly.CopyTo(renderLocalBuffer);
+                            TryEmitOccluder(
+                                light,
+                                renderLocalBuffer.AsSpan(0, poly.Length),
+                                worldTransform,
+                                occluder.LocalBounds,
+                                occluder.OccludingEdges,
+                                writeMask: true);
+                            return true;
+                        }
+
+                        // Tall lighting: footprint + extra-height strip.
+                        poly.CopyTo(renderLocalBuffer);
+                        TryEmitOccluder(
+                            light,
+                            renderLocalBuffer.AsSpan(0, poly.Length),
                             worldTransform,
+                            occluder.LocalBounds,
                             occluder.OccludingEdges,
-                            _occluderSharedBoundaryEdges,
-                            _occluderBoundarySegments);
+                            writeMask: true);
 
-                        if (geometryFull
-                            || !worldTransform.TransformBox(occluder.LocalBounds).Intersects(expandedBounds))
+                        var tallAxis = Direction.North;
+                        if (occluder.AlignVisualToEye)
                         {
+                            var worldRot = _transformSystem.GetWorldRotation(transform, xforms);
+                            tallAxis = OccluderSystem.GetLocalScreenUpCardinal(worldRot, eyeRotation);
+                        }
+
+                        if (!OccluderSystem.TryCopyExtraHeightStrip(
+                                occluder, renderLocalBuffer, tallAxis, out var stripCount))
                             return true;
-                        }
 
-                        if (_occluderRenderEntries.Count >= _maxOccluders
-                            || _occluderRenderVertices.Count + polygon.Length > maxMaskVertices
-                            || imi + (polygon.Length - 2) * 3 > indexMaskBuffer.Length)
-                        {
-                            geometryFull = true;
-                            return true;
-                        }
-
-                        var vertexOffset = _occluderRenderVertices.Count;
-                        var clockwise = SignedArea(polygon) < 0f;
-                        for (var i = 0; i < polygon.Length; i++)
-                        {
-                            var sourceIndex = clockwise ? i : polygon.Length - 1 - i;
-                            var worldVertex = Vector2.Transform(polygon[sourceIndex], worldTransform);
-                            _occluderRenderVertices.Add(worldVertex);
-                        }
-
-                        if (!TryWriteMaskPolygon(vertexOffset, polygon.Length))
-                        {
-                            geometryFull = true;
-                            return true;
-                        }
-
-                        occluderCount += 1;
-
-                        if (!TryCacheDepthEdges(vertexOffset, polygon.Length, occluder.OccludingEdges))
-                        {
-                            geometryFull = true;
-                            return true;
-                        }
-
+                        var stripShared = OccluderSystem.GetTallVisualSharedEdgeMask(
+                            occluder.OccludingEdges,
+                            tallAxis);
+                        TryEmitOccluder(
+                            light,
+                            renderLocalBuffer.AsSpan(0, stripCount),
+                            worldTransform,
+                            OccluderSystem.GetTreeLocalBounds(occluder),
+                            stripShared,
+                            writeMask: true);
                         return true;
                     }, treeBounds);
                 }
 
-                _occlusionMaskDataLength = imi;
-
-                BindVertexArray(_occlusionMaskVao.Handle);
-                CheckGlError();
-
-                _occlusionMaskVbo.Reallocate(arrayMaskBuffer.AsSpan(0, ami));
-                _occlusionMaskEbo.Reallocate(indexMaskBuffer.AsSpan(0, imi));
+                if (buildLighting)
+                {
+                    _occlusionMaskDataLength = imi;
+                    BindVertexArray(_occlusionMaskVao.Handle);
+                    CheckGlError();
+                    _occlusionMaskVbo.Reallocate(arrayMaskBuffer.AsSpan(0, ami));
+                    _occlusionMaskEbo.Reallocate(indexMaskBuffer.AsSpan(0, imi));
+                }
+                else
+                {
+                    _occlusionMaskDataLength = 0;
+                }
             }
             finally
             {
                 ArrayPool<Vector2>.Shared.Return(arrayMaskBuffer);
                 ArrayPool<ushort>.Shared.Return(indexMaskBuffer);
+                ArrayPool<Vector2>.Shared.Return(renderLocalBuffer);
             }
 
             _debugStats.Occluders += occluderCount;
         }
 
-        private void UploadSourceOcclusionDepthGeometry(Vector2 sourcePosition)
+        /// <summary>
+        /// Any boundary edge that appears on more than one occluder is shared (neighbour merge).
+        /// </summary>
+        private void MarkGeometricallySharedOccluderEdges(OccluderPassGeometry geometry)
         {
-            var maxDepthFaces = _occluderRenderEdges.Count;
+            var seen = _occluderSeenBoundaryEdges;
+            seen.Clear();
+            var shared = geometry.SharedBoundaryEdges;
+
+            foreach (var edge in geometry.BoundarySegments)
+            {
+                var key = OccluderEdgeKey.From(edge);
+                if (!seen.Add(key))
+                    shared.Add(key);
+            }
+
+            var renderEdges = CollectionsMarshal.AsSpan(geometry.RenderEdges);
+            var renderShared = CollectionsMarshal.AsSpan(geometry.RenderSharedEdges);
+            for (var i = 0; i < renderEdges.Length; i++)
+            {
+                if (shared.Contains(OccluderEdgeKey.From(renderEdges[i])))
+                    renderShared[i] = true;
+            }
+        }
+
+        private void UploadSourceOcclusionDepthGeometry(
+            OccluderPassGeometry geometry,
+            Vector2 sourcePosition,
+            GLHandle vao,
+            GLBuffer vbo,
+            GLBuffer viVbo,
+            GLBuffer ebo,
+            out int dataLength)
+        {
+            dataLength = 0;
+            var maxDepthFaces = geometry.RenderEdges.Count;
+            if (maxDepthFaces == 0)
+                return;
+
             var maxDepthVertices = maxDepthFaces * 4;
             var maxDepthIndices = maxDepthFaces * GetQuadBatchIndexCount();
 
             var arrayBuffer = ArrayPool<Vector4>.Shared.Rent(maxDepthVertices);
-            // multiplied by 2 (it's a vector2 of bytes)
             var arrayVIBuffer = ArrayPool<byte>.Shared.Rent(maxDepthVertices * 2);
             var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxDepthIndices);
 
@@ -1786,8 +1974,8 @@ namespace Robust.Client.Graphics.Clyde
             var ii = 0;
             var geometryFull = false;
 
-            var sharedBoundaryEdges = _occluderSharedBoundaryEdges;
-            var boundarySegments = _occluderBoundarySegments;
+            var sharedBoundaryEdges = geometry.SharedBoundaryEdges;
+            var boundarySegments = geometry.BoundarySegments;
             var visibleBoundaryVertices = _occluderVisibleBoundaryVertices;
             var convexBoundaryVertices = _occluderConvexBoundaryVertices;
             var sharedVertexEdges = _occluderSharedVertexEdges;
@@ -1807,12 +1995,7 @@ namespace Robust.Client.Graphics.Clyde
                 for (byte vi = 0; vi < 4; vi++)
                 {
                     arrayBuffer[ai++] = vec;
-                    // generates the sequence:
-                    // DddD
-                    // HHhh
-                    // deflection
                     arrayVIBuffer[avi++] = (byte)((((vi + 1) & 2) != 0) ? 0 : 255);
-                    // height
                     arrayVIBuffer[avi++] = (byte)(((vi & 2) != 0) ? 0 : 255);
                 }
 
@@ -1822,9 +2005,9 @@ namespace Robust.Client.Graphics.Clyde
 
             try
             {
-                var renderEdges = CollectionsMarshal.AsSpan(_occluderRenderEdges);
-                var renderSharedEdges = CollectionsMarshal.AsSpan(_occluderRenderSharedEdges);
-                foreach (var entry in _occluderRenderEntries)
+                var renderEdges = CollectionsMarshal.AsSpan(geometry.RenderEdges);
+                var renderSharedEdges = CollectionsMarshal.AsSpan(geometry.RenderSharedEdges);
+                foreach (var entry in geometry.RenderEntries)
                 {
                     if (geometryFull || ai >= maxDepthVertices)
                         break;
@@ -1834,18 +2017,6 @@ namespace Robust.Client.Graphics.Clyde
                     for (var i = 0; i < activeEdges.Length; i++)
                     {
                         var edge = activeEdges[i];
-                        /*
-                         * Okay so essentially for occlusion you draw from edges in the viewport and project it out to the edge of the screen.
-                         * In our case there are some exceptions where we don't in fact want to do that because it doesn't look good.
-                         * e.g. connecting walls, but only sometimes like if not a corner, or only want to do that at specific angles.
-                         * Hence you get the hell that is ShouldSuppressSharedOccluderEdge.
-                         *
-                         * A lot of this was implicitly handled before but now that we allow entirely arbitrary occluders
-                         * this needs to be handled explicitly.
-                         *
-                         * If you know trig you'll be right mate.
-                         */
-
                         var suppressSharedEdge = ShouldSuppressSharedOccluderEdge(
                             i,
                             activeEdges,
@@ -1866,14 +2037,14 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                _occlusionDataLength = ii;
+                dataLength = ii;
 
-                BindVertexArray(_occlusionVao.Handle);
+                BindVertexArray(vao.Handle);
                 CheckGlError();
 
-                _occlusionVbo.Reallocate(arrayBuffer.AsSpan(0, ai));
-                _occlusionVIVbo.Reallocate(arrayVIBuffer.AsSpan(0, avi));
-                _occlusionEbo.Reallocate(indexBuffer.AsSpan(0, ii));
+                vbo.Reallocate(arrayBuffer.AsSpan(0, ai));
+                viVbo.Reallocate(arrayVIBuffer.AsSpan(0, avi));
+                ebo.Reallocate(indexBuffer.AsSpan(0, ii));
             }
             finally
             {

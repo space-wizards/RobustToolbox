@@ -20,7 +20,47 @@ public sealed partial class OccluderComponent : Component, IComponentTreeEntry<O
     public bool Enabled = true;
 
     /// <summary>
-    /// Local-space convex polygon vertices.
+    /// Whether vision raycasts (<see cref="OccluderSystem.InRangeUnoccluded"/>) hit this occluder.
+    /// Independent of FOV / light mesh contribution.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool BlockVision = true;
+
+    /// <summary>
+    /// Whether this occluder is drawn into the hard FOV mesh.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool DrawFov = true;
+
+    /// <summary>
+    /// Whether this occluder contributes to light-shadow / wall-bleed occlusion.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool BlockLight = true;
+
+    /// <summary>
+    /// Optional tall lighting size in local tiles (width, height). Hard FOV and vision always use
+    /// <see cref="Polygon"/>. When set, lighting draws the gameplay footprint plus an extra-height strip.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Vector2 VisualSize;
+
+    /// <summary>
+    /// Center offset applied to <see cref="VisualSize"/> when caching <see cref="VisualLocalBounds"/>
+    /// (tree queries). Strip lighting uses <see cref="VisualSize"/>.Y against the footprint height.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Vector2 VisualOffset;
+
+    /// <summary>
+    /// When true with <see cref="VisualSize"/>, the lighting strip follows this client's snapCardinals
+    /// screen-up. Hard FOV stays on <see cref="Polygon"/>. Pair with sprite <c>snapCardinals: true</c>.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool AlignVisualToEye;
+
+    /// <summary>
+    /// Local-space convex polygon vertices used for vision / FOV / shared-edge topology.
     /// </summary>
     [DataField("polygon", customTypeSerializer: typeof(PhysicsHullSerializer)), AutoNetworkedField]
     private Vector2[] _polygon =
@@ -43,7 +83,13 @@ public sealed partial class OccluderComponent : Component, IComponentTreeEntry<O
     /// Cached local-space bounds for <see cref="Polygon"/>.
     /// </summary>
     [ViewVariables]
-    public Box2 LocalBounds { get; internal set; } = Box2.Empty; // Leave as empty so we remember to always update the cache on init.
+    public Box2 LocalBounds { get; internal set; } = Box2.Empty;
+
+    /// <summary>
+    /// Cached local-space bounds for <see cref="VisualSize"/> / <see cref="VisualOffset"/>, or empty.
+    /// </summary>
+    [ViewVariables]
+    public Box2 VisualLocalBounds { get; internal set; } = Box2.Empty;
 
     public EntityUid? TreeUid { get; set; }
     public DynamicTree<ComponentTreeEntry<OccluderComponent>>? Tree { get; set; }

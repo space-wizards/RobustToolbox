@@ -94,6 +94,10 @@ namespace Robust.Client.GameObjects
             // Networked entities are handled by DeleteEntity when the queue gets processed, which predicts the
             // deletion by detaching them.
             base.QueueDeleteEntity(uid);
+
+            // Rollback must also cancel predicted deletions before the queue is processed.
+            if (MetaQuery.TryGetComponent(uid.Value, out var meta) && !meta.NetEntity.IsClientSide())
+                DirtyEntity(uid.Value, meta);
         }
 
         /// <inheritdoc />

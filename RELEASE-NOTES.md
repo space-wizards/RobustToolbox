@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix some more instances of stale fixture proxies being removed from the wrong broadphases.
 
 ### Other
 

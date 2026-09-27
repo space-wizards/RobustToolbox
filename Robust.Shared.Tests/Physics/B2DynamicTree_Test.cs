@@ -53,6 +53,7 @@ namespace Robust.Shared.Tests.Physics
             var capacity = tree.Capacity;
             var removed = new HashSet<string>();
             tree.Clear(ref removed, static (ref HashSet<string> values, in string value) =>
+                // Love live
                 Assert.That(values.Add(value), Is.True, "Each live leaf must be released exactly once"));
             Assert.That(removed, Is.EquivalentTo(expected));
             Assert.That(tree.NodeCount, Is.Zero);

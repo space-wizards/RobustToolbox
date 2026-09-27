@@ -81,21 +81,70 @@ internal sealed partial class PredictedDeletionTests : RobustIntegrationTest
 
         await client.WaitPost(() =>
         {
-            var ent = new Entity<MetaDataComponent?, TransformComponent?>(clientTarget, null, null);
-
-            client.EntMan.PredictedDeleteEntity(ent);
+            client.EntMan.DeleteEntity(clientTarget);
             var xform = client.EntMan.GetComponent<TransformComponent>(clientTarget);
             var firstDetachTick = xform.LastModifiedTick;
 
             Assert.That(((ClientEntityManager) client.EntMan).IsPredictedDetached(clientTarget), Is.True);
             Assert.That(client.EntMan.IsQueuedForDeletion(clientTarget), Is.True);
 
-            client.EntMan.PredictedDeleteEntity(ent);
+            client.EntMan.DeleteEntity(clientTarget);
 
             Assert.That(((ClientEntityManager) client.EntMan).IsPredictedDetached(clientTarget), Is.True);
             Assert.That(client.EntMan.IsQueuedForDeletion(clientTarget), Is.True);
             Assert.That(xform.LastModifiedTick, Is.EqualTo(firstDetachTick));
         });
+    }
+
+    [Test]
+    public async Task PredictedQueueDeletionRaisesQueueDeletedEvent()
+    {
+        await using var pair = await StartConnectedPair();
+
+        var (_, client, _, clientTarget, _) = await SetupTarget(pair.Server, pair.Client);
+
+        await client.WaitPost(() =>
+        {
+            var entMan = (ClientEntityManager) client.EntMan;
+            EntityUid? raised = null;
+            void OnQueueDeleted(EntityUid uid) => raised = uid;
+
+            entMan.EntityQueueDeleted += OnQueueDeleted;
+            try
+            {
+                entMan.QueueDeleteEntity(clientTarget);
+            }
+            finally
+            {
+                entMan.EntityQueueDeleted -= OnQueueDeleted;
+            }
+
+            // Physics relies on this to purge contacts before the entity gets detached.
+            Assert.That(raised, Is.EqualTo(clientTarget));
+        });
+    }
+
+    [Test]
+    public async Task ClearingAQueuedPredictedDeletionCancelsIt()
+    {
+        await using var pair = await StartConnectedPair();
+
+        var (_, client, _, clientTarget, clientParent) = await SetupTarget(pair.Server, pair.Client);
+
+        await client.WaitPost(() =>
+        {
+            var entMan = (ClientEntityManager) client.EntMan;
+            entMan.QueueDeleteEntity(clientTarget);
+            Assert.That(entMan.IsQueuedForDeletion(clientTarget), Is.True);
+
+            // Rolling back the prediction cancels the deletion before the queue gets processed.
+            entMan.ClearPredictedDeletion(clientTarget);
+            Assert.That(entMan.IsQueuedForDeletion(clientTarget), Is.False);
+        });
+
+        await client.WaitRunTicks(1);
+
+        await AssertRolledBack(client, clientTarget, clientParent);
     }
 
     [Test]
@@ -139,8 +188,7 @@ internal sealed partial class PredictedDeletionTests : RobustIntegrationTest
 
         await client.WaitPost(() =>
         {
-            var ent = new Entity<MetaDataComponent?, TransformComponent?>(clientTarget, null, null);
-            client.EntMan.PredictedDeleteEntity(ent);
+            client.EntMan.DeleteEntity(clientTarget);
 
             var meta = client.EntMan.GetComponent<MetaDataComponent>(clientTarget);
             var xform = client.EntMan.GetComponent<TransformComponent>(clientTarget);
@@ -276,9 +324,9 @@ internal sealed partial class PredictedDeletionTests : RobustIntegrationTest
                 return;
 
             if (_mode == PredictedDeleteMode.Direct)
-                PredictedDel(uid.Value);
+                Del(uid.Value);
             else
-                PredictedQueueDel(uid.Value);
+                QueueDel(uid.Value);
         }
     }
 

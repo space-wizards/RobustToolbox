@@ -936,66 +936,66 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedDeleteEntity))]
+    [Obsolete("Use Del")]
     protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?> ent)
     {
-        EntityManager.PredictedDeleteEntity(ent);
+        EntityManager.DeleteEntity(ent.Owner);
     }
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedDeleteEntity))]
+    [Obsolete("Use Del")]
     protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
     {
-        EntityManager.PredictedDeleteEntity(ent);
+        EntityManager.DeleteEntity(ent?.Owner);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(Entity<MetaDataComponent?> ent)
     {
-        EntityManager.PredictedQueueDeleteEntity(ent);
+        EntityManager.QueueDeleteEntity(ent.Owner);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(Entity<MetaDataComponent?>? ent)
     {
-        EntityManager.PredictedQueueDeleteEntity(ent);
+        EntityManager.QueueDeleteEntity(ent?.Owner);
     }
 
-    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(EntityUid uid)
     {
-        EntityManager.PredictedQueueDeleteEntity(uid);
+        EntityManager.QueueDeleteEntity(uid);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ProxyFor(typeof(EntityManager), nameof(EntityManager.PredictedQueueDeleteEntity))]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(EntityUid? uid)
     {
-        EntityManager.PredictedQueueDeleteEntity(uid);
+        EntityManager.QueueDeleteEntity(uid);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Obsolete("use variant without TransformComponent")]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?> ent)
     {
-        EntityManager.PredictedQueueDeleteEntity(ent);
+        EntityManager.QueueDeleteEntity(ent.Owner);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Obsolete("use variant without TransformComponent")]
+    [Obsolete("Use QueueDel")]
     protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
     {
-        EntityManager.PredictedQueueDeleteEntity(ent);
+        EntityManager.QueueDeleteEntity(ent?.Owner);
     }
 
     /// <inheritdoc cref="IEntityManager.TryQueueDeleteEntity(EntityUid?)" />

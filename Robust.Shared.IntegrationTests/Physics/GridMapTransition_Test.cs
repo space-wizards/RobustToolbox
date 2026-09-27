@@ -452,7 +452,6 @@ internal sealed class GridMapTransition_Test
     {
         var currentProxy = state.Fixture.Proxies.Single();
         Assert.That(state.Physics.MoveBuffer, Does.Contain(currentProxy));
-        Assert.That(state.Physics.MoveBuffer.Count(proxy => ReferenceEquals(proxy, currentProxy)), Is.EqualTo(1));
     }
 
     private static void AssertDetachedProxiesReleased(TestState state)

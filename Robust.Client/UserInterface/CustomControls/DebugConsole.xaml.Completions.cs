@@ -42,6 +42,7 @@ public sealed partial class DebugConsole
 
     private void InitCompletions()
     {
+        CommandBar.InvokeOnHistorySelect = false; // Scrolling history does not enter into completion.
         CommandBar.OnFocusExit += CommandBarOnOnFocusExit;
         CommandBar.OnTextChanged += CommandBarOnTextChanged;
     }

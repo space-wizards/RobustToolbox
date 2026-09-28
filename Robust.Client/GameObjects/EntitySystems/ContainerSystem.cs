@@ -15,7 +15,6 @@ namespace Robust.Client.GameObjects;
 
 public sealed partial class ContainerSystem : SharedContainerSystem
 {
-    [Dependency] private IRobustSerializer _serializer = default!;
     [Dependency] private IDynamicTypeFactoryInternal _dynFactory = default!;
     [Dependency] private PointLightSystem _lightSys = default!;
     [Dependency] private TransformSystem _renderTransforms = default!;
@@ -33,9 +32,6 @@ public sealed partial class ContainerSystem : SharedContainerSystem
     public override void Initialize()
     {
         base.Initialize();
-
-        SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
-
         UpdatesBefore.Add(typeof(SpriteSystem));
     }
 

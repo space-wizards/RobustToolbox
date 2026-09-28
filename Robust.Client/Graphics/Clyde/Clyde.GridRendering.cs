@@ -94,7 +94,8 @@ namespace Robust.Client.Graphics.Clyde
                         new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter),
                     viewport.Size);
                 gridProgram.SetUniform(UniIModelMatrix, matrix);
-                var enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, renderQueryBounds);
+                var chunks = _transformSystem.GetRenderGridChunks(mapGrid, worldBounds, matrix);
+                var enumerator = chunks;
 
                 // Handle base texture updates.
                 while (enumerator.MoveNext(out var chunk))
@@ -131,7 +132,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Handle edge sprites.
                 if (_drawTileEdges)
                 {
-                    enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, renderQueryBounds);
+                    enumerator = chunks;
                     while (enumerator.MoveNext(out var chunk))
                     {
                         var datum = data[chunk.Indices];
@@ -140,7 +141,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, renderQueryBounds);
+                enumerator = chunks;
 
                 // Draw chunks
                 while (enumerator.MoveNext(out var chunk))

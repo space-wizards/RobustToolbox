@@ -173,6 +173,9 @@ namespace Robust.Shared.Timing
         ///     the simulation progresses in relation to Real time. Don't mess with this unless
         ///     you know what you are doing. DO NOT TOUCH THIS ON SERVER.
         /// </summary>
+        /// <remarks>
+        ///     During rollback this gets frozen the entire time and only applies from the next active tick.
+        /// </remarks>
         float TickTimingAdjustment { get; set; }
 
         /// <summary>

@@ -31,20 +31,28 @@ internal sealed partial class PvsSystem
 
     private void SendSessionState(PvsSession data, ZStdCompressionContext ctx, GameTick sendTick)
     {
+        // Ensure it gets disposed if any exceptions happen.
+        using var stateStream = data.StateStream;
+        data.StateStream = null;
+
         // PVS benchmarks use dummy sessions.
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (data.Session.Channel is not DummyChannel)
         {
-            DebugTools.AssertNotEqual(data.StateStream, null);
+            if (!data.Session.Channel.IsConnected)
+                return;
+
+            DebugTools.AssertNotEqual(stateStream, null);
             var msg = new MsgState
             {
-                StateStream = data.StateStream,
+                StateStream = stateStream,
                 ForceSendReliably = data.ForceSendReliably,
                 CompressionContext = ctx
             };
 
             _netMan.ServerSendMessage(msg, data.Session.Channel);
-            if (msg.ShouldSendReliably())
+            // The channel can disconnect between our check and the network manager's check.
+            if (msg.HasWritten && msg.ShouldSendReliably())
             {
                 data.RequestedFull = false;
                 data.LastReceivedAck = sendTick;
@@ -64,9 +72,6 @@ internal sealed partial class PvsSystem
                 PendingAcks.Add(data.Session);
             }
         }
-
-        data.StateStream?.Dispose();
-        data.StateStream = null;
     }
 
     private record struct PvsSendJob(PvsSystem _pvs) : IParallelRobustJob

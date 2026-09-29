@@ -1691,7 +1691,7 @@ namespace Robust.Shared
         /// Setting to false is more permissive, but may result in uploading faulty prototypes.
         /// </remarks>
         public static readonly CVarDef<bool> ResValidatePrototypeUpload =
-            CVarDef.Create("res.validate_prototype_upload", true, CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("res.validate_prototype_upload", false, CVar.REPLICATED | CVar.SERVER);
 
         /*
          * DEBUG

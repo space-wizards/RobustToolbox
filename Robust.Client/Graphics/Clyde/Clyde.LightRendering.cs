@@ -14,7 +14,6 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
@@ -783,16 +782,15 @@ namespace Robust.Client.Graphics.Clyde
             in ComponentTreeEntry<OccluderComponent> entry)
         {
             var occluder = entry.Component;
-            if (!occluder.Enabled)
+            if (!occluder.Enabled || occluder.CachedShape.VertexCount < 3)
                 return true;
 
             var (worldPosition, worldRotation) = state.TransformSystem.GetWorldPositionRotation(
                 entry.Transform,
                 state.Xforms);
 
-            if (!OccluderOverlapsPoint(
-                    state.FixtureSystem,
-                    occluder.PolygonArray,
+            if (!state.FixtureSystem.TestPoint(
+                    occluder.CachedShape,
                     new Transform(worldPosition, worldRotation),
                     state.LightPosition))
             {
@@ -1253,19 +1251,6 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             edges.Add(edge);
-        }
-
-        private static bool OccluderOverlapsPoint(
-            FixtureSystem fixtures,
-            Vector2[] polygon,
-            in Transform occluderTransform,
-            Vector2 worldPoint)
-        {
-            if (polygon.Length < 3)
-                return false;
-
-            var occluderShape = new Polygon(polygon);
-            return occluderShape.VertexCount >= 3 && fixtures.TestPoint(occluderShape, occluderTransform, worldPoint);
         }
 
         private static bool PointsMatch(Vector2 a, Vector2 b)

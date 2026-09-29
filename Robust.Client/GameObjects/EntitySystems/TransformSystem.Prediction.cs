@@ -22,7 +22,7 @@ public sealed partial class TransformSystem
         _predictionReconciliation.TryBeginRollback(
             uid,
             predictionTick,
-            GetRenderTransformInternal((uid, xform), 0));
+            GetRenderTransformInternal(uid, xform));
     }
 
     internal void CompletePredictionRollback(GameTick predictionTick)
@@ -109,7 +109,7 @@ public sealed partial class TransformSystem
                 return;
             }
 
-            basePose = ResolveEndpoint(endpoint, 0);
+            basePose = ResolveEndpoint(endpoint);
             ref var newState = ref CollectionsMarshal.GetValueRefOrAddDefault(_renderTransforms, rollback.Entity, out _);
             StartPredictionInterpolation(
                 ref newState,
@@ -125,7 +125,7 @@ public sealed partial class TransformSystem
         }
         else
         {
-            basePose = GetBaseRenderTransform(in state, 0);
+            basePose = GetBaseRenderTransform(in state);
         }
 
         if (ExceedsMaxInterpolationDistance(rollback.Anchor, basePose))
@@ -209,6 +209,7 @@ public sealed partial class TransformSystem
             // First-time prediction renders over the current tick. Rollback keeps the last rendered pose below.
             if (hasExisting
                 && existing.Type == RenderInterpolationType.PredictionInterpolation
+                && existing.PredictionHandoff == PredictionHandoffStatus.Inactive
                 && existing.ChangeTick == _timing.CurTick
                 && existing.Alpha <= existing.InterpolationStartAlpha
                 && !existing.PendingPredictionRollback)
@@ -251,22 +252,19 @@ public sealed partial class TransformSystem
         bool snapRotation)
     {
         // Correction is independent from this base interpolation and may continue across later ticks.
-        state.Source = source;
-        state.Target = target;
-        state.LastRendered = rendered;
-        state.CoordinateSpace = coordinateSpace;
-        state.ChangeTick = _timing.CurTick;
-        state.Type = RenderInterpolationType.PredictionInterpolation;
-        state.Alpha = 0f;
-        state.InterpolationStartAlpha = 0f;
-        state.LastFramePhase = -1f;
-        state.PendingPredictionRollback = false;
-        state.SnapRotation = snapRotation;
-
-        if (preserveCorrection)
-            return;
-
-        ClearCorrection(ref state);
+        state = new RenderTransformState
+        {
+            Source = source,
+            Target = target,
+            LastRendered = rendered,
+            CoordinateSpace = coordinateSpace,
+            ChangeTick = _timing.CurTick,
+            Type = RenderInterpolationType.PredictionInterpolation,
+            LastFramePhase = -1f,
+            SnapRotation = snapRotation,
+            CorrectionTranslation = preserveCorrection ? state.CorrectionTranslation : default,
+            CorrectionRotation = preserveCorrection ? state.CorrectionRotation : default,
+        };
     }
 
     private void RebasePredictionInterpolation(
@@ -288,9 +286,20 @@ public sealed partial class TransformSystem
         in RenderTransform rendered,
         EntityUid coordinateSpace)
     {
-        // Buffered states can still be stale while prediction hands back to network presentation.
-        RebasePredictionState(ref state, source, target, rendered, coordinateSpace);
-        state.Type = RenderInterpolationType.PredictionInterpolation;
+        // This is a new server segment, not another replay of the previous prediction tick.
+        // Retaining the old alpha would leave every subsequent update at its endpoint.
+        var handoffTick = state.PredictionHandoffTick;
+        var targetTick = _timing.LastProcessedTick;
+        StartNetworkInterpolation(
+            ref state,
+            source,
+            target,
+            rendered,
+            coordinateSpace,
+            targetTick > GameTick.Zero ? targetTick - 1 : targetTick,
+            targetTick,
+            state.SnapRotation);
+        state.PredictionHandoffTick = handoffTick;
         state.PredictionHandoff = PredictionHandoffStatus.RebasePending;
     }
 
@@ -333,7 +342,7 @@ public sealed partial class TransformSystem
         EntityUid coordinateSpace,
         InterpolationDecision decision)
     {
-        // Authoritative updates own the segment while a predicted entity returns to server state.
+        // Server updates own the segment while a predicted entity returns to server state.
         if (state.PredictionHandoff == PredictionHandoffStatus.Inactive)
             return false;
 
@@ -353,9 +362,16 @@ public sealed partial class TransformSystem
     internal void EndPrediction(EntityUid uid)
     {
         ref var state = ref CollectionsMarshal.GetValueRefOrNullRef(_renderTransforms, uid);
+        // Stuff like pulling cancels use predictive events, which are run every tick until acknowledged. They shouldn't mess with
+        // a handoff that already owns the rendered pose.
         if (Unsafe.IsNullRef(ref state)
-            || state.Type != RenderInterpolationType.PredictionInterpolation
-            || !XformQuery.TryGetComponent(uid, out var xform)
+            || state.PredictionHandoff != PredictionHandoffStatus.Inactive
+            || state.Type != RenderInterpolationType.PredictionInterpolation)
+        {
+            return;
+        }
+
+        if (!XformQuery.TryGetComponent(uid, out var xform)
             || xform.Deleted
             || !TryCreateEndpoint(xform.Coordinates, xform.LocalRotation, out var target)
             || !TryBindRenderTransformToParent(state.LastRendered, target.Parent, out var source)
@@ -389,13 +405,6 @@ public sealed partial class TransformSystem
         GameTick sourceTick)
     {
         // Keep the handoff alive until authoritative states reach the first unpredicted tick.
-        var startingHandoff = state.PredictionHandoff == PredictionHandoffStatus.Inactive;
-        var handoff = startingHandoff
-            ? PredictionHandoffStatus.WaitingForAuthoritativeState
-            : state.PredictionHandoff;
-        var handoffTick = startingHandoff
-            ? _timing.CurTick
-            : state.PredictionHandoffTick;
         var correctionTranslation = state.CorrectionTranslation;
         var correctionRotation = state.CorrectionRotation;
         StartNetworkInterpolation(
@@ -409,8 +418,8 @@ public sealed partial class TransformSystem
             state.SnapRotation);
         state.CorrectionTranslation = correctionTranslation;
         state.CorrectionRotation = correctionRotation;
-        state.PredictionHandoffTick = handoffTick;
-        state.PredictionHandoff = handoff;
+        state.PredictionHandoffTick = _timing.CurTick;
+        state.PredictionHandoff = PredictionHandoffStatus.WaitingForServerState;
     }
 
     private struct PredictionSample(
@@ -555,7 +564,7 @@ public sealed partial class TransformSystem
     private enum PredictionHandoffStatus : byte
     {
         Inactive,
-        WaitingForAuthoritativeState,
+        WaitingForServerState,
         RebasePending,
     }
 }

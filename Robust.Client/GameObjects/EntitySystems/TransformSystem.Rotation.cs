@@ -20,7 +20,7 @@ public sealed partial class TransformSystem
         }
 
         // Only first-time prediction may replace the displayed snapped angle.
-        var targetPose = ResolveEndpoint(target, 0);
+        var targetPose = ResolveEndpoint(target);
         _snapRenderRotations[uid] = snapped with { Rotation = targetPose.Rotation };
     }
 
@@ -96,7 +96,7 @@ public sealed partial class TransformSystem
 
     private void SnapRenderRotation(ref RenderTransformState state)
     {
-        var target = ResolveEndpoint(state.Target, 0);
+        var target = ResolveEndpoint(state.Target);
         state.SnapRotation = true;
         state.CorrectionRotation = Angle.Zero;
         state.LastRendered = state.LastRendered with { Rotation = target.Rotation };

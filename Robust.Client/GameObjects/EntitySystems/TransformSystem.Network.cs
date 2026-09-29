@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -71,21 +72,18 @@ public sealed partial class TransformSystem
         bool snapRotation)
     {
         // Source and target ticks define duration, including gaps caused by dropped states.
-        state.Source = source;
-        state.Target = target;
-        state.LastRendered = rendered;
-        state.CoordinateSpace = coordinateSpace;
-        state.ChangeTick = sourceTick;
-        state.Type = RenderInterpolationType.NetworkInterpolation;
-        state.Alpha = 0f;
-        state.InterpolationStartAlpha = 0f;
-        state.LastFramePhase = -1f;
-        state.NetworkTargetTick = targetTick;
-        state.PendingPredictionRollback = false;
-        state.SnapRotation = snapRotation;
-        state.PredictionHandoffTick = GameTick.Zero;
-        state.PredictionHandoff = PredictionHandoffStatus.Inactive;
-        ClearCorrection(ref state);
+        state = new RenderTransformState
+        {
+            Source = source,
+            Target = target,
+            LastRendered = rendered,
+            CoordinateSpace = coordinateSpace,
+            ChangeTick = sourceTick,
+            Type = RenderInterpolationType.NetworkInterpolation,
+            LastFramePhase = -1f,
+            NetworkTargetTick = targetTick,
+            SnapRotation = snapRotation,
+        };
     }
 
     private float GetNetworkInterpolationAlpha(ref RenderTransformState state)
@@ -120,9 +118,27 @@ public sealed partial class TransformSystem
         GameTick targetTick)
     {
         // The game-state layer supplies a resolved future transform when an intermediate state is missing.
+        if (!XformQuery.TryGetComponent(uid, out var xform) || xform.Deleted)
+        {
+            _renderTransforms.Remove(uid);
+            return;
+        }
+
+        ref var existing = ref CollectionsMarshal.GetValueRefOrNullRef(_renderTransforms, uid);
+        var hasExisting = !Unsafe.IsNullRef(ref existing);
+
+        // Lookahead is only for remote movement. Even an invalid future endpoint must not clear
+        // prediction, its correction, or the handoff waiting for authoritative state.
+        if (xform.LastModifiedTick > _timing.LastRealTick
+            || HasComp<PredictedPhysicsComponent>(uid)
+            || hasExisting && (existing.Type == RenderInterpolationType.PredictionInterpolation
+                || existing.PredictionHandoff != PredictionHandoffStatus.Inactive
+                || HasCorrection(in existing)))
+        {
+            return;
+        }
+
         if (targetTick <= sourceTick
-            || !XformQuery.TryGetComponent(uid, out var xform)
-            || xform.Deleted
             || !TryCreateEndpoint(xform.Coordinates, xform.LocalRotation, out var source)
             || !TryCreateEndpoint(targetCoordinates, targetRotation, out var target))
         {
@@ -137,9 +153,6 @@ public sealed partial class TransformSystem
             return;
         }
 
-        ref var existing = ref CollectionsMarshal.GetValueRefOrNullRef(_renderTransforms, uid);
-        var hasExisting = !Unsafe.IsNullRef(ref existing);
-
         if (hasExisting
             && existing.Type == RenderInterpolationType.NetworkInterpolation
             && existing.ChangeTick == sourceTick
@@ -151,7 +164,7 @@ public sealed partial class TransformSystem
 
         var rendered = hasExisting
             ? existing.LastRendered
-            : ResolveLastRenderedEndpoint(source, 0);
+            : ResolveLastRenderedEndpoint(source);
 
         ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_renderTransforms, uid, out _);
         StartNetworkInterpolation(

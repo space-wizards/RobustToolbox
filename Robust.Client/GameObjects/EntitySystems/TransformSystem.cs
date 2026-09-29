@@ -9,6 +9,8 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
+using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
@@ -40,11 +42,11 @@ public sealed partial class TransformSystem : SharedTransformSystem
     // Oh yeah the only reason the unsafe ref checks are everywhere is so we can access the direct dictionary value
     // by ref and avoid having to do multiple lookups to mutate it because they're STRUCTS.
 
-    private const int MaxTransformDepth = 128;
-
     [Dependency] private IConfigurationManager _configuration = default!;
     [Dependency] private IClientGameTiming _timing = default!;
+    [Dependency] private SharedMapSystem _maps = default!;
 
+    // TODO: Jaggedarray or something
     [ViewVariables]
     private readonly Dictionary<EntityUid, RenderTransformState> _renderTransforms = new();
 
@@ -65,7 +67,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
 
     /// <summary>
     /// Invoked when interpolation crosses render spaces. The default policy only permits the same map.
-    /// A client feature such as z-level rendering can mark other map pairs as compatible.
+    /// A client feature such as z-level rendering can mark other map pairs as compatible and not SNAP.
     /// </summary>
     public event RenderSpaceCompatibilityHandler? RenderSpaceCompatibility;
 
@@ -208,7 +210,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
         }
         else
         {
-            rendered = ResolveLastRenderedEndpoint(oldEndpoint, 0);
+            rendered = ResolveLastRenderedEndpoint(oldEndpoint);
         }
 
         if (!TryGetCommonRenderSpace(source.RenderSpace, target.RenderSpace, out var coordinateSpace))
@@ -299,8 +301,8 @@ public sealed partial class TransformSystem : SharedTransformSystem
         in RenderTransformEndpoint source,
         in RenderTransformEndpoint target)
     {
-        var sourcePose = ResolveEndpoint(source, 0);
-        var targetPose = ResolveEndpoint(target, 0);
+        var sourcePose = ResolveEndpoint(source);
+        var targetPose = ResolveEndpoint(target);
         var distance = Vector2.DistanceSquared(sourcePose.Position, targetPose.Position);
 
         if (distance >= _maxInterpolationDistanceSquared)
@@ -372,7 +374,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
             {
                 // State application and prediction have finished, so the network base is stable for this frame.
                 state.Alpha = GetInterpolationAlpha(ref state);
-                var basePose = GetBaseRenderTransform(in state, 0);
+                var basePose = GetBaseRenderTransform(in state);
                 if (ExceedsMaxInterpolationDistance(state.LastRendered, basePose))
                 {
                     _remove.Add(uid);
@@ -380,7 +382,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
                 }
 
                 StartCorrection(ref state, state.LastRendered, basePose);
-                state.PredictionHandoff = PredictionHandoffStatus.WaitingForAuthoritativeState;
+                state.PredictionHandoff = PredictionHandoffStatus.WaitingForServerState;
                 correctionStarted = true;
             }
 
@@ -408,6 +410,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
         // Resolve poses after interpolation has advanced so moving parents are cached for children.
         foreach (var (uid, _) in _renderTransforms)
         {
+            // Struct data but we also don't add / remove from dictionary sooo
             ref var state = ref CollectionsMarshal.GetValueRefOrNullRef(_renderTransforms, uid);
             if (Unsafe.IsNullRef(ref state))
                 continue;
@@ -437,7 +440,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
                 state.InterpolationStartAlpha = 1f;
             }
 
-            state.LastRendered = GetRenderTransformInternal(uid, 0);
+            state.LastRendered = GetRenderTransformInternal(uid, xform);
 
             if (state.Type == RenderInterpolationType.PredictionInterpolation)
                 state.PendingPredictionRollback = false;
@@ -497,7 +500,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
         if (!XformQuery.Resolve(uid, ref xform, false))
             return default;
 
-        return GetRenderTransformInternal((uid, xform), 0);
+        return GetRenderTransformInternal(uid, xform);
     }
 
     /// <summary>
@@ -562,21 +565,21 @@ public sealed partial class TransformSystem : SharedTransformSystem
             : MapCoordinates.Nullspace;
     }
 
-    private RenderTransform GetRenderTransformInternal(Entity<TransformComponent?> ent, int depth)
+    private RenderTransform GetRenderTransformInternal(EntityUid uid, TransformComponent? xform = null)
     {
-        var uid = ent.Owner;
-        var xform = ent.Comp;
-        if (depth >= MaxTransformDepth || !XformQuery.Resolve(uid, ref xform, false))
+        if (!XformQuery.Resolve(uid, ref xform, false))
             return default;
 
-        if (_renderTransforms.TryGetValue(uid, out var state))
+        // Recursive pose resolution only reads this dictionary, so the reference stays valid.
+        ref var state = ref CollectionsMarshal.GetValueRefOrNullRef(_renderTransforms, uid);
+        if (!Unsafe.IsNullRef(ref state))
         {
-            var snapRotation = state.SnapRotation || _snapRenderRotations.ContainsKey(uid);
-            var pose = GetBaseRenderTransform(in state, depth + 1);
+            var pose = GetBaseRenderTransform(in state);
 
             if (!HasCorrection(in state))
                 return ApplyRenderRotationOverride(uid, pose);
 
+            var snapRotation = state.SnapRotation || _snapRenderRotations.ContainsKey(uid);
             pose = new RenderTransform(
                 pose.Position + state.CorrectionTranslation,
                 snapRotation
@@ -597,7 +600,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
             return ApplyRenderRotationOverride(uid, pose);
         }
 
-        var parent = GetRenderTransformInternal(xform.ParentUid, depth + 1);
+        var parent = GetRenderTransformInternal(xform.ParentUid, null);
         var childPose = parent with
         {
             Position = parent.Position + parent.Rotation.RotateVec(xform.LocalPosition),
@@ -606,11 +609,30 @@ public sealed partial class TransformSystem : SharedTransformSystem
         return ApplyRenderRotationOverride(uid, childPose);
     }
 
-    private RenderTransform GetBaseRenderTransform(in RenderTransformState state, int depth)
+    private RenderTransform GetBaseRenderTransform(in RenderTransformState state)
     {
-        var source = ResolveEndpoint(state.Source, depth);
-        var targetPose = ResolveEndpoint(state.Target, depth);
-        var alpha = GetSegmentAlpha(state);
+        var alpha = GetSegmentAlpha(in state);
+        if (state.Source.Parent == state.Target.Parent
+            && state.Source.Parent.IsValid())
+        {
+            // Both endpoints normally share a parent. Resolving it twice at each level would
+            // multiply the work down a hierarchy of interpolating transforms.
+            var parent = GetRenderTransformInternal(state.Source.Parent, null);
+            // Interpolate before rotating so both positions share one rotation operation.
+            var localPosition = Vector2.Lerp(state.Source.LocalPosition, state.Target.LocalPosition, alpha);
+            var sourceRotation = parent.Rotation + state.Source.LocalRotation;
+            var targetRotation = parent.Rotation + state.Target.LocalRotation;
+            return new RenderTransform(
+                parent.Position + parent.Rotation.RotateVec(localPosition),
+                state.SnapRotation ? targetRotation : Angle.Lerp(sourceRotation, targetRotation, alpha),
+                state.CoordinateSpace,
+                state.Source.RenderSpace,
+                state.Target.RenderSpace,
+                alpha);
+        }
+
+        var source = ResolveEndpoint(state.Source);
+        var targetPose = ResolveEndpoint(state.Target);
         return new RenderTransform(
             Vector2.Lerp(source.Position, targetPose.Position, alpha),
             state.SnapRotation
@@ -622,14 +644,19 @@ public sealed partial class TransformSystem : SharedTransformSystem
             alpha);
     }
 
-    private RenderTransform ResolveEndpoint(in RenderTransformEndpoint endpoint, int depth)
+    private RenderTransform ResolveEndpoint(in RenderTransformEndpoint endpoint)
     {
         // Endpoints store local coordinates. Resolve through rendered parents so child interpolation follows
         // the same visual parent pose that will be drawn this frame.
-        if (!endpoint.Parent.IsValid() || depth >= MaxTransformDepth)
+        if (!endpoint.Parent.IsValid())
             return new RenderTransform(endpoint.LocalPosition, endpoint.LocalRotation, endpoint.RenderSpace);
 
-        var parent = GetRenderTransformInternal(endpoint.Parent, depth + 1);
+        var parent = GetRenderTransformInternal(endpoint.Parent, null);
+        return ResolveEndpoint(endpoint, parent);
+    }
+
+    private static RenderTransform ResolveEndpoint(in RenderTransformEndpoint endpoint, in RenderTransform parent)
+    {
         return new RenderTransform(
             parent.Position + parent.Rotation.RotateVec(endpoint.LocalPosition),
             parent.Rotation + endpoint.LocalRotation,
@@ -639,7 +666,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
             1f);
     }
 
-    private static float GetSegmentAlpha(RenderTransformState state)
+    private static float GetSegmentAlpha(in RenderTransformState state)
     {
         var remaining = 1f - state.InterpolationStartAlpha;
         if (remaining <= float.Epsilon)
@@ -648,15 +675,15 @@ public sealed partial class TransformSystem : SharedTransformSystem
         return Math.Clamp((state.Alpha - state.InterpolationStartAlpha) / remaining, 0f, 1f);
     }
 
-    private RenderTransform ResolveLastRenderedEndpoint(in RenderTransformEndpoint endpoint, int depth)
+    private RenderTransform ResolveLastRenderedEndpoint(in RenderTransformEndpoint endpoint)
     {
         // Used when re-parenting across parents or render spaces. Sampling last-rendered parents avoids a
         // one-frame snap back to simulation coordinates during grid traversal or z-level transitions.
         // Yes this tilted me for years.
-        if (!endpoint.Parent.IsValid() || depth >= MaxTransformDepth)
+        if (!endpoint.Parent.IsValid())
             return new RenderTransform(endpoint.LocalPosition, endpoint.LocalRotation, endpoint.RenderSpace);
 
-        var parent = GetLastRenderedTransformInternal(endpoint.Parent, depth + 1);
+        var parent = GetLastRenderedTransformInternal(endpoint.Parent);
         return new RenderTransform(
             parent.Position + parent.Rotation.RotateVec(endpoint.LocalPosition),
             parent.Rotation + endpoint.LocalRotation,
@@ -666,9 +693,9 @@ public sealed partial class TransformSystem : SharedTransformSystem
             1f);
     }
 
-    private RenderTransform GetLastRenderedTransformInternal(EntityUid uid, int depth, TransformComponent? xform = null)
+    private RenderTransform GetLastRenderedTransformInternal(EntityUid uid, TransformComponent? xform = null)
     {
-        if (depth >= MaxTransformDepth || !XformQuery.Resolve(uid, ref xform, false))
+        if (!XformQuery.Resolve(uid, ref xform, false))
             return default;
 
         if (_renderTransforms.TryGetValue(uid, out var state))
@@ -678,7 +705,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
         if (!xform.ParentUid.IsValid())
             return new RenderTransform(xform.LocalPosition, xform.LocalRotation, renderSpace);
 
-        var parent = GetLastRenderedTransformInternal(xform.ParentUid, depth + 1);
+        var parent = GetLastRenderedTransformInternal(xform.ParentUid);
         return parent with
         {
             Position = parent.Position + parent.Rotation.RotateVec(xform.LocalPosition),
@@ -715,7 +742,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
             return false;
         }
 
-        var parent = GetLastRenderedTransformInternal(parentUid, 0, parentXform);
+        var parent = GetLastRenderedTransformInternal(parentUid, parentXform);
         var localPosition = (-parent.Rotation).RotateVec(pose.Position - parent.Position);
         var localRotation = pose.Rotation - parent.Rotation;
         endpoint = new RenderTransformEndpoint(parentUid, localPosition, localRotation, renderSpace);
@@ -800,7 +827,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
     }
 
     /// <summary>
-    /// Enlarges a render query enough to include sparse poses whose simulation target lies outside the viewport.
+    /// Enlarges a render query enough to include entities whose simulation target lies outside the viewport.
     /// </summary>
     [Pure]
     public Box2 GetRenderCullingBounds(MapId mapId, in Box2Rotated bounds)
@@ -814,6 +841,24 @@ public sealed partial class TransformSystem : SharedTransformSystem
         => _maxInterpolationDistance > 0f
             ? bounds.Enlarged(_maxInterpolationDistance)
             : bounds;
+
+    /// <summary>
+    /// Gets grid chunks intersecting world bounds at the grid's rendered pose.
+    /// </summary>
+    /// <param name="grid">The grid to query.</param>
+    /// <param name="worldBounds">The visible area in world space.</param>
+    /// <param name="renderMatrix">The drawing matrix, including any pixel snapping adjustment.
+    /// Defaults to the grid's render world matrix.</param>
+    internal ChunkEnumerator GetRenderGridChunks(
+        Entity<MapGridComponent> grid,
+        in Box2Rotated worldBounds,
+        Matrix3x2? renderMatrix = null)
+    {
+        var matrix = renderMatrix ?? GetRenderWorldMatrix(grid.Owner);
+        Matrix3x2.Invert(matrix, out var inverseMatrix);
+        var localBounds = inverseMatrix.TransformBox(worldBounds);
+        return _maps.GetLocalMapChunks(grid.Owner, grid.Comp, localBounds);
+    }
 
     /// <summary>
     /// Enumerates active render interpolation state for debugging.
@@ -841,9 +886,9 @@ public sealed partial class TransformSystem : SharedTransformSystem
         }
 
         var simulation = GetWorldPositionRotation(xform);
-        var source = ResolveEndpoint(state.Source, 0);
-        var target = ResolveEndpoint(state.Target, 0);
-        var rendered = GetRenderTransformInternal((uid, xform), 0);
+        var source = ResolveEndpoint(state.Source);
+        var target = ResolveEndpoint(state.Target);
+        var rendered = GetRenderTransformInternal(uid, xform);
         data = new RenderTransformDebugData(
             uid,
             new RenderTransform(simulation.WorldPosition, simulation.WorldRotation, xform.MapUid ?? EntityUid.Invalid),

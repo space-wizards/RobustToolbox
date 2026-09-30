@@ -42,6 +42,7 @@ internal sealed partial class PvsSystem
     /// <param name="histogram"></param>
     private WaitHandle? ProcessQueuedAcks()
     {
+        // ProcessDisconnections has already waited for the send job and this runs on the game thread too sooo.
         // ReSharper disable InconsistentlySynchronizedField
         if (PendingAcks.Count == 0)
             return null;

@@ -1,6 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using Robust.Client.Graphics;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 
@@ -22,6 +23,10 @@ public interface IFileDialogManager
     /// <see langword="null" /> if the user canceled the action.
     /// </returns>
     /// <param name="filters">Filters for file types that the user can select.</param>
+    /// <param name="defaultLocation">Best-effort default folder or file path to start the native dialog at.</param>
+    /// <param name="defaultUserDataLocation">
+    /// Best-effort default folder or file path under the user-data directory to start the native dialog at.
+    /// </param>
     /// <param name="access">What access is desired from the file operation.</param>
     /// <param name="share">
     /// What sharing mode is desired from the file operation.
@@ -31,7 +36,9 @@ public interface IFileDialogManager
     Task<(Stream?, string?)> GetFileAndName(
         FileDialogFilters? filters = null,
         FileAccess access = FileAccess.ReadWrite,
-        FileShare? share = null);
+        FileShare? share = null,
+        string? defaultLocation = null,
+        ResPath? defaultUserDataLocation = null);
 
     /// <summary>
     /// Open a file dialog used for getting the file name of the selected file.
@@ -44,7 +51,9 @@ public interface IFileDialogManager
     Task<string?> GetName(
         FileDialogFilters? filters = null,
         FileAccess access = FileAccess.ReadWrite,
-        FileShare? share = null);
+        FileShare? share = null,
+        string? defaultLocation = null,
+        ResPath? defaultUserDataLocation = null);
 
     /// <summary>
     /// Open a file dialog used for opening the selected file.
@@ -57,7 +66,9 @@ public interface IFileDialogManager
     Task<Stream?> OpenFile(
         FileDialogFilters? filters = null,
         FileAccess access = FileAccess.ReadWrite,
-        FileShare? share = null);
+        FileShare? share = null,
+        string? defaultLocation = null,
+        ResPath? defaultUserDataLocation = null);
 
     /// <summary>
     ///  Open a file dialog used for saving a single file.
@@ -72,7 +83,9 @@ public interface IFileDialogManager
         FileDialogFilters? filters = null,
         bool truncate = true,
         FileAccess access = FileAccess.ReadWrite,
-        FileShare share = FileShare.None);
+        FileShare share = FileShare.None,
+        string? defaultLocation = null,
+        ResPath? defaultUserDataLocation = null);
 }
 
 /// <summary>
@@ -80,6 +93,6 @@ public interface IFileDialogManager
 /// </summary>
 internal interface IFileDialogManagerImplementation
 {
-    Task<string?> OpenFile(FileDialogFilters? filters);
-    Task<string?> SaveFile(FileDialogFilters? filters);
+    Task<string?> OpenFile(FileDialogFilters? filters, string? defaultLocation);
+    Task<string?> SaveFile(FileDialogFilters? filters, string? defaultLocation);
 }

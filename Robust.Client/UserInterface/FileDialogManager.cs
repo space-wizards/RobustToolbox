@@ -3,11 +3,13 @@ using System.IO;
 using System.Threading.Tasks;
 using Robust.Client.Graphics;
 using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 
-internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManager
+internal sealed class FileDialogManager(IClydeInternal clyde, IResourceManager resourceManager) : IFileDialogManager
 {
     private static FileShare Validate(FileAccess access, FileShare? share)
     {
@@ -22,20 +24,54 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
         return realShare;
     }
 
-    private async Task<string?> Prompt(bool isSave, FileDialogFilters? filters)
+    private async Task<string?> Prompt(bool isSave, FileDialogFilters? filters, string? defaultLocation)
     {
         if (clyde.FileDialogImpl is { } impl)
-            return isSave ? await impl.SaveFile(filters) : await impl.OpenFile(filters);
+            return isSave
+                ? await impl.SaveFile(filters, defaultLocation)
+                : await impl.OpenFile(filters, defaultLocation);
 
         return null;
+    }
+
+    private string? ResolveDefaultLocation(string? defaultLocation, ResPath? defaultUserDataLocation)
+    {
+        if (!string.IsNullOrWhiteSpace(defaultLocation))
+            return NormalizeNativeDialogDefaultLocation(defaultLocation);
+
+        if (defaultUserDataLocation == null || resourceManager.UserData is not WritableDirProvider userData)
+            return null;
+
+        try
+        {
+            return NormalizeNativeDialogDefaultLocation(userData.GetFullPath(defaultUserDataLocation.Value));
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+    }
+
+    private static string NormalizeNativeDialogDefaultLocation(string location)
+    {
+        if (!Directory.Exists(location) ||
+            location.EndsWith(Path.DirectorySeparatorChar) ||
+            location.EndsWith(Path.AltDirectorySeparatorChar))
+        {
+            return location;
+        }
+
+        return location + Path.DirectorySeparatorChar;
     }
 
     public async Task<(Stream?, string?)> GetFileAndName(
         FileDialogFilters? filters = null,
         FileAccess access = FileAccess.ReadWrite,
-        FileShare? share = null)
+        FileShare? share = null,
+        string? defaultLocation = null,
+        ResPath? defaultUserDataLocation = null)
     {
-        var name = await Prompt(false, filters);
+        var name = await Prompt(false, filters, ResolveDefaultLocation(defaultLocation, defaultUserDataLocation));
 
         if (name == null) return (null, null);
 
@@ -46,10 +82,12 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
     public async Task<string?> GetName(
         FileDialogFilters? filters = null,
         FileAccess access = FileAccess.ReadWrite,
-        FileShare? share = null)
+        FileShare? share = null,
+        string? defaultLocation = null,
+        ResPath? defaultUserDataLocation = null)
     {
         Validate(access, share);
-        var name = await Prompt(false, filters);
+        var name = await Prompt(false, filters, ResolveDefaultLocation(defaultLocation, defaultUserDataLocation));
 
         return name == null ? null : Path.GetFileName(name);
     }
@@ -57,10 +95,12 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
     public async Task<Stream?> OpenFile(
         FileDialogFilters? filters = null,
         FileAccess access = FileAccess.ReadWrite,
-        FileShare? share = null)
+        FileShare? share = null,
+        string? defaultLocation = null,
+        ResPath? defaultUserDataLocation = null)
     {
         var realShare = Validate(access, share);
-        var name = await Prompt(false, filters);
+        var name = await Prompt(false, filters, ResolveDefaultLocation(defaultLocation, defaultUserDataLocation));
 
         return name == null ? null : File.Open(name, FileMode.Open, access, realShare);
     }
@@ -69,10 +109,12 @@ internal sealed class FileDialogManager(IClydeInternal clyde) : IFileDialogManag
         FileDialogFilters? filters,
         bool truncate = true,
         FileAccess access = FileAccess.ReadWrite,
-        FileShare share = FileShare.None)
+        FileShare share = FileShare.None,
+        string? defaultLocation = null,
+        ResPath? defaultUserDataLocation = null)
     {
         Validate(access, share);
-        var name = await Prompt(true, filters);
+        var name = await Prompt(true, filters, ResolveDefaultLocation(defaultLocation, defaultUserDataLocation));
 
         if (name == null) return null;
 

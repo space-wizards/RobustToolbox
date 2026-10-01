@@ -1773,7 +1773,9 @@ public abstract partial class SharedTransformSystem
     /// this will attempt to insert that entity into the same container. Otherwise it will attach the entity to the
     /// grid or map at the same world-position as the target entity.
     /// </summary>
-    public void DropNextTo(Entity<TransformComponent?> entity, Entity<TransformComponent?> target)
+    /// <param name="forceInsertion">Whether to bypass normal insertion checks.</param>
+    /// <param name="forceRemoval">Whether to bypass normal removal checks (forcing the entity out of current container, if it's inside one)</param>
+    public void DropNextTo(Entity<TransformComponent?> entity, Entity<TransformComponent?> target, bool forceInsertion = false, bool forceRemoval = false)
     {
         var xform = entity.Comp;
         if (!XformQuery.Resolve(entity, ref xform))
@@ -1794,7 +1796,7 @@ public abstract partial class SharedTransformSystem
         {
             if (_container.IsEntityInContainer(targetUid)
                 && _container.TryGetContainingContainer(targetXform.ParentUid, targetUid, out var container)
-                && _container.Insert((entity, xform, null, null), container))
+                && _container.Insert((entity, xform, null, null), container, force: forceInsertion, forceRemoval: forceRemoval))
             {
                 return;
             }
@@ -1811,7 +1813,9 @@ public abstract partial class SharedTransformSystem
     /// Attempts to place one entity next to another entity. If the target entity is in a container, this will attempt
     /// to insert that entity into the same container. Otherwise it will attach the entity to the same parent.
     /// </summary>
-    public void PlaceNextTo(Entity<TransformComponent?> entity, Entity<TransformComponent?> target)
+    /// <param name="forceInsertion">Whether to bypass normal insertion checks.</param>
+    /// <param name="forceRemoval">Whether to bypass normal removal checks (forcing the entity out of current container, if it's inside one)</param>
+    public void PlaceNextTo(Entity<TransformComponent?> entity, Entity<TransformComponent?> target, bool forceInsertion = false, bool forceRemoval = false)
     {
         var xform = entity.Comp;
         if (!XformQuery.Resolve(entity, ref xform))
@@ -1836,8 +1840,8 @@ public abstract partial class SharedTransformSystem
             if (!container.Contains(target))
                 continue;
 
-            if (!_container.Insert((entity, xform, null, null), container))
-                PlaceNextTo((entity, xform), targetXform.ParentUid);
+            if (!_container.Insert((entity, xform, null, null), container, force: forceInsertion, forceRemoval:forceRemoval))
+                PlaceNextTo((entity, xform), targetXform.ParentUid, forceInsertion: forceInsertion, forceRemoval: forceRemoval);
         }
     }
 

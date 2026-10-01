@@ -1122,7 +1122,7 @@ namespace Robust.Shared
         /// It is expected to stay fixed for a given deployment and is probably not safe to change while in-game.
         /// </summary>
         public static readonly CVarDef<int> DisplayPixelsPerMeter =
-            CVarDef.Create("display.pixels_per_meter", 32, CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("display.pixels_per_meter", SharedEyeSystem.DefaultPixelsPerMeter, CVar.REPLICATED | CVar.SERVER);
 
         /*
          *  CONTROLS

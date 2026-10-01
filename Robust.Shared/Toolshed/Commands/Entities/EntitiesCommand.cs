@@ -19,18 +19,18 @@ internal sealed class EntitiesCommand : ToolshedCommand
         public IEntityManager EntMan { get; } = entMan;
 
         // We create an array as chained commands might modify it.
-        public EntityUid[]? _arr;
+        public EntityUid[]? Entities;
 
         public IEnumerator<EntityUid> GetEnumerator()
         {
-            _arr ??= EntMan.GetEntities().ToArray();
-            return ((IEnumerable<EntityUid>)_arr).GetEnumerator();
+            Entities ??= EntMan.GetEntities().ToArray();
+            return ((IEnumerable<EntityUid>)Entities).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            _arr ??= EntMan.GetEntities().ToArray();
-            return _arr.GetEnumerator();
+            Entities ??= EntMan.GetEntities().ToArray();
+            return Entities.GetEnumerator();
         }
     }
 }

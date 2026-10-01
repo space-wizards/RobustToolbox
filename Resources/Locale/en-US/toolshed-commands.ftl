@@ -28,8 +28,6 @@ command-description-search =
     Searches through the input for the provided value.
 command-description-stopwatch =
     Measures the execution time of the given expression.
-command-description-types-consumers =
-    Provides all commands that can consume the given type.
 command-description-types-tree =
     Debug tool to return all types the command interpreter can downcast the input to.
 command-description-types-gettype =
@@ -426,6 +424,14 @@ command-description-tee =
 command-description-cmd-info =
     Returns a CommandSpec for the given command.
     On its own, this means it'll print the command's help message.
+command-description-cmd-accepts =
+    Filters commands based on what type they accept as a piped argument
+command-description-cmd-accepts_generic =
+    Filters commands based on what type they accept as a piped argument, allowing commands that broadly accept most types
+command-description-cmd-returns =
+    Filters commands based on what type they return as a result
+command-description-cmd-returns_generic =
+    Filters commands based on what type they return as a result, allowing commands that broadly accept most types
 command-description-comp-rm =
     Removes the given component from the entity.
 

@@ -61,6 +61,7 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
+            Subs.CVar(_cfg, CVars.DisplayPixelsPerMeter, OnPixelsPerMeterChanged);
             _query = GetEntityQuery<SpriteComponent>();
         }
 
@@ -146,6 +147,18 @@ namespace Robust.Client.GameObjects
         private void OnBiasChanged(double value)
         {
             SpriteComponent.DirectionBias = value;
+        }
+
+        private void OnPixelsPerMeterChanged(int value)
+        {
+            EyeManager.SetPixelsPerMeter(value);
+
+            var query = AllEntityQuery<SpriteComponent>();
+            while (query.MoveNext(out var uid, out var sprite))
+            {
+                DirtyBounds((uid, sprite));
+                _tree.QueueTreeUpdate((uid, sprite));
+            }
         }
 
         private void DoUpdateIsInert(SpriteComponent component)

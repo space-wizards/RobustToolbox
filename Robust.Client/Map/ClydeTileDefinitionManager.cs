@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
@@ -25,10 +27,16 @@ namespace Robust.Client.Map
         [Dependency] private IReloadManager _reload = default!;
         [Dependency] private IResourceManager _manager = default!;
         [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
 
         private ISawmill _sawmill = default!;
 
         private Texture? _tileTextureAtlas;
+
+        /// <summary>
+        /// The <see cref="EyeManager.PixelsPerMeter"/> value the current atlas was generated with.
+        /// </summary>
+        private int _atlasPixelsPerMeter;
 
         public Texture TileTextureAtlas => _tileTextureAtlas ?? Texture.Transparent;
 
@@ -69,6 +77,18 @@ namespace Robust.Client.Map
             _reload.Register("/Textures/Tiles", "*.png");
             _reload.OnChanged += OnReload;
 
+            _cfg.OnValueChanged(CVars.DisplayPixelsPerMeter, OnPixelsPerMeterChanged);
+
+            _genTextureAtlas();
+        }
+
+        private void OnPixelsPerMeterChanged(int value)
+        {
+            EyeManager.SetPixelsPerMeter(value);
+
+            if (_atlasPixelsPerMeter == EyeManager.PixelsPerMeter)
+                return;
+
             _genTextureAtlas();
         }
 
@@ -95,15 +115,17 @@ namespace Robust.Client.Map
         {
             var sw = RStopwatch.StartNew();
             var tileRegs = new Dictionary<(int Id, Direction Direction), Box2[]>();
-            _tileTextureAtlas = null;
 
             var defList = TileDefs.Where(t => t.Sprite != null).ToList();
 
             // If there are no tile definitions, we do nothing.
             if (defList.Count <= 0)
+            {
+                _tileTextureAtlas = null;
                 return;
+            }
 
-            const int tileSize = EyeManager.PixelsPerMeter;
+            var tileSize = EyeManager.PixelsPerMeter;
 
             var tileCount = defList.Select(x => x.Variants + x.EdgeSprites.Count).Sum() + 1;
 
@@ -117,15 +139,18 @@ namespace Robust.Client.Map
             var h = (float)sheet.Height;
 
             // Add in the missing tile texture sprite as tile texture 0.
+            var errorTileRegion = Box2.FromDimensions(
+                0, (h - tileSize) / h,
+                tileSize / w, tileSize / h);
             {
-                ErrorTileRegion = Box2.FromDimensions(
-                    0, (h - EyeManager.PixelsPerMeter) / h,
-                    tileSize / w, tileSize / h);
                 Image<Rgba32> image;
                 using (var stream = _manager.ContentFileRead("/Textures/noTile.png"))
                 {
                     image = Image.Load<Rgba32>(stream);
                 }
+
+                if (image.Width != tileSize || image.Height != tileSize)
+                    image.Mutate(o => o.Resize(tileSize, tileSize, KnownResamplers.NearestNeighbor));
 
                 image.Blit(new UIBox2i(0, 0, tileSize, tileSize), sheet, Vector2i.Zero);
             }
@@ -138,6 +163,7 @@ namespace Robust.Client.Map
 
             var column = 1;
             var row = 0;
+            var rescaled = 0;
 
             foreach (var def in defList)
             {
@@ -150,10 +176,16 @@ namespace Robust.Client.Map
                     image = Image.Load<Rgba32>(stream);
                 }
 
-                if (image.Width != (tileSize * def.Variants) || image.Height != tileSize)
+                if (image.Width != image.Height * def.Variants)
                 {
                     throw new NotSupportedException(
-                        $"Unable to load {path}, due to being unable to use tile texture with a dimension other than {tileSize}x({tileSize} * Variants).");
+                        $"Unable to load {path}, due to being unable to use tile texture with a dimension other than NxN * Variants.");
+                }
+
+                if (image.Height != tileSize)
+                {
+                    image.Mutate(o => o.Resize(tileSize * def.Variants, tileSize, KnownResamplers.NearestNeighbor));
+                    rescaled++;
                 }
 
                 var regionList = new Box2[def.Variants];
@@ -187,10 +219,16 @@ namespace Robust.Client.Map
                         image = Image.Load<Rgba32>(stream);
                     }
 
-                    if (image.Width != tileSize || image.Height != tileSize)
+                    if (image.Width != image.Height)
                     {
                         throw new NotSupportedException(
-                            $"Unable to load {path}, due to being unable to use tile textures with a dimension other than {tileSize}x{tileSize}.");
+                            $"Unable to load {edge}, due to being unable to use tile edge textures that are not square.");
+                    }
+
+                    if (image.Height != tileSize)
+                    {
+                        image.Mutate(o => o.Resize(tileSize, tileSize, KnownResamplers.NearestNeighbor));
+                        rescaled++;
                     }
 
                     Angle angle = Angle.Zero;
@@ -243,8 +281,15 @@ namespace Robust.Client.Map
                 }
             }
 
+            if (rescaled > 0)
+            {
+                _sawmill.Warning($"Rescaled {rescaled} tile textures to {tileSize}x{tileSize} to match {CVars.DisplayPixelsPerMeter.Name}. Author tile textures at this size to avoid resampling.");
+            }
+
             _tileRegions = tileRegs.ToFrozenDictionary();
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
+            ErrorTileRegion = errorTileRegion;
+            _atlasPixelsPerMeter = tileSize;
             _sawmill.Debug($"Tile atlas took {sw.Elapsed} to build");
         }
 

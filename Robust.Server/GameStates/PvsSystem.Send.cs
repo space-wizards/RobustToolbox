@@ -55,9 +55,9 @@ internal sealed partial class PvsSystem
             if (msg.HasWritten && msg.ShouldSendReliably())
             {
                 data.RequestedFull = false;
-                data.LastReceivedAck = sendTick;
                 lock (PendingAcks)
                 {
+                    data.LastReceivedAck = sendTick;
                     PendingAcks.Add(data.Session);
                 }
             }
@@ -65,10 +65,10 @@ internal sealed partial class PvsSystem
         else
         {
             // Always "ack" dummy sessions.
-            data.LastReceivedAck = sendTick;
             data.RequestedFull = false;
             lock (PendingAcks)
             {
+                data.LastReceivedAck = sendTick;
                 PendingAcks.Add(data.Session);
             }
         }

@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
-    <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>WinExe</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -45,7 +44,8 @@
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Avalonia.Base\Avalonia.Base.csproj" />
+    <!--Not actually used yet, and has a conflicting namespace, disabled until more work is done-->
+    <!--<ProjectReference Include="..\Avalonia.Base\Avalonia.Base.csproj" />-->
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
     <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
     <ProjectReference Include="..\Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj" />

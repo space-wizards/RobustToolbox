@@ -37,10 +37,29 @@ namespace Robust.Shared.Physics
 
         #region Intersect Tests
 
+        /// <summary>
+        ///     Checks whether this ray intersects a box.
+        /// </summary>
+        /// <param name="box">Box to check.</param>
+        /// <param name="distance">Distance which the ray enters.</param>
+        /// <param name="hitPos">Position at which the ray enters.</param>
         public readonly bool Intersects(Box2 box, out float distance, out Vector2 hitPos)
+        {
+            return Intersects(box, out distance, out hitPos, out _);
+        }
+
+        /// <summary>
+        ///     Checks whether this ray intersects a box.
+        /// </summary>
+        /// <param name="box">Box to check.</param>
+        /// <param name="distance">Distance at which the ray enters.</param>
+        /// <param name="hitPos">Position at which the ray enters.</param>
+        /// <param name="exit">Distance along the ray where it leaves.</param>
+        public readonly bool Intersects(Box2 box, out float distance, out Vector2 hitPos, out float exit)
         {
             hitPos = Vector2.Zero;
             distance = 0;
+            exit = 0;
 
             var tmin = 0.0f; // set to -FLT_MAX to get first hit on line
             var tmax = float.MaxValue; // set to max distance ray can travel (for segment)
@@ -111,6 +130,7 @@ namespace Robust.Shared.Physics
             // Ray intersects all slabs. Return point and intersection t value
             hitPos = Position + Direction * tmin;
             distance = tmin;
+            exit = tmax;
             return true;
         }
 

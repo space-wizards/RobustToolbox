@@ -277,7 +277,7 @@ public sealed partial class EntitySpawningUIController : UIController
             return;
 
         // Calculate index of first prototype to render based on current scroll.
-        var height = _window.MeasureButton.DesiredSize.Y + PrototypeListContainer.Separation;
+        var height = _window.MeasureButton.DesiredSize.Y + VirtualListContainer.DefaultSeparation;
         var offset = Math.Max(-_window.PrototypeList.Position.Y, 0);
         var startIndex = (int)Math.Floor(offset / height);
         _window.PrototypeList.ItemOffset = startIndex;

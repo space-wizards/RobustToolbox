@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Server.GameStates;
@@ -143,7 +144,8 @@ namespace Robust.Server.GameObjects
 
         private readonly PriorityQueue<MsgEntity> _queue = new(new MessageSequenceComparer());
 
-        private readonly Dictionary<ICommonSession, uint> _lastProcessedSequencesCmd =
+        // Sequenced client messages need scheduling state per session; SourceTick alone can reorder them.
+        private readonly Dictionary<ICommonSession, SequencedMessageState> _sequencedMessageStates =
             new();
 
         private bool _logLateMsgs;
@@ -187,7 +189,9 @@ namespace Robust.Server.GameObjects
 
         public uint GetLastMessageSequence(ICommonSession? session)
         {
-            return session == null ? default : _lastProcessedSequencesCmd.GetValueOrDefault(session);
+            return session != null && _sequencedMessageStates.TryGetValue(session, out var state)
+                ? state.LastProcessedSequence
+                : 0;
         }
 
         /// <inheritdoc />
@@ -234,7 +238,25 @@ namespace Robust.Server.GameObjects
                 }
             }
 
+            if (!QueueEntityNetworkMessage(message))
+                return;
+
             _queue.Add(message);
+        }
+
+        private bool QueueEntityNetworkMessage(MsgEntity message)
+        {
+            if (message.Sequence == 0 || !message.MsgChannel.IsConnected)
+                return true;
+
+            var player = _playerManager.GetSessionByChannel(message.MsgChannel);
+            ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                _sequencedMessageStates,
+                player,
+                out _);
+
+            // Preserve reliable stream order while still using SourceTick as the eligibility tick.
+            return state.Queue(message);
         }
 
         private void DispatchEntityNetworkMessage(MsgEntity message)
@@ -249,10 +271,14 @@ namespace Robust.Server.GameObjects
 
             if (message.Sequence != 0)
             {
-                if (_lastProcessedSequencesCmd[player] < message.Sequence)
-                {
-                    _lastProcessedSequencesCmd[player] = message.Sequence;
-                }
+                ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                    _sequencedMessageStates,
+                    player,
+                    out _);
+
+                // Stale queued messages must not overwrite newer input state.
+                if (!state.MarkProcessed(message.Sequence))
+                    return;
             }
 
 #if EXCEPTION_TOLERANCE
@@ -284,12 +310,70 @@ namespace Robust.Server.GameObjects
             switch (args.NewStatus)
             {
                 case SessionStatus.Connected:
-                    _lastProcessedSequencesCmd.Add(args.Session, 0);
+                    _sequencedMessageStates.Add(args.Session, default);
                     break;
 
                 case SessionStatus.Disconnected:
-                    _lastProcessedSequencesCmd.Remove(args.Session);
+                    _sequencedMessageStates.Remove(args.Session);
                     break;
+            }
+        }
+
+        /// <summary>
+        /// Per-session state for preserving client sequence order through SourceTick scheduling.
+        /// </summary>
+        internal struct SequencedMessageState
+        {
+            /// <summary>
+            /// Highest sequenced message that has been dispatched to systems.
+            /// </summary>
+            public uint LastProcessedSequence;
+
+            /// <summary>
+            /// Highest sequenced message admitted to the scheduling queue.
+            /// </summary>
+            public uint LastQueuedSequence;
+
+            /// <summary>
+            /// Last effective SourceTick assigned to a queued sequenced message.
+            /// </summary>
+            public GameTick LastScheduledTick;
+
+            /// <summary>
+            /// Validates a newly arrived sequenced message before queueing.
+            /// </summary>
+            public bool Queue(MsgEntity message)
+            {
+                if (message.Sequence == 0)
+                    return true;
+
+                if (message.Sequence <= LastProcessedSequence || message.Sequence <= LastQueuedSequence)
+                    return false;
+
+                if (message.SourceTick < LastScheduledTick)
+                {
+                    // Do not let a later sequence execute before an earlier message.
+                    message.SourceTick = LastScheduledTick;
+                }
+                else
+                {
+                    LastScheduledTick = message.SourceTick;
+                }
+
+                LastQueuedSequence = message.Sequence;
+                return true;
+            }
+
+            /// <summary>
+            /// Marks a queued sequenced message as dispatched, rejecting stale duplicates.
+            /// </summary>
+            public bool MarkProcessed(uint sequence)
+            {
+                if (sequence <= LastProcessedSequence)
+                    return false;
+
+                LastProcessedSequence = sequence;
+                return true;
             }
         }
 

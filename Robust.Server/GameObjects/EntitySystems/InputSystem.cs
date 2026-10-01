@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -51,8 +52,21 @@ namespace Robust.Server.GameObjects
 
             var session = eventArgs.SenderSession;
 
-            if (_lastProcessedInputCmd[session] < msg.InputSequence)
-                _lastProcessedInputCmd[session] = msg.InputSequence;
+            if (msg.InputSequence != 0)
+            {
+                ref var lastProcessedInput = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                    _lastProcessedInputCmd,
+                    session,
+                    out _);
+
+                // Dump stale inputs so they don't overwrite current input state.
+                // Client increments its input sequence on every input but that doesn't guarantee the order the server receives
+                // them in.
+                if (msg.InputSequence <= lastProcessedInput)
+                    return;
+
+                lastProcessedInput = msg.InputSequence;
+            }
 
             // set state, only bound key functions get state changes
             var states = GetInputStates(session);

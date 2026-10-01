@@ -2171,5 +2171,15 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> LoadingShowDebug =
             CVarDef.Create("loading.show_debug", DefaultShowDebug, CVar.CLIENTONLY);
+
+        /*
+         * MAP LOADER
+         */
+
+        /// <summary>
+        /// ZSTD compression level to use when compressing save files.
+        /// </summary>
+        public static readonly CVarDef<int> MapSavesCompressLevel =
+            CVarDef.Create("maploader.compress_level", 3, CVar.ARCHIVE);
     }
 }

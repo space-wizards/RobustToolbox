@@ -67,7 +67,7 @@ internal sealed class PhysicsTestBedTest : RobustIntegrationTest
             var mapUid = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
             physSystem.SetGravity(new Vector2(0f, -9.8f));
 
-            var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var groundUid = entityManager.Spawn(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
             var groundManager = entityManager.EnsureComponent<FixturesComponent>(groundUid);
 
@@ -90,7 +90,7 @@ internal sealed class PhysicsTestBedTest : RobustIntegrationTest
                 {
                     var x = 0.0f;
 
-                    var boxUid = entityManager.SpawnEntity(null,
+                    var boxUid = entityManager.Spawn(null,
                         new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
                     var box = entityManager.AddComponent<PhysicsComponent>(boxUid);
                     var manager = entityManager.EnsureComponent<FixturesComponent>(boxUid);
@@ -171,7 +171,7 @@ internal sealed class PhysicsTestBedTest : RobustIntegrationTest
             var mapUid = entityManager.System<SharedMapSystem>().CreateMap(out mapId);
             physSystem.SetGravity(new Vector2(0f, -9.8f));
 
-            var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var groundUid = entityManager.Spawn(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
             var groundManager = entityManager.EnsureComponent<FixturesComponent>(groundUid);
 
@@ -196,7 +196,7 @@ internal sealed class PhysicsTestBedTest : RobustIntegrationTest
                 {
                     var x = 0.0f;
 
-                    var circleUid = entityManager.SpawnEntity(null,
+                    var circleUid = entityManager.Spawn(null,
                         new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 1.1f * i), mapId));
                     var circle = entityManager.AddComponent<PhysicsComponent>(circleUid);
                     var manager = entityManager.EnsureComponent<FixturesComponent>(circleUid);

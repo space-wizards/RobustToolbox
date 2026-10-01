@@ -25,9 +25,9 @@ internal sealed class TransformIntegration_Test
         var xformSystem = entManager.System<SharedTransformSystem>();
         var map1 = sim.CreateMap().Uid;
 
-        var ent1 = entManager.SpawnEntity(null, new EntityCoordinates(map1, Vector2.Zero));
-        var ent2 = entManager.SpawnEntity(null, new EntityCoordinates(map1, Vector2.Zero));
-        var ent3 = entManager.SpawnEntity(null, new EntityCoordinates(map1, Vector2.Zero));
+        var ent1 = entManager.SpawnAttachedTo(null, new EntityCoordinates(map1, Vector2.Zero));
+        var ent2 = entManager.SpawnAttachedTo(null, new EntityCoordinates(map1, Vector2.Zero));
+        var ent3 = entManager.SpawnAttachedTo(null, new EntityCoordinates(map1, Vector2.Zero));
 
         var container = containerSystem.EnsureContainer<ContainerSlot>(ent1, "a");
 

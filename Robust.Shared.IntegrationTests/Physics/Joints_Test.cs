@@ -29,9 +29,9 @@ internal sealed class Joints_Test
 
         var mapId = sim.CreateMap().MapId;
 
-        var uidA = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
-        var uidB = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
-        var uidC = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
+        var uidA = entManager.Spawn(null, new MapCoordinates(0f, 0f, mapId));
+        var uidB = entManager.Spawn(null, new MapCoordinates(0f, 0f, mapId));
+        var uidC = entManager.Spawn(null, new MapCoordinates(0f, 0f, mapId));
 
         entManager.AddComponent<PhysicsComponent>(uidA);
         entManager.AddComponent<PhysicsComponent>(uidB);
@@ -74,8 +74,8 @@ internal sealed class Joints_Test
         var map = server.CreateMap();
         var mapId = map.MapId;
 
-        var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
-        var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var ent1 = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
+        var ent2 = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
         var body1 = entManager.AddComponent<PhysicsComponent>(ent1);
         var body2 = entManager.AddComponent<PhysicsComponent>(ent2);
         var manager1 = entManager.EnsureComponent<FixturesComponent>(ent1);

@@ -22,19 +22,18 @@ namespace Robust.Shared.Serialization.Manager
                     throw new InvalidOperationException($"Could not create ConstantMapping for non-enum {constType}.");
                 }
 
-                if (Enum.GetUnderlyingType(constType) != typeof(int))
+                var underlyingType = Enum.GetUnderlyingType(constType);
+                if (underlyingType != typeof(int) && underlyingType != typeof(byte))
                 {
-                    throw new InvalidOperationException($"Could not create ConstantMapping for non-int enum {constType}.");
+                    throw new InvalidOperationException($"Could not create ConstantMapping for unsupported enum {constType}.");
                 }
 
                 foreach (var constantsForAttribute in constType.GetCustomAttributes<ConstantsForAttribute>(true))
                 {
-                    if (_constantsMapping.ContainsKey(constantsForAttribute.Tag))
+                    if (!_constantsMapping.TryAdd(constantsForAttribute.Tag, constType))
                     {
                         throw new NotSupportedException($"Multiple constant enums declared for the tag {constantsForAttribute.Tag}.");
                     }
-
-                    _constantsMapping.Add(constantsForAttribute.Tag, constType);
                 }
             }
 

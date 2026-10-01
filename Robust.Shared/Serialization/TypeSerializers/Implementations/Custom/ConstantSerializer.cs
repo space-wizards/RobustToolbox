@@ -56,4 +56,40 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             return new ValueDataNode(constantName);
         }
     }
+
+    /// <summary>
+    ///     Serializes or deserializes a byte from a set of known constants specified by an enum.
+    /// </summary>
+    public sealed class ByteConstantSerializer<TTag> : ITypeSerializer<byte, ValueDataNode>
+    {
+        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies, ISerializationContext? context = null)
+        {
+            var constType = serializationManager.GetConstantTypeFromTag(typeof(TTag));
+            return Enum.TryParse(constType, node.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing constant.", false);
+        }
+
+        public byte Read(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<byte>? instanceProvider = null)
+        {
+            var constType = serializationManager.GetConstantTypeFromTag(typeof(TTag));
+            return Convert.ToByte(Enum.Parse(constType, node.Value));
+        }
+
+        public DataNode Write(ISerializationManager serializationManager, byte value, IDependencyCollection dependencies,
+            bool alwaysWrite = false,
+            ISerializationContext? context = null)
+        {
+            var constType = serializationManager.GetConstantTypeFromTag(typeof(TTag));
+            var constantName = Enum.GetName(constType, value);
+
+            if (constantName == null)
+            {
+                throw new InvalidOperationException($"No constant corresponding to value {value} in {constType}.");
+            }
+
+            return new ValueDataNode(constantName);
+        }
+    }
 }

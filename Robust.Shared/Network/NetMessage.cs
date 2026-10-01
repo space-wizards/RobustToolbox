@@ -86,6 +86,12 @@ namespace Robust.Shared.Network
         /// <param name="serializer"></param>
         public abstract void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer);
 
+        /// <summary>
+        /// Estimated size of the serialized payload, excluding transport encryption overhead.
+        /// Used to size Lidgren's outgoing buffer before <see cref="WriteToBuffer"/>.
+        /// </summary>
+        public virtual int EstimateBufferSize() => 4;
+
         public virtual NetDeliveryMethod DeliveryMethod
         {
             get

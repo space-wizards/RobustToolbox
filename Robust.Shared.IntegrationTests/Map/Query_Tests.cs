@@ -57,12 +57,11 @@ internal sealed class Query_Tests
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
         var map = mapSystem.CreateMap();
-        var grid = mapManager.CreateGridEntity(map);
+        var grid = mapSystem.CreateGridEntity(map);
 
         for (var i = 0; i < 10; i++)
         {
@@ -72,7 +71,7 @@ internal sealed class Query_Tests
         xformSystem.SetWorldRotation(grid.Owner, radians);
 
         var grids = new List<Entity<MapGridComponent>>();
-        mapManager.FindGridsIntersecting(map, worldAABB, ref grids);
+        mapSystem.FindGridsIntersecting(map, worldAABB, ref grids);
 
         Assert.That(grids.Count > 0, Is.EqualTo(result));
     }

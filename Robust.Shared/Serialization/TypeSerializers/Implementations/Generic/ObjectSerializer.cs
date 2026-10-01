@@ -11,20 +11,20 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 
 [TypeSerializer]
-public sealed class ObjectSerializer : ITypeSerializer<object, ValueDataNode>, ITypeCopier<object>
+public sealed partial class ObjectSerializer : ITypeSerializer<object, ValueDataNode>, ITypeCopier<object>
 {
+    [Dependency] private IReflectionManager _refMan = default!;
+
     #region Validate
 
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null)
     {
-        var reflection = dependencies.Resolve<IReflectionManager>();
-
         if (node.Tag != null)
         {
             string? typeString = node.Tag[6..];
 
-            if (!reflection.TryLooseGetType(typeString, out var type))
+            if (!_refMan.TryLooseGetType(typeString, out var type))
             {
                 return new ErrorNode(node, $"Unable to find type for {typeString}");
             }
@@ -42,14 +42,13 @@ public sealed class ObjectSerializer : ITypeSerializer<object, ValueDataNode>, I
         SerializationHookContext hookCtx, ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<object>? instanceProvider = null)
     {
-        var reflection = dependencies.Resolve<IReflectionManager>();
         var value = instanceProvider != null ? instanceProvider() : new object();
 
         if (node.Tag != null)
         {
             string? typeString = node.Tag[6..];
 
-            if (!reflection.TryLooseGetType(typeString, out var type))
+            if (!_refMan.TryLooseGetType(typeString, out var type))
                 throw new NullReferenceException($"Found null type for {typeString}");
 
             value = serializationManager.Read(type, node, hookCtx, context);

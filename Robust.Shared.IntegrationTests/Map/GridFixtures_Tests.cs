@@ -29,8 +29,8 @@ internal sealed class GridFixtures_Tests : RobustIntegrationTest
         var server = RobustServerSimulation.NewSimulation().InitializeInstance();
         var map = server.CreateMap();
         var entManager = server.Resolve<IEntityManager>();
-        var grid = server.Resolve<IMapManager>().CreateGridEntity(map.MapId);
         var mapSystem = entManager.System<SharedMapSystem>();
+        var grid = mapSystem.CreateGridEntity(map.MapId);
         var fixtures = entManager.GetComponent<FixturesComponent>(grid);
 
         mapSystem.SetTiles(grid, new List<(Vector2i GridIndices, Tile Tile)>()
@@ -51,20 +51,101 @@ internal sealed class GridFixtures_Tests : RobustIntegrationTest
     }
 
     [Test]
+    public void SingleSetTileSameShapeDoesNotRegenerateFixtures()
+    {
+        var server = NewFixtureCounterSimulation();
+        var map = server.CreateMap();
+        var entManager = server.Resolve<IEntityManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var grid = mapSystem.CreateGridEntity(map.MapId);
+        var fixtures = entManager.GetComponent<FixturesComponent>(grid);
+        var counter = entManager.System<FixtureChangeCounterSystem>();
+
+        mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
+        Assert.That(counter.EventCount, Is.EqualTo(1));
+        Assert.That(fixtures.Fixtures, Does.ContainKey("grid_chunk-0-0"));
+        var fixture = fixtures.Fixtures["grid_chunk-0-0"];
+
+        counter.EventCount = 0;
+        mapSystem.SetTile(grid, Vector2i.Zero, new Tile(2));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(counter.EventCount, Is.EqualTo(0));
+            Assert.That(fixtures.FixtureCount, Is.EqualTo(1));
+            Assert.That(fixtures.Fixtures["grid_chunk-0-0"], Is.SameAs(fixture));
+        });
+    }
+
+    [Test]
+    public void BulkSetTilesSameShapeDoesNotRegenerateFixtures()
+    {
+        var server = NewFixtureCounterSimulation();
+        var map = server.CreateMap();
+        var entManager = server.Resolve<IEntityManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var grid = mapSystem.CreateGridEntity(map.MapId);
+        var fixtures = entManager.GetComponent<FixturesComponent>(grid);
+        var counter = entManager.System<FixtureChangeCounterSystem>();
+
+        mapSystem.SetTiles(grid, new List<(Vector2i GridIndices, Tile Tile)>
+        {
+            (Vector2i.Zero, new Tile(1)),
+            (Vector2i.Right, new Tile(1)),
+        });
+
+        Assert.That(counter.EventCount, Is.EqualTo(1));
+        Assert.That(fixtures.Fixtures, Does.ContainKey("grid_chunk-0-0"));
+        var fixture = fixtures.Fixtures["grid_chunk-0-0"];
+
+        counter.EventCount = 0;
+        mapSystem.SetTiles(grid, new List<(Vector2i GridIndices, Tile Tile)>
+        {
+            (Vector2i.Zero, new Tile(2)),
+            (Vector2i.Right, new Tile(2)),
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(counter.EventCount, Is.EqualTo(0));
+            Assert.That(fixtures.FixtureCount, Is.EqualTo(1));
+            Assert.That(fixtures.Fixtures["grid_chunk-0-0"], Is.SameAs(fixture));
+        });
+    }
+
+    [Test]
+    public void FixtureNamesUseTileBounds()
+    {
+        var server = RobustServerSimulation.NewSimulation().InitializeInstance();
+        var map = server.CreateMap();
+        var entManager = server.Resolve<IEntityManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var grid = mapSystem.CreateGridEntity(map.MapId);
+        var fixtures = entManager.GetComponent<FixturesComponent>(grid);
+
+        mapSystem.SetTile(grid, new Vector2i(-1, 2), new Tile(1));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(fixtures.Fixtures, Does.ContainKey("grid_chunk--1-2"));
+            Assert.That(fixtures.Fixtures.Keys, Does.Not.Contain("grid_chunk--1.01-1.99"));
+        });
+    }
+
+    [Test]
     public async Task TestGridFixtures()
     {
         var server = StartServer();
         await server.WaitIdleAsync();
 
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
         var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
         await server.WaitAssertion(() =>
         {
             entManager.System<SharedMapSystem>().CreateMap(out var mapId);
-            var grid = mapManager.CreateGridEntity(mapId);
+            var grid = mapSystem.CreateGridEntity(mapId);
 
             // Should be nothing if grid empty
             Assert.That(entManager.TryGetComponent(grid, out PhysicsComponent? gridBody));
@@ -95,7 +176,29 @@ internal sealed class GridFixtures_Tests : RobustIntegrationTest
             Assert.That(manager.FixtureCount, Is.EqualTo(2));
 
             physSystem.SetLinearVelocity(grid, Vector2.One, manager: manager, body: gridBody);
-            Assert.That(gridBody.LinearVelocity.Length, Is.EqualTo(0f));
+            Assert.That(gridBody.LinearVelocity.Length(), Is.EqualTo(0f));
         });
+    }
+
+    private static ISimulation NewFixtureCounterSimulation()
+    {
+        return RobustServerSimulation.NewSimulation()
+            .RegisterEntitySystems(factory => factory.LoadExtraSystemType<FixtureChangeCounterSystem>())
+            .InitializeInstance();
+    }
+
+    private sealed partial class FixtureChangeCounterSystem : EntitySystem
+    {
+        public int EventCount;
+
+        public override void Initialize()
+        {
+            SubscribeLocalEvent<GridFixtureChangeEvent>(OnGridFixtureChange);
+        }
+
+        private void OnGridFixtureChange(GridFixtureChangeEvent ev)
+        {
+            EventCount++;
+        }
     }
 }

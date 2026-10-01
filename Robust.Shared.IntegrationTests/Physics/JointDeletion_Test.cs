@@ -23,7 +23,6 @@ internal sealed class JointDeletion_Test : RobustIntegrationTest
         await server.WaitIdleAsync();
 
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var susManager = server.ResolveDependency<IEntitySystemManager>();
         var jointSystem = susManager.GetEntitySystem<SharedJointSystem>();
         var broadphase = susManager.GetEntitySystem<SharedBroadphaseSystem>();

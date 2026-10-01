@@ -29,8 +29,9 @@ namespace Robust.Client.GameObjects
         internal event Action? AfterStartup;
         internal event Action? AfterShutdown;
 
-        private readonly Queue<EntityUid> _queuedPredictedDeletions = new();
-        private readonly HashSet<EntityUid> _queuedPredictedDeletionsSet = new();
+        private readonly HashSet<EntityUid> _predictedDetachedEntities = new();
+        private Histogram? _tickUpdateHistogram;
+        private Histogram.Child? _entityNetHistogram;
 
         public override void Initialize()
         {
@@ -59,6 +60,7 @@ namespace Robust.Client.GameObjects
             // Server doesn't network deletions on client shutdown so we need to
             // manually clear these out or risk stale data getting used.
             PendingNetEntityStates.Clear();
+            _predictedDetachedEntities.Clear();
             using var _ = _gameTiming.StartStateApplicationArea();
             base.FlushEntities();
         }
@@ -81,18 +83,40 @@ namespace Robust.Client.GameObjects
             if (uid == null || uid == EntityUid.Invalid)
                 return;
 
-            if (IsClientSide(uid.Value))
+            // Some UIs get disposed after entity manager has shut down and already deleted all entities.
+            if (!Started || ShuttingDown)
+                return;
+
+            // Already detached to nullspace by a predicted deletion, nothing left to queue.
+            if (_predictedDetachedEntities.Contains(uid.Value))
+                return;
+
+            // Networked entities are handled by DeleteEntity when the queue gets processed, which predicts the
+            // deletion by detaching them.
+            base.QueueDeleteEntity(uid);
+
+            // Rollback must also cancel predicted deletions before the queue is processed.
+            if (MetaQuery.TryGetComponent(uid.Value, out var meta) && !meta.NetEntity.IsClientSide())
+                DirtyEntity(uid.Value, meta);
+        }
+
+        /// <inheritdoc />
+        public override void DeleteEntity(EntityUid uid, MetaDataComponent meta, TransformComponent xform)
+        {
+            // There's 3 scenarios:
+            // 1. We're applying server state, so the deletion is authoritative and actually happens.
+            // 2. Client-side entity, which we can just delete.
+            // 3. Networked entity, which we predict by detaching to nullspace and letting state handling restore it.
+            if (!_gameTiming.ApplyingState && !meta.NetEntity.IsClientSide())
             {
-                base.QueueDeleteEntity(uid);
+                if (meta.EntityLifeStage < EntityLifeStage.Terminating)
+                    PredictedDetachNetworkedEntity(uid, xform, meta);
+
                 return;
             }
 
-            if (ShuttingDown)
-                return;
-
-            // Client-side entity deletion is not supported and will cause errors.
-            if (_client.RunLevel == ClientRunLevel.Connected || _client.RunLevel == ClientRunLevel.InGame)
-                LogManager.RootSawmill.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid.Value)}. Trace: {Environment.StackTrace}");
+            ClearPredictedDeletion(uid);
+            base.DeleteEntity(uid, meta, xform);
         }
 
         /// <inheritdoc />
@@ -206,7 +230,9 @@ namespace Robust.Client.GameObjects
 
         public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntityNet").NewTimer())
+            UpdateTickHistogram(histogram);
+
+            using (_entityNetHistogram?.NewTimer())
             {
                 while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameTiming.LastRealTick)
                 {
@@ -219,33 +245,13 @@ namespace Robust.Client.GameObjects
             base.TickUpdate(frameTime, noPredictions, histogram);
         }
 
-        internal override void ProcessQueueudDeletions()
+        private void UpdateTickHistogram(Histogram? histogram)
         {
-            base.ProcessQueueudDeletions();
-            while (_queuedPredictedDeletions.TryDequeue(out var uid))
-            {
-                if (!MetaQuery.TryGetComponentInternal(uid, out var meta))
-                    continue;
+            if (ReferenceEquals(_tickUpdateHistogram, histogram))
+                return;
 
-                if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
-                    continue;
-
-                var xform = TransformQuery.GetComponentInternal(uid);
-                if (meta.NetEntity.IsClientSide())
-                {
-                    DeleteEntity(uid, meta, xform);
-                }
-                else
-                {
-                    _xforms.DetachEntity(uid, xform, meta, null);
-                    // base call bypasses IGameTiming.InPrediction check
-                    // This is pretty janky and there should be a way for the client to dirty an entity outside of prediction
-                    // TODO PREDICTION Is actually needed after the current predicted deletion fix?
-                    base.Dirty(uid, xform, meta);
-                }
-            }
-
-            _queuedPredictedDeletionsSet.Clear();
+            _tickUpdateHistogram = histogram;
+            _entityNetHistogram = histogram?.WithLabels("EntityNet");
         }
 
         /// <inheritdoc />
@@ -324,61 +330,30 @@ namespace Robust.Client.GameObjects
         }
         #endregion
 
-        /// <inheritdoc />
-        public override void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        internal bool IsPredictedDetached(EntityUid uid)
         {
-            if (!MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
-                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
-                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
-            {
+            return _predictedDetachedEntities.Contains(uid);
+        }
+
+        internal void ClearPredictedDeletion(EntityUid uid)
+        {
+            _predictedDetachedEntities.Remove(uid);
+            QueuedDeletionsSet.Remove(uid);
+        }
+
+        private void PredictedDetachNetworkedEntity(EntityUid uid, TransformComponent xform, MetaDataComponent meta)
+        {
+            if (!_predictedDetachedEntities.Add(uid))
                 return;
-            }
 
-            // So there's 3 scenarios:
-            // 1. Networked entity we just move to nullspace and rely on state handling.
-            // 2. Clientside predicted entity we delete and rely on state handling.
-            // 3. Clientside only entity that actually needs deleting here.
-
-            if (ent.Comp1.NetEntity.IsClientSide())
-            {
-                DeleteEntity(ent, ent.Comp1, ent.Comp2);
-            }
-            else
-            {
-                _xforms.DetachEntity(ent, ent.Comp2);
-            }
+            // base call bypasses IGameTiming.InPrediction check. Predicted queue deletes are processed after prediction,
+            // but reset still needs to see the detached entity as dirty and restore it from the last server state.
+            base.Dirty(uid, xform, meta);
+            _xforms.DetachEntity(uid, xform, meta, null);
+            meta.Flags |= MetaDataFlags.Detached;
         }
 
         public override bool IsQueuedForDeletion(EntityUid uid)
-            => QueuedDeletionsSet.Contains(uid) || _queuedPredictedDeletions.Contains(uid);
-
-        /// <inheritdoc />
-        public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?> ent)
-        {
-            // Some UIs get disposed after entity-manager has shut down and already deleted all entities.
-            if (!Started)
-                return;
-
-            if (IsQueuedForDeletion(ent.Owner))
-                return;
-
-            if (!MetaQuery.Resolve(ent.Owner, ref ent.Comp, false))
-                return;
-
-            if (ent.Comp.NetEntity.IsClientSide())
-            {
-                // client-side QueueDeleteEntity re-fetches MetadataComp and checks IsClientSide().
-                // base call to skip that.
-                // TODO create override that takes in metadata comp
-                base.QueueDeleteEntity(ent);
-            }
-            else
-            {
-                if (!_queuedPredictedDeletionsSet.Add(ent.Owner))
-                    return;
-
-                _queuedPredictedDeletions.Enqueue(ent.Owner);
-            }
-        }
+            => QueuedDeletionsSet.Contains(uid) || _predictedDetachedEntities.Contains(uid);
     }
 }

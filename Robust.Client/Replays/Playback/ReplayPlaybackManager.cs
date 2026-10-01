@@ -131,6 +131,7 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
         if (Replay == null)
             return;
 
+        var replay = Replay;
         _playing = false;
         Replay.CurrentIndex = -1;
         Replay = null;
@@ -140,6 +141,9 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
         // Unload any uploaded prototypes & resources.
         _netResMan.ClearResources();
         _protoMan.Reset();
+
+        // Release the windowed data provider and the underlying replay file handle.
+        replay.Dispose();
 
         ReplayPlaybackStopped?.Invoke();
     }

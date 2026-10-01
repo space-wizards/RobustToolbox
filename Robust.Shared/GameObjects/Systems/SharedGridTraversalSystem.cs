@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects;
 /// </summary>
 public sealed partial class SharedGridTraversalSystem : EntitySystem
 {
-    [Dependency] private IMapManagerInternal _mapManager = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private IGameTiming _timing = default!;
 
@@ -97,7 +97,7 @@ public sealed partial class SharedGridTraversalSystem : EntitySystem
             : Vector2.Transform(xform.LocalPosition, Transform(xform.ParentUid).LocalMatrix);
 
         // Change parent if necessary
-        if (_mapManager.TryFindGridAt(map, mapPos, out var gridUid, out _))
+        if (_mapSystem.TryFindGridAt(map, mapPos, out var gridUid, out _))
         {
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
             if (gridUid != xform.GridUid && !TerminatingOrDeleted(gridUid))

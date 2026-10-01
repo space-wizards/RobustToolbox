@@ -33,13 +33,13 @@ namespace Robust.Client.Placement
         [Dependency] internal IPlayerManager PlayerManager = default!;
         [Dependency] internal IResourceCache ResourceCache = default!;
         [Dependency] private IReflectionManager _reflectionManager = default!;
-        [Dependency] private IMapManager _mapManager = default!;
         [Dependency] private IGameTiming _time = default!;
         [Dependency] private IEyeManager _eyeManager = default!;
         [Dependency] internal IInputManager InputManager = default!;
         [Dependency] private IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private IEntityManager _entityManager = default!;
         [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IComponentFactory _factory = default!;
         [Dependency] private IBaseClient _baseClient = default!;
         [Dependency] private IOverlayManager _overlayManager = default!;
         [Dependency] internal IClyde Clyde = default!;
@@ -48,7 +48,6 @@ namespace Robust.Client.Placement
 
         public IEntityManager EntityManager => _entityManager;
         public IEyeManager EyeManager => _eyeManager;
-        public IMapManager MapManager => _mapManager;
 
         private ISawmill _sawmill = default!;
 
@@ -112,7 +111,7 @@ namespace Robust.Client.Placement
         /// <summary>
         /// Holds the selection rectangle for the eraser
         /// </summary>
-        public Box2? EraserRect { get; set; }
+        public Box2Rotated? EraserRect { get; set; }
 
         /// <summary>
         /// Drawing shader for drawing without being affected by lighting
@@ -483,12 +482,16 @@ namespace Robust.Client.Placement
             _networkManager.ClientSendMessage(msg);
         }
 
-        public void HandleRectDeletion(EntityCoordinates start, Box2 rect)
+        public void HandleRectDeletion(EntityCoordinates start, Box2Rotated rect)
         {
-            var msg = new MsgPlacement();
-            msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
-            msg.NetCoordinates = new NetCoordinates(EntityManager.GetNetEntity(StartPoint.EntityId), rect.BottomLeft);
-            msg.RectSize = rect.Size;
+            var centerCoords = XformSystem.ToCoordinates(new MapCoordinates(rect.Origin, XformSystem.GetMapId(start)));
+            var msg = new MsgPlacement
+            {
+                PlaceType = PlacementManagerMessage.RequestRectRemove,
+                NetCoordinates = EntityManager.GetNetCoordinates(centerCoords),
+                RectSize = rect.Box.Size,
+                RectRotation = (float)rect.Rotation.Theta
+            };
             _networkManager.ClientSendMessage(msg);
         }
 
@@ -596,28 +599,15 @@ namespace Robust.Client.Placement
                 {
                     if (!CurrentEraserMouseCoordinates(out EntityCoordinates end))
                         return;
-                    float b, l, t, r;
-                    if (StartPoint.X < end.X)
-                    {
-                        l = StartPoint.X;
-                        r = end.X;
-                    }
-                    else
-                    {
-                        l = end.X;
-                        r = StartPoint.X;
-                    }
-                    if (StartPoint.Y < end.Y)
-                    {
-                        b = StartPoint.Y;
-                        t = end.Y;
-                    }
-                    else
-                    {
-                        b = end.Y;
-                        t = StartPoint.Y;
-                    }
-                    EraserRect = new Box2(l, b, r, t);
+
+                    var startPos = XformSystem.ToWorldPosition(StartPoint);
+                    var endPos = XformSystem.ToWorldPosition(end);
+                    var eyeRot = _eyeManager.CurrentEye.Rotation;
+
+                    var diff = eyeRot.RotateVec(endPos - startPos);
+                    var size = new Vector2(MathF.Abs(diff.X), MathF.Abs(diff.Y));
+                    var centerPos = (startPos + endPos) / 2f;
+                    EraserRect = new Box2Rotated(Box2.CenteredAround(centerPos, size), -eyeRot, centerPos);
                 }
                 return;
             }
@@ -666,7 +656,9 @@ namespace Robust.Client.Placement
                 return;
 
             StartPoint = coordinates;
-            EraserRect = new Box2(coordinates.Position, Vector2.Zero);
+            var startPos = XformSystem.ToWorldPosition(coordinates);
+            var eyeRot = _eyeManager.CurrentEye.Rotation;
+            EraserRect = new Box2Rotated(new Box2(startPos, startPos), -eyeRot, startPos);
         }
 
         private bool DeactivateSpecialPlacement()
@@ -686,7 +678,6 @@ namespace Robust.Client.Placement
                 {
                     args.WorldHandle.UseShader(_drawingShader);
                     args.WorldHandle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 50));
-                    args.WorldHandle.UseShader(null);
                 }
                 return;
             }
@@ -787,7 +778,7 @@ namespace Robust.Client.Placement
 
             sc.Comp.NoRotation = noRot;
 
-            if (prototype != null && prototype.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp))
+            if (prototype != null && prototype.TryComp<SpriteComponent>(out var spriteComp, _factory))
             {
                 Sprite.SetScale(sc.AsNullable(), spriteComp.Scale);
             }

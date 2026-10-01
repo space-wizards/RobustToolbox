@@ -41,7 +41,6 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitIdleAsync();
 
             var entManager = server.ResolveDependency<IEntityManager>();
-            var mapManager = server.ResolveDependency<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
             var transformSystem = entManager.System<SharedTransformSystem>();
 
@@ -56,7 +55,7 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitPost(() =>
             {
                 mapSystem.CreateMap(out mapId);
-                grid = mapManager.CreateGridEntity(mapId);
+                grid = mapSystem.CreateGridEntity(mapId);
                 mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
 
                 entityOne = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));

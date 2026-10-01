@@ -38,7 +38,7 @@ namespace Robust.Server.GameObjects
 
         private void InputMessageHandler(InputCmdMessage message, EntitySessionEventArgs eventArgs)
         {
-            if (!(message is FullInputCmdMessage msg))
+            if (message is not FullInputCmdMessage msg)
                 return;
 
             //Client Sanitization: out of bounds functionID
@@ -46,7 +46,7 @@ namespace Robust.Server.GameObjects
                 return;
 
             //Client Sanitization: bad enum key state value
-            if (!Enum.IsDefined(typeof(BoundKeyState), msg.State))
+            if (!Enum.IsDefined(msg.State))
                 return;
 
             var session = eventArgs.SenderSession;

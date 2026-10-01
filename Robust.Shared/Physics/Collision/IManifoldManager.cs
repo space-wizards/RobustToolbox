@@ -12,7 +12,14 @@ internal interface IManifoldManager
 
     void ReturnEdge(EdgeShape edge);
 
-    bool TestOverlap<T, U>(T shapeA, int indexA, U shapeB, int indexB, in Transform xfA, in Transform xfB)
+    bool TestOverlap<T, U>(
+        T shapeA,
+        int indexA,
+        U shapeB,
+        int indexB,
+        in Transform xfA,
+        in Transform xfB,
+        bool ignoreShapeSkin = false)
         where T : IPhysShape
         where U : IPhysShape;
 

@@ -34,7 +34,6 @@ namespace Robust.UnitTesting.Shared.Prototypes
   - type: {HotReloadTestComponentTwoId}";
 
         private PrototypeManager _prototypes = default!;
-        private IMapManager _maps = default!;
         private IEntityManager _entities = default!;
 
         protected override Type[]? ExtraComponents => new[] {typeof(HotReloadTestOneComponent), typeof(HotReloadTestTwoComponent)};
@@ -48,7 +47,6 @@ namespace Robust.UnitTesting.Shared.Prototypes
             _prototypes.LoadString(InitialPrototypes);
             _prototypes.ResolveResults();
 
-            _maps = IoCManager.Resolve<IMapManager>();
             _entities = IoCManager.Resolve<IEntityManager>();
         }
 

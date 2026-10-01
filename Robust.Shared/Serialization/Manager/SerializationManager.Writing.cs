@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -146,7 +147,7 @@ public sealed partial class SerializationManager
                     Type.EmptyTypes,
                     Expression.Convert(objParam, typeof(ISelfSerialize)));
             }
-            else
+            else if (actualType.IsAssignableTo(typeof(ISerializationGenerated<>).MakeGenericType(actualType)))
             {
                 call = Expression.Call(
                     instanceParam,
@@ -166,6 +167,14 @@ public sealed partial class SerializationManager
                         Expression.Assign(Expression.Field(nodeVar, "Tag"), Expression.Constant($"!type:{actualType.Name}")),
                         nodeVar);
                 }
+            }
+            else
+            {
+                call = Expression.Call(
+                    instanceParam,
+                    nameof(WriteNoSerializer),
+                    Type.EmptyTypes,
+                    Expression.Constant(actualType, typeof(Type)));
             }
 
             // check for customtypeserializer before anything
@@ -221,6 +230,11 @@ public sealed partial class SerializationManager
         return new ValueDataNode(obj.Serialize());
     }
 
+    private DataNode WriteNoSerializer(Type type)
+    {
+        throw new ArgumentException($"No type serializer or data definition found for type {type} when writing");
+    }
+
     private DataNode WriteArray<TElement>(TElement[] obj, bool alwaysWrite, ISerializationContext? context)
     {
         var sequenceNode = new SequenceDataNode();
@@ -239,13 +253,14 @@ public sealed partial class SerializationManager
         DataDefinition<T>? definition,
         bool alwaysWrite,
         ISerializationContext? context)
-        where T : notnull
+        where T : ISerializationGenerated<T>
     {
         //this check is in here on purpose. we cannot check this during expression tree generation due to the value maybe being handled by a custom typeserializer
         if(definition == null)
             throw new InvalidOperationException($"No data definition found for type {typeof(T)} when writing");
 
-        var mapping = definition.Serialize(value, context, alwaysWrite);
+        var mapping = new MappingDataNode();
+        definition.Serialize(value, mapping, this, context, alwaysWrite, definition.DefaultValuesDict);
 
         return mapping;
     }

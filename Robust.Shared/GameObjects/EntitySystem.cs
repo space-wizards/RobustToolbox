@@ -9,6 +9,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
 
@@ -24,6 +25,7 @@ namespace Robust.Shared.GameObjects
     public abstract partial class EntitySystem : IEntitySystem, IPostInjectInit
     {
         [Dependency] protected EntityManager EntityManager = default!;
+        [Dependency] protected IPrototypeManager ProtoMan = default!;
         [Dependency] protected ILogManager LogManager = default!;
         [Dependency] private ISharedPlayerManager _playerMan = default!;
         [Dependency] private IReplayRecordingManager _replayMan = default!;
@@ -91,6 +93,10 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [MustCallBase(true)]
         public virtual void Initialize() { }
+
+        /// <inheritdoc />
+        [MustCallBase(true)]
+        public virtual void AutoSubscriptions() { }
 
         /// <inheritdoc />
         /// <remarks>

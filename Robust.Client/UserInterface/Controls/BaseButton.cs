@@ -90,7 +90,6 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (old != value)
                 {
-                    DefaultCursorShape = Disabled ? CursorShape.NotAllowed : CursorShape.Pointer;
                     DrawModeChanged();
                 }
             }
@@ -235,7 +234,6 @@ namespace Robust.Client.UserInterface.Controls
         protected BaseButton()
         {
             MouseFilter = MouseFilterMode.Stop;
-            DefaultCursorShape = Disabled ? CursorShape.NotAllowed : CursorShape.Pointer;
         }
 
         protected virtual void DrawModeChanged()
@@ -396,9 +394,9 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void ExitedTree()
         {
-            base.Dispose(disposing);
+            base.ExitedTree();
 
             Group = null;
         }

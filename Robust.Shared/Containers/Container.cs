@@ -15,7 +15,6 @@ namespace Robust.Shared.Containers
     /// For example, inventory containers should be modified only through an inventory component.
     /// </summary>
     [UsedImplicitly]
-    [SerializedType(nameof(Container))]
     public sealed partial class Container : BaseContainer
     {
         /// <summary>

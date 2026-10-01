@@ -1,10 +1,20 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Robust.Client.Animations;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controls;
+using Robust.Client.UserInterface.Themes;
+using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Shared.Animations;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Client.UserInterface
 {
@@ -12,6 +22,9 @@ namespace Robust.UnitTesting.Client.UserInterface
     [TestOf(typeof(Control))]
     public sealed class ControlTest : RobustUnitTest
     {
+        private IUserInterfaceManagerInternal _userInterfaceManager = default!;
+        private IDynamicTypeFactoryInternal _typeFactory = default!;
+
         private static readonly AttachedProperty _refTypeAttachedProperty
             = AttachedProperty.Create("_refType", typeof(ControlTest), typeof(string), "foo", v => (string?) v != "bar");
 
@@ -26,10 +39,139 @@ namespace Robust.UnitTesting.Client.UserInterface
 
         public override UnitTestProject Project => UnitTestProject.Client;
 
+        protected override void OverrideIoC()
+        {
+            base.OverrideIoC();
+
+            IoCManager.Register<IXamlProxyManager, XamlProxyManagerStub>(overwrite: true);
+        }
+
         [OneTimeSetUp]
         public void Setup()
         {
-            IoCManager.Resolve<IUserInterfaceManagerInternal>().InitializeTesting();
+            var resources = IoCManager.Resolve<IResourceManagerInternal>();
+            resources.Initialize(null, false);
+            resources.MountContentDirectory(Path.GetFullPath(Path.Combine(
+                TestContext.CurrentContext.TestDirectory,
+                "..",
+                "..",
+                "Resources")));
+
+            IoCManager.Resolve<ISerializationManager>().Initialize();
+
+            var prototypes = IoCManager.Resolve<IPrototypeManager>();
+            prototypes.Initialize();
+            prototypes.LoadDirectory(new ResPath("/EnginePrototypes/Shaders"));
+            prototypes.LoadDirectory(new ResPath("/EnginePrototypes/UserInterface"));
+            prototypes.ResolveResults();
+
+            _userInterfaceManager = IoCManager.Resolve<IUserInterfaceManagerInternal>();
+            _userInterfaceManager.InitializeTesting();
+            _userInterfaceManager.SetDefaultTheme(UITheme.DefaultName);
+            _typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
+        }
+
+        private static IEnumerable<TestCaseData> ControlTypes()
+        {
+            var baseType = typeof(Control);
+
+            yield return new TestCaseData(baseType);
+
+            foreach (var type in baseType.Assembly.GetTypes()
+                         .Where(type => type != baseType
+                                        && type.IsAssignableTo(baseType)
+                                        && !type.IsAbstract
+                                        && !type.ContainsGenericParameters
+                                        && type.GetConstructor(Type.EmptyTypes) != null)
+                         .OrderBy(type => type.FullName))
+            {
+                yield return new TestCaseData(type);
+            }
+        }
+
+        [TestCaseSource(nameof(ControlTypes))]
+        public void TestTreeLifecycle(Type controlType)
+        {
+            var root = _userInterfaceManager.RootControl;
+            var initialTreeSize = GetSelfAndDescendants(root).Count();
+            var control = _typeFactory.CreateInstanceUnchecked<Control>(controlType);
+
+            try
+            {
+                for (var i = 0; i < 2; i++)
+                {
+                    Assert.That(control.Parent, Is.Null);
+                    AssertTreeRoot(control, null);
+
+                    root.AddChild(control);
+                    Assert.That(control.Parent, Is.SameAs(root));
+
+                    var attachedControls = GetSelfAndDescendants(control).ToArray();
+                    foreach (var attachedControl in attachedControls)
+                    {
+                        Assert.That(attachedControl.Root, Is.SameAs(root), attachedControl.GetType().FullName);
+                        Assert.That(attachedControl.IsInsideTree, Is.True, attachedControl.GetType().FullName);
+                    }
+
+                    control.Orphan();
+                    Assert.That(control.Parent, Is.Null);
+
+                    foreach (var attachedControl in attachedControls)
+                    {
+                        Assert.That(attachedControl.Root, Is.Null, attachedControl.GetType().FullName);
+                        Assert.That(attachedControl.IsInsideTree, Is.False, attachedControl.GetType().FullName);
+                    }
+
+                    Assert.That(GetSelfAndDescendants(root).Count(), Is.EqualTo(initialTreeSize));
+                }
+            }
+            finally
+            {
+                control.Orphan();
+            }
+        }
+
+        [Test]
+        public void TestTreeLifecycleCallbacks()
+        {
+            var root = _userInterfaceManager.RootControl;
+            var control = new LifecycleControl();
+
+            root.AddChild(control);
+            Assert.That(control.EnteredRoots, Is.EqualTo(new[] { root }));
+            Assert.That(control.ExitedRoots, Is.Empty);
+
+            control.Orphan();
+            Assert.That(control.EnteredRoots, Is.EqualTo(new[] { root }));
+            Assert.That(control.ExitedRoots, Is.EqualTo(new UIRoot?[] { null }));
+
+            root.AddChild(control);
+            control.Orphan();
+
+            Assert.That(control.EnteredRoots, Is.EqualTo(new[] { root, root }));
+            Assert.That(control.ExitedRoots, Is.EqualTo(new UIRoot?[] { null, null }));
+        }
+
+        private static void AssertTreeRoot(Control control, UIRoot? root)
+        {
+            foreach (var child in GetSelfAndDescendants(control))
+            {
+                Assert.That(child.Root, Is.SameAs(root), child.GetType().FullName);
+                Assert.That(child.IsInsideTree, Is.EqualTo(root != null), child.GetType().FullName);
+            }
+        }
+
+        private static IEnumerable<Control> GetSelfAndDescendants(Control control)
+        {
+            yield return control;
+
+            foreach (var child in control.Children)
+            {
+                foreach (var descendant in GetSelfAndDescendants(child))
+                {
+                    yield return descendant;
+                }
+            }
         }
 
         /// <summary>
@@ -194,6 +336,24 @@ namespace Robust.UnitTesting.Client.UserInterface
         private sealed class TestControl : Control
         {
             [Animatable] public float Foo { get; set; }
+        }
+
+        private sealed class LifecycleControl : Control
+        {
+            public List<UIRoot?> EnteredRoots { get; } = new();
+            public List<UIRoot?> ExitedRoots { get; } = new();
+
+            protected override void EnteredTree()
+            {
+                base.EnteredTree();
+                EnteredRoots.Add(Root);
+            }
+
+            protected override void ExitedTree()
+            {
+                base.ExitedTree();
+                ExitedRoots.Add(Root);
+            }
         }
     }
 }

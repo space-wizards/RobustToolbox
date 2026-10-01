@@ -31,7 +31,6 @@ public interface IIntegrationInstance : IDisposable
     IConfigurationManager CfgMan { get; }
     ISharedPlayerManager PlayerMan { get; }
     INetManager NetMan { get; }
-    IMapManager MapMan { get; }
     IGameTiming Timing { get; }
     ISawmill Log { get; }
 

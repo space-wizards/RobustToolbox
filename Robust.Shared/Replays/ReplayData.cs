@@ -16,17 +16,28 @@ namespace Robust.Shared.Replays;
 /// <summary>
 ///     This class contains data read from some replay recording.
 /// </summary>
-public sealed class ReplayData
+public sealed class ReplayData : IDisposable
 {
     /// <summary>
-    /// List of game states for each tick.
+    /// Provides the per-tick game states and messages. Backed by a windowed loader so that the whole
+    /// replay does not have to stay resident in memory (see <c>BufferedReplayDataProvider</c>).
     /// </summary>
-    public readonly List<GameState> States;
+    private readonly IReplayDataProvider _provider;
 
     /// <summary>
-    /// List of all networked messages and variables that were sent each tick.
+    /// The total number of ticks (states/messages) in this recording.
     /// </summary>
-    public readonly List<ReplayMessage> Messages;
+    public int Count => _provider.Count;
+
+    /// <summary>
+    /// Get the game state for a given tick index. May trigger a synchronous load from disk.
+    /// </summary>
+    public GameState GetState(int index) => _provider.GetState(index);
+
+    /// <summary>
+    /// Get the networked messages for a given tick index. May trigger a synchronous load from disk.
+    /// </summary>
+    public ReplayMessage GetMessages(int index) => _provider.GetMessages(index);
 
     /// <summary>
     /// Replay recording time for each corresponding entry in <see cref="States"/>. Starts at 0.
@@ -41,6 +52,12 @@ public sealed class ReplayData
     /// The first tick in this recording.
     /// </summary>
     public readonly GameTick TickOffset;
+
+    /// <summary>
+    /// The end tick (<see cref="GameState.ToSequence"/>) of the last state in this recording. Cached at load
+    /// time so the UI does not have to fetch the final (out-of-window) data block every frame.
+    /// </summary>
+    public readonly GameTick LastTick;
 
     /// <summary>
     /// The sever's time when the recording was started.
@@ -69,9 +86,9 @@ public sealed class ReplayData
     public GameTick LastApplied { get; internal set; }
 
     public GameTick CurTick => new GameTick((uint) CurrentIndex + TickOffset.Value);
-    public GameState CurState => States[CurrentIndex];
-    public GameState? NextState => CurrentIndex + 1 < States.Count ? States[CurrentIndex + 1] : null;
-    public ReplayMessage CurMessages => Messages[CurrentIndex];
+    public GameState CurState => _provider.GetState(CurrentIndex);
+    public GameState? NextState => CurrentIndex + 1 < Count ? _provider.GetState(CurrentIndex + 1) : null;
+    public ReplayMessage CurMessages => _provider.GetMessages(CurrentIndex);
 
     public TimeSpan CurrentReplayTime => ReplayTime[CurrentIndex];
 
@@ -90,10 +107,10 @@ public sealed class ReplayData
     /// </summary>
     public ReplayMessage? InitialMessages;
 
-    public ReplayData(List<GameState> states,
-        List<ReplayMessage> messages,
+    public ReplayData(IReplayDataProvider provider,
         TimeSpan[] replayTime,
         GameTick tickOffset,
+        GameTick lastTick,
         TimeSpan startTime,
         TimeSpan? duration,
         CheckpointState[] checkpointStates,
@@ -101,10 +118,10 @@ public sealed class ReplayData
         bool clientSideRecording,
         MappingDataNode yamlData)
     {
-        States = states;
-        Messages = messages;
+        _provider = provider;
         ReplayTime = replayTime;
         TickOffset = tickOffset;
+        LastTick = lastTick;
         StartTime = startTime;
         Duration = duration;
         Checkpoints = checkpointStates;
@@ -117,6 +134,14 @@ public sealed class ReplayData
         {
             Recorder = new NetUserId(guid);
         }
+    }
+
+    /// <summary>
+    /// Releases the underlying data provider (and the replay file handle it owns).
+    /// </summary>
+    public void Dispose()
+    {
+        _provider.Dispose();
     }
 }
 
@@ -233,11 +258,13 @@ public sealed class ReplayMessage
     public sealed class LeavePvs
     {
         public readonly List<NetEntity> Entities;
+        public readonly List<NetEntity> ChunkEntities;
         public readonly GameTick Tick;
 
-        public LeavePvs(List<NetEntity> entities, GameTick tick)
+        public LeavePvs(List<NetEntity> entities, GameTick tick, List<NetEntity>? chunkEntities = null)
         {
-            Entities = entities;
+            Entities = new(entities);
+            ChunkEntities = chunkEntities != null ? new(chunkEntities) : new List<NetEntity>();
             Tick = tick;
         }
     }

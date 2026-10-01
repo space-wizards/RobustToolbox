@@ -118,5 +118,7 @@ internal sealed class ServerTransferImplWebSocket : TransferImplWebSocket
     public override void Dispose()
     {
         _connectTcs.TrySetCanceled();
+
+        base.Dispose();
     }
 }

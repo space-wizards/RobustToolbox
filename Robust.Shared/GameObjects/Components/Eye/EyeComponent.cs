@@ -30,7 +30,7 @@ namespace Robust.Shared.GameObjects
         [DataField, AutoNetworkedField]
         public bool DrawFov = true;
 
-        [AutoNetworkedField]
+        [DataField, AutoNetworkedField]
         public bool DrawLight = true;
 
         // yes it's not networked, don't ask.

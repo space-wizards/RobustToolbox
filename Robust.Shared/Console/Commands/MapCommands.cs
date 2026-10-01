@@ -157,7 +157,6 @@ internal sealed partial class RunMapInitCommand : LocalizedEntityCommands
 internal sealed partial class ListMapsCommand : LocalizedEntityCommands
 {
     [Dependency] private IEntityManager _entManager = default!;
-    [Dependency] private IMapManager _map = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
 
     public override string Command => "lsmap";
@@ -180,7 +179,7 @@ internal sealed partial class ListMapsCommand : LocalizedEntityCommands
                 _mapSystem.IsInitialized(mapUid),
                 _mapSystem.IsPaused(mapId),
                 _entManager.GetNetEntity(mapUid),
-                string.Join(",", _map.GetAllGrids(mapId).Select(grid => grid.Owner)));
+                string.Join(",", _mapSystem.GetAllGrids(mapId).Select(grid => grid.Owner)));
         }
 
         // Trim the newline

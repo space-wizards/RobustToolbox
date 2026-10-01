@@ -11,7 +11,6 @@ namespace Robust.Shared.Map
     ///     All maps, aside from <see cref="Nullspace"/>, are also entities. When writing generic code it's usually
     ///     preferable to use <see cref="EntityUid"/> or <see cref="Entity{T}"/> instead.
     /// </remarks>
-    /// <seealso cref="IMapManager"/>
     /// <seealso cref="SharedMapSystem"/>
     [Serializable, NetSerializable]
     public readonly struct MapId : IEquatable<MapId>

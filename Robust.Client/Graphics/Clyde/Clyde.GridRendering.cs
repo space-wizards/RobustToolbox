@@ -52,19 +52,18 @@ namespace Robust.Client.Graphics.Clyde
         private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
         {
             var mapId = eye.Position.MapId;
-            if (!_mapManager.MapExists(mapId))
+            if (!_mapSystem.MapExists(mapId))
             {
                 // fall back to nullspace map
                 mapId = MapId.Nullspace;
             }
 
             _grids.Clear();
-            _mapManager.FindGridsIntersecting(mapId, worldBounds, ref _grids);
+            _mapSystem.FindGridsIntersecting(mapId, worldBounds, ref _grids);
 
             var requiresFlush = true;
             GLShaderProgram gridProgram = default!;
             var gridOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceGrids);
-            var mapSystem = _entityManager.System<SharedMapSystem>();
 
             foreach (var mapGrid in _grids)
             {
@@ -85,8 +84,16 @@ namespace Robust.Client.Graphics.Clyde
                     gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
                 }
 
-                gridProgram.SetUniform(UniIModelMatrix, _transformSystem.GetWorldMatrix(mapGrid));
-                var enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                var matrix = _transformSystem.GetWorldMatrix(mapGrid);
+                matrix.Translation += GetPixelSnapOffset(
+                    matrix.Translation,
+                    eye.Position.Position + eye.Offset,
+                    eye.Rotation,
+                    eye.Scale * viewport.RenderScale *
+                        new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter),
+                    viewport.Size);
+                gridProgram.SetUniform(UniIModelMatrix, matrix);
+                var enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
 
                 // Handle base texture updates.
                 while (enumerator.MoveNext(out var chunk))
@@ -123,7 +130,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Handle edge sprites.
                 if (_drawTileEdges)
                 {
-                    enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                    enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
                     while (enumerator.MoveNext(out var chunk))
                     {
                         var datum = data[chunk.Indices];
@@ -132,7 +139,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                enumerator = _mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
 
                 // Draw chunks
                 while (enumerator.MoveNext(out var chunk))
@@ -281,22 +288,31 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateChunkEdges(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
         {
-            // Need a buffer that can potentially store all neighbor tiles
-            Span<ushort> indexBuffer = EnsureSize(ref _chunkMeshBuilderIndexBuffer, _indicesPerChunk(chunk) * 8);
-            Span<Vertex2D> vertexBuffer = EnsureSize(ref _chunkMeshBuilderVertexBuffer, _verticesPerChunk(chunk) * 8);
+            // Need a buffer that can potentially store all neighbor tiles plus the
+            // one-tile phantom border used when the neighboring chunk does not exist.
+            var edgeTileCount = (chunk.ChunkSize + 2) * (chunk.ChunkSize + 2) * 8;
+            Span<ushort> indexBuffer = EnsureSize(ref _chunkMeshBuilderIndexBuffer, edgeTileCount * GetQuadBatchIndexCount());
+            Span<Vertex2D> vertexBuffer = EnsureSize(ref _chunkMeshBuilderVertexBuffer, edgeTileCount * 4);
 
             var i = 0;
             var chunkSize = grid.Comp.ChunkSize;
             var chunkOriginScaled = chunk.Indices * chunkSize;
             var maps = _entityManager.System<SharedMapSystem>();
 
-            for (ushort x = 0; x < chunkSize; x++)
+            for (var x = -1; x <= chunkSize; x++)
             {
-                for (ushort y = 0; y < chunkSize; y++)
+                for (var y = -1; y <= chunkSize; y++)
                 {
                     var gridX = x + chunkOriginScaled.X;
                     var gridY = y + chunkOriginScaled.Y;
-                    var tile = chunk.GetTile(x, y);
+                    var gridIndices = new Vector2i(gridX, gridY);
+                    var cellChunk = SharedMapSystem.GetChunkIndices(gridIndices, chunkSize);
+                    if (cellChunk != chunk.Indices && grid.Comp.Chunks.ContainsKey(cellChunk))
+                        continue;
+
+                    if (!maps.TryGetTile(grid.Comp, gridIndices, out var tile))
+                        tile = Tile.Empty;
+
                     if (!_tileDefinitionManager.TryGetDefinition(tile.TypeId, out var tileDef))
                         continue;
 
@@ -310,7 +326,7 @@ namespace Robust.Client.Graphics.Clyde
 
                             var neighborIndices = new Vector2i(gridX + nx, gridY + ny);
                             if (!maps.TryGetTile(grid.Comp, neighborIndices, out var neighborTile))
-                                continue;
+                                neighborTile = Tile.Empty;
 
                             if (!_tileDefinitionManager.TryGetDefinition(neighborTile.TypeId, out var neighborDef))
                                 continue;
@@ -420,8 +436,19 @@ namespace Robust.Client.Graphics.Clyde
             var gridData = _mapChunkData.GetOrNew(args.Entity);
             foreach (var change in args.Changes)
             {
-                if (gridData.TryGetValue(change.ChunkIndex, out var data))
+                var chunkIndex = SharedMapSystem.GetChunkIndices(change.GridIndices, args.Entity.Comp.ChunkSize);
+                if (gridData.TryGetValue(chunkIndex, out var data))
                     data.Dirty = true;
+
+                for (var x = -1; x <= 1; x++)
+                {
+                    for (var y = -1; y <= 1; y++)
+                    {
+                        var neighbor = chunkIndex + new Vector2i(x, y);
+                        if (gridData.TryGetValue(neighbor, out var neighborData))
+                            neighborData.EdgeDirty = true;
+                    }
+                }
             }
         }
 

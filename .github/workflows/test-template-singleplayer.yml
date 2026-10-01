@@ -1,0 +1,61 @@
+name: Test RobustToolboxTemplateSingleplayer against engine
+
+on:
+  push:
+    branches: [master]
+  merge_group:
+  pull_request:
+    types: [ opened, reopened, synchronize, ready_for_review ]
+    branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out template
+        uses: actions/checkout@v4.2.2
+        with:
+          repository: space-wizards/RobustToolboxTemplateSingleplayer
+          path: template
+
+      - name: Check out engine version
+        uses: actions/checkout@v4.2.2
+        with:
+          path: template/RobustToolbox
+          submodules: recursive
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4.1.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Replace global.json
+        run: cp RobustToolbox/global.json .
+        working-directory: template
+
+      - name: Install dependencies
+        run: dotnet restore
+        working-directory: template
+
+      - name: Build
+        run: dotnet build --no-restore /p:WarningsAsErrors=nullable
+        working-directory: template
+
+      - name: Run tests
+        shell: pwsh
+        run: dotnet test --no-build -- NUnit.ConsoleOut=0 NUnit.TestOutputXml="logs" NUnit.WorkDirectory="$(pwd)/test_results"
+        working-directory: template
+
+      - name: Archive NUnit3 test results.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nunit3-results-template-singleplayer
+          path: template/test_results/*
+          retention-days: 7

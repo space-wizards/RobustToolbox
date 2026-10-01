@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Placement;
@@ -9,7 +8,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
-using Robust.Shared.Graphics;
+using Robust.Shared.Maths;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
@@ -239,7 +238,13 @@ public sealed partial class TileSpawningUIController : UIController
             {
                 texture = _resources.GetResource<TextureResource>(path);
             }
-            _window.TileList.AddItem(Loc.GetString(entry.Name), texture);
+
+            var item = _window.TileList.AddItem(Loc.GetString(entry.Name), texture);
+
+            if (texture != null)
+            {
+                item.IconRegion = new UIBox2(0, 0, texture.Width / entry.Variants, texture.Height);
+            }
         }
     }
 }

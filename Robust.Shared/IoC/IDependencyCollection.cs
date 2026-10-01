@@ -159,6 +159,9 @@ namespace Robust.Shared.IoC
         [System.Diagnostics.Contracts.Pure]
         T Resolve<T>();
 
+        [Pure]
+        T ResolveInject<T>(Type owningType);
+
         /// <inheritdoc cref="Resolve{T}()"/>
         void Resolve<T>([NotNull] ref T? instance);
 

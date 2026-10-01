@@ -19,7 +19,6 @@ internal sealed class GridReparentVelocity_Test
     private ISimulation _sim = default!;
     private IEntitySystemManager _systems = default!;
     private IEntityManager _entManager = default!;
-    private IMapManager _mapManager = default!;
     private FixtureSystem _fixtureSystem = default!;
     private SharedMapSystem _mapSystem = default!;
     private SharedPhysicsSystem _physSystem = default!;
@@ -38,7 +37,6 @@ internal sealed class GridReparentVelocity_Test
 
         _systems = _sim.Resolve<IEntitySystemManager>();
         _entManager = _sim.Resolve<IEntityManager>();
-        _mapManager = _sim.Resolve<IMapManager>();
         _fixtureSystem = _systems.GetEntitySystem<FixtureSystem>();
         _mapSystem = _systems.GetEntitySystem<SharedMapSystem>();
         _physSystem = _systems.GetEntitySystem<SharedPhysicsSystem>();
@@ -50,7 +48,7 @@ internal sealed class GridReparentVelocity_Test
         _mapUid = _mapSystem.CreateMap(out _mapId);
 
         // Spawn a 1x1 grid centered at (0.5, 0.5), ensure it's movable and its velocity has no damping.
-        var gridEnt = _mapManager.CreateGridEntity(_mapId);
+        var gridEnt = _mapSystem.CreateGridEntity(_mapId);
         var gridPhys = _entManager.GetComponent<PhysicsComponent>(gridEnt);
         _physSystem.SetSleepingAllowed(gridEnt, gridPhys, false);
         _physSystem.SetBodyType(gridEnt, BodyType.Dynamic, body: gridPhys);

@@ -33,8 +33,6 @@ namespace Robust.Shared.Scripting
         public IEntitySystemManager esm => _esm;
         [Dependency] private IPrototypeManager _prot = null!;
         public IPrototypeManager prot => _prot;
-        [Dependency] private IMapManager _map = null!;
-        public IMapManager map => _map;
         [Dependency] private IDependencyCollection _dependencies = null!;
         public IDependencyCollection dependencies => _dependencies;
         [Dependency] private ToolshedManager _shed = null!;

@@ -109,11 +109,17 @@ public sealed partial class SerializationManager
                         Expression.Constant(false)),
                     Expression.Constant(true));
             }
-            else
+            else if (actualType.IsAssignableTo(typeof(ISerializationGenerated<>).MakeGenericType(actualType)))
             {
                 call = Expression.Call(instanceParam, nameof(CopyToInternal), new[] { actualType }, sourceVar, targetVar,
                     Expression.Constant(manager.GetDefinition(actualType), typeof(DataDefinition<>).MakeGenericType(actualType)),
                     instanceParam, hookCtxParam, contextParam);
+            }
+            else
+            {
+                call = Expression.Block(
+                    Expression.Assign(targetVar, sourceVar),
+                    Expression.Constant(true));
             }
 
             if (!sameType)
@@ -235,7 +241,7 @@ public sealed partial class SerializationManager
                             contextParam,
                             Expression.Constant(false)), type);
                     }
-                    else
+                    else if (typeof(T).IsAssignableTo(typeof(ISerializationGenerated<T>)))
                     {
                         call = Expression.Call(
                             instanceParam,
@@ -245,6 +251,16 @@ public sealed partial class SerializationManager
                             hookCtxParam,
                             contextParam,
                             Expression.Constant(manager.GetDefinition(type), typeof(DataDefinition<>).MakeGenericType(type)));
+                    }
+                    else
+                    {
+                        call = Expression.Call(
+                            instanceParam,
+                            nameof(CreateCopyInternalNotGenerated),
+                            new[] {type},
+                            sourceParamAccess,
+                            hookCtxParam,
+                            contextParam);
                     }
                 }
 
@@ -261,7 +277,7 @@ public sealed partial class SerializationManager
         return type.IsPrimitive ||
                type.IsEnum ||
                type == typeof(string) ||
-               _copyByRefRegistrations.ContainsKey(type);
+               _copyByRefRegistrations.Contains(type);
     }
 
     private bool CopyToInternal<TCommon>(
@@ -271,13 +287,15 @@ public sealed partial class SerializationManager
         ISerializationManager serializationManager,
         SerializationHookContext hookCtx,
         ISerializationContext? context)
-        where TCommon : notnull
+        where TCommon : ISerializationGenerated<TCommon>
     {
         if (context != null &&
             context.SerializerProvider.TryGetTypeSerializer<ITypeCopier<TCommon>, TCommon>(out var copier))
         {
             var commonTarget = target;
             copier.CopyTo(this, source, ref commonTarget, DependencyCollection, hookCtx, context);
+            target = commonTarget;
+            return true;
         }
 
         if (ShouldReturnSource(typeof(TCommon))) //todo paul can be precomputed
@@ -338,7 +356,7 @@ public sealed partial class SerializationManager
         return copy;
     }
 
-    private T CreateCopyInternal<T>(T source, SerializationHookContext hookCtx, ISerializationContext context, DataDefinition<T>? definition) where T : notnull
+    private T CreateCopyInternal<T>(T source, SerializationHookContext hookCtx, ISerializationContext context, DataDefinition<T>? definition) where T : ISerializationGenerated<T>
     {
         if (source is DataNode node)
             return (T)(object)node.Copy();
@@ -354,7 +372,7 @@ public sealed partial class SerializationManager
             var generated = Unsafe.As<ISerializationGenerated<T>>(source);
             var target = generated.Instantiate();
             generated.Copy(ref target, this, hookCtx, context);
-            RunAfterHook(target, hookCtx);
+            TryRunAfterHook(target, hookCtx);
             return target;
         }
         else
@@ -368,6 +386,26 @@ public sealed partial class SerializationManager
             }
             return target!;
         }
+    }
+
+    private T CreateCopyInternalNotGenerated<T>(T source, SerializationHookContext hookCtx, ISerializationContext context)
+    {
+        if (source is DataNode node)
+            return (T)(object)node.Copy();
+
+        ref readonly var information = ref SerializedType<T>.Information;
+        if (information.ReturnSource || typeof(T).IsValueType)
+        {
+            return source;
+        }
+
+        var target = GetOrCreateInstantiator<T>(false)();
+
+        if (!GetOrCreateCopyToGenericDelegate<T>(source)(source, ref target, hookCtx, context))
+        {
+            throw new CopyToFailedException<T>();
+        }
+        return target!;
     }
 
     private void NotNullOverrideCheck(bool notNullableOverride, Type? type = null)
@@ -394,13 +432,6 @@ public sealed partial class SerializationManager
         {
             NotNullOverrideCheck(notNullableOverride);
             target = null;
-            return;
-        }
-
-        if (source is ISerializationGenerated generated)
-        {
-            generated.Copy(ref target!, this, hookCtx, context);
-            RunAfterHook(target, hookCtx);
             return;
         }
 
@@ -438,12 +469,12 @@ public sealed partial class SerializationManager
         }
 
         ref readonly var information = ref SerializedType<T>.Information;
-        if (information.SerializationGenerated)
+        if (information.SerializationGenerated && !typeof(T).IsAbstract && !typeof(T).IsInterface)
         {
             var generated = Unsafe.As<ISerializationGenerated<T>>(source);
             target ??= generated.Instantiate();
             generated.Copy(ref target, this, hookCtx, context);
-            RunAfterHook(target, hookCtx);
+            TryRunAfterHook(target, hookCtx);
             return;
         }
 
@@ -458,7 +489,7 @@ public sealed partial class SerializationManager
             target = CreateCopy(source, hookCtx, context);
         }
 
-        RunAfterHook(target, hookCtx);
+        TryRunAfterHook(target, hookCtx);
     }
 
     public void CopyTo<T>(ITypeCopier<T> copier, T source, ref T target, ISerializationContext? context = null,
@@ -503,7 +534,7 @@ public sealed partial class SerializationManager
         }
 
         copier.CopyTo(this, source, ref target, DependencyCollection, hookCtx, context);
-        RunAfterHook(target, hookCtx);
+        TryRunAfterHook(target, hookCtx);
     }
 
     public void CopyTo<T, TCopier>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
@@ -576,13 +607,13 @@ public sealed partial class SerializationManager
             var generated = Unsafe.As<ISerializationGenerated<T>>(source);
             var target = generated.Instantiate();
             generated.Copy(ref target, this, hookCtx, context);
-            RunAfterHook(target, hookCtx);
+            TryRunAfterHook(target, hookCtx);
 
             return target;
         }
 
         var res = GetOrCreateCreateCopyGenericDelegate<T>()(source, hookCtx, context);
-        RunAfterHook(res, hookCtx);
+        TryRunAfterHook(res, hookCtx);
 
         return res;
     }
@@ -612,7 +643,7 @@ public sealed partial class SerializationManager
         }
 
         var res = copyCreator.CreateCopy(this, source, DependencyCollection, hookCtx, context);
-        RunAfterHook(res, hookCtx);
+        TryRunAfterHook(res, hookCtx);
 
         return res;
     }

@@ -23,6 +23,15 @@ namespace Robust.Client.Graphics
         Vector2 ContentScale { get; }
 
         /// <summary>
+        /// Enables or disables relative mouse mode for this window.
+        /// </summary>
+        /// <remarks>
+        /// While enabled, the cursor is hidden and confined to the window, and mouse motion continues to be reported
+        /// when the cursor would otherwise reach the edge of the window.
+        /// </remarks>
+        void SetRelativeMouseMode(bool enabled);
+
+        /// <summary>
         ///     If set to true, the user closing the window will also <see cref="IDisposable.Dispose"/> it.
         /// </summary>
         bool DisposeOnClose { get; set; }

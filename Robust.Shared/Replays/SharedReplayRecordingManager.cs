@@ -420,6 +420,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         var document = new JsonObject
         {
             ["server_gc"] = ShouldEnableServerGC(recState),
+            ["engine_type"] = info.Engine,
             ["engine_version"] = info.EngineVersion,
             ["base_build"] = new JsonObject
             {

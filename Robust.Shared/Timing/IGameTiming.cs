@@ -136,6 +136,11 @@ namespace Robust.Shared.Timing
         TimeSpan TickRemainderRealtime { get; }
 
         /// <summary>
+        /// How far the current frame is through the current simulation tick, adjusted for client clock timing.
+        /// </summary>
+        float TickPhase { get; }
+
+        /// <summary>
         /// Calculate the amount of <b>real time</b> to wait between ticks.
         /// </summary>
         /// <remarks>
@@ -156,7 +161,7 @@ namespace Robust.Shared.Timing
                     return ushort.MaxValue;
                 }
 
-                return (ushort)(ushort.MaxValue * TickRemainder.TotalSeconds / TickPeriod.TotalSeconds);
+                return (ushort)(ushort.MaxValue * TickPhase);
             }
         }
 
@@ -168,6 +173,9 @@ namespace Robust.Shared.Timing
         ///     the simulation progresses in relation to Real time. Don't mess with this unless
         ///     you know what you are doing. DO NOT TOUCH THIS ON SERVER.
         /// </summary>
+        /// <remarks>
+        ///     During rollback this gets frozen the entire time and only applies from the next active tick.
+        /// </remarks>
         float TickTimingAdjustment { get; set; }
 
         /// <summary>

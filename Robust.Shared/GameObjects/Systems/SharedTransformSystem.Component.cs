@@ -847,8 +847,6 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region States
-    public virtual void ActivateLerp(EntityUid uid, TransformComponent xform) { }
-
     internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
     {
         DebugTools.Assert(!component.ParentUid.IsValid() || (!Deleted(component.ParentUid) && !EntityManager.IsQueuedForDeletion(component.ParentUid)));
@@ -955,7 +953,6 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert(xform.Anchored == newState.Anchored, "Transform state failed to set anchored");
         }
 
-        HandleNextTransformState(uid, xform, args.Next);
     }
 
     private TransformComponentState? GetTransformState(TransformComponent xform, IComponentState? state)
@@ -978,47 +975,6 @@ public abstract partial class SharedTransformSystem
             }
             default:
                 return null;
-        }
-    }
-
-    private void HandleNextTransformState(EntityUid uid, TransformComponent xform, IComponentState? state)
-    {
-        switch (state)
-        {
-            case TransformComponentState nextTransform:
-            {
-                if (nextTransform.ParentID != GetNetEntity(xform.ParentUid))
-                    return;
-
-                xform.NextPosition = nextTransform.LocalPosition;
-                xform.NextRotation = nextTransform.Rotation;
-                ActivateLerp(uid, xform);
-                break;
-            }
-            case TransformComponentDeltaState delta:
-            {
-                if (delta.IsChanged(TransformParentIndex) && delta.ParentID != GetNetEntity(xform.ParentUid))
-                    return;
-
-                var activateLerp = false;
-
-                if (delta.IsChanged(TransformLocalPositionIndex))
-                {
-                    xform.NextPosition = delta.LocalPosition;
-                    activateLerp = true;
-                }
-
-                if (delta.IsChanged(TransformLocalRotationIndex))
-                {
-                    xform.NextRotation = delta.Rotation;
-                    activateLerp = true;
-                }
-
-                if (activateLerp)
-                    ActivateLerp(uid, xform);
-
-                break;
-            }
         }
     }
 
@@ -1728,11 +1684,6 @@ public abstract partial class SharedTransformSystem
 
         // Before making any changes to physics or transforms, remove from the current broadphase
         _lookup.RemoveFromEntityTree(uid, xform);
-
-        // Stop any active lerps
-        xform.NextPosition = null;
-        xform.NextRotation = null;
-        xform.LerpParent = EntityUid.Invalid;
 
         if (xform.Anchored
             && _metaQuery.TryGetComponent(xform.GridUid, out var gridMeta)

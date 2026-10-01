@@ -87,24 +87,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        // used for lerping
-
-        [ViewVariables]
-        public Vector2? NextPosition { get; internal set; }
-
-        [ViewVariables]
-        public Angle? NextRotation { get; internal set; }
-
-        [ViewVariables]
-        public Vector2 PrevPosition { get; internal set; }
-
-        [ViewVariables]
-        public Angle PrevRotation { get; internal set; }
-
-        [ViewVariables] public bool ActivelyLerping;
-
-        [ViewVariables] public GameTick LastLerp = GameTick.Zero;
-
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
         /// <summary>
@@ -398,9 +380,6 @@ namespace Robust.Shared.GameObjects
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
 
         [ViewVariables] public int ChildCount => _children.Count;
-
-        [ViewVariables] public EntityUid LerpParent;
-        public bool PredictedLerp;
 
         /// <summary>
         /// Detaches this entity from its parent.

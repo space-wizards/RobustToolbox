@@ -4,7 +4,7 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Server.Physics
 {
-    internal sealed class BroadPhaseSystem : SharedBroadphaseSystem
+    internal sealed partial class BroadPhaseSystem : SharedBroadphaseSystem
     {
         public override void Initialize()
         {

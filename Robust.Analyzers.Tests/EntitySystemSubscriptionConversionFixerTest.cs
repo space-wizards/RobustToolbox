@@ -104,8 +104,8 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
         public sealed partial class TestComponent : IComponent;
         public sealed class TestNetworkEvent;
 
-        public sealed class SomeOtherSystemA : EntitySystem;
-        public sealed class SomeOtherSystemB : EntitySystem;
+        public sealed partial class SomeOtherSystemA : EntitySystem;
+        public sealed partial class SomeOtherSystemB : EntitySystem;
     """;
 
     [Test]
@@ -439,7 +439,7 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
             using Robust.Shared.Analyzers;
             using Robust.Shared.GameObjects;
 
-            public sealed class InitalizeBasedSystem : EntitySystem
+            public sealed partial class InitalizeBasedSystem : EntitySystem
             {
                 public override void Initialize()
                 {
@@ -487,7 +487,7 @@ public sealed class EntitySystemSubscriptionConversionFixerTest
         const string code = """
             using Robust.Shared.GameObjects;
 
-            public sealed class InitalizeBasedSystem : EntitySystem
+            public sealed partial class InitalizeBasedSystem : EntitySystem
             {
                 public override void Initialize()
                 {

@@ -13,7 +13,7 @@ namespace Robust.Client.Graphics.FontManagement;
 /// <summary>
 /// Implementation of <see cref="ISystemFontManager"/> that uses CoreText on macOS.
 /// </summary>
-internal sealed class SystemFontManagerCoreText : SystemFontManagerBase, ISystemFontManagerInternal
+internal sealed partial class SystemFontManagerCoreText : SystemFontManagerBase, ISystemFontManagerInternal
 {
     private static readonly FontWidth[] FontWidths = Enum.GetValues<FontWidth>();
 

@@ -69,7 +69,7 @@ namespace Robust.Server.GameStates
         }
 
         [EventSource(Name = "Robust.Pvs")]
-        public sealed class PvsEventSource : System.Diagnostics.Tracing.EventSource
+        public sealed partial class PvsEventSource : System.Diagnostics.Tracing.EventSource
         {
             public static PvsEventSource Log { get; } = new();
 

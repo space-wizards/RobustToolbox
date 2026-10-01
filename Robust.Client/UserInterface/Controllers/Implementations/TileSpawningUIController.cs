@@ -240,6 +240,8 @@ public sealed partial class TileSpawningUIController : UIController
             }
 
             var item = _window.TileList.AddItem(Loc.GetString(entry.Name), texture);
+            item.TooltipEnabled = true;
+            item.TooltipText = entry.ID;
 
             if (texture != null)
             {

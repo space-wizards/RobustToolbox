@@ -96,6 +96,8 @@ public abstract partial class Joint : IEquatable<Joint>
     /// </summary>
     internal bool IslandFlag;
 
+    internal (EntityUid A, EntityUid B)? SleepBlockerBodies;
+
     // For some reason in FPE this is settable?
     /// <summary>
     ///     Gets the type of the joint.

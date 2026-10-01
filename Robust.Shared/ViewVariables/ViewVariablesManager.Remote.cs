@@ -183,11 +183,9 @@ internal abstract partial class ViewVariablesManager
             return;
         }
 
-        var value = req.Value != null ? DeserializeValue(path.Type, req.Value) : null;
-
         try
         {
-            path.Set(value);
+            WritePath(req.Path, req.Value, new NetUserId(req.MsgChannel.UserId));
         }
         catch (Exception)
         {

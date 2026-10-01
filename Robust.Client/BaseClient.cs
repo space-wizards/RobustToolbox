@@ -10,7 +10,6 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;

@@ -160,6 +160,7 @@ public sealed partial class EntitySpawningUIController : UIController
 
         _window.OverrideMenu.SelectId(args.Id);
         _cfg.SetCVar(CVars.EntitySpawnOverrideMode, args.Id);
+        _cfg.SaveToFile();
 
         if (_placement.CurrentMode != null)
         {

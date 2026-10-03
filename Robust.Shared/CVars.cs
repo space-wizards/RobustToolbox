@@ -2139,7 +2139,7 @@ namespace Robust.Shared
         /// The selected mode for the entity spawn window's placement mode dropdown.
         /// </summary>
         public static readonly CVarDef<int> EntitySpawnOverrideMode =
-            CVarDef.Create("ui.entity_spawn.override_mode", 0, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("ui.entity_spawn.override_mode", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /*
          * FONT

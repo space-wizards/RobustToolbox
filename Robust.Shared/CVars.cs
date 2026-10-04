@@ -1119,7 +1119,7 @@ namespace Robust.Shared
 
         /// <summary>
         /// How many texture pixels map to one world meter (one tile).
-        /// It is expected to stay fixed for a given deployment and is probably not safe to change while in-game.
+        /// The client applies the server's value on connect or cvar change, rebuilding sprite bounds and tile atlas.
         /// </summary>
         public static readonly CVarDef<int> DisplayPixelsPerMeter =
             CVarDef.Create("display.pixels_per_meter", SharedEyeSystem.DefaultPixelsPerMeter, CVar.REPLICATED | CVar.SERVER);

@@ -20,21 +20,16 @@ namespace Robust.Client.Graphics
         /// How many texture pixels map to one world meter (one tile). Driven by the server-authoritative
         /// <see cref="CVars.DisplayPixelsPerMeter"/> CVar, defaulting to <see cref="SharedEyeSystem.DefaultPixelsPerMeter"/>.
         /// </summary>
-        public static int PixelsPerMeter { get; private set; } = DefaultPixelsPerMeter;
-
-        /// <summary>
-        /// Default for <see cref="PixelsPerMeter"/>, used before the replicated CVar value is applied.
-        /// </summary>
-        public const int DefaultPixelsPerMeter = SharedEyeSystem.DefaultPixelsPerMeter;
+        public static int PixelsPerMeter { get; private set; } = SharedEyeSystem.DefaultPixelsPerMeter;
 
         /// <summary>
         /// Applies the <c>display.pixels_per_meter</c> CVar to <see cref="PixelsPerMeter"/>. Invoked with the
         /// local default at startup and again with the server's value on connect. Non-positive values fall
-        /// back to <see cref="DefaultPixelsPerMeter"/>.
+        /// back to <see cref="SharedEyeSystem.DefaultPixelsPerMeter"/>.
         /// </summary>
         internal static void SetPixelsPerMeter(int value)
         {
-            PixelsPerMeter = value > 0 ? value : DefaultPixelsPerMeter;
+            PixelsPerMeter = value > 0 ? value : SharedEyeSystem.DefaultPixelsPerMeter;
         }
 
         [Dependency] private IClyde _displayManager = default!;

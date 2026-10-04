@@ -151,13 +151,10 @@ namespace Robust.Client.GameObjects
 
         private void OnPixelsPerMeterChanged(int value)
         {
-            EyeManager.SetPixelsPerMeter(value);
-
             var query = AllEntityQuery<SpriteComponent>();
             while (query.MoveNext(out var uid, out var sprite))
             {
                 DirtyBounds((uid, sprite));
-                _tree.QueueTreeUpdate((uid, sprite));
             }
         }
 

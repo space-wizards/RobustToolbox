@@ -84,8 +84,6 @@ namespace Robust.Client.Map
 
         private void OnPixelsPerMeterChanged(int value)
         {
-            EyeManager.SetPixelsPerMeter(value);
-
             if (_atlasPixelsPerMeter == EyeManager.PixelsPerMeter)
                 return;
 

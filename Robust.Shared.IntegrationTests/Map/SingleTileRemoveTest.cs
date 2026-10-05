@@ -78,8 +78,8 @@ internal sealed class GridDeleteSingleTileRemoveTestTest : RobustIntegrationTest
             sys.SetTile(grid, grid, new Vector2i(0, 0), new Tile(typeId: 1, flags: 1, variant: 1));
             var coords = new EntityCoordinates(grid, 0.5f, 0.5f);
 
-            sPlayer = sEntMan.SpawnEntity(null, coords);
-            sEntity = sEntMan.SpawnEntity(null, coords);
+            sPlayer = sEntMan.SpawnAttachedTo(null, coords);
+            sEntity = sEntMan.SpawnAttachedTo(null, coords);
 
             // Attach player.
             var session = sPlayerMan.Sessions.First();

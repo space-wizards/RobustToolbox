@@ -66,8 +66,8 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
             map = server.System<SharedMapSystem>().CreateMap();
             coords = new(map, default);
 
-            var playerUid = sEntMan.SpawnEntity(null, coords);
-            var entUid = sEntMan.SpawnEntity(null, coords);
+            var playerUid = sEntMan.SpawnAttachedTo(null, coords);
+            var entUid = sEntMan.SpawnAttachedTo(null, coords);
             entity = sEntMan.GetNetEntity(entUid);
             player = sEntMan.GetNetEntity(playerUid);
 

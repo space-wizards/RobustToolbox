@@ -35,7 +35,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 entManager.System<SharedMapSystem>().CreateMap(out var mapId);
                 mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
-                owner = entManager.SpawnEntity(null, mapPos);
+                owner = entManager.Spawn(null, mapPos);
                 metadataSystem.SetEntityName(owner, "Container");
                 containerSystem.EnsureContainer<Container>(owner, containerId);
 
@@ -77,8 +77,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
         /// Tests container states with children that do not exist on the client
         /// and tests that said children are added to the container when they do arrive on the client.
         /// </summary>
-        [Test]
-        public async Task ContainerStateMissingEntitySpawnsLater()
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task ContainerStateMissingEntitySpawnsLater(bool updateContainerNextTick)
         {
             await using var pair = await StartConnectedPair();
             var server = pair.Server;
@@ -106,7 +107,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             NetEntity itemNet = default;
             await server.WaitAssertion(() =>
             {
-                item = sEntManager.SpawnEntity(null, mapPos);
+                item = sEntManager.Spawn(null, mapPos);
                 itemNet = sEntManager.GetNetEntity(item);
                 sMetadataSys.SetEntityName(item, "Item");
                 Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
@@ -126,17 +127,56 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 AssertPendingContainerState(cClientEntManager, itemNet, cOwner);
             });
 
-            await server.WaitAssertion(() =>
+            var initialized = false;
+            var containedOnInit = false;
+            var futureContainerOnInit = false;
+            void OnInitialized(Entity<MetaDataComponent> ent)
             {
-                sVisibilitySys.RemoveLayer(item, HiddenVisibilityLayer);
-            });
+                if (ent.Comp.NetEntity != itemNet)
+                    return;
 
-            await RunTicksSync(server, client, 10);
+                initialized = true;
+                containedOnInit = GetClientContainer(cEntManager, cContainerSys, ownerNet).Contains(ent.Owner);
+                futureContainerOnInit = cContainerSys.HasContainer(cOwner, OtherContainerId, null);
+            }
+
+            // IDK how else to do this sub sooooo
+            await client.WaitPost(() => cEntManager.EntityInitialized += OnInitialized);
+            try
+            {
+                await server.WaitAssertion(() =>
+                {
+                    sVisibilitySys.RemoveLayer(item, HiddenVisibilityLayer);
+                });
+
+                if (updateContainerNextTick)
+                {
+                    // Buffer the child's PVS entry followed by a container update. The latter is
+                    // available for interpolation when the missing-entity state is re-run.
+                    await server.WaitRunTicks(1);
+                    await server.WaitPost(() =>
+                    {
+                        sContainerSys.EnsureContainer<Container>(owner, OtherContainerId);
+                    });
+                    await server.WaitRunTicks(4);
+                }
+
+                await RunTicksSync(server, client, 10);
+            }
+            finally
+            {
+                await client.WaitPost(() => cEntManager.EntityInitialized -= OnInitialized);
+            }
+
+            Assert.That(initialized, Is.True);
+            Assert.That(futureContainerOnInit, Is.False, "The next container state must not be applied early.");
+            Assert.That(containedOnInit, Is.True, "The arriving child must be inserted during the current state, even when the container has a next state.");
 
             await client.WaitAssertion(() =>
             {
                 var cItem = GetClientEntity(cEntManager, itemNet);
                 var container = GetClientContainer(cEntManager, cContainerSys, ownerNet);
+                Assert.That(cContainerSys.HasContainer(cOwner, OtherContainerId, null), Is.EqualTo(updateContainerNextTick));
                 Assert.That(container.ContainedEntities, Has.Member(cItem));
                 Assert.That(container.PvsDetachedEntities, Is.Empty);
                 Assert.That(cContainerSys.PvsDetachedEntities, Is.Empty);
@@ -182,7 +222,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             NetEntity itemNet = default;
             await server.WaitAssertion(() =>
             {
-                item = sEntManager.SpawnEntity(null, mapPos);
+                item = sEntManager.Spawn(null, mapPos);
                 itemNet = sEntManager.GetNetEntity(item);
                 sMetadataSys.SetEntityName(item, "Item");
                 Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
@@ -266,7 +306,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             NetEntity itemNet = default;
             await server.WaitAssertion(() =>
             {
-                item = sEntManager.SpawnEntity(null, mapPos);
+                item = sEntManager.Spawn(null, mapPos);
                 itemNet = sEntManager.GetNetEntity(item);
                 sMetadataSys.SetEntityName(item, "Item");
                 Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
@@ -349,7 +389,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             NetEntity itemNet = default;
             await server.WaitAssertion(() =>
             {
-                item = sEntManager.SpawnEntity(null, mapPos);
+                item = sEntManager.Spawn(null, mapPos);
                 itemNet = sEntManager.GetNetEntity(item);
                 sMetadataSys.SetEntityName(item, "Item");
                 Assert.That(sContainerSys.Insert(item, sContainerSys.GetContainer(owner, ContainerId)));
@@ -368,7 +408,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             await server.WaitAssertion(() =>
             {
-                var viewer = sEntManager.SpawnEntity(null, mapPos);
+                var viewer = sEntManager.Spawn(null, mapPos);
                 sEntManager.AddComponent<EyeComponent>(viewer);
                 server.PlayerMan.SetAttachedEntity(sPlayerManager.Sessions.First(), viewer);
             });
@@ -428,10 +468,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 sEntManager.System<SharedMapSystem>().CreateMap(out var mapIdOne);
                 Assert.That(mapSys.IsInitialized(mapIdOne), Is.True);
 
-                var containerEnt = sEntManager.SpawnEntity(null, new MapCoordinates(1, 1, mapIdOne));
+                var containerEnt = sEntManager.Spawn(null, new MapCoordinates(1, 1, mapIdOne));
                 sMetadataSys.SetEntityName(containerEnt, "ContainerEnt");
 
-                var containeeEnt = sEntManager.SpawnEntity(null, new MapCoordinates(2, 2, mapIdOne));
+                var containeeEnt = sEntManager.Spawn(null, new MapCoordinates(2, 2, mapIdOne));
                 sMetadataSys.SetEntityName(containeeEnt, "ContaineeEnt");
 
                 var container = sContainerSys.MakeContainer<Container>(containerEnt, "testContainer");

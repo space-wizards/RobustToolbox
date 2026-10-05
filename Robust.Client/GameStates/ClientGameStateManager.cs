@@ -1637,10 +1637,11 @@ namespace Robust.Client.GameStates
                     ref var compState =
                         ref CollectionsMarshal.GetValueRefOrAddDefault(_compStateWork, netId, out var exists);
 
-                    if (exists)
+                    // A next-only entry shouldn't stop the state handler from going out.
+                    if (exists && compState.curState != null)
                         continue;
 
-                    compState = (comp, lastCompState, null);
+                    compState = (comp, lastCompState, compState.nextState);
                 }
             }
 

@@ -130,8 +130,12 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"{lowerCaseName} is already registered, previous: {prevName}");
 
             var unsaved = type.HasCustomAttribute<UnsavedComponentAttribute>();
+            var networked = type.HasCustomAttribute<NetworkedComponentAttribute>();
 
-            var registration = new ComponentRegistration(name, type, idx, unsaved);
+            var registration = new ComponentRegistration(name, type, idx, unsaved)
+            {
+                Networked = networked,
+            };
 
             idxToType[idx] = type;
             names[name] = registration;
@@ -545,7 +549,7 @@ namespace Robust.Shared.GameObjects
             foreach (var kvRegistration in _names)
             {
                 var registration = kvRegistration.Value;
-                if (Attribute.GetCustomAttribute(registration.Type, typeof(NetworkedComponentAttribute)) is NetworkedComponentAttribute)
+                if (registration.Networked)
                 {
                     networkedRegs.Add(registration);
                 }

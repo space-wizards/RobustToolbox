@@ -10,7 +10,7 @@ namespace Robust.Shared.Audio.Components;
 /// <summary>
 /// Can have Audio passed to it to apply effects or filters.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true), Access(typeof(SharedAudioSystem))]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true, fieldDeltas: false), Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioAuxiliaryComponent : Component
 {
     /// <summary>

@@ -59,11 +59,11 @@ internal partial class Clyde
     {
         var query = _entityManager.GetEntityQuery<TransformComponent>();
         var gridQuery = _entityManager.GetEntityQuery<MapGridComponent>();
+        var renderQueryBounds = _transformSystem.GetRenderCullingBounds(map, worldBounds);
         var viewScale = eye.Scale * view.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
         var treeData = new BatchData()
         {
             Sys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>(),
-            Query = query,
             ViewRotation = eye.Rotation,
             ViewScale = viewScale,
             PreScaleViewOffset = view.Size / 2f / viewScale,
@@ -76,17 +76,18 @@ internal partial class Clyde
         var added = 0;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
 
-        foreach (var (treeOwner, comp) in _spriteTreeSystem.GetIntersectingTrees(map, worldBounds))
+        foreach (var (treeOwner, comp) in _spriteTreeSystem.GetIntersectingTrees(map, renderQueryBounds))
         {
             var treeXform = query.GetComponent(treeOwner);
-            var treePos = treeXform.LocalPosition;
-            var bounds = _transformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
+            var treePose = _transformSystem.GetRenderWorldTransform((treeOwner, treeXform));
+            var bounds = _transformSystem.GetInvRenderWorldMatrix((treeOwner, treeXform)).TransformBox(renderQueryBounds);
+            var pixelSnapOffset = Vector2.Zero;
             DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
 
             if (gridQuery.HasComponent(treeOwner))
             {
-                treePos += GetPixelSnapOffset(
-                    treePos,
+                pixelSnapOffset = GetPixelSnapOffset(
+                    treePose.Position,
                     treeData.ViewPosition,
                     treeData.ViewRotation,
                     treeData.ViewScale,
@@ -95,11 +96,7 @@ internal partial class Clyde
 
             treeData = treeData with
             {
-                TreeOwner = treeOwner,
-                TreePos = treePos,
-                TreeRot = treeXform.LocalRotation,
-                Sin = MathF.Sin((float)treeXform.LocalRotation),
-                Cos = MathF.Cos((float)treeXform.LocalRotation),
+                TreePixelSnapOffset = pixelSnapOffset,
             };
 
             comp.Tree.QueryAabb(ref list,
@@ -163,16 +160,12 @@ internal partial class Clyde
             // To help explain the remainder of this function, it should be functionally equivalent to the following
             // three lines of code, but has been expanded & simplified to speed up the calculation:
             //
-            // (data.WorldPos, data.WorldRot) = batch.Sys.GetWorldPositionRotation(data.Xform);
+            // (data.WorldPos, data.WorldRot) = batch.Sys.GetRenderWorldPositionRotation((data.Uid, data.Xform));
             // var spriteWorldBB = data.Sprite.CalculateRotatedBoundingBox(data.WorldPos, data.WorldRot, batch.ViewRotation);
             // data.SpriteScreenBB = Viewport.GetWorldToLocalMatrix().TransformBox(spriteWorldBB);
 
-            var (pos, rot) = batch.Sys.GetRelativePositionRotation(data.Xform, batch.TreeOwner);
-            pos = new Vector2(
-                batch.TreePos.X + batch.Cos * pos.X - batch.Sin * pos.Y,
-                batch.TreePos.Y + batch.Sin * pos.X + batch.Cos * pos.Y);
-
-            rot += batch.TreeRot;
+            var (pos, rot) = batch.Sys.GetRenderWorldPositionRotation((data.Uid, data.Xform));
+            pos += batch.TreePixelSnapOffset;
             data.WorldRot = rot;
             data.WorldPos = pos;
 
@@ -243,16 +236,11 @@ internal partial class Clyde
     private readonly struct BatchData
     {
         public TransformSystem Sys { get; init; }
-        public EntityQuery<TransformComponent> Query { get; init; }
         public Angle ViewRotation { get; init; }
         public Vector2 ViewScale { get; init; }
         public Vector2 PreScaleViewOffset { get; init; }
         public Vector2 ViewPosition { get; init; }
-        public EntityUid TreeOwner { get; init; }
-        public Vector2 TreePos { get; init; }
-        public Angle TreeRot { get; init; }
-        public float Sin { get; init; }
-        public float Cos { get;  init; }
+        public Vector2 TreePixelSnapOffset { get; init; }
     }
 
     private readonly struct SpriteSortItem : IComparable<SpriteSortItem>

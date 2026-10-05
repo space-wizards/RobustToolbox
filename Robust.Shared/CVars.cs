@@ -191,6 +191,36 @@ namespace Robust.Shared
             CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
+        /// Maximum transform distance that will be interpolated instead of snapped.
+        /// </summary>
+        public static readonly CVarDef<float> NetInterpMaxDistance =
+            CVarDef.Create("net.interp_max_distance", 2f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Minimum transform distance that will be interpolated.
+        /// </summary>
+        public static readonly CVarDef<float> NetInterpMinDistance =
+            CVarDef.Create("net.interp_min_distance", 0.001f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Half-life in seconds for predicted transform correction errors.
+        /// </summary>
+        public static readonly CVarDef<float> NetInterpCorrectionHalfLife =
+            CVarDef.Create("net.interp_correction_half_life", 0.1f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Minimum translation error retained by predicted transform correction.
+        /// </summary>
+        public static readonly CVarDef<float> NetInterpCorrectionMinTranslation =
+            CVarDef.Create("net.interp_correction_min_translation", 0.0001f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Minimum rotation error retained by predicted transform correction, in radians.
+        /// </summary>
+        public static readonly CVarDef<float> NetInterpCorrectionMinRotation =
+            CVarDef.Create("net.interp_correction_min_rotation", 0.0001f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
@@ -1684,6 +1714,15 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ResCheckBadFileExtensions =
             CVarDef.Create("res.check_bad_file_extensions", true);
 
+        /// <summary>
+        /// If true, prototypes will be validated upon uploading and throw an error if one fails, cancelling the upload.
+        /// </summary>
+        /// <remarks>
+        /// Setting to false is more permissive, but may result in uploading faulty prototypes.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResValidatePrototypeUpload =
+            CVarDef.Create("res.validate_prototype_upload", true, CVar.REPLICATED | CVar.SERVER);
+
         /*
          * DEBUG
          */
@@ -2125,6 +2164,13 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> UIObeyUpdateLimits =
             CVarDef.Create("ui.obey_update_limits", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The selected mode for the entity spawn window's placement mode dropdown.
+        /// </summary>
+        public static readonly CVarDef<int> EntitySpawnOverrideMode =
+            CVarDef.Create("ui.entity_spawn.override_mode", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+
         /*
          * FONT
          */

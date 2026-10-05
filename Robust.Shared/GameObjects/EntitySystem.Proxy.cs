@@ -1010,7 +1010,7 @@ public partial class EntitySystem
 
     #region Entity Spawning
 
-    // This method will be obsoleted soon(TM).
+    [Obsolete($"Call {nameof(SpawnAttachedTo)} directly or switch to {nameof(SpawnAtPosition)}.")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager), nameof(EntityManager.SpawnEntity))]
     protected EntityUid Spawn(string? prototype, EntityCoordinates coordinates)

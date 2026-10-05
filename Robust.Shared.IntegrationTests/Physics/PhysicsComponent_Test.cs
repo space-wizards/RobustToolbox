@@ -32,7 +32,7 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 entManager.System<SharedMapSystem>().CreateMap(out var mapId);
-                var boxEnt = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+                var boxEnt = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
                 var box = entManager.AddComponent<PhysicsComponent>(boxEnt);
                 var poly = new PolygonShape();
                 poly.SetAsBox(0.5f, 0.5f);

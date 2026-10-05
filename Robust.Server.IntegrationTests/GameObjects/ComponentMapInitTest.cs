@@ -31,7 +31,7 @@ internal sealed partial class ComponentMapInitTest
         var mapSystem = entManager.System<SharedMapSystem>();
         mapSystem.CreateMap(out var mapId);
 
-        var ent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var ent = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
         Assert.That(entManager.GetComponent<MetaDataComponent>(ent).EntityLifeStage, Is.EqualTo(EntityLifeStage.MapInitialized));
 
         var comp = entManager.AddComponent<MapInitTestComponent>(ent);

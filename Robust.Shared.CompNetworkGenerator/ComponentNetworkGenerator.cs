@@ -337,10 +337,9 @@ namespace Robust.Shared.CompNetworkGenerator
 
             ITypeSymbol GetCloneableType(ITypeSymbol type)
             {
-                if (type is INamedTypeSymbol named &&
-                    named.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
+                if (type is INamedTypeSymbol namedType && namedType.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
                 {
-                    return named.TypeArguments[0];
+                    return namedType.TypeArguments[0];
                 }
 
                 return type.WithNullableAnnotation(NullableAnnotation.None);
@@ -351,8 +350,7 @@ namespace Robust.Shared.CompNetworkGenerator
                 if (!NeedsCopyValue(type))
                     return value;
 
-                if (type is INamedTypeSymbol named &&
-                    named.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
+                if (type is INamedTypeSymbol namedType && namedType.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
                 {
                     return $"{value}.HasValue ? {value}.Value.Clone() : null";
                 }

@@ -357,6 +357,12 @@ namespace Robust.Shared.GameObjects
             get => _anchored;
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
+        internal bool VVAnchored
+        {
+            get => Anchored;
+            set => _entMan.System<SharedTransformSystem>().TryAnchor((Owner, this, null), value);
+        }
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
 
         [ViewVariables] public int ChildCount => _children.Count;

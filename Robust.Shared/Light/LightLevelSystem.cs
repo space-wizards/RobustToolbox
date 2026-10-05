@@ -24,6 +24,7 @@ namespace Robust.Shared.Light;
 public sealed partial class LightLevelSystem : EntitySystem
 {
     private float _maxLightRadius;
+    private ValueList<(EntityUid Uid, OccluderTreeComponent Comp)> _occluderTrees = new();
 
     private const float LightHeight = 1.0f;
 
@@ -163,12 +164,13 @@ public sealed partial class LightLevelSystem : EntitySystem
         // contains the centre point of all lights, which would allow us to use the HandleSingleOccluder branch more,
         // but this approximation is probably fine most of the time.
         var occluderAabb = new Box2(pos, pos).Enlarged(maxShadowRadius);
-        var occluderTrees = _occluder.GetIntersectingTreesInternal(point.MapId, occluderAabb);
+        _occluderTrees.Clear();
+        _occluder.GetIntersectingTrees(point.MapId, occluderAabb, ref _occluderTrees);
 
         // Most of the time, there will probably only be one occluder tree in range
-        var lightColor = occluderTrees.Count == 1
-            ? HandleSingleOccluder(pos, lightSpan, occluderTrees[0])
-            : HandleMultipleOccluders(pos, lightSpan, occluderTrees.Span);
+        var lightColor = _occluderTrees.Count == 1
+            ? HandleSingleOccluder(pos, lightSpan, _occluderTrees[0])
+            : HandleMultipleOccluders(pos, lightSpan, _occluderTrees.Span);
         color = new Color(color.RGBA + lightColor.RGBA);
         return true;
 

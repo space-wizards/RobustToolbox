@@ -1246,7 +1246,7 @@ public abstract partial class SharedTransformSystem
     #region World Matrix
 
     /// <summary>
-    /// Given an entity uid U, yields M[U->world], the matrix from U's frame to the world frame.
+    /// Given an <see cref="EntityUid"/> U, yields M[U->world], the matrix from U's frame to the world frame.
     /// The matrix stores U's world position and rotation, so it is U's pose in the world.
     /// Applying it to a point or pose measured in U's frame rotates, then shifts it.
     /// Thus, it yields the same point or pose measured in the world.

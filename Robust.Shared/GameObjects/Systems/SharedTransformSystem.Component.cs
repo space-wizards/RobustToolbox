@@ -211,7 +211,7 @@ public abstract partial class SharedTransformSystem
         }
 
         xform._anchored = true;
-        Dirty(uid, xform, meta);
+        DirtyField(uid, xform, nameof(TransformComponent.Anchored), meta);
 
         _physics.TrySetBodyType(uid, BodyType.Static, xform: xform);
 

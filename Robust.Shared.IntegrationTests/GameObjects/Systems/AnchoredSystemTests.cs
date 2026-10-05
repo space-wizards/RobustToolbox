@@ -188,6 +188,32 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         }
 
         /// <summary>
+        /// If we anchor a pre-init entity it should still stay anchored after init.
+        /// </summary>
+        [Test]
+        public void AnchorEntity_BeforeInitialization_AddedToLookup()
+        {
+            var (sim, grid, coordinates, xformSys, mapSys, entMan) = SimulationFactory();
+            var tile = mapSys.TileIndicesFor(grid, coordinates);
+            mapSys.SetTile(grid, tile, new Tile(1));
+
+            var ent = entMan.CreateEntityUninitialized(null, coordinates);
+            var xform = sim.Transform(ent, entMan);
+            Assert.That(xform.Initialized, Is.False);
+            Assert.That(xform.Anchored, Is.False);
+
+            Assert.That(xformSys.AnchorEntity(ent), Is.True);
+            Assert.That(xform.Anchored, Is.True);
+
+            entMan.InitializeAndStartEntity(ent);
+
+            Assert.That(xform.Initialized, Is.True);
+            Assert.That(xform.Anchored, Is.True);
+            Assert.That(xform.ParentUid, Is.EqualTo(grid.Owner));
+            Assert.That(mapSys.GetAnchoredEntities(grid, tile), Is.EquivalentTo(new[] { ent }));
+        }
+
+        /// <summary>
         /// When an entity is anchored to a grid tile, it's parent is set to the grid.
         /// </summary>
         [Test]

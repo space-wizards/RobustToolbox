@@ -28,7 +28,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
      * Okay so because our game runs at TPS, we need to be able to smoothly render entities A -> B
      * We also need to handle mispredicts (correction for translation OR rotation)
      *
-     * RenderTransformState handles what the render position of a particular entity was so we can avoid mutating transformcomponent
+     * RenderTransformState handles what the render position of a particular entity was so we can avoid mutating TransformComponent
      * itself and can just let it run in the simulation just fine.
      *
      * We also use it to store any corrections required so they can be adjusted over _correctionHalfLife time
@@ -63,7 +63,10 @@ public sealed partial class TransformSystem : SharedTransformSystem
     private float _minCorrectionTranslationSquared;
     private float _minCorrectionRotation;
 
-    private PredictionReconciliationTracker _predictionReconciliation;
+    /// <summary>
+    /// Tracks what's going on with transform states and handling prediction rollback.
+    /// </summary>
+    private PredictionReconciliationTracker _predTracker;
 
     /// <summary>
     /// Invoked when interpolation crosses render spaces. The default policy only permits the same map.
@@ -93,7 +96,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
         _snapRenderRotationEntities.Clear();
         _snapRenderTransformAfterParentChange.Clear();
         _renderRotationOverrides.Clear();
-        _predictionReconciliation.Clear();
+        _predTracker.Clear();
         base.Shutdown();
     }
 
@@ -108,7 +111,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
         _snapRenderTransformAfterParentChange.Clear();
         _renderRotationOverrides.Clear();
         _remove.Clear();
-        _predictionReconciliation.Clear();
+        _predTracker.Clear();
     }
 
     [SubscribeLocalEvent]
@@ -120,7 +123,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
         _snapRenderTransformAfterParentChange.Remove(uid);
         _renderRotationOverrides.Remove(uid);
 
-        _predictionReconciliation.RemoveEntity(uid);
+        _predTracker.RemoveEntity(uid);
     }
 
     private void SetMaxInterpolationDistance(float value)
@@ -194,6 +197,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
             var sameTickPredictionRollback = existing.Type == RenderInterpolationType.PredictionInterpolation
                                              && existing.ChangeTick == _timing.CurTick
                                              && (existing.PendingPredictionRollback || _timing.ApplyingState);
+
             // Multiple changes in one simulation tick retain the original source: A -> B -> C is A -> C.
             // Most notable with substepping or content systems touching it.
             if (existing.ChangeTick == _timing.CurTick
@@ -801,7 +805,7 @@ public sealed partial class TransformSystem : SharedTransformSystem
         _snapRenderRotations.Remove(uid);
         _snapRenderTransformAfterParentChange.Remove(uid);
         _renderRotationOverrides.Remove(uid);
-        _predictionReconciliation.MarkRollbackHardReset(uid);
+        _predTracker.MarkRollbackHardReset(uid);
         RefreshPredictionSample(uid);
 
         if (!recursive || !XformQuery.TryGetComponent(uid, out var xform))
@@ -927,10 +931,14 @@ public sealed partial class TransformSystem : SharedTransformSystem
         public PredictionHandoffStatus PredictionHandoff;
     }
 
+    // How to handle the difference between two transforms.
     private enum InterpolationDecision : byte
     {
+        // The change is too small to need smoothing.
         Ignore,
+        // Smoothly move from the source to the target.
         Interpolate,
+        // The change is too large to smooth; jump to the target.
         Snap,
     }
 }
@@ -963,8 +971,11 @@ internal readonly record struct RenderTransformEndpoint(
 /// </summary>
 public enum RenderInterpolationType : byte
 {
+    // Smooth movement between server updates.
     NetworkInterpolation,
+    // Smooth locally predicted movement between simulation ticks.
     PredictionInterpolation,
+    // Represents prediction error smoothing; currently unused.
     PredictionCorrection,
 }
 

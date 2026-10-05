@@ -12,14 +12,14 @@ public sealed partial class TransformSystem
     internal void BeginPredictionRollback(EntityUid uid, GameTick predictionTick)
     {
         // Prediction interpolation is the normal tick-to-tick render path for locally simulated movement.
-        if (_predictionReconciliation.Rollback.Status != PredictionRollbackStatus.Inactive)
+        if (_predTracker.Rollback.Status != PredictionRollbackStatus.Inactive)
             return;
 
         if (!XformQuery.TryGetComponent(uid, out var xform) || xform.Deleted)
             return;
 
         // Keep the pose that was actually displayed while prediction is reset and run again.
-        _predictionReconciliation.TryBeginRollback(
+        _predTracker.TryBeginRollback(
             uid,
             predictionTick,
             GetRenderTransformInternal(uid, xform));
@@ -28,7 +28,7 @@ public sealed partial class TransformSystem
     internal void CompletePredictionRollback(GameTick predictionTick)
     {
         // Wait until prediction reaches the exact tick represented by the saved endpoint.
-        ref var rollback = ref _predictionReconciliation.Rollback;
+        ref var rollback = ref _predTracker.Rollback;
 
         var explicitSnap = rollback.Status == PredictionRollbackStatus.HardReset;
         if (rollback.Status is not (PredictionRollbackStatus.Pending or PredictionRollbackStatus.HardReset)
@@ -39,7 +39,7 @@ public sealed partial class TransformSystem
 
         if (predictionTick > rollback.Tick)
         {
-            _predictionReconciliation.ClearRollback();
+            _predTracker.ClearRollback();
             return;
         }
 
@@ -77,10 +77,10 @@ public sealed partial class TransformSystem
 
     internal void FinishPredictionRollback()
     {
-        if (_predictionReconciliation.Rollback.Status == PredictionRollbackStatus.Inactive)
+        if (_predTracker.Rollback.Status == PredictionRollbackStatus.Inactive)
             return;
 
-        var rollback = _predictionReconciliation.TakeRollback();
+        var rollback = _predTracker.TakeRollback();
 
         if (rollback.Status != PredictionRollbackStatus.Pending)
             CompleteSnappedRotationRollback(rollback.Entity, rollback.Tick);
@@ -164,12 +164,12 @@ public sealed partial class TransformSystem
             || xform.Deleted
             || !TryCreateEndpoint(xform.Coordinates, xform.LocalRotation, out var endpoint))
         {
-            _predictionReconciliation.ClearSamples();
+            _predTracker.ClearSamples();
             return;
         }
 
         // The input sequence records which queued inputs were included in this endpoint.
-        _predictionReconciliation.Record(uid, endpoint, predictionTick, inputSequence);
+        _predTracker.Record(uid, endpoint, predictionTick, inputSequence);
     }
 
     internal bool TryGetPredictionSample(
@@ -178,7 +178,7 @@ public sealed partial class TransformSystem
         out GameTick predictionTick,
         out uint inputSequence)
     {
-        return _predictionReconciliation.TryGetSample(
+        return _predTracker.TryGetSample(
             uid,
             previous,
             out predictionTick,
@@ -187,7 +187,7 @@ public sealed partial class TransformSystem
 
     private void RefreshPredictionSample(EntityUid uid)
     {
-        if (!_predictionReconciliation.TryGetLatestSample(uid, out var sample))
+        if (!_predTracker.TryGetLatestSample(uid, out var sample))
             return;
 
         // Transform helpers can change the endpoint after the regular end-of-tick sample.
@@ -552,6 +552,9 @@ public sealed partial class TransformSystem
         public PredictionRollbackStatus Status = PredictionRollbackStatus.Pending;
     }
 
+    /// <summary>
+    /// Tracks whether rollback prediction changed the saved transform.
+    /// </summary>
     private enum PredictionRollbackStatus : byte
     {
         Inactive,
@@ -561,6 +564,10 @@ public sealed partial class TransformSystem
         HardReset,
     }
 
+    // This one's somewhat important so client predicting movement going back to server isn't immediately jerky.
+    /// <summary>
+    /// Tracks the transition from local prediction back to server movement.
+    /// </summary>
     private enum PredictionHandoffStatus : byte
     {
         Inactive,

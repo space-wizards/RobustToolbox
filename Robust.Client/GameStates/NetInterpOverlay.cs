@@ -9,6 +9,7 @@ using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Random;
 
@@ -63,15 +64,31 @@ internal sealed partial class NetInterpOverlay : Overlay
             DrawMarker(handle, rendered, Color.Cyan);
 
             var correctionActive = data.CorrectionTranslation != Vector2.Zero || data.CorrectionRotation != Angle.Zero;
-            var correction =
-                $"{data.CorrectionTranslation.X:0.000},{data.CorrectionTranslation.Y:0.000}, {data.CorrectionRotation.Degrees:0.00}deg";
-            var text = $"{data.Entity} {data.Type} a={data.Alpha:0.000}\n" +
-                       $"correction: {(correctionActive ? "active" : "inactive")} error {correction}\n" +
-                       $"sim {Format(data.Simulation)} render {Format(data.Rendered)}\n" +
-                       $"source {Format(data.Source)} target {Format(data.Target)}\n" +
-                       $"parent {data.Parent} coords {data.CoordinateSpace}\n" +
-                       $"spaces {data.SourceRenderSpace}->{data.TargetRenderSpace} " +
-                       $"a={data.Rendered.RenderSpaceAlpha:0.000}";
+            var text = Loc.GetString("cmd-renderlerp-overlay",
+                ("entity", data.Entity.ToString()),
+                ("type", Loc.GetString(data.Type switch
+                {
+                    RenderInterpolationType.NetworkInterpolation => "cmd-renderlerp-type-network",
+                    RenderInterpolationType.PredictionInterpolation => "cmd-renderlerp-type-prediction",
+                    RenderInterpolationType.PredictionCorrection => "cmd-renderlerp-type-correction",
+                    _ => throw new ArgumentOutOfRangeException()
+                })),
+                ("alpha", data.Alpha.ToString("0.000")),
+                ("correction", Loc.GetString(correctionActive
+                    ? "cmd-renderlerp-correction-active"
+                    : "cmd-renderlerp-correction-inactive")),
+                ("errorX", data.CorrectionTranslation.X.ToString("0.000")),
+                ("errorY", data.CorrectionTranslation.Y.ToString("0.000")),
+                ("errorRotation", data.CorrectionRotation.Degrees.ToString("0.00")),
+                ("simulation", Format(data.Simulation)),
+                ("rendered", Format(data.Rendered)),
+                ("source", Format(data.Source)),
+                ("target", Format(data.Target)),
+                ("parent", data.Parent.ToString()),
+                ("coordinates", data.CoordinateSpace.ToString()),
+                ("sourceSpace", data.SourceRenderSpace.ToString()),
+                ("targetSpace", data.TargetRenderSpace.ToString()),
+                ("spaceAlpha", data.Rendered.RenderSpaceAlpha.ToString("0.000")));
             var dimensions = handle.GetDimensions(_font, text, 1f);
             var labelPos = rendered + new Vector2(8f, 8f);
             handle.DrawRect(UIBox2.FromDimensions(labelPos - new Vector2(2f), dimensions + new Vector2(4f)),
@@ -81,7 +98,10 @@ internal sealed partial class NetInterpOverlay : Overlay
     }
 
     private static string Format(in RenderTransform pose)
-        => $"({pose.Position.X:0.00},{pose.Position.Y:0.00},{pose.Rotation.Degrees:0.0}deg)";
+        => Loc.GetString("cmd-renderlerp-overlay-pose",
+            ("x", pose.Position.X.ToString("0.00")),
+            ("y", pose.Position.Y.ToString("0.00")),
+            ("rotation", pose.Rotation.Degrees.ToString("0.0")));
 
     private static void DrawMarker(DrawingHandleScreen handle, Vector2 position, Color color)
     {
@@ -128,12 +148,12 @@ internal sealed partial class NetInterpOverlay : Overlay
             if (overlayManager.HasOverlay<NetInterpOverlay>())
             {
                 overlayManager.RemoveOverlay<NetInterpOverlay>();
-                shell.WriteLine("Disabled render interpolation overlay.");
+                shell.WriteLine(Loc.GetString("cmd-renderlerp-disabled"));
             }
             else
             {
                 overlayManager.AddOverlay(new NetInterpOverlay());
-                shell.WriteLine("Enabled render interpolation overlay.");
+                shell.WriteLine(Loc.GetString("cmd-renderlerp-enabled"));
             }
 
             return;
@@ -142,7 +162,7 @@ internal sealed partial class NetInterpOverlay : Overlay
         if (args[0] == "0")
         {
             overlayManager.RemoveOverlay<NetInterpOverlay>();
-            shell.WriteLine("Disabled render interpolation overlay.");
+            shell.WriteLine(Loc.GetString("cmd-renderlerp-disabled"));
             return;
         }
 
@@ -155,7 +175,7 @@ internal sealed partial class NetInterpOverlay : Overlay
         {
             if (players.LocalEntity is not { } player)
             {
-                shell.WriteError("No controlled entity.");
+                shell.WriteError(Loc.GetString("cmd-renderlerp-error-no-entity"));
                 return;
             }
 
@@ -179,8 +199,8 @@ internal sealed partial class NetInterpOverlay : Overlay
 
         overlay._filter = filter;
         shell.WriteLine(filter == null
-            ? "Enabled render interpolation overlay for all entities."
-            : $"Enabled render interpolation overlay for entity {filter}.");
+            ? Loc.GetString("cmd-renderlerp-enabled-all")
+            : Loc.GetString("cmd-renderlerp-enabled-entity", ("entity", filter.Value.ToString())));
     }
 
     private sealed partial class NetMispredictCommand : LocalizedCommands
@@ -224,7 +244,7 @@ internal sealed partial class NetInterpOverlay : Overlay
             if (_players.LocalEntity is not { } player
                 || !_entities.TryGetComponent(player, out TransformComponent? xform))
             {
-                shell.WriteError("No controlled entity with a transform.");
+                shell.WriteError(Loc.GetString("cmd-net_mispredict-error-no-transform"));
                 return;
             }
 
@@ -246,8 +266,11 @@ internal sealed partial class NetInterpOverlay : Overlay
                 transforms.SnapRenderTransform(player, true);
             }
 
-            shell.WriteLine(
-                $"Moved local entity {player} by ({x:0.###}, {y:0.###}), {rotationOffset.Degrees:0.###} degrees without notifying the server.");
+            shell.WriteLine(Loc.GetString("cmd-net_mispredict-moved",
+                ("entity", player.ToString()),
+                ("x", x.ToString("0.###")),
+                ("y", y.ToString("0.###")),
+                ("rotation", rotationOffset.Degrees.ToString("0.###"))));
         }
     }
 

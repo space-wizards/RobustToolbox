@@ -43,7 +43,7 @@ public sealed class EntitySystemSubscriptionGeneratorErrorAnalyzerTest
     public async Task NonNullableComponentParameter()
     {
         await Verify("""
-            public sealed class TestSystem : EntitySystem
+            public sealed partial class TestSystem : EntitySystem
             {
                 [SubscribeLocalEvent]
                 private void OnEvent(EntityUid uid, TestComponent component, ref TestEvent args)
@@ -57,7 +57,7 @@ public sealed class EntitySystemSubscriptionGeneratorErrorAnalyzerTest
     public async Task NonNullableEntityComponent()
     {
         await Verify("""
-            public sealed class TestSystem : EntitySystem
+            public sealed partial class TestSystem : EntitySystem
             {
                 [SubscribeLocalEvent]
                 private void OnEvent(Entity<TestComponent> entity, ref TestEvent args)
@@ -71,7 +71,7 @@ public sealed class EntitySystemSubscriptionGeneratorErrorAnalyzerTest
     public async Task NullableComponentParameter()
     {
         await Verify("""
-            public sealed class TestSystem : EntitySystem
+            public sealed partial class TestSystem : EntitySystem
             {
                 [SubscribeLocalEvent]
                 private void {|#0:OnEvent|}(EntityUid uid, TestComponent? component, ref TestEvent args)
@@ -87,7 +87,7 @@ public sealed class EntitySystemSubscriptionGeneratorErrorAnalyzerTest
     public async Task NullableEntityComponent()
     {
         await Verify("""
-            public sealed class TestSystem : EntitySystem
+            public sealed partial class TestSystem : EntitySystem
             {
                 [SubscribeLocalEvent]
                 private void {|#0:OnEvent|}(Entity<TestComponent?> entity, ref TestEvent args)

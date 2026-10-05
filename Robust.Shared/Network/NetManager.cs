@@ -1131,11 +1131,7 @@ namespace Robust.Shared.Network
             var instance = (NetMessage) Activator.CreateInstance(type)!;
             instance.MsgChannel = channel;
 
-            if (!_bandwidthUsage.TryGetValue(type, out var bandwidth))
-            {
-                bandwidth = 0;
-            }
-
+            var bandwidth = _bandwidthUsage.GetValueOrDefault(type, 0);
             _bandwidthUsage[type] = bandwidth + msg.LengthBytes;
 
             try

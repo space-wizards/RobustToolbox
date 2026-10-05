@@ -413,7 +413,7 @@ public abstract partial class SharedTransformSystem
         if (!xform._anchored)
             return false;
 
-        Dirty(uid, xform);
+        DirtyField(uid, xform, nameof(TransformComponent.Anchored));
         xform._anchored = false;
 
         if (setPhysics)
@@ -749,7 +749,7 @@ public abstract partial class SharedTransformSystem
             SetLocalRotation(entity.Owner, Angle.Zero, entity.Comp);
 
         entity.Comp._noLocalRotation = value;
-        Dirty(entity);
+        DirtyField(entity.Owner, entity.Comp, nameof(TransformComponent.NoLocalRotation));
     }
 
     #endregion
@@ -810,8 +810,27 @@ public abstract partial class SharedTransformSystem
         var oldRotation = xform._localRotation;
         var oldMap = xform.MapUid;
 
+        var parentChanged = value.EntityId != oldParentUid;
+
+        if (parentChanged)
+        {
+            DirtyFields(uid, xform, meta,
+                nameof(TransformComponent.LocalPosition),
+                nameof(TransformComponent.LocalRotation),
+                nameof(TransformComponent.ParentUid));
+        }
+        else if (rotation != null && !xform.NoLocalRotation)
+        {
+            DirtyFields(uid, xform, meta,
+                nameof(TransformComponent.LocalPosition),
+                nameof(TransformComponent.LocalRotation));
+        }
+        else
+        {
+            DirtyField(uid, xform, nameof(TransformComponent.LocalPosition), meta);
+        }
+
         // Set new values
-        Dirty(uid, xform, meta);
         xform.MatricesDirty = true;
         xform._localPosition = value.Position;
 
@@ -1093,12 +1112,41 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region States
-    public virtual void ActivateLerp(EntityUid uid, TransformComponent xform) { }
-
     internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
     {
         DebugTools.Assert(!component.ParentUid.IsValid() || (!Deleted(component.ParentUid) && !EntityManager.IsQueuedForDeletion(component.ParentUid)));
         var parent = GetNetEntity(component.ParentUid);
+
+        if (args.FromTick > component.CreationTick)
+        {
+            var aspects = EntityManager.GetModifiedAspects(component, args.FromTick);
+
+            if (aspects > 0 && aspects < DeltaAspect.Unclassified)
+            {
+                var state = new TransformComponentDeltaState
+                {
+                    ChangedFields = aspects,
+                };
+
+                if ((aspects & (1UL << TransformLocalPositionIndex)) != 0)
+                    state.LocalPosition = component.LocalPosition;
+
+                if ((aspects & (1UL << TransformLocalRotationIndex)) != 0)
+                    state.Rotation = component.LocalRotation;
+
+                if ((aspects & (1UL << TransformParentIndex)) != 0)
+                    state.ParentID = parent;
+
+                if ((aspects & (1UL << TransformNoLocalRotationIndex)) != 0)
+                    state.NoLocalRotation = component.NoLocalRotation;
+
+                if ((aspects & (1UL << TransformAnchoredIndex)) != 0)
+                    state.Anchored = component.Anchored;
+
+                args.State = state;
+                return;
+            }
+        }
 
         args.State = new TransformComponentState(
             component.LocalPosition,
@@ -1110,13 +1158,8 @@ public abstract partial class SharedTransformSystem
 
     internal void OnHandleState(EntityUid uid, TransformComponent xform, ref ComponentHandleState args)
     {
-        if (args.Current is TransformComponentState newState)
+        if (GetTransformState(xform, args.Current) is { } newState)
         {
-            // TODO Delta-states
-            // If the transform component ever gets delta states, then the client state manager needs to be updated.
-            // Currently it explicitly looks for a "TransformComponentState" when determining an entity's parent for the
-            // sake of sorting the states that need to be applied base on the transform hierarchy.
-
             var parent = EnsureEntity<TransformComponent>(newState.ParentID, uid);
             var oldAnchored = xform.Anchored;
 
@@ -1173,12 +1216,28 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert(xform.Anchored == newState.Anchored, "Transform state failed to set anchored");
         }
 
-        if (args.Next is TransformComponentState nextTransform
-            && nextTransform.ParentID == GetNetEntity(xform.ParentUid))
+    }
+
+    private TransformComponentState? GetTransformState(TransformComponent xform, IComponentState? state)
+    {
+        switch (state)
         {
-            xform.NextPosition = nextTransform.LocalPosition;
-            xform.NextRotation = nextTransform.Rotation;
-            ActivateLerp(uid, xform);
+            case TransformComponentState transform:
+                return transform;
+            case TransformComponentDeltaState delta:
+            {
+                var parent = GetNetEntity(xform.ParentUid);
+                var fullState = new TransformComponentState(
+                    xform.LocalPosition,
+                    xform.LocalRotation,
+                    parent,
+                    xform.NoLocalRotation,
+                    xform.Anchored);
+
+                return delta.CreateNewFullState(fullState);
+            }
+            default:
+                return null;
         }
     }
 
@@ -1579,7 +1638,9 @@ public abstract partial class SharedTransformSystem
         DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
 
         var meta = MetaData(uid);
-        Dirty(uid, xform, meta);
+        DirtyFields(uid, xform, meta,
+            nameof(TransformComponent.LocalPosition),
+            nameof(TransformComponent.LocalRotation));
         xform.MatricesDirty = true;
 
         if (!xform.Initialized)
@@ -1886,11 +1947,6 @@ public abstract partial class SharedTransformSystem
 
         // Before making any changes to physics or transforms, remove from the current broadphase
         _lookup.RemoveFromEntityTree(uid, xform);
-
-        // Stop any active lerps
-        xform.NextPosition = null;
-        xform.NextRotation = null;
-        xform.LerpParent = EntityUid.Invalid;
 
         if (xform.Anchored
             && _metaQuery.TryGetComponent(xform.GridUid, out var gridMeta)

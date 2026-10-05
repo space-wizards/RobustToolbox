@@ -202,7 +202,7 @@ public static class CompletionHelper
     {
         IoCManager.Resolve(ref players);
 
-        var playerOptions = players.Sessions.Select(p => new CompletionOption(p.Name));
+        var playerOptions = players.Sessions.Select(p => new CompletionOption(p.Name, p.UserId.UserId.ToString()));
         return sorted ? playerOptions.OrderBy(o => o.Value) : playerOptions;
     }
 

@@ -25,6 +25,11 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         private IReadOnlyDictionary<string, ValueDataNode>? _keyNodes;
         // TODO avoid populating this unless we are running the yaml linter?
 
+        /// <summary>
+        /// Tags associated with each mapping key, if any.
+        /// </summary>
+        private Dictionary<string, string>? _keyTags;
+
         public override bool IsEmpty => _children.Count == 0;
         public int Count => _children.Count;
         public bool IsReadOnly => false;
@@ -164,6 +169,8 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             if (!_children.Remove(key))
                 return false;
 
+            _keyTags?.Remove(key);
+
             var index = IndexOf(key);
             if (index == -1)
                 throw new Exception("Key exists in Children, but not list?");
@@ -263,6 +270,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             }
 
             newMapping._keyNodes = _keyNodes;
+            newMapping._keyTags = _keyTags;
             return newMapping;
         }
 
@@ -434,6 +442,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         {
             _children.Clear();
             _list.Clear();
+            _keyTags = null;
         }
 
         public bool Contains(KeyValuePair<string, DataNode> item) => _children.ContainsKey(item.Key);
@@ -478,6 +487,17 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             entry = value.Copy();
             _list.Add(new(key, entry));
             return true;
+        }
+
+        internal string? GetKeyTag(string key)
+        {
+            return _keyTags?.GetValueOrDefault(key);
+        }
+
+        internal void SetKeyTag(string key, string tag)
+        {
+            _keyTags ??= new Dictionary<string, string>();
+            _keyTags[key] = tag;
         }
 
         // These methods are probably fine to keep around as helper methods, but are currently marked as obsolete

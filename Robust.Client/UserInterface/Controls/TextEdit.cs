@@ -104,6 +104,14 @@ public sealed partial class TextEdit : Control
     }
 
     /// <summary>
+    /// Limits the number of lines the user is allowed to create
+    /// </summary>
+    /// <remarks>
+    /// If the value is 0 we won't set a limit
+    /// </remarks>
+    public int MaxLines { get; set; } = 0;
+
+    /// <summary>
     /// The current position of the cursor in the text rope.
     /// </summary>
     /// <remarks>
@@ -425,9 +433,11 @@ public sealed partial class TextEdit : Control
         }
         else if (args.Function == EngineKeyFunctions.TextNewline)
         {
-            InsertAtCursor("\n");
-
-            InvalidateHorizontalCursorPos();
+            if (MaxLines == 0 || GetLineCount() < MaxLines)
+            {
+                InsertAtCursor("\n");
+                InvalidateHorizontalCursorPos();
+            }
 
             args.Handle();
         }
@@ -916,7 +926,11 @@ public sealed partial class TextEdit : Control
         return _placeholder ?? Rope.Leaf.Empty;
     }
 
-    private int GetLineCount()
+    /// <summary>
+    /// Returns the number of lines of text currently in the textbox.
+    /// </summary>
+    [Pure]
+    public int GetLineCount()
     {
         return _lineBreaks.Count + 1;
     }

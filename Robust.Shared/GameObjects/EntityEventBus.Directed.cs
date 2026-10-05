@@ -357,7 +357,7 @@ namespace Robust.Shared.GameObjects
 
         public void OnComponentAdded(in AddedComponentEventArgs e)
         {
-            EntAddComponent(e.BaseArgs.Owner, e.ComponentType.Idx);
+            EntAddComponent(e.BaseArgs.Owner, e.ComponentType.Idx, e.BaseArgs.Component);
         }
 
         internal void LockSubscriptions()
@@ -434,11 +434,12 @@ namespace Robust.Shared.GameObjects
             _entEventTables.Remove(euid);
         }
 
-        private void EntAddComponent(EntityUid euid, CompIdx compType)
+        private void EntAddComponent(EntityUid euid, CompIdx compType, IComponent component)
         {
             DebugTools.Assert(_subscriptionLock);
 
             var eventTable = _entEventTables[euid];
+            eventTable.Version++;
             var compSubs = _eventSubs[compType.Value];
 
             foreach (var evType in compSubs.Keys)
@@ -460,6 +461,7 @@ namespace Robust.Shared.GameObjects
 
                 // Set it up
                 entry.Component = compType;
+                entry.ComponentInstance = component;
                 entry.Next = exists ? indices.Start : -1;
 
                 // Assign new list entry to EventIndices dictionary.
@@ -499,6 +501,7 @@ namespace Robust.Shared.GameObjects
         private void EntRemoveComponent(EntityUid euid, CompIdx compType)
         {
             var eventTable = _entEventTables[euid];
+            eventTable.Version++;
             var compSubs = _eventSubs[compType.Value];
 
             foreach (var evType in compSubs.Keys)
@@ -537,10 +540,13 @@ namespace Robust.Shared.GameObjects
                 }
 
                 // Push entry back onto free list.
+                entry.ComponentInstance = null!;
                 entry.Next = eventTable.Free;
                 eventTable.Free = entryIdx;
             }
         }
+
+        private readonly record struct EventTableDispatchEntry(CompIdx Component, int Entry);
 
         private void EntDispatch(EntityUid euid, Type eventType, ref Unit args)
         {
@@ -553,24 +559,86 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(indices.Count > 0);
             DebugTools.Assert(indices.Start >= 0);
 
+            var version = eventTable.Version;
+
+            // Fastpath no stackalloc
+            if (indices.Count == 1)
+            {
+                ref var entry = ref eventTable.ComponentLists[indices.Start];
+                var comp = entry.ComponentInstance;
+                var compIdx = entry.Component;
+                var compSubs = _eventSubs[compIdx.Value];
+
+                if (comp.Deleted)
+                    return;
+
+#if DEBUG
+                eventTable.DirectedDispatchDepth++;
+#endif
+                try
+                {
+                    compSubs[eventType].Handler(euid, comp, ref args);
+                }
+                finally
+                {
+#if DEBUG
+                    eventTable.DirectedDispatchDepth--;
+#endif
+                }
+
+                return;
+            }
+
             // First, collect all subscribing components.
             // This is to avoid infinite loops over the linked list if subscription handlers add or remove components.
-            Span<CompIdx> compIds = stackalloc CompIdx[indices.Count];
+            Span<EventTableDispatchEntry> dispatchEntries = stackalloc EventTableDispatchEntry[indices.Count];
             var idx = indices.Start;
-            for (var index = 0; index < compIds.Length; index++)
+            for (var index = 0; index < dispatchEntries.Length; index++)
             {
                 DebugTools.Assert(idx >= 0);
                 ref var entry = ref eventTable.ComponentLists[idx];
+                dispatchEntries[index] = new EventTableDispatchEntry(entry.Component, idx);
                 idx = entry.Next;
-                compIds[index] = entry.Component;
             }
 
-            foreach (var compIdx in compIds)
+            var fallback = false;
+#if DEBUG
+            eventTable.DirectedDispatchDepth++;
+#endif
+            try
             {
-                if (!_entMan.TryGetComponent(euid, compIdx, out var comp))
-                    continue;
-                var compSubs = _eventSubs[compIdx.Value];
-                compSubs[eventType].Handler(euid, comp, ref args);
+                foreach (var (compIdx, entry) in dispatchEntries)
+                {
+                    IComponent comp;
+
+                    // If we haven't degenned then just use the indexed component.
+                    if (!fallback && eventTable.Version == version)
+                    {
+                        comp = eventTable.ComponentLists[entry].ComponentInstance;
+                    }
+                    // Debug mode do NOT change components during eventbus, however still need it work in release (even if slow).
+                    else
+                    {
+                        fallback = true;
+
+                        if (!_entMan.TryGetComponent(euid, compIdx, out var fallbackComp))
+                            continue;
+
+                        comp = fallbackComp;
+                    }
+
+                    if (comp.Deleted)
+                        continue;
+
+                    var compSubs = _eventSubs[compIdx.Value];
+                    compSubs[eventType].Handler(euid, comp, ref args);
+                }
+            }
+            finally
+            {
+#if DEBUG
+                eventTable.DirectedDispatchDepth--;
+#endif
             }
         }
 
@@ -587,20 +655,48 @@ namespace Robust.Shared.GameObjects
 
             DebugTools.Assert(indices.Count > 0);
             DebugTools.Assert(indices.Start >= 0);
+            var version = eventTable.Version;
             var idx = indices.Start;
             while (idx != -1)
             {
+                var entryIdx = idx;
                 ref var entry = ref eventTable.ComponentLists[idx];
                 idx = entry.Next;
-                var comp = _entMan.GetComponentInternal(euid, entry.Component);
-                var compSubs = _eventSubs[entry.Component.Value];
+                var comp = entry.ComponentInstance;
+                var compIdx = entry.Component;
+                var compSubs = _eventSubs[compIdx.Value];
                 var reg = compSubs[eventType];
 
                 found.Add(new OrderedEventDispatch(
                     (ref Unit ev) =>
                     {
-                        if (!comp.Deleted)
-                            reg.Handler(euid, comp, ref ev);
+                        var dispatchComp = comp;
+                        if (eventTable.Version != version)
+                        {
+                            if (!_entMan.TryGetComponent(euid, compIdx, out dispatchComp))
+                                return;
+                        }
+                        else
+                        {
+                            dispatchComp = eventTable.ComponentLists[entryIdx].ComponentInstance;
+                        }
+
+                        if (dispatchComp.Deleted)
+                            return;
+
+#if DEBUG
+                        eventTable.DirectedDispatchDepth++;
+#endif
+                        try
+                        {
+                            reg.Handler(euid, dispatchComp, ref ev);
+                        }
+                        finally
+                        {
+#if DEBUG
+                            eventTable.DirectedDispatchDepth--;
+#endif
+                        }
                     },
                     reg.Order));
             }
@@ -663,6 +759,10 @@ namespace Robust.Shared.GameObjects
             // ComponentList is the actual region of memory containing linked list nodes.
             public readonly Dictionary<Type, (int Start, int Count)> EventIndices = new();
             public int Free;
+            public int Version;
+#if DEBUG
+            public int DirectedDispatchDepth;
+#endif
             public EventTableListEntry[] ComponentLists = new EventTableListEntry[InitialListSize];
 
             public EventTable()
@@ -676,6 +776,7 @@ namespace Robust.Shared.GameObjects
         {
             public int Next;
             public CompIdx Component;
+            public IComponent ComponentInstance;
         }
 
         /// <summary>

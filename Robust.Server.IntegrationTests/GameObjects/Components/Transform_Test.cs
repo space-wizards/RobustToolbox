@@ -387,7 +387,7 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             XformSystem.SetParent(node4, node4Trans, node3, parentXform: node3Trans);
 
             //Act
-            XformSystem.SetLocalRotation(node1, new Angle(MathHelper.Pi / 6.37), node1Trans);
+            XformSystem.SetLocalRotation(node1, new Angle(Math.PI / 6.37), node1Trans);
             XformSystem.SetWorldPosition(node1, new Vector2(1, 1));
 
             var worldMat = XformSystem.GetWorldMatrix(node4Trans);

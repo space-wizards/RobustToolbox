@@ -9,6 +9,7 @@ namespace Robust.Client.GameObjects;
 public sealed partial class EyeSystem : SharedEyeSystem
 {
     [Dependency] private IEyeManager _eyeManager = default!;
+    [Dependency] private TransformSystem _transform = default!;
 
     public override void Initialize()
     {
@@ -18,7 +19,7 @@ public sealed partial class EyeSystem : SharedEyeSystem
         SubscribeLocalEvent<EyeComponent, LocalPlayerAttachedEvent>(OnEyeAttached);
         SubscribeLocalEvent<EyeComponent, AfterAutoHandleStateEvent>(OnEyeAutoState);
 
-        // Make sure this runs *after* entities have been moved by interpolation and movement.
+        // Make sure this runs after the entity's final position has been updated.
         UpdatesAfter.Add(typeof(TransformSystem));
         UpdatesAfter.Add(typeof(PhysicsSystem));
     }
@@ -56,13 +57,15 @@ public sealed partial class EyeSystem : SharedEyeSystem
             if (eyeComponent.Eye == null)
                 continue;
 
-            if (!TryComp<TransformComponent>(eyeComponent.Target, out var xform))
+            var target = eyeComponent.Target ?? uid;
+            if (!TryComp(target, out TransformComponent? xform))
             {
                 xform = Transform(uid);
                 eyeComponent.Target = null;
+                target = uid;
             }
 
-            eyeComponent.Eye.Position = TransformSystem.GetMapCoordinates(xform);
+            eyeComponent.Eye.Position = _transform.GetRenderMapCoordinates((target, xform));
         }
     }
 }

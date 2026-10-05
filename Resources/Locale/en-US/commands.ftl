@@ -537,7 +537,34 @@ cmd-net_watchent-desc = Dumps all network updates for an EntityId to the console
 cmd-net_watchent-help = Usage: {$command} <0|EntityUid>
 
 cmd-net_draw_interp-desc = Toggles the debug drawing of the network interpolation.
-cmd-net_draw_interp-help = Usage: {$command} <0|EntityUid>
+cmd-net_draw_interp-help = Usage: {$command} [0|all|self|EntityUid]
+
+cmd-renderlerp-desc = Toggles the debug drawing of the render interpolation.
+cmd-renderlerp-help = Usage: {$command} [0|all|self|EntityUid]
+cmd-renderlerp-enabled = Enabled render interpolation overlay.
+cmd-renderlerp-disabled = Disabled render interpolation overlay.
+cmd-renderlerp-enabled-all = Enabled render interpolation overlay for all entities.
+cmd-renderlerp-enabled-entity = Enabled render interpolation overlay for entity {$entity}.
+cmd-renderlerp-error-no-entity = No controlled entity.
+cmd-renderlerp-type-network = Network interpolation
+cmd-renderlerp-type-prediction = Prediction interpolation
+cmd-renderlerp-type-correction = Prediction correction
+cmd-renderlerp-correction-active = active
+cmd-renderlerp-correction-inactive = inactive
+cmd-renderlerp-overlay =
+    {$entity} {$type} a={$alpha}
+    correction: {$correction} error {$errorX},{$errorY}, {$errorRotation}deg
+    sim {$simulation} render {$rendered}
+    source {$source} target {$target}
+    parent {$parent} coords {$coordinates}
+    spaces {$sourceSpace}->{$targetSpace} a={$spaceAlpha}
+cmd-renderlerp-overlay-pose = ({$x},{$y},{$rotation}deg)
+
+cmd-net_mispredict-desc = Applies an unsent local transform offset to test prediction correction smoothing.
+cmd-net_mispredict-help = Usage: {$command} [active] [<x> <y> [rotation degrees]]
+cmd-net_mispredict-error-no-transform = No controlled entity with a transform.
+cmd-net_mispredict-moved = Moved local entity {$entity} by ({$x}, {$y}), {$rotation} degrees without notifying the server.
+
 
 cmd-vram-desc = Displays video memory usage statics by the game.
 cmd-vram-help = Usage: {$command}

@@ -39,14 +39,14 @@ public class BroadphaseDetachBenchmark
         var grid = _map.CreateGridEntity(mapId);
         _map.SetTile(grid, Vector2i.Zero, new Tile(1));
 
-        _root = _entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(0.5f, 0.5f)));
+        _root = _entManager.SpawnAttachedTo(null, new EntityCoordinates(grid.Owner, new Vector2(0.5f, 0.5f)));
         _rootXform = _entManager.GetComponent<TransformComponent>(_root);
         _children = new EntityUid[Children];
 
         var parent = _root;
         for (var i = 0; i < Children; i++)
         {
-            var child = _entManager.SpawnEntity(null, new EntityCoordinates(parent, new Vector2(0.001f, 0f)));
+            var child = _entManager.SpawnAttachedTo(null, new EntityCoordinates(parent, new Vector2(0.001f, 0f)));
             _children[i] = child;
             parent = child;
         }

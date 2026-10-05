@@ -42,13 +42,13 @@ public class BroadphaseReinsertBenchmark
         xforms.SetCoordinates(gridUid, new EntityCoordinates(map, new Vector2(10f, 10f)));
         xforms.SetLocalRotation(gridUid, Angle.FromDegrees(35));
 
-        _root = _entManager.SpawnEntity(null, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)));
+        _root = _entManager.SpawnAttachedTo(null, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)));
         _rootXform = _entManager.GetComponent<TransformComponent>(_root);
 
         var parent = _root;
         for (var i = 0; i < Children; i++)
         {
-            var child = _entManager.SpawnEntity(null, new EntityCoordinates(parent, new Vector2(0.001f, 0f)));
+            var child = _entManager.SpawnAttachedTo(null, new EntityCoordinates(parent, new Vector2(0.001f, 0f)));
 
             if (i % 4 == 0)
             {

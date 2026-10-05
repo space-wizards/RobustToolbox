@@ -62,7 +62,7 @@ internal sealed partial class ReplayPlaybackManager
         var next =  nextIndex < replay.Count ? replay.GetState(nextIndex) : null;
         _gameState.PartialStateReset(checkpoint.FullState, false, false);
         _entMan.EntitySysManager.GetEntitySystem<ClientDirtySystem>().Reset();
-        _entMan.EntitySysManager.GetEntitySystem<TransformSystem>().Reset();
+        _entMan.EntitySysManager.GetEntitySystem<TransformSystem>().ResetRenderTransforms();
         _gameState.UpdateFullRep(checkpoint.FullState, cloneDelta: true);
         _gameState.ClearDetachQueue();
         EnsureDetachedExist(checkpoint);

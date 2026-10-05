@@ -22,8 +22,6 @@
 
 using System;
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
@@ -333,45 +331,13 @@ public abstract partial class SharedPhysicsSystem
 
     private static void SolveVelocityConstraints(
         in IslandData island,
-        ParallelOptions? options,
         ContactVelocityConstraint[] velocityConstraints,
         Vector2[] linearVelocities,
         float[] angularVelocities)
     {
         var contactCount = island.Contacts.Count;
 
-        if (options != null && contactCount > VelocityConstraintsPerThread * 2)
-        {
-            static void ProcessParallelInternal(
-                IslandData island,
-                int contactCount,
-                ParallelOptions options,
-                ContactVelocityConstraint[] velocityConstraints,
-                Vector2[] linearVelocities,
-                float[] angularVelocities)
-            {
-                var batches = (int) Math.Ceiling((float) contactCount / VelocityConstraintsPerThread);
-
-                Parallel.For(0, batches, options, i =>
-                {
-                    var start = i * VelocityConstraintsPerThread;
-                    var end = Math.Min(start + VelocityConstraintsPerThread, contactCount);
-                    SolveVelocityConstraints(island, start, end, velocityConstraints, linearVelocities, angularVelocities);
-                });
-            }
-
-            ProcessParallelInternal(
-                island,
-                contactCount,
-                options,
-                velocityConstraints,
-                linearVelocities,
-                angularVelocities);
-        }
-        else
-        {
-            SolveVelocityConstraints(in island, 0, contactCount, velocityConstraints, linearVelocities, angularVelocities);
-        }
+        SolveVelocityConstraints(in island, 0, contactCount, velocityConstraints, linearVelocities, angularVelocities);
     }
 
     private static void SolveVelocityConstraints(
@@ -682,43 +648,12 @@ public abstract partial class SharedPhysicsSystem
     private static bool SolvePositionConstraints(
         in SolverData data,
         in IslandData island,
-        ParallelOptions? options,
         ContactPositionConstraint[] positionConstraints,
         Vector2[] positions,
         float[] angles)
     {
         var contactCount = island.Contacts.Count;
 
-        // Parallel
-        if (options != null && contactCount > PositionConstraintsPerThread * 2)
-        {
-            static bool ProcessParallelInternal(
-                int contactCount,
-                SolverData data,
-                ParallelOptions options,
-                ContactPositionConstraint[] positionConstraints,
-                Vector2[] positions,
-                float[] angles)
-            {
-                var unsolved = 0;
-                var batches = (int) Math.Ceiling((float) contactCount / PositionConstraintsPerThread);
-
-                Parallel.For(0, batches, options, i =>
-                {
-                    var start = i * PositionConstraintsPerThread;
-                    var end = Math.Min(start + PositionConstraintsPerThread, contactCount);
-
-                    if (!SolvePositionConstraints(data, start, end, positionConstraints, positions, angles))
-                        Interlocked.Increment(ref unsolved);
-                });
-
-                return unsolved == 0;
-            }
-
-            return ProcessParallelInternal(contactCount, data, options, positionConstraints, positions, angles);
-        }
-
-        // No parallel
         return SolvePositionConstraints(data, 0, contactCount, positionConstraints, positions, angles);
     }
 

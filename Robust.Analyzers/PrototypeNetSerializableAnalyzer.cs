@@ -58,7 +58,7 @@ public sealed class PrototypeNetSerializableAnalyzer : DiagnosticAnalyzer
         if (symbolContext.Symbol is not INamedTypeSymbol symbol)
             return;
 
-        if (!TypeSymbolHelper.ImplementsInterface(symbol, prototypeInterface))
+        if (!symbol.ImplementsInterface(prototypeInterface))
             return;
 
         if (AttributeHelper.HasAttribute(symbol, netSerializableAttribute, out _))

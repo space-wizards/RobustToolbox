@@ -18,7 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-*None yet*
+- `lsmap` and `lsgrid` no longer throw an exception when there are no maps or grids
 
 ### Other
 

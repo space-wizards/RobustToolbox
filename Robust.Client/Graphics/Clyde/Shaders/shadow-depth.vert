@@ -12,7 +12,7 @@ attribute vec4 aPos;
 attribute vec2 subVertex;
 
 // x: actual angle, y: line angle + 90 degrees, z: Distance at y
-varying vec3 fragControl;
+varying highp vec3 fragControl;
 
 // Note: This is *not* the standard projectionMatrix!
 uniform vec2 shadowLightCentre;
@@ -34,6 +34,8 @@ void main()
     // aPos is clockwise, but we need anticlockwise so swap it here
     vec2 pA = aPos.zw - shadowLightCentre;
     vec2 pB = aPos.xy - shadowLightCentre;
+    if (dot(pA, pA) < 1e-8) pA = vec2(1e-4, 0.0);
+    if (dot(pB, pB) < 1e-8) pB = vec2(1e-4, 0.0);
     float xA = atan(pA.y, -pA.x);
     float xB = atan(pB.y, -pB.x);
 
@@ -72,7 +74,15 @@ void main()
 
     // Calculate the necessary control data for the fragment shader.
     vec2 lineNormal = pB - pA; // hypothetical: <- would have negative X, zero Y
-    lineNormal /= length(lineNormal);
+    float lineLen = length(lineNormal);
+    if (lineLen < 1e-5)
+    {
+        lineNormal = vec2(1.0, 0.0);
+    }
+    else
+    {
+        lineNormal /= lineLen;
+    }
     fragControl = vec3(
         // Angle
         targetAngle,

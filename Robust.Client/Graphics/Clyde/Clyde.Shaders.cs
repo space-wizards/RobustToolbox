@@ -213,6 +213,7 @@ namespace Robust.Client.Graphics.Clyde
                     versionHeader += "#define NO_ARRAY_PRECISION\n";
                 }
 
+                versionHeader += "#ifdef FRAGMENT_SHADER\n#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n#endif\n";
             }
 
             if (_hasGLStandardDerivatives)
@@ -255,9 +256,10 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (ShaderCompilationException e)
                 {
-                    File.WriteAllText("error.glsl", vertexSource);
+                    try { File.WriteAllText("error.glsl", vertexSource); } catch {}
+                    _clydeSawmill.Error($"Failed to compile vertex shader for '{name}': {e.Message}\nSource:\n{vertexSource}");
                     throw new ShaderCompilationException(
-                        "Failed to compile vertex shader, see inner for details (and error.glsl for formatted source).", e);
+                        $"Failed to compile vertex shader for '{name}': {e.Message}", e);
                 }
 
                 try
@@ -266,9 +268,10 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (ShaderCompilationException e)
                 {
-                    File.WriteAllText("error.glsl", fragmentSource);
+                    try { File.WriteAllText("error.glsl", fragmentSource); } catch {}
+                    _clydeSawmill.Error($"Failed to compile fragment shader for '{name}': {e.Message}\nSource:\n{fragmentSource}");
                     throw new ShaderCompilationException(
-                        "Failed to compile fragment shader, see inner for details (and error.glsl for formatted source).", e);
+                        $"Failed to compile fragment shader for '{name}': {e.Message}", e);
                 }
 
                 var program = new GLShaderProgram(this, name);
@@ -282,8 +285,8 @@ namespace Robust.Client.Graphics.Clyde
                 catch (ShaderCompilationException e)
                 {
                     program.Delete();
-
-                    throw new ShaderCompilationException("Failed to link shaders. See inner for details.", e);
+                    _clydeSawmill.Error($"Failed to link shader program for '{name}': {e.Message}");
+                    throw new ShaderCompilationException($"Failed to link shader program for '{name}': {e.Message}", e);
                 }
 
                 return program;

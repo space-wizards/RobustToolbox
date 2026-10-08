@@ -169,7 +169,47 @@ internal sealed class RayCast_Test
             Flags = flags,
         };
 
-        var hits = kind switch
+        var hits = CastUpwards(raycast, kind, mapId, filter);
+
+        var expected = hardFixture || includeSensors
+            ? new[] { target }
+            : Array.Empty<EntityUid>();
+
+        Assert.That(hits.Results.Select(hit => hit.Entity).ToArray(), Is.EqualTo(expected));
+    }
+
+    /// <summary>
+    /// Casts also hit entities parented directly to a map, which are in the map's broadphase rather than a grid's.
+    /// </summary>
+    [Test]
+    public void CastsHitOffGridEntities([Values] SensorCastKind kind)
+    {
+        var sim = RobustServerSimulation.NewSimulation().RegisterEntitySystems(f =>
+        {
+            f.LoadExtraSystemType<RayCastSystem>();
+        }).InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var mapUid = entManager.System<SharedMapSystem>().CreateMap(out var mapId);
+        var target = SpawnCastTarget(entManager,
+            entManager.System<FixtureSystem>(),
+            entManager.System<SharedPhysicsSystem>(),
+            mapUid,
+            new Vector2(0.5f, 1f),
+            true);
+        var raycast = sim.System<RayCastSystem>();
+
+        var hits = CastUpwards(raycast, kind, mapId, new QueryFilter { LayerBits = 1 });
+
+        Assert.That(hits.Results.Select(hit => hit.Entity).ToArray(), Is.EqualTo(new[] { target }));
+    }
+
+    /// <summary>
+    /// Casts a ray, or a small circle for <see cref="SensorCastKind.Shape"/>, from (0.5, 0) three units up.
+    /// </summary>
+    private static RayResult CastUpwards(RayCastSystem raycast, SensorCastKind kind, MapId mapId, QueryFilter filter)
+    {
+        return kind switch
         {
             SensorCastKind.RayAll => raycast.CastRay(
                 mapId,
@@ -190,12 +230,6 @@ internal sealed class RayCast_Test
                 RayCastSystem.RayCastAllCallback),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
         };
-
-        var expected = hardFixture || includeSensors
-            ? new[] { target }
-            : Array.Empty<EntityUid>();
-
-        Assert.That(hits.Results.Select(hit => hit.Entity).ToArray(), Is.EqualTo(expected));
     }
 
     private void Setup(ISimulation sim, out MapId mapId)

@@ -205,6 +205,43 @@ internal sealed class RayCast_Test
     }
 
     /// <summary>
+    /// A closer hit found on a later broadphase replaces the closest hit so far, and still has to be returned in map
+    /// coordinates.
+    /// </summary>
+    [Test]
+    public void ClosestHitFromLaterBroadphaseIsInMapCoordinates()
+    {
+        var sim = RobustServerSimulation.NewSimulation().RegisterEntitySystems(f =>
+        {
+            f.LoadExtraSystemType<RayCastSystem>();
+        }).InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+        var physicsSystem = entManager.System<SharedPhysicsSystem>();
+
+        var mapUid = mapSystem.CreateMap(out var mapId);
+
+        // The map's broadphase is checked first, so this hit is found first even though it's farther away.
+        SpawnCastTarget(entManager, fixtureSystem, physicsSystem, mapUid, new Vector2(0.5f, 2.5f), true);
+
+        // Offset the grid so its local coordinates differ from map coordinates.
+        var grid = mapSystem.CreateGridEntity(mapId);
+        entManager.System<SharedTransformSystem>().SetLocalPosition(grid.Owner, new Vector2(5f, 0f));
+        mapSystem.SetTile(grid, new Vector2i(-5, 1), new Tile(1));
+        var closer = SpawnCastTarget(entManager, fixtureSystem, physicsSystem, grid.Owner, new Vector2(-4.5f, 1.5f), true);
+
+        var raycast = sim.System<RayCastSystem>();
+        var hits = raycast.CastRayClosest(mapId, Vector2.UnitX / 2f, Vector2.UnitY * 3f, new QueryFilter { LayerBits = 1 });
+
+        Assert.That(hits.Results.Select(hit => hit.Entity).ToArray(), Is.EqualTo(new[] { closer }));
+        // Where the ray enters the closer target's circle, which has a radius of 0.25.
+        Assert.That(hits.Results[0].Point.X, Is.EqualTo(0.5f).Within(0.001f));
+        Assert.That(hits.Results[0].Point.Y, Is.EqualTo(1.25f).Within(0.001f));
+    }
+
+    /// <summary>
     /// Casts a ray, or a small circle for <see cref="SensorCastKind.Shape"/>, from (0.5, 0) three units up.
     /// </summary>
     private static RayResult CastUpwards(RayCastSystem raycast, SensorCastKind kind, MapId mapId, QueryFilter filter)

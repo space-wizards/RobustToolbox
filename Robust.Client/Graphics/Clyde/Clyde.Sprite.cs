@@ -67,7 +67,8 @@ internal partial class Clyde
             ViewRotation = eye.Rotation,
             ViewScale = viewScale,
             PreScaleViewOffset = view.Size / 2f / viewScale,
-            ViewPosition = eye.Position.Position + eye.Offset
+            ViewPosition = eye.Position.Position + eye.Offset,
+            ViewportSize = view.Size,
         };
 
         // We need to batch the actual tree query, or alternatively we need just get the list of sprites and then
@@ -166,6 +167,17 @@ internal partial class Clyde
 
             var (pos, rot) = batch.Sys.GetRenderWorldPositionRotation((data.Uid, data.Xform));
             pos += batch.TreePixelSnapOffset;
+
+            if (data.Sprite.Scale != Vector2.One)
+            {
+                pos += GetPixelSnapOffset(
+                    pos,
+                    batch.ViewPosition,
+                    batch.ViewRotation,
+                    batch.ViewScale,
+                    batch.ViewportSize);
+            }
+
             data.WorldRot = rot;
             data.WorldPos = pos;
 
@@ -241,6 +253,7 @@ internal partial class Clyde
         public Vector2 PreScaleViewOffset { get; init; }
         public Vector2 ViewPosition { get; init; }
         public Vector2 TreePixelSnapOffset { get; init; }
+        public Vector2 ViewportSize { get; init; }
     }
 
     private readonly struct SpriteSortItem : IComparable<SpriteSortItem>

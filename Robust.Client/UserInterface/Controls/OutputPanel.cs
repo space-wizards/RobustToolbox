@@ -218,6 +218,7 @@ namespace Robust.Client.UserInterface.Controls
             // This stack contains the format tag to RETURN TO when popped off.
             // So when a new color tag gets hit this stack gets the previous color pushed on.
             var context = new MarkupDrawingContext(2);
+            Color? styleColor = TryGetStyleProperty<Color>(Label.StylePropertyFontColor, out var color) ? color : null;
 
             foreach (ref var entry in _entries)
             {
@@ -243,7 +244,8 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                entry.Draw(_tagManager, handle, font, contentBox, entryOffset, context, UIScale);
+                entry.Draw(_tagManager, handle, font, contentBox, entryOffset, context, UIScale,
+                    fallbackColor: styleColor);
 
                 entryOffset += entry.Height + lineSeparation;
             }

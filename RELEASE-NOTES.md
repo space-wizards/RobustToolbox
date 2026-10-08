@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fixed the `MapId` overloads of `RayCastSystem.CastRay`, `CastRayClosest` and `CastShape` missing entities parented directly to a map, i.e. anything off-grid.
+* Fixed the `MapId` overload of `RayCastSystem.CastRayClosest` returning the hit point in a grid's local coordinates when that hit was closer than one found on an earlier broadphase.
 
 ### Other
 

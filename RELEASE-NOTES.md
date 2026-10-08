@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * The default AnchorEntity method now snaps to tile center again.
+* Fixed the `MapId` overloads of `RayCastSystem.CastRay`, `CastRayClosest` and `CastShape` missing entities parented directly to a map, i.e. anything off-grid.
 
 ### Other
 

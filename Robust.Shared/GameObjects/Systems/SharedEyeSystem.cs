@@ -8,6 +8,12 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedEyeSystem : EntitySystem
 {
+    /// <summary>
+    /// Default number of texture pixels per world meter (one tile), used as the default of
+    /// <see cref="CVars.DisplayPixelsPerMeter"/>.
+    /// </summary>
+    public const int DefaultPixelsPerMeter = 32;
+
     [Dependency] private SharedViewSubscriberSystem _views = default!;
     [Dependency] protected SharedTransformSystem TransformSystem = default!;
 

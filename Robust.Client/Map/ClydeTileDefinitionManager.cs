@@ -124,7 +124,7 @@ namespace Robust.Client.Map
                 Image<Rgba32> image;
                 using (var stream = _manager.ContentFileRead("/Textures/noTile.png"))
                 {
-                    image = Image.Load<Rgba32>(stream);
+                    image = ImageOps.LoadImage<Rgba32>(stream);
                 }
 
                 image.Blit(new UIBox2i(0, 0, tileSize, tileSize), sheet, Vector2i.Zero);
@@ -147,7 +147,7 @@ namespace Robust.Client.Map
 
                 using (var stream = _manager.ContentFileRead(path))
                 {
-                    image = Image.Load<Rgba32>(stream);
+                    image = ImageOps.LoadImage<Rgba32>(stream);
                 }
 
                 if (image.Width != (tileSize * def.Variants) || image.Height != tileSize)
@@ -184,7 +184,7 @@ namespace Robust.Client.Map
 
                     using (var stream = _manager.ContentFileRead(edge))
                     {
-                        image = Image.Load<Rgba32>(stream);
+                        image = ImageOps.LoadImage<Rgba32>(stream);
                     }
 
                     if (image.Width != tileSize || image.Height != tileSize)

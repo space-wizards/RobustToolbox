@@ -92,7 +92,6 @@ namespace Robust.Client.ResourceManagement
                 var path = data.Path;
                 images = RsiLoading.LoadImages(
                     metadata,
-                    SixLabors.ImageSharp.Configuration.Default,
                     name =>
                     {
                         var texPath = path / (name + ".png");
@@ -131,7 +130,7 @@ namespace Robust.Client.ResourceManagement
             Image<Rgba32> image;
             using (rsicFile)
             {
-                image = Image.Load<Rgba32>(rsicFile);
+                image = ImageOps.LoadImage<Rgba32>(rsicFile);
             }
 
             data.AtlasSheet = image;

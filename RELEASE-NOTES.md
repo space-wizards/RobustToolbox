@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Engine image loading (textures, RSIs, tiles, window icons) no longer decodes TIFF images.
 
 ### New features
 

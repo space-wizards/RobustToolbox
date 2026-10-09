@@ -265,7 +265,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 using var stream = _resManager.ContentFileRead(file);
-                yield return Image.Load<Rgba32>(stream);
+                yield return ImageOps.LoadImage<Rgba32>(stream);
             }
         }
 

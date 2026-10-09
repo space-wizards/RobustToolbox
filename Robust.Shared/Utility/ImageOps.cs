@@ -1,13 +1,42 @@
 ﻿using System;
+using System.IO;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
+using Fmt = SixLabors.ImageSharp.Formats;
+using ImageConfiguration = SixLabors.ImageSharp.Configuration;
 
 namespace Robust.Shared.Utility;
 
 // Definitely a "kick the can down the road" for not moving these immediately to shared to avoid a breaking change.
 internal static class ImageOps
 {
+    // Every default format except TIFF, whose decoder is vulnerable (GHSA-wmxv-xphr-5c9g).
+    private static readonly DecoderOptions ResourceDecoderOptions = new()
+    {
+        Configuration = new ImageConfiguration(
+            new Fmt.Png.PngConfigurationModule(),
+            new Fmt.Jpeg.JpegConfigurationModule(),
+            new Fmt.Gif.GifConfigurationModule(),
+            new Fmt.Bmp.BmpConfigurationModule(),
+            new Fmt.Pbm.PbmConfigurationModule(),
+            new Fmt.Tga.TgaConfigurationModule(),
+            new Fmt.Webp.WebpConfigurationModule(),
+            new Fmt.Qoi.QoiConfigurationModule())
+        {
+            PreferContiguousImageBuffers = true, // Needed by GetPixelSpan.
+        },
+    };
+
+    /// <summary>
+    ///     Use instead of <see cref="Image.Load{TPixel}(Stream)"/> for resources. Doesn't decode TIFF.
+    /// </summary>
+    public static Image<T> LoadImage<T>(Stream stream) where T : unmanaged, IPixel<T>
+    {
+        return Image.Load<T>(ResourceDecoderOptions, stream);
+    }
+
     /// <summary>
     ///     Blit an image into another, with the specified offset.
     /// </summary>

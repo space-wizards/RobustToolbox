@@ -1,0 +1,9 @@
+- files: ["NotoSansMono-Regular.ttf"]
+  license: "OFL-1.1"
+  copyright: "Copyright 2022 The Noto Project Authors (https://github.com/notofonts/)"
+  source: "https://notofonts.github.io/"
+
+- files: ["NotoSans-Regular.ttf"]
+  license: "OFL-1.1"
+  copyright: "Copyright 2022 The Noto Project Authors (https://github.com/notofonts/)"
+  source: "https://notofonts.github.io/"

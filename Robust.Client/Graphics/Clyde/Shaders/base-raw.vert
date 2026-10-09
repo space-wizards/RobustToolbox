@@ -6,9 +6,9 @@
 // Colour modulation.
 /*layout (location = 3)*/ attribute vec4 modulate;
 
-varying vec2 UV;
-varying vec2 UV2;
-varying vec2 SCREEN_UV;
+varying highp vec2 UV;
+varying highp vec2 UV2;
+varying highp vec2 SCREEN_UV;
 
 // Maybe we should merge these CPU side.
 // idk yet.

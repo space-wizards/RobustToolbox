@@ -183,7 +183,7 @@ internal sealed partial class ListMapsCommand : LocalizedEntityCommands
         }
 
         // Trim the newline
-        shell.WriteLine(msg.ToString()[..^1]);
+        shell.WriteLine(msg.ToString().TrimEnd('\n'));
     }
 }
 
@@ -213,6 +213,6 @@ internal sealed partial class ListGridsCommand : LocalizedEntityCommands
                 uid, xform.MapID, uid, worldPos.X, worldPos.Y);
         }
 
-        shell.WriteLine(msg.ToString()[..^1]);
+        shell.WriteLine(msg.ToString().TrimEnd('\n'));
     }
 }

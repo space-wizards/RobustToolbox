@@ -12,7 +12,7 @@ public abstract partial class SharedContainerSystem
 {
 
     /// <summary>
-    /// Attempts to insert the entity into this container.
+    /// Attempts to insert the entity into this container (removing it from its current container, if needed)
     /// </summary>
     /// <remarks>
     /// If the insertion is successful, the inserted entity will end up parented to the
@@ -22,7 +22,8 @@ public abstract partial class SharedContainerSystem
     /// <param name="container">The container to insert into.</param>
     /// <param name="containerXform">The container's transform component.</param>
     /// <param name="force">Whether to bypass normal insertion checks.</param>
-    /// <returns>False if the entity could not be inserted.</returns>
+    /// <param name="forceRemoval">Whether to bypass normal removal checks (forcing the entity out of current container, if it's inside one)</param>
+    /// <returns>False if the entity could not be removed from current container and inserted into target container.</returns>
     /// <exception cref="InvalidOperationException">
     /// Thrown if this container is a child of the entity,
     /// which would cause infinite loops.
@@ -30,7 +31,8 @@ public abstract partial class SharedContainerSystem
     public bool Insert(Entity<TransformComponent?, MetaDataComponent?, PhysicsComponent?> toInsert,
         BaseContainer container,
         TransformComponent? containerXform = null,
-        bool force = false)
+        bool force = false,
+        bool forceRemoval = false)
     {
         var (uid, transform, meta, physics) = toInsert;
 
@@ -75,7 +77,7 @@ public abstract partial class SharedContainerSystem
         if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
             TryComp(transform.ParentUid, out ContainerManagerComponent? oldManager) &&
             TryGetContainingContainer(transform.ParentUid, toInsert, out var oldContainer, oldManager) &&
-            !Remove((uid, transform, meta), oldContainer, reparent: false, force: false))
+            !Remove((uid, transform, meta), oldContainer, reparent: false, force: forceRemoval))
         {
             // failed to remove from container --> cannot insert.
             return false;
@@ -140,18 +142,25 @@ public abstract partial class SharedContainerSystem
     /// Attempts to insert an entity into a container. If it fails, it will instead drop the entity next to the
     /// container entity.
     /// </summary>
+    /// <param name="toInsert">The entity to insert.</param>
+    /// <param name="container">The container to insert into.</param>
+    /// <param name="containerXform">The container's transform component.</param>
+    /// <param name="forceInsertion">Whether to bypass normal insertion checks.</param>
+    /// <param name="forceRemoval">Whether to bypass normal removal checks (forcing the entity out of current container, if it's inside one)</param>
     /// <returns>Whether or not the entity was successfully inserted</returns>
     public bool InsertOrDrop(Entity<TransformComponent?, MetaDataComponent?, PhysicsComponent?> toInsert,
         BaseContainer container,
-        TransformComponent? containerXform = null)
+        TransformComponent? containerXform = null,
+        bool forceInsertion = false,
+        bool forceRemoval = false)
     {
         if (!Resolve(toInsert.Owner, ref toInsert.Comp1) || !Resolve(container.Owner, ref containerXform))
             return false;
 
-        if (Insert(toInsert, container, containerXform))
+        if (Insert(toInsert, container, containerXform, force: forceInsertion, forceRemoval: forceRemoval))
             return true;
 
-        _transform.DropNextTo(toInsert, (container.Owner, containerXform));
+        _transform.DropNextTo(toInsert, (container.Owner, containerXform), forceInsertion: forceInsertion, forceRemoval: forceRemoval);
         return false;
     }
 

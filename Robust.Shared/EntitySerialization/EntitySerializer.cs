@@ -38,7 +38,8 @@ namespace Robust.Shared.EntitySerialization;
 public sealed partial class EntitySerializer : ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
     ITypeSerializer<NetEntity, ValueDataNode>,
-    ITypeSerializer<MapId, ValueDataNode>
+    ITypeSerializer<MapId, ValueDataNode>,
+    ITypeSerializer<EntityRelation, ValueDataNode>
 {
     public const int MapFormatVersion = 7;
     // v6->v7: PR #5572 - Added more metadata, List maps/grids/orphans, include some life-stage information
@@ -1152,6 +1153,36 @@ public sealed partial class EntitySerializer : ISerializationContext,
 
         _log.Error($"Attempted to serialize invalid map id {value} while serializing component '{CurrentComponent}' on entity '{EntMan.ToPrettyString(uid)}'");
         return new ValueDataNode("invalid");
+    }
+
+    ValidationNode ITypeValidator<EntityRelation, ValueDataNode>.Validate(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        ISerializationContext? context)
+    {
+        return seri.ValidateNode<EntityUid?>(node, context);
+    }
+
+    EntityRelation ITypeReader<EntityRelation, ValueDataNode>.Read(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        SerializationHookContext hookCtx,
+        ISerializationContext? ctx,
+        ISerializationManager.InstantiationDelegate<EntityRelation>? instanceProvider)
+    {
+        return new EntityRelation(seri.Read<EntityUid?>(node, ctx));
+    }
+
+    DataNode ITypeWriter<EntityRelation>.Write(
+        ISerializationManager seri,
+        EntityRelation value,
+        IDependencyCollection deps,
+        bool alwaysWrite,
+        ISerializationContext? ctx)
+    {
+        return seri.WriteValue(value.Entity, alwaysWrite, ctx);
     }
 
     #endregion

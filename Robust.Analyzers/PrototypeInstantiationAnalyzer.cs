@@ -40,7 +40,7 @@ public sealed class PrototypeInstantiationAnalyzer : DiagnosticAnalyzer
         if (ctx.Operation is not IObjectCreationOperation { Type: { } resultType } creationOp)
             return;
 
-        if (!TypeSymbolHelper.ImplementsInterface(resultType, prototypeInterface))
+        if (!resultType.ImplementsInterface(prototypeInterface))
             return;
 
         ctx.ReportDiagnostic(Diagnostic.Create(Rule, creationOp.Syntax.GetLocation()));

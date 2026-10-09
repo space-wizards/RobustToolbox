@@ -616,10 +616,10 @@ public class Generator : IIncrementalGenerator
 
     private static string GetReadCompMethod(DataDefinition definition)
     {
-        var inheritsComp = TypeSymbolHelper.Inherits(definition.Type, ComponentName);
+        var inheritsComp = definition.Type.InheritsFrom(ComponentName);
         if (!inheritsComp)
         {
-            if (!TypeSymbolHelper.ShittyTypeMatch(definition.Type, ComponentName)) return string.Empty;
+            if (!definition.Type.ShittyTypeMatch(ComponentName)) return string.Empty;
 
             return """
                 public virtual void ReadComp(

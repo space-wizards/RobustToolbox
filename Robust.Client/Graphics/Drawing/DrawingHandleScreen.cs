@@ -113,8 +113,9 @@ namespace Robust.Client.Graphics
 
             for (var i = 0; i <= segments; i++)
             {
-                var angle = i / (float) segments * MathHelper.TwoPi;
-                var pos = new Vector2(MathF.Sin(angle), MathF.Cos(angle));
+                var angle = i / (float) segments * Math.Tau;
+                var (sin, cos) = Math.SinCos(angle);
+                var pos = new Vector2((float) sin, (float) cos);
 
                 buffer[i] = position + pos * radius;
             }

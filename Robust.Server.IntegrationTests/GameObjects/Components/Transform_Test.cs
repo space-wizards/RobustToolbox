@@ -190,7 +190,7 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             XformSystem.SetParent(child, childTrans, parent, parentXform: parentTrans);
 
             //Act
-            XformSystem.SetLocalRotationNoLerp(parent, new Angle(MathHelper.Pi / 2), parentTrans);
+            XformSystem.SetLocalRotationNoLerp(parent, new Angle(MathHelper.PiOver2), parentTrans);
 
             //Assert
             var result = XformSystem.GetWorldPosition(childTrans);
@@ -217,7 +217,7 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             XformSystem.SetParent(child, childTrans, parent, parentXform: parentTrans);
 
             //Act
-            XformSystem.SetLocalRotationNoLerp(parent, new Angle(MathHelper.Pi / 2), parentTrans);
+            XformSystem.SetLocalRotationNoLerp(parent, new Angle(MathHelper.PiOver2), parentTrans);
 
             //Assert
             var result = XformSystem.GetWorldPosition(childTrans);
@@ -255,7 +255,7 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             XformSystem.SetParent(node4, node4Trans, node3, parentXform: node3Trans);
 
             //Act
-            XformSystem.SetLocalRotationNoLerp(node1, new Angle(MathHelper.Pi / 2), node1Trans);
+            XformSystem.SetLocalRotationNoLerp(node1, new Angle(MathHelper.PiOver2), node1Trans);
 
             //Assert
             var result = XformSystem.GetWorldPosition(node4Trans);
@@ -337,7 +337,7 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             // Act
             var oldWpos = XformSystem.GetWorldPosition(node3Trans);
 
-            var angle180 = new Angle(MathHelper.Pi);
+            var angle180 = new Angle(Math.PI);
             for (var i = 0; i < 100; i++)
             {
                 XformSystem.SetLocalRotationNoLerp(node1, node1Trans.LocalRotation + angle180, node1Trans);
@@ -387,7 +387,7 @@ namespace Robust.Server.IntegrationTests.GameObjects.Components
             XformSystem.SetParent(node4, node4Trans, node3, parentXform: node3Trans);
 
             //Act
-            XformSystem.SetLocalRotation(node1, new Angle(MathHelper.Pi / 6.37), node1Trans);
+            XformSystem.SetLocalRotation(node1, new Angle(Math.PI / 6.37), node1Trans);
             XformSystem.SetWorldPosition(node1, new Vector2(1, 1));
 
             var worldMat = XformSystem.GetWorldMatrix(node4Trans);

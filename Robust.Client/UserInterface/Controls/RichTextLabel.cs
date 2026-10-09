@@ -204,7 +204,9 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, _drawingContext, UIScale, LineHeightScale, ActualFontOutline);
+            Color? styleColor = TryGetStyleProperty<Color>(Label.StylePropertyFontColor, out var color) ? color : null;
+            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, _drawingContext, UIScale, LineHeightScale, ActualFontOutline,
+                styleColor);
         }
 
         protected override void StylePropertiesChanged()

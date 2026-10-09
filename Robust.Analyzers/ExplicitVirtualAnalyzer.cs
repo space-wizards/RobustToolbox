@@ -18,7 +18,7 @@ public sealed class ExplicitVirtualAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdExplicitVirtual,
         "Class must be explicitly marked as [Virtual], abstract, static, or sealed",
         "Class must be explicitly marked as [Virtual], abstract, static, or sealed",
-        "Usage",
+        DiagnosticCategories.Design,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description: "Class must be explicitly marked as [Virtual], abstract, static, or sealed.");
@@ -27,7 +27,7 @@ public sealed class ExplicitVirtualAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdExclusiveVirtual,
         "A class marked as [Virtual] cannot be abstract, static, or sealed",
         "A class marked as [Virtual] cannot be abstract, static, or sealed",
-        "Usage",
+        DiagnosticCategories.Design,
         DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         description: "A class marked as [Virtual] cannot be abstract, static, or sealed.");

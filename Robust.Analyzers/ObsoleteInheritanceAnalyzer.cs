@@ -15,7 +15,7 @@ public sealed class ObsoleteInheritanceAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdObsoleteInheritance,
         "Parent type has obsoleted inheritance",
         "Type '{0}' inherits from '{1}', which has obsoleted inheriting from itself",
-        "Usage",
+        DiagnosticCategories.Design,
         DiagnosticSeverity.Warning,
         true);
 
@@ -23,7 +23,7 @@ public sealed class ObsoleteInheritanceAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdObsoleteInheritanceWithMessage,
         "Parent type has obsoleted inheritance",
         "Type '{0}' inherits from '{1}', which has obsoleted inheriting from itself: \"{2}\"",
-        "Usage",
+        DiagnosticCategories.Design,
         DiagnosticSeverity.Warning,
         true);
 

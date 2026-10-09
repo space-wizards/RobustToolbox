@@ -30,7 +30,7 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdUseGenericVariant,
         "Consider using the generic variant of this method",
         "Consider using the generic variant of this method to avoid potential allocations",
-        "Usage",
+        DiagnosticCategories.Performance,
         DiagnosticSeverity.Warning,
         true,
         "Consider using the generic variant of this method to avoid potential allocations.");
@@ -39,7 +39,7 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdUseGenericVariantInvalidUsage,
         "Invalid generic variant provided",
         "Generic variant provided mismatches the amount of type parameters of non-generic variant",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "The non-generic variant should have at least as many type parameter at the beginning of the method as there are generic type parameters on the generic variant.");
@@ -48,7 +48,7 @@ public sealed class PreferGenericVariantAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdUseGenericVariantAttributeValueError,
         "Failed resolving generic variant value",
         "Failed resolving generic variant value: {0}",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Error,
         true,
         "Consider using nameof to avoid any typos.");

@@ -17,7 +17,7 @@ public sealed class TaskResultAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdTaskResult,
         "Risk of deadlock from accessing Task<T>.Result",
         "Accessing Task<T>.Result is dangerous and can cause deadlocks in some contexts. If you understand how this works and are certain that you aren't causing a deadlock here, mute this error with #pragma.",
-        "Usage",
+        DiagnosticCategories.Performance,
         DiagnosticSeverity.Error,
         true);
 

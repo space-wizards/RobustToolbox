@@ -17,7 +17,7 @@ public sealed class ForbidLiteralAnalyzer : DiagnosticAnalyzer
         Diagnostics.IdForbidLiteral,
         "Parameter forbids literal values",
         "The {0} parameter of {1} forbids literal values",
-        "Usage",
+        DiagnosticCategories.Usage,
         DiagnosticSeverity.Warning,
         true,
         "Pass in a validated wrapper type like ProtoId, or a const or static value."

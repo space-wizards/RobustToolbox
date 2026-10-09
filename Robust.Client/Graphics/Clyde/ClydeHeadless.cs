@@ -14,6 +14,7 @@ using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
@@ -190,7 +191,7 @@ namespace Robust.Client.Graphics.Clyde
         public OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
-            using (var image = Image.Load<Rgba32>(stream))
+            using (var image = ImageOps.LoadImage<Rgba32>(stream))
             {
                 return LoadTextureFromImage(image, name, loadParams);
             }

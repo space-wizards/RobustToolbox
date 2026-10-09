@@ -111,7 +111,7 @@ public sealed class AssetPassPackRsis : AssetPass
             return null;
 
         var frameCounts = RsiLoading.CalculateFrameCounts(metadata);
-        var images = RsiLoading.LoadImages(metadata, _imageConfiguration, name => dat.StatesFound[name].Open());
+        var images = RsiLoading.LoadImages(metadata, name => dat.StatesFound[name].Open());
 
         try
         {

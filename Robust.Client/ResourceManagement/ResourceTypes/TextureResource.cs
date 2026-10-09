@@ -62,7 +62,7 @@ namespace Robust.Client.ResourceManagement
         {
             using (var stream = cache.ContentFileRead(data.Path))
             {
-                data.Image = Image.Load<Rgba32>(stream);
+                data.Image = ImageOps.LoadImage<Rgba32>(stream);
             }
         }
 
@@ -96,7 +96,7 @@ namespace Robust.Client.ResourceManagement
         {
             var loadParams = TryLoadTextureParameters(resManager, path) ?? TextureLoadParameters.Default;
             using var stream = resManager.ContentFileRead(path);
-            using var image = Image.Load<Rgba32>(stream);
+            using var image = ImageOps.LoadImage<Rgba32>(stream);
             return clyde.LoadTextureFromImage(image, path.ToString(), loadParams);
         }
 

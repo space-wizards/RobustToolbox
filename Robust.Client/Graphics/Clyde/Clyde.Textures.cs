@@ -39,7 +39,7 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.Assert(_gameThread == Thread.CurrentThread);
 
             // Load using Rgba32.
-            using var image = Image.Load<Rgba32>(stream);
+            using var image = ImageOps.LoadImage<Rgba32>(stream);
 
             return LoadTextureFromImage(image, name, loadParams);
         }

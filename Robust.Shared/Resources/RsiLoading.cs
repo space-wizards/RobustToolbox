@@ -7,7 +7,6 @@ using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using ImageConfiguration = SixLabors.ImageSharp.Configuration;
 
@@ -154,17 +153,9 @@ internal static class RsiLoading
         return counts;
     }
 
-    internal static Image<Rgba32>[] LoadImages(
-        RsiMetadata metadata,
-        ImageConfiguration configuration,
-        Func<string, Stream> openStream)
+    internal static Image<Rgba32>[] LoadImages(RsiMetadata metadata, Func<string, Stream> openStream)
     {
         var images = new Image<Rgba32>[metadata.States.Length];
-
-        var decoderOptions = new DecoderOptions
-        {
-            Configuration = configuration,
-        };
 
         var frameSize = metadata.Size;
 
@@ -175,7 +166,7 @@ internal static class RsiLoading
                 var state = metadata.States[i];
                 using var stream = openStream(state.StateId);
 
-                var image = Image.Load<Rgba32>(decoderOptions, stream);
+                var image = ImageOps.LoadImage<Rgba32>(stream);
                 images[i] = image;
 
                 if (image.Width % frameSize.X != 0 || image.Height % frameSize.Y != 0)

@@ -1245,6 +1245,14 @@ public abstract partial class SharedTransformSystem
 
     #region World Matrix
 
+    /// <summary>
+    /// Given an <see cref="EntityUid"/> U, yields M[U->world], the matrix from U's frame to the world frame.
+    /// The matrix stores U's world position and rotation, so it is U's pose in the world.
+    /// Applying it to a point or pose measured in U's frame rotates, then shifts it.
+    /// Thus, it yields the same point or pose measured in the world.
+    /// </summary>
+    /// <param name="uid">The entity whose frame the input point or pose is measured in.</param>
+    /// <returns>A rotate-then-shift pose matrix from the entity to the world.</returns>
     [Pure]
     public Matrix3x2 GetWorldMatrix(EntityUid uid)
     {

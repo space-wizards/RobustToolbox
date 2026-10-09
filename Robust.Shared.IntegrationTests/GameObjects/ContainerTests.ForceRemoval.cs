@@ -20,7 +20,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
     {
         /// <summary>
         /// Creates a situation where an unremovable item is created and tries to remove it from the container
-        /// heavily based on <see cref="Robust.UnitTesting.Shared.GameObjects.ContainerTests.TestContainerExpectedEntityDeleted">TestContainerExpectedEntityDeleted</see>.
+        /// heavily based on ContainerTests.TestContainerExpectedEntityDeleted (now deleted).
         /// <br/>
         /// could probably cut down on a lot of the boilerplate here
         /// </summary>
@@ -83,7 +83,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
                 mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
     
-                sEntityUid = sEntManager.SpawnEntity(null, mapPos);
+                sEntityUid = sEntManager.Spawn(null, mapPos);
                 sMetadataSys.SetEntityName(sEntityUid, "Container");
                 sContainerSys.EnsureContainer<Container>(sEntityUid, "dummy");
     
@@ -102,7 +102,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
     
             await server.WaitAssertion(() =>
             {
-                sItemUid = sEntManager.SpawnEntity(null, mapPos);
+                sItemUid = sEntManager.Spawn(null, mapPos);
                 netEnt = sEntManager.GetNetEntity(sItemUid);
                 sMetadataSys.SetEntityName(sItemUid, "Item");
                 // make the item unremovable
@@ -123,22 +123,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
     
             var cUid = cEntManager.GetEntity(sEntManager.GetNetEntity(sEntityUid));
     
-            await client.WaitAssertion(() =>
-            {
-                if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cUid, out var containerManagerComp))
-                {
-                    Assert.Fail();
-                    return;
-                }
-    
-                var container = cContainerSys.GetContainer(cUid, "dummy", containerManagerComp);
-                Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
-                Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
-    
-                Assert.That(cContainerSys.ExpectedEntities.ContainsKey(netEnt));
-                Assert.That(cContainerSys.ExpectedEntities.Count, Is.EqualTo(1));
-            });
-    
             await server.WaitAssertion(() =>
             {
                 Assume.That(sEntManager.EntityExists(sItemUid), Is.True, "Item does not exist :(");
@@ -150,8 +134,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 
                 Assert.That(sContainerSys.TryRemoveFromContainer(sItemUid, force: true), Is.True, "Unremovable item wasn't removed from container despite being forced!");
                 Assert.That(sContainerSys.IsEntityInContainer(sItemUid), Is.False, "Unremovable item still in container after forced removal :(");
-    
-                //sEntManager.DeleteEntity(sItemUid);
             });
     
             await server.WaitRunTicks(1);
@@ -167,10 +149,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
     
                 var container = cContainerSys.GetContainer(cUid, "dummy", containerManagerComp);
                 Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
-                Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
+                Assert.That(container.PvsDetachedEntities.Count, Is.EqualTo(0));
     
-                Assert.That(!cContainerSys.ExpectedEntities.ContainsKey(netEnt));
-                Assert.That(cContainerSys.ExpectedEntities.Count, Is.EqualTo(0));
+                Assert.That(!cContainerSys.PvsDetachedEntities.ContainsKey(netEnt));
+                Assert.That(cContainerSys.PvsDetachedEntities.Count, Is.EqualTo(0));
             });
     
             await client.WaitPost(() => clientNetManager.ClientDisconnect(""));

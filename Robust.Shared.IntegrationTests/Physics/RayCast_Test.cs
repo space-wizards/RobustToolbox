@@ -213,7 +213,7 @@ internal sealed class RayCast_Test
         }
 
         // Spawn a wall in the middle tile.
-        var wall = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(1.5f, 0.5f)));
+        var wall = entManager.SpawnAttachedTo(null, new EntityCoordinates(grid.Owner, new Vector2(1.5f, 0.5f)));
 
         var physics = entManager.AddComponent<PhysicsComponent>(wall);
         var poly = new PolygonShape();
@@ -254,7 +254,7 @@ internal sealed class RayCast_Test
         Vector2 position,
         bool hard)
     {
-        var uid = entManager.SpawnEntity(null, new EntityCoordinates(parent, position));
+        var uid = entManager.SpawnAttachedTo(null, new EntityCoordinates(parent, position));
         var physics = entManager.AddComponent<PhysicsComponent>(uid);
         fixtureSystem.CreateFixture(uid, "fix1", new Fixture(new PhysShapeCircle(0.25f), 1, 1, hard));
         physicsSystem.SetCanCollide(uid, true, body: physics);

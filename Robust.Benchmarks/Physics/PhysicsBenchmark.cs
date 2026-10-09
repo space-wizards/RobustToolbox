@@ -73,7 +73,7 @@ public class PhysicsBenchmark
 
         for ( int i = 0; i < rowCount; ++i )
         {
-            var groundUid = entManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var groundUid = entManager.Spawn(null, new MapCoordinates(0, 0, mapId));
             var ground = entManager.AddComponent<PhysicsComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(-0.5f * 2.0f * groundWidth, groundY), new Vector2(0.5f * 2.0f * groundWidth, groundY));
@@ -112,7 +112,7 @@ public class PhysicsBenchmark
             {
                 float x = ( i + 1.0f ) * extent + 2.0f * ( j - i ) * extent + centerX - 0.5f;
 
-                var boxUid = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(x, y), mapId));
+                var boxUid = entManager.Spawn(null, new MapCoordinates(new Vector2(x, y), mapId));
                 var box = entManager.AddComponent<PhysicsComponent>(boxUid);
                 physics.SetBodyType(boxUid, BodyType.Dynamic, body: box);
 
@@ -147,7 +147,7 @@ public class PhysicsBenchmark
             var smashBox = new PolygonShape();
             smashBox.SetAsBox(4f, 4f);
 
-            var bodyUid = entManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
+            var bodyUid = entManager.Spawn(null, new MapCoordinates(0f, 10f, mapId));
             var body = entManager.AddComponent<PhysicsComponent>(bodyUid);
 
             physics.SetBodyType(bodyUid, BodyType.Dynamic, body: body);
@@ -170,7 +170,7 @@ public class PhysicsBenchmark
         {
             for ( int j = 0; j < rows; ++j )
             {
-                var bodyUid = entManager.SpawnEntity(null, new MapCoordinates(i * d + 30f, ( j - rows / 2.0f ) * d, mapId));
+                var bodyUid = entManager.Spawn(null, new MapCoordinates(i * d + 30f, ( j - rows / 2.0f ) * d, mapId));
                 var body = entManager.AddComponent<PhysicsComponent>(bodyUid);
 
                 physics.SetBodyType(bodyUid, BodyType.Dynamic, body: body);
@@ -232,13 +232,13 @@ public class PhysicsBenchmark
         physics.SetGravity(new Vector2(0f, -9.8f));
 
         {
-            var groundUid = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
+            var groundUid = entManager.Spawn(null, new MapCoordinates(0f, 0f, mapId));
             var ground = entManager.AddComponent<PhysicsComponent>(groundUid);
             // Due to lookup changes fixtureless bodies are invalid, so
             var cShape = new PhysShapeCircle(1f);
             fixtures.CreateFixture(groundUid, "fix1", new Fixture(cShape, 0, 0, false));
 
-            var bodyUid = entManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
+            var bodyUid = entManager.Spawn(null, new MapCoordinates(0f, 10f, mapId));
             var body = entManager.AddComponent<PhysicsComponent>(bodyUid);
 
             physics.SetBodyType(bodyUid, BodyType.Dynamic, body: body);
@@ -292,7 +292,7 @@ public class PhysicsBenchmark
 
                 for (var j = 0; j < gridCount; j++)
                 {
-                    var boxUid = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(x, y), mapId));
+                    var boxUid = entManager.Spawn(null, new MapCoordinates(new Vector2(x, y), mapId));
                     var body = entManager.AddComponent<PhysicsComponent>(boxUid);
                     physics.SetBodyType(boxUid, BodyType.Dynamic, body: body);
 

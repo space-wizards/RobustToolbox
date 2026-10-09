@@ -87,24 +87,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        // used for lerping
-
-        [ViewVariables]
-        public Vector2? NextPosition { get; internal set; }
-
-        [ViewVariables]
-        public Angle? NextRotation { get; internal set; }
-
-        [ViewVariables]
-        public Vector2 PrevPosition { get; internal set; }
-
-        [ViewVariables]
-        public Angle PrevRotation { get; internal set; }
-
-        [ViewVariables] public bool ActivelyLerping;
-
-        [ViewVariables] public GameTick LastLerp = GameTick.Zero;
-
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
         /// <summary>
@@ -369,38 +351,22 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Is this transform anchored to a grid tile?
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
+        [ViewVariables]
         public bool Anchored
         {
             get => _anchored;
-            [Obsolete("Use the SharedTransformSystem.AnchorEntity/Unanchor methods instead.")]
-            set
-            {
-                // This will be set again when the transform initializes, actually anchoring it.
-                if (!Initialized)
-                {
-                    _anchored = value;
-                }
-                else if (value && !_anchored && _entMan.EntitySysManager.GetEntitySystem<SharedMapSystem>().TryFindGridAt(MapPosition, out _, out var grid))
-                {
-                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(Owner, this, grid);
-                }
-                else if (!value && _anchored)
-                {
-                    // An anchored entity is always parented to the grid.
-                    // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
-                    // then this will be false.
-                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(Owner, this);
-                }
-            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        internal bool VVAnchored
+        {
+            get => Anchored;
+            set => _entMan.System<SharedTransformSystem>().TryAnchor((Owner, this, null), value);
         }
 
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
 
         [ViewVariables] public int ChildCount => _children.Count;
-
-        [ViewVariables] public EntityUid LerpParent;
-        public bool PredictedLerp;
 
         /// <summary>
         /// Detaches this entity from its parent.
@@ -608,32 +574,6 @@ namespace Robust.Shared.GameObjects
         ///     If true, the entity is being detached to null-space
         /// </summary>
         public readonly bool Detaching = detaching;
-    }
-
-    /// <summary>
-    /// Raised when an entity is re-anchored to another grid.
-    /// </summary>
-    [ByRefEvent]
-    public readonly struct ReAnchorEvent
-    {
-        public readonly EntityUid Entity;
-        public readonly EntityUid OldGrid;
-        public readonly EntityUid Grid;
-        public readonly TransformComponent Xform;
-
-        /// <summary>
-        /// Tile on both the old and new grid being re-anchored.
-        /// </summary>
-        public readonly Vector2i TilePos;
-
-        public ReAnchorEvent(EntityUid uid, EntityUid oldGrid, EntityUid grid, Vector2i tilePos, TransformComponent xform)
-        {
-            Entity = uid;
-            OldGrid = oldGrid;
-            Grid = grid;
-            TilePos = tilePos;
-            Xform = xform;
-        }
     }
 
     /// <summary>

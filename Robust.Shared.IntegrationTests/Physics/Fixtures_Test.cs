@@ -123,12 +123,10 @@ internal sealed class Fixtures_Test
     [Test]
     public void FixtureProxyCleanupIsIdempotent()
     {
-        var (sim, ent, fixture, proxy, _, _, _, lookup, broadphase) = SetupQueuedProxy();
-        var entManager = sim.Resolve<IEntityManager>();
-        var xform = entManager.GetComponent<TransformComponent>(ent);
+        var (sim, _, fixture, proxy, _, _, _, lookup, broadphase) = SetupQueuedProxy();
 
-        lookup.ReleaseProxies(ent, fixture, xform);
-        lookup.ReleaseProxies(ent, fixture, xform);
+        lookup.ReleaseProxies(fixture);
+        lookup.ReleaseProxies(fixture);
 
         AssertProxyReleased(sim, fixture, proxy);
         Assert.That(broadphase.StaticTree.GetProxy(proxy.ProxyId), Is.Null);
@@ -204,7 +202,7 @@ internal sealed class Fixtures_Test
         var entManager = sim.Resolve<IEntityManager>();
         var fixturesSystem = entManager.System<FixtureSystem>();
         var physicsSystem = entManager.System<SharedPhysicsSystem>();
-        var ent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var ent = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
         var body = entManager.AddComponent<PhysicsComponent>(ent);
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);

@@ -18,9 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-* Fixed a partial prototype exception message mentioning the wrong tag to use to combine data at a specific index on a sequence. The correct one is !CombineIndex:0 for example.
-* Fixed components with delta states causing a serializer error if they contain an automatically networked field of an abstract type. This fixes usages of SoundSpecifier, for example.
-* Fixed an exception caused by inheriting an entity that has had a component removed by a partial prototype without removing the component data.
+*None yet*
 
 ### Other
 
@@ -49,11 +47,84 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* `SpawnEntity` and the `EntityCoordinates` version of `SpawnEntities` have been marked as obsolete.
 
 ### Internal
 
 *None yet*
+
+
+## 292.0.0
+
+### Breaking changes
+
+* `BoundUserInterfaceMessageAttempt` is now a by-ref struct. It can no longer be assigned to `CancellableEntityEventArgs`.
+* TransformComponent.Anchored setter is now removed. All anchoring is done via TransformSystem.TryAnchor / TransformSystem.AnchorEntity.
+* ReAnchorEvent has been removed for grid splitting and now normal unanchor / anchor events are raised.
+* Transform lerping has been reworked to handle dropped ticks and position corrections in cases of mispredicts.
+  It will also no longer raise MoveEvent on FrameUpdates as the TransformComponent fields will reflect the simulation data.
+  To get the render position on client use the equivalent Render methods e.g. GetRenderWorldPosition. This will have any relevant corrections or lerping applied.
+  Any teleports should call SnapRenderTransform to ensure lerping isn't run in scenarios where it is unwanted.
+
+### New features
+
+* Added SpriteComponent.LayerData for read-only list access to layers.
+* Persist the entity spawn menu placement mode in a CVar.
+* Added GetIntersectingTrees to ComponentTreeSystem for an allocation-free way to get the relevant trees.
+* Expose IClyde.MouseMove as an event for when the mouse is moved.
+
+### Bugfixes
+
+* Rollback the LastModifiedTick for components when re-running state handling on the client.
+* Fix `display.compat` and `display.angle` being set to true at the same time crashing the game.
+* Fix the client sometimes not re-applying container states correctly when using `EnsureEntity`.
+* Added some PendingAck locks to fix some race conditions around client connection state and PvsSystem Acks.
+
+### Internal
+
+* Removed internal parallel solving for islands to simplify physics code and significantly reduce allocations. Now all islands will be solved in parallel regardless of size.
+* Fix BroadphaseContactJob allocations.
+
+
+## 291.0.0
+
+### Breaking changes
+
+* Ignore ctrl + alt key bindings while AltGr is held.
+* Serialize PVS states asynchronously.
+
+### Bugfixes
+
+* Fix more instances of stale fixture proxies being erroneously cleared on the wrong tree.
+
+### Internal
+
+* Remove global container subscription to entity initialization.
+
+
+## 290.0.0
+
+### Breaking changes
+
+* Add missing proxies for predicted spawn methods.
+* Rename SetFallbackCluture to SetFallbackCulture
+
+### New features
+
+* `Control.Restyle` has been made public for manually restyling controls on edge cases.
+* `EntityManager.PredictedSpawn(string?,ComponentRegistry?,bool)`, `EntityManager.PredictedSpawn(string?,MapCoordinates,ComponentRegistry?,Angle)`, `EntityManager.PredictedSpawnAtPosition(string?,EntityCoordinates,Angle,ComponentRegistry?)`, and `EntityManager.PredictedSpawnInContainerOrDrop(string?,EntityUid,string,out bool,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)` now all have proxies for EntitySystems.
+
+### Bugfixes
+
+* Make OutputPanel orphan controls when modifying messages.
+* Don't invoke OnTextChanged when scrolling through commands.
+* Dirty BodyType on SetBodyType for physics.
+* Fix some PVS scenarios with physics dying.
+
+### Other
+
+* Rate-limited full game state requests.
+* Allow prototype uploads to pass unknown fields to server.
 
 
 ## 289.0.2

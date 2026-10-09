@@ -30,7 +30,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var map = sim.CreateMap().MapId;
-            var ent1 = entMan.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map));
+            var ent1 = entMan.Spawn(null, new MapCoordinates(Vector2.Zero, map));
 
             entMan.System<AnchoredSystemTests.MoveEventTestSystem>().ResetCounters();
             entMan.System<TransformSystem>().SetLocalPosition(ent1, Vector2.One);
@@ -48,12 +48,12 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var xformSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
             var mapId = sim.CreateMap().MapId;
 
-            var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
+            var parent = entManager.Spawn(null, new MapCoordinates(Vector2.One, mapId));
             var parentXform = entManager.GetComponent<TransformComponent>(parent);
             Assert.That(parentXform.LocalPosition, Is.EqualTo(Vector2.One));
 
-            var child1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
-            var child2 = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
+            var child1 = entManager.Spawn(null, new MapCoordinates(Vector2.One, mapId));
+            var child2 = entManager.Spawn(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
 
             var child1Xform = entManager.GetComponent<TransformComponent>(child1);
             var child2Xform = entManager.GetComponent<TransformComponent>(child2);
@@ -66,7 +66,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             Assert.That(mover1.Position, Is.EqualTo(Vector2.One));
             Assert.That(mover2.Position, Is.EqualTo(new Vector2(10f, 10f)));
 
-            var child3 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
+            var child3 = entManager.Spawn(null, new MapCoordinates(Vector2.One, mapId));
             var child3Xform = entManager.GetComponent<TransformComponent>(child3);
             xformSystem.SetParent(child3, child3Xform, child2, parentXform: child2Xform);
 
@@ -84,10 +84,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var xformSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
             var mapId = sim.CreateMap().MapId;
 
-            var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
+            var parent = entManager.Spawn(null, new MapCoordinates(Vector2.One, mapId));
             var parentXform = entManager.GetComponent<TransformComponent>(parent);
 
-            var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
+            var child = entManager.SpawnAttachedTo(null, new EntityCoordinates(parent, Vector2.Zero));
             var childXform = entManager.GetComponent<TransformComponent>(child);
 
             Assert.That(parentXform.MapID, Is.EqualTo(mapId));

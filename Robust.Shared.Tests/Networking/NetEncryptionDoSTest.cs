@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using System.Diagnostics;
+using Lidgren.Network;
 using NUnit.Framework;
 using Robust.Shared.Network;
 
@@ -7,6 +8,35 @@ namespace Robust.Shared.Tests.Networking;
 public sealed class NetEncryptionDoSTest
 {
     private const ulong Magic = 0x13377777_77777777;
+    private static readonly TimeSpan MessageTimeout = TimeSpan.FromSeconds(10);
+    private readonly List<NetPeer> _peers = new();
+
+    [TearDown]
+    public void TearDown()
+    {
+        // Yummy threading
+        // Ensure all this gets flushed before we shutdown.
+        foreach (var peer in _peers)
+        {
+            foreach (var connection in peer.Connections)
+            {
+                connection.Disconnect("bye bye", sendBye: false);
+            }
+        }
+
+        foreach (var peer in _peers)
+        {
+            Assert.That(() => peer.Connections.Count, Is.Zero.After(10_000).PollEvery(100),
+                $"{peer.GetType().Name} did not disconnect before shutdown.");
+        }
+
+        foreach (var peer in _peers)
+        {
+            peer.Shutdown(null);
+        }
+
+        _peers.Clear();
+    }
 
     [Test]
     [Description("A control test that ensures connecting in a test works.")]
@@ -18,12 +48,12 @@ public sealed class NetEncryptionDoSTest
 
         message.WriteVariableUInt64(Magic);
 
-        client.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+        Assert.That(client.SendMessage(message, NetDeliveryMethod.ReliableOrdered),
+            Is.EqualTo(NetSendResult.Sent).Or.EqualTo(NetSendResult.Queued));
 
         var packet = Receive(server);
 
         Assert.That(packet.ReadVariableUInt64(), Is.EqualTo(Magic));
-        server.Shutdown(null);
     }
 
     [Test]
@@ -39,12 +69,12 @@ public sealed class NetEncryptionDoSTest
 
         clientEnc.Encrypt(message);
 
-        client.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+        Assert.That(client.SendMessage(message, NetDeliveryMethod.ReliableOrdered),
+            Is.EqualTo(NetSendResult.Sent).Or.EqualTo(NetSendResult.Queued));
 
         var packet = Receive(server);
 
         Assert.That(serverEnc.TryDecrypt(packet), Is.True);
-        server.Shutdown(null);
     }
 
     [Test]
@@ -60,12 +90,12 @@ public sealed class NetEncryptionDoSTest
 
         clientEnc.Encrypt(message);
 
-        client.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+        Assert.That(client.SendMessage(message, NetDeliveryMethod.ReliableOrdered),
+            Is.EqualTo(NetSendResult.Sent).Or.EqualTo(NetSendResult.Queued));
 
         var packet = Receive(server);
 
         Assert.That(serverEnc.TryDecrypt(packet), Is.False);
-        server.Shutdown(null);
     }
 
     private static int[] _badMessages =
@@ -93,15 +123,14 @@ public sealed class NetEncryptionDoSTest
 
         // Don't encrypt at all.
 
-        client.SendMessage(message, NetDeliveryMethod.ReliableOrdered);
+        Assert.That(client.SendMessage(message, NetDeliveryMethod.ReliableOrdered),
+            Is.EqualTo(NetSendResult.Sent).Or.EqualTo(NetSendResult.Queued));
 
         var packet = Receive(server);
 
         Assert.That(packet.LengthBytes, Is.EqualTo(badMessageLength));
 
         Assert.That(serverEnc.TryDecrypt(packet), Is.False);
-
-        server.Shutdown(null);
     }
 
 
@@ -112,7 +141,9 @@ public sealed class NetEncryptionDoSTest
         const string id = "test";
         var client = new NetClient(new NetPeerConfiguration(id));
 
-        var server = new NetServer( new NetPeerConfiguration(id));
+        var server = new NetServer(new NetPeerConfiguration(id));
+        _peers.Add(client);
+        _peers.Add(server);
 
         client.Start();
         // Lidgren has no facilities for mocking this nicely.
@@ -121,45 +152,44 @@ public sealed class NetEncryptionDoSTest
 
         client.Connect("localhost", server.Port);
 
-        var ready = false;
-
-        while (!ready)
-        {
-            switch (server.WaitMessage(1000))
-            {
-                case { MessageType: NetIncomingMessageType.StatusChanged } msg:
-                {
-                    // hello there.
-                    var status = (NetConnectionStatus)msg.ReadByte();
-
-                    if (status == NetConnectionStatus.Connected)
-                        ready = true;
-
-                    break;
-                }
-            }
-        }
+        // The server can finish its handshake before the client updates its own status.
+        // Wait for both notifications before attempting to send any data.
+        client.Recycle(Receive(client, NetIncomingMessageType.StatusChanged));
+        server.Recycle(Receive(server, NetIncomingMessageType.StatusChanged));
 
         return (client, server);
     }
 
-    private NetIncomingMessage Receive(NetPeer peer)
+    private NetIncomingMessage Receive(NetPeer peer, NetIncomingMessageType messageType = NetIncomingMessageType.Data)
     {
-        NetIncomingMessage? found = null;
-
-        while (found == null)
+        var stopwatch = Stopwatch.StartNew();
+        while (stopwatch.Elapsed < MessageTimeout)
         {
-            switch (peer.WaitMessage(1000))
+            if (peer.WaitMessage(100) is not { } message)
+                continue;
+
+            if (message.MessageType == NetIncomingMessageType.StatusChanged)
             {
-                case { MessageType: NetIncomingMessageType.Data } msg:
+                var status = (NetConnectionStatus) message.ReadByte();
+                var reason = message.ReadString();
+                Assert.That(status, Is.Not.EqualTo(NetConnectionStatus.Disconnected),
+                    $"{peer.GetType().Name} disconnected while waiting for {messageType}: {reason}");
+
+                if (status != NetConnectionStatus.Connected)
                 {
-                    found = msg;
-                    break;
+                    peer.Recycle(message);
+                    continue;
                 }
             }
+
+            if (message.MessageType == messageType)
+                return message;
+
+            peer.Recycle(message);
         }
 
-        return found;
+        Assert.Fail($"{peer.GetType().Name} timed out after {MessageTimeout} waiting for {messageType}.");
+        return null!;
     }
 
     private (NetEncryption client, NetEncryption server) MakeEncryptionPair(bool disjointKey = false)

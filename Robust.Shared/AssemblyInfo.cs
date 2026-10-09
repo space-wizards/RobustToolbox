@@ -19,6 +19,8 @@
 [assembly: InternalsVisibleTo("Robust.Client.IntegrationTests")]
 [assembly: InternalsVisibleTo("Robust.Shared.IntegrationTests")]
 
+[assembly: AssemblySide(AssemblySide.Shared)]
+
 #if NET5_0_OR_GREATER
 [module: SkipLocalsInit]
 #endif

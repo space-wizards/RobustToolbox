@@ -14,9 +14,18 @@ namespace Robust.Shared.IoC
     /// <para>
     /// If you would like to run code after the dependencies have been injected, use <see cref="IPostInjectInit" />
     /// </para>
+    /// <param name="Mode">Injection mode</param>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Field)]
-    public sealed class DependencyAttribute : Attribute
+    public sealed class DependencyAttribute(IoCMode mode = IoCMode.Required) : Attribute
     {
+        public IoCMode Mode => mode;
+    }
+    public enum IoCMode
+    {
+        Required,
+        Optional,
+        Differed,
+        DifferedOptional,
     }
 }

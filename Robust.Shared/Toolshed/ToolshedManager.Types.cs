@@ -10,8 +10,11 @@ namespace Robust.Shared.Toolshed;
 public sealed partial class ToolshedManager
 {
     // If this gets updated, ensure that GetTransformer() is also updated
-    internal bool IsTransformableTo(Type left, Type right)
+    internal bool IsTransformableTo(Type left, Type right, bool allowGeneric = true)
     {
+        if ((left.IsGenericParameter || right.IsGenericParameter) && !allowGeneric)
+            return false;
+
         if (left.IsAssignableToGeneric(right, this))
             return true;
 

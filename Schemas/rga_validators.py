@@ -19,6 +19,7 @@ class License(Validator):
         "MIT",
         "CC SAMPLING+ 1.0",
         "OFL-1.1",
+        "Apache-2.0",
         "Custom" # implies that the license is described in the copyright field.
         ]
 

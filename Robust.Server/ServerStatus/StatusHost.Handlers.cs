@@ -45,7 +45,8 @@ namespace Robust.Server.ServerStatus
                 // Tags is optional technically but will be necessary practically for future organization.
                 // Content can override these if it wants (e.g. stealthmins).
                 ["name"] = _serverNameCache,
-                ["players"] = _playerManager.PlayerCount
+                ["players"] = _playerManager.PlayerCount,
+                ["engine_type"] = _cfg.GetCVar(CVars.BuildEngineType)
             };
 
             var tagsCache = _serverTagsCache;
@@ -88,9 +89,12 @@ namespace Robust.Server.ServerStatus
                 buildInfo = GetExternalBuildInfo();
             }
 
+            var authServers = new JsonArray();
+            authServers.Add(_cfg.GetCVar(CVars.AuthServer));
             var authInfo = new JsonObject
             {
                 ["mode"] = _netManager.Auth.ToString(),
+                ["auth_servers"] = authServers,
                 ["public_key"] = _netManager.CryptoPublicKey != null
                     ? Convert.ToBase64String(_netManager.CryptoPublicKey)
                     : null
@@ -134,6 +138,7 @@ namespace Robust.Server.ServerStatus
 
             return new JsonObject
             {
+                ["engine_type"] = buildInfo.Engine,
                 ["engine_version"] = buildInfo.EngineVersion,
                 ["fork_id"] = buildInfo.ForkId,
                 ["version"] = buildInfo.Version,
@@ -160,6 +165,7 @@ namespace Robust.Server.ServerStatus
             }
             return new JsonObject
             {
+                ["engine_type"] = _cfg.GetCVar(CVars.BuildEngineType),
                 ["engine_version"] = _cfg.GetCVar(CVars.BuildEngineVersion),
                 ["fork_id"] = fork,
                 ["version"] = acm.ManifestHash,

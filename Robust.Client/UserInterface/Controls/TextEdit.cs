@@ -1261,14 +1261,16 @@ public sealed partial class TextEdit : Control
             var lineBreakIndex = startLineIndex;
             var count = startIdx;
 
-            var selectionLower = _master.SelectionLower;
-            var selectionUpper = _master.SelectionUpper;
-
             baseLine.Y += startLineIndex * height;
-
-            int? selectStartPos = null;
-            int? selectEndPos = null;
-            var selecting = false;
+            var selectionLowerIndex = _master.SelectionLower.Index;
+            var selectionUpperIndex = _master.SelectionUpper.Index;
+            var selectionColor = _master.StylePropertyDefault(StylePropertySelectionColor, SelectableTextControl.DefaultSelectionColor);
+            var selectionMap = new TextSelectionGeometry.SelectionMap();
+            selectionMap.BeginLine(
+                startIdx,
+                drawBox.Left,
+                baseLine.Y - height + descent,
+                baseLine.Y + descent);
 
             var imeStartIndex = -1;
             var imeEndIndex = -1;
@@ -1290,12 +1292,6 @@ public sealed partial class TextEdit : Control
                 }
             }
 
-            if (selectionLower.Index < startIdx && selectionUpper.Index > startIdx)
-            {
-                selecting = true;
-                selectStartPos = 0;
-            }
-
             foreach (var rune in Rope.EnumerateRunes(_master.GetDisplayRope(), startIdx))
             {
                 CheckDrawCursors(LineBreakBias.Top);
@@ -1304,15 +1300,17 @@ public sealed partial class TextEdit : Control
                     && _master._lineBreaks[lineBreakIndex] == count)
                 {
                     // Line break
-                    // Check to handle
-
+                    selectionMap.EndLine(count, baseLine.X);
                     PostDrawLine();
 
                     baseLine = new Vector2(drawBox.Left, baseLine.Y + height);
                     lineBreakIndex += 1;
-
-                    selectStartPos = selecting ? 0 : null;
-                    selectEndPos = null;
+                    int lineStartIndex = count;
+                    selectionMap.BeginLine(
+                        lineStartIndex,
+                        drawBox.Left,
+                        baseLine.Y - height + descent,
+                        baseLine.Y + descent);
 
                     imeStartPos = imeing ? 0 : null;
                     imeEndPos = null;
@@ -1326,14 +1324,18 @@ public sealed partial class TextEdit : Control
 
                 CheckDrawCursors(LineBreakBias.Bottom);
 
+                selectionMap.AddBoundary(count, baseLine.X);
                 baseLine.X += font.DrawChar(handle, rune, baseLine, scale, renderedTextColor);
 
                 count += rune.Utf16SequenceLength;
+                selectionMap.AddBoundary(count, baseLine.X);
             }
 
             // Also draw cursor if it's at the very end.
             CheckDrawCursors(LineBreakBias.Bottom);
             CheckDrawCursors(LineBreakBias.Top);
+            selectionMap.EndLine(count, baseLine.X);
+            selectionMap.DrawSelection(handle, selectionLowerIndex, selectionUpperIndex, selectionColor);
             PostDrawLine();
 
             // Draw cursor bias
@@ -1391,18 +1393,6 @@ public sealed partial class TextEdit : Control
                     }
                 }
 
-                if (selectionLower == pos)
-                {
-                    selecting = true;
-                    selectStartPos = (int)baseLine.X;
-                }
-
-                if (selectionUpper == pos)
-                {
-                    selecting = false;
-                    selectEndPos = (int)baseLine.X;
-                }
-
                 if (count == imeStartIndex)
                 {
                     imeing = true;
@@ -1418,22 +1408,6 @@ public sealed partial class TextEdit : Control
 
             void PostDrawLine()
             {
-                if (selectStartPos != null)
-                {
-                    var rect = new UIBox2(
-                        selectStartPos.Value,
-                        baseLine.Y - height + descent,
-                        selectEndPos ?? baseLine.X,
-                        baseLine.Y + descent
-                    );
-
-                    var color = _master.StylePropertyDefault(
-                        StylePropertySelectionColor,
-                        Color.CornflowerBlue.WithAlpha(0.25f));
-
-                    handle.DrawRect(rect, color);
-                }
-
                 if (_master._imeData.HasValue && imeStartPos.HasValue)
                 {
                     // Draw IME underline.

@@ -13,7 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.UserInterface.Controls
 {
     [Virtual]
-    public partial class RichTextLabel : Control
+    public partial class RichTextLabel : SelectableTextControl
     {
         [Dependency] private MarkupTagManager _tagManager = default!;
 
@@ -118,6 +118,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             _entry?.RemoveControls();
             _entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
+            ClearSelection();
             InvalidateMeasure();
         }
 
@@ -138,7 +139,8 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Returns a copy of the currently used formatted message.
         /// </summary>
-        public FormattedMessage? GetFormattedMessage() => _entry == null ? null : new FormattedMessage(_entry.Value.Message);
+        public FormattedMessage? GetFormattedMessage() =>
+            _entry == null ? null : new FormattedMessage(_entry.Value.Message);
 
         public float? OutlineThicknessOverride
         {
@@ -174,11 +176,13 @@ namespace Robust.Client.UserInterface.Controls
                     return _actualFontOutline;
 
                 var thickness = OutlineThicknessOverride;
-                if (!thickness.HasValue && TryGetStyleProperty<float>(Label.StylePropertyFontOutlineThickness, out var styleThickness))
+                if (!thickness.HasValue &&
+                    TryGetStyleProperty<float>(Label.StylePropertyFontOutlineThickness, out var styleThickness))
                     thickness = styleThickness;
 
                 var color = OutlineColorOverride;
-                if (!color.HasValue && TryGetStyleProperty<Color>(Label.StylePropertyFontOutlineColor, out var styleColor))
+                if (!color.HasValue &&
+                    TryGetStyleProperty<Color>(Label.StylePropertyFontOutlineColor, out var styleColor))
                     color = styleColor;
 
                 _actualFontOutline = TextOutline.FromOverrides(thickness, color);
@@ -204,7 +208,8 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, _drawingContext, UIScale, LineHeightScale, ActualFontOutline);
+            DrawSelectionIfNeeded(handle);
+            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale, ActualFontOutline);
         }
 
         protected override void StylePropertiesChanged()
@@ -213,6 +218,50 @@ namespace Robust.Client.UserInterface.Controls
             _fontCacheValid = false;
 
             base.StylePropertiesChanged();
+        }
+
+        protected override ReadOnlySpan<char> GetTextSpan()
+        {
+            if (_entry == null)
+                return [];
+
+            return _entry.Value.GetPlainText(_tagManager, _getFont()).AsSpan();
+        }
+
+        protected override int GetIndexAtPosition(Vector2 relativePosition)
+        {
+            EnsureLayout();
+            return _entry?.GetIndexAtPosition(
+                _tagManager,
+                _getFont(),
+                SizeBox,
+                0,
+                relativePosition * UIScale,
+                UIScale,
+                LineHeightScale) ?? 0;
+        }
+
+        protected override void DrawSelectionRange(DrawingHandleScreen handle, int selectionLower, int selectionUpper, Color color)
+        {
+            EnsureLayout();
+            _entry?.DrawSelection(
+                _tagManager,
+                handle,
+                _getFont(),
+                SizeBox,
+                0,
+                new MarkupDrawingContext(),
+                UIScale,
+                LineHeightScale,
+                selectionLower,
+                selectionUpper,
+                color);
+        }
+
+        private void EnsureLayout()
+        {
+            if (_entry is { } entry)
+                _entry = entry.Update(_tagManager, _getFont(), SizeBox.Width * UIScale, UIScale, LineHeightScale);
         }
 
         [Pure]

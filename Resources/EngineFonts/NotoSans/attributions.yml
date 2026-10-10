@@ -1,0 +1,9 @@
+- files: ["NotoSansMono-Regular.ttf"]
+  license: "OFL-1.1"
+  copyright: "Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)"
+  source: "https://notofonts.github.io/"
+
+- files: ["NotoSans-Regular.ttf"]
+  license: "Apache-2.0"
+  copyright: "Copyright 2012 Google Inc. All Rights Reserved."
+  source: "https://notofonts.github.io/"

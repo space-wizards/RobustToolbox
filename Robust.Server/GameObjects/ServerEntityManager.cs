@@ -141,7 +141,10 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public event EventHandler<object>? ReceivedSystemMessage;
 
-        private readonly PriorityQueue<MsgEntity> _queue = new(new MessageSequenceComparer());
+        private readonly PriorityQueue<(ulong arrival, MsgEntity msg)> _queue = new(new MessageSequenceComparer());
+
+        // Breaks ties between messages with the same tick & sequence (e.g. non-predicted events), as the queue is unstable.
+        private ulong _incomingMsgSequence;
 
         private readonly Dictionary<ICommonSession, uint> _lastProcessedSequencesCmd =
             new();
@@ -165,9 +168,9 @@ namespace Robust.Server.GameObjects
 
             using (_entityNetHistogram?.NewTimer())
             {
-                while (_queue.Count != 0 && _queue.Peek().SourceTick <= _gameTiming.CurTick)
+                while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameTiming.CurTick)
                 {
-                    DispatchEntityNetworkMessage(_queue.Take());
+                    DispatchEntityNetworkMessage(_queue.Take().msg);
                 }
             }
 
@@ -234,7 +237,7 @@ namespace Robust.Server.GameObjects
                 }
             }
 
-            _queue.Add(message);
+            _queue.Add((++_incomingMsgSequence, message));
         }
 
         private void DispatchEntityNetworkMessage(MsgEntity message)
@@ -293,20 +296,23 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        internal sealed class MessageSequenceComparer : IComparer<MsgEntity>
+        internal sealed class MessageSequenceComparer : IComparer<(ulong arrival, MsgEntity msg)>
         {
-            public int Compare(MsgEntity? x, MsgEntity? y)
+            public int Compare((ulong arrival, MsgEntity msg) x, (ulong arrival, MsgEntity msg) y)
             {
-                DebugTools.AssertNotNull(x);
-                DebugTools.AssertNotNull(y);
-
-                var cmp = y!.SourceTick.CompareTo(x!.SourceTick);
+                var cmp = y.msg.SourceTick.CompareTo(x.msg.SourceTick);
                 if (cmp != 0)
                 {
                     return cmp;
                 }
 
-                return y.Sequence.CompareTo(x.Sequence);
+                cmp = y.msg.Sequence.CompareTo(x.msg.Sequence);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+
+                return y.arrival.CompareTo(x.arrival);
             }
         }
 

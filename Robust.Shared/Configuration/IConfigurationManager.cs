@@ -69,7 +69,23 @@ namespace Robust.Shared.Configuration
         /// </summary>
         void SaveToTomlStream(Stream stream, IEnumerable<string> cvars);
 
+        /// <summary>
+        /// Load a TOML config file, using all CVar values specified inside.
+        /// </summary>
+        /// <remarks>
+        /// All CVars in the TOML file must be registered when this function is called.
+        /// </remarks>
+        /// <returns>A set of all CVars touched.</returns>
         HashSet<string> LoadFromTomlStream(Stream stream);
+
+        /// <summary>
+        /// Load a TOML config file and try and parse its contents without side-effects.
+        /// </summary>
+        /// <remarks>
+        /// All CVars in the TOML file must be registered when this function is called.
+        /// </remarks>
+        /// <returns>A set of all CVars that would be touched by this stream.</returns>
+        HashSet<string> ValidateTomlStream(Stream stream);
 
         /// <summary>
         /// Load a TOML config file and use the CVar values specified as an <see cref="OverrideDefault"/>.

@@ -8,7 +8,7 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Client.Physics
 {
-    public sealed class JointSystem : SharedJointSystem
+    public sealed partial class JointSystem : SharedJointSystem
     {
         public override void Initialize()
         {

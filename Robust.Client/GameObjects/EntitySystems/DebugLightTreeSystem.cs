@@ -9,7 +9,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
 {
-    internal sealed class DebugLightTreeSystem : EntitySystem
+    internal sealed partial class DebugLightTreeSystem : EntitySystem
     {
         private DebugLightOverlay? _lightOverlay;
 

@@ -6,7 +6,7 @@ namespace Robust.Server.GameObjects;
 /// <summary>
 ///     Entity System that handles subscribing and unsubscribing to PVS views.
 /// </summary>
-public sealed class ViewSubscriberSystem : SharedViewSubscriberSystem
+public sealed partial class ViewSubscriberSystem : SharedViewSubscriberSystem
 {
     public override void Initialize()
     {

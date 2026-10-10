@@ -5,7 +5,7 @@ using Robust.Shared.Debugging;
 namespace Robust.Server.Debugging;
 
 [UsedImplicitly]
-internal sealed class DebugRayDrawingSystem : SharedDebugRayDrawingSystem
+internal sealed partial class DebugRayDrawingSystem : SharedDebugRayDrawingSystem
 {
 #if DEBUG
     protected override void ReceiveLocalRayAtMainThread(DebugRayData data)

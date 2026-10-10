@@ -3,7 +3,7 @@ using Robust.Shared.Spawners;
 
 namespace Robust.Server.Spawners;
 
-public sealed class TimedDespawnSystem : SharedTimedDespawnSystem
+public sealed partial class TimedDespawnSystem : SharedTimedDespawnSystem
 {
     protected override bool CanDelete(EntityUid uid)
     {

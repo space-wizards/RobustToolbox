@@ -75,7 +75,7 @@ internal sealed partial class LifestageSerializationTest : RobustIntegrationTest
         // All entities should initially be un-initialized and paused.
         AssertPaused(true, map, entA, entB, childA, childB);
         AssertPreInit(true, map, entA, entB, childA, childB);
-        Assert.That(loader.TrySaveMap(map, preInitPath));
+        Assert.That(loader.TrySaveMap(map, preInitPath, immediate: true));
 
         async Task Delete()
         {
@@ -117,7 +117,7 @@ internal sealed partial class LifestageSerializationTest : RobustIntegrationTest
         await Reload(preInitPath, opts);
         AssertPaused(false, map, entA, entB, childA, childB);
         AssertPreInit(false, map, entA, entB, childA, childB);
-        Assert.That(loader.TrySaveMap(map, postInitPath));
+        Assert.That(loader.TrySaveMap(map, postInitPath, immediate: true));
 
         // re-loading the post-init map should keep everything initialized, even without explicitly asking to initialize maps.
         await Reload(postInitPath);
@@ -129,7 +129,7 @@ internal sealed partial class LifestageSerializationTest : RobustIntegrationTest
         await Reload(preInitPath, opts);
         AssertPaused(true, map, entA, entB, childA, childB);
         AssertPreInit(false, map, entA, entB, childA, childB);
-        Assert.That(loader.TrySaveMap(map, pausedPostInitPath));
+        Assert.That(loader.TrySaveMap(map, pausedPostInitPath, immediate: true));
 
         // The pause map option also works when loading un-paused post-init maps
         opts = DeserializationOptions.Default with {PauseMaps = true};
@@ -254,7 +254,7 @@ internal sealed partial class LifestageSerializationTest : RobustIntegrationTest
 
         void Save(ResPath f)
         {
-            Assert.That(loader.TrySaveGeneric([mapA, mapB, nullA, nullB, nullC], f, out _));
+            Assert.That(loader.TrySaveGeneric([mapA, mapB, nullA, nullB, nullC], f, out _, immediate: true));
         }
 
         async Task Delete()

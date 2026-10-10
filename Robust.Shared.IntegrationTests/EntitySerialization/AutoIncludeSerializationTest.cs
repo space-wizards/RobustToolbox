@@ -87,8 +87,8 @@ internal sealed partial class AutoIncludeSerializationTest : RobustIntegrationTe
         // This will cause the null-space entity to be lost.
         // Save the map, then delete all the entities.
         AssertCount(5);
-        Assert.That(loader.TrySaveMap(mapId, mapPath));
-        Assert.That(loader.TrySaveGrid(grid, gridPath));
+        Assert.That(loader.TrySaveMap(mapId, mapPath, immediate: true));
+        Assert.That(loader.TrySaveGrid(grid, gridPath, immediate: true));
         await server.WaitPost(() => mapSys.DeleteMap(mapId));
         AssertCount(1);
         await server.WaitPost(() => entMan.DeleteEntity(nullSpace));
@@ -136,8 +136,8 @@ internal sealed partial class AutoIncludeSerializationTest : RobustIntegrationTe
         onGrid.Comp2.Entity = nullSpace.Owner;
 
         AssertCount(5);
-        Assert.That(loader.TrySaveMap(mapId, mapPath));
-        Assert.That(loader.TrySaveGrid(grid, gridPath));
+        Assert.That(loader.TrySaveMap(mapId, mapPath, immediate: true));
+        Assert.That(loader.TrySaveGrid(grid, gridPath, immediate: true));
         await server.WaitPost(() => mapSys.DeleteMap(mapId));
         AssertCount(1);
         await server.WaitPost(() => entMan.DeleteEntity(nullSpace));
@@ -192,8 +192,8 @@ internal sealed partial class AutoIncludeSerializationTest : RobustIntegrationTe
         // By default it should log an error, but tests don't have a nice way to validate that an error was logged, so we'll just suppress it.
         var opts = SerializationOptions.Default with {MissingEntityBehaviour = MissingEntityBehaviour.Ignore};
         AssertCount(6);
-        Assert.That(loader.TrySaveMap(mapId, mapPath, opts));
-        Assert.That(loader.TrySaveGrid(grid, gridPath, opts));
+        Assert.That(loader.TrySaveMap(mapId, mapPath, opts, immediate: true));
+        Assert.That(loader.TrySaveGrid(grid, gridPath, opts, immediate: true));
         await server.WaitPost(() => mapSys.DeleteMap(mapId));
         await server.WaitPost(() => entMan.DeleteEntity(nullSpace));
         await server.WaitPost(() => entMan.DeleteEntity(otherMap));
@@ -246,9 +246,9 @@ internal sealed partial class AutoIncludeSerializationTest : RobustIntegrationTe
 
         AssertCount(7);
         opts = opts with {MissingEntityBehaviour = MissingEntityBehaviour.AutoInclude};
-        Assert.That(loader.TrySaveGeneric(map.Owner, mapPath, out var cat, opts));
+        Assert.That(loader.TrySaveGeneric(map.Owner, mapPath, out var cat, opts, immediate: true));
         Assert.That(cat, Is.EqualTo(FileCategory.Unknown));
-        Assert.That(loader.TrySaveGeneric(grid.Owner, gridPath, out cat, opts));
+        Assert.That(loader.TrySaveGeneric(grid.Owner, gridPath, out cat, opts, immediate: true));
         Assert.That(cat, Is.EqualTo(FileCategory.Unknown));
         await server.WaitPost(() => mapSys.DeleteMap(mapId));
         await server.WaitPost(() => entMan.DeleteEntity(otherMap));

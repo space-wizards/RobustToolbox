@@ -166,7 +166,7 @@ internal static class RsiLoading
                 var state = metadata.States[i];
                 using var stream = openStream(state.StateId);
 
-                var image = ImageOps.LoadImage<Rgba32>(stream);
+                var image = Image.Load<Rgba32>(decoderOptions, stream);
                 images[i] = image;
 
                 if (image.Width % frameSize.X != 0 || image.Height % frameSize.Y != 0)

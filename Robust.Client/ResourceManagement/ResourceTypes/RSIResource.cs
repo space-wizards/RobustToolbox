@@ -130,7 +130,7 @@ namespace Robust.Client.ResourceManagement
             Image<Rgba32> image;
             using (rsicFile)
             {
-                image = ImageOps.LoadImage<Rgba32>(rsicFile);
+                image = Image.Load<Rgba32>(rsicFile);
             }
 
             data.AtlasSheet = image;

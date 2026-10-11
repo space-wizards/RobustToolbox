@@ -92,6 +92,7 @@ namespace Robust.Client.ResourceManagement
                 var path = data.Path;
                 images = RsiLoading.LoadImages(
                     metadata,
+                    SixLabors.ImageSharp.Configuration.Default,
                     name =>
                     {
                         var texPath = path / (name + ".png");

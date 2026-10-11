@@ -303,7 +303,6 @@ namespace Robust.Server.GameObjects
             public int Compare((ulong arrival, MsgEntity msg) x, (ulong arrival, MsgEntity msg) y)
             {
                 // Earliest first: by tick, then by sequence, then by arrival.
-                // Operands are swapped (y vs x) because the queue takes the largest item first.
                 var cmp = y.msg.SourceTick.CompareTo(x.msg.SourceTick);
                 if (cmp == 0)
                     cmp = y.msg.Sequence.CompareTo(x.msg.Sequence);

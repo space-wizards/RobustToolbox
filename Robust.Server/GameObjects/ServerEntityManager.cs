@@ -143,7 +143,8 @@ namespace Robust.Server.GameObjects
 
         private readonly PriorityQueue<(ulong arrival, MsgEntity msg)> _queue = new(new MessageSequenceComparer());
 
-        // Breaks ties between messages with the same tick & sequence (e.g. non-predicted events), as the queue is unstable.
+        // PriorityQueue isn't stable, and non-predicted messages all have Sequence 0.
+        // Without this, same-tick messages from a client could be dispatched in a different order than they were sent.
         private ulong _incomingMsgSequence;
 
         private readonly Dictionary<ICommonSession, uint> _lastProcessedSequencesCmd =
@@ -301,18 +302,12 @@ namespace Robust.Server.GameObjects
             public int Compare((ulong arrival, MsgEntity msg) x, (ulong arrival, MsgEntity msg) y)
             {
                 var cmp = y.msg.SourceTick.CompareTo(x.msg.SourceTick);
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
+                if (cmp == 0)
+                    cmp = y.msg.Sequence.CompareTo(x.msg.Sequence);
+                if (cmp == 0)
+                    cmp = y.arrival.CompareTo(x.arrival);
 
-                cmp = y.msg.Sequence.CompareTo(x.msg.Sequence);
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
-
-                return y.arrival.CompareTo(x.arrival);
+                return cmp;
             }
         }
 

@@ -35,8 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Engine image loading (textures, RSIs, tiles, window icons) no longer decodes TIFF images.
-* Content can no longer call `Image.Load<T>(Stream)`. Use `ImageLoader.Load<T>(Stream)` instead.
+* ImageSharp's default configuration no longer decodes TIFF images, for both engine and content.
 
 ### New features
 

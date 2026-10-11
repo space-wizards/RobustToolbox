@@ -90,10 +90,10 @@
   </ItemGroup>
   <ItemGroup>
     <!--
-    ImageSharp advisories fixed only in 4.x, which needs a license key to build.
+    ImageSharp advisories fixed only in versions which need a license key to build.
     We could get one since we're an OSS project but that's a lot of work.
     IccProfile.Entries and HistogramEqualization are never used,
-    TIFF is never encoded, and ImageOps.LoadImage doesn't decode TIFF.
+    TIFF is never encoded, and SharedIoC stops ImageSharp from detecting TIFF.
     -->
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-gwg2-r3hj-4w44" />
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-j3p4-wp97-rph4" />

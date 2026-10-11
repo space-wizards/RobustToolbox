@@ -19,6 +19,14 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Toolshed;
+using SixLabors.ImageSharp.Formats.Bmp;
+using SixLabors.ImageSharp.Formats.Gif;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Pbm;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Qoi;
+using SixLabors.ImageSharp.Formats.Tga;
+using SixLabors.ImageSharp.Formats.Webp;
 
 namespace Robust.Shared
 {
@@ -26,6 +34,8 @@ namespace Robust.Shared
     {
         public static void RegisterIoC(IDependencyCollection deps)
         {
+            DisableTiffDecoding();
+
             deps.Register<ISerializationManager, SerializationManager>();
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
@@ -50,6 +60,21 @@ namespace Robust.Shared
             deps.Register<HttpClientHolder>();
             deps.Register<RobustMemoryManager>();
             deps.Register<EntityConsoleHost>();
+        }
+
+        // Nothing in the process can decode TIFF, whose decoder is vulnerable
+        private static void DisableTiffDecoding()
+        {
+            var formats = SixLabors.ImageSharp.Configuration.Default.ImageFormatsManager;
+            formats.ClearImageFormatDetectors();
+            formats.AddImageFormatDetector(new PngImageFormatDetector());
+            formats.AddImageFormatDetector(new JpegImageFormatDetector());
+            formats.AddImageFormatDetector(new GifImageFormatDetector());
+            formats.AddImageFormatDetector(new BmpImageFormatDetector());
+            formats.AddImageFormatDetector(new PbmImageFormatDetector());
+            formats.AddImageFormatDetector(new TgaImageFormatDetector());
+            formats.AddImageFormatDetector(new WebpImageFormatDetector());
+            formats.AddImageFormatDetector(new QoiImageFormatDetector());
         }
     }
 }

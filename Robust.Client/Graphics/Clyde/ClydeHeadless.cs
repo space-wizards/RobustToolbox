@@ -540,7 +540,7 @@ namespace Robust.Client.Graphics.Clyde
             public event Action<ClearCachedViewportResourcesEvent>? ClearCachedResources;
             public Color? ClearColor { get; set; } = Color.Black;
             public bool ClearWhenMissingEye { get; set; }
-            public Vector2 RenderScale { get; set; } = Vector2.One;
+            public Vector2 RenderScale { get; set; }
             public bool AutomaticRender { get; set; }
 
             public void Render()
@@ -550,41 +550,14 @@ namespace Robust.Client.Graphics.Clyde
 
             public MapCoordinates LocalToWorld(Vector2 point)
             {
-                if (Eye == null)
-                    return default;
-
-                var newPoint = point;
-                newPoint -= Size / 2f;
-                newPoint *= new Vector2(1, -1) / EyeManager.PixelsPerMeter;
-
-                Eye.GetViewMatrixInv(out var viewMatrixInv, RenderScale);
-                newPoint = Vector2.Transform(newPoint, viewMatrixInv);
-
-                return new MapCoordinates(newPoint, Eye.Position.MapId);
+                return default;
             }
 
-            public Matrix3x2 GetWorldToLocalMatrix()
-            {
-                if (Eye == null)
-                    return Matrix3x2.Identity;
-
-                Eye.GetViewMatrix(out var viewMatrix,
-                    RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter));
-                viewMatrix.M31 += Size.X / 2f;
-                viewMatrix.M32 += Size.Y / 2f;
-                return viewMatrix;
-            }
+            public Matrix3x2 GetWorldToLocalMatrix() => default;
 
             public Vector2 WorldToLocal(Vector2 point)
             {
-                if (Eye == null)
-                    return default;
-
-                Eye.GetViewMatrix(out var viewMatrix, RenderScale);
-                var newPoint = Vector2.Transform(point, viewMatrix);
-                newPoint *= new Vector2(1, -1) * EyeManager.PixelsPerMeter;
-                newPoint += Size / 2f;
-                return newPoint;
+                return default;
             }
 
             public void RenderScreenOverlaysBelow(

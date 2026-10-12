@@ -199,8 +199,7 @@ public sealed partial class RayCastSystem : EntitySystem
                 var localOrigin = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin);
                 var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation) - localOrigin;
 
-                // A closer hit replaces the closest one so far instead of being added after it, so check the fraction
-                // to know whether the hit needs moving into map coordinates.
+                // A closer hit replaces the earlier one instead of being appended, so only adjust it if it changed.
                 var oldFraction = tuple.result.Hit ? tuple.result.Results[0].Fraction : float.MaxValue;
                 tuple.system.CastRayClosest((entity.Owner, entity.Comp), ref tuple.result, localOrigin, localTranslation, filter: tuple.filter);
 

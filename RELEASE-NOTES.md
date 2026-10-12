@@ -47,11 +47,18 @@ END TEMPLATE-->
 
 ### Other
 
-* `SpawnEntity` and the `EntityCoordinates` version of `SpawnEntities` have been marked as obsolete.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 293.0.0
+
+### Other
+
+* `SpawnEntity` and the `EntityCoordinates` version of `SpawnEntities` have been marked as obsolete.
 
 
 ## 292.0.0

@@ -375,7 +375,7 @@ namespace Robust.Shared.Serialization.Manager
             DebugTools.Assert(!typeof(TValue).IsValueType, "ISerializationHooks must only be used on reference types");
 
             if (ctx.DeferQueue != null)
-                ctx.DeferQueue.TryWrite(instance);
+                ctx.DeferQueue.TryWrite(new DeferredHook(instance, ctx.Context));
             else
                 instance.AfterDeserialization();
         }

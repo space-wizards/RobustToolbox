@@ -1108,7 +1108,7 @@ namespace Robust.Shared
             CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         public static readonly CVarDef<string> RenderFOVColor =
-            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("render.fov_color", "#080B10", CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Whether to render tile edges, which is where some tiles can partially overlap other adjacent tiles on a grid.

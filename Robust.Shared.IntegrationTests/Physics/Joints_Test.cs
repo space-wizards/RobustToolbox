@@ -56,6 +56,83 @@ internal sealed class Joints_Test
         mapSystem.DeleteMap(mapId);
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void CrossGridJointPreventsSleeping(bool relayed)
+    {
+        var factory = RobustServerSimulation.NewSimulation();
+        var sim = factory.InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var jointSystem = entManager.System<SharedJointSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var physicsSystem = entManager.System<SharedPhysicsSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+
+        var (map, mapId) = sim.CreateMap();
+        var grid = mapSystem.CreateGridEntity(mapId);
+        mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
+
+        var gridJointBodyUid = entManager.SpawnEntity(null, new EntityCoordinates(grid, 0.5f, 0.5f));
+        var mapBodyUid = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(3f, 0.5f), mapId));
+
+        var gridJointBody = AddBody(gridJointBodyUid);
+        var mapBody = AddBody(mapBodyUid);
+        var joint = jointSystem.CreateDistanceJoint(gridJointBodyUid, mapBodyUid);
+
+        var gridBodyUid = gridJointBodyUid;
+        var gridBody = gridJointBody;
+
+        if (relayed)
+        {
+            gridBodyUid = grid.Owner;
+            gridBody = entManager.GetComponent<PhysicsComponent>(gridBodyUid);
+            physicsSystem.SetBodyType(gridBodyUid, BodyType.Dynamic, body: gridBody);
+            jointSystem.SetRelay(gridJointBodyUid, gridBodyUid);
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(gridBody.CanSleep, Is.False);
+            Assert.That(mapBody.CanSleep, Is.False);
+            Assert.That(gridJointBody.CanSleep, Is.EqualTo(relayed));
+        });
+
+        jointSystem.SetEnabled(joint, false);
+        Assert.Multiple(() =>
+        {
+            Assert.That(gridBody.CanSleep, Is.True);
+            Assert.That(mapBody.CanSleep, Is.True);
+        });
+
+        jointSystem.SetEnabled(joint, true);
+        transformSystem.SetCoordinates(mapBodyUid, new EntityCoordinates(grid, Vector2.Zero));
+        Assert.Multiple(() =>
+        {
+            Assert.That(gridBody.CanSleep, Is.True);
+            Assert.That(mapBody.CanSleep, Is.True);
+        });
+
+        transformSystem.SetCoordinates(mapBodyUid, new EntityCoordinates(map, Vector2.Zero));
+        Assert.That(mapBody.CanSleep, Is.False);
+
+        jointSystem.RemoveJoint(joint);
+        Assert.Multiple(() =>
+        {
+            Assert.That(gridBody.CanSleep, Is.True);
+            Assert.That(mapBody.CanSleep, Is.True);
+        });
+
+        mapSystem.DeleteMap(mapId);
+
+        PhysicsComponent AddBody(EntityUid uid)
+        {
+            var body = entManager.AddComponent<PhysicsComponent>(uid);
+            physicsSystem.SetBodyType(uid, BodyType.Dynamic, body: body);
+            return body;
+        }
+    }
+
     /// <summary>
     /// Assert that if a joint exists between 2 bodies they can collide or not collide correctly.
     /// </summary>

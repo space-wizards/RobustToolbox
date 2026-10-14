@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* ImageSharp's dynamic/automatic decoder detection code (used in Image.Load()) no longer includes TIFF (due to security vulnerabilities)
 
 ### New features
 

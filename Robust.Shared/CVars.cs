@@ -819,6 +819,36 @@ namespace Robust.Shared
             CVarDef.Create("build.manifest_url", string.Empty);
 
         /// <summary>
+        /// URL of the game repository fork (e.g. "https://github.com/MyFork/space-station-14")
+        /// or original game repository.
+        /// </summary>
+        public static readonly CVarDef<string> SourceUrl =
+            CVarDef.Create("build.source_url", string.Empty);
+
+        /// <summary> Commit ID on which current game was built. </summary>
+        public static readonly CVarDef<string> SourceCommitId =
+            CVarDef.Create("build.source_commit_id", string.Empty);
+
+        /// <summary> Branch on which current game was built. </summary>
+        public static readonly CVarDef<string> SourceBranchName =
+            CVarDef.Create("build.source_branch_name", string.Empty);
+
+        /// <summary>
+        /// URL for engine repository (or its fork), used for this version of the game,
+        /// or original game repository URL.
+        /// </summary>
+        public static readonly CVarDef<string> EngineSourceBranchName =
+            CVarDef.Create("build.engine_source_url", string.Empty);
+
+        /// <summary> Commit ID of engine, that was used to build this version of the game. </summary>
+        public static readonly CVarDef<string> EngineSourceUrl =
+            CVarDef.Create("build.engine_source_commit_id", string.Empty);
+
+        /// <summary> Name of branch for engine, on which this version of game was built. </summary>
+        public static readonly CVarDef<string> EngineSourceCommitId =
+            CVarDef.Create("build.engine_source_branch_name", string.Empty);
+
+        /// <summary>
         /// URL at which the launcher can download the manifest game files.
         /// </summary>
         public static readonly CVarDef<string> BuildManifestDownloadUrl =

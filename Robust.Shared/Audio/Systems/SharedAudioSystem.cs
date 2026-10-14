@@ -62,6 +62,14 @@ public abstract partial class SharedAudioSystem : EntitySystem
     }
 
     /// <summary>
+    ///  Set AudioParams for entity.
+    /// </summary>
+    public void SetAudioParams(Entity<AudioComponent> entity, AudioParams audioParams)
+    {
+        entity.Comp.Params = audioParams;
+    }
+
+    /// <summary>
     /// Sets the playback position of audio to the specified spot.
     /// </summary>
     public void SetPlaybackPosition(Entity<AudioComponent?>? nullEntity, float position)

@@ -211,6 +211,26 @@ public interface IMidiRenderer : IDisposable
     void ApplyState(MidiRendererState state, bool filterChannels = false);
 
     /// <summary>
+    ///     Sets the filter cutoff for a specific channel.
+    /// </summary>
+    void SetChannelFilterCutoff(int channel, float cutoffCents);
+
+    /// <summary>
+    ///     Sets the playback tempo scale for the renderer.
+    /// </summary>
+    void SetTempoScale(double scale);
+
+    /// <summary>
+    ///     Sets the pitch offset for a specific channel.
+    /// </summary>
+    void SetChannelPitch(int channel, int semitones);
+
+    /// <summary>
+    ///     Enables or disables reverb for a specific channel.
+    /// </summary>
+    void SetChannelReverb(int channel, bool enabled);
+
+    /// <summary>
     ///     Actually disposes of this renderer. Do NOT use outside the MIDI thread.
     /// </summary>
     internal void InternalDispose();

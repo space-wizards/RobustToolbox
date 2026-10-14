@@ -6,7 +6,6 @@ using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Pbm;
 using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Formats.Qoi;
 using SixLabors.ImageSharp.Formats.Tga;
 using SixLabors.ImageSharp.Formats.Webp;
 
@@ -20,8 +19,8 @@ internal static class ImageSharp
     /// <summary>
     /// Detectors that Load() can use to match to the specific implementations.
     /// </summary>
-    private static readonly List<IImageFormatDetector> Detectors =
-    [
+    private static readonly List<IImageFormatDetector> Detectors = new()
+    {
         // Explicitly allowed in sandbox:
         new PngImageFormatDetector(),
         new JpegImageFormatDetector(),
@@ -33,12 +32,11 @@ internal static class ImageSharp
         new WebpImageFormatDetector(),
 
         // No usages (consider removal at some point):
-        new QoiImageFormatDetector(),
         new PbmImageFormatDetector()
 
         // Has (or had) vulnerabilities:
         // new TiffImageFormatDetector()
-    ];
+    };
 
     // We use ModuleInitializer here to ensure this always runs before Engine/Content code (it's security sensitive),
     // and it helpfully makes sure this will only run once, to avoid race conditions in the static Default object.

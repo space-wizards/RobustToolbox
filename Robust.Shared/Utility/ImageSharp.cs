@@ -32,7 +32,7 @@ internal static class ImageSharp
         // Webp is registered in clyde and used in WizDen
         new WebpImageFormatDetector(),
 
-        // No usages (explicitly deprecate at some point):
+        // No usages (consider removal at some point):
         new QoiImageFormatDetector(),
         new PbmImageFormatDetector()
 
@@ -40,7 +40,7 @@ internal static class ImageSharp
         // new TiffImageFormatDetector()
     ];
 
-    // We use ModuleInitializer here to ensure this always runs before any other code (it's security sensitive),
+    // We use ModuleInitializer here to ensure this always runs before Engine/Content code (it's security sensitive),
     // and it helpfully makes sure this will only run once, to avoid race conditions in the static Default object.
 #pragma warning disable CA2255
     [ModuleInitializer]

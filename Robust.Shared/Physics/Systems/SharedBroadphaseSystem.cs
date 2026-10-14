@@ -632,10 +632,12 @@ namespace Robust.Shared.Physics.Systems
             public void Execute(int index)
             {
                 var proxy = MoveBuffer[index];
-                var broadphaseUid = XformQuery.GetComponent(proxy.Entity).Broadphase?.Uid;
-                var worldAABB = TransformSys.GetWorldMatrix(broadphaseUid!.Value).TransformBox(proxy.AABB);
+                var proxyXform = XformQuery.GetComponent(proxy.Entity);
+                if (proxyXform.MapUid is not { } mapUid)
+                    return;
 
-                var mapUid = XformQuery.GetComponent(proxy.Entity).MapUid ?? EntityUid.Invalid;
+                var broadphaseUid = proxyXform.Broadphase?.Uid;
+                var worldAABB = TransformSys.GetWorldMatrix(broadphaseUid!.Value).TransformBox(proxy.AABB);
 
                 var broadphaseExpand = System.GetBroadphaseExpand(proxy.Body, FrameTime);
 

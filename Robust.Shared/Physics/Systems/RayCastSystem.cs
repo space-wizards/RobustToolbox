@@ -171,7 +171,7 @@ public sealed partial class RayCastSystem : EntitySystem
     }
 
     /// <summary>
-    /// Returns all entities hit in order.
+    /// Returns the closest entity hit, if any.
     /// </summary>
     public RayResult CastRayClosest(MapId mapId, Vector2 origin, Vector2 translation, QueryFilter filter)
     {
@@ -199,9 +199,12 @@ public sealed partial class RayCastSystem : EntitySystem
                 var localOrigin = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin);
                 var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation) - localOrigin;
 
-                var oldIndex = tuple.result.Results.Count;
+                // A closer hit replaces the earlier one instead of being appended, so only adjust it if it changed.
+                var oldFraction = tuple.result.Hit ? tuple.result.Results[0].Fraction : float.MaxValue;
                 tuple.system.CastRayClosest((entity.Owner, entity.Comp), ref tuple.result, localOrigin, localTranslation, filter: tuple.filter);
-                tuple.system.AdjustResults(ref tuple.result, oldIndex, transform);
+
+                if (tuple.result.Hit && tuple.result.Results[0].Fraction < oldFraction)
+                    tuple.system.AdjustResults(ref tuple.result, 0, transform);
             });
 
         result = state.result;

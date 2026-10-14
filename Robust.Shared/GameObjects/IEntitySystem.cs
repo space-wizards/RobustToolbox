@@ -38,5 +38,11 @@ namespace Robust.Shared.GameObjects
         /// <param name="frameTime">Delta time since Update() was last called.</param>
         void Update(float frameTime);
         void FrameUpdate(float frameTime);
+
+        [Obsolete("Used only in source generation internally")]
+        bool? NeedsUpdate();
+
+        [Obsolete("Used only in source generation internally")]
+        bool? NeedsFrameUpdate();
     }
 }

@@ -1,6 +1,6 @@
 namespace Robust.Server.Console
 {
-    internal sealed class SystemConsoleManagerDummy : ISystemConsoleManager
+    internal sealed partial class SystemConsoleManagerDummy : ISystemConsoleManager
     {
         public void UpdateInput()
         {

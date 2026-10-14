@@ -35,7 +35,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Reflect(false)]
-        private sealed class SubscribeCompRefDirectedEventSystem : EntitySystem
+        private sealed partial class SubscribeCompRefDirectedEventSystem : EntitySystem
         {
             public override void Initialize()
             {
@@ -50,7 +50,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Reflect(false)]
-        private sealed class SubscriptionNoMixedRefValueDirectedEventSystem : EntitySystem
+        private sealed partial class SubscriptionNoMixedRefValueDirectedEventSystem : EntitySystem
         {
             public override void Initialize()
             {
@@ -103,7 +103,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Reflect(false)]
-        private sealed class OrderASystem : EntitySystem
+        private sealed partial class OrderASystem : EntitySystem
         {
             public override void Initialize()
             {
@@ -121,7 +121,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Reflect(false)]
-        private sealed class OrderBSystem : EntitySystem
+        private sealed partial class OrderBSystem : EntitySystem
         {
             public override void Initialize()
             {
@@ -139,7 +139,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Reflect(false)]
-        private sealed class OrderCSystem : EntitySystem
+        private sealed partial class OrderCSystem : EntitySystem
         {
             public override void Initialize()
             {

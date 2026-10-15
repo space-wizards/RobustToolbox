@@ -17,8 +17,8 @@ namespace Robust.Client.UserInterface;
 [GenerateTypedNameReferences]
 internal sealed partial class DevWindowTabTextures : Control
 {
-    [Dependency] private readonly IClydeInternal _clyde = null!;
-    [Dependency] private readonly ILocalizationManager _loc = null!;
+    [Dependency] private IClydeInternal _clyde = null!;
+    [Dependency] private ILocalizationManager _loc = null!;
 
     public DevWindowTabTextures()
     {

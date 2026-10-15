@@ -45,8 +45,8 @@ namespace Robust.Shared.Toolshed;
 [Reflect(false)]
 public abstract partial class ToolshedCommand
 {
-    [Dependency] protected readonly ToolshedManager Toolshed = default!;
-    [Dependency] protected readonly ILocalizationManager Loc = default!;
+    [Dependency] protected ToolshedManager Toolshed = default!;
+    [Dependency] protected ILocalizationManager Loc = default!;
 
     /// <summary>
     ///     The user-facing name of the command.
@@ -105,7 +105,7 @@ public abstract partial class ToolshedCommand
                 throw new InvalidCommandImplementation($"{nameof(TypeParameterParsers)} element {typeParser} is not {nameof(TypeTypeParser)} or assignable to {typeof(CustomTypeParser<Type>).PrettyName()}");
         }
 
-        var impls = GetGenericImplementations().ToArray();
+        var impls = GetMethods();
         if (impls.Length == 0)
             throw new Exception($"Command has no implementations?");
 
@@ -227,8 +227,10 @@ public abstract partial class ToolshedCommand
                 throw new InvalidCommandImplementation("The combination of subcommand and piped parameter type must be unique");
 
             var key = subCmd ?? string.Empty;
+            var attributeDescription = impl.GetCustomAttribute<CommandDescriptionAttribute>()?.Description;
+            var attributeHelp = impl.GetCustomAttribute<CommandHelpAttribute>()?.Help;
             if (!CommandImplementors.ContainsKey(key))
-                CommandImplementors[key] = new ToolshedCommandImplementor(subCmd, this, Toolshed, Loc);
+                CommandImplementors[key] = new ToolshedCommandImplementor(subCmd, attributeDescription, attributeHelp, this, Toolshed, Loc);
         }
     }
 

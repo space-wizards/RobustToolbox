@@ -8,6 +8,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Placement
 {
+    [NotContentImplementable]
     public interface IPlacementManager
     {
         void Initialize();
@@ -23,7 +24,6 @@ namespace Robust.Client.Placement
 
         IEntityManager EntityManager { get; }
         IEyeManager EyeManager { get; }
-        IMapManager MapManager { get; }
 
         /// <summary>
         /// The direction to spawn the entity in (presently exposed for EntitySpawnWindow UI)

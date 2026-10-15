@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -16,8 +15,7 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         internal static string GetExecutableDirectory()
         {
-            // TODO: remove this shitty hack, either through making it less hardcoded into shared,
-            //   or by making our file structure less spaghetti somehow.
+            // Fallback in case the above doesn't work ig?
             var assembly = typeof(PathHelpers).Assembly;
             var location = assembly.Location;
             if (location == string.Empty)
@@ -68,7 +66,11 @@ namespace Robust.Shared.ContentPack
         internal static string SafeGetResourcePath(string baseDir, ResPath path)
         {
             var relSysPath = path.ToRelativeSystemPath();
-            if (relSysPath.Contains("\\..") || relSysPath.Contains("/.."))
+
+            // This also blocks files like "..foo.yml". But whatever, I CBF fixing that.
+            if (relSysPath.Contains("\\..")
+                || relSysPath.Contains("/..")
+                || relSysPath.StartsWith(".."))
             {
                 // Hard cap on any exploit smuggling a .. in there.
                 // Since that could allow leaving sandbox.

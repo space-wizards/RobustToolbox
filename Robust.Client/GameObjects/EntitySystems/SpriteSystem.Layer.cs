@@ -17,7 +17,7 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return false;
 
-        return index > 0 && index < sprite.Comp.Layers.Count;
+        return index >= 0 && index < sprite.Comp.Layers.Count;
     }
 
     public bool TryGetLayer(

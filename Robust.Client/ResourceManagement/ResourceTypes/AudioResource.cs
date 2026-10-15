@@ -40,12 +40,12 @@ public sealed class AudioResource : BaseResource
         seekableStream.Seek(0, SeekOrigin.Begin);
 
         var audioManager = dependencies.Resolve<IAudioInternal>();
-        if (signature[..OggSignature.Length].SequenceEqual(OggSignature))
+        if (signature.AsSpan()[..OggSignature.Length].SequenceEqual(OggSignature))
         {
             AudioStream = audioManager.LoadAudioOggVorbis(seekableStream, path.ToString());
         }
-        else if (signature[..RiffSignature.Length].SequenceEqual(RiffSignature)
-                 && signature[WavSignatureStart..MaxSignatureLength].SequenceEqual(WavSignature))
+        else if (signature.AsSpan()[..RiffSignature.Length].SequenceEqual(RiffSignature)
+                 && signature.AsSpan()[WavSignatureStart..MaxSignatureLength].SequenceEqual(WavSignature))
         {
             AudioStream = audioManager.LoadAudioWav(seekableStream, path.ToString());
         }

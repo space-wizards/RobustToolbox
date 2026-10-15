@@ -36,6 +36,11 @@ public sealed class ComponentRegistration
     public ushort? NetID { get; internal set; }
 
     /// <summary>
+    /// Whether this component type has <see cref="NetworkedComponentAttribute"/>.
+    /// </summary>
+    public bool Networked { get; internal set; }
+
+    /// <summary>
     /// The type that will be instantiated if this component is created.
     /// </summary>
     public Type Type { get; }

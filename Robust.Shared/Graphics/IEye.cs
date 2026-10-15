@@ -10,6 +10,7 @@ namespace Robust.Shared.Graphics
     /// It's a 2D camera in other game dev lingo basically.
     /// </summary>
     [PublicAPI]
+    [NotContentImplementable]
     public interface IEye
     {
         /// <summary>

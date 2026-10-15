@@ -19,11 +19,11 @@ using static Robust.Client.UserInterface.Controls.LineEdit;
 
 namespace Robust.Client.UserInterface.Controllers.Implementations;
 
-public sealed class EntitySpawningUIController : UIController
+public sealed partial class EntitySpawningUIController : UIController
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly IPlacementManager _placement = default!;
-    [Dependency] private readonly IPrototypeManager _prototypes = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IPlacementManager _placement = default!;
+    [Dependency] private IPrototypeManager _prototypes = default!;
 
     private EntitySpawnWindow? _window;
     private readonly List<EntityPrototype> _shownEntities = new();
@@ -60,7 +60,7 @@ public sealed class EntitySpawningUIController : UIController
 
         _placement.Clear();
         // Only toggle the eraser back if the button is pressed.
-        if(args.Pressed)
+        if (args.Pressed)
             _placement.ToggleEraser();
         // clearing will toggle the erase button off...
         args.Button.Pressed = args.Pressed;
@@ -89,18 +89,31 @@ public sealed class EntitySpawningUIController : UIController
             return;
 
         _window = UIManager.CreateWindow<EntitySpawnWindow>();
-        LayoutContainer.SetAnchorPreset(_window,LayoutContainer.LayoutPreset.CenterLeft);
+        LayoutContainer.SetAnchorPreset(_window, LayoutContainer.LayoutPreset.CenterLeft);
         _window.OnClose += WindowClosed;
         _window.ReplaceButton.Pressed = _placement.Replacement;
         _window.ReplaceButton.OnToggled += OnEntityReplaceToggled;
         _window.EraseButton.Pressed = _placement.Eraser;
         _window.EraseButton.OnToggled += OnEntityEraseToggled;
         _window.OverrideMenu.OnItemSelected += OnEntityOverrideSelected;
+        ApplySavedOverrideMode();
         _window.SearchBar.OnTextChanged += OnEntitySearchChanged;
         _window.ClearButton.OnPressed += OnEntityClearPressed;
         _window.PrototypeScrollContainer.OnScrolled += UpdateVisiblePrototypes;
         _window.OnResized += UpdateVisiblePrototypes;
         BuildEntityList();
+    }
+
+    private void ApplySavedOverrideMode()
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        var mode = _cfg.GetCVar(CVars.EntitySpawnOverrideMode);
+        if (mode < 0 || mode >= _placement.AllModeNames.Length)
+            mode = 0;
+
+        _window.OverrideMenu.SelectId(mode);
     }
 
     public void CloseWindow()
@@ -146,6 +159,8 @@ public sealed class EntitySpawningUIController : UIController
             return;
 
         _window.OverrideMenu.SelectId(args.Id);
+        _cfg.SetCVar(CVars.EntitySpawnOverrideMode, args.Id);
+        _cfg.SaveToFile();
 
         if (_placement.CurrentMode != null)
         {
@@ -223,11 +238,12 @@ public sealed class EntitySpawningUIController : UIController
             _shownEntities.Add(prototype);
         }
 
-        _shownEntities.Sort((a, b) => {
-                var namesComparation = string.Compare(a.Name, b.Name, StringComparison.Ordinal);
-                if (namesComparation == 0)
-                    return string.Compare(a.EditorSuffix, b.EditorSuffix, StringComparison.Ordinal);
-                return namesComparation;
+        _shownEntities.Sort((a, b) =>
+        {
+            var namesComparation = string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+            if (namesComparation == 0)
+                return string.Compare(a.EditorSuffix, b.EditorSuffix, StringComparison.Ordinal);
+            return namesComparation;
         });
 
         _window.PrototypeList.TotalItemCount = _shownEntities.Count;
@@ -278,7 +294,7 @@ public sealed class EntitySpawningUIController : UIController
         // Calculate index of first prototype to render based on current scroll.
         var height = _window.MeasureButton.DesiredSize.Y + PrototypeListContainer.Separation;
         var offset = Math.Max(-_window.PrototypeList.Position.Y, 0);
-        var startIndex = (int) Math.Floor(offset / height);
+        var startIndex = (int)Math.Floor(offset / height);
         _window.PrototypeList.ItemOffset = startIndex;
 
         var (prevStart, prevEnd) = _lastEntityIndices;
@@ -306,7 +322,7 @@ public sealed class EntitySpawningUIController : UIController
         // Delete buttons at the start of the list that are no longer visible (scrolling down).
         for (var i = prevStart; i < startIndex && i <= prevEnd; i++)
         {
-            var control = (EntitySpawnButton) _window.PrototypeList.GetChild(0);
+            var control = (EntitySpawnButton)_window.PrototypeList.GetChild(0);
             DebugTools.Assert(control.Index == i);
             _window.PrototypeList.RemoveChild(control);
         }
@@ -314,7 +330,7 @@ public sealed class EntitySpawningUIController : UIController
         // Delete buttons at the end of the list that are no longer visible (scrolling up).
         for (var i = prevEnd; i > endIndex && i >= prevStart; i--)
         {
-            var control = (EntitySpawnButton) _window.PrototypeList.GetChild(_window.PrototypeList.ChildCount - 1);
+            var control = (EntitySpawnButton)_window.PrototypeList.GetChild(_window.PrototypeList.ChildCount - 1);
             DebugTools.Assert(control.Index == i);
             _window.PrototypeList.RemoveChild(control);
         }
@@ -347,7 +363,7 @@ public sealed class EntitySpawningUIController : UIController
         if (_window == null || _window.Disposed)
             return;
 
-        var item = (EntitySpawnButton) args.Button.Parent!;
+        var item = (EntitySpawnButton)args.Button.Parent!;
         if (_window.SelectedButton == item)
         {
             _window.SelectedButton = null;

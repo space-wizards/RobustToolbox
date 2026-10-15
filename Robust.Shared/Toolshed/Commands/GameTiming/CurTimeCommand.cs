@@ -5,9 +5,9 @@ using Robust.Shared.Timing;
 namespace Robust.Shared.Toolshed.Commands.GameTiming;
 
 [ToolshedCommand]
-public sealed class CurTimeCommand : ToolshedCommand
+public sealed partial class CurTimeCommand : ToolshedCommand
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     [CommandImplementation]
     public TimeSpan CurTime() => _gameTiming.CurTime;

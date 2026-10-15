@@ -10,7 +10,6 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Containers
 {
     [UsedImplicitly]
-    [SerializedType(nameof(ContainerSlot))]
     public sealed partial class ContainerSlot : BaseContainer
     {
         public override int Count => ContainedEntity == null ? 0 : 1;

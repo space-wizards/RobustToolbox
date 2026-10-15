@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
+using Robust.Client.Input;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
@@ -15,8 +16,11 @@ namespace Robust.Client.Graphics
 {
     public delegate void CopyPixelsDelegate<T>(Image<T> pixels) where T : unmanaged, IPixel<T>;
 
+    [NotContentImplementable]
     public interface IClyde
     {
+        internal bool IsInitialized { get; }
+
         IClydeWindow MainWindow { get; }
         IRenderTarget MainWindowRenderTarget => MainWindow.RenderTarget;
 
@@ -35,6 +39,16 @@ namespace Robust.Client.Graphics
         void SetWindowMonitor(IClydeMonitor monitor);
 
         /// <summary>
+        ///     Gets the monitor the specified window is currently on.
+        /// </summary>
+        IClydeMonitor? GetWindowMonitor(IClydeWindow window);
+
+        /// <summary>
+        ///     Gets the monitor the main game window is currently on.
+        /// </summary>
+        IClydeMonitor? GetMainWindowMonitor();
+
+        /// <summary>
         ///     This is the magic method to make the game window ping you in the task bar.
         /// </summary>
         void RequestWindowAttention();
@@ -42,6 +56,9 @@ namespace Robust.Client.Graphics
         event Action<WindowResizedEventArgs> OnWindowResized;
 
         event Action<WindowFocusedEventArgs> OnWindowFocused;
+
+        /// <summary>Raised on mouse motion.</summary>
+        event Action<MouseMoveEventArgs>? MouseMove;
 
         event Action<WindowContentScaleEventArgs> OnWindowScaleChanged;
 

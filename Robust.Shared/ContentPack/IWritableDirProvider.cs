@@ -9,6 +9,7 @@ namespace Robust.Shared.ContentPack
     /// Provides an API for file and directory manipulation inside of a rooted folder.
     /// </summary>
     [PublicAPI]
+    [NotContentImplementable]
     public interface IWritableDirProvider
     {
         /// <summary>

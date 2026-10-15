@@ -1,0 +1,24 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+  Depend on this in your client project (e.g. Content.Client) to generate a development app bundle for macOS.
+  This is required for WebView.
+  -->
+
+  <PropertyGroup>
+    <RTMakeAppBundle Condition="'$(TargetOS)' == 'MacOS' And '$(RTMakeAppBundle)' == '' And '$(FullRelease)' != 'True'">True</RTMakeAppBundle>
+    <RTAppBundleName Condition="'$(RTAppBundleName)' == ''">RobustToolbox Project</RTAppBundleName>
+    <RTAppBundleIdentifier Condition="'$(RTAppBundleIdentifier)' == ''">org.robusttoolbox.project</RTAppBundleIdentifier>
+    <!-- RTAppBundleIcon controls icon -->
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <_RTMacOSAppBundle_targets_imported>True</_RTMacOSAppBundle_targets_imported>
+  </PropertyGroup>
+
+  <Target Name="RTMakeAppBundleAfterBuild" Condition="'$(RTMakeAppBundle)' == 'True'" AfterTargets="AfterBuild">
+    <PropertyGroup>
+      <_RTMacOSAppBundle_icon Condition="'$(RTAppBundleIcon)' != ''">--icon &quot;$(RTAppBundleIcon)&quot;</_RTMacOSAppBundle_icon>
+    </PropertyGroup>
+    <Exec Command="$(MSBuildThisFileDirectory)/../Tools/macos_make_appbundle.py $(_RTMacOSAppBundle_for_webview) --name &quot;$(RTAppBundleName)&quot; --directory &quot;$(OutputPath)&quot; --apphost &quot;$(AssemblyName)&quot; --identifier &quot;$(RTAppBundleIdentifier)&quot; $(_RTMacOSAppBundle_icon)" />
+  </Target>
+</Project>

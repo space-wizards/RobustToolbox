@@ -7,6 +7,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Console
 {
+    [NotContentImplementable]
     public interface IClientConsoleHost : IConsoleHost, IDisposable
     {
         /// <summary>

@@ -201,7 +201,7 @@ namespace Robust.Client.Placement
             return gridUidOpt is { } gridUid && gridUid.IsValid()
                 ? pManager.EntityManager.System<SharedMapSystem>().GetTileRef(gridUid, pManager.EntityManager.GetComponent<MapGridComponent>(gridUid), MouseCoords)
                 : new TileRef(gridUidOpt ?? EntityUid.Invalid,
-                    MouseCoords.ToVector2i(pManager.EntityManager, pManager.MapManager, pManager.EntityManager.System<SharedTransformSystem>()), Tile.Empty);
+                    MouseCoords.ToVector2i(pManager.EntityManager, pManager.EntityManager.System<SharedTransformSystem>()), Tile.Empty);
         }
 
         public TextureResource GetSprite(string key)
@@ -267,7 +267,8 @@ namespace Robust.Client.Placement
         {
             var mapCoords = pManager.EyeManager.PixelToMap(coords.Position);
             var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
-            if (!pManager.MapManager.TryFindGridAt(mapCoords, out var gridUid, out _))
+            var mapSys = pManager.EntityManager.System<SharedMapSystem>();
+            if (!mapSys.TryFindGridAt(mapCoords, out var gridUid, out _))
             {
                 return transformSys.ToCoordinates(mapCoords);
             }

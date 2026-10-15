@@ -14,10 +14,11 @@
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
     <PackageReference Include="Nett" PrivateAssets="compile" />
     <PackageReference Include="System.Management" />
+    <PackageReference Include="System.Numerics.Tensors" />
     <PackageReference Include="VorbisPizza" PrivateAssets="compile" />
     <PackageReference Include="Pidgin" />
     <PackageReference Include="prometheus-net" />
-    <PackageReference Include="Robust.Shared.AuthLib" />
+    <PackageReference Include="Robust.Shared.AuthLib" PrivateAssets="none" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="YamlDotNet" />
     <PackageReference Include="Microsoft.Win32.Registry" PrivateAssets="compile" />
@@ -28,6 +29,7 @@
     <PackageReference Include="libsodium" />
     <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
+    <PackageReference Include="Tracy-CSharp" />
 
     <!-- Needed to pin transitive dependency versions. -->
     <PackageReference Include="System.Reflection.Metadata" />
@@ -62,4 +64,5 @@
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />
   <Import Project="..\MSBuild\Robust.CompNetworkGenerator.targets" />
+  <Import Project="..\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />
 </Project>

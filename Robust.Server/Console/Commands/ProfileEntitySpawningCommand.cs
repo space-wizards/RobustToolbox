@@ -9,9 +9,9 @@ using Robust.Shared.Timing;
 
 namespace Robust.Server.Console.Commands;
 
-public sealed class ProfileEntitySpawningCommand : IConsoleCommand
+public sealed partial class ProfileEntitySpawningCommand : IConsoleCommand
 {
-    [Dependency] private readonly IEntityManager _entities = default!;
+    [Dependency] private IEntityManager _entities = default!;
 
     public string Command => "profileEntitySpawning";
     public string Description => "Profiles entity spawning with n entities";
@@ -51,7 +51,7 @@ public sealed class ProfileEntitySpawningCommand : IConsoleCommand
 
         for (var i = 0; i < amount; i++)
         {
-            ents[i] = _entities.SpawnEntity(prototype, MapCoordinates.Nullspace);
+            ents[i] = _entities.Spawn(prototype);
         }
 
         MeasureProfiler.SaveData();

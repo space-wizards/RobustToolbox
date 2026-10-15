@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Audio;
@@ -116,7 +116,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 _pressed = value;
 
-                if (Group != null)
+                if (Group != null && _pressed)
                 {
                     UnsetOtherGroupButtons();
                 }
@@ -318,7 +318,10 @@ namespace Robust.Client.UserInterface.Controls
                     if (args.Function == EngineKeyFunctions.UIClick && ToggleMode)
                     {
                         OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
-                        UnsetOtherGroupButtons();
+                        if (_pressed)
+                        {
+                            UnsetOtherGroupButtons();
+                        }
                     }
                 }
             }
@@ -391,9 +394,9 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void ExitedTree()
         {
-            base.Dispose(disposing);
+            base.ExitedTree();
 
             Group = null;
         }

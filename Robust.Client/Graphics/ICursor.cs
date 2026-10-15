@@ -13,6 +13,7 @@ namespace Robust.Client.Graphics
     /// <seealso cref="IClyde.CreateCursor"/>
     /// <seealso cref="IClyde.GetStandardCursor"/>
     /// <seealso cref="IClyde.SetCursor"/>
+    [NotContentImplementable]
     public interface ICursor : IDisposable
     {
     }

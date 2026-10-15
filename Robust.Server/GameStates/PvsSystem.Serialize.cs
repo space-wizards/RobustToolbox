@@ -14,7 +14,7 @@ namespace Robust.Server.GameStates;
 
 internal sealed partial class PvsSystem
 {
-    [Dependency] private readonly IRobustSerializer _serializer = default!;
+    [Dependency] private IRobustSerializer _serializer = default!;
 
     /// <summary>
     /// Get and serialize <see cref="GameState"/> objects for each player. Compressing & sending the states is done later.
@@ -28,7 +28,7 @@ internal sealed partial class PvsSystem
     }
 
     /// <summary>
-    /// Get and serialize a <see cref="GameState"/> for a single session (or the current replay).
+    /// Get and serialize a <see cref="GameState"/> for a single session (or update the current replay).
     /// </summary>
     private void SerializeState(int i)
     {
@@ -48,6 +48,9 @@ internal sealed partial class PvsSystem
         {
             var source = i >= 0 ? _sessions[i].Session.ToString() : "replays";
             Log.Log(LogLevel.Error, e, $"Caught exception while serializing game state for {source}.");
+#if !EXCEPTION_TOLERANCE
+            throw;
+#endif
         }
     }
 
@@ -56,7 +59,7 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void SerializeSessionState(PvsSession data)
     {
-        ComputeSessionState(data);
+        var state = ComputeSessionState(data);
         InterlockedHelper.Min(ref _oldestAck, data.FromTick.Value);
         DebugTools.AssertEqual(data.StateStream, null);
 
@@ -65,9 +68,9 @@ internal sealed partial class PvsSystem
         if (data.Session.Channel is not DummyChannel)
         {
             data.StateStream = RobustMemoryManager.GetMemoryStream();
-            _serializer.SerializeDirect(data.StateStream, data.State);
+            _serializer.SerializeDirect(data.StateStream, state);
         }
 
-        data.ClearState();
+        ClearSessionState(data);
     }
 }

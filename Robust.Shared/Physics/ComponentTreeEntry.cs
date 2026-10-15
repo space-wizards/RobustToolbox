@@ -25,10 +25,25 @@ public readonly struct ComponentTreeEntry<T> : IEquatable<ComponentTreeEntry<T>>
         return Uid.Equals(other.Uid);
     }
 
+    public override bool Equals(object? obj)
+    {
+        return obj is ComponentTreeEntry<T> other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return Uid.GetHashCode();
+    }
+
     public readonly void Deconstruct(out T component, out TransformComponent xform)
     {
         component = Component;
         xform = Transform;
+    }
+
+    public static implicit operator Entity<T, TransformComponent>(ComponentTreeEntry<T> entry)
+    {
+        return new(entry.Uid, entry.Component, entry.Transform);
     }
 
     public static implicit operator ComponentTreeEntry<T>((T, TransformComponent) tuple)

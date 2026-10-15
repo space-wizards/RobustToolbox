@@ -13,13 +13,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Debugging
 {
-    public sealed class DebugAnchoringSystem : EntitySystem
+    public sealed partial class DebugAnchoringSystem : EntitySystem
     {
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IUserInterfaceManager _userInterface = default!;
-        [Dependency] private readonly MapSystem _mapSystem = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private IUserInterfaceManager _userInterface = default!;
+        [Dependency] private MapSystem _mapSystem = default!;
 
         private Label? _label;
 
@@ -64,7 +63,7 @@ namespace Robust.Client.Debugging
             var mouseSpot = _inputManager.MouseScreenPosition;
             var spot = _eyeManager.PixelToMap(mouseSpot);
 
-            if (!_mapManager.TryFindGridAt(spot, out var gridUid, out var grid))
+            if (!_mapSystem.TryFindGridAt(spot, out var gridUid, out var grid))
             {
                 _label.Text = string.Empty;
                 _hovered = null;

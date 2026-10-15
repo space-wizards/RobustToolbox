@@ -18,13 +18,13 @@ namespace Robust.Client.UserInterface.XAML.Proxy;
 /// <remarks>
 /// Its behavior is described there.
 /// </remarks>
-internal sealed class XamlHotReloadManager : IXamlHotReloadManager
+internal sealed partial class XamlHotReloadManager : IXamlHotReloadManager
 {
-    [Dependency] private readonly IConfigurationManager _cfg = null!;
-    [Dependency] private readonly ILogManager _logManager = null!;
-    [Dependency] private readonly IResourceManager _resources = null!;
-    [Dependency] private readonly ITaskManager _taskManager = null!;
-    [Dependency] private readonly IXamlProxyManager _xamlProxyManager = null!;
+    [Dependency] private IConfigurationManager _cfg = null!;
+    [Dependency] private ILogManager _logManager = null!;
+    [Dependency] private IResourceManagerInternal _resources = null!;
+    [Dependency] private ITaskManager _taskManager = null!;
+    [Dependency] private IXamlProxyManager _xamlProxyManager = null!;
 
     private ISawmill _sawmill = null!;
     private FileSystemWatcher? _watcher;
@@ -120,9 +120,9 @@ internal sealed class XamlHotReloadManager : IXamlHotReloadManager
     private string? InferCodeLocation()
     {
         // ascend upwards from each content root until the solution file is found
-        foreach (var contentRoot in _resources.GetContentRoots())
+        foreach (var baseSystemPath in _resources.GetContentRoots())
         {
-            var systemPath = contentRoot.ToRelativeSystemPath();
+            var systemPath = baseSystemPath;
             while (true)
             {
                 var files = Array.Empty<string>();

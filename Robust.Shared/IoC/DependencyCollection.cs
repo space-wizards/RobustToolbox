@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -17,6 +18,11 @@ namespace Robust.Shared.IoC
     public delegate T DependencyFactoryDelegate<out T>()
         where T : class;
 
+    public delegate T DependencyFactoryBaseGenericLazyDelegate<out T>(
+        Type type,
+        IDependencyCollection services)
+        where T : class;
+
     /// <inheritdoc />
     internal sealed class DependencyCollection : IDependencyCollection
     {
@@ -28,6 +34,10 @@ namespace Robust.Shared.IoC
 
         private static readonly Type[] InjectorParameters = { typeof(object), typeof(object[]) };
 
+        // Temporary: cache of whether IHasDependencies is safe to use on a type.
+        // False for any types on which the source gen has failed to run.
+        private static readonly Dictionary<Type, bool> IsHasDependenciesSafe = new();
+
         /// <summary>
         /// Dictionary that maps the types passed to <see cref="Resolve{T}()"/> to their implementation.
         /// This is the first dictionary to get hit on a resolve.
@@ -36,6 +46,18 @@ namespace Robust.Shared.IoC
         /// Immutable and atomically swapped to provide thread safety guarantees.
         /// </remarks>
         private FrozenDictionary<Type, object> _services = FrozenDictionary<Type, object>.Empty;
+
+        /// <summary>
+        /// Array of all service implementations.
+        /// Indexed by <see cref="DependencyType.Index"/>
+        /// </summary>
+        private object[] _servicesArray = Array.Empty<object>();
+
+        /// <summary>
+        /// Dictionary that maps the types passed to <see cref="Resolve{T}()"/> to their implementation
+        /// for any types registered through <see cref="RegisterBaseGenericLazy"/>.
+        /// </summary>
+        private readonly ConcurrentDictionary<Type, object> _lazyServices = new();
 
         // Start fields used for building new services.
 
@@ -48,7 +70,9 @@ namespace Robust.Shared.IoC
         private readonly Dictionary<Type, DependencyFactoryDelegateInternal<object>> _resolveFactories = new();
         private readonly Queue<Type> _pendingResolves = new();
 
-        private readonly object _serviceBuildLock = new();
+        private readonly ConcurrentDictionary<Type, DependencyFactoryBaseGenericLazyDelegate<object>> _baseGenericLazyFactories = new();
+
+        private readonly Lock _serviceBuildLock = new();
 
         // End fields for building new services.
 
@@ -79,8 +103,8 @@ namespace Robust.Shared.IoC
         public IEnumerable<Type> GetRegisteredTypes()
         {
             return _parentCollection != null
-                ? _services.Keys.Concat(_parentCollection.GetRegisteredTypes())
-                : _services.Keys;
+                ? _services.Keys.Concat(_lazyServices.Keys).Concat(_parentCollection.GetRegisteredTypes())
+                : _services.Keys.Concat(_lazyServices.Keys);
         }
 
         public Type[] GetCachedInjectorTypes()
@@ -116,10 +140,7 @@ namespace Robust.Shared.IoC
             FrozenDictionary<Type, object> services,
             [MaybeNullWhen(false)] out object instance)
         {
-            if (!services.TryGetValue(objectType, out instance))
-                return _parentCollection is not null && _parentCollection.TryResolveType(objectType, out instance);
-
-            return true;
+            return TryResolveType(objectType, (IReadOnlyDictionary<Type, object>) services, out instance);
         }
 
         private bool TryResolveType(
@@ -128,7 +149,16 @@ namespace Robust.Shared.IoC
             [MaybeNullWhen(false)] out object instance)
         {
             if (!services.TryGetValue(objectType, out instance))
+            {
+                if (objectType.IsGenericType &&
+                    _baseGenericLazyFactories.TryGetValue(objectType.GetGenericTypeDefinition(), out var factory))
+                {
+                    instance = _lazyServices.GetOrAdd(objectType, type => factory(type, this));
+                    return true;
+                }
+
                 return _parentCollection is not null && _parentCollection.TryResolveType(objectType, out instance);
+            }
 
             return true;
         }
@@ -267,12 +297,12 @@ namespace Robust.Shared.IoC
                 _pendingResolves.Enqueue(interfaceType);
             }
         }
-        
+
         private void CheckRegisterInterface(Type interfaceType, Type implementationType, bool overwrite)
         {
             lock (_serviceBuildLock)
             {
-                if (!_resolveTypes.ContainsKey(interfaceType))
+                if (!_resolveTypes.TryGetValue(interfaceType, out var type))
                     return;
 
                 if (!overwrite)
@@ -281,7 +311,7 @@ namespace Robust.Shared.IoC
                     (
                         string.Format(
                             "Attempted to register already registered interface {0}. New implementation: {1}, Old implementation: {2}",
-                            interfaceType, implementationType, _resolveTypes[interfaceType]
+                            interfaceType, implementationType, type
                         ));
                 }
 
@@ -312,15 +342,25 @@ namespace Robust.Shared.IoC
             Register(type, implementation.GetType(), () => implementation, overwrite);
         }
 
+        public void RegisterBaseGenericLazy(Type interfaceType, DependencyFactoryBaseGenericLazyDelegate<object> factory)
+        {
+            lock (_serviceBuildLock)
+            {
+                _baseGenericLazyFactories[interfaceType] = factory;
+            }
+        }
+
         /// <inheritdoc />
         public void Clear()
         {
-            foreach (var service in _services.Values.OfType<IDisposable>().Distinct())
+            foreach (var service in _services.Values.Concat(_lazyServices.Values).OfType<IDisposable>().Distinct())
             {
                 service.Dispose();
             }
 
             _services = FrozenDictionary<Type, object>.Empty;
+            _lazyServices.Clear();
+            _servicesArray = [];
 
             lock (_serviceBuildLock)
             {
@@ -339,7 +379,48 @@ namespace Robust.Shared.IoC
         [System.Diagnostics.Contracts.Pure]
         public T Resolve<T>()
         {
-            return (T)ResolveType(typeof(T));
+            if (typeof(T) == typeof(IDependencyCollection))
+            {
+                if (TryResolveType(typeof(T), out var collection))
+                    return (T) collection;
+
+                return (T) (IDependencyCollection) this;
+            }
+
+            var index = DependencyType<T>.Index;
+            if (index < _servicesArray.Length &&
+                _servicesArray.TryGetValue(index, out var service) &&
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+                service != null)
+            {
+                return (T) service;
+            }
+
+            var resolved = (T) ResolveType(typeof(T));
+            lock (_serviceBuildLock)
+            {
+                // Re-check after we obtain the lock that this is still relevant
+                // We don't want to accidentally down-size it in a thread race.
+                EnsureServicesArrayCapacity(index);
+
+                // This might be a lazy-generated service, such as EntityQuery
+                // In that case, we index it now
+                _servicesArray[index] = resolved;
+            }
+
+            return resolved;
+        }
+
+        public T ResolveInject<T>(Type owningType)
+        {
+            try
+            {
+                return Resolve<T>();
+            }
+            catch (UnregisteredTypeException)
+            {
+                throw new UnregisteredDependencyException(owningType, typeof(T));
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -405,6 +486,13 @@ namespace Robust.Shared.IoC
                 var injectList = new List<object>();
 
                 var newDeps = _services.ToDictionary();
+                var reverse = new Dictionary<Type, Type>();
+
+                foreach (var serviceType in _services.Keys)
+                {
+                    if (_resolveTypes.TryGetValue(serviceType, out var implementationType))
+                        reverse.TryAdd(implementationType, serviceType);
+                }
 
                 // First we build every type we have registered but isn't yet built.
                 // This allows us to run this after the content assembly has been loaded.
@@ -416,12 +504,7 @@ namespace Robust.Shared.IoC
                     // Find a potential dupe by checking other registered types that have already been instantiated that have the same instance type.
                     // Can't catch ourselves because we're not instantiated.
                     // Ones that aren't yet instantiated are about to be and will find us instead.
-                    var (type, _) =
-                        _resolveTypes.FirstOrDefault(p => newDeps.ContainsKey(p.Key) && p.Value == value)!;
-
-                    // Interface key can't be null so since KeyValuePair<> is a struct,
-                    // this effectively checks whether we found something.
-                    if (type != null)
+                    if (reverse.TryGetValue(value, out var type))
                     {
                         // We have something with the same instance type, use that.
                         newDeps[key] = newDeps[type];
@@ -431,8 +514,9 @@ namespace Robust.Shared.IoC
                     try
                     {
                         // Yay for delegate covariance
-                        object instance = _resolveFactories[value].Invoke(newDeps);
+                        var instance = _resolveFactories[value].Invoke(newDeps);
                         newDeps[key] = instance;
+                        reverse[value] = key;
                         injectList.Add(instance);
                     }
                     catch (TargetInvocationException e)
@@ -448,10 +532,45 @@ namespace Robust.Shared.IoC
                 // Atomically set the new dict of services.
                 _services = newDeps.ToFrozenDictionary();
 
+                // Need to account for dependency collections that might not have all services
+                _servicesArray = new object[Math.Max(newDeps.Count, DependencyType.Index + 1)];
+
+                foreach (var (type, inst) in _services)
+                {
+                    var index = DependencyType.GetIndex(type);
+                    EnsureServicesArrayCapacity(index);
+
+                    _servicesArray[index] = inst;
+                }
+
+                // Index parent collections for their services, recursively
+                var parent = _parentCollection as DependencyCollection;
+                while (parent != null)
+                {
+                    for (var i = 0; i < parent._servicesArray.Length; i++)
+                    {
+                        var parentService = parent._servicesArray[i];
+
+                        // We don't want to overwrite our services with null if the parent doesn't have them
+                        // We also don't want to overwite our services with the parent's
+                        // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+                        if (parentService != null)
+                        {
+                            EnsureServicesArrayCapacity(i);
+
+                            if (_servicesArray[i] == null)
+                                _servicesArray[i] = parentService;
+                        }
+                        // ReSharper restore ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+                    }
+
+                    parent = parent._parentCollection as DependencyCollection;
+                }
+
                 // Graph built, go over ones that need injection.
                 foreach (var implementation in injectList)
                 {
-                    InjectDependenciesReflection(implementation, _services);
+                    InjectDependenciesReflection(implementation);
                 }
 
                 foreach (var injectedItem in injectList.OfType<IPostInjectInit>())
@@ -459,6 +578,15 @@ namespace Robust.Shared.IoC
                     injectedItem.PostInject();
                 }
             }
+        }
+
+        private void EnsureServicesArrayCapacity(int index)
+        {
+            if (index < _servicesArray.Length)
+                return;
+
+            var newLength = Math.Max(index + 1, Math.Max(4, _servicesArray.Length * 2));
+            Array.Resize(ref _servicesArray, newLength);
         }
 
         /// <inheritdoc />
@@ -483,23 +611,51 @@ namespace Robust.Shared.IoC
                     return;
                 }
 
-                injector = CacheInjector(type);
+                injector = CacheInjector(obj, type);
             }
 
-            var (@delegate, services) = injector;
+            var (@delegate, hasDependencies, services) = injector;
+
+            if (!hasDependencies && services?.Length == 0)
+                return;
+
+            if (hasDependencies)
+            {
+                ((IHasDependencies)obj).Inject(this);
+            }
 
             // If @delegate is null then the type has no dependencies.
             // So running an initializer would be quite wasteful.
             @delegate?.Invoke(obj, services!);
         }
 
-        private void InjectDependenciesReflection(object obj)
+        private object ResolveForInjection(Type owningType, Type fieldType, FrozenDictionary<Type, object> services)
         {
-            InjectDependenciesReflection(obj, _services);
+            // Not using Resolve<T>() because we're literally building it right now.
+            if (TryResolveType(fieldType, services, out var dep))
+            {
+                // Quick note: this DOES work with read only fields, though it may be a CLR implementation detail.
+                return dep;
+            }
+
+            // IDependencyCollection resolves to this collection by default,
+            // while allowing an explicitly registered service to override it.
+            if (fieldType == typeof(IDependencyCollection))
+            {
+                return this;
+            }
+
+            throw new UnregisteredDependencyException(owningType, fieldType);
         }
 
-        private void InjectDependenciesReflection(object obj, FrozenDictionary<Type, object> services)
+        private void InjectDependenciesReflection(object obj)
         {
+            if (CalculateHasDependenciesSafe(obj.GetType()))
+            {
+                InjectImmediateHasDependencies(obj);
+                return;
+            }
+
             var type = obj.GetType();
             foreach (var field in type.GetAllFields())
             {
@@ -508,32 +664,27 @@ namespace Robust.Shared.IoC
                     continue;
                 }
 
-                // Not using Resolve<T>() because we're literally building it right now.
-                if (TryResolveType(field.FieldType, services, out var dep))
-                {
-                    // Quick note: this DOES work with read only fields, though it may be a CLR implementation detail.
-                    field.SetValue(obj, dep);
-                    continue;
-                }
-
-                // A hard-coded special case so the DependencyCollection can inject itself.
-                // This is not put into the services so it can be overridden if needed.
-                if (field.FieldType == typeof(IDependencyCollection))
-                {
-                    field.SetValue(obj, this);
-                    continue;
-                }
-
-                throw new UnregisteredDependencyException(type, field.FieldType, field.Name);
+                field.SetValue(obj, ResolveForInjection(type, field.FieldType, _services));
             }
         }
 
-        private CachedInjector CacheInjector(Type type)
+        private void InjectImmediateHasDependencies(object obj)
+        {
+            if (obj is not IHasDependencies hasDependencies)
+                return;
+
+            hasDependencies.Inject(this);
+        }
+
+        private CachedInjector CacheInjector(object obj, Type type)
         {
             using var _ = _injectorCacheLock.WriteGuard();
             // Check in case value got filled in right before we acquired the lock.
             if (_injectorCache.TryGetValue(type, out var cached))
                 return cached;
+
+            if (CalculateHasDependenciesSafe(type))
+                return CacheInjectorHasDependencies(obj, type);
 
             var fields = new List<FieldInfo>();
 
@@ -572,8 +723,8 @@ namespace Robust.Shared.IoC
                 // Not using Resolve<T>() because we're literally building it right now.
                 if (!TryResolveType(field.FieldType, out var service))
                 {
-                    // A hard-coded special case so the DependencyCollection can inject itself.
-                    // This is not put into the services so it can be overridden if needed.
+                    // IDependencyCollection resolves to this collection by default,
+                    // while allowing an explicitly registered service to override it.
                     if (field.FieldType == typeof(IDependencyCollection))
                     {
                         service = this;
@@ -599,10 +750,33 @@ namespace Robust.Shared.IoC
             generator.Emit(OpCodes.Ret);
 
             var @delegate = (InjectorDelegate)dynamicMethod.CreateDelegate(typeof(InjectorDelegate));
-            cached = new CachedInjector(@delegate, services.ToArray());
+            cached = new CachedInjector(@delegate, false, services.ToArray());
             _injectorCache.Add(type, cached);
 
             return cached;
+        }
+
+        private CachedInjector CacheInjectorHasDependencies(object obj, Type type)
+        {
+            DebugTools.Assert(type == obj.GetType());
+            var cached = obj is IHasDependencies
+                ? new CachedInjector(null, true, null)
+                : default;
+
+            _injectorCache.Add(type, cached);
+            return cached;
+        }
+
+        private object[] ResolveServicesArray(Type owningType, Type[] types)
+        {
+            var result = new object[types.Length];
+
+            for (var i = 0; i < types.Length; i++)
+            {
+                result[i] = ResolveForInjection(owningType, types[i], _services);
+            }
+
+            return result;
         }
 
         [return: NotNullIfNotNull("factory")]
@@ -616,6 +790,41 @@ namespace Robust.Shared.IoC
             return _ => factory();
         }
 
-        private record struct CachedInjector(InjectorDelegate? Delegate, object[]? Services);
+        private record struct CachedInjector(InjectorDelegate? Delegate, bool HasDependencies, object[]? Services);
+
+        private static bool HasAnyDependenciesAtLevel(Type type)
+        {
+            return type
+                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .Any(field => field.HasCustomAttribute<DependencyAttribute>());
+        }
+
+        private static bool CalculateHasDependenciesSafe(Type type)
+        {
+            bool safe;
+
+            lock (IsHasDependenciesSafe)
+            {
+                if (IsHasDependenciesSafe.TryGetValue(type, out safe))
+                    return safe;
+
+                safe = true;
+                for (var checkType = type; checkType != null; checkType = checkType.BaseType)
+                {
+                    if (checkType.HasCustomAttribute<HasDependenciesGeneratedAttribute>())
+                        continue;
+
+                    if (HasAnyDependenciesAtLevel(checkType))
+                    {
+                        safe = false;
+                        break;
+                    }
+                }
+
+                IsHasDependenciesSafe.Add(type, safe);
+            }
+
+            return safe;
+        }
     }
 }

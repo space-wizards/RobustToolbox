@@ -33,7 +33,7 @@ PLATFORM_LINUX = "linux-x64"
 PLATFORM_LINUX_ARM64 = "linux-arm64"
 PLATFORM_MACOS = "osx-x64"
 
-TARGET_FRAMEWORK = "net9.0"
+TARGET_FRAMEWORK = "net10.0"
 
 def main() -> None:
     parser = argparse.ArgumentParser(

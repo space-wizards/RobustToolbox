@@ -6,10 +6,10 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
-    public sealed class VisibilitySystem : SharedVisibilitySystem
+    public sealed partial class VisibilitySystem : SharedVisibilitySystem
     {
-        [Dependency] private readonly PvsSystem _pvs = default!;
-        [Dependency] private readonly IViewVariablesManager _vvManager = default!;
+        [Dependency] private PvsSystem _pvs = default!;
+        [Dependency] private IViewVariablesManager _vvManager = default!;
 
         private EntityQuery<TransformComponent> _xformQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;

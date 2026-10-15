@@ -31,14 +31,14 @@ using static Robust.Shared.Network.Messages.MsgScriptCompletionResponse;
 
 namespace Robust.Server.Scripting
 {
-    internal sealed class ScriptHost : IScriptHost
+    internal sealed partial class ScriptHost : IScriptHost
     {
-        [Dependency] private readonly IServerNetManager _netManager = default!;
-        [Dependency] private readonly IConGroupController _conGroupController = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IServerNetManager _netManager = default!;
+        [Dependency] private IConGroupController _conGroupController = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         readonly Dictionary<ICommonSession, Dictionary<int, ScriptInstance>> _instances =
             new();
@@ -272,7 +272,7 @@ namespace Robust.Server.Scripting
 
             if (!_instances.TryGetValue(session, out var instances) ||
                 !instances.TryGetValue(message.ScriptSession, out var instance))
-                    return;
+                return;
 
             var replyMessage = new MsgScriptCompletionResponse();
             replyMessage.ScriptSession = message.ScriptSession;
@@ -308,7 +308,7 @@ namespace Robust.Server.Scripting
                 .GetCompletionsAsync(document, message.Cursor) ?? Task.FromResult(CompletionList.Empty));
 
             var ires = ImmutableArray.CreateBuilder<LiteResult>();
-            foreach  (var r in results.ItemsList)
+            foreach (var r in results.ItemsList)
                 ires.Add(new LiteResult(
                             displayText: r.DisplayText,
                             displayTextPrefix: r.DisplayTextPrefix,
@@ -374,7 +374,7 @@ namespace Robust.Server.Scripting
 
             protected override void WriteSyntax(object toString)
             {
-                if (_scriptInstance.RunningScript && toString?.ToString() is {} code)
+                if (_scriptInstance.RunningScript && toString?.ToString() is { } code)
                 {
                     var options = ScriptInstanceShared.GetScriptOptions(_reflectionManager);
                     var script = CSharpScript.Create(code, options, typeof(ScriptGlobals));
@@ -389,7 +389,7 @@ namespace Robust.Server.Scripting
 
             public override void write(object toString)
             {
-                if (_scriptInstance.RunningScript && toString.ToString() is {} value)
+                if (_scriptInstance.RunningScript && toString.ToString() is { } value)
                 {
                     _scriptInstance.OutputBuffer.AddText(value);
                 }

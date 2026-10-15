@@ -12,10 +12,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
-public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
+public sealed partial class PvsOverrideSystem : SharedPvsOverrideSystem
 {
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IConsoleHost _console = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IConsoleHost _console = default!;
 
     private readonly HashSet<EntityUid> _hasOverride = new();
 
@@ -250,27 +250,6 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
         {
             SessionOverrides.GetOrNew(session).Add(uid);
         }
-    }
-
-    [Obsolete("Use variant that takes in an EntityUid")]
-    public void AddGlobalOverride(NetEntity entity, bool removeExistingOverride = true, bool recursive = false)
-    {
-        if (TryGetEntity(entity, out var uid))
-            AddGlobalOverride(uid.Value);
-    }
-
-    [Obsolete("Use variant that takes in an EntityUid")]
-    public void AddSessionOverride(NetEntity entity, ICommonSession session, bool removeExistingOverride = true)
-    {
-        if (TryGetEntity(entity, out var uid))
-            AddSessionOverride(uid.Value, session);
-    }
-
-    [Obsolete("Don't use this, clear specific overrides")]
-    public void ClearOverride(NetEntity entity)
-    {
-        if (TryGetEntity(entity, out var uid))
-            Clear(uid.Value);
     }
 
     #region Map/Grid Events

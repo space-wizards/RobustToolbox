@@ -79,5 +79,5 @@ release/
 Robust.Docfx/*-site
 Robust.Docfx/api
 
-# ignore compiler-generated xml docs
-Resources/ViewVariables/
+# C# Dev Kit cache file
+*.lscache

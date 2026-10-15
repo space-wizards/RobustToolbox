@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Placement;
@@ -9,7 +8,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
-using Robust.Shared.Graphics;
+using Robust.Shared.Maths;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
@@ -18,11 +17,11 @@ using static Robust.Client.UserInterface.Controls.BaseButton;
 
 namespace Robust.Client.UserInterface.Controllers.Implementations;
 
-public sealed class TileSpawningUIController : UIController
+public sealed partial class TileSpawningUIController : UIController
 {
-    [Dependency] private readonly IPlacementManager _placement = default!;
-    [Dependency] private readonly IResourceCache _resources = default!;
-    [Dependency] private readonly ITileDefinitionManager _tiles = default!;
+    [Dependency] private IPlacementManager _placement = default!;
+    [Dependency] private IResourceCache _resources = default!;
+    [Dependency] private ITileDefinitionManager _tiles = default!;
 
     private TileSpawnWindow? _window;
     private bool _init;
@@ -106,7 +105,7 @@ public sealed class TileSpawningUIController : UIController
         if (_window is { Disposed: false })
             return;
         _window = UIManager.CreateWindow<TileSpawnWindow>();
-        LayoutContainer.SetAnchorPreset(_window,LayoutContainer.LayoutPreset.CenterLeft);
+        LayoutContainer.SetAnchorPreset(_window, LayoutContainer.LayoutPreset.CenterLeft);
         _window.ClearButton.OnPressed += OnTileClearPressed;
         _window.SearchBar.OnTextChanged += OnTileSearchChanged;
         _window.TileList.OnItemSelected += OnTileItemSelected;
@@ -239,7 +238,13 @@ public sealed class TileSpawningUIController : UIController
             {
                 texture = _resources.GetResource<TextureResource>(path);
             }
-            _window.TileList.AddItem(Loc.GetString(entry.Name), texture);
+
+            var item = _window.TileList.AddItem(Loc.GetString(entry.Name), texture);
+
+            if (texture != null)
+            {
+                item.IconRegion = new UIBox2(0, 0, texture.Width / entry.Variants, texture.Height);
+            }
         }
     }
 }

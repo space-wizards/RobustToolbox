@@ -6,7 +6,6 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Instances;
-using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -21,12 +20,11 @@ namespace Robust.Client.ViewVariables
 {
     internal sealed partial class ClientViewVariablesManager : ViewVariablesManager, IClientViewVariablesManagerInternal
     {
-        [Dependency] private readonly IUserInterfaceManager _userInterfaceManager = default!;
-        [Dependency] private readonly IClientNetManager _netManager = default!;
-        [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IViewVariableControlFactory _controlFactory = default!;
-        [Dependency] private readonly IResourceManager _resManager = default!;
+        [Dependency] private IUserInterfaceManager _userInterfaceManager = default!;
+        [Dependency] private IClientNetManager _netManager = default!;
+        [Dependency] private IRobustSerializer _robustSerializer = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IViewVariableControlFactory _controlFactory = default!;
 
         private uint _nextReqId = 1;
         private readonly Vector2i _defaultWindowSize = (640, 420);
@@ -54,8 +52,6 @@ namespace Robust.Client.ViewVariables
             _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>();
             _netManager.RegisterNetMessage<MsgViewVariablesReqSession>();
             _netManager.RegisterNetMessage<MsgViewVariablesReqData>();
-
-            LoadDocStrings();
         }
 
         public VVPropEditor PropertyFor(Type? type)
@@ -127,7 +123,7 @@ namespace Robust.Client.ViewVariables
                 instance = new ViewVariablesInstanceObject(this, _robustSerializer);
             }
 
-            loadingLabel.Dispose();
+            loadingLabel.Orphan();
             instance.Initialize(window, blob, session);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
@@ -209,7 +205,7 @@ namespace Robust.Client.ViewVariables
 
             if (closeWindow)
             {
-                window.Dispose();
+                window.Close();
             }
 
             _windows.Remove(instance);
@@ -278,7 +274,6 @@ namespace Robust.Client.ViewVariables
             session = null;
             return false;
         }
-
     }
 
     [Virtual]

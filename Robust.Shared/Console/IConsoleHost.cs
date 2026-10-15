@@ -31,6 +31,7 @@ namespace Robust.Shared.Console
     /// The console host exists as a singleton subsystem that provides all of the features of the console API.
     /// It will register console commands, spawn console shells and execute command strings.
     /// </summary>
+    [NotContentImplementable]
     public interface IConsoleHost
     {
         /// <summary>
@@ -64,6 +65,12 @@ namespace Robust.Shared.Console
         /// should only be used during server initialization.
         /// </summary>
         void LoadConsoleCommands();
+
+        /// <summary>
+        /// Check whether a console command is hidden.
+        /// </summary>
+        /// <seealso cref="IConsoleCommand.Command"/>
+        bool IsCommandHidden(IConsoleCommand command);
 
         #region RegisterCommand
         /// <summary>

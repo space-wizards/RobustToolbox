@@ -23,7 +23,7 @@ public sealed class AfterAutoHandleStateAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Error,
         true,
         // Does this even show up anywhere in Rider? >:(
-        "You must mark your component with '[AutoGenerateComponentState(true)]' to subscribe to this event."
+        "You must mark your component with '[AutoGenerateComponentState(raiseAfterAutoHandleState: true)]' to subscribe to this event."
     );
 
     public static readonly DiagnosticDescriptor MissingAttributeParam = new(

@@ -4,9 +4,9 @@ using Robust.Shared.Random;
 namespace Robust.Shared.Toolshed.Commands.Math;
 
 [ToolshedCommand]
-public sealed class RngCommand : ToolshedCommand
+public sealed partial class RngCommand : ToolshedCommand
 {
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     [CommandImplementation("to")]
     public int To(

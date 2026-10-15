@@ -1,0 +1,584 @@
+﻿using System.Numerics;
+using NUnit.Framework;
+
+namespace Robust.Shared.Maths.Tests
+{
+    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
+    [TestFixture]
+    [TestOf(typeof(Box2))]
+    internal sealed class Box2_Test
+    {
+        public delegate void Box2Setter(ref Box2 box);
+
+        private static IEnumerable<(float left, float bottom, float right, float top)> Sources =>
+            new (float, float, float, float)[]
+            {
+                (0, 0, 0, 0),
+                (0, 0, 0, 1),
+                (0, 0, 1, 0),
+                (0, 0, 1, 1),
+                (0, -1, 0, 0),
+                (0, -1, 0, 1),
+                (0, -1, 1, 0),
+                (0, -1, 1, 1),
+                (-1, 0, 0, 0),
+                (-1, 0, 0, 1),
+                (-1, 0, 1, 0),
+                (-1, 0, 1, 1),
+                (-1, -1, 0, 0),
+                (-1, -1, 0, 1),
+                (-1, -1, 1, 0),
+                (-1, -1, 1, 1)
+            };
+
+        private static IEnumerable<(float x, float y)> SmallTranslations => new[]
+        {
+            (0, 0.1f),
+            (0.1f, 0),
+            (0.1f, 0.1f),
+            (0, -0.1f),
+            (0.1f, -0.1f),
+            (-0.1f, 0),
+            (-0.1f, 0.1f),
+            (-0.1f, -0.1f)
+        };
+
+        private static IEnumerable<(float x, float y)> LargeTranslations => new (float, float)[]
+        {
+            (0, 5),
+            (5, 0),
+            (5, 5),
+            (0, -5),
+            (5, -5),
+            (-5, 0),
+            (-5, 5),
+            (-5, -5)
+        };
+
+        private static IEnumerable<float> Scalars => new[]
+        {
+            0.0f,
+            0.1f,
+            1.0f,
+            5.0f,
+            10.0f
+        };
+
+        private static TestCaseData[] MatrixCases = new[]
+        {
+            new TestCaseData(Matrix3x2.Identity,
+                Box2.UnitCentered,
+                Box2.UnitCentered),
+            new TestCaseData(Matrix3x2.CreateRotation(MathF.PI),
+                Box2.UnitCentered,
+                new Box2(new Vector2(-0.5f, -0.5f), new Vector2(0.5f, 0.5f))),
+            new TestCaseData(Matrix3x2.CreateTranslation(Vector2.One),
+                Box2.UnitCentered,
+                new Box2(new Vector2(0.5f, 0.5f), new Vector2(1.5f, 1.5f))),
+        };
+
+        private static TestCaseData[] UnionStaticCases =
+        [
+            new TestCaseData(
+                new Box2(-2, -1, 0, 1),
+                new Box2(-1, -3, 4, 0),
+                new Box2(-2, -3, 4, 1)),
+            new TestCaseData(
+                new Box2(-1, -1, 1, 1),
+                new Box2(-0.5f, -0.5f, 0.5f, 0.5f),
+                new Box2(-1, -1, 1, 1)),
+        ];
+
+        private static TestCaseData[] EnlargeAabbCases =
+        [
+            new TestCaseData(
+                new Box2(-1, -1, 1, 1),
+                new Box2(-2, -3, 4, 5),
+                true,
+                new Box2(-2, -3, 4, 5)),
+            new TestCaseData(
+                new Box2(-2, -3, 4, 5),
+                new Box2(-1, -1, 1, 1),
+                false,
+                new Box2(-2, -3, 4, 5)),
+        ];
+
+        private static TestCaseData[] HasNanCases =
+        [
+            new TestCaseData(new Box2(float.NaN, 0, 1, 2), true),
+            new TestCaseData(new Box2(0, float.NaN, 1, 2), true),
+            new TestCaseData(new Box2(0, 1, float.NaN, 2), true),
+            new TestCaseData(new Box2(0, 1, 2, float.NaN), true),
+            new TestCaseData(new Box2(0, 1, 2, 3), false),
+        ];
+
+        private static TestCaseData[] InvalidSetterCases =
+        [
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Left = 2), new Box2(1, -1, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Right = -2), new Box2(-1, -1, -1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Bottom = 2), new Box2(-1, 1, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Top = -2), new Box2(-1, -1, 1, -1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.BottomLeft = new Vector2(2, 0)), new Box2(1, 0, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.TopRight = new Vector2(0, -2)), new Box2(-1, -1, 0, -1)),
+        ];
+
+        private static TestCaseData[] ValidSetterCases =
+        [
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Left = -2), new Box2(-2, -1, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Right = 2), new Box2(-1, -1, 2, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Bottom = -2), new Box2(-1, -2, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.Top = 2), new Box2(-1, -1, 1, 2)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.BottomLeft = new Vector2(-2, -2)), new Box2(-2, -2, 1, 1)),
+            new TestCaseData((Box2Setter) ((ref Box2 box) => box.TopRight = new Vector2(2, 2)), new Box2(-1, -1, 2, 2)),
+        ];
+
+        [Test, TestCaseSource(nameof(MatrixCases))]
+        public void TestBox2Matrices(Matrix3x2 matrix, Box2 bounds, Box2 result)
+        {
+            Assert.That(matrix.TransformBox(bounds), Is.EqualTo(result));
+        }
+
+        /// <summary>
+        ///     Check whether the sources list has correct data.
+        ///     That is, no boxes where left > right or top > bottom.
+        /// </summary>
+        [Test]
+        public void AssertSourcesValid([ValueSource(nameof(Sources))] (float, float, float, float) test)
+        {
+            var (left, bottom, right, top) = test;
+            Assert.That(right, Is.GreaterThanOrEqualTo(left));
+            Assert.That(top, Is.GreaterThanOrEqualTo(bottom));
+        }
+
+        [Test]
+        public void Box2VectorConstructor([ValueSource(nameof(Sources))] (float, float, float, float) test)
+        {
+            var (left, bottom, right, top) = test;
+            var box = new Box2(new Vector2(left, bottom), new Vector2(right, top));
+
+            Assert.That(box.Left, Is.EqualTo(left));
+            Assert.That(box.Top, Is.EqualTo(top));
+            Assert.That(box.Right, Is.EqualTo(right));
+            Assert.That(box.Bottom, Is.EqualTo(bottom));
+        }
+
+        [Test]
+        public void Box2EdgesConstructor([ValueSource(nameof(Sources))] (float, float, float, float) test)
+        {
+            var (left, bottom, right, top) = test;
+            var box = new Box2(left, bottom, right, top);
+
+            Assert.That(box.Left, Is.EqualTo(left));
+            Assert.That(box.Top, Is.EqualTo(top));
+            Assert.That(box.Right, Is.EqualTo(right));
+            Assert.That(box.Bottom, Is.EqualTo(bottom));
+        }
+
+        [Test]
+        public void Box2InvalidConstruction()
+        {
+#if DEBUG
+            Assert.That(() => new Box2(3, 4, -1, -2), Throws.Exception);
+            Assert.That(() => new Box2(new Vector2(3, 4), new Vector2(-1, -2)), Throws.Exception);
+#else
+            var expected = new Box2(3, 4, 3, 4);
+
+            Assert.That(new Box2(3, 4, -1, -2), Is.EqualTo(expected));
+            Assert.That(new Box2(new Vector2(3, 4), new Vector2(-1, -2)), Is.EqualTo(expected));
+#endif
+        }
+
+        [Test]
+        public void Box2CornerVectorProperties([ValueSource(nameof(Sources))] (float, float, float, float) test)
+        {
+            var (left, bottom, right, top) = test;
+            var box = new Box2(left, bottom, right, top);
+
+            var br = new Vector2(right, bottom);
+            var tl = new Vector2(left, top);
+            var tr = new Vector2(right, top);
+            var bl = new Vector2(left, bottom);
+
+            Assert.That(box.BottomRight, Is.EqualTo(br));
+            Assert.That(box.TopLeft, Is.EqualTo(tl));
+            Assert.That(box.TopRight, Is.EqualTo(tr));
+            Assert.That(box.BottomLeft, Is.EqualTo(bl));
+        }
+
+        [Test]
+        public void Box2FromDimensionsFloats([ValueSource(nameof(Sources))] (float, float, float, float) test)
+        {
+            var (left, bottom, right, top) = test;
+
+            var width = Math.Abs(left - right);
+            var height = Math.Abs(top - bottom);
+
+            var box = Box2.FromDimensions(left, bottom, width, height);
+
+            Assert.That(box.Left, Is.EqualTo(left));
+            Assert.That(box.Bottom, Is.EqualTo(bottom));
+            Assert.That(box.Right, Is.EqualTo(left + width));
+            Assert.That(box.Top, Is.EqualTo(bottom + height));
+
+            Assert.That(box.Width, Is.EqualTo(width));
+            Assert.That(box.Height, Is.EqualTo(height));
+        }
+
+        [Test]
+        public void Box2FromDimensionsVectors([ValueSource(nameof(Sources))] (float, float, float, float) test)
+        {
+            var (left, bottom, right, top) = test;
+
+            var width = Math.Abs(left - right);
+            var height = Math.Abs(top - bottom);
+            var size = new Vector2(width, height);
+
+            var box = Box2.FromDimensions(new Vector2(left, bottom), size);
+
+            Assert.That(box.Left, Is.EqualTo(left));
+            Assert.That(box.Top, Is.EqualTo(top));
+            Assert.That(box.Right, Is.EqualTo(left + width));
+            Assert.That(box.Top, Is.EqualTo(bottom + height));
+
+            Assert.That(box.Size, Is.EqualTo(size));
+        }
+
+        [Test]
+        public void Box2IntersectsSelf([ValueSource(nameof(Sources))] (float, float, float, float) test)
+        {
+            var (left, bottom, right, top) = test;
+
+            var box = new Box2(left, bottom, right, top);
+
+            Assert.That(box.Intersects(box));
+        }
+
+        [Test]
+        public void Box2IntersectsWithSmallTranslation([ValueSource(nameof(SmallTranslations))]
+            (float, float) test)
+        {
+            var (x, y) = test;
+
+            var box = new Box2(-1, -1, 1, 1);
+            var translatedBox = box.Translated(new Vector2(x, y));
+
+            Assert.That(box.Intersects(translatedBox));
+        }
+
+        [Test]
+        public void Box2NotIntersectsWithLargeTranslation([ValueSource(nameof(LargeTranslations))]
+            (float, float) test)
+        {
+            var (x, y) = test;
+
+            var box = new Box2(-1, -1, 1, 1);
+            var translatedBox = box.Translated(new Vector2(x, y));
+
+            Assert.That(box.Intersects(translatedBox), Is.False);
+        }
+
+        [Test]
+        public void Box2Intersect()
+        {
+            var boxOne = new Box2(-1, -1, 1, 1);
+            var boxTwo = new Box2(0, 0, 2, 2);
+
+            var result = boxOne.Intersect(boxTwo);
+
+            Assert.That(result.Left, Is.EqualTo(0f));
+            Assert.That(result.Bottom, Is.EqualTo(0f));
+            Assert.That(result.Right, Is.EqualTo(1f));
+            Assert.That(result.Top, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void Box2NotIntersect()
+        {
+            var boxOne = new Box2(-1, -1, 0, 0);
+            var boxTwo = new Box2(0, 0, 2, 2);
+
+            var result = boxOne.Intersect(boxTwo);
+
+            Assert.That(result.Left, Is.EqualTo(0f));
+            Assert.That(result.Bottom, Is.EqualTo(0f));
+            Assert.That(result.Right, Is.EqualTo(0f));
+            Assert.That(result.Top, Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void Box2Union()
+        {
+            var boxOne = new Box2(-1, -1, 1, 1);
+            var boxTwo = new Box2(0, 0, 2, 2);
+
+            var result = boxOne.Union(boxTwo);
+
+            Assert.That(result.Left, Is.EqualTo(-1f));
+            Assert.That(result.Bottom, Is.EqualTo(-1f));
+            Assert.That(result.Right, Is.EqualTo(2f));
+            Assert.That(result.Top, Is.EqualTo(2f));
+        }
+
+        [Test, TestCaseSource(nameof(UnionStaticCases))]
+        public void Box2UnionStatic(Box2 boxOne, Box2 boxTwo, Box2 expected)
+        {
+            Assert.That(Box2.Union(boxOne, boxTwo), Is.EqualTo(expected));
+        }
+
+        [Test, TestCaseSource(nameof(EnlargeAabbCases))]
+        public void Box2EnlargeAabb(Box2 box, Box2 other, bool expectedChanged, Box2 expectedBox)
+        {
+            Assert.That(box.EnlargeAabb(other), Is.EqualTo(expectedChanged));
+            Assert.That(box, Is.EqualTo(expectedBox));
+        }
+
+        [Test, TestCaseSource(nameof(HasNanCases))]
+        public void Box2HasNan(Box2 box, bool expected)
+        {
+            Assert.That(box.HasNan(), Is.EqualTo(expected));
+        }
+
+        [Test, TestCaseSource(nameof(InvalidSetterCases))]
+        public void Box2InvalidSetters(Box2Setter setter, Box2 expected)
+        {
+            var box = new Box2(-1, -1, 1, 1);
+
+#if DEBUG
+            Assert.That(() => setter(ref box), Throws.Exception);
+#else
+            setter(ref box);
+
+            Assert.That(box, Is.EqualTo(expected));
+#endif
+        }
+
+        [Test, TestCaseSource(nameof(ValidSetterCases))]
+        public void Box2AcceptsValidSetters(Box2Setter setter, Box2 expected)
+        {
+            var box = new Box2(-1, -1, 1, 1);
+
+            setter(ref box);
+
+            Assert.That(box, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void Box2IsEmpty()
+        {
+            var degenerateBox = new Box2(0, 0, 0, 0);
+
+            Assert.That(degenerateBox.IsEmpty());
+
+            var tallDegenBox = new Box2(0, -1, 0, 1);
+            var wideDegenBox = new Box2(-1, 0, 1, 0);
+            var meatyBox = new Box2(-1, -1, 1, 1);
+
+            Assert.That(tallDegenBox.IsEmpty(), Is.False);
+            Assert.That(wideDegenBox.IsEmpty(), Is.False);
+            Assert.That(meatyBox.IsEmpty(), Is.False);
+        }
+
+        [Test]
+        public void Box2NotEnclosesSelf()
+        {
+            var box = new Box2(-1, -1, 1, 1);
+
+            Assert.That(box.Encloses(box), Is.False);
+        }
+
+        [Test]
+        public void Box2ScaledEncloses()
+        {
+            var box = new Box2(-1, -1, 1, 1);
+            var smallBox = box.Scale(0.5f);
+            var bigBox = box.Scale(2.0f);
+
+            Assert.That(box.Encloses(smallBox));
+            Assert.That(box.Encloses(bigBox), Is.False);
+            Assert.That(smallBox.Encloses(box), Is.False);
+            Assert.That(bigBox.Encloses(box));
+        }
+
+        [Test]
+        public void Box2TranslatedNotEncloses([ValueSource(nameof(LargeTranslations))]
+            (float, float) test)
+        {
+            var (x, y) = test;
+
+            var box = new Box2(-1, -1, 1, 1);
+            var translatedBox = box.Translated(new Vector2(x, y));
+
+            Assert.That(box.Encloses(translatedBox), Is.False);
+            Assert.That(translatedBox.Encloses(box), Is.False);
+        }
+
+        [Test]
+        public void Box2NotContainsSelfOpen()
+        {
+            var box = new Box2(-1, -1, 1, 1);
+
+            Assert.That(box.Contains(box.BottomLeft, false), Is.False);
+            Assert.That(box.Contains(box.TopLeft, false), Is.False);
+            Assert.That(box.Contains(box.TopRight, false), Is.False);
+            Assert.That(box.Contains(box.BottomRight, false), Is.False);
+        }
+
+        [Test]
+        public void Box2ContainsSelfClosed()
+        {
+            var box = new Box2(-1, -1, 1, 1);
+
+            Assert.That(box.Contains(box.BottomLeft));
+            Assert.That(box.Contains(box.TopLeft));
+            Assert.That(box.Contains(box.TopRight));
+            Assert.That(box.Contains(box.BottomRight));
+
+            var bl = box.BottomLeft;
+            var tl = box.TopLeft;
+            var tr = box.TopRight;
+            var br = box.BottomRight;
+
+            Assert.That(box.Contains(bl.X, bl.Y));
+            Assert.That(box.Contains(tl.X, tl.Y));
+            Assert.That(box.Contains(tr.X, tr.Y));
+            Assert.That(box.Contains(br.X, br.Y));
+        }
+
+        [Test]
+        public void Box2Contains([ValueSource(nameof(SmallTranslations))]
+            (float, float) test)
+        {
+            var (x, y) = test;
+            var vec = new Vector2(x, y);
+
+            var box = new Box2(-1, -1, 1, 1);
+
+            Assert.That(box.Contains(x, y));
+            Assert.That(box.Contains(vec));
+            Assert.That(box.Contains(vec, false));
+        }
+
+        [Test]
+        public void Box2NotContains([ValueSource(nameof(LargeTranslations))]
+            (float, float) test)
+        {
+            var (x, y) = test;
+            var vec = new Vector2(x, y);
+
+            var box = new Box2(-1, -1, 1, 1);
+
+            Assert.That(box.Contains(x, y), Is.False);
+            Assert.That(box.Contains(vec), Is.False);
+            Assert.That(box.Contains(vec, false), Is.False);
+        }
+
+        [Test]
+        public void Box2Scale([ValueSource(nameof(Scalars))] float scalar)
+        {
+            var box = new Box2(-1, -1, 1, 1);
+            var scaledBox = box.Scale(scalar);
+
+            Assert.That(scaledBox.Center, Is.EqualTo(box.Center));
+            Assert.That(scaledBox.Size, Is.EqualTo(box.Size * scalar));
+        }
+
+        [Test]
+        public void Box2ScaleNegativeException()
+        {
+            var box = new Box2(-1, -1, 1, 1);
+            Assert.That(() => box.Scale(-1), Throws.Exception);
+        }
+
+        [Test]
+        public void Box2Translated([ValueSource(nameof(LargeTranslations))]
+            (float, float) test)
+        {
+            var (x, y) = test;
+            var vec = new Vector2(x, y);
+
+            var box = new Box2(-1, -1, 1, 1);
+            var scaledBox = box.Translated(vec);
+
+            Assert.That(scaledBox.Left, Is.EqualTo(box.Left + x));
+            Assert.That(scaledBox.Top, Is.EqualTo(box.Top + y));
+            Assert.That(scaledBox.Bottom, Is.EqualTo(box.Bottom + y));
+            Assert.That(scaledBox.Right, Is.EqualTo(box.Right + x));
+        }
+
+        [Test]
+        public void Box2Equals([ValueSource(nameof(Sources))] (float, float, float, float) test)
+        {
+            var (left, bottom, right, top) = test;
+
+            var controlBox = new Box2(left, bottom, right, top);
+            var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
+            var sameBox = new Box2(left, bottom, right, top);
+            Object sameBoxAsObject = sameBox;
+            Box2? nullBox = null;
+            Vector2 notBox = new Vector2(left, top);
+
+            Assert.That(controlBox.Equals(controlBox));
+            Assert.That(controlBox.Equals(differentBox), Is.False);
+            Assert.That(controlBox.Equals(sameBox));
+            Assert.That(controlBox.Equals(sameBoxAsObject));
+            // ReSharper disable once ExpressionIsAlwaysNull
+            Assert.That(controlBox.Equals(nullBox), Is.False);
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            Assert.That(controlBox.Equals(notBox), Is.False);
+        }
+
+        [Test]
+        public void Box2EqualsOperator([ValueSource(nameof(Sources))] (float, float, float, float) test)
+        {
+            var (left, bottom, right, top) = test;
+
+            var controlBox = new Box2(left, bottom, right, top);
+            var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
+            var sameBox = new Box2(left, bottom, right, top);
+
+#pragma warning disable CS1718 // Comparison made to same variable
+            // ReSharper disable once EqualExpressionComparison
+            Assert.That(controlBox == controlBox);
+#pragma warning restore CS1718 // Comparison made to same variable
+            Assert.That(controlBox == differentBox, Is.False);
+            Assert.That(controlBox == sameBox);
+        }
+
+        [Test]
+        public void Box2InequalsOperator([ValueSource(nameof(Sources))] (float, float, float, float) test)
+        {
+            var (left, bottom, right, top) = test;
+
+            var controlBox = new Box2(left, bottom, right, top);
+            var differentBox = new Box2(-MathHelper.Pi, -MathHelper.Pi, MathHelper.Pi, MathHelper.Pi);
+            var sameBox = new Box2(left, bottom, right, top);
+
+#pragma warning disable CS1718 // Comparison made to same variable
+            // ReSharper disable once EqualExpressionComparison
+            Assert.That(controlBox != controlBox, Is.False);
+#pragma warning restore CS1718 // Comparison made to same variable
+            Assert.That(controlBox != differentBox);
+            Assert.That(controlBox != sameBox, Is.False);
+        }
+
+        [Test]
+        public void Box2CenteredAround()
+        {
+            var center = new Vector2(1, 1);
+            var size = new Vector2(1, 1);
+
+            var box = Box2.CenteredAround(center, size);
+
+            Assert.That(box.Center, Is.EqualTo(center));
+            Assert.That(box.Size, Is.EqualTo(size));
+        }
+
+        [Test]
+        public void Enlarged()
+        {
+            var box = new Box2(1, 1, 2, 2).Enlarged(1);
+
+            Assert.That(box, Is.EqualTo(new Box2(0, 0, 3, 3)));
+        }
+    }
+}

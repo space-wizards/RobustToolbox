@@ -9,7 +9,8 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Physics.Shapes;
 
 // Internal so people don't use it when it will have breaking changes very soon.
-internal record struct Polygon : IPhysShape
+[DataDefinition]
+internal partial record struct Polygon : IPhysShape
 {
     [DataField]
     public byte VertexCount { get; internal set; }
@@ -41,6 +42,8 @@ internal record struct Polygon : IPhysShape
 
     }
 
+    public Polygon(PhysShapeAabb aabb) : this(aabb.LocalBounds) {}
+
     public Polygon(PolygonShape polyShape)
     {
         Unsafe.SkipInit(out this);
@@ -50,6 +53,24 @@ internal record struct Polygon : IPhysShape
 
         polyShape.Vertices.AsSpan()[..VertexCount].CopyTo(_vertices.AsSpan);
         polyShape.Normals.AsSpan()[..VertexCount].CopyTo(_normals.AsSpan);
+    }
+
+    internal Polygon(SlimPolygon slim)
+    {
+        Unsafe.SkipInit(out this);
+        Radius = slim.Radius;
+        VertexCount = slim.VertexCount;
+
+        _vertices._00 = slim._vertices._00;
+        _vertices._01 = slim._vertices._01;
+        _vertices._02 = slim._vertices._02;
+        _vertices._03 = slim._vertices._03;
+
+        _normals._00 = slim._normals._00;
+        _normals._01 = slim._normals._01;
+        _normals._02 = slim._normals._02;
+        _normals._03 = slim._normals._03;
+        Centroid = slim.Centroid;
     }
 
     public Polygon(Box2 box)
@@ -74,11 +95,12 @@ internal record struct Polygon : IPhysShape
         Unsafe.SkipInit(out this);
         Radius = 0f;
         VertexCount = 4;
+        bounds.GetCorners(out var bottomLeft, out var bottomRight, out var topRight, out var topLeft);
 
-        _vertices._00 = bounds.BottomLeft;
-        _vertices._01 = bounds.BottomRight;
-        _vertices._02 = bounds.TopRight;
-        _vertices._03 = bounds.TopLeft;
+        _vertices._00 = bottomLeft;
+        _vertices._01 = bottomRight;
+        _vertices._02 = topRight;
+        _vertices._03 = topLeft;
 
         CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
 
@@ -91,10 +113,10 @@ internal record struct Polygon : IPhysShape
     internal Polygon(ReadOnlySpan<Vector2> vertices, ReadOnlySpan<Vector2> normals, Vector2 centroid, byte count)
     {
         Unsafe.SkipInit(out this);
-        vertices[..VertexCount].CopyTo(_vertices.AsSpan);
-        normals[..VertexCount].CopyTo(_normals.AsSpan);
         Centroid = centroid;
         VertexCount = count;
+        vertices[..VertexCount].CopyTo(_vertices.AsSpan);
+        normals[..VertexCount].CopyTo(_normals.AsSpan);
         Radius = 0f;
     }
 
@@ -109,12 +131,11 @@ internal record struct Polygon : IPhysShape
             return;
         }
 
-        VertexCount = (byte) vertices.Length;
+        VertexCount = (byte) hull.Count;
         var vertSpan = _vertices.AsSpan;
 
-        vertices.AsSpan().CopyTo(vertSpan);
         Set(hull);
-        Centroid = ComputeCentroid(vertSpan);
+        Centroid = ComputeCentroid(vertSpan[..VertexCount]);
     }
 
     public static explicit operator Polygon(PolygonShape polyShape)

@@ -18,8 +18,8 @@ namespace Robust.Shared.ContentPack
     [Virtual]
     internal partial class ResourceManager : IResourceManagerInternal
     {
-        [Dependency] private readonly IConfigurationManager _config = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IConfigurationManager _config = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private (ResPath prefix, IContentRoot root)[] _contentRoots =
             new (ResPath prefix, IContentRoot root)[0];
@@ -371,20 +371,19 @@ namespace Robust.Shared.ContentPack
             AddRoot(ResPath.Root, loader);
         }
 
-        public IEnumerable<ResPath> GetContentRoots()
+        IEnumerable<ResPath> IResourceManager.GetContentRoots()
+        {
+            return [];
+        }
+
+        public IEnumerable<string> GetContentRoots()
         {
             foreach (var (_, root) in _contentRoots)
             {
-                if (root is DirLoader loader)
-                {
-                    var rootDir = loader.GetPath(new ResPath(@"/"));
+                if (root is not DirLoader loader)
+                    continue;
 
-                    // TODO: GET RID OF THIS.
-                    // This code shouldn't be passing OS disk paths through ResPath.
-                    rootDir = rootDir.Replace(Path.DirectorySeparatorChar, '/');
-
-                    yield return new ResPath(rootDir);
-                }
+                yield return loader.GetPath(ResPath.Root);
             }
         }
 

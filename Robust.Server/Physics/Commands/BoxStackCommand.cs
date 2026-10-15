@@ -13,9 +13,9 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Server.Physics.Commands;
 
-public sealed class BoxStackCommand : IConsoleCommand
+public sealed partial class BoxStackCommand : IConsoleCommand
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private IEntityManager _entManager = default!;
 
     public string Command => "boxstack";
     public string Description => string.Empty;
@@ -36,7 +36,7 @@ public sealed class BoxStackCommand : IConsoleCommand
         var physSystem = _entManager.System<SharedPhysicsSystem>();
         physSystem.SetGravity(new Vector2(0f, -9.8f));
 
-        var groundUid = _entManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+        var groundUid = _entManager.Spawn(null, new MapCoordinates(0, 0, mapId));
         var ground = _entManager.AddComponent<PhysicsComponent>(groundUid);
         var groundManager = _entManager.EnsureComponent<FixturesComponent>(groundUid);
 
@@ -59,7 +59,7 @@ public sealed class BoxStackCommand : IConsoleCommand
             {
                 var x = 0.0f;
 
-                var boxUid = _entManager.SpawnEntity(null,
+                var boxUid = _entManager.Spawn(null,
                     new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
                 var box = _entManager.AddComponent<PhysicsComponent>(boxUid);
                 var manager = _entManager.EnsureComponent<FixturesComponent>(boxUid);

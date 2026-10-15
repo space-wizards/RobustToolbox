@@ -25,8 +25,8 @@ public sealed partial class RayCastSystem : EntitySystem
      * - If you wish to add more helper methods make a new partial and dump them there and have them call the below methods.
      */
 
-    [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private SharedBroadphaseSystem _broadphase = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
 
     private readonly RayComparer _rayComparer = new();
 

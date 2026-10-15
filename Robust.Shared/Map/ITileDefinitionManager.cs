@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Random;
 
@@ -7,14 +8,17 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     This manages tile definitions for grid tiles.
     /// </summary>
+    [NotContentImplementable]
     public interface ITileDefinitionManager : IEnumerable<ITileDefinition>
     {
         Tile GetVariantTile(string name, IRobustRandom random);
 
+        [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
         Tile GetVariantTile(string name, System.Random random);
 
         Tile GetVariantTile(ITileDefinition tileDef, IRobustRandom random);
 
+        [Obsolete("Always use RobustRandom/IRobustRandom, System.Random does not provide any extra functionality.")]
         Tile GetVariantTile(ITileDefinition tileDef, System.Random random);
 
         /// <summary>

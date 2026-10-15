@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Server.Console;
 using Robust.Server.Player;
-using Robust.Shared.Audio;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -20,14 +19,14 @@ namespace Robust.Server.ViewVariables
 {
     internal sealed partial class ServerViewVariablesManager : ViewVariablesManager, IServerViewVariablesInternal
     {
-        [Dependency] private readonly INetManager _netManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IConGroupController _groupController = default!;
-        [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private INetManager _netManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IConGroupController _groupController = default!;
+        [Dependency] private IRobustSerializer _robustSerializer = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
 
         private readonly Dictionary<uint, ViewVariablesSession>
             _sessions = new();
@@ -138,6 +137,7 @@ namespace Robust.Server.ViewVariables
             }
 
             object theObject;
+            Action<object>? objectChangeDelegate = null;
 
             switch (message.Selector)
             {
@@ -200,13 +200,14 @@ namespace Robust.Server.ViewVariables
                         return;
                     }
 
-                    if (value == null || value.GetType().IsValueType)
+                    if (value == null)
                     {
                         Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }
 
                     theObject = value;
+                    objectChangeDelegate = obj => relSession.Modify(sessionRelativeSelector.PropertyIndex, obj);
                     break;
                 }
                 case ViewVariablesIoCSelector ioCSelector:
@@ -250,7 +251,7 @@ namespace Robust.Server.ViewVariables
             }
 
             var sessionId = _nextSessionId++;
-            var session = new ViewVariablesSession(message.MsgChannel.UserId, theObject, sessionId, this,
+            var session = new ViewVariablesSession(message.MsgChannel.UserId, theObject, objectChangeDelegate, sessionId, this,
                 _robustSerializer, _entityManager, Sawmill);
 
             _sessions.Add(sessionId, session);

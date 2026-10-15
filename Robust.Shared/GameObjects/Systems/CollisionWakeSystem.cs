@@ -6,9 +6,9 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Shared.GameObjects
 {
-    public sealed class CollisionWakeSystem : EntitySystem
+    public sealed partial class CollisionWakeSystem : EntitySystem
     {
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
         private EntityQuery<CollisionWakeComponent> _query;
 
         public override void Initialize()

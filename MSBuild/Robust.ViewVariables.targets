@@ -17,29 +17,28 @@ created, one at the path in DocumentationFile and one next to the DLL. This scri
 uses the somewhat arcane facility `<DocFileItem>` to side-step that problem and create
 a single copy of the xml docs in the folder we want.
 
-Project files (.csproj) outside Robust Toolbox need to define these properties:
+Project files (.csproj), inside or outside Robust Toolbox, opt in with:
 
 ```
   <PropertyGroup>
     <ViewVariables>true</ViewVariables>
-    <VVRobustProjectDir>{path to robust toolbox}</VVRobustProjectDir>
   </PropertyGroup>
 ```
-
-VVRobustProjectDir is required so that projects outside Robust Toolbox can properly find the 
-XmlDocTool project and the resulting executable. This is perhaps not as seemless as it could be, 
-but it's good enough for now :tm:
 
 see also
 github.com/dotnet/msbuild/issues/1559
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- Robust Toolbox root, found relative to this file so it works from content projects too -->
+    <VVRobustDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</VVRobustDir>
+  </PropertyGroup>
   <ItemGroup>
     <!-- Add a reference to XmlDocTool so it always gets built before any project that needs it -->
-    <ProjectReference Include="..\$(VVRobustProjectDir)\Robust.XmlDocTool\Robust.XmlDocTool.csproj">
+    <ProjectReference Include="$(VVRobustDir)Robust.XmlDocTool\Robust.XmlDocTool.csproj">
       <!-- Don't copy the build artifacts from this project to the referencing project's output folder  -->
       <Private>false</Private>
-      <!-- Indicate that the referencing project isn't actually meant to reference this project's assembly directily -->
+      <!-- Indicate that the referencing project isn't actually meant to reference this project's assembly directly -->
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
@@ -57,6 +56,6 @@ github.com/dotnet/msbuild/issues/1559
   </Target>
   <Target Name="TrimXmlDoc" AfterTargets="PostBuildEvent">
     <!-- Run XmlDocTool on the generated doc file -->
-    <Exec Command="$([MSBuild]::NormalizePath('$(ProjectDir)\..\$(VVRobustProjectDir)\bin\XmlDocTool\Robust.XmlDocTool')) $(VVDocPath)" />
+    <Exec Command="&quot;$([MSBuild]::NormalizePath('$(VVRobustDir)', 'bin', 'XmlDocTool', 'Robust.XmlDocTool'))&quot; $(VVDocPath)" />
   </Target>
 </Project>

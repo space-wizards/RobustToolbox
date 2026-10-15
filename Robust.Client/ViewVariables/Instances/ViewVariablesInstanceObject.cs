@@ -35,9 +35,7 @@ namespace Robust.Client.ViewVariables.Instances
             var type = obj.GetType();
 
             var title = PrettyPrint.PrintUserFacingWithType(obj, out var subtitle);
-
-            string typeName = type.AssemblyQualifiedName!.Split(", ")[0];
-            string docString = ViewVariablesManager.GetDocStringForType(typeName);
+            string docString = ViewVariablesManager.GetDocStringForType(type);
 
             _wrappingInit(window, title, docString, subtitle);
             foreach (var trait in TraitsFor(ViewVariablesManager.TraitIdsFor(type)))

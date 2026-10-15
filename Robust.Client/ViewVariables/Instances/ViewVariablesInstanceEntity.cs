@@ -215,8 +215,7 @@ namespace Robust.Client.ViewVariables.Instances
             foreach (var component in componentList)
             {
                 var ctype = component.GetType();
-                string typeName = ctype.AssemblyQualifiedName!.Split(", ")[0];
-                string docString = ViewVariablesManager.GetDocStringForType(typeName);
+                string docString = ViewVariablesManager.GetDocStringForType(ctype);
 
                 var button = new Button
                 {

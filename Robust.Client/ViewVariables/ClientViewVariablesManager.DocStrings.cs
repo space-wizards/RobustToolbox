@@ -180,7 +180,7 @@ namespace Robust.Client.ViewVariables
             return string.Join(Environment.NewLine, lines);
         }
 
-        public static bool TryGetChildNode(XmlNode node, string childName, [NotNullWhen(true)] out XmlNode? element)
+        private static bool TryGetChildNode(XmlNode node, string childName, [NotNullWhen(true)] out XmlNode? element)
         {
             element = node[childName];
             return element != null;
@@ -200,6 +200,12 @@ namespace Robust.Client.ViewVariables
                 }
             }
             return false;
+        }
+
+        public string GetDocStringForType(Type type)
+        {
+            string typeName = type.AssemblyQualifiedName!.Split(", ")[0];
+            return GetDocStringForType(typeName);
         }
 
         public string GetDocStringForType(string key)

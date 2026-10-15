@@ -78,6 +78,13 @@ namespace Robust.Client.ViewVariables
         void LoadDocStrings();
 
         /// <summary>
+        ///     Retrieve a DocString for the given type definition
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns>DocString for the type or an error string</returns>
+        string GetDocStringForType(Type type);
+
+        /// <summary>
         ///     Retrieve a DocString for a type definition matching the given key
         /// </summary>
         /// <param name="key"></param>

@@ -45,6 +45,7 @@
     <File Path="MSBuild/Robust.ProjectReferences.targets" />
     <File Path="MSBuild/Robust.Properties.targets" />
     <File Path="MSBuild/Robust.Trimming.targets" />
+    <File Path="MSBuild/Robust.ViewVariables.targets" />
     <File Path="MSBuild/XamlIL.targets" />
     <File Path="MSBuild/WebView.targets" />
   </Folder>
@@ -142,6 +143,10 @@
   <Project Path="Robust.Shared/Robust.Shared.csproj" />
   <Project Path="Robust.UnitTesting/Robust.UnitTesting.csproj" />
   <Project Path="Robust.Xaml/Robust.Xaml.csproj">
+    <BuildType Solution="DebugOpt|*" Project="Debug" />
+    <BuildType Solution="Tools|*" Project="Release" />
+  </Project>
+  <Project Path="Robust.XmlDocTool/Robust.XmlDocTool.csproj">
     <BuildType Solution="DebugOpt|*" Project="Debug" />
     <BuildType Solution="Tools|*" Project="Release" />
   </Project>

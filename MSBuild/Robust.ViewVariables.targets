@@ -40,6 +40,8 @@ github.com/dotnet/msbuild/issues/1559
       <Private>false</Private>
       <!-- Indicate that the referencing project isn't actually meant to reference this project's assembly directly -->
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <!-- Build-time tools run on the host, not the target runtime -->
+      <GlobalPropertiesToRemove>RuntimeIdentifier;RestoreRuntimeIdentifier</GlobalPropertiesToRemove>
     </ProjectReference>
   </ItemGroup>
   <Target Name="GenerateXmlDoc" BeforeTargets="CoreCompile">
@@ -56,6 +58,7 @@ github.com/dotnet/msbuild/issues/1559
   </Target>
   <Target Name="TrimXmlDoc" AfterTargets="PostBuildEvent">
     <!-- Run XmlDocTool on the generated doc file -->
-    <Exec Command="&quot;$([MSBuild]::NormalizePath('$(VVRobustDir)', 'bin', 'XmlDocTool', 'Robust.XmlDocTool'))&quot; $(VVDocPath)" />
+    <!-- Run the dll through the dotnet host rather than relying on a platform-specific apphost existing -->
+    <Exec Command="&quot;$(DOTNET_HOST_PATH)&quot; &quot;$([MSBuild]::NormalizePath('$(VVRobustDir)', 'bin', 'XmlDocTool', 'Robust.XmlDocTool.dll'))&quot; &quot;$(VVDocPath)&quot;" />
   </Target>
 </Project>

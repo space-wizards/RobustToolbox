@@ -45,8 +45,8 @@ internal sealed partial class ReplayRecordingManager : SharedReplayRecordingMana
             return;
         }
 
-        _pvs.ComputeSessionState(_pvsSession);
-        Update(_pvsSession.State);
+        var state = _pvs.ComputeSessionState(_pvsSession);
+        Update(state);
         _pvs.ClearSessionState(_pvsSession);
         _pvsSession.LastReceivedAck = Timing.CurTick;
     }

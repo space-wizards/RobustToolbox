@@ -130,8 +130,8 @@ internal sealed partial class ChunkEntitySerializationTest : RobustIntegrationTe
 
         await server.WaitPost(() =>
         {
-            root = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
-            chunk = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
+            root = entMan.Spawn();
+            chunk = entMan.Spawn();
             entMan.AddComponent(chunk, new ChunkEntityComponent
             {
                 Root = root,

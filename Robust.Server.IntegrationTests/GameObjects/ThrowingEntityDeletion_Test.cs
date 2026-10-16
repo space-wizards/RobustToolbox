@@ -47,7 +47,7 @@ namespace Robust.Server.IntegrationTests.GameObjects
             var entMan = _sim.Resolve<IEntityManager>();
             _sim.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var map);
 
-            Assert.That(() => entMan.SpawnEntity(prototypeName, new MapCoordinates(0, 0, map)),
+            Assert.That(() => entMan.Spawn(prototypeName, new MapCoordinates(0, 0, map)),
                 Throws.TypeOf<EntityCreationException>());
 
             Assert.That(entMan.GetEntities().Where(p => entMan.GetComponent<MetaDataComponent>(p).EntityPrototype?.ID == prototypeName), Is.Empty);

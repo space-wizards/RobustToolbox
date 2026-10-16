@@ -144,20 +144,23 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
-    ///     Raised whenever the server receives a BUI message from a client relating to a UI that requires input
-    ///     validation.
+    /// Raised whenever the server receives a BUI message from a client relating to a UI that requires input validation.
+    /// This is first broadcast then, if not cancelled already, raised directly on the BUI's owner.
     /// </summary>
-    public sealed class BoundUserInterfaceMessageAttempt(
-        EntityUid actor,
-        EntityUid target,
-        Enum uiKey,
-        BoundUserInterfaceMessage message)
-        : CancellableEntityEventArgs
+    [ByRefEvent]
+    public record struct BoundUserInterfaceMessageAttempt(EntityUid Actor, EntityUid Target, Enum UiKey, BoundUserInterfaceMessage Message)
     {
-        public readonly EntityUid Actor = actor;
-        public readonly EntityUid Target = target;
-        public readonly Enum UiKey = uiKey;
-        public readonly BoundUserInterfaceMessage Message = message;
+        public bool Cancelled { get; private set; }
+
+        public void Cancel()
+        {
+            Cancelled = true;
+        }
+
+        public void Uncancel()
+        {
+            Cancelled = false;
+        }
     }
 
     /// <summary>

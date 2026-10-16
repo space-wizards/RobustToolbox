@@ -25,44 +25,28 @@ public sealed partial class ContainerSystem : SharedContainerSystem
 
     private readonly HashSet<EntityUid> _updateQueue = new();
 
-    public readonly Dictionary<NetEntity, BaseContainer> ExpectedEntities = new();
+    public readonly Dictionary<NetEntity, BaseContainer> PvsDetachedEntities = new();
 
     public override void Initialize()
     {
         base.Initialize();
 
-        EntityManager.EntityInitialized += HandleEntityInitialized;
         SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
 
         UpdatesBefore.Add(typeof(SpriteSystem));
     }
 
-    public override void Shutdown()
-    {
-        EntityManager.EntityInitialized -= HandleEntityInitialized;
-        base.Shutdown();
-    }
-
     protected override void ValidateMissingEntity(EntityUid uid, BaseContainer cont, EntityUid missing)
     {
         var netEntity = GetNetEntity(missing);
-        DebugTools.Assert(ExpectedEntities.TryGetValue(netEntity, out var expectedContainer) && expectedContainer == cont && cont.ExpectedEntities.Contains(netEntity));
-    }
-
-    private void HandleEntityInitialized(Entity<MetaDataComponent> ent)
-    {
-        var (uid, meta) = ent;
-        if (!RemoveExpectedEntity(meta.NetEntity, out var container))
-            return;
-
-        Insert((uid, TransformQuery.GetComponent(uid), MetaQuery.GetComponent(uid), null), container, force: true);
+        DebugTools.Assert(PvsDetachedEntities.TryGetValue(netEntity, out var expectedContainer) && expectedContainer == cont && cont.PvsDetachedEntities.Contains(netEntity));
     }
 
     public override void ShutdownContainer(BaseContainer container)
     {
-        foreach (var ent in container.ExpectedEntities)
+        foreach (var ent in container.PvsDetachedEntities)
         {
-            if (ExpectedEntities.Remove(ent, out var c))
+            if (PvsDetachedEntities.Remove(ent, out var c))
                 DebugTools.Assert(c == container);
         }
 
@@ -154,17 +138,17 @@ public sealed partial class ContainerSystem : SharedContainerSystem
                 DebugTools.Assert(!container.Contains(entity));
             }
 
-            // Remove entities that were expected, but have been removed from the container.
-            var removedExpected = new ValueList<NetEntity>();
-            foreach (var netEntity in container.ExpectedEntities)
+            // Remove PVS-detached entities that have been removed from the container.
+            var removedDetached = new ValueList<NetEntity>();
+            foreach (var netEntity in container.PvsDetachedEntities)
             {
                 if (!stateNetEnts.Contains(netEntity))
-                    removedExpected.Add(netEntity);
+                    removedDetached.Add(netEntity);
             }
 
-            foreach (var entityUid in removedExpected.Span)
+            foreach (var entityUid in removedDetached.Span)
             {
-                RemoveExpectedEntity(entityUid, out _);
+                RemovePvsDetachedEntity(entityUid, out _);
             }
 
             // Add new entities.
@@ -175,7 +159,7 @@ public sealed partial class ContainerSystem : SharedContainerSystem
                 if (!entity.IsValid())
                 {
                     DebugTools.Assert(netEnt.IsValid());
-                    AddExpectedEntity(netEnt, container);
+                    EntityManager.EnsureEntity<ContainerManagerComponent>(netEnt, uid);
                     continue;
                 }
 
@@ -191,14 +175,14 @@ public sealed partial class ContainerSystem : SharedContainerSystem
                 // containers/players.
                 if ((meta.Flags & MetaDataFlags.Detached) != 0)
                 {
-                    AddExpectedEntity(netEnt, container);
+                    AddPvsDetachedEntity(netEnt, container);
                     continue;
                 }
 
                 if (container.Contains(entity))
                     continue;
 
-                RemoveExpectedEntity(netEnt, out _);
+                RemovePvsDetachedEntity(netEnt, out _);
                 Insert(
                     (entity, TransformQuery.GetComponent(entity), MetaQuery.GetComponent(entity), null),
                     container,
@@ -224,7 +208,7 @@ public sealed partial class ContainerSystem : SharedContainerSystem
         if (message.OldParent != null && message.OldParent.Value.IsValid())
             return;
 
-        if (!RemoveExpectedEntity(GetNetEntity(message.Entity), out var container))
+        if (!RemovePvsDetachedEntity(GetNetEntity(message.Entity), out var container))
             return;
 
         if (xform.ParentUid != container.Owner)
@@ -237,7 +221,7 @@ public sealed partial class ContainerSystem : SharedContainerSystem
         Insert(message.Entity, container, force: true);
     }
 
-    public void AddExpectedEntity(NetEntity netEntity, BaseContainer container)
+    public void AddPvsDetachedEntity(NetEntity netEntity, BaseContainer container)
     {
 #if DEBUG
         var uid = GetEntity(netEntity);
@@ -245,34 +229,34 @@ public sealed partial class ContainerSystem : SharedContainerSystem
         if (TryComp(uid, out MetaDataComponent? meta))
         {
             DebugTools.Assert((meta.Flags & (MetaDataFlags.Detached | MetaDataFlags.InContainer)) == MetaDataFlags.Detached,
-                $"Adding entity {ToPrettyString(uid)} to list of expected entities for container {container.ID} in {ToPrettyString(container.Owner)}, despite it already being in a container.");
+                $"Adding entity {ToPrettyString(uid)} to list of PVS-detached entities for container {container.ID} in {ToPrettyString(container.Owner)}, despite it already being in a container.");
         }
 #endif
 
-        if (!ExpectedEntities.TryAdd(netEntity, container))
+        if (!PvsDetachedEntities.TryAdd(netEntity, container))
         {
             // It is possible that we were expecting this entity in one container, but it has now moved to another
             // container, and this entity's state is just being applied before the old container is getting updated.
-            var oldContainer = ExpectedEntities[netEntity];
-            ExpectedEntities[netEntity] = container;
-            DebugTools.Assert(oldContainer.ExpectedEntities.Contains(netEntity),
-                $"Entity {netEntity} is expected, but not expected in the given container? Container: {oldContainer.ID} in {ToPrettyString(oldContainer.Owner)}");
-            oldContainer.ExpectedEntities.Remove(netEntity);
+            var oldContainer = PvsDetachedEntities[netEntity];
+            PvsDetachedEntities[netEntity] = container;
+            DebugTools.Assert(oldContainer.PvsDetachedEntities.Contains(netEntity),
+                $"Entity {netEntity} is PVS-detached, but not tracked in the given container? Container: {oldContainer.ID} in {ToPrettyString(oldContainer.Owner)}");
+            oldContainer.PvsDetachedEntities.Remove(netEntity);
         }
 
-        DebugTools.Assert(!container.ExpectedEntities.Contains(netEntity),
-            $"Contained entity {netEntity} was not yet expected by the system, but was already expected by the container: {container.ID} in {ToPrettyString(container.Owner)}");
-        container.ExpectedEntities.Add(netEntity);
+        DebugTools.Assert(!container.PvsDetachedEntities.Contains(netEntity),
+            $"Contained entity {netEntity} was not yet PVS-detached according to the system, but was already tracked by the container: {container.ID} in {ToPrettyString(container.Owner)}");
+        container.PvsDetachedEntities.Add(netEntity);
     }
 
-    public bool RemoveExpectedEntity(NetEntity netEntity, [NotNullWhen(true)] out BaseContainer? container)
+    public bool RemovePvsDetachedEntity(NetEntity netEntity, [NotNullWhen(true)] out BaseContainer? container)
     {
-        if (!ExpectedEntities.Remove(netEntity, out container))
+        if (!PvsDetachedEntities.Remove(netEntity, out container))
             return false;
 
-        DebugTools.Assert(container.ExpectedEntities.Contains(netEntity),
-            $"While removing expected contained entity {ToPrettyString(netEntity)}, the entity was missing from the container expected set. Container: {container.ID} in {ToPrettyString(container.Owner)}");
-        container.ExpectedEntities.Remove(netEntity);
+        DebugTools.Assert(container.PvsDetachedEntities.Contains(netEntity),
+            $"While removing PVS-detached contained entity {ToPrettyString(netEntity)}, the entity was missing from the container detached set. Container: {container.ID} in {ToPrettyString(container.Owner)}");
+        container.PvsDetachedEntities.Remove(netEntity);
         return true;
     }
 

@@ -53,7 +53,7 @@ internal sealed partial class MapMergeTest : RobustIntegrationTest
             var mapUid = mapSys.CreateMap(out mapId, runMapInit: false);
             var gridEnt = mapSys.CreateGridEntity(mapId);
             mapSys.SetTile(gridEnt, Vector2i.Zero, new Tile(tDef.TileId));
-            var entUid = entMan.SpawnEntity(null, new MapCoordinates(10, 10, mapId));
+            var entUid = entMan.Spawn(null, new MapCoordinates(10, 10, mapId));
             map = Get(mapUid, entMan);
             ent = Get(entUid, entMan);
             grid = Get(gridEnt.Owner, entMan);

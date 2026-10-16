@@ -42,10 +42,10 @@ internal sealed partial class DeferredEntityDeletionTest : RobustIntegrationTest
             entMan = IoCManager.Resolve<IEntityManager>();
             var sys = entMan.EntitySysManager.GetEntitySystem<DeferredDeletionTestSystem>();
 
-            uid1 = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
-            uid2 = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
-            uid3 = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
-            uid4 = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
+            uid1 = entMan.Spawn();
+            uid2 = entMan.Spawn();
+            uid3 = entMan.Spawn();
+            uid4 = entMan.Spawn();
 
             comp1 = entMan.AddComponent<DeferredDeletionTestComponent>(uid1);
             comp2 = entMan.AddComponent<DeferredDeletionTestComponent>(uid2);

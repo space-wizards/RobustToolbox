@@ -76,7 +76,10 @@ namespace Robust.Client.ViewVariables
                         docString = "DocString is invalid.";
                     }
 
-                    _docStrings.Add(memberName, docString);
+                    if (!_docStrings.TryAdd(memberName, docString))
+                    {
+                        Sawmill.Warning($"DocString duplicate memberName `{memberName}` with docString `{docString}`");
+                    }
                 }
             }
 

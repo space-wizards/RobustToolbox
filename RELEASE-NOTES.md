@@ -47,11 +47,28 @@ END TEMPLATE-->
 
 ### Other
 
-* `SpawnEntity` and the `EntityCoordinates` version of `SpawnEntities` have been marked as obsolete.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 293.0.1
+
+### Breaking changes
+
+* ImageSharp's dynamic/automatic decoder detection code (used in Image.Load()) no longer includes TIFF (due to security vulnerabilities)
+
+
+## 293.0.0
+
+### Breaking changes
+* Transform lerping rework from the previous release (292.0.0) has been reverted due to unforseen bugs. As a short summary, this should have the following impact: The lerping-related fields in TransformComponent (`NextPosition`, `NextRotation `, `PrevPosition `, `PrevRotation` , `ActivelyLerping` , `LastLerp` ) are back; The lerping-related cvars (`NetInterpMaxDistance`, `NetInterpMinDistance`, `NetInterpCorrectionHalfLife`, `NetInterpCorrectionMinTranslation`, `NetInterpCorrectionMinRotation`) and the `RenderTransform` struct are gone; The related functions in TransformSystem (i.e `ActivateLerp` , `GetRender...`, etc) have been removed.
+
+### Other
+
+* `SpawnEntity` and the `EntityCoordinates` version of `SpawnEntities` have been marked as obsolete.
 
 
 ## 292.0.0

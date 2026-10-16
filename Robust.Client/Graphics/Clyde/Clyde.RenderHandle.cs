@@ -256,13 +256,10 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (worldRot == null)
                 {
-                    xformSystem ??= _entities.System<TransformSystem>();
+                    xformSystem ??= _entities.System<SharedTransformSystem>();
                     var query = _entities.GetEntityQuery<TransformComponent>();
                     xform ??= query.GetComponent(entity);
-                    // TODO: Hate this remove it from the api aaaaa.
-                    worldRot = xformSystem is TransformSystem clientTransforms
-                        ? clientTransforms.GetRenderWorldRotation((entity, xform))
-                        : xformSystem.GetWorldRotation(xform, query);
+                    worldRot = xformSystem.GetWorldRotation(xform, query);
                 }
 
                 if (postShaders is { Count: > 0 })

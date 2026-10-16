@@ -73,7 +73,7 @@ namespace Robust.Client.ViewVariables
         ///     Load the DocStrings for use by VV
         /// </summary>
         /// <remarks>
-        ///     Needs to be called before any call to the GetDocString* functions
+        ///     The other DocString functions lazily call this if it hasn't been called yet.
         /// </remarks>
         void LoadDocStrings();
 

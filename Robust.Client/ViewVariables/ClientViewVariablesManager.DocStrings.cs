@@ -13,11 +13,10 @@ namespace Robust.Client.ViewVariables
 
         private readonly Dictionary<string, string> _docStrings = new();
 
+        private bool _docsLoaded = false;
+
         public void LoadDocStrings()
         {
-            // todo: lots of clients (most clients actually) wont ever open VV so we
-            // might be able to just skip loading the doc strings in a majority of cases.
-
             foreach (var resPath in _resManager.ContentFindFiles(ViewVariablesResourcesRoot))
             {
                 using var resStream = _resManager.ContentFileRead(resPath);
@@ -80,6 +79,8 @@ namespace Robust.Client.ViewVariables
                     _docStrings.Add(memberName, docString);
                 }
             }
+
+            _docsLoaded = true;
         }
 
         private string ProcessDocNode(XmlNode xmlNode)
@@ -204,12 +205,18 @@ namespace Robust.Client.ViewVariables
 
         public string GetDocStringForType(Type type)
         {
+            if (!_docsLoaded)
+                LoadDocStrings();
+
             string typeName = type.AssemblyQualifiedName!.Split(", ")[0];
             return GetDocStringForType(typeName);
         }
 
         public string GetDocStringForType(string key)
         {
+            if (!_docsLoaded)
+                LoadDocStrings();
+
             if (_docStrings.TryGetValue($"T:{key}", out string? docString))
             {
                 return docString;
@@ -226,6 +233,9 @@ namespace Robust.Client.ViewVariables
 
         public string GetDocStringForFieldOrProperty(string key)
         {
+            if (!_docsLoaded)
+                LoadDocStrings();
+
             // Will lumping fields and properties into the same search come back to bite us? Yes!
             // It's a problem for future someone to take care of. You'll have to make the server
             // send over a bool that toggles if we should look for a field or a property.

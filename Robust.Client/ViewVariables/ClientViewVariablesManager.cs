@@ -54,8 +54,6 @@ namespace Robust.Client.ViewVariables
             _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>();
             _netManager.RegisterNetMessage<MsgViewVariablesReqSession>();
             _netManager.RegisterNetMessage<MsgViewVariablesReqData>();
-
-            LoadDocStrings();
         }
 
         public VVPropEditor PropertyFor(Type? type)

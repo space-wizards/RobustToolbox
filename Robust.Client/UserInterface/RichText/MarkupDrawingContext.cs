@@ -60,6 +60,9 @@ public sealed class MarkupDrawingContext(Control? owner, int capacity)
     /// <summary>
     /// Clears the context.
     /// </summary>
+    /// <remarks>
+    /// This does not clear <see cref="owner"/>.
+    /// </remarks>
     public void Clear()
     {
         Color.Clear();
@@ -73,7 +76,7 @@ public sealed class MarkupDrawingContext(Control? owner, int capacity)
     /// <param name="param">Style property key</param>
     /// <param name="value">Style property value</param>
     /// <typeparam name="T">Type of the style property value</typeparam>
-    /// <returns>True if found with type, false if not (or false if there is no <see cref="owner"/>)</returns>
+    /// <returns>True if found with type <see cref="T"/>, false if not (or false if there is no <see cref="_owner"/>)</returns>
     [PublicAPI]
     public bool TryGetStyleProperty<T>(string param, [MaybeNullWhen(false)] out T value)
     {

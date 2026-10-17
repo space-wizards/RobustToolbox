@@ -10,19 +10,17 @@ namespace Robust.Client.UserInterface.RichText;
 /// <summary>
 /// The context used when drawing rich text markup.
 /// </summary>
-/// <param name="owner">The parent Control (for style properties), or null if none</param>
-/// <param name="capacity">Initial capacity for the context stacks</param>
-public sealed class MarkupDrawingContext(Control? owner, int capacity)
+public sealed class MarkupDrawingContext
 {
     /// <summary>
     /// The stack of font colors.
     /// </summary>
-    public readonly Stack<Color> Color = new(capacity);
+    public readonly Stack<Color> Color;
 
     /// <summary>
     /// The stack of fonts.
     /// </summary>
-    public readonly Stack<Font> Font = new(capacity);
+    public readonly Stack<Font> Font;
 
     /// <summary>
     /// Tags processed so far.
@@ -31,6 +29,14 @@ public sealed class MarkupDrawingContext(Control? owner, int capacity)
     /// This is not currently populated or written to by anything.
     /// </remarks>
     public readonly List<IMarkupTagHandler> Tags = [];
+
+    /// <summary>
+    /// The control that owns/holds the context.
+    /// </summary>
+    /// <remarks>
+    /// This is used to provide style property information.
+    /// </remarks>
+    private readonly Control? _owner;
 
     /// <summary>
     /// A markup drawing context without a parent control.
@@ -58,10 +64,22 @@ public sealed class MarkupDrawingContext(Control? owner, int capacity)
     }
 
     /// <summary>
+    /// The context used when drawing rich text markup.
+    /// </summary>
+    /// <param name="owner">The parent Control (for style properties), or null if none</param>
+    /// <param name="capacity">Initial capacity for the context stacks</param>
+    public MarkupDrawingContext(Control? owner, int capacity)
+    {
+        _owner = owner;
+        Color = new Stack<Color>(capacity);
+        Font = new Stack<Font>(capacity);
+    }
+
+    /// <summary>
     /// Clears the context.
     /// </summary>
     /// <remarks>
-    /// This does not clear <see cref="owner"/>.
+    /// This does not clear <see cref="_owner"/>.
     /// </remarks>
     public void Clear()
     {
@@ -71,7 +89,7 @@ public sealed class MarkupDrawingContext(Control? owner, int capacity)
     }
 
     /// <summary>
-    /// Tries to get the provided style property from the <see cref="owner"/>.
+    /// Tries to get the provided style property from the <see cref="_owner"/>.
     /// </summary>
     /// <param name="param">Style property key</param>
     /// <param name="value">Style property value</param>
@@ -81,6 +99,6 @@ public sealed class MarkupDrawingContext(Control? owner, int capacity)
     public bool TryGetStyleProperty<T>(string param, [MaybeNullWhen(false)] out T value)
     {
         value = default;
-        return owner?.TryGetStyleProperty(param, out value) ?? false;
+        return _owner?.TryGetStyleProperty(param, out value) ?? false;
     }
 }

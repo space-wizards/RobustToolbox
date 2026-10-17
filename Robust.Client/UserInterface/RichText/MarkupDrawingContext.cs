@@ -95,6 +95,7 @@ public sealed class MarkupDrawingContext
     /// <param name="value">Style property value</param>
     /// <typeparam name="T">Type of the style property value</typeparam>
     /// <returns>True if found with type <see cref="T"/>, false if not (or false if there is no <see cref="_owner"/>)</returns>
+    /// <seealso cref="Control.TryGetStyleProperty{T}"/>
     [PublicAPI]
     public bool TryGetStyleProperty<T>(string param, [MaybeNullWhen(false)] out T value)
     {

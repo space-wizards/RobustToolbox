@@ -35,7 +35,6 @@ namespace Robust.Client.UserInterface
 
         public readonly FormattedMessage Message;
 
-
         /// <summary>
         ///     The vertical size of this entry, in pixels.
         /// </summary>

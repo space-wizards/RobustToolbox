@@ -20,6 +20,8 @@ namespace Robust.Client.ViewVariables
         public BoxContainer BottomContainer { get; }
         public Label NameLabel { get; }
 
+        private readonly Label _middleLabel;
+
         private readonly Label _bottomLabel;
 
         private readonly IClientViewVariablesManagerInternal _viewVariablesManager;
@@ -52,16 +54,21 @@ namespace Robust.Client.ViewVariables
 
             BottomContainer = new BoxContainer
             {
-                Orientation = LayoutOrientation.Horizontal,
+                Orientation = LayoutOrientation.Vertical,
                 Visible = false
             };
             VBox.AddChild(BottomContainer);
 
             //var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
 
+            _middleLabel = new Label
+            {
+                FontColorOverride = Color.DarkGray,
+            };
+            BottomContainer.AddChild(_middleLabel);
+
             _bottomLabel = new Label
             {
-                //    FontOverride = smallFont,
                 FontColorOverride = Color.DarkGray
             };
             BottomContainer.AddChild(_bottomLabel);
@@ -70,11 +77,12 @@ namespace Robust.Client.ViewVariables
             TopContainer.AddChild(NameLabel);
         }
 
-        public VVPropEditor SetProperty(ViewVariablesBlobMembers.MemberData member)
+        public VVPropEditor SetProperty(ViewVariablesBlobMembers.MemberData member, string docStringKey)
         {
             NameLabel.Text = member.Name;
             var type = member.Value?.GetType();
 
+            _middleLabel.Text = _viewVariablesManager.GetDocStringForFieldOrProperty(docStringKey);
             _bottomLabel.Text = $"Type: {member.TypePretty}";
             var editor = _viewVariablesManager.PropertyFor(type);
 

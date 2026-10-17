@@ -29,7 +29,9 @@ namespace Robust.Client.UserInterface
             typeof(ItalicTag)
         ];
 
-        private readonly Color _defaultColor;
+        public static readonly Color DefaultColor = new(200, 200, 200);
+
+        private readonly Color? _defaultColor;
         private readonly Type[]? _tagsAllowed;
 
         public readonly FormattedMessage Message;
@@ -67,7 +69,7 @@ namespace Robust.Client.UserInterface
             Height = 0;
             Width = 0;
             LineBreaks = default;
-            _defaultColor = defaultColor ?? new(200, 200, 200);
+            _defaultColor = defaultColor;
             _tagsAllowed = tagsAllowed;
             Controls = GetControls(parent, tagManager);
         }
@@ -135,7 +137,7 @@ namespace Robust.Client.UserInterface
             var wordWrap = new WordWrap(maxSizeX);
             var context = new MarkupDrawingContext();
             context.Font.Push(defaultFont);
-            context.Color.Push(_defaultColor);
+            context.Color.Push(_defaultColor ?? DefaultColor);
 
             // Go over every node.
             // Nodes can change the markup drawing context and return additional text.
@@ -234,8 +236,11 @@ namespace Robust.Client.UserInterface
             MarkupDrawingContext context,
             float uiScale,
             float lineHeightScale = 1,
-            TextOutline? outline = null)
+            TextOutline? outline = null,
+            Color? fallbackColor = null)
         {
+            var defaultColor = _defaultColor ?? fallbackColor ?? DefaultColor;
+
             if (outline is { } outlineSettings)
             {
                 DrawPass(
@@ -248,6 +253,7 @@ namespace Robust.Client.UserInterface
                     uiScale,
                     lineHeightScale,
                     outlineSettings,
+                    defaultColor,
                     arrangeControls: false);
             }
 
@@ -261,6 +267,7 @@ namespace Robust.Client.UserInterface
                 uiScale,
                 lineHeightScale,
                 outline: null,
+                defaultColor,
                 arrangeControls: true);
         }
 
@@ -274,10 +281,11 @@ namespace Robust.Client.UserInterface
             float uiScale,
             float lineHeightScale,
             TextOutline? outline,
+            Color defaultColor,
             bool arrangeControls)
         {
             context.Clear();
-            context.Color.Push(_defaultColor);
+            context.Color.Push(defaultColor);
             context.Font.Push(defaultFont);
 
             var globalBreakCounter = 0;
@@ -296,7 +304,7 @@ namespace Robust.Client.UserInterface
                 var text = ProcessNode(tagManager, node, context);
                 if (!context.Color.TryPeek(out var color) || !context.Font.TryPeek(out var font))
                 {
-                    color = _defaultColor;
+                    color = defaultColor;
                     font = defaultFont;
                 }
 

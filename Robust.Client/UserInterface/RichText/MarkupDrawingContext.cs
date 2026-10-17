@@ -59,16 +59,8 @@ public sealed class MarkupDrawingContext
     /// The context used when drawing rich text markup.
     /// </summary>
     /// <param name="owner">The parent Control (for style properties), or null if none</param>
-    public MarkupDrawingContext(Control? owner) : this(owner, 0)
-    {
-    }
-
-    /// <summary>
-    /// The context used when drawing rich text markup.
-    /// </summary>
-    /// <param name="owner">The parent Control (for style properties), or null if none</param>
     /// <param name="capacity">Initial capacity for the context stacks</param>
-    public MarkupDrawingContext(Control? owner, int capacity)
+    public MarkupDrawingContext(Control? owner, int capacity = 0)
     {
         _owner = owner;
         Color = new Stack<Color>(capacity);

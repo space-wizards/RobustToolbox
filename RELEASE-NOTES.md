@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* The server now processes non-predicted client network events from the same tick in the order they were received, instead of arbitrarily.
 
 ### Other
 

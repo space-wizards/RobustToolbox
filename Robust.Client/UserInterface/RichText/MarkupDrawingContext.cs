@@ -1,27 +1,27 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class MarkupDrawingContext
+public sealed class MarkupDrawingContext(Control? owner, int capacity)
 {
-    public readonly Stack<Color> Color;
-    public readonly Stack<Font> Font;
-    public readonly List<IMarkupTag> Tags;
+    public readonly Stack<Color> Color = new(capacity);
+    public readonly Stack<Font> Font = new(capacity);
+    public readonly List<IMarkupTagHandler> Tags = [];
 
-    public MarkupDrawingContext()
+    public MarkupDrawingContext() : this(null)
     {
-        Color = new Stack<Color>();
-        Font = new Stack<Font>();
-        Tags = new List<IMarkupTag>();
     }
 
-    public MarkupDrawingContext(int capacity)
+    public MarkupDrawingContext(int capacity) : this(null, capacity)
     {
-        Color = new Stack<Color>(capacity);
-        Font = new Stack<Font>(capacity);
-        Tags = new List<IMarkupTag>();
+    }
+
+    public MarkupDrawingContext(Control? owner) : this(owner, 0)
+    {
     }
 
     public void Clear()
@@ -29,5 +29,12 @@ public sealed class MarkupDrawingContext
         Color.Clear();
         Font.Clear();
         Tags.Clear();
+    }
+
+    [PublicAPI]
+    public bool TryGetStyleProperty<T>(string param, [MaybeNullWhen(false)] out T value)
+    {
+        value = default;
+        return owner?.TryGetStyleProperty(param, out value) ?? false;
     }
 }

@@ -35,6 +35,7 @@ public sealed class MarkupDrawingContext(Control? owner, int capacity)
     /// <summary>
     /// A markup drawing context without a parent control.
     /// </summary>
+    [Obsolete("Use MarkupDrawingContext(Control owner) instead so tags can use style properties")]
     public MarkupDrawingContext() : this(null)
     {
     }
@@ -43,7 +44,7 @@ public sealed class MarkupDrawingContext(Control? owner, int capacity)
     /// The context used when drawing rich text markup.
     /// </summary>
     /// <param name="capacity">Initial capacity for the context stacks</param>
-    [Obsolete("Use MarkupDrawingContext(Control, int) instead so tags can use style properties")]
+    [Obsolete("Use MarkupDrawingContext(Control owner, int capacity) instead so tags can use style properties")]
     public MarkupDrawingContext(int capacity) : this(null, capacity)
     {
     }

@@ -1633,6 +1633,7 @@ Types:
       - "System.Type[] GetInterfaces()"
       - "System.Type[] GetNestedTypes()"
       - "System.Type[] GetNestedTypes(System.Reflection.BindingFlags)"
+      - "System.Type[] GetGenericArguments()"
       Fields:
       - "System.Reflection.MemberFilter FilterAttribute"
       - "System.Reflection.MemberFilter FilterName"

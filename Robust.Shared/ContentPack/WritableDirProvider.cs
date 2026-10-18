@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -34,6 +35,7 @@ namespace Robust.Shared.ContentPack
         public void CreateDir(ResPath path)
         {
             var fullPath = GetFullPath(path);
+            LogVfs("Creating directory '{0}'.", path);
             Directory.CreateDirectory(fullPath);
         }
 
@@ -43,10 +45,12 @@ namespace Robust.Shared.ContentPack
             var fullPath = GetFullPath(path);
             if (Directory.Exists(fullPath))
             {
+                LogVfs("Deleting directory '{0}'.", path);
                 Directory.Delete(fullPath, true);
             }
             else if (File.Exists(fullPath))
             {
+                LogVfs("Deleting file '{0}'.", path);
                 File.Delete(fullPath);
             }
         }
@@ -115,6 +119,7 @@ namespace Robust.Shared.ContentPack
         public Stream Open(ResPath path, FileMode fileMode, FileAccess access, FileShare share)
         {
             var fullPath = GetFullPath(path);
+            LogVfs("Opening file '{0}' with mode {1}, access {2}, share {3}.", path, fileMode, access, share);
             return File.Open(fullPath, fileMode, access, share);
         }
 
@@ -132,6 +137,7 @@ namespace Robust.Shared.ContentPack
         {
             var fullOldPath = GetFullPath(oldPath);
             var fullNewPath = GetFullPath(newPath);
+            LogVfs("Renaming file '{0}' to '{1}'.", oldPath, newPath);
             File.Move(fullOldPath, fullNewPath);
         }
 
@@ -186,6 +192,18 @@ namespace Robust.Shared.ContentPack
             path = path.Clean();
 
             return PathHelpers.SafeGetResourcePath(RootDir, path);
+        }
+
+        private static void LogVfs(string message, params object?[] args)
+        {
+            try
+            {
+                Logger.GetSawmill("res.vfs").Info(message, args);
+            }
+            catch
+            {
+                // WritableDirProvider is usable in tests and tools without an IoC log manager.
+            }
         }
     }
 }

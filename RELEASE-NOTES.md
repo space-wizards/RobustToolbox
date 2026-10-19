@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* The default AnchorEntity method now snaps to tile center again.
 
 ### Other
 

@@ -352,7 +352,7 @@ public abstract partial class SharedTransformSystem
             ? _map.TileIndicesFor(grid.Value, xform.Coordinates)
             : _map.TileIndicesFor(grid.Value, GetMapCoordinates(xform));
 
-        return AnchorEntityResolved(entity, grid.Value, tileIndices, snapToTileCenter: false);
+        return AnchorEntityResolved(entity, grid.Value, tileIndices, snapToTileCenter: true);
     }
 
     internal void SetAnchored(Entity<TransformComponent> entity, bool value)

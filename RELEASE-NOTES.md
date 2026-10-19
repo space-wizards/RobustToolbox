@@ -45,7 +45,7 @@ END TEMPLATE-->
 
 * The default AnchorEntity method now snaps to tile center again.
 * Fixed the `MapId` overloads of `RayCastSystem.CastRay`, `CastRayClosest` and `CastShape` missing entities parented directly to a map, i.e. anything off-grid.
-* Fixed the `MapId` overload of `RayCastSystem.CastRayClosest` returning the hit point in a grid's local coordinates when that hit was closer than one found on an earlier broadphase.
+* Fixed the `MapId` overload of `RayCastSystem.CastRayClosest` returning a grid-local hit point when the closest hit was on a grid and a farther hit had already been found on the map or another grid.
 
 ### Other
 

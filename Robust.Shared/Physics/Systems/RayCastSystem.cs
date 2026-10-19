@@ -219,6 +219,10 @@ public sealed partial class RayCastSystem : EntitySystem
     /// <summary>
     /// Convenience method for shape casts; only supports shapes with area.
     /// </summary>
+    /// <remarks>
+    /// Hit points are converted to map coordinates per broadphase, so a callback that replaces earlier results
+    /// (like a closest-hit callback) can be left with points in a grid's local coordinates.
+    /// </remarks>
     public RayResult CastShape(
         MapId mapId,
         IPhysShape shape,

@@ -113,7 +113,7 @@ public sealed class ComponentPauseGenerator : IIncrementalGenerator
                     partialTypeInfo,
                     EquatableArray<FieldInfo>.FromImmutableArray(fieldBuilder.ToImmutable()),
                     dirty,
-                    !TypeSymbolHelper.ImplementsInterface(symbol, IComponentTypeName),
+                    !symbol.ImplementsInterface(IComponentTypeName),
                     typeDeclarationSyntax.Identifier.GetLocation());
             });
 

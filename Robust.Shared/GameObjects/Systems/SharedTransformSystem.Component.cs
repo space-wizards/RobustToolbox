@@ -352,7 +352,7 @@ public abstract partial class SharedTransformSystem
             ? _map.TileIndicesFor(grid.Value, xform.Coordinates)
             : _map.TileIndicesFor(grid.Value, GetMapCoordinates(xform));
 
-        return AnchorEntityResolved(entity, grid.Value, tileIndices, snapToTileCenter: false);
+        return AnchorEntityResolved(entity, grid.Value, tileIndices, snapToTileCenter: true);
     }
 
     internal void SetAnchored(Entity<TransformComponent> entity, bool value)
@@ -1112,6 +1112,8 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region States
+    public virtual void ActivateLerp(EntityUid uid, TransformComponent xform) { }
+
     internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
     {
         DebugTools.Assert(!component.ParentUid.IsValid() || (!Deleted(component.ParentUid) && !EntityManager.IsQueuedForDeletion(component.ParentUid)));
@@ -1216,6 +1218,7 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert(xform.Anchored == newState.Anchored, "Transform state failed to set anchored");
         }
 
+        HandleNextTransformState(uid, xform, args.Next);
     }
 
     private TransformComponentState? GetTransformState(TransformComponent xform, IComponentState? state)
@@ -1241,10 +1244,59 @@ public abstract partial class SharedTransformSystem
         }
     }
 
+    private void HandleNextTransformState(EntityUid uid, TransformComponent xform, IComponentState? state)
+    {
+        switch (state)
+        {
+            case TransformComponentState nextTransform:
+            {
+                if (nextTransform.ParentID != GetNetEntity(xform.ParentUid))
+                    return;
+
+                xform.NextPosition = nextTransform.LocalPosition;
+                xform.NextRotation = nextTransform.Rotation;
+                ActivateLerp(uid, xform);
+                break;
+            }
+            case TransformComponentDeltaState delta:
+            {
+                if (delta.IsChanged(TransformParentIndex) && delta.ParentID != GetNetEntity(xform.ParentUid))
+                    return;
+
+                var activateLerp = false;
+
+                if (delta.IsChanged(TransformLocalPositionIndex))
+                {
+                    xform.NextPosition = delta.LocalPosition;
+                    activateLerp = true;
+                }
+
+                if (delta.IsChanged(TransformLocalRotationIndex))
+                {
+                    xform.NextRotation = delta.Rotation;
+                    activateLerp = true;
+                }
+
+                if (activateLerp)
+                    ActivateLerp(uid, xform);
+
+                break;
+            }
+        }
+    }
+
     #endregion
 
     #region World Matrix
 
+    /// <summary>
+    /// Given an <see cref="EntityUid"/> U, yields M[U->world], the matrix from U's frame to the world frame.
+    /// The matrix stores U's world position and rotation, so it is U's pose in the world.
+    /// Applying it to a point or pose measured in U's frame rotates, then shifts it.
+    /// Thus, it yields the same point or pose measured in the world.
+    /// </summary>
+    /// <param name="uid">The entity whose frame the input point or pose is measured in.</param>
+    /// <returns>A rotate-then-shift pose matrix from the entity to the world.</returns>
     [Pure]
     public Matrix3x2 GetWorldMatrix(EntityUid uid)
     {
@@ -1947,6 +1999,11 @@ public abstract partial class SharedTransformSystem
 
         // Before making any changes to physics or transforms, remove from the current broadphase
         _lookup.RemoveFromEntityTree(uid, xform);
+
+        // Stop any active lerps
+        xform.NextPosition = null;
+        xform.NextRotation = null;
+        xform.LerpParent = EntityUid.Invalid;
 
         if (xform.Anchored
             && _metaQuery.TryGetComponent(xform.GridUid, out var gridMeta)

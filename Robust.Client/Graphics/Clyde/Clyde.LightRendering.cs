@@ -608,7 +608,7 @@ namespace Robust.Client.Graphics.Clyde
             if (light is not PointLightComponent pointLight)
                 return true;
 
-            var (lightPos, rot) = state.clyde._transformSystem.GetRenderWorldPositionRotation((value.Uid, transform));
+            var (lightPos, rot) = state.clyde._transformSystem.GetWorldPositionRotation(transform, state.xforms);
             lightPos += rot.RotateVec(light.Offset);
             var circle = new Circle(lightPos, light.Radius);
 
@@ -688,13 +688,11 @@ namespace Robust.Client.Graphics.Clyde
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
             var state = (this, map, count: 0, shadowCastingCount: 0, xforms, worldAABB);
-            var lightAabb = _transformSystem.GetRenderCullingBounds(map, worldAABB.Enlarged(_maxLightRadius));
-            var renderBounds = _transformSystem.GetRenderCullingBounds(map, worldBounds);
-            var renderBoundsRotated = new Box2Rotated(renderBounds, default, default);
+            var lightAabb = worldAABB.Enlarged(_maxLightRadius);
 
             foreach (var (uid, comp) in _lightTreeSystem.GetIntersectingTrees(map, lightAabb))
             {
-                var bounds = _transformSystem.GetInvRenderWorldMatrix(uid).TransformBox(renderBoundsRotated);
+                var bounds = _transformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(worldBounds);
                 comp.Tree.QueryAabb(ref state, LightQuery, bounds);
             }
 
@@ -763,12 +761,11 @@ namespace Robust.Client.Graphics.Clyde
             // Do a narrow tree query around the light and only run the expensive polygon TestPoint
             // for occluders whose cached AABB can contain the light.
             var pointBounds = new Box2(lightPosition, lightPosition).Enlarged(SharedOccluderEdgeTolerance);
-            var queryBounds = _transformSystem.GetRenderCullingBounds(map, pointBounds);
             _occluderTrees.Clear();
-            _occluderSystem.GetIntersectingTrees(map, queryBounds, ref _occluderTrees);
+            _occluderSystem.GetIntersectingTrees(map, pointBounds, ref _occluderTrees);
             foreach (var (treeUid, comp) in _occluderTrees)
             {
-                var treeBounds = _transformSystem.GetInvRenderWorldMatrix(treeUid).TransformBox(queryBounds);
+                var treeBounds = _transformSystem.GetInvWorldMatrix(treeUid, xforms).TransformBox(pointBounds);
                 var state = new LightEmbeddedOccluderQueryState(
                     _fixtureSystem,
                     _transformSystem,
@@ -792,7 +789,9 @@ namespace Robust.Client.Graphics.Clyde
             if (!occluder.Enabled || occluder.CachedShape.VertexCount < 3)
                 return true;
 
-            var (worldPosition, worldRotation) = state.TransformSystem.GetRenderWorldPositionRotation((entry.Uid, entry.Transform));
+            var (worldPosition, worldRotation) = state.TransformSystem.GetWorldPositionRotation(
+                entry.Transform,
+                state.Xforms);
 
             if (!state.FixtureSystem.TestPoint(
                     occluder.CachedShape,
@@ -1678,12 +1677,11 @@ namespace Robust.Client.Graphics.Clyde
                 // Include one tile around the rendered area so shared corners on the edge of the viewport have
                 // complete topology. Visible geometry is filtered back to expandedBounds below.
                 var boundaryBounds = expandedBounds.Enlarged(SharedOccluderNeighbourQueryPadding);
-                var boundaryQueryBounds = _transformSystem.GetRenderCullingBounds(map, boundaryBounds);
                 _occluderTrees.Clear();
-                _occluderSystem.GetIntersectingTrees(map, boundaryQueryBounds, ref _occluderTrees);
+                _occluderSystem.GetIntersectingTrees(map, boundaryBounds, ref _occluderTrees);
                 foreach (var (uid, comp) in _occluderTrees)
                 {
-                    var treeBounds = _transformSystem.GetInvRenderWorldMatrix(uid).TransformBox(boundaryQueryBounds);
+                    var treeBounds = _transformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(boundaryBounds);
 
                     comp.Tree.QueryAabb((in ComponentTreeEntry<OccluderComponent> entry) =>
                     {
@@ -1695,7 +1693,7 @@ namespace Robust.Client.Graphics.Clyde
                         if (polygon.Length < 3)
                             return true;
 
-                        var worldTransform = _transformSystem.GetRenderWorldMatrix((entry.Uid, transform));
+                        var worldTransform = _transformSystem.GetWorldMatrix(transform, xforms);
 
                         // Build source-dependent corner topology from the cached client-side shared edge mask.
                         AddOccluderBoundaryEdges(

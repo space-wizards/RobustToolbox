@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Joints now reference the same object on both entities and removed the redundant error log.
 
 ### Other
 

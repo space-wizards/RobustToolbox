@@ -116,10 +116,12 @@ namespace Robust.Client.ViewVariables
             return groupedSorted;
         }
 
-        protected static Control MakeTopBar(string top, string middle, string bottom)
+        /// <param name="middleLabel">The label holding <paramref name="middle"/>, so it can be updated later. Null if not shown.</param>
+        protected static Control MakeTopBar(string top, string middle, string bottom, out Label? middleLabel)
         {
             if (top == bottom)
             {
+                middleLabel = null;
                 return new Label {Text = top, ClipText = true};
             }
 
@@ -137,11 +139,12 @@ namespace Robust.Client.ViewVariables
                 ClipText = true
             });
 
-            headBox.AddChild(new Label {
+            middleLabel = new Label {
                 Text = middle,
                 FontColorOverride = Color.DarkGray,
                 ClipText = true
-            });
+            };
+            headBox.AddChild(middleLabel);
 
             headBox.AddChild(new Label {
                 Text = bottom,

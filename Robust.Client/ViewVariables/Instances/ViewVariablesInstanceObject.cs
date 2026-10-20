@@ -51,10 +51,14 @@ namespace Robust.Client.ViewVariables.Instances
         {
             Session = session;
 
+            // The type may be server-only, so its docs may have to come from the server.
             string typeName = blob.ObjectType.Split(", ")[0];
-            string docString = ViewVariablesManager.GetDocStringForType(typeName);
-
-            _wrappingInit(window, $"[SERVER] {blob.Stringified}", docString, blob.ObjectTypePretty);
+            var middleLabel = _wrappingInit(window, $"[SERVER] {blob.Stringified}", string.Empty, blob.ObjectTypePretty);
+            if (middleLabel != null)
+            {
+                ViewVariablesManager.ApplyDocStringsAsync(ViewVariablesDocStringKind.Type,
+                    [(typeName, doc => middleLabel.Text = doc)]);
+            }
             foreach (var trait in TraitsFor(blob.Traits))
             {
                 trait.Initialize(this);
@@ -63,7 +67,7 @@ namespace Robust.Client.ViewVariables.Instances
             _refresh();
         }
 
-        private void _wrappingInit(DefaultWindow window, string top, string middle, string bottom)
+        private Label? _wrappingInit(DefaultWindow window, string top, string middle, string bottom)
         {
             // Wrapping containers.
             var scrollContainer = new ScrollContainer();
@@ -77,6 +81,8 @@ namespace Robust.Client.ViewVariables.Instances
             };
             scrollContainer.AddChild(vBoxContainer);
 
+            Label? middleLabel;
+
             // Handle top bar.
             {
                 var headBox = new BoxContainer
@@ -84,7 +90,7 @@ namespace Robust.Client.ViewVariables.Instances
                     Orientation = LayoutOrientation.Horizontal
                 };
 
-                var topBarControl = MakeTopBar(top, middle, bottom);
+                var topBarControl = MakeTopBar(top, middle, bottom, out middleLabel);
                 topBarControl.HorizontalExpand = true;
 
                 headBox.AddChild(topBarControl);
@@ -111,6 +117,8 @@ namespace Robust.Client.ViewVariables.Instances
 
             _tabs = new TabContainer();
             vBoxContainer.AddChild(_tabs);
+
+            return middleLabel;
         }
 
         private void OnButtonKeybindDown(GUIBoundKeyEventArgs eventArgs)

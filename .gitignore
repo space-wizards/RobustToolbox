@@ -84,3 +84,4 @@ Robust.Docfx/api
 
 # ignore compiler-generated xml docs
 Resources/ViewVariables/
+Resources/Server/ViewVariables/

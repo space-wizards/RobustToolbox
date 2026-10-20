@@ -7,7 +7,10 @@ in its `<PropertyGroup>`.
 The workflow is:
 
 0. Ensure the XmlDocTool is built before any project that uses this system
-1. Make sure `..\Resources\ViewVariables\` exists
+1. Make sure the doc folder exists:
+   - `..\Resources\ViewVariables\` for client and shared code, which is shipped to clients.
+   - `..\Resources\Server\ViewVariables\` for server code, which only the server can see.
+     The server hands these docs to clients that are allowed to VV, on demand.
 2. Get MSBuild to generate the xml doc at the path from step 1.
 3. Run XmlDocTool on the generated doc
 
@@ -25,6 +28,9 @@ Project files (.csproj), inside or outside Robust Toolbox, opt in with:
   </PropertyGroup>
 ```
 
+Projects whose name ends in `.Server` are treated as server-only automatically.
+Override that with `<ViewVariablesServerOnly>true|false</ViewVariablesServerOnly>`.
+
 see also
 github.com/dotnet/msbuild/issues/1559
 -->
@@ -32,6 +38,13 @@ github.com/dotnet/msbuild/issues/1559
   <PropertyGroup>
     <!-- Robust Toolbox root, found relative to this file so it works from content projects too -->
     <VVRobustDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</VVRobustDir>
+    <!-- Doc generation is only enabled to feed VV, we don't require every public member to be documented -->
+    <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
+    <!-- Server code docs must not ship to clients, they go in the server-only resources folder -->
+    <ViewVariablesServerOnly Condition="'$(ViewVariablesServerOnly)' == '' And $(MSBuildProjectName.EndsWith('.Server'))">true</ViewVariablesServerOnly>
+    <VVDocDir Condition="'$(ViewVariablesServerOnly)' == 'true'">..\Resources\Server\ViewVariables\</VVDocDir>
+    <VVDocDir Condition="'$(ViewVariablesServerOnly)' != 'true'">..\Resources\ViewVariables\</VVDocDir>
+    <VVDocPath>$(VVDocDir)$(MSBuildProjectName).xml</VVDocPath>
   </PropertyGroup>
   <ItemGroup>
     <!-- Add a reference to XmlDocTool so it always gets built before any project that needs it -->
@@ -46,11 +59,7 @@ github.com/dotnet/msbuild/issues/1559
   </ItemGroup>
   <Target Name="GenerateXmlDoc" BeforeTargets="CoreCompile">
     <!-- Ensure the destination folder for the docs exists -->
-    <MakeDir Directories="..\Resources\ViewVariables\"/>
-    <PropertyGroup>
-      <!-- This is just for convenience so the lines below don't get unreasonably long -->
-      <VVDocPath>..\Resources\ViewVariables\$(MSBuildProjectName).xml</VVDocPath>
-    </PropertyGroup>
+    <MakeDir Directories="$(VVDocDir)"/>
     <ItemGroup>
       <!-- Slightly arcane invocation of the MSBuild doc generation facility that bypasses the issue explained above -->
       <DocFileItem Include="$(VVDocPath)" />

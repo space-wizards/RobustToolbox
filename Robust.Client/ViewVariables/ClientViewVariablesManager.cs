@@ -47,6 +47,9 @@ namespace Robust.Client.ViewVariables
         {
             base.Initialize();
             InitializeDomains();
+            _netManager.RegisterNetMessage<MsgViewVariablesDocStrings>(_netMessageDocStrings);
+            _netManager.RegisterNetMessage<MsgViewVariablesReqDocStrings>();
+            _netManager.Disconnect += OnDisconnectDocStrings;
             _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(_netMessageOpenSession);
             _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(_netMessageRemoteData);
             _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(_netMessageCloseSession);

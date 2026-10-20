@@ -97,5 +97,20 @@ namespace Robust.Client.ViewVariables
         /// <param name="key"></param>
         /// <returns>DocString for the field or property or an error string</returns>
         string GetDocStringForFieldOrProperty(string key);
+
+        /// <summary>
+        ///     Retrieve DocStrings for many keys at once, asking the server for any we don't have locally.
+        /// </summary>
+        /// <remarks>
+        ///     Server-only code has its docs in a folder clients can't see, so remote objects need this.
+        ///     Server answers are cached until disconnect.
+        /// </remarks>
+        /// <returns>One DocString or error string per key, in the same order as <paramref name="keys"/></returns>
+        Task<string[]> GetDocStringsAsync(ViewVariablesDocStringKind kind, IReadOnlyList<string> keys);
+
+        /// <summary>
+        ///     Fire-and-forget version of <see cref="GetDocStringsAsync"/> that hands each result to its callback.
+        /// </summary>
+        void ApplyDocStringsAsync(ViewVariablesDocStringKind kind, IReadOnlyList<(string Key, Action<string> Apply)> targets);
     }
 }

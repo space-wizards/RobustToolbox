@@ -77,12 +77,23 @@ namespace Robust.Client.ViewVariables
             TopContainer.AddChild(NameLabel);
         }
 
-        public VVPropEditor SetProperty(ViewVariablesBlobMembers.MemberData member, string docStringKey)
+        public void SetDocString(string docString)
+        {
+            _middleLabel.Text = docString;
+        }
+
+        /// <param name="member">The member to show.</param>
+        /// <param name="docStringKey">
+        ///     Key to look up a local DocString with. Pass null for remote members and call
+        ///     <see cref="SetDocString"/> once the DocString arrives from the server.
+        /// </param>
+        public VVPropEditor SetProperty(ViewVariablesBlobMembers.MemberData member, string? docStringKey)
         {
             NameLabel.Text = member.Name;
             var type = member.Value?.GetType();
 
-            _middleLabel.Text = _viewVariablesManager.GetDocStringForFieldOrProperty(docStringKey);
+            if (docStringKey != null)
+                SetDocString(_viewVariablesManager.GetDocStringForFieldOrProperty(docStringKey));
             _bottomLabel.Text = $"Type: {member.TypePretty}";
             var editor = _viewVariablesManager.PropertyFor(type);
 

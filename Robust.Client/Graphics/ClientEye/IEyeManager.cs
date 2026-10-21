@@ -11,6 +11,7 @@ namespace Robust.Client.Graphics
     /// Keeps a reference to the current eye (camera) that the client is seeing though, and provides
     /// utility functions for the current eye.
     /// </summary>
+    [NotContentImplementable]
     public interface IEyeManager
     {
         /// <summary>

@@ -271,7 +271,8 @@ namespace Robust.Client.Graphics
         Mix,
         Add,
         Subtract,
-        Multiply
+        Multiply,
+        Premultiplied
     }
 
     internal enum ShaderPreset : byte

@@ -18,10 +18,10 @@ namespace Robust.Shared.Map.Components
         [ViewVariables(VVAccess.ReadOnly), Access(typeof(SharedMapSystem), Other = AccessPermissions.ReadExecute)]
         public MapId MapId { get; internal set; } = MapId.Nullspace;
 
-        [DataField, Access(typeof(SharedMapSystem), typeof(MapManager))]
+        [DataField, Access(typeof(SharedMapSystem))]
         public bool MapPaused;
 
-        [DataField, Access(typeof(SharedMapSystem), typeof(MapManager))]
+        [DataField, Access(typeof(SharedMapSystem))]
         public bool MapInitialized;
     }
 

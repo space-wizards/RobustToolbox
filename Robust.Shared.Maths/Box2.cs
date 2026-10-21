@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -19,31 +20,107 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     The X coordinate of the left edge of the box.
         /// </summary>
-        [FieldOffset(sizeof(float) * 0)] public float Left;
+        [FieldOffset(sizeof(float) * 0)] internal float _left;
 
         /// <summary>
         ///     The Y coordinate of the bottom of the box.
         /// </summary>
-        [FieldOffset(sizeof(float) * 1)] public float Bottom;
+        [FieldOffset(sizeof(float) * 1)] internal float _bottom;
 
         /// <summary>
         ///     The X coordinate of the right edge of the box.
         /// </summary>
-        [FieldOffset(sizeof(float) * 2)] public float Right;
+        [FieldOffset(sizeof(float) * 2)] internal float _right;
 
         /// <summary>
         ///     The Y coordinate of the top edge of the box.
         /// </summary>
-        [FieldOffset(sizeof(float) * 3)] public float Top;
+        [FieldOffset(sizeof(float) * 3)] internal float _top;
 
         [NonSerialized]
-        [FieldOffset(sizeof(float) * 0)] public Vector2 BottomLeft;
+        [FieldOffset(sizeof(float) * 0)] internal Vector2 _bottomLeft;
 
         [NonSerialized]
-        [FieldOffset(sizeof(float) * 2)] public Vector2 TopRight;
+        [FieldOffset(sizeof(float) * 2)] internal Vector2 _topRight;
 
         [NonSerialized]
-        [FieldOffset(sizeof(float) * 0)] public Vector4 AsVector4;
+        [FieldOffset(sizeof(float) * 0)] internal Vector4 _asVector4;
+
+        /// <summary>
+        ///     The X coordinate of the left edge of the box.
+        /// </summary>
+        public float Left
+        {
+            readonly get => _left;
+            set
+            {
+                Debug.Assert(!(value > _right), "Left cannot be greater than Right.");
+                _left = MathF.Min(value, _right);
+            }
+        }
+
+        /// <summary>
+        ///     The Y coordinate of the bottom of the box.
+        /// </summary>
+        public float Bottom
+        {
+            readonly get => _bottom;
+            set
+            {
+                Debug.Assert(!(value > _top), "Bottom cannot be greater than Top.");
+                _bottom = MathF.Min(value, _top);
+            }
+        }
+
+        /// <summary>
+        ///     The X coordinate of the right edge of the box.
+        /// </summary>
+        public float Right
+        {
+            readonly get => _right;
+            set
+            {
+                Debug.Assert(!(value < _left), "Right cannot be less than Left.");
+                _right = MathF.Max(value, _left);
+            }
+        }
+
+        /// <summary>
+        ///     The Y coordinate of the top edge of the box.
+        /// </summary>
+        public float Top
+        {
+            readonly get => _top;
+            set
+            {
+                Debug.Assert(!(value < _bottom), "Top cannot be less than Bottom.");
+                _top = MathF.Max(value, _bottom);
+            }
+        }
+
+        public Vector2 BottomLeft
+        {
+            readonly get => _bottomLeft;
+            set
+            {
+                Debug.Assert(!(value.X > _right), "BottomLeft.X cannot be greater than Right.");
+                Debug.Assert(!(value.Y > _top), "BottomLeft.Y cannot be greater than Top.");
+                _bottomLeft = Vector2.Min(value, _topRight);
+            }
+        }
+
+        public Vector2 TopRight
+        {
+            readonly get => _topRight;
+            set
+            {
+                Debug.Assert(!(value.X < _left), "TopRight.X cannot be less than Left.");
+                Debug.Assert(!(value.Y < _bottom), "TopRight.Y cannot be less than Bottom.");
+                _topRight = Vector2.Max(value, _bottomLeft);
+            }
+        }
+
+        public readonly Vector4 AsVector4 => _asVector4;
 
         public readonly Vector2 BottomRight
         {
@@ -60,13 +137,13 @@ namespace Robust.Shared.Maths
         public readonly float Width
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => MathF.Abs(Right - Left);
+            get => _right - _left;
         }
 
         public readonly float Height
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => MathF.Abs(Bottom - Top);
+            get => _top - _bottom;
         }
 
         public readonly Vector2 Size
@@ -87,13 +164,13 @@ namespace Robust.Shared.Maths
         public readonly Vector2 Center
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => (BottomLeft + TopRight) * .5f;
+            get => new((_left + _right) * 0.5f, (_bottom + _top) * 0.5f);
         }
 
         public readonly Vector2 Extents
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => (TopRight - BottomLeft) * 0.5f;
+            get => new((_right - _left) * 0.5f, (_top - _bottom) * 0.5f);
         }
 
         public static Box2 Empty = new Box2();
@@ -107,18 +184,41 @@ namespace Robust.Shared.Maths
         {
             Unsafe.SkipInit(out this);
 
-            BottomLeft = bottomLeft;
-            TopRight = topRight;
+            Validate(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y);
+
+            _bottomLeft = bottomLeft;
+            _topRight = Vector2.Max(bottomLeft, topRight);
         }
 
         public Box2(float left, float bottom, float right, float top)
         {
             Unsafe.SkipInit(out this);
 
-            Left = left;
-            Right = right;
-            Top = top;
-            Bottom = bottom;
+            Validate(left, bottom, right, top);
+
+            _left = left;
+            _right = MathF.Max(left, right);
+            _top = MathF.Max(bottom, top);
+            _bottom = bottom;
+        }
+
+        /// <summary>
+        /// Creates a Box2 with no bounds validation applied, use at your own risk.
+        /// </summary>
+        internal static Box2 DangerousCreate(float left, float bottom, float right, float top)
+        {
+            Unsafe.SkipInit(out Box2 box);
+            box._left = left;
+            box._right = right;
+            box._top = top;
+            box._bottom = bottom;
+            return box;
+        }
+
+        private static void Validate(float left, float bottom, float right, float top)
+        {
+            Debug.Assert(!(left > right), "Left cannot be greater than Right.");
+            Debug.Assert(!(bottom > top), "Bottom cannot be greater than Top.");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -159,17 +259,21 @@ namespace Robust.Shared.Maths
             return new Box2(min, max);
         }
 
+        [Pure]
         public readonly bool HasNan()
         {
-            return Vector128.EqualsAny(AsVector4.AsVector128(), Vector128.Create(float.NaN));
+            var vector = _asVector4.AsVector128();
+            return !Vector128.EqualsAll(vector, vector);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public readonly bool Intersects(in Box2 other)
         {
-            return other.Bottom <= this.Top && other.Top >= this.Bottom && other.Right >= this.Left &&
-                   other.Left <= this.Right;
+            return other._bottom <= _top
+                   && other._top >= _bottom
+                   && other._right >= _left
+                   && other._left <= _right;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -212,6 +316,7 @@ namespace Robust.Shared.Maths
             return surfaceIntersect / (Area(this) + Area(other) - surfaceIntersect);
         }
 
+        [Pure]
         public readonly bool IsValid()
         {
             var d = Vector2.Subtract(TopRight, BottomLeft);
@@ -229,25 +334,25 @@ namespace Robust.Shared.Maths
 
             if (other.Left < Left)
             {
-                Left = other.Left;
+                _left = other.Left;
                 changed = true;
             }
 
             if (other.Bottom < Bottom)
             {
-                Bottom = other.Bottom;
+                _bottom = other.Bottom;
                 changed = true;
             }
 
             if (Right < other.Right)
             {
-                Right = other.Right;
+                _right = other.Right;
                 changed = true;
             }
 
-            if (other.Top < Top)
+            if (Top < other.Top)
             {
-                Top = other.Top;
+                _top = other.Top;
                 changed = true;
             }
 
@@ -307,15 +412,23 @@ namespace Robust.Shared.Maths
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public readonly bool Contains(Vector2 point, bool closedRegion = true)
+        public readonly bool Contains(Vector2 point, bool closedRegion)
         {
-            var xOk = closedRegion
-                ? point.X >= Left ^ point.X > Right
-                : point.X > Left ^ point.X >= Right;
-            var yOk = closedRegion
-                ? point.Y >= Bottom ^ point.Y > Top
-                : point.Y > Bottom ^ point.Y >= Top;
-            return xOk && yOk;
+            return closedRegion ? Contains(point) : ContainsOpen(point);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public readonly bool Contains(Vector2 point)
+        {
+            return (point.X >= Left ^ point.X > Right) && (point.Y >= Bottom ^ point.Y > Top);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public readonly bool ContainsOpen(Vector2 point)
+        {
+            return (point.X > Left ^ point.X >= Right) && (point.Y > Bottom ^ point.Y >= Top);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -436,12 +549,26 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public static float Area(in Box2 box)
             => box.Width * box.Height;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public static float Perimeter(in Box2 box)
             => (box.Width + box.Height) * 2;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public static float UnionPerimeter(in Box2 a, in Box2 b)
+        {
+            var left = MathF.Min(a._left, b._left);
+            var bottom = MathF.Min(a._bottom, b._bottom);
+            var right = MathF.Max(a._right, b._right);
+            var top = MathF.Max(a._top, b._top);
+
+            return 2 * ((right - left) + (top - bottom));
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
@@ -456,11 +583,9 @@ namespace Robust.Shared.Maths
         [Pure]
         public static Box2 Union(in Vector2 a, in Vector2 b)
         {
-            var vecA = new Vector2(a.X, a.Y);
-            var vecB = new Vector2(b.X, b.Y);
 
-            var min = Vector2.Min(vecA, vecB);
-            var max = Vector2.Max(vecA, vecB);
+            var min = Vector2.Min(a, b);
+            var max = Vector2.Max(a, b);
 
             return new Box2(min.X, min.Y, max.X, max.Y);
         }
@@ -495,6 +620,7 @@ namespace Robust.Shared.Maths
             return new Vector2(cx, cy);
         }
 
+        [Pure]
         public readonly bool EqualsApprox(Box2 other)
         {
             return MathHelper.CloseToPercent(Left, other.Left)
@@ -503,6 +629,7 @@ namespace Robust.Shared.Maths
                    && MathHelper.CloseToPercent(Top, other.Top);
         }
 
+        [Pure]
         public readonly bool EqualsApprox(Box2 other, double tolerance)
         {
             return MathHelper.CloseToPercent(Left, other.Left, tolerance)

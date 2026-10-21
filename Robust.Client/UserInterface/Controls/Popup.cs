@@ -30,6 +30,29 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool CloseOnEscape { get; set; } = true;
 
+        private bool _autoOrphan;
+
+        /// <summary>
+        /// Opens the popup at the location of the mouse.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The popup is placed in the modal root, and is automatically sized.
+        /// </para>
+        /// <para>
+        /// The popup *automatically* gets removed from the popup root when it is hidden again.
+        /// Do not remove it manually!
+        /// </para>
+        /// </remarks>
+        public void OpenAtMouse()
+        {
+            _autoOrphan = true;
+            var root = UserInterfaceManager.GetRootForMouse();
+            root.ModalRoot.AddChild(this);
+
+            Open(UIBox2.FromDimensions(UserInterfaceManager.MousePositionScaled.Position, Vector2.One));
+        }
+
         public virtual void Open(UIBox2? box = null, Vector2? altPos = null, Vector2? altPosUp = null)
         {
             if (Visible)
@@ -72,6 +95,12 @@ namespace Robust.Client.UserInterface.Controls
 
             Visible = false;
             OnPopupHide?.Invoke();
+
+            if (_autoOrphan)
+            {
+                Orphan();
+                _autoOrphan = false;
+            }
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)

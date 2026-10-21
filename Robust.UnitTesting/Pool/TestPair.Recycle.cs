@@ -1,8 +1,11 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using Robust.Client;
 using Robust.Shared;
 using Robust.Shared.Exceptions;
@@ -15,6 +18,18 @@ namespace Robust.UnitTesting.Pool;
 // This partial file contains logic related to recycling & disposing test pairs.
 public partial class TestPair<TServer, TClient>
 {
+    private void ReportErrorLogs()
+    {
+        using (Assert.EnterMultipleScope())
+        {
+            foreach (var log in ServerLogHandler.FailingLogs)
+                Assert.Fail(log);
+
+            foreach (var log in ClientLogHandler.FailingLogs)
+                Assert.Fail(log);
+        }
+    }
+
     private async Task OnDirtyDispose()
     {
         var usageTime = Watch.Elapsed;
@@ -23,6 +38,7 @@ public partial class TestPair<TServer, TClient>
         Kill();
         var disposeTime = Watch.Elapsed;
         await TestOut.WriteLineAsync($"{nameof(DisposeAsync)}: Disposed pair {Id} in {disposeTime.TotalMilliseconds} ms");
+        ReportErrorLogs();
         // Test pairs should only dirty dispose if they are failing. If they are not failing, this probably happened
         // because someone forgot to clean-return the pair.
         Assert.Warn("Test was dirty-disposed.");
@@ -71,18 +87,32 @@ public partial class TestPair<TServer, TClient>
             return;
         }
 
-        var sRuntimeLog = Server.Resolve<IRuntimeLog>();
-        if (sRuntimeLog.ExceptionCount > 0)
-            throw new Exception($"{nameof(CleanReturnAsync)}: Server logged exceptions");
-        var cRuntimeLog = Client.Resolve<IRuntimeLog>();
-        if (cRuntimeLog.ExceptionCount > 0)
-            throw new Exception($"{nameof(CleanReturnAsync)}: Client logged exceptions");
+        try
+        {
+            var sRuntimeLog = Server.Resolve<IRuntimeLog>();
+            if (sRuntimeLog.ExceptionCount > 0)
+                throw new Exception($"{nameof(CleanReturnAsync)}: Server logged exceptions");
+            var cRuntimeLog = Client.Resolve<IRuntimeLog>();
+            if (cRuntimeLog.ExceptionCount > 0)
+                throw new Exception($"{nameof(CleanReturnAsync)}: Client logged exceptions");
+
+            ReportErrorLogs();
+        }
+        catch (Exception)
+        {
+            Kill();
+            await ReallyBeIdle();
+            await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: Dirty disposed in {Watch.Elapsed.TotalMilliseconds} ms");
+            Assert.Warn("Test was dirty-disposed.");
+            throw;
+        }
 
         var returnTime = Watch.Elapsed;
         await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: PoolManager took {returnTime.TotalMilliseconds} ms to put pair {Id} back into the pool");
         State = PairState.Ready;
     }
 
+    [HandlesResourceDisposal]
     public async ValueTask CleanReturnAsync()
     {
         if (State != PairState.InUse)
@@ -90,10 +120,16 @@ public partial class TestPair<TServer, TClient>
 
         await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: Return of pair {Id} started");
         State = PairState.CleanDisposed;
-        await OnCleanDispose();
-        DebugTools.Assert(State is PairState.Dead or PairState.Ready);
-        Manager.Return(this);
-        ClearContext();
+        try
+        {
+            await OnCleanDispose();
+        }
+        finally
+        {
+            DebugTools.Assert(State is PairState.Dead or PairState.Ready);
+            ClearContext();
+            Manager.Return(this);
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -105,9 +141,15 @@ public partial class TestPair<TServer, TClient>
                 break;
             case PairState.InUse:
                 await TestOut.WriteLineAsync($"{nameof(DisposeAsync)}: Dirty return of pair {Id} started");
-                await OnDirtyDispose();
-                Manager.Return(this);
-                ClearContext();
+                try
+                {
+                    await OnDirtyDispose();
+                }
+                finally
+                {
+                    ClearContext();
+                    Manager.Return(this);
+                }
                 break;
             default:
                 throw new Exception($"{nameof(DisposeAsync)}: Unexpected state. Pair: {Id}. State: {State}.");

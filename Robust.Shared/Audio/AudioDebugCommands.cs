@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Audio;
 
-internal sealed class AudioDebugCommands : LocalizedCommands
+internal sealed partial class AudioDebugCommands : LocalizedCommands
 {
-    [Dependency] private readonly IEntitySystemManager _entitySystem = default!;
+    [Dependency] private IEntitySystemManager _entitySystem = default!;
 
     public override string Command => "audio_length";
 

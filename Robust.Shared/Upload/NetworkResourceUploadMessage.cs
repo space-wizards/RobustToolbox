@@ -6,6 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Upload;
 
+[Obsolete("The engine no longer uses this message")]
 public sealed class NetworkResourceUploadMessage : NetMessage
 {
     public override MsgGroups MsgGroup => MsgGroups.String;

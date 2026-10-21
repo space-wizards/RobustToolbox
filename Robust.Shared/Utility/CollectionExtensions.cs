@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -13,7 +14,7 @@ namespace Robust.Shared.Utility
         /// </summary>
         public static void EnsureLength<T>(ref T[] array, int length)
         {
-            if (array.Length > length)
+            if (array.Length >= length)
                 return;
 
             Array.Resize(ref array, length);
@@ -40,20 +41,45 @@ namespace Robust.Shared.Utility
         /// <returns>A new list with the same elements as <paramref name="list" />.</returns>
         public static List<T> ShallowClone<T>(this List<T> self)
         {
-            var list = new List<T>(self.Count);
-            list.AddRange(self);
-            return list;
+            return new List<T>(self);
         }
 
         public static Dictionary<TKey, TValue> ShallowClone<TKey, TValue>(this Dictionary<TKey, TValue> self)
             where TKey : notnull
         {
-            var dict = new Dictionary<TKey, TValue>(self.Count);
-            foreach (var item in self)
+            return new Dictionary<TKey, TValue>(self, self.Comparer);
+        }
+
+        /// <summary>
+        /// Compares the entries inside of 2 dictionaries to check equality.
+        /// </summary>
+        /// <remarks>
+        /// The base Equals implementation checks references hence this.
+        /// </remarks>
+        /// <param name="self"></param>
+        /// <param name="other"></param>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <returns></returns>
+        public static bool DictionaryEquals<TKey, TValue>(
+            this IReadOnlyDictionary<TKey, TValue> self,
+            IReadOnlyDictionary<TKey, TValue> other)
+            where TKey : notnull
+        {
+            if (ReferenceEquals(self, other))
+                return true;
+
+            if (self.Count != other.Count)
+                return false;
+
+            var valueComparer = EqualityComparer<TValue>.Default;
+            foreach (var (key, value) in self)
             {
-                dict[item.Key] = item.Value;
+                if (!other.TryGetValue(key, out var otherValue) || !valueComparer.Equals(value, otherValue))
+                    return false;
             }
-            return dict;
+
+            return true;
         }
 
         public static bool TryGetValue<T>(this IList<T> list, int index, out T value)
@@ -186,7 +212,8 @@ namespace Robust.Shared.Utility
         /// <paramref name="source" /> is <see langword="null" />.</exception>
         public static bool TryFirstOrNull<TSource>(this IEnumerable<TSource> source, [NotNullWhen(true)] out TSource? element) where TSource : struct
         {
-            return TryFirstOrNull(source, _ => true, out element);
+            element = source.FirstOrNull();
+            return element != null;
         }
 
         /// <summary>
@@ -214,7 +241,8 @@ namespace Robust.Shared.Utility
         /// <paramref name="source" /> is <see langword="null" />.</exception>
         public static bool TryFirstOrDefault<TSource>(this IEnumerable<TSource> source, [NotNullWhen(true)] out TSource? element) where TSource : class
         {
-            return TryFirstOrDefault(source, _ => true, out element);
+            element = source.FirstOrDefault();
+            return element != null;
         }
 
         public static TValue GetOrNew<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) where TValue : new()
@@ -251,20 +279,13 @@ namespace Robust.Shared.Utility
             return entry!;
         }
 
-        // More efficient than LINQ.
+        [Pure]
         public static KeyValuePair<TKey, TValue>[] ToArray<TKey, TValue>(this Dictionary<TKey, TValue> dict)
             where TKey : notnull
         {
-            var array = new KeyValuePair<TKey, TValue>[dict.Count];
-
-            var i = 0;
-            foreach (var kvPair in dict)
-            {
-                array[i] = kvPair;
-                i += 1;
-            }
-
-            return array;
+            // Faster than the old custom implementation
+            // 0 count faster, 1 count slower, any higher faster (on my 7800X3D).
+            return Enumerable.ToArray(dict);
         }
 
         /// <summary>

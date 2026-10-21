@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
@@ -20,16 +21,16 @@ using Robust.Shared.Exceptions;
 
 namespace Robust.Shared.GameObjects
 {
-    public sealed class EntitySystemManager : IEntitySystemManager, IPostInjectInit
+    public sealed partial class EntitySystemManager : IEntitySystemManager, IPostInjectInit
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly ProfManager _profManager = default!;
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private ProfManager _profManager = default!;
+        [Dependency] private IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
 #if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+        [Dependency] private IRuntimeLog _runtimeLog = default!;
 #endif
 
         private ISawmill _sawmill = default!;
@@ -64,7 +65,7 @@ namespace Robust.Shared.GameObjects
         private bool _initialized;
 
         [ViewVariables] private UpdateReg[] _updateOrder = Array.Empty<UpdateReg>();
-        [ViewVariables] private IEntitySystem[] _frameUpdateOrder = Array.Empty<IEntitySystem>();
+        [ViewVariables] private FrameUpdateReg[] _frameUpdateOrder = Array.Empty<FrameUpdateReg>();
 
         public bool MetricsEnabled { get; set; }
 
@@ -83,6 +84,10 @@ namespace Robust.Shared.GameObjects
 
         public T? GetEntitySystemOrNull<T>() where T : IEntitySystem
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (SystemDependencyCollection == null)
+                return default;
+
             SystemDependencyCollection.TryResolveType<T>(out var system);
             return system;
         }
@@ -125,7 +130,9 @@ namespace Robust.Shared.GameObjects
         public bool TryGetEntitySystem<T>([NotNullWhen(true)] out T? entitySystem)
             where T : IEntitySystem
         {
-            return SystemDependencyCollection.TryResolveType<T>(out entitySystem);
+            entitySystem = default;
+            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+            return SystemDependencyCollection?.TryResolveType(out entitySystem) ?? false;
         }
 
         /// <inheritdoc />
@@ -174,15 +181,10 @@ namespace Robust.Shared.GameObjects
                     // which instance to return if we retrieved it by the supertype
                     if (excludedTypes.Contains(baseType)) continue;
 
-                    if (subTypes.ContainsKey(baseType))
-                    {
-                        subTypes.Remove(baseType);
+                    if (subTypes.Remove(baseType))
                         excludedTypes.Add(baseType);
-                    }
                     else
-                    {
                         subTypes.Add(baseType, type);
-                    }
                 }
             }
 
@@ -192,24 +194,46 @@ namespace Robust.Shared.GameObjects
                 _systemTypes.Remove(baseType);
             }
 
+            var queryMethod = typeof(EntityManager).GetMethod(nameof(EntityManager.GetEntityQuery), 1, [])!;
+            SystemDependencyCollection.RegisterBaseGenericLazy(
+                typeof(EntityQuery<>),
+                (queryType, dep) => queryMethod
+                    .MakeGenericMethod(queryType.GetGenericArguments()[0])
+                    .Invoke(dep.Resolve<IEntityManager>(), null)!
+            );
+
             SystemDependencyCollection.BuildGraph();
 
             foreach (var systemType in _systemTypes)
             {
                 var system = (IEntitySystem)SystemDependencyCollection.ResolveType(systemType);
                 system.Initialize();
+                if (system is EntitySystem entitySystem)
+                    entitySystem.AutoSubscriptions();
                 SystemLoaded?.Invoke(this, new SystemChangedArgs(system));
             }
 
             // Create update order for entity systems.
             var (fUpdate, update) = CalculateUpdateOrder(_systemTypes, subTypes, SystemDependencyCollection);
 
-            _frameUpdateOrder = fUpdate.ToArray();
             _updateOrder = update
-                .Select(s => new UpdateReg
+                .Select(s =>
+                {
+                    var profileName = s.GetType().Name;
+                    return new UpdateReg
+                    {
+                        System = s,
+                        ProfileName = profileName,
+                        Monitor = _tickUsageHistogram.WithLabels(profileName)
+                    };
+                })
+                .ToArray();
+
+            _frameUpdateOrder = fUpdate
+                .Select(s => new FrameUpdateReg
                 {
                     System = s,
-                    Monitor = _tickUsageHistogram.WithLabels(s.GetType().Name)
+                    ProfileName = s.GetType().Name
                 })
                 .ToArray();
 
@@ -293,7 +317,7 @@ namespace Robust.Shared.GameObjects
             _extraLoadedTypes.Clear();
             _systemTypes.Clear();
             _updateOrder = Array.Empty<UpdateReg>();
-            _frameUpdateOrder = Array.Empty<IEntitySystem>();
+            _frameUpdateOrder = Array.Empty<FrameUpdateReg>();
             _initialized = false;
             SystemDependencyCollection?.Clear();
         }
@@ -314,9 +338,10 @@ namespace Robust.Shared.GameObjects
                 try
                 {
 #endif
-                    var sw = ProfSampler.StartNew();
-                    updReg.System.Update(frameTime);
-                    _profManager.WriteValue(updReg.System.GetType().Name, sw);
+                    using (_profManager.Value(updReg.ProfileName))
+                    {
+                        updReg.System.Update(frameTime);
+                    }
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)
@@ -335,15 +360,16 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void FrameUpdate(float frameTime)
         {
-            foreach (var system in _frameUpdateOrder)
+            foreach (var updReg in _frameUpdateOrder)
             {
 #if EXCEPTION_TOLERANCE
                 try
                 {
 #endif
-                    var sw = ProfSampler.StartNew();
-                    system.FrameUpdate(frameTime);
-                    _profManager.WriteValue(system.GetType().Name, sw);
+                    using (_profManager.Value(updReg.ProfileName))
+                    {
+                        updReg.System.FrameUpdate(frameTime);
+                    }
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)
@@ -372,7 +398,9 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetEntitySystem(Type sysType, [NotNullWhen(true)] out object? system)
         {
-            return SystemDependencyCollection.TryResolveType(sysType, out system);
+            system = null;
+            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+            return SystemDependencyCollection?.TryResolveType(sysType, out system) ?? false;
         }
 
         public object GetEntitySystem(Type sysType)
@@ -408,12 +436,24 @@ namespace Robust.Shared.GameObjects
             return mFrameUpdate!.DeclaringType != typeof(EntitySystem);
         }
 
-        internal IEnumerable<Type> FrameUpdateOrder => _frameUpdateOrder.Select(c => c.GetType());
+        internal IEnumerable<Type> FrameUpdateOrder => _frameUpdateOrder.Select(c => c.System.GetType());
         internal IEnumerable<Type> TickUpdateOrder => _updateOrder.Select(c => c.System.GetType());
+
+        private struct FrameUpdateReg
+        {
+            [ViewVariables] public IEntitySystem System;
+            [ViewVariables] public string ProfileName;
+
+            public override string? ToString()
+            {
+                return System.ToString();
+            }
+        }
 
         private struct UpdateReg
         {
             [ViewVariables] public IEntitySystem System;
+            [ViewVariables] public string ProfileName;
             [ViewVariables] public Histogram.Child Monitor;
 
             public override string? ToString()

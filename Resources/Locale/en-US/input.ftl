@@ -69,6 +69,7 @@ input-key-MouseButton7 = Mouse 7
 input-key-MouseButton8 = Mouse 8
 input-key-MouseButton9 = Mouse 9
 input-key-CapsLock = Caps Lock
+input-key-ScrollLock = Scroll Lock
 
 input-key-LSystem-win = Left Win
 input-key-RSystem-win = Right Win
@@ -76,5 +77,16 @@ input-key-LSystem-mac = Left ⌘
 input-key-RSystem-mac = Right ⌘
 input-key-LSystem-linux = Left Meta
 input-key-RSystem-linux = Right Meta
+
+input-key-Help = Help
+input-key-Stop = Stop
+input-key-Again = Again
+input-key-Prop = Props
+input-key-Undo = Undo
+input-key-Cut = Cut
+input-key-Copy = Copy
+input-key-Open = Open
+input-key-Paste = Paste
+input-key-Find = Find
 
 input-key-unknown = <unknown key>

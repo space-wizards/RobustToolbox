@@ -39,13 +39,13 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     // I don't think anybody's gonna write 256 MB of chunk at once yeah?
     private const int MaxTickBatchSize = 256 * 1024;
 
-    [Dependency] protected readonly IGameTiming Timing = default!;
-    [Dependency] protected readonly INetConfigurationManager NetConf = default!;
-    [Dependency] private readonly IComponentFactory _factory = default!;
-    [Dependency] private readonly IRobustSerializer _serializer = default!;
-    [Dependency] private readonly INetManager _netMan = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly ITaskManager _taskManager = default!;
+    [Dependency] protected IGameTiming Timing = default!;
+    [Dependency] protected INetConfigurationManager NetConf = default!;
+    [Dependency] private IComponentFactory _factory = default!;
+    [Dependency] private IRobustSerializer _serializer = default!;
+    [Dependency] private INetManager _netMan = default!;
+    [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
 
     public event Action<MappingDataNode, List<object>>? RecordingStarted;
     public event Action<MappingDataNode>? RecordingStopped;

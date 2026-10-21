@@ -1,7 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Threading;
+using Robust.Shared.ContentPack;
 using Xilium.CefGlue;
 
 namespace Robust.Client.WebView.Cef
@@ -19,6 +21,20 @@ namespace Robust.Client.WebView.Cef
                 Array.Copy(args, 0, argv, 1, args.Length);
                 argv[0] = "-";
             }
+
+#if MACOS
+            NativeLibrary.SetDllImportResolver(typeof(CefSettings).Assembly,
+                (name, assembly, path) =>
+                {
+                    if (name == "libcef")
+                    {
+                        var libPath = PathHelpers.ExecutableRelativeFile("../../../../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework");
+                        return NativeLibrary.Load(libPath, assembly, path);
+                    }
+
+                    return 0;
+                });
+#endif
 
             var mainArgs = new CefMainArgs(argv);
 

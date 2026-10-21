@@ -24,7 +24,7 @@ namespace Robust.Client.GameObjects
         private const float MinInterpolationDistance = 0.001f;
         private const float MinInterpolationDistanceSquared = MinInterpolationDistance * MinInterpolationDistance;
 
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
 
         // Only keep track of transforms actively lerping.
         // Much faster than iterating 3000+ transforms every frame.

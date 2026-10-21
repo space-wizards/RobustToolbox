@@ -12,6 +12,7 @@ namespace Robust.Shared.Input.Binding
     /// fire after another system's handlers. This also allows easy unregistering of all bindings
     /// for a given system / manager.
     /// </summary>
+    [NotContentImplementable]
     public interface ICommandBindRegistry
     {
         /// <summary>CO

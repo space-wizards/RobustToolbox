@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
@@ -93,7 +94,7 @@ public sealed partial class EntityLookupSystem
             flags);
 
         // Need to include maps
-        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+        _map.FindGridsIntersecting(mapId, worldAABB, ref state,
             static (EntityUid uid, MapGridComponent _, ref EntityQueryState<T> state) =>
             {
                 var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
@@ -244,7 +245,7 @@ public sealed partial class EntityLookupSystem
             flags);
 
         // Need to include maps
-        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+        _map.FindGridsIntersecting(mapId, worldAABB, ref state,
             static (EntityUid uid, MapGridComponent _, ref AnyEntityQueryState<T> state) =>
             {
                 var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
@@ -556,7 +557,7 @@ public sealed partial class EntityLookupSystem
         var state = (uid, transform, intersecting, _fixturesQuery, this, _physics, flags);
 
         // Unfortuantely I can't think of a way to de-dupe this with the other ones as it's slightly different.
-        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
+        _map.FindGridsIntersecting(mapId, worldAABB, ref state,
             static (EntityUid gridUid, MapGridComponent grid,
                 ref (EntityUid entity, Transform transform, HashSet<EntityUid> intersecting,
                     EntityQuery<FixturesComponent> fixturesQuery, EntityLookupSystem lookup, SharedPhysicsSystem physics, LookupFlags flags) state) =>
@@ -786,7 +787,7 @@ public sealed partial class EntityLookupSystem
 
         var state = (callback, _broadQuery);
 
-        _mapManager.FindGridsIntersecting(mapId, worldBounds, ref state,
+        _map.FindGridsIntersecting(mapId, worldBounds, ref state,
             static (EntityUid uid, MapGridComponent grid,
                 ref (ComponentQueryCallback<BroadphaseComponent> callback, EntityQuery<BroadphaseComponent> _broadQuery)
                     tuple) =>
@@ -803,18 +804,21 @@ public sealed partial class EntityLookupSystem
 
     #region Bounds
 
+    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize)
     {
         return new Box2(gridIndices * tileSize, (gridIndices + 1) * tileSize);
     }
 
+    [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box2 GetLocalBounds(TileRef tileRef, ushort tileSize)
     {
         return GetLocalBounds(tileRef.GridIndices, tileSize);
     }
 
+    [Pure]
     public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3x2? worldMatrix = null, Angle? angle = null)
     {
         var grid = _gridQuery.GetComponent(tileRef.GridUid);

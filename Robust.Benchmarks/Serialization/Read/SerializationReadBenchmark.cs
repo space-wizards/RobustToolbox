@@ -20,7 +20,7 @@ namespace Robust.Benchmarks.Serialization.Read
             InitializeSerialization();
 
             StringDataDefNode = new MappingDataNode();
-            StringDataDefNode.Add(new ValueDataNode("string"), new ValueDataNode("ABC"));
+            StringDataDefNode.Add("string", new ValueDataNode("ABC"));
 
             var yamlStream = new YamlStream();
             yamlStream.Load(new StringReader(SeedDataDefinition.Prototype));

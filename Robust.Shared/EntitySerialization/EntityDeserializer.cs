@@ -27,7 +27,7 @@ namespace Robust.Shared.EntitySerialization;
 /// This class provides methods for deserializing entities from yaml. It provides some more control over
 /// serialization than the methods provided by <see cref="MapLoaderSystem"/>.
 /// </summary>
-public sealed class EntityDeserializer :
+public sealed partial class EntityDeserializer :
     ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
     ITypeSerializer<NetEntity, ValueDataNode>,
@@ -42,16 +42,16 @@ public sealed class EntityDeserializer :
 
     public const int NewestSupportedVersion = EntitySerializer.MapFormatVersion;
 
-    public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
+    public SerializationManager.SerializerProvider SerializerProvider { get; }
 
-    [Dependency] public readonly EntityManager EntMan = default!;
-    [Dependency] public readonly IGameTiming Timing = default!;
-    [Dependency] private readonly ISerializationManager _seriMan = default!;
-    [Dependency] private readonly IComponentFactory _factory = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
-    [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly IDependencyCollection _deps = default!;
+    [Dependency] public EntityManager EntMan = default!;
+    [Dependency] public IGameTiming Timing = default!;
+    [Dependency] private ISerializationManager _seriMan = default!;
+    [Dependency] private IComponentFactory _factory = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private SharedMapSystem _map = default!;
+    [Dependency] private ILogManager _logMan = default!;
+    [Dependency] private IDependencyCollection _deps = default!;
 
     private readonly ISawmill _log;
     private Stopwatch _stopwatch = new();
@@ -126,6 +126,7 @@ public sealed class EntityDeserializer :
         deps.InjectDependencies(this);
         _log = _logMan.GetSawmill("entity_deserializer");
         _log.Level = LogLevel.Info;
+        SerializerProvider = new(_seriMan);
         SerializerProvider.RegisterSerializer(this);
         Data = data;
         Options = options;
@@ -617,8 +618,9 @@ public sealed class EntityDeserializer :
                 }
 
                 var datanode = compData;
-                if (proto != null && proto.Components.TryGetValue(name, out var protoData))
-                    datanode = _seriMan.CombineMappings(compData, protoData.Mapping);
+
+                if (proto != null && _proto.GetPrototypeData(proto).TryGetValue(name, out var protoData))
+                    datanode = _seriMan.CombineMappings(compData, protoData);
 
                 _components.Add(name, datanode);
             }
@@ -689,14 +691,16 @@ public sealed class EntityDeserializer :
             // I'm scared turning over this rock will reveal a lot of bugs. So leaving that to a future PR.
             // I.e., creating "temp" here just unnecessarily slows everything down.
             var temp = (IComponent) _seriMan.Read(compReg.Type, data, this)!;
-
             _seriMan.CopyTo(temp, ref existing, this, notNullableOverride: true);
         }
 
         _components.Clear();
         CurrentComponent = null;
         if (missingComps is {Count: > 0})
+        {
+            EntMan.DirtyEntity(uid, meta);
             meta.LastComponentRemoved = Timing.CurTick;
+        }
     }
 
     private void GetRootEntities()
@@ -1187,7 +1191,7 @@ public sealed class EntityDeserializer :
 
             msg = CurrentReadingEntity is not { } curr
                 ? $"Encountered invalid EntityUid reference"
-                : $"Encountered invalid EntityUid reference wile reading entity {curr.YamlId}, component: {CurrentComponent}";
+                : $"Encountered invalid EntityUid reference while reading entity {curr.YamlId}, component: {CurrentComponent}";
             _log.Error(msg);
             return EntityUid.Invalid;
         }
@@ -1197,7 +1201,7 @@ public sealed class EntityDeserializer :
 
         msg = CurrentReadingEntity is not { } ent
             ? "Encountered unknown entity yaml uid"
-            : $"Encountered unknown entity yaml uid wile reading entity {ent.YamlId}, component: {CurrentComponent}";
+            : $"Encountered unknown entity yaml uid while reading entity {ent.YamlId}, component: {CurrentComponent}";
         _log.Error(msg);
         return EntityUid.Invalid;
     }
@@ -1274,7 +1278,7 @@ public sealed class EntityDeserializer :
 
         var msg = CurrentReadingEntity is not { } ent
             ? "Encountered unknown yaml map id"
-            : $"Encountered unknown yaml map id wile reading entity {ent.YamlId}, component: {CurrentComponent}";
+            : $"Encountered unknown yaml map id while reading entity {ent.YamlId}, component: {CurrentComponent}";
         _log.Error(msg);
         return MapId.Nullspace;
     }

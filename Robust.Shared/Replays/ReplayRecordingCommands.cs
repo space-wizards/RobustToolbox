@@ -6,10 +6,10 @@ using Robust.Shared.ContentPack;
 
 namespace Robust.Shared.Replays;
 
-internal sealed class ReplayStartCommand : LocalizedCommands
+internal sealed partial class ReplayStartCommand : LocalizedCommands
 {
-    [Dependency] private readonly IReplayRecordingManager _replay = default!;
-    [Dependency] private readonly IResourceManager _resMan = default!;
+    [Dependency] private IReplayRecordingManager _replay = default!;
+    [Dependency] private IResourceManager _resMan = default!;
 
     public override string Command => "replay_recording_start";
     public override string Description => LocalizationManager.GetString($"cmd-replay-recording-start-desc");
@@ -67,9 +67,9 @@ internal sealed class ReplayStartCommand : LocalizedCommands
     }
 }
 
-internal sealed class ReplayStopCommand : LocalizedCommands
+internal sealed partial class ReplayStopCommand : LocalizedCommands
 {
-    [Dependency] private readonly IReplayRecordingManager _replay = default!;
+    [Dependency] private IReplayRecordingManager _replay = default!;
 
     public override string Command => "replay_recording_stop";
     public override string Description => LocalizationManager.GetString($"cmd-replay-recording-stop-desc");
@@ -87,9 +87,9 @@ internal sealed class ReplayStopCommand : LocalizedCommands
     }
 }
 
-internal sealed class ReplayStatsCommand : LocalizedCommands
+internal sealed partial class ReplayStatsCommand : LocalizedCommands
 {
-    [Dependency] private readonly IReplayRecordingManager _replay = default!;
+    [Dependency] private IReplayRecordingManager _replay = default!;
 
     public override string Command => "replay_recording_stats";
     public override string Description => LocalizationManager.GetString($"cmd-replay-recording-stats-desc");

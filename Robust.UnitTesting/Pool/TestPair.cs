@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Robust.Shared.Configuration;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -23,8 +25,11 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
     public PairState State { get; private set; } = PairState.Ready;
     public bool Initialized { get; private set; }
     protected TextWriter TestOut = default!;
+    protected TextWriter? Gravestone = default!;
     public Stopwatch Watch { get; } = new();
-    public List<string> TestHistory { get; } = new();
+
+    private List<TestHistoryEntry> _testHistory = new();
+    public IReadOnlyList<TestHistoryEntry> ExtendedTestHistory => _testHistory;
     public PairSettings Settings { get; set; } = default!;
 
     public readonly PoolTestLogHandler ServerLogHandler = new("SERVER");
@@ -57,7 +62,8 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
         int id,
         BasePoolManager manager,
         PairSettings settings,
-        TextWriter testOut)
+        TextWriter testOut,
+        TextWriter? gravestone)
     {
         if (Initialized)
             throw new InvalidOperationException("Already initialized");
@@ -66,11 +72,19 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
         Manager = manager;
         Settings = settings;
         Initialized = true;
+        Gravestone = gravestone;
+
+        if (Gravestone is not null)
+            await Gravestone.WriteLineAsync("Test pair initialized.");
 
         ClientLogHandler.ActivateContext(testOut);
         ServerLogHandler.ActivateContext(testOut);
-        Client = await GenerateClient();
-        Server = await GenerateServer();
+
+        // Need a new task so it doesn't wait until the first await (after the constructor) to run asynchronously
+        var tasks = await Task.WhenAll(new[] {Task.Run(GenerateClientCast), Task.Run(GenerateServerCast)});
+        Client = (TClient) tasks[0];
+        Server = (TServer) tasks[1];
+
         ActivateContext(testOut);
         await ApplySettings(settings);
 
@@ -105,6 +119,16 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
     protected abstract Task<TClient> GenerateClient();
     protected abstract Task<TServer> GenerateServer();
 
+    protected async Task<IIntegrationInstance> GenerateClientCast()
+    {
+        return await GenerateClient();
+    }
+
+    protected async Task<IIntegrationInstance> GenerateServerCast()
+    {
+        return await GenerateServer();
+    }
+
     public void Kill()
     {
         State = PairState.Dead;
@@ -112,6 +136,10 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
         ClientLogHandler.ShuttingDown = true;
         Server.Dispose();
         Client.Dispose();
+
+        Gravestone?.WriteLine("Test pair killed.");
+        Gravestone?.WriteLine(Environment.StackTrace);
+        Gravestone?.Flush();
     }
 
     private void ClearContext()
@@ -123,6 +151,9 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
 
     public void ActivateContext(TextWriter testOut)
     {
+        // This is the very, very first thing that happens in prepping a pair, so wait a sec
+        // for disposal to get to finish if we got returned right this instant.
+        // Not necessary after some of the disposal changes but defensive is good.
         TestOut = testOut;
         ServerLogHandler.ActivateContext(testOut);
         ClientLogHandler.ActivateContext(testOut);
@@ -132,7 +163,20 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
     {
         if (State != PairState.Ready)
             throw new InvalidOperationException($"Pair is not ready to use. State: {State}");
+
         State = PairState.InUse;
+    }
+
+    public async Task AddToHistory(string testName)
+    {
+        var memUse = GC.GetTotalMemory(false);
+        var entry = new TestHistoryEntry(testName, memUse);
+        _testHistory.Add(entry);
+        if (Gravestone is not null)
+        {
+            await Gravestone.WriteLineAsync($"#{_testHistory.Count}: {entry}");
+            await Gravestone.FlushAsync();
+        }
     }
 
     public void SetupSeed()

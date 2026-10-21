@@ -7,9 +7,9 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Server.Console.Commands;
 
-public sealed class SpinCommand : LocalizedCommands
+public sealed partial class SpinCommand : LocalizedCommands
 {
-    [Dependency] private readonly IEntityManager _entities = default!;
+    [Dependency] private IEntityManager _entities = default!;
 
     public override string Command => "spin";
 

@@ -9,9 +9,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 {
-    internal sealed class DebugInputPanel : PanelContainer
+    internal sealed partial class DebugInputPanel : PanelContainer
     {
-        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private IInputManager _inputManager = default!;
 
         private readonly Label _label;
 

@@ -9,6 +9,8 @@ namespace Robust.Shared.Network;
 
 internal sealed class NetEncryption
 {
+    public const int EncryptionOverhead = sizeof(ulong) + CryptoAeadXChaCha20Poly1305Ietf.AddBytes;
+
     // Use a counter for nonces. The counter is 64-bit, I will be impressed if you ever manage to run it out.
     // 64-bit counter (incl over the wire) is fine, don't need the whole 192-bit.
     // Server starts at 0, client starts at 1, increment by two.
@@ -31,7 +33,7 @@ internal sealed class NetEncryption
         var nonce = Interlocked.Add(ref _nonce, 2);
 
         var lengthBytes = message.LengthBytes;
-        var encryptedSize = CryptoAeadXChaCha20Poly1305Ietf.AddBytes + lengthBytes + sizeof(ulong);
+        var encryptedSize = lengthBytes + EncryptionOverhead;
 
         var data = message.Data.AsSpan(0, lengthBytes);
 
@@ -84,8 +86,18 @@ internal sealed class NetEncryption
             ArrayPool<byte>.Shared.Return(returnPool);
     }
 
-    public unsafe void Decrypt(NetIncomingMessage message)
+    /// <summary>
+    ///     Attempts to decrypt an incoming network message, falliably.
+    /// </summary>
+    /// <param name="message">The message to decrypt in-place. This will be mutated with the decrypted results.</param>
+    /// <returns>Whether the operation was successful. If this fails, you likely want to drop the connection.</returns>
+    public unsafe bool TryDecrypt(NetIncomingMessage message)
     {
+        // Minimum possible size a message can be is the nonce + 16 bytes of message.
+        // So we immediately bail on anything smaller.
+        if (message.LengthBytes < sizeof(ulong) + CryptoAeadXChaCha20Poly1305Ietf.AddBytes)
+            return false;
+
         var nonce = message.ReadUInt64();
         var cipherText = message.Data.AsSpan(sizeof(ulong), message.LengthBytes - sizeof(ulong));
 
@@ -114,7 +126,6 @@ internal sealed class NetEncryption
 
         ArrayPool<byte>.Shared.Return(buffer);
 
-        if (!result)
-            throw new SodiumException("Decryption operation failed!");
+        return result;
     }
 }

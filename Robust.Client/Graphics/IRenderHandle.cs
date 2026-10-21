@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
@@ -9,6 +10,7 @@ namespace Robust.Client.Graphics
     /// <remarks>
     ///     Unstable API. Likely to break hard during renderer rewrite if you rely on it.
     /// </remarks>
+    [NotContentImplementable]
     public interface IRenderHandle
     {
         DrawingHandleScreen DrawingHandleScreen { get; }
@@ -35,6 +37,7 @@ namespace Robust.Client.Graphics
         /// <param name="xform">The entity's transform component.
         /// Only required if <see cref="overrideDirection"/> is null.</param>
         /// <param name="xformSystem">The transform system</param>
+        /// <param name="postShaders">The post-shader passes to apply to this draw.</param>
         void DrawEntity(EntityUid entity,
             Vector2 position,
             Vector2 scale,
@@ -43,6 +46,7 @@ namespace Robust.Client.Graphics
             Direction? overrideDirection = null,
             SpriteComponent? sprite = null,
             TransformComponent? xform = null,
-            SharedTransformSystem? xformSystem = null);
+            SharedTransformSystem? xformSystem = null,
+            IReadOnlyList<SpriteComponent.PostShaderEntry>? postShaders = null);
     }
 }

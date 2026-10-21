@@ -42,10 +42,10 @@ namespace Robust.Client.UserInterface.CustomControls
     [GenerateTypedNameReferences]
     public sealed partial class DebugConsole : Control, IDebugConsoleView
     {
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private IClientConsoleHost _consoleHost = default!;
+        [Dependency] private IResourceManager _resourceManager = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private ILogManager _logMan = default!;
 
         private static readonly ResPath HistoryPath = new("/debug_console_history.json");
 
@@ -64,7 +64,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             InitCompletions();
 
-            CommandBar.OnTextChanged += OnCommandChanged;
             CommandBar.OnKeyBindDown += CommandBarOnOnKeyBindDown;
             CommandBar.OnTextEntered += CommandEntered;
             CommandBar.OnHistoryChanged += OnHistoryChanged;
@@ -140,8 +139,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 CompletionCommandEntered();
             }
-
-            // commandChanged = true;
         }
 
         private void OnHistoryChanged()
@@ -205,11 +202,6 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             CompletionKeyDown(args);
-        }
-
-        private void OnCommandChanged(LineEdit.LineEditEventArgs args)
-        {
-            // commandChanged = true;
         }
 
         private async void _loadHistoryFromDisk()

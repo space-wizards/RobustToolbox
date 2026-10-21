@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 namespace Robust.Server.GameObjects;
 
 [UsedImplicitly]
-public sealed class ServerOccluderSystem : OccluderSystem
+public sealed partial class ServerOccluderSystem : OccluderSystem
 {
-    [Dependency] private readonly MetaDataSystem _metadata = default!;
+    [Dependency] private MetaDataSystem _metadata = default!;
 
     public override void Initialize()
     {
@@ -17,7 +17,7 @@ public sealed class ServerOccluderSystem : OccluderSystem
 
     private void OnFlagRemoveAttempt(Entity<OccluderComponent> ent, ref MetaFlagRemoveAttemptEvent args)
     {
-        if (ent.Comp is {Enabled: true, LifeStage: <= ComponentLifeStage.Running})
+        if (ent.Comp is { Enabled: true, LifeStage: <= ComponentLifeStage.Running })
             args.ToRemove &= ~MetaDataFlags.PvsPriority;
     }
 

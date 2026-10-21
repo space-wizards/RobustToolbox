@@ -4,6 +4,7 @@ namespace Robust.Roslyn.Shared;
 
 #nullable enable
 
+[Obsolete("Use the extension methods instead.")]
 public static class TypeSymbolHelper
 {
     public static bool ShittyTypeMatch(ITypeSymbol type, string attributeMetadataName)
@@ -68,5 +69,46 @@ public static class TypeSymbolHelper
         }
 
         return type;
+    }
+
+    /// <summary>
+    /// Enumerates all base types of the given <paramref name="type"/>.
+    /// </summary>
+    public static IEnumerable<ITypeSymbol> GetBaseTypes(ITypeSymbol type)
+    {
+        var baseType = type.BaseType;
+        while (baseType != null)
+        {
+            yield return baseType;
+            baseType = baseType.BaseType;
+        }
+    }
+
+    /// <summary>
+    /// Checks if the given <paramref name="type"/> inherits from <paramref name="other"/>.
+    /// </summary>
+    /// <returns>True if <paramref name="type"/> inherits from <paramref name="other"/>, otherwise false.</returns>
+    public static bool Inherits(ITypeSymbol type, ITypeSymbol other)
+    {
+        foreach (var baseType in GetBaseTypes(type))
+        {
+            if (SymbolEqualityComparer.Default.Equals(baseType, other))
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Checks if the given <paramref name="type"/> inherits from a type with the given metadata name.
+    /// </summary>
+    public static bool Inherits(ITypeSymbol type, string otherTypeName)
+    {
+        foreach (var baseType in GetBaseTypes(type))
+        {
+            if (ShittyTypeMatch(baseType, otherTypeName))
+                return true;
+        }
+
+        return false;
     }
 }

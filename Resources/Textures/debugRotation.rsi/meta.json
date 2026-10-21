@@ -1,17 +1,17 @@
 {
     "version": 1,
+    "license": "MIT",
+    "copyright": "Made by Acruid (GitHub) for SS14 in https://github.com/space-wizards/RobustToolbox/commit/de0bd1887f67a55c851a054d406f6faf3f1f2de5",
     "size": {
         "x": 32,
         "y": 32
     },
     "states": [{
             "name": "direction1",
-            "directions": 1,
-            "delays": [[1.0]]
+            "directions": 1
         }, {
             "name": "direction4",
-            "directions": 4,
-            "delays": [[1.0], [1.0], [1.0], [1.0]]
+            "directions": 4
         }
     ]
 }

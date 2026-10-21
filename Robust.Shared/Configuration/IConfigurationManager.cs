@@ -56,6 +56,7 @@ namespace Robust.Shared.Configuration
     /// so it is not recommended to modify CVars from other threads.
     /// </para>
     /// </remarks>
+    [NotContentImplementable]
     public interface IConfigurationManager
     {
         /// <summary>

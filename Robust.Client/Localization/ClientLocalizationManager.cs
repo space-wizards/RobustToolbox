@@ -4,9 +4,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Localization;
 
-internal sealed class ClientLocalizationManager : LocalizationManager, ILocalizationManagerInternal
+internal sealed partial class ClientLocalizationManager : LocalizationManager, ILocalizationManagerInternal
 {
-    [Dependency] private readonly IReloadManager _reload = default!;
+    [Dependency] private IReloadManager _reload = default!;
 
     void ILocalizationManager.Initialize() => Initialize();
 

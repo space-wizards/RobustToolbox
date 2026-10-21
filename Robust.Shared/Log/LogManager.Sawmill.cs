@@ -78,19 +78,22 @@ namespace Robust.Shared.Log
 
             public void Log(LogLevel level, Exception? exception, string message, params object?[] args)
             {
+                if (!IsLogLevelEnabled(level))
+                    return;
+
                 if (!_sLogger.BindMessageTemplate(message, args, out var parsedTemplate, out var properties))
                     return;
 
                 var msg = new LogEvent(DateTimeOffset.Now, level.ToSerilog(), exception, parsedTemplate, properties);
-
-                if (!IsLogLevelEnabled(level))
-                    return;
 
                 LogInternal(Name, msg);
             }
 
             public void Log(LogLevel level, string message, params object?[] args)
             {
+                if (!IsLogLevelEnabled(level))
+                    return;
+
                 if (args.Length != 0 && message.Contains("{0"))
                 {
                     // Fallback for logs that still use the string.Format approach.

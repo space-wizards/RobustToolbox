@@ -5,9 +5,9 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Client.ViewVariables.Editors;
 
-internal sealed class VVPropEditorEntProtoId : VVPropEditor
+internal sealed partial class VVPropEditorEntProtoId : VVPropEditor
 {
-    [Dependency] private readonly IPrototypeManager _protoMan = default!;
+    [Dependency] private IPrototypeManager _protoMan = default!;
 
     public VVPropEditorEntProtoId()
     {

@@ -10,7 +10,7 @@ namespace Robust.Client.WebView.Cef
 {
     internal partial class WebViewManagerCef
     {
-        [Dependency] private readonly IClydeInternal _clyde = default!;
+        [Dependency] private IClydeInternal _clyde = default!;
 
         private readonly List<WebViewWindowImpl> _browserWindows = new();
 
@@ -141,7 +141,7 @@ namespace Robust.Client.WebView.Cef
             {
                 Closed = true;
                 _manager._browserWindows.Remove(this);
-                Logger.Debug("Removing window");
+                _manager._sawmill.Debug("Removing window");
             }
 
             private void CheckClosed()

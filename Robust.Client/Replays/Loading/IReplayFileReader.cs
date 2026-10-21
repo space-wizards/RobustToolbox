@@ -10,6 +10,7 @@ namespace Robust.Client.Replays.Loading;
 /// <summary>
 /// Simple interface that the replay system loads files from.
 /// </summary>
+[NotContentImplementable]
 public interface IReplayFileReader : IDisposable
 {
     /// <summary>

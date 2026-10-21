@@ -23,6 +23,7 @@ internal sealed class RayCast_Test
         RayAll,
         RayClosest,
         Shape,
+        ShapeClosest,
     }
 
     private static TestCaseData[] _rayCases =
@@ -202,7 +203,8 @@ internal sealed class RayCast_Test
     }
 
     [Test]
-    public void ClosestHitFromLaterBroadphaseIsInMapCoordinates()
+    public void ClosestHitFromLaterBroadphaseIsInMapCoordinates(
+        [Values(SensorCastKind.RayClosest, SensorCastKind.ShapeClosest)] SensorCastKind kind)
     {
         var sim = RobustServerSimulation.NewSimulation().RegisterEntitySystems(f =>
         {
@@ -226,10 +228,10 @@ internal sealed class RayCast_Test
         var closer = SpawnCastTarget(entManager, fixtureSystem, physicsSystem, grid.Owner, new Vector2(-4.5f, 1.5f), true);
 
         var raycast = sim.System<RayCastSystem>();
-        var hits = raycast.CastRayClosest(mapId, Vector2.UnitX / 2f, Vector2.UnitY * 3f, new QueryFilter { LayerBits = 1 });
+        var hits = CastUpwards(raycast, kind, mapId, new QueryFilter { LayerBits = 1 });
 
         Assert.That(hits.Results.Select(hit => hit.Entity).ToArray(), Is.EqualTo(new[] { closer }));
-        // Where the ray enters the closer target's circle, which has a radius of 0.25.
+        // Where the cast reaches the closer target's circle, which has a radius of 0.25.
         Assert.That(hits.Results[0].Point.X, Is.EqualTo(0.5f).Within(0.001f));
         Assert.That(hits.Results[0].Point.Y, Is.EqualTo(1.25f).Within(0.001f));
     }
@@ -255,6 +257,13 @@ internal sealed class RayCast_Test
                 Vector2.UnitY * 3f,
                 filter,
                 RayCastSystem.RayCastAllCallback),
+            SensorCastKind.ShapeClosest => raycast.CastShape(
+                mapId,
+                new PhysShapeCircle(0.1f),
+                new Transform(Vector2.UnitX / 2f, Angle.Zero),
+                Vector2.UnitY * 3f,
+                filter,
+                RayCastSystem.RayCastClosestCallback),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
         };
     }

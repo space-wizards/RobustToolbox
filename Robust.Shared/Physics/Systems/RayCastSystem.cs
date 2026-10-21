@@ -220,8 +220,7 @@ public sealed partial class RayCastSystem : EntitySystem
     /// Convenience method for shape casts; only supports shapes with area.
     /// </summary>
     /// <remarks>
-    /// Hit points are converted to map coordinates per broadphase, so a callback that replaces earlier results
-    /// (like a closest-hit callback) can be left with points in a grid's local coordinates.
+    /// The callback receives hit points in map coordinates, unlike the per-broadphase overload where they are broadphase-local.
     /// </remarks>
     public RayResult CastShape(
         MapId mapId,
@@ -253,9 +252,11 @@ public sealed partial class RayCastSystem : EntitySystem
                 var localOrigin = Physics.Transform.MulT(transform, tuple.origin);
                 var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.origin.Position + tuple.translation) - localOrigin.Position;
 
-                var oldIndex = tuple.result.Results.Count;
-                tuple.system.CastShape((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter, callback: tuple.callback);
-                tuple.system.AdjustResults(ref tuple.result, oldIndex, transform);
+                // The callback may replace earlier results, so convert the point before it sees it.
+                var callback = tuple.callback;
+                tuple.system.CastShape((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter,
+                    callback: (FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, ref RayResult result) =>
+                        callback(proxy, Physics.Transform.Mul(transform, point), normal, fraction, ref result));
             });
 
         result = state.result;

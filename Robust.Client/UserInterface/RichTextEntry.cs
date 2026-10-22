@@ -31,6 +31,7 @@ namespace Robust.Client.UserInterface
 
         private readonly Color _defaultColor;
         private readonly Type[]? _tagsAllowed;
+        private readonly Control _parent;
 
         public readonly FormattedMessage Message;
 
@@ -69,6 +70,7 @@ namespace Robust.Client.UserInterface
             LineBreaks = default;
             _defaultColor = defaultColor ?? new(200, 200, 200);
             _tagsAllowed = tagsAllowed;
+            _parent = parent;
             Controls = GetControls(parent, tagManager);
         }
 
@@ -133,7 +135,7 @@ namespace Robust.Client.UserInterface
 
             int? breakLine;
             var wordWrap = new WordWrap(maxSizeX);
-            var context = new MarkupDrawingContext();
+            var context = new MarkupDrawingContext(_parent);
             context.Font.Push(defaultFont);
             context.Color.Push(_defaultColor);
 

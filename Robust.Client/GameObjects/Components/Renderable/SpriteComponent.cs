@@ -515,6 +515,18 @@ namespace Robust.Client.GameObjects
         public void LayerSetData(int index, PrototypeLayerData layerDatum)
             => Sys.LayerSetData((Owner, this), index, layerDatum);
 
+        /// <summary>
+        ///     Names the prototype being deserialized, for appending to sprite errors. Sprite layers are built
+        ///     from a deferred serialization hook, which runs detached from the prototype that queued it, so
+        ///     without this the message cannot say what is at fault. Empty when the sprite is not being built
+        ///     as part of prototype loading.
+        /// </summary>
+        private static string DescribeSource()
+        {
+            var context = SerializationHookContext.RunningContext;
+            return context == null ? string.Empty : $" [{context}]";
+        }
+
         [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
         internal void LayerSetData(Layer layer, PrototypeLayerData layerDatum)
         {
@@ -530,7 +542,7 @@ namespace Robust.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'.", path);
+                    Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'.{1}", path, DescribeSource());
                 }
             }
 
@@ -540,8 +552,9 @@ namespace Robust.Client.GameObjects
                 if (theRsi == null)
                 {
                     Logger.ErrorS(LogCategory,
-                        "Layer has no RSI to load states from. Cannot use 'state' property. ({0})",
-                        layerDatum.State);
+                        "Layer has no RSI to load states from. Cannot use 'state' property. ({0}){1}",
+                        layerDatum.State,
+                        DescribeSource());
                 }
                 else
                 {

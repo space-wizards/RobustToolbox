@@ -174,7 +174,8 @@ public abstract partial class SharedJointSystem : EntitySystem
                 return;
             }
 
-            Log.Error($"While adding joint {joint.ID} to entity {ToPrettyString(bUid)}, the joint already existed for the connected entity {ToPrettyString(aUid)}.");
+            // Initial states can arrive on either entity first so make it reference the same object.
+            joint = existing;
         }
         else if (!ignoreExisting && jointsB.TryGetValue(joint.ID, out existing))
         {
@@ -184,7 +185,7 @@ public abstract partial class SharedJointSystem : EntitySystem
                 return;
             }
 
-            Log.Error($"While adding joint {joint.ID} to entity {ToPrettyString(aUid)}, the joint already existed for the connected entity {ToPrettyString(bUid)}.");
+            joint = existing;
         }
 
         jointsA.TryAdd(joint.ID, joint);

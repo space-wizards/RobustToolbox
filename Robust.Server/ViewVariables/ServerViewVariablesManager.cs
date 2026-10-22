@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Server.Console;
 using Robust.Server.Player;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -27,6 +28,7 @@ namespace Robust.Server.ViewVariables
         [Dependency] private IReflectionManager _reflectionManager = default!;
         [Dependency] private IDependencyCollection _dependencyCollection = default!;
         [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IResourceManager _resManager = default!;
 
         private readonly Dictionary<uint, ViewVariablesSession>
             _sessions = new();
@@ -39,6 +41,8 @@ namespace Robust.Server.ViewVariables
         {
             base.Initialize();
             InitializeDomains();
+            _netManager.RegisterNetMessage<MsgViewVariablesReqDocStrings>(_msgReqDocStrings);
+            _netManager.RegisterNetMessage<MsgViewVariablesDocStrings>();
             _netManager.RegisterNetMessage<MsgViewVariablesReqSession>(_msgReqSession);
             _netManager.RegisterNetMessage<MsgViewVariablesReqData>(_msgReqData);
             _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>(_msgModifyRemote);

@@ -214,7 +214,15 @@ namespace Robust.Client.ViewVariables.Instances
 
             foreach (var component in componentList)
             {
-                var button = new Button {Text = PrettyPrint.PrintUserFacingTypeShort(component.GetType(), 2), TextAlign = Label.AlignMode.Left};
+                var ctype = component.GetType();
+                string docString = ViewVariablesManager.GetDocStringForType(ctype);
+
+                var button = new Button
+                {
+                    Text = PrettyPrint.PrintUserFacingTypeShort(ctype, 2),
+                    TextAlign = Label.AlignMode.Left,
+                    ToolTip = docString,
+                };
                 var removeButton = new TextureButton()
                 {
                     StyleClasses = { DefaultWindow.StyleClassWindowCloseButton },
@@ -263,9 +271,16 @@ namespace Robust.Client.ViewVariables.Instances
 
             componentTypes = componentTypes.OrderBy(t => t.Stringified);
 
+            var docTargets = new List<(string, Action<string>)>();
+
             foreach (var componentType in componentTypes)
             {
-                var button = new Button {Text = componentType.Stringified, TextAlign = Label.AlignMode.Left};
+                var button = new Button
+                {
+                    Text = componentType.Stringified,
+                    TextAlign = Label.AlignMode.Left,
+                };
+                docTargets.Add((componentType.FullName, doc => button.ToolTip = doc));
                 var removeButton = new TextureButton()
                 {
                     StyleClasses = { DefaultWindow.StyleClassWindowCloseButton },
@@ -285,6 +300,9 @@ namespace Robust.Client.ViewVariables.Instances
                 button.AddChild(removeButton);
                 _serverComponents.AddChild(button);
             }
+
+            // Server-only components have their docs on the server, fetch them in one go.
+            ViewVariablesManager.ApplyDocStringsAsync(ViewVariablesDocStringKind.Type, docTargets);
         }
 
         private void UpdateClientComponentListVisibility(string? searchStr = null)
@@ -523,15 +541,18 @@ namespace Robust.Client.ViewVariables.Instances
 
             var otherStyle = false;
             var first = true;
+            var docTargets = new List<(string, Action<string>)>();
             foreach (var (groupName, groupMembers) in _membersBlob!.MemberGroups)
             {
-                ViewVariablesTraitMembers.CreateMemberGroupHeader(ref first, groupName, _serverVariables.Children);
+                var prettyGroupName = TypeAbbreviation.Abbreviate(groupName);
+                ViewVariablesTraitMembers.CreateMemberGroupHeader(ref first, prettyGroupName, _serverVariables.Children);
 
                 foreach (var propertyData in groupMembers)
                 {
                     var propertyEdit = new ViewVariablesPropertyControl(ViewVariablesManager, _robustSerializer);
                     propertyEdit.SetStyle(otherStyle = !otherStyle);
-                    var editor = propertyEdit.SetProperty(propertyData);
+                    var editor = propertyEdit.SetProperty(propertyData, null);
+                    docTargets.Add(($"{groupName}.{propertyData.Name}", propertyEdit.SetDocString));
                     var selectorChain = new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)};
                     editor.OnValueChanged += (o, r) => ViewVariablesManager.ModifyRemote(_entitySession, selectorChain, o, r);
                     editor.WireNetworkSelector(_entitySession.SessionId, selectorChain);
@@ -539,6 +560,8 @@ namespace Robust.Client.ViewVariables.Instances
                     _serverVariables.AddChild(propertyEdit);
                 }
             }
+
+            ViewVariablesManager.ApplyDocStringsAsync(ViewVariablesDocStringKind.FieldOrProperty, docTargets);
 
             PopulateServerComponents();
         }

@@ -35,8 +35,9 @@ namespace Robust.Client.ViewVariables.Instances
             var type = obj.GetType();
 
             var title = PrettyPrint.PrintUserFacingWithType(obj, out var subtitle);
+            string docString = ViewVariablesManager.GetDocStringForType(type);
 
-            _wrappingInit(window, title, subtitle);
+            _wrappingInit(window, title, docString, subtitle);
             foreach (var trait in TraitsFor(ViewVariablesManager.TraitIdsFor(type)))
             {
                 trait.Initialize(this);
@@ -50,7 +51,14 @@ namespace Robust.Client.ViewVariables.Instances
         {
             Session = session;
 
-            _wrappingInit(window, $"[SERVER] {blob.Stringified}", blob.ObjectTypePretty);
+            // The type may be server-only, so its docs may have to come from the server.
+            string typeName = blob.ObjectType.Split(", ")[0];
+            var middleLabel = _wrappingInit(window, $"[SERVER] {blob.Stringified}", string.Empty, blob.ObjectTypePretty);
+            if (middleLabel != null)
+            {
+                ViewVariablesManager.ApplyDocStringsAsync(ViewVariablesDocStringKind.Type,
+                    [(typeName, doc => middleLabel.Text = doc)]);
+            }
             foreach (var trait in TraitsFor(blob.Traits))
             {
                 trait.Initialize(this);
@@ -59,7 +67,7 @@ namespace Robust.Client.ViewVariables.Instances
             _refresh();
         }
 
-        private void _wrappingInit(DefaultWindow window, string top, string bottom)
+        private Label? _wrappingInit(DefaultWindow window, string top, string middle, string bottom)
         {
             // Wrapping containers.
             var scrollContainer = new ScrollContainer();
@@ -73,25 +81,44 @@ namespace Robust.Client.ViewVariables.Instances
             };
             scrollContainer.AddChild(vBoxContainer);
 
+            Label? middleLabel;
+
             // Handle top bar.
             {
                 var headBox = new BoxContainer
                 {
                     Orientation = LayoutOrientation.Horizontal
                 };
-                var name = MakeTopBar(top, bottom);
-                name.HorizontalExpand = true;
-                headBox.AddChild(name);
 
-                _refreshButton = new Button {Text = "Refresh", ToolTip = "RMB to toggle auto-refresh."};
+                var topBarControl = MakeTopBar(top, middle, bottom, out middleLabel);
+                topBarControl.HorizontalExpand = true;
+
+                headBox.AddChild(topBarControl);
+
+                var refreshBox = new BoxContainer()
+                {
+                    Orientation = LayoutOrientation.Vertical,
+                };
+
+                _refreshButton = new Button
+                {
+                    Text = "Refresh",
+                    ToolTip = "RMB to toggle auto-refresh.",
+                };
                 _refreshButton.OnPressed += _ => _refresh();
                 _refreshButton.OnKeyBindDown += OnButtonKeybindDown;
-                headBox.AddChild(_refreshButton);
+
+                refreshBox.AddChild(_refreshButton);
+
+                headBox.AddChild(refreshBox);
+
                 vBoxContainer.AddChild(headBox);
             }
 
             _tabs = new TabContainer();
             vBoxContainer.AddChild(_tabs);
+
+            return middleLabel;
         }
 
         private void OnButtonKeybindDown(GUIBoundKeyEventArgs eventArgs)

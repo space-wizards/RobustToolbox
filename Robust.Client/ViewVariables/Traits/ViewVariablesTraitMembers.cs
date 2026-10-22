@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -65,15 +66,18 @@ namespace Robust.Client.ViewVariables.Traits
 
                 var otherStyle = false;
                 var first = true;
+                var docTargets = new List<(string, Action<string>)>();
                 foreach (var (groupName, groupMembers) in blob.MemberGroups)
                 {
-                    CreateMemberGroupHeader(ref first, groupName, replacementControls);
+                    var prettyGroupName = TypeAbbreviation.Abbreviate(groupName);
+                    CreateMemberGroupHeader(ref first, prettyGroupName, replacementControls);
 
                     foreach (var propertyData in groupMembers)
                     {
                         var propertyEdit = new ViewVariablesPropertyControl(_vvm, _robustSerializer);
                         propertyEdit.SetStyle(otherStyle = !otherStyle);
-                        var editor = propertyEdit.SetProperty(propertyData);
+                        var editor = propertyEdit.SetProperty(propertyData, null);
+                        docTargets.Add(($"{groupName}.{propertyData.Name}", propertyEdit.SetDocString));
 
                         var selectorChain = new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)};
                         editor.WireNetworkSelector(Instance.Session!.SessionId, selectorChain);
@@ -86,6 +90,9 @@ namespace Robust.Client.ViewVariables.Traits
                         replacementControls.Add(propertyEdit);
                     }
                 }
+
+                // Server members may only have docs on the server, fetch them in one go.
+                _vvm.ApplyDocStringsAsync(ViewVariablesDocStringKind.FieldOrProperty, docTargets);
             }
 
             _memberList.DisposeAllChildren();

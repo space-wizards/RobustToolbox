@@ -8,6 +8,7 @@ public sealed class RobustClientPackaging
     {
         "Maps",
         "ConfigPresets",
+        "Server",
         // Leaving this here for future archaeologists to ponder at.
         "emotes.xml",
         "Groups",

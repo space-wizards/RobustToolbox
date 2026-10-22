@@ -50,7 +50,16 @@ internal sealed partial class PvsSystem
                 CompressionContext = ctx
             };
 
-            _netMan.ServerSendMessage(msg, data.Session.Channel);
+            try
+            {
+                msg.Compress();
+                _netMan.ServerSendMessage(msg, data.Session.Channel);
+            }
+            finally
+            {
+                msg.ReleaseCompressed();
+            }
+
             // The channel can disconnect between our check and the network manager's check.
             if (msg.HasWritten && msg.ShouldSendReliably())
             {

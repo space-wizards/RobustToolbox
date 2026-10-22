@@ -21,7 +21,6 @@ namespace Robust.Shared.Network.Messages
         // TODO PVS make this a cvar
         // TODO PVS figure out optimal value
         public const int CompressionThreshold = 256;
-        private const int CompressedSizeEstimateDivisor = 4;
 
         public override MsgGroups MsgGroup => MsgGroups.Entity;
 
@@ -32,23 +31,57 @@ namespace Robust.Shared.Network.Messages
 
         internal bool HasWritten;
 
+        private byte[] _compressed;
+        private int _compressedLength;
+
         internal bool ForceSendReliably;
 
         public override int EstimateBufferSize()
         {
             var uncompressedLength = (int) StateStream.Length;
-            // We have no idea what the compressed size will be but we'll try and guess slightly over
-            // mostly want to avoid a small initial size and then immediately copying.
-            var payloadLength = uncompressedLength > CompressionThreshold
-                ? Math.Max(CompressionThreshold, uncompressedLength / CompressedSizeEstimateDivisor)
-                : uncompressedLength;
-            var compressedLength = uncompressedLength > CompressionThreshold ? payloadLength : 0;
+
+            int payloadLength;
+            int compressedLength;
+            if (_compressed != null)
+            {
+                payloadLength = _compressedLength;
+                compressedLength = _compressedLength;
+            }
+            else if (uncompressedLength > CompressionThreshold)
+            {
+                payloadLength = ZStd.CompressBound(uncompressedLength);
+                compressedLength = payloadLength;
+            }
+            else
+            {
+                payloadLength = uncompressedLength;
+                compressedLength = 0;
+            }
 
             // Message ID + two variable-length size prefixes + payload.
             return 1
                 + VariableInt32Size(uncompressedLength)
                 + VariableInt32Size(compressedLength)
                 + payloadLength;
+        }
+
+        public void Compress()
+        {
+            if (_compressed != null || StateStream.Length <= CompressionThreshold)
+                return;
+
+            StateStream.Position = 0;
+            _compressed = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound((int) StateStream.Length));
+            _compressedLength = CompressionContext.Compress2(_compressed, StateStream.AsSpan());
+        }
+
+        public void ReleaseCompressed()
+        {
+            if (_compressed == null)
+                return;
+
+            ArrayPool<byte>.Shared.Return(_compressed);
+            _compressed = null;
         }
 
         private static int VariableInt32Size(int value)
@@ -111,15 +144,12 @@ namespace Robust.Shared.Network.Messages
             // We compress the state.
             if (StateStream.Length > CompressionThreshold)
             {
-                // var sw = Stopwatch.StartNew();
-                StateStream.Position = 0;
-                var buf = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound((int)StateStream.Length));
-                var length = CompressionContext.Compress2(buf, StateStream.AsSpan());
+                Compress();
 
-                buffer.WriteVariableInt32(length);
-                buffer.Write(buf.AsSpan(0, length));
+                buffer.WriteVariableInt32(_compressedLength);
+                buffer.Write(_compressed.AsSpan(0, _compressedLength));
 
-                ArrayPool<byte>.Shared.Return(buf);
+                ReleaseCompressed();
             }
             // The state is sent as is.
             else

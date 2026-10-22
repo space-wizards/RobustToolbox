@@ -24,7 +24,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Reflect(false)]
-        internal sealed class SubscribeCompRefBroadcastSystem : EntitySystem
+        internal sealed partial class SubscribeCompRefBroadcastSystem : EntitySystem
         {
             public override void Initialize()
             {
@@ -54,7 +54,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Reflect(false)]
-        private sealed class SubscriptionNoMixedRefValueBroadcastEventSystem : EntitySystem
+        private sealed partial class SubscriptionNoMixedRefValueBroadcastEventSystem : EntitySystem
         {
             public override void Initialize()
             {
@@ -93,7 +93,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Reflect(false)]
-        private sealed class BroadcastOrderASystem : EntitySystem
+        private sealed partial class BroadcastOrderASystem : EntitySystem
         {
             public override void Initialize()
             {
@@ -111,7 +111,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Reflect(false)]
-        private sealed class BroadcastOrderBSystem : EntitySystem
+        private sealed partial class BroadcastOrderBSystem : EntitySystem
         {
             public override void Initialize()
             {
@@ -129,7 +129,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Reflect(false)]
-        private sealed class BroadcastOrderCSystem : EntitySystem
+        private sealed partial class BroadcastOrderCSystem : EntitySystem
         {
             public override void Initialize()
             {

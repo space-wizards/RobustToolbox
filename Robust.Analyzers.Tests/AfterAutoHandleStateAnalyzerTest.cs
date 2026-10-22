@@ -75,7 +75,7 @@ public sealed class AfterAutoHandleStateAnalyzerTest
             [AutoGenerateComponentState(false)]
             public sealed class AutoGenFalse;
 
-            public sealed class Foo : EntitySystem
+            public sealed partial class Foo : EntitySystem
             {
                 public void Good()
                 {
